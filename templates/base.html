@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block titulo %}Matchpoint{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
     <script src="{% static 'js/pestanas.js' %}" defer></script>
     <script src="{% static 'js/mensajes.js' %}" defer></script>
@@ -13,7 +14,10 @@
 <body>
     <header class="barra-superior">
         <div class="contenedor navegacion">
-            <a class="marca" href="{% url 'inicio' %}">Matchpoint</a>
+            <a class="marca" href="{% url 'inicio' %}">
+                <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="44" height="44">
+                <span>Matchpoint</span>
+            </a>
             {% if request.user.is_authenticated %}
                 <nav>
                     {% if perms.instalaciones.view_sede %}

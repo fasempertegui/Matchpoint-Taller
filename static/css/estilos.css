@@ -72,8 +72,21 @@ a {
 }
 
 .marca {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 10px;
     font-size: 1.25rem;
     font-weight: 700;
+}
+
+.marca-logo {
+    display: block;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    border-radius: 4px;
 }
 
 .formulario-en-linea {
