@@ -337,6 +337,18 @@ textarea.form-control {
     margin-top: 20px;
 }
 
+.acciones-acceso {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.acciones-acceso .enlace-volver {
+    margin-top: 0;
+}
+
 .mensaje {
     display: flex;
     align-items: flex-start;
