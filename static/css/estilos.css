@@ -1,11 +1,15 @@
 :root {
-    --fondo: #eeeeee;
+    --fondo: #f4f6f8;
     --superficie: #ffffff;
-    --texto: #17221c;
-    --texto-suave: #607067;
-    --borde: #dce3de;
-    --primario: #19623b;
-    --primario-hover: #104a2b;
+    --texto: #1a2028;
+    --texto-suave: #596474;
+    --borde: #d9dee5;
+    --primario: #4b176d;
+    --primario-hover: #391052;
+    --primario-suave: #f5eff9;
+    --acento: #b6d532;
+    --acento-suave: #f4f8e2;
+    --acento-texto: #3d4b0c;
     --peligro: #b42318;
 }
 
@@ -31,9 +35,9 @@ a {
 }
 
 .barra-superior {
-    background: #10251a;
+    background: var(--primario);
     color: #ffffff;
-    border-bottom: 3px solid var(--primario);
+    border-bottom: 3px solid var(--acento);
 }
 
 .navegacion {
@@ -57,14 +61,14 @@ a {
 
 .navegacion nav > a,
 .enlace-boton {
-    color: #d9e6dd;
+    color: #ffffff;
     font: inherit;
     font-size: 0.95rem;
 }
 
 .navegacion nav > a:hover,
 .enlace-boton:hover {
-    color: #ffffff;
+    color: var(--acento);
 }
 
 .marca {
@@ -232,13 +236,13 @@ tbody tr:last-child td {
 }
 
 .estado-activa {
-    background: #dcfce7;
-    color: #166534;
+    background: var(--acento-suave);
+    color: var(--acento-texto);
 }
 
 .estado-inactiva {
-    background: #edf0ee;
-    color: #536159;
+    background: #eef1f5;
+    color: #596474;
 }
 
 .estado-vacio {
@@ -271,14 +275,14 @@ tbody tr:last-child td {
 }
 
 .boton-secundario {
-    border-color: var(--borde);
-    background: #ffffff;
-    color: var(--texto);
+    border-color: var(--primario);
+    background: var(--superficie);
+    color: var(--primario);
 }
 
 .boton-secundario:hover {
-    border-color: #b9c5bd;
-    background: #f8faf8;
+    border-color: var(--primario-hover);
+    background: var(--primario-suave);
 }
 
 .boton-chico {
@@ -306,7 +310,7 @@ tbody tr:last-child td {
     width: 100%;
     min-height: 44px;
     padding: 10px 12px;
-    border: 1px solid #c8d2cb;
+    border: 1px solid #cbd2dc;
     border-radius: 2px;
     background: #ffffff;
     color: var(--texto);
@@ -320,7 +324,7 @@ textarea.form-control {
 
 .form-control:focus,
 .grupo-campo input:focus {
-    outline: 2px solid rgba(25, 98, 59, 0.2);
+    outline: 2px solid rgba(75, 23, 109, 0.2);
     border-color: var(--primario);
 }
 
@@ -389,9 +393,9 @@ textarea.form-control {
 }
 
 .mensaje-success {
-    border-color: #86efac;
-    background: #dcfce7;
-    color: #166534;
+    border-color: var(--acento);
+    background: var(--acento-suave);
+    color: var(--acento-texto);
 }
 
 .mensaje-error {
