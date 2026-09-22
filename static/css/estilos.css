@@ -11,6 +11,10 @@
     --acento-suave: #f4f8e2;
     --acento-texto: #3d4b0c;
     --peligro: #b42318;
+    --estado-activo-fondo: #f4f8e2;
+    --estado-activo-texto: #3d4b0c;
+    --estado-inactivo-fondo: #eef1f5;
+    --estado-inactivo-texto: #596474;
 }
 
 * {
@@ -248,14 +252,20 @@ tbody tr:last-child td {
     font-weight: 700;
 }
 
+.estado-activa,
+.estado-inactiva {
+    justify-content: center;
+    min-width: 80px;
+}
+
 .estado-activa {
-    background: var(--acento-suave);
-    color: var(--acento-texto);
+    background: var(--estado-activo-fondo);
+    color: var(--estado-activo-texto);
 }
 
 .estado-inactiva {
-    background: #eef1f5;
-    color: #596474;
+    background: var(--estado-inactivo-fondo);
+    color: var(--estado-inactivo-texto);
 }
 
 .estado-vacio {
