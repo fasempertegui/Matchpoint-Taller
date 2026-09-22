@@ -27,6 +27,7 @@
                     {% if perms.usuarios.view_usuario %}
                         <a href="{% url 'usuarios:usuario_lista' %}">Usuarios</a>
                     {% endif %}
+                    <span class="saludo-usuario">Hola, {{ request.user.first_name|default:request.user.username }}</span>
                     <a href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Mi perfil</a>
                     <form class="formulario-en-linea" method="post" action="{% url 'logout' %}">
                         {% csrf_token %}

@@ -55,7 +55,15 @@ a {
 .navegacion nav {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 20px;
+}
+
+.saludo-usuario {
+    color: var(--acento);
+    font-size: 0.95rem;
+    font-weight: 700;
 }
 
 .navegacion a,
