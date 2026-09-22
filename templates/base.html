@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block titulo %}Matchpoint{% endblock %}</title>
+    <title>{% block titulo %}Academia TM{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,7 @@
         <div class="contenedor navegacion">
             <a class="marca" href="{% url 'inicio' %}">
                 <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="44" height="44">
-                <span>Matchpoint</span>
+                <span>Academia TM</span>
             </a>
             {% if request.user.is_authenticated %}
                 <nav>

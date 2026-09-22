@@ -140,5 +140,5 @@ LOGOUT_REDIRECT_URL = "login"
 
 # Recuperación de contraseña: durante la demo, el correo completo sale en consola.
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = "Matchpoint <no-reply@matchpoint.local>"
+DEFAULT_FROM_EMAIL = "Academia TM <no-reply@academiatm.local>"
 PASSWORD_RESET_TIMEOUT = 60 * 60
