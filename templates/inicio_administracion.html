@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block titulo %}Administración | Matchpoint{% endblock %}
+
+{% block contenido %}
+<header class="inicio-presentacion">
+    <h1>Matchpoint</h1>
+    <p>Un espacio para administrar la Academia de Tenis TM. Desde acá podés acceder a las herramientas disponibles y conocer los módulos del sistema.</p>
+</header>
+
+<section class="inicio-seccion" aria-labelledby="inicio-modulos-titulo">
+    <h2 id="inicio-modulos-titulo">Módulos del sistema</h2>
+    <div class="inicio-modulos">
+        <article class="tarjeta inicio-modulo">
+            <h3>Usuarios</h3>
+            <p>Alta, consulta y gestión de usuarios, roles y acceso al sistema.</p>
+            {% if perms.usuarios.view_usuario %}
+                <a class="inicio-modulo-enlace" href="{% url 'usuarios:usuario_lista' %}">Ir a usuarios</a>
+            {% endif %}
+        </article>
+
+        <article class="tarjeta inicio-modulo">
+            <h3>Sedes y canchas</h3>
+            <p>Consulta y gestión de las sedes y sus canchas asociadas.</p>
+            {% if perms.instalaciones.view_sede %}
+                <a class="inicio-modulo-enlace" href="{% url 'instalaciones:sede_lista' %}">Ir a sedes y canchas</a>
+            {% endif %}
+        </article>
+
+        <article class="tarjeta inicio-modulo">
+            <h3>Clases</h3>
+            <p>Programación de clases, asignación de profesores y alumnos, y registro de asistencia.</p>
+            <span class="inicio-modulo-estado">En preparación</span>
+        </article>
+
+        <article class="tarjeta inicio-modulo">
+            <h3>Reservas</h3>
+            <p>Consulta de disponibilidad y gestión de reservas de cancha.</p>
+            <span class="inicio-modulo-estado">En preparación</span>
+        </article>
+
+        <article class="tarjeta inicio-modulo">
+            <h3>Membresías</h3>
+            <p>Administración de planes mensuales y pases de cancha de los usuarios.</p>
+            <span class="inicio-modulo-estado">En preparación</span>
+        </article>
+
+        <article class="tarjeta inicio-modulo">
+            <h3>Pagos e ingresos</h3>
+            <p>Registro y seguimiento de pagos e ingresos de la academia.</p>
+            <span class="inicio-modulo-estado">En preparación</span>
+        </article>
+    </div>
+</section>
+{% endblock %}

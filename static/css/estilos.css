@@ -110,6 +110,89 @@ a {
     padding-bottom: 48px;
 }
 
+.inicio-presentacion {
+    margin-bottom: 28px;
+}
+
+.inicio-presentacion h1 {
+    margin-bottom: 12px;
+}
+
+.inicio-presentacion p {
+    max-width: 78ch;
+    margin: 0;
+    color: var(--texto-suave);
+}
+
+.inicio-seccion h2 {
+    margin-bottom: 16px;
+}
+
+.inicio-modulos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.tarjeta.inicio-modulo {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 190px;
+    border: 0;
+}
+
+.inicio-modulo h3,
+.inicio-modulo p {
+    margin: 0;
+}
+
+.inicio-modulo h3 {
+    font-size: 1.1rem;
+}
+
+.inicio-modulo p {
+    flex: 1;
+}
+
+.inicio-modulo-enlace {
+    align-self: flex-start;
+    color: var(--primario);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.inicio-modulo-enlace:hover {
+    text-decoration: underline;
+}
+
+.inicio-modulo-estado {
+    color: var(--texto-suave);
+    font-size: 0.85rem;
+}
+
+.tarjeta.inicio-portal {
+    max-width: 680px;
+    margin: 40px auto 0;
+    padding: 32px;
+    border: 0;
+}
+
+.inicio-portal-etiqueta {
+    margin: 0 0 12px;
+    color: var(--primario);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.inicio-portal-descripcion {
+    max-width: 50ch;
+    margin: 16px 0 24px;
+    color: var(--texto-suave);
+}
+
 .encabezado-pagina {
     display: flex;
     align-items: end;
@@ -530,6 +613,11 @@ textarea.form-control {
 
     .contenido-principal {
         padding-top: 32px;
+    }
+
+    .tarjeta.inicio-portal {
+        margin-top: 0;
+        padding: 24px;
     }
 
     .detalle-grid {
