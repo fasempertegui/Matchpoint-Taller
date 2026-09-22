@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block titulo %}Cambiar mi contraseña | Matchpoint{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-angosta">
+    <h1>Cambiar mi contraseña</h1>
+    {% if request.user.debe_cambiar_contrasena %}
+        <div class="mensaje mensaje-warning">
+            Tenés que reemplazar la contraseña provisoria antes de continuar.
+        </div>
+    {% endif %}
+    <p>Ingresá tu contraseña actual y elegí una nueva. Tu sesión actual se mantendrá abierta; las otras sesiones deberán iniciar sesión nuevamente.</p>
+    <form method="post">
+        {% csrf_token %}
+        {% include "autenticacion/campos_formulario.html" %}
+        <div class="acciones-formulario">
+            {% if not request.user.debe_cambiar_contrasena %}
+                <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Cancelar</a>
+            {% endif %}
+            <button class="boton boton-primario" type="submit">Guardar contraseña</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

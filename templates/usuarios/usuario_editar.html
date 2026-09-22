@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block titulo %}Modificar correo | Matchpoint{% endblock %}
+
+{% block contenido %}
+<div class="encabezado-pagina">
+    <div>
+        <h1>Modificar correo</h1>
+        <p>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</p>
+    </div>
+</div>
+
+<section class="tarjeta tarjeta-formulario">
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if formulario.non_field_errors %}
+            <div class="mensaje mensaje-error">
+                {{ formulario.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for campo in formulario %}
+            <div class="grupo-campo">
+                <label for="{{ campo.id_for_label }}">
+                    {{ campo.label }}
+                    {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
+                </label>
+                {{ campo }}
+                {% if campo.help_text %}
+                    <small>{{ campo.help_text }}</small>
+                {% endif %}
+                {% for error in campo.errors %}
+                    <p class="error-campo">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <div class="acciones-formulario">
+            <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}">
+                Cancelar
+            </a>
+            <button class="boton boton-primario" type="submit">Guardar correo</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

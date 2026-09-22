@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block titulo %}Contraseña restablecida | Matchpoint{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-angosta">
+    <h1>Contraseña restablecida</h1>
+    <p>
+        Comunicale esta contraseña provisoria a
+        <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>.
+        No se vuelve a mostrar y deberá reemplazarse en el próximo inicio de sesión.
+    </p>
+
+    <div class="detalle-grid">
+        <div>
+            <span class="etiqueta">Nombre de usuario</span>
+            <p>{{ usuario_obj.username }}</p>
+        </div>
+        <div>
+            <span class="etiqueta">Contraseña provisoria</span>
+            <p>{{ contrasena }}</p>
+        </div>
+    </div>
+
+    <a class="boton boton-primario boton-bloque" href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}">
+        Ir al usuario
+    </a>
+</section>
+{% endblock %}

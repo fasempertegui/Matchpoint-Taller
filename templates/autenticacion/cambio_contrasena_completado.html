@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block titulo %}Contraseña actualizada | Matchpoint{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-angosta">
+    <h1>Contraseña actualizada</h1>
+    <p>Tu contraseña se cambió correctamente.</p>
+    <a class="boton boton-primario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Volver a mi perfil</a>
+</section>
+{% endblock %}

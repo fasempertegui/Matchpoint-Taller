@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ sede.nombre }} | Matchpoint{% endblock %}
+
+{% block contenido %}
+<div class="encabezado-pagina">
+    <div>
+        <h1>{{ sede.nombre }}</h1>
+    </div>
+    <div class="acciones">
+        {% if perms.instalaciones.change_sede %}
+            <a class="boton boton-secundario" href="{% url 'instalaciones:sede_editar' sede.pk %}">
+                Editar
+            </a>
+            <a class="boton boton-secundario" href="{% url 'instalaciones:sede_cambiar_estado' sede.pk %}">
+                {% if sede.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div data-pestanas>
+    <div class="pestanas-botones" role="tablist">
+        <button type="button" class="pestana-boton" data-pestana="detalles" aria-selected="true">Detalles</button>
+        <button type="button" class="pestana-boton" data-pestana="canchas" aria-selected="false">Canchas</button>
+    </div>
+
+    <div class="pestana-panel" data-panel="detalles">
+        <section class="tarjeta detalle-grid">
+            <div>
+                <span class="etiqueta">Dirección</span>
+                <p>{{ sede.direccion|default:"Sin dirección informada" }}</p>
+            </div>
+            <div>
+                <span class="etiqueta">Estado</span>
+                <p><span class="estado estado-{{ sede.estado }}">{{ sede.get_estado_display }}</span></p>
+            </div>
+            <div class="detalle-ancho">
+                <span class="etiqueta">Observaciones</span>
+                <p>{{ sede.observaciones|default:"Sin observaciones"|linebreaksbr }}</p>
+            </div>
+            <div>
+                <span class="etiqueta">Creada</span>
+                <p>{{ sede.creado_en|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div>
+                <span class="etiqueta">Última actualización</span>
+                <p>{{ sede.actualizado_en|date:"d/m/Y H:i" }}</p>
+            </div>
+        </section>
+    </div>
+
+    <div class="pestana-panel" data-panel="canchas" hidden>
+        <div class="encabezado-pagina encabezado-seccion">
+            <h2>Canchas</h2>
+            {% if perms.instalaciones.add_cancha %}
+                <a class="boton boton-primario boton-chico" href="{% url 'instalaciones:cancha_crear' sede.pk %}">
+                    Nueva cancha
+                </a>
+            {% endif %}
+        </div>
+
+        <form method="get" action="{% url 'instalaciones:sede_detalle' sede.pk %}#canchas" class="tarjeta tarjeta-busqueda">
+            <div class="grupo-campo">
+                <label for="estado_cancha">Estado</label>
+                <select class="form-control" name="estado_cancha" id="estado_cancha">
+                    <option value="">Todas</option>
+                    {% for valor, etiqueta in estados_cancha %}
+                        <option value="{{ valor }}" {% if valor == estado_cancha_actual %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="acciones-formulario">
+                <button class="boton boton-primario" type="submit">Filtrar</button>
+            </div>
+        </form>
+
+        <section class="tarjeta tabla-contenedor">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Superficie</th>
+                        <th>Estado</th>
+                        <th class="acciones-columna">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cancha in canchas %}
+                        <tr>
+                            <td>{{ cancha.nombre }}</td>
+                            <td>{{ cancha.get_superficie_display }}</td>
+                            <td>
+                                <span class="estado estado-{{ cancha.estado }}">
+                                    {{ cancha.get_estado_display }}
+                                </span>
+                            </td>
+                            <td class="acciones">
+                                {% if perms.instalaciones.change_cancha %}
+                                    <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:cancha_editar' sede.pk cancha.pk %}">
+                                        Editar
+                                    </a>
+                                    <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:cancha_cambiar_estado' sede.pk cancha.pk %}"
+                                          data-confirmar="¿{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} la cancha {{ cancha.nombre }}?">
+                                        {% csrf_token %}
+                                        <button class="boton boton-secundario boton-chico" type="submit">
+                                            {% if cancha.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="estado-vacio" colspan="4">
+                                Esta sede todavía no tiene canchas.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </div>
+</div>
+
+<a class="enlace-volver" href="{% url 'instalaciones:sede_lista' %}">← Volver al listado</a>
+{% endblock %}

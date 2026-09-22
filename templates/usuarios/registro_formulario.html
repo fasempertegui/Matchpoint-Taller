@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block titulo %}Crear cuenta | Matchpoint{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario">
+    <h1>Crear cuenta</h1>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="mensaje mensaje-error" role="alert">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for campo in form %}
+            <div class="grupo-campo">
+                <label for="{{ campo.id_for_label }}">
+                    {{ campo.label }}
+                    {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
+                </label>
+                {{ campo }}
+                {% if campo.help_text %}
+                    <small>{{ campo.help_text }}</small>
+                {% endif %}
+                {% for error in campo.errors %}
+                    <p class="error-campo">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <div class="acciones-formulario">
+            <a class="boton boton-secundario" href="{% url 'login' %}">Cancelar</a>
+            <button class="boton boton-primario" type="submit">Crear cuenta</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block titulo %}{% if nuevo_estado == "activa" %}Activar{% else %}Desactivar{% endif %} {{ sede.nombre }} | Matchpoint{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-angosta">
+    <h1>{% if nuevo_estado == "activa" %}Activar sede{% else %}Desactivar sede{% endif %}</h1>
+    <p>
+        {% if nuevo_estado == "activa" %}
+            <strong>{{ sede.nombre }}</strong> volverá a ofrecerse para nuevas clases y reservas.
+        {% else %}
+            <strong>{{ sede.nombre }}</strong> dejará de ofrecerse para nuevas clases y reservas.
+            Las canchas, clases y reservas ya existentes no se modifican.
+        {% endif %}
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="acciones-formulario">
+            <a class="boton boton-secundario" href="{% url 'instalaciones:sede_detalle' sede.pk %}">
+                Cancelar
+            </a>
+            <button class="boton boton-primario" type="submit">Confirmar</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

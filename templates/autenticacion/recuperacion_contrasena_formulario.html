@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block titulo %}Recuperar contraseña | Matchpoint{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-angosta">
+    <h1>Recuperar contraseña</h1>
+    <p>Ingresá el email registrado en tu cuenta. Te enviaremos un enlace para elegir una nueva contraseña.</p>
+    <form method="post">
+        {% csrf_token %}
+        {% include "autenticacion/campos_formulario.html" %}
+        <button class="boton boton-primario boton-bloque" type="submit">Enviar enlace</button>
+    </form>
+    <a class="enlace-volver" href="{% url 'login' %}">Volver al inicio de sesión</a>
+</section>
+{% endblock %}

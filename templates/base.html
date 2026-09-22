@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block titulo %}Matchpoint{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+    <script src="{% static 'js/pestanas.js' %}" defer></script>
+    <script src="{% static 'js/mensajes.js' %}" defer></script>
+    <script src="{% static 'js/confirmaciones.js' %}" defer></script>
+</head>
+<body>
+    <header class="barra-superior">
+        <div class="contenedor navegacion">
+            <a class="marca" href="{% url 'inicio' %}">Matchpoint</a>
+            {% if request.user.is_authenticated %}
+                <nav>
+                    {% if perms.instalaciones.view_sede %}
+                        <a href="{% url 'instalaciones:sede_lista' %}">Sedes</a>
+                    {% endif %}
+                    {% if perms.usuarios.view_usuario %}
+                        <a href="{% url 'usuarios:usuario_lista' %}">Usuarios</a>
+                    {% endif %}
+                    <a href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Mi perfil</a>
+                    <form class="formulario-en-linea" method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button class="enlace-boton" type="submit">Cerrar sesión</button>
+                    </form>
+                </nav>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="contenedor contenido-principal">
+        {% if messages %}
+            <section class="mensajes" aria-label="Mensajes del sistema">
+                {% for message in messages %}
+                    <div class="mensaje mensaje-{{ message.tags|default:'info' }}" data-mensaje{% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS or message.level == DEFAULT_MESSAGE_LEVELS.INFO %} data-autocierre="5000"{% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %} data-autocierre="8000"{% endif %}>
+                        <span role="{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}alert{% else %}status{% endif %}">{{ message }}</span>
+                        <button type="button" class="mensaje-cerrar" aria-label="Cerrar aviso" hidden>&times;</button>
+                    </div>
+                {% endfor %}
+            </section>
+        {% endif %}
+
+        {% block contenido %}{% endblock %}
+    </main>
+</body>
+</html>

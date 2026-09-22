@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block titulo %}{% if activar %}Activar{% else %}Desactivar{% endif %} usuario | Matchpoint{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-angosta">
+    <h1>{% if activar %}Activar usuario{% else %}Desactivar usuario{% endif %}</h1>
+    <p>
+        {% if activar %}
+            <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong> va a poder
+            iniciar sesión de nuevo.
+        {% else %}
+            <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong> no va a poder
+            iniciar sesión ni ser asignado como profesor activo. Sus clases, reservas, asistencias,
+            membresías, ingresos y roles no se modifican.
+        {% endif %}
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="acciones-formulario">
+            <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}">
+                Cancelar
+            </a>
+            <button class="boton boton-primario" type="submit">Confirmar</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

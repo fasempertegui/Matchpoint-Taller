@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block titulo %}Sedes | Matchpoint{% endblock %}
+
+{% block contenido %}
+<div class="encabezado-pagina">
+    <h1>Sedes</h1>
+    {% if perms.instalaciones.add_sede %}
+        <a class="boton boton-primario" href="{% url 'instalaciones:sede_crear' %}">
+            Nueva sede
+        </a>
+    {% endif %}
+</div>
+
+<form method="get" class="tarjeta tarjeta-busqueda">
+    <div class="grupo-campo">
+        <label for="estado">Estado</label>
+        <select class="form-control" name="estado" id="estado">
+            <option value="">Todos</option>
+            {% for valor, etiqueta in estados %}
+                <option value="{{ valor }}" {% if valor == estado_actual %}selected{% endif %}>{{ etiqueta }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="acciones-formulario">
+        <button class="boton boton-primario" type="submit">Filtrar</button>
+    </div>
+</form>
+
+<section class="tarjeta tabla-contenedor">
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Dirección</th>
+                <th>Estado</th>
+                <th class="acciones-columna">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sede in sedes %}
+                <tr>
+                    <td>{{ sede.nombre }}</td>
+                    <td>{{ sede.direccion|default:"-" }}</td>
+                    <td>
+                        <span class="estado estado-{{ sede.estado }}">
+                            {{ sede.get_estado_display }}
+                        </span>
+                    </td>
+                    <td class="acciones">
+                        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}">
+                            Detalles
+                        </a>
+                        {% if perms.instalaciones.change_sede %}
+                            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_editar' sede.pk %}">
+                                Editar
+                            </a>
+                            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_cambiar_estado' sede.pk %}">
+                                {% if sede.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td class="estado-vacio" colspan="4">
+                        Todavía no hay sedes registradas.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

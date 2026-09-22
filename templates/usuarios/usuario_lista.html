@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block titulo %}Usuarios | Matchpoint{% endblock %}
+
+{% block contenido %}
+<div class="encabezado-pagina">
+    <h1>Usuarios</h1>
+    {% if perms.usuarios.add_usuario %}
+    <a class="boton boton-primario" href="{% url 'usuarios:usuario_crear' %}">
+        Nuevo usuario
+    </a>
+    {% endif %}
+</div>
+
+<form method="get" class="tarjeta tarjeta-busqueda">
+    <div class="detalle-grid">
+        <div class="grupo-campo">
+            <label for="{{ formulario_busqueda.q.id_for_label }}">{{ formulario_busqueda.q.label }}</label>
+            {{ formulario_busqueda.q }}
+        </div>
+        <div class="grupo-campo">
+            <label for="{{ formulario_busqueda.rol.id_for_label }}">Rol</label>
+            {{ formulario_busqueda.rol }}
+        </div>
+        <div class="grupo-campo">
+            <label for="{{ formulario_busqueda.estado.id_for_label }}">Estado</label>
+            {{ formulario_busqueda.estado }}
+        </div>
+    </div>
+    <div class="acciones-formulario">
+        <button class="boton boton-primario" type="submit">Buscar</button>
+    </div>
+</form>
+
+<section class="tarjeta tabla-contenedor">
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Estado</th>
+                <th class="acciones-columna">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario_obj in usuarios %}
+            <tr>
+                <td>
+                    {{ usuario_obj.get_full_name|default:usuario_obj.username }}
+                    {% if usuario_obj.es_administrador_listado %}
+                        <span role="img" aria-label="Administrador" title="Administrador">⭐</span>
+                    {% endif %}
+                </td>
+                <td>{{ usuario_obj.email }}</td>
+                <td>
+                    <span class="estado estado-{% if usuario_obj.is_active %}activa{% else %}inactiva{% endif %}">
+                        {% if usuario_obj.is_active %}Activo{% else %}Inactivo{% endif %}
+                    </span>
+                </td>
+                <td class="acciones">
+                    <a class="boton boton-secundario boton-chico"
+                        href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}">
+                        Detalles
+                    </a>
+                    {% if perms.usuarios.change_usuario %}
+                    <a class="boton boton-secundario boton-chico"
+                        href="{% url 'usuarios:usuario_editar' usuario_obj.pk %}">
+                        Modificar correo
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td class="estado-vacio" colspan="4">
+                    No se encontraron usuarios.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

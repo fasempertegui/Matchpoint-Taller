@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block titulo %}Iniciar sesión | Matchpoint{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-angosta">
+    <h1>Iniciar sesión</h1>
+
+    {% if form.errors %}
+        <div class="mensaje mensaje-error">
+            El usuario o la contraseña no son correctos.
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <div class="grupo-campo">
+            <label for="{{ form.username.id_for_label }}">Usuario</label>
+            {{ form.username }}
+        </div>
+
+        <div class="grupo-campo">
+            <label for="{{ form.password.id_for_label }}">Contraseña</label>
+            {{ form.password }}
+        </div>
+
+        <button class="boton boton-primario boton-bloque" type="submit">
+            Ingresar
+        </button>
+    </form>
+    <a class="enlace-volver" href="{% url 'password_reset' %}">Olvidé mi contraseña</a>
+    <a class="enlace-volver" href="{% url 'registro' %}">Crear una cuenta</a>
+</section>
+{% endblock %}

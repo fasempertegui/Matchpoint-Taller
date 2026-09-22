@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ titulo }} | Matchpoint{% endblock %}
+
+{% block contenido %}
+<div class="encabezado-pagina">
+    <h1>{{ titulo }}</h1>
+</div>
+
+<section class="tarjeta tarjeta-formulario">
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if formulario.non_field_errors %}
+            <div class="mensaje mensaje-error">
+                {{ formulario.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for campo in formulario %}
+            <div class="grupo-campo">
+                <label for="{{ campo.id_for_label }}">
+                    {{ campo.label }}
+                    {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
+                </label>
+                {{ campo }}
+                {% if campo.help_text %}
+                    <small>{{ campo.help_text }}</small>
+                {% endif %}
+                {% for error in campo.errors %}
+                    <p class="error-campo">{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <div class="acciones-formulario">
+            <a class="boton boton-secundario" href="{% url 'instalaciones:sede_detalle' sede.pk %}">
+                Cancelar
+            </a>
+            <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block titulo %}Restablecer contraseña | Matchpoint{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-angosta">
+    <h1>Restablecer contraseña</h1>
+    <p>
+        Se generará una contraseña provisoria para
+        <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>.
+        La contraseña actual dejará de funcionar y la nueva deberá reemplazarse
+        en el próximo inicio de sesión.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="acciones-formulario">
+            <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}">
+                Cancelar
+            </a>
+            <button class="boton boton-primario" type="submit">Restablecer contraseña</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

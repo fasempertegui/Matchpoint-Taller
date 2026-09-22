@@ -1,0 +1,62 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: matchpoint_django_web
+    restart: unless-stopped
+    working_dir: /app
+    command: >-
+      sh -c "if [ -f manage.py ]; then
+      python manage.py runserver 0.0.0.0:8000;
+      else
+      echo 'Contenedor listo. Crea el proyecto Django dentro de /app.';
+      tail -f /dev/null;
+      fi"
+    environment:
+      DB_NAME: matchpoint_django
+      DB_USER: matchpoint
+      DB_PASSWORD: matchpoint_dev
+      DB_HOST: db
+      DB_PORT: "5432"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    container_name: matchpoint_django_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: matchpoint_django
+      POSTGRES_USER: matchpoint
+      POSTGRES_PASSWORD: matchpoint_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U matchpoint -d matchpoint_django"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  adminer:
+    image: adminer:latest
+    container_name: matchpoint_django_adminer
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
