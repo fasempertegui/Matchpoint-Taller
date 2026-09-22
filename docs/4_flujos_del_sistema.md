@@ -2514,7 +2514,7 @@ Alternativas:
 - Un intento en estado terminal (`aprobado` o `rechazado`) nunca vuelve a `pendiente` por una notificación posterior, sea cual sea el estado que reporte.
 - Una notificación con firma inválida, o una consulta a MercadoPago que falla de forma transitoria, responden con un error en vez de `200`/`201`, para que MercadoPago reintente cuando corresponda.
 - Si el monto o la moneda no coinciden con lo esperado, no se activa nada y no se informa éxito al usuario.
-- Un evento auténtico cuyo `external_reference` no corresponde a ningún intento local (por ejemplo, otro movimiento de la misma cuenta de MercadoPago ajeno a Matchpoint) se descarta sin crear ni modificar ningún registro. Se responde `200` igual, para no generar reintentos indefinidos sobre algo que nunca va a encontrar un intento.
+- Un evento auténtico cuyo `external_reference` no corresponde a ningún intento local (por ejemplo, otro movimiento de la misma cuenta de MercadoPago ajeno a Academia TM) se descarta sin crear ni modificar ningún registro. Se responde `200` igual, para no generar reintentos indefinidos sobre algo que nunca va a encontrar un intento.
 - Los intentos que quedan **Aprobado** sin membresía ni ingreso vinculados (dinero cobrado, activación pendiente de resolución manual) se localizan mediante **FL-62**.
 
 - **Resultado:** según el estado del pago: membresía de usuario activa, ingreso registrado y rol Alumno otorgado si correspondía; intento marcado rechazado; intento marcado pendiente; o intento aprobado sin activar si el conflicto de exclusividad se detectó tarde.

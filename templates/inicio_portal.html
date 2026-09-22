@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block titulo %}Portal | Academia TM{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta inicio-portal" aria-labelledby="inicio-portal-titulo">
+    <p class="inicio-portal-etiqueta">Portal de usuarios</p>
+    <h1 id="inicio-portal-titulo">Hola, {{ request.user.first_name|default:request.user.username }}</h1>
+    <p class="inicio-portal-descripcion">Bienvenido a la Academia de Tenis TM. Desde acá podés consultar los datos de tu cuenta.</p>
+    <a class="boton boton-primario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Ver mi perfil</a>
+</section>
+{% endblock %}

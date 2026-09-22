@@ -4,7 +4,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block titulo %}Matchpoint{% endblock %}</title>
+    <title>{% block titulo %}Academia TM{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
     <script src="{% static 'js/pestanas.js' %}" defer></script>
     <script src="{% static 'js/mensajes.js' %}" defer></script>
@@ -13,9 +17,14 @@
 <body>
     <header class="barra-superior">
         <div class="contenedor navegacion">
-            <a class="marca" href="{% url 'inicio' %}">Matchpoint</a>
+            <a class="marca" href="{% url 'inicio' %}">
+                <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="44" height="44">
+                <span>Academia TM</span>
+            </a>
             {% if request.user.is_authenticated %}
                 <nav>
+                    <span class="saludo-usuario">Hola, {{ request.user.first_name|default:request.user.username }}</span>
+                    <a href="{% url 'inicio' %}">Inicio</a>
                     {% if perms.instalaciones.view_sede %}
                         <a href="{% url 'instalaciones:sede_lista' %}">Sedes</a>
                     {% endif %}

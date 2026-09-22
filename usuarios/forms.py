@@ -5,6 +5,7 @@ import unicodedata
 
 import phonenumbers
 from django import forms
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from django.utils import timezone
@@ -14,6 +15,29 @@ from common.fechas import fecha_minima_nacimiento, validar_fecha_nacimiento
 from .models import Rol, Usuario, UsuarioRol
 
 _PATRON_NOMBRE_USUARIO = re.compile(r"^[a-z0-9._-]+$")
+
+
+class InicioSesionForm(AuthenticationForm):
+    error_messages = {
+        **AuthenticationForm.error_messages,
+        "invalid_login": "El usuario o la contraseña no son correctos.",
+        "inactive": "Tu cuenta está inactiva. Contactá a un administrador.",
+    }
+
+    def get_invalid_login_error(self):
+        username = self.cleaned_data.get("username")
+        password = self.cleaned_data.get("password")
+        if username and password:
+            try:
+                usuario = Usuario._default_manager.get_by_natural_key(username)
+            except Usuario.DoesNotExist:
+                pass
+            else:
+                if not usuario.is_active and usuario.check_password(password):
+                    return forms.ValidationError(
+                        self.error_messages["inactive"], code="inactive"
+                    )
+        return super().get_invalid_login_error()
 
 
 def _normalizar_para_usuario(texto):

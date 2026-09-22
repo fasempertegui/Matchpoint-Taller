@@ -5,7 +5,7 @@ from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import FormView
 
-from .forms import UsuarioRegistroForm
+from .forms import InicioSesionForm, UsuarioRegistroForm
 
 
 class RegistroView(FormView):
@@ -26,6 +26,7 @@ class RegistroView(FormView):
 
 class InicioSesionView(auth_views.LoginView):
     template_name = "autenticacion/iniciar_sesion.html"
+    authentication_form = InicioSesionForm
 
     def get_success_url(self):
         if self.request.user.debe_cambiar_contrasena:

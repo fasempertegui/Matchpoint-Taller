@@ -103,7 +103,7 @@ Los roles se almacenan en la tabla fija `roles`; `usuarios_roles.rol_id` los ref
 
 Los roles serán:
 
-- **Administrador**: acceso total al sistema. Se representa mediante una asignación en `usuarios_roles`; la marca técnica `is_superuser` permite que Django le conceda todos los permisos. Se crea con el comando `crear_administrador` ejecutado por el desarrollador y opera desde la interfaz de Matchpoint. Ningún administrador puede asignar ni quitar este rol desde la aplicación.
+- **Administrador**: acceso total al sistema. Se representa mediante una asignación en `usuarios_roles`; la marca técnica `is_superuser` permite que Django le conceda todos los permisos. Se crea con el comando `crear_administrador` ejecutado por el desarrollador y opera desde la interfaz de Academia TM. Ningún administrador puede asignar ni quitar este rol desde la aplicación.
 - **Profesor**: gestiona sus propias clases asignadas. Lo asigna un administrador, al crear el usuario o mediante la gestión de roles. Solo puede quitarse si el usuario no tiene clases programadas como profesor.
 - **Público**: permite consultar el catálogo de la academia, suscribirse a planes o pases y consultar el perfil propio. Corresponde a una cuenta registrada y autenticada, no a un visitante anónimo. Se asigna automáticamente al crear la cuenta y no puede quitarse desde la aplicación.
 - **Reservas**: permite crear, cancelar y consultar reservas propias. Todo usuario lo recibe automáticamente desde su alta, se autoregistre o lo registre la administración. Un administrador puede quitarlo únicamente si el usuario no tiene reservas programadas. El catálogo, la suscripción y el perfil corresponden al rol Público.
@@ -134,7 +134,7 @@ Una persona con permiso para cambiar estados no puede desactivar su propia cuent
 
 La inactivación registra automáticamente la fecha y hora de baja de la cuenta. La reactivación elimina esa marca, de modo que una cuenta activa no conserva una fecha de baja vigente. Ambas operaciones actualizan también la fecha de última modificación.
 
-La aplicación no expone la interfaz administrativa técnica de Django; toda operación cotidiana se realiza desde las pantallas de Matchpoint.
+La aplicación no expone la interfaz administrativa técnica de Django; toda operación cotidiana se realiza desde las pantallas de Academia TM.
 
 ### 2.4 Membresías, reservas y precios
 

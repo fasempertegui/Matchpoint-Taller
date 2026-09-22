@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block titulo %}{% if activar %}Activar{% else %}Desactivar{% endif %} usuario | Matchpoint{% endblock %}
+{% block titulo %}{% if activar %}Activar{% else %}Desactivar{% endif %} usuario | Academia TM{% endblock %}
 
 {% block contenido %}
 <section class="tarjeta tarjeta-angosta">
@@ -11,8 +11,7 @@
             iniciar sesión de nuevo.
         {% else %}
             <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong> no va a poder
-            iniciar sesión ni ser asignado como profesor activo. Sus clases, reservas, asistencias,
-            membresías, ingresos y roles no se modifican.
+            iniciar sesión hasta que se reactive su cuenta.
         {% endif %}
     </p>
 
