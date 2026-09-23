@@ -62,12 +62,6 @@
                         href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}">
                         Detalles
                     </a>
-                    {% if perms.usuarios.change_usuario %}
-                    <a class="boton boton-secundario boton-chico"
-                        href="{% url 'usuarios:usuario_editar' usuario_obj.pk %}">
-                        Modificar correo
-                    </a>
-                    {% endif %}
                 </td>
             </tr>
             {% empty %}

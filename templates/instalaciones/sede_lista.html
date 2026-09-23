@@ -51,14 +51,6 @@
                         <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}">
                             Detalles
                         </a>
-                        {% if perms.instalaciones.change_sede %}
-                            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_editar' sede.pk %}">
-                                Editar
-                            </a>
-                            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_cambiar_estado' sede.pk %}">
-                                {% if sede.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
-                            </a>
-                        {% endif %}
                     </td>
                 </tr>
             {% empty %}

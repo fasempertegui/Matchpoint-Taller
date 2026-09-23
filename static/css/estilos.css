@@ -474,7 +474,7 @@ textarea.form-control {
     margin-top: 16px;
 }
 
-.acciones-acceso .enlace-volver {
+.acciones-acceso .enlace-texto {
     margin-top: 0;
 }
 
@@ -605,7 +605,7 @@ textarea.form-control {
     margin-top: 0;
 }
 
-.enlace-volver {
+.enlace-texto {
     display: inline-block;
     margin-top: 16px;
     color: var(--primario);

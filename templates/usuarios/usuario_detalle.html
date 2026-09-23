@@ -121,9 +121,4 @@
 
 </div>
 
-{% if perms.usuarios.view_usuario %}
-    <a class="enlace-volver" href="{% url 'usuarios:usuario_lista' %}">← Volver al listado</a>
-{% else %}
-    <a class="enlace-volver" href="{% url 'inicio' %}">← Volver al inicio</a>
-{% endif %}
 {% endblock %}
