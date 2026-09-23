@@ -649,61 +649,12 @@ flowchart LR
 5. Datos actualizados de la sesión autenticada.
 6. Resultado del cambio o errores de validación.
 
-### DFD 24: solicitar la recuperación de contraseña
+### DFD 24: cerrar sesión
 
 ```mermaid
 flowchart LR
     U[Usuario]
-    C[Servicio de correo]
-    P((24. Solicitar recuperación de contraseña))
-    D1[(D1: Usuarios)]
-
-    U -->|1| P
-    P -->|2| D1
-    D1 -->|3| P
-    P -->|4| C
-    C -->|5| P
-    P -->|6| U
-```
-
-**Datos que circulan**
-
-1. Email de la cuenta que se desea recuperar.
-2. Email que debe localizarse.
-3. Identidad, estado y datos necesarios para generar el token.
-4. Destinatario y enlace temporal de recuperación.
-5. Resultado del envío del mensaje de recuperación.
-6. Resultado genérico de la solicitud.
-
-### DFD 25: establecer una contraseña mediante recuperación
-
-```mermaid
-flowchart LR
-    U[Usuario]
-    P((25. Establecer contraseña recuperada))
-    D1[(D1: Usuarios)]
-
-    U -->|1| P
-    P -->|2| D1
-    D1 -->|3| P
-    P -->|4| D1
-    P -->|5| U
-```
-
-**Datos que circulan**
-
-1. Token temporal y nueva contraseña.
-2. Identificador de cuenta contenido en el enlace.
-3. Datos de la cuenta necesarios para validar el token.
-4. Nuevo hash, cambio obligatorio desactivado y fecha de modificación.
-5. Resultado de la recuperación o errores de validación.
-
-### DFD 26: cerrar sesión
-
-```mermaid
-flowchart LR
-    U[Usuario]
-    P((26. Cerrar sesión))
+    P((24. Cerrar sesión))
     D4[(D4: Sesiones)]
 
     U -->|1| P
