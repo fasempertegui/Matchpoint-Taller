@@ -27,6 +27,7 @@ class RegistroView(FormView):
 class InicioSesionView(auth_views.LoginView):
     template_name = "autenticacion/iniciar_sesion.html"
     authentication_form = InicioSesionForm
+    redirect_authenticated_user = True
 
     def get_success_url(self):
         if self.request.user.debe_cambiar_contrasena:
