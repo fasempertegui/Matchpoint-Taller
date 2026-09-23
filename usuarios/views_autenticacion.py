@@ -47,14 +47,3 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
             update_fields=("debe_cambiar_contrasena", "actualizado_en")
         )
         return respuesta
-
-
-class RecuperacionContrasenaConfirmacionView(auth_views.PasswordResetConfirmView):
-    template_name = "autenticacion/recuperacion_contrasena_confirmacion.html"
-
-    @transaction.atomic
-    def form_valid(self, form):
-        respuesta = super().form_valid(form)
-        form.user.debe_cambiar_contrasena = False
-        form.user.save(update_fields=("debe_cambiar_contrasena", "actualizado_en"))
-        return respuesta

@@ -8,10 +8,6 @@ class CambioContrasenaObligatorioMiddleware:
         "login",
         "logout",
         "password_change",
-        "password_reset",
-        "password_reset_done",
-        "password_reset_confirm",
-        "password_reset_complete",
     }
 
     def __init__(self, get_response):

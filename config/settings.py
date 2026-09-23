@@ -137,8 +137,3 @@ AUTH_USER_MODEL = "usuarios.Usuario"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "inicio"
 LOGOUT_REDIRECT_URL = "login"
-
-# Recuperación de contraseña: durante la demo, el correo completo sale en consola.
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = "Academia TM <no-reply@academiatm.local>"
-PASSWORD_RESET_TIMEOUT = 60 * 60
