@@ -1,9 +1,11 @@
+name: atm
+
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: matchpoint_django_web
+    container_name: atm_web
     restart: unless-stopped
     working_dir: /app
     command: >-
@@ -14,9 +16,9 @@ services:
       tail -f /dev/null;
       fi"
     environment:
-      DB_NAME: matchpoint_django
-      DB_USER: matchpoint
-      DB_PASSWORD: matchpoint_dev
+      DB_NAME: atm
+      DB_USER: atm
+      DB_PASSWORD: atm_dev
       DB_HOST: db
       DB_PORT: "5432"
     ports:
@@ -29,18 +31,18 @@ services:
 
   db:
     image: postgres:17
-    container_name: matchpoint_django_db
+    container_name: atm_db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: matchpoint_django
-      POSTGRES_USER: matchpoint
-      POSTGRES_PASSWORD: matchpoint_dev
+      POSTGRES_DB: atm
+      POSTGRES_USER: atm
+      POSTGRES_PASSWORD: atm_dev
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U matchpoint -d matchpoint_django"]
+      test: ["CMD-SHELL", "pg_isready -U atm -d atm"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -48,7 +50,7 @@ services:
 
   adminer:
     image: adminer:latest
-    container_name: matchpoint_django_adminer
+    container_name: atm_adminer
     restart: unless-stopped
     environment:
       ADMINER_DEFAULT_SERVER: db
