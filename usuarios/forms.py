@@ -5,7 +5,7 @@ import unicodedata
 
 import phonenumbers
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from django.utils import timezone
@@ -38,6 +38,17 @@ class InicioSesionForm(AuthenticationForm):
                         self.error_messages["inactive"], code="inactive"
                     )
         return super().get_invalid_login_error()
+
+
+class CambioContrasenaForm(PasswordChangeForm):
+    def clean_new_password1(self):
+        contrasena = self.cleaned_data["new_password1"]
+        if self.user.check_password(contrasena):
+            raise forms.ValidationError(
+                "La nueva contraseña debe ser diferente de la actual.",
+                code="password_unchanged",
+            )
+        return contrasena
 
 
 def _normalizar_para_usuario(texto):
