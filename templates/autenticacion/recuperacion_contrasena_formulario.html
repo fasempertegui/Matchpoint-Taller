@@ -11,6 +11,8 @@
         {% include "autenticacion/campos_formulario.html" %}
         <button class="boton boton-primario boton-bloque" type="submit">Enviar enlace</button>
     </form>
-    <a class="enlace-volver" href="{% url 'login' %}">Volver al inicio de sesión</a>
+    <div class="acciones-acceso">
+        <a class="boton boton-secundario boton-bloque" href="{% url 'login' %}">Volver al inicio de sesión</a>
+    </div>
 </section>
 {% endblock %}
