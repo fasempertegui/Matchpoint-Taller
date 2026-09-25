@@ -3,10 +3,12 @@ from django.db.models.functions import Lower
 
 
 class Sede(models.Model):
+    
     class Estado(models.TextChoices):
         ACTIVA = "activa", "Activa"
         INACTIVA = "inactiva", "Inactiva"
 
+    id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=120)
     direccion = models.CharField(max_length=250)
     observaciones = models.TextField(blank=True, null=True)
@@ -36,6 +38,7 @@ class Sede(models.Model):
 
 
 class Cancha(models.Model):
+
     class Superficie(models.TextChoices):
         CEMENTO = "cemento", "Cemento"
         POLVO_LADRILLO = "polvo_ladrillo", "Polvo de ladrillo"
@@ -44,6 +47,7 @@ class Cancha(models.Model):
         ACTIVA = "activa", "Activa"
         INACTIVA = "inactiva", "Inactiva"
 
+    id = models.BigAutoField(primary_key=True)
     sede = models.ForeignKey(Sede, on_delete=models.PROTECT, related_name="canchas")
     nombre = models.CharField(max_length=120)
     superficie = models.CharField(max_length=30, choices=Superficie.choices)

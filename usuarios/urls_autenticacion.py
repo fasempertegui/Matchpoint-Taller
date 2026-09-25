@@ -5,10 +5,12 @@ from .views_autenticacion import (
     CambioContrasenaView,
     InicioSesionView,
     RegistroView,
+    nombre_usuario_disponible,
 )
 
 urlpatterns = [
     path("registro/", RegistroView.as_view(), name="registro"),
+    path("nombre-usuario/", nombre_usuario_disponible, name="nombre_usuario_disponible"),
     path(
         "login/",
         InicioSesionView.as_view(),

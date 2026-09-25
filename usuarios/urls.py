@@ -8,9 +8,9 @@ urlpatterns = [
     path("", views.usuario_lista, name="usuario_lista"),
     path("nuevo/", views.usuario_crear, name="usuario_crear"),
     path(
-        "nuevo/sugerir-credenciales/",
-        views.usuario_sugerir_credenciales,
-        name="usuario_sugerir_credenciales",
+        "nuevo/sugerir-contrasena/",
+        views.usuario_sugerir_contrasena,
+        name="usuario_sugerir_contrasena",
     ),
     path("<int:pk>/", views.usuario_detalle, name="usuario_detalle"),
     path("<int:pk>/editar/", views.usuario_editar, name="usuario_editar"),

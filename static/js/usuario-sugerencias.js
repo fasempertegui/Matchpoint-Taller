@@ -1,53 +1,80 @@
 document.addEventListener("DOMContentLoaded", function () {
-    var boton = document.querySelector("[data-sugerir-credenciales]");
-    if (!boton) return;
+    var formulario = document.querySelector("[data-nombre-usuario-url]");
+    if (!formulario) return;
 
-    var formulario = boton.closest("form");
     var nombre = formulario.querySelector("[name='nombre']");
     var apellido = formulario.querySelector("[name='apellido']");
     var nombreUsuario = formulario.querySelector("[name='nombre_usuario']");
-    var contrasena = formulario.querySelector("[name='contrasena']");
-    var error = formulario.querySelector("[data-error-sugerencias]");
-    var textoOriginal = boton.textContent.trim();
+    var errorNombreUsuario = formulario.querySelector("[data-error-nombre-usuario]");
+    var ultimaSolicitud = 0;
 
-    boton.addEventListener("click", function () {
-        if (!nombre.value.trim()) {
-            nombre.reportValidity();
-            nombre.focus();
+    function normalizar(texto) {
+        return texto.normalize("NFKD").replace(/[^\x00-\x7F]/g, "").toLowerCase().replace(/[^a-z]/g, "");
+    }
+
+    function actualizarNombreUsuario() {
+        var solicitud = ++ultimaSolicitud;
+        var base = normalizar(apellido.value);
+        var inicial = normalizar(nombre.value).charAt(0);
+        errorNombreUsuario.hidden = true;
+        nombreUsuario.value = base && inicial ? base + inicial : "";
+        if (/\p{Number}/u.test(nombre.value + apellido.value)) {
+            nombreUsuario.value = "";
             return;
         }
-        if (!apellido.value.trim()) {
-            apellido.reportValidity();
-            apellido.focus();
-            return;
-        }
+        if (!nombreUsuario.value) return;
 
-        var url = new URL(boton.dataset.url, window.location.origin);
+        var url = new URL(formulario.dataset.nombreUsuarioUrl, window.location.origin);
         url.searchParams.set("nombre", nombre.value.trim());
         url.searchParams.set("apellido", apellido.value.trim());
 
-        boton.disabled = true;
-        boton.textContent = "Generando...";
-        error.hidden = true;
-
-        fetch(url, {headers: {Accept: "application/json"}})
+        fetch(url, {headers: {Accept: "application/json"}, cache: "no-store"})
             .then(function (respuesta) {
                 return respuesta.json().then(function (datos) {
-                    if (!respuesta.ok) throw new Error(datos.error || "No se pudieron generar las credenciales.");
+                    if (!respuesta.ok) throw new Error(datos.error || "No se pudo generar el usuario.");
                     return datos;
                 });
             })
             .then(function (datos) {
-                nombreUsuario.value = datos.nombre_usuario;
+                if (solicitud === ultimaSolicitud) nombreUsuario.value = datos.nombre_usuario;
+            })
+            .catch(function (excepcion) {
+                if (solicitud !== ultimaSolicitud) return;
+                nombreUsuario.value = "";
+                errorNombreUsuario.textContent = excepcion.message;
+                errorNombreUsuario.hidden = false;
+            });
+    }
+
+    nombre.addEventListener("input", actualizarNombreUsuario);
+    apellido.addEventListener("input", actualizarNombreUsuario);
+    actualizarNombreUsuario();
+
+    var botonContrasena = formulario.querySelector("[data-sugerir-contrasena]");
+    if (!botonContrasena) return;
+
+    var contrasena = formulario.querySelector("[name='contrasena']");
+    var errorContrasena = formulario.querySelector("[data-error-contrasena]");
+    botonContrasena.addEventListener("click", function () {
+        botonContrasena.disabled = true;
+        errorContrasena.hidden = true;
+
+        fetch(botonContrasena.dataset.url, {headers: {Accept: "application/json"}, cache: "no-store"})
+            .then(function (respuesta) {
+                return respuesta.json().then(function (datos) {
+                    if (!respuesta.ok) throw new Error(datos.error || "No se pudo generar la contraseña.");
+                    return datos;
+                });
+            })
+            .then(function (datos) {
                 contrasena.value = datos.contrasena;
             })
             .catch(function (excepcion) {
-                error.textContent = excepcion.message;
-                error.hidden = false;
+                errorContrasena.textContent = excepcion.message;
+                errorContrasena.hidden = false;
             })
             .finally(function () {
-                boton.disabled = false;
-                boton.textContent = textoOriginal;
+                botonContrasena.disabled = false;
             });
     });
 });

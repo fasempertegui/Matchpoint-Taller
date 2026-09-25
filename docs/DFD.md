@@ -301,8 +301,8 @@ flowchart LR
 
 **Datos que circulan**
 
-1. Datos del usuario, credenciales provisorias y roles seleccionados.
-2. Email y nombre de usuario que deben validarse.
+1. Datos del usuario, contraseña provisoria y roles seleccionados.
+2. Email y nombre de usuario generado que deben validarse.
 3. Coincidencias existentes para esos datos.
 4. Datos del usuario activo, hash de contraseña y cambio obligatorio pendiente.
 5. Códigos de los roles que deben asignarse.
@@ -332,8 +332,8 @@ flowchart LR
 
 **Datos que circulan**
 
-1. Datos personales y credenciales elegidas por la persona.
-2. Email y nombre de usuario que deben validarse.
+1. Datos personales y contraseña elegida por la persona.
+2. Email y nombre de usuario generado que deben validarse.
 3. Coincidencias existentes para esos datos.
 4. Datos del usuario activo, hash de contraseña y ausencia de cambio obligatorio.
 5. Códigos de los roles Público y Reservas.

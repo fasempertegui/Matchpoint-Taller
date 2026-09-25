@@ -430,6 +430,86 @@ tbody tr:last-child td {
     font-weight: 700;
 }
 
+.observaciones-opcionales {
+    margin-bottom: 14px;
+}
+
+.observaciones-opcionales summary {
+    width: fit-content;
+    list-style: none;
+    color: var(--primario);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.observaciones-opcionales summary::-webkit-details-marker {
+    display: none;
+}
+
+.observaciones-opcionales .observaciones-ocultar,
+.observaciones-opcionales[open] .observaciones-mostrar {
+    display: none;
+}
+
+.observaciones-opcionales[open] .observaciones-ocultar {
+    display: inline;
+}
+
+.observaciones-opcionales .grupo-campo {
+    margin: 12px 0 0;
+}
+
+.observaciones-opcionales .etiqueta-oculta {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+.campo-opcion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.campo-opcion input[type="checkbox"] {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--primario);
+    cursor: pointer;
+}
+
+.campo-opcion label {
+    display: inline;
+    margin: 0;
+    cursor: pointer;
+}
+
+.grupo-roles {
+    margin: 20px 0;
+    padding: 12px 14px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 2px;
+}
+
+.grupo-roles legend {
+    padding: 0 6px;
+    font-weight: 700;
+}
+
+.grupo-roles .grupo-campo:last-child {
+    margin-bottom: 0;
+}
+
 .form-control,
 .grupo-campo input {
     width: 100%;
@@ -440,6 +520,52 @@ tbody tr:last-child td {
     background: #ffffff;
     color: var(--texto);
     font: inherit;
+}
+
+.form-control:disabled {
+    background: var(--estado-inactivo-fondo);
+    color: var(--estado-inactivo-texto);
+}
+
+.campo-con-boton {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.campo-con-boton .form-control {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+}
+
+.boton-icono {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+}
+
+.boton-icono:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+.aviso-campo {
+    margin: 8px 0 0;
+    color: var(--texto-suave);
+    font-size: 0.88rem;
+}
+
+.nota-campo {
+    display: block;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-left: 3px solid var(--primario);
+    background: var(--primario-suave);
+    color: var(--texto-suave);
+    font-size: 0.88rem;
 }
 
 textarea.form-control {

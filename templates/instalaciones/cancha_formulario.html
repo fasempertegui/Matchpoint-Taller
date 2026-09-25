@@ -18,19 +18,23 @@
         {% endif %}
 
         {% for campo in formulario %}
-            <div class="grupo-campo">
-                <label for="{{ campo.id_for_label }}">
-                    {{ campo.label }}
-                    {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
-                </label>
-                {{ campo }}
-                {% if campo.help_text %}
-                    <small>{{ campo.help_text }}</small>
-                {% endif %}
-                {% for error in campo.errors %}
-                    <p class="error-campo">{{ error }}</p>
-                {% endfor %}
-            </div>
+            {% if campo.name == "observaciones" %}
+                {% include "componentes/observaciones_opcionales.html" with campo=campo %}
+            {% else %}
+                <div class="grupo-campo">
+                    <label for="{{ campo.id_for_label }}">
+                        {{ campo.label }}
+                        {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
+                    </label>
+                    {{ campo }}
+                    {% if campo.help_text %}
+                        <small>{{ campo.help_text }}</small>
+                    {% endif %}
+                    {% for error in campo.errors %}
+                        <p class="error-campo">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
         {% endfor %}
 
         <div class="acciones-formulario">

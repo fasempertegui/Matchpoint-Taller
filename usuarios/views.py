@@ -15,7 +15,6 @@ from .forms import (
     UsuarioEditarForm,
     generar_contrasena,
     generar_contrasena_valida,
-    sugerir_nombre_usuario,
 )
 from .models import Rol, Usuario, UsuarioRol
 
@@ -109,21 +108,8 @@ def usuario_crear(request):
 @login_required
 @permission_required("usuarios.add_usuario", raise_exception=True)
 @require_GET
-def usuario_sugerir_credenciales(request):
-    nombre = request.GET.get("nombre", "").strip()
-    apellido = request.GET.get("apellido", "").strip()
-    if not nombre or not apellido:
-        return JsonResponse(
-            {"error": "Ingresá el nombre y el apellido antes de generar las credenciales."},
-            status=400,
-        )
-
-    return JsonResponse(
-        {
-            "nombre_usuario": sugerir_nombre_usuario(nombre, apellido),
-            "contrasena": generar_contrasena(),
-        }
-    )
+def usuario_sugerir_contrasena(request):
+    return JsonResponse({"contrasena": generar_contrasena()})
 
 
 @login_required

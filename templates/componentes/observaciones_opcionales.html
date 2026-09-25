@@ -1,0 +1,17 @@
+<details class="observaciones-opcionales"{% if campo.value or campo.errors %} open{% endif %}>
+    <summary>
+        Observaciones
+        <span class="observaciones-mostrar" aria-hidden="true">▾</span>
+        <span class="observaciones-ocultar" aria-hidden="true">▴</span>
+    </summary>
+    <div class="grupo-campo">
+        <label class="etiqueta-oculta" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+        {{ campo }}
+        {% if campo.help_text %}
+            <small>{{ campo.help_text }}</small>
+        {% endif %}
+        {% for error in campo.errors %}
+            <p class="error-campo">{{ error }}</p>
+        {% endfor %}
+    </div>
+</details>

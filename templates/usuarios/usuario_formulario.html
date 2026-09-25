@@ -9,7 +9,7 @@
 </div>
 
 <section class="tarjeta tarjeta-formulario">
-    <form method="post" novalidate>
+    <form method="post" novalidate data-nombre-usuario-url="{% url 'nombre_usuario_disponible' %}">
         {% csrf_token %}
 
         {% if formulario.non_field_errors %}
@@ -19,32 +19,63 @@
         {% endif %}
 
         {% for campo in formulario %}
-            {% if campo.name == "nombre_usuario" %}
-                <div class="acciones-formulario">
-                    <button
-                        class="boton boton-secundario"
-                        type="button"
-                        data-sugerir-credenciales
-                        data-url="{% url 'usuarios:usuario_sugerir_credenciales' %}"
-                    >
-                        Sugerir usuario y contraseña
-                    </button>
+            {% if campo.name == "observaciones" %}
+                {% include "componentes/observaciones_opcionales.html" with campo=campo %}
+            {% elif campo.name == "rol_profesor" %}
+                <fieldset class="grupo-roles">
+                    <legend>Roles adicionales</legend>
+                    <div class="grupo-campo">
+                        <div class="campo-opcion">
+                            {{ formulario.rol_profesor }}
+                            <label for="{{ formulario.rol_profesor.id_for_label }}">{{ formulario.rol_profesor.label }}</label>
+                        </div>
+                        {% for error in formulario.rol_profesor.errors %}
+                            <p class="error-campo">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    <div class="grupo-campo">
+                        <div class="campo-opcion">
+                            {{ formulario.rol_alumno }}
+                            <label for="{{ formulario.rol_alumno.id_for_label }}">{{ formulario.rol_alumno.label }}</label>
+                        </div>
+                        {% for error in formulario.rol_alumno.errors %}
+                            <p class="error-campo">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+            {% elif campo.name != "rol_alumno" %}
+                <div class="grupo-campo">
+                    <label for="{{ campo.id_for_label }}">
+                        {{ campo.label }}
+                        {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
+                    </label>
+                    {% if campo.name == "contrasena" %}
+                        <div class="campo-con-boton">
+                            {{ campo }}
+                            <button
+                                class="boton boton-primario boton-icono"
+                                type="button"
+                                data-sugerir-contrasena
+                                data-url="{% url 'usuarios:usuario_sugerir_contrasena' %}"
+                                aria-label="Sugerir contraseña"
+                                title="Sugerir contraseña"
+                            ><img src="{% static 'img/brillos.svg' %}" alt="" width="28" height="28"></button>
+                        </div>
+                        <p class="error-campo" data-error-contrasena hidden></p>
+                    {% else %}
+                        {{ campo }}
+                    {% endif %}
+                    {% if campo.help_text %}
+                        <small class="nota-campo">{{ campo.help_text }}</small>
+                    {% endif %}
+                    {% for error in campo.errors %}
+                        <p class="error-campo">{{ error }}</p>
+                    {% endfor %}
+                    {% if campo.name == "nombre_usuario" %}
+                        <p class="error-campo" data-error-nombre-usuario hidden></p>
+                    {% endif %}
                 </div>
-                <p class="error-campo" data-error-sugerencias hidden></p>
             {% endif %}
-            <div class="grupo-campo">
-                <label for="{{ campo.id_for_label }}">
-                    {{ campo.label }}
-                    {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
-                </label>
-                {{ campo }}
-                {% if campo.help_text %}
-                    <small>{{ campo.help_text }}</small>
-                {% endif %}
-                {% for error in campo.errors %}
-                    <p class="error-campo">{{ error }}</p>
-                {% endfor %}
-            </div>
         {% endfor %}
 
         <div class="acciones-formulario">

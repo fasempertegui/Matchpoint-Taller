@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28" fill="none">
+    <defs>
+        <linearGradient id="dorado" x1="15" y1="3" x2="21" y2="23" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFF1A0"/>
+            <stop offset="1" stop-color="#FFC247"/>
+        </linearGradient>
+    </defs>
+    <path d="M17.5 2.5 20.15 10.85 26 13.5 20.15 16.15 17.5 24.5 14.85 16.15 9 13.5 14.85 10.85 17.5 2.5Z" fill="url(#dorado)"/>
+    <path d="M5.5 16.5 6.55 19.45 9.5 20.5 6.55 21.55 5.5 24.5 4.45 21.55 1.5 20.5 4.45 19.45 5.5 16.5Z" fill="#FFB44C"/>
+    <path d="M6.5 2 7.3 4.2 9.5 5 7.3 5.8 6.5 8 5.7 5.8 3.5 5 5.7 4.2 6.5 2Z" fill="#FFE584"/>
+</svg>

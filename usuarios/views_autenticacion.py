@@ -1,11 +1,30 @@
 from django.contrib import messages
 from django.contrib.auth import views as auth_views
+from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import FormView
+from django.views.decorators.http import require_GET
 
-from .forms import InicioSesionForm, UsuarioRegistroForm
+from .forms import InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario
+
+
+@require_GET
+def nombre_usuario_disponible(request):
+    nombre = request.GET.get("nombre", "").strip()
+    apellido = request.GET.get("apellido", "").strip()
+    if not nombre or not apellido:
+        return JsonResponse(
+            {"error": "Ingresá el nombre y el apellido para generar el usuario."},
+            status=400,
+        )
+    try:
+        nombre_usuario = generar_nombre_usuario(nombre, apellido)
+    except ValidationError as error:
+        return JsonResponse({"error": error.messages[0]}, status=400)
+    return JsonResponse({"nombre_usuario": nombre_usuario})
 
 
 class RegistroView(FormView):
@@ -19,8 +38,11 @@ class RegistroView(FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        form.guardar()
-        messages.success(self.request, "Tu cuenta fue creada. Ya podés iniciar sesión.")
+        usuario = form.guardar()
+        messages.success(
+            self.request,
+            f"Tu cuenta fue creada. Tu nombre de usuario es {usuario.username}. Ya podés iniciar sesión.",
+        )
         return super().form_valid(form)
 
 
