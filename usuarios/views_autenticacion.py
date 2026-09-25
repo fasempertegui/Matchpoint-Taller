@@ -8,7 +8,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import FormView
 from django.views.decorators.http import require_GET
 
-from .forms import InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario
+from .forms import CambioContrasenaForm, InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario
 
 
 @require_GET
@@ -59,6 +59,7 @@ class InicioSesionView(auth_views.LoginView):
 
 class CambioContrasenaView(auth_views.PasswordChangeView):
     template_name = "autenticacion/cambio_contrasena_formulario.html"
+    form_class = CambioContrasenaForm
     success_url = reverse_lazy("password_change_done")
 
     @transaction.atomic
