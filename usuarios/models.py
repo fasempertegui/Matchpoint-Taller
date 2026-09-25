@@ -15,6 +15,7 @@ class Rol(models.Model):
     PUBLICO = "publico"
     INICIALES = (PUBLICO, RESERVAS)
 
+    id = models.BigAutoField(primary_key=True)
     codigo = models.SlugField(max_length=20, unique=True)
     nombre = models.CharField(max_length=50)
 
@@ -31,9 +32,8 @@ class Rol(models.Model):
 
 class UsuarioRol(models.Model):
     
-    usuario = models.ForeignKey(
-        "Usuario", on_delete=models.CASCADE, related_name="roles"
-    )
+    id = models.BigAutoField(primary_key=True)
+    usuario = models.ForeignKey("Usuario", on_delete=models.CASCADE, related_name="roles")
     rol = models.ForeignKey(Rol, on_delete=models.PROTECT, related_name="asignaciones")
     asignado_por = models.ForeignKey(
         "Usuario",
@@ -84,8 +84,9 @@ class UsuarioManager(UserManager):
 
 
 class Usuario(AbstractUser):
-    objects = UsuarioManager()
 
+    id = models.BigAutoField(primary_key=True)
+    objects = UsuarioManager()
     email = models.EmailField(
         "correo electrónico",
     )
