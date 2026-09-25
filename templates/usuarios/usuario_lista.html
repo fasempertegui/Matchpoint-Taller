@@ -3,7 +3,7 @@
 {% block titulo %}Usuarios | Academia TM{% endblock %}
 
 {% block contenido %}
-<div class="encabezado-pagina">
+<div class="tarjeta encabezado-pagina">
     <h1>Usuarios</h1>
     {% if perms.usuarios.add_usuario %}
     <a class="boton boton-primario" href="{% url 'usuarios:usuario_crear' %}">

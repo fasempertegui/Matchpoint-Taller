@@ -3,14 +3,13 @@
 {% block titulo %}Modificar correo | Academia TM{% endblock %}
 
 {% block contenido %}
-<div class="encabezado-pagina">
-    <div>
-        <h1>Modificar correo</h1>
-        <p>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</p>
-    </div>
-</div>
-
 <section class="tarjeta tarjeta-formulario">
+    <div class="encabezado-pagina">
+        <div>
+            <h1>Modificar correo</h1>
+            <p class="texto-secundario">{{ usuario_obj.get_full_name|default:usuario_obj.username }}</p>
+        </div>
+    </div>
     <form method="post" novalidate>
         {% csrf_token %}
 

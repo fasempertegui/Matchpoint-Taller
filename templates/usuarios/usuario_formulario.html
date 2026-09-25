@@ -4,11 +4,8 @@
 {% block titulo %}Nuevo usuario | Academia TM{% endblock %}
 
 {% block contenido %}
-<div class="encabezado-pagina">
-    <h1>Nuevo usuario</h1>
-</div>
-
 <section class="tarjeta tarjeta-formulario">
+    <h1>Nuevo usuario</h1>
     <form method="post" novalidate data-nombre-usuario-url="{% url 'nombre_usuario_disponible' %}">
         {% csrf_token %}
 

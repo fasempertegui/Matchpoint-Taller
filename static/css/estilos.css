@@ -289,8 +289,8 @@ h2 {
     margin-bottom: 20px;
 }
 
-.tarjeta-angosta h1,
-.tarjeta-formulario h1 {
+.tarjeta-angosta > h1,
+.tarjeta-formulario > h1 {
     margin-bottom: 20px;
 }
 

@@ -3,7 +3,7 @@
 {% block titulo %}Sedes | Academia TM{% endblock %}
 
 {% block contenido %}
-<div class="encabezado-pagina">
+<div class="tarjeta encabezado-pagina">
     <h1>Sedes</h1>
     {% if perms.instalaciones.add_sede %}
         <a class="boton boton-primario" href="{% url 'instalaciones:sede_crear' %}">
