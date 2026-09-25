@@ -19,7 +19,9 @@
         {% endif %}
 
         {% for campo in formulario %}
-            {% if campo.name == "rol_profesor" %}
+            {% if campo.name == "observaciones" %}
+                {% include "componentes/observaciones_opcionales.html" with campo=campo %}
+            {% elif campo.name == "rol_profesor" %}
                 <fieldset class="grupo-roles">
                     <legend>Roles adicionales</legend>
                     <div class="grupo-campo">
