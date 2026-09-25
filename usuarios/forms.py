@@ -160,19 +160,25 @@ class UsuarioRegistroForm(NombreUsuarioAutomaticoMixin, forms.Form):
     nombre = forms.CharField(
         max_length=100,
         validators=[validar_nombre_sin_numeros],
-        widget=forms.TextInput(attrs={"class": "form-control", "autofocus": True}),
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "Juan", "autofocus": True}
+        ),
     )
     apellido = forms.CharField(
         max_length=100,
         validators=[validar_nombre_sin_numeros],
-        widget=forms.TextInput(attrs={"class": "form-control"}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Pérez"}),
     )
-    email = forms.EmailField(widget=forms.EmailInput(attrs={"class": "form-control"}))
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={"class": "form-control", "placeholder": "ejemplo@dominio.com"}
+        )
+    )
     celular_contacto = forms.CharField(
         label="Celular",
         max_length=30,
         widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "Ej.: +54 387 555-1234"}
+            attrs={"class": "form-control", "placeholder": "Ej: 3875551234"}
         ),
     )
     fecha_nacimiento = forms.DateField(
@@ -248,18 +254,24 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
     nombre = forms.CharField(
         max_length=100,
         validators=[validar_nombre_sin_numeros],
-        widget=forms.TextInput(attrs={"class": "form-control", "autofocus": True}),
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "Juan", "autofocus": True}
+        ),
     )
     apellido = forms.CharField(
         max_length=100,
         validators=[validar_nombre_sin_numeros],
-        widget=forms.TextInput(attrs={"class": "form-control"}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Pérez"}),
     )
-    email = forms.EmailField(widget=forms.EmailInput(attrs={"class": "form-control"}))
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={"class": "form-control", "placeholder": "ejemplo@dominio.com"}
+        )
+    )
     celular_contacto = forms.CharField(
         max_length=30,
         widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "Ej.: +54 387 555-1234"}
+            attrs={"class": "form-control", "placeholder": "Ej: 3875551234"}
         ),
     )
     fecha_nacimiento = forms.DateField(
@@ -285,7 +297,14 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
     rol_profesor = forms.BooleanField(required=False, label="Profesor")
     rol_alumno = forms.BooleanField(required=False, label="Alumno")
     observaciones = forms.CharField(
-        required=False, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3})
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 3,
+                "placeholder": "Información adicional sobre el usuario",
+            }
+        ),
     )
 
     def __init__(self, *args, **kwargs):
@@ -337,7 +356,11 @@ class UsuarioEditarForm(forms.ModelForm):
         model = Usuario
         fields = ("email",)
         labels = {"email": "Email"}
-        widgets = {"email": forms.EmailInput(attrs={"class": "form-control"})}
+        widgets = {
+            "email": forms.EmailInput(
+                attrs={"class": "form-control", "placeholder": "ejemplo@dominio.com"}
+            )
+        }
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip()

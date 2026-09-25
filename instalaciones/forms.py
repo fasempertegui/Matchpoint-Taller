@@ -11,14 +11,14 @@ class SedeForm(forms.ModelForm):
             "nombre": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "placeholder": "Ej.: Sociedad Española",
+                    "placeholder": "Club Norte",
                     "autofocus": True,
                 }
             ),
             "direccion": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "placeholder": "Ej.: Av. Sarmiento 320",
+                    "placeholder": "Avenida Sarmiento 320",
                 }
             ),
             "observaciones": forms.Textarea(
@@ -55,7 +55,7 @@ class CanchaForm(forms.ModelForm):
             "nombre": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "placeholder": "Ej.: Cancha 1",
+                    "placeholder": "Cancha 1",
                     "autofocus": True,
                 }
             ),
