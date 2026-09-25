@@ -1,83 +1,80 @@
 document.addEventListener("DOMContentLoaded", function () {
-    var botonUsuario = document.querySelector("[data-sugerir-usuario]");
-    if (!botonUsuario) return;
+    var formulario = document.querySelector("[data-nombre-usuario-url]");
+    if (!formulario) return;
 
-    var formulario = botonUsuario.closest("form");
-    var botonContrasena = formulario.querySelector("[data-sugerir-contrasena]");
     var nombre = formulario.querySelector("[name='nombre']");
     var apellido = formulario.querySelector("[name='apellido']");
     var nombreUsuario = formulario.querySelector("[name='nombre_usuario']");
-    var contrasena = formulario.querySelector("[name='contrasena']");
-    var errorUsuario = formulario.querySelector("[data-error-usuario]");
-    var errorContrasena = formulario.querySelector("[data-error-contrasena]");
+    var errorNombreUsuario = formulario.querySelector("[data-error-nombre-usuario]");
+    var ultimaSolicitud = 0;
 
-    nombre.addEventListener("input", function () {
-        nombre.setCustomValidity("");
-    });
-    apellido.addEventListener("input", function () {
-        apellido.setCustomValidity("");
-    });
+    function normalizar(texto) {
+        return texto.normalize("NFKD").replace(/[^\x00-\x7F]/g, "").toLowerCase().replace(/[^a-z]/g, "");
+    }
 
-    function sugerir(boton, url, campo, error, propiedad) {
-        boton.disabled = true;
-        error.hidden = true;
+    function actualizarNombreUsuario() {
+        var solicitud = ++ultimaSolicitud;
+        var base = normalizar(apellido.value);
+        var inicial = normalizar(nombre.value).charAt(0);
+        errorNombreUsuario.hidden = true;
+        nombreUsuario.value = base && inicial ? base + inicial : "";
+        if (/\p{Number}/u.test(nombre.value + apellido.value)) {
+            nombreUsuario.value = "";
+            return;
+        }
+        if (!nombreUsuario.value) return;
+
+        var url = new URL(formulario.dataset.nombreUsuarioUrl, window.location.origin);
+        url.searchParams.set("nombre", nombre.value.trim());
+        url.searchParams.set("apellido", apellido.value.trim());
 
         fetch(url, {headers: {Accept: "application/json"}, cache: "no-store"})
             .then(function (respuesta) {
                 return respuesta.json().then(function (datos) {
-                    if (!respuesta.ok) throw new Error(datos.error || "No se pudo generar la sugerencia.");
+                    if (!respuesta.ok) throw new Error(datos.error || "No se pudo generar el usuario.");
                     return datos;
                 });
             })
             .then(function (datos) {
-                campo.value = datos[propiedad];
+                if (solicitud === ultimaSolicitud) nombreUsuario.value = datos.nombre_usuario;
             })
             .catch(function (excepcion) {
-                error.textContent = excepcion.message;
-                error.hidden = false;
-            })
-            .finally(function () {
-                boton.disabled = false;
+                if (solicitud !== ultimaSolicitud) return;
+                nombreUsuario.value = "";
+                errorNombreUsuario.textContent = excepcion.message;
+                errorNombreUsuario.hidden = false;
             });
     }
 
-    botonUsuario.addEventListener("click", function () {
-        if (!nombre.value.trim()) {
-            nombre.reportValidity();
-            nombre.focus();
-            return;
-        }
-        if (!apellido.value.trim()) {
-            apellido.reportValidity();
-            apellido.focus();
-            return;
-        }
-        if (/\p{Number}/u.test(nombre.value)) {
-            nombre.setCustomValidity("No se permiten números.");
-            nombre.reportValidity();
-            nombre.focus();
-            return;
-        }
-        if (/\p{Number}/u.test(apellido.value)) {
-            apellido.setCustomValidity("No se permiten números.");
-            apellido.reportValidity();
-            apellido.focus();
-            return;
-        }
+    nombre.addEventListener("input", actualizarNombreUsuario);
+    apellido.addEventListener("input", actualizarNombreUsuario);
+    actualizarNombreUsuario();
 
-        var url = new URL(botonUsuario.dataset.url, window.location.origin);
-        url.searchParams.set("nombre", nombre.value.trim());
-        url.searchParams.set("apellido", apellido.value.trim());
-        sugerir(botonUsuario, url, nombreUsuario, errorUsuario, "nombre_usuario");
-    });
+    var botonContrasena = formulario.querySelector("[data-sugerir-contrasena]");
+    if (!botonContrasena) return;
 
+    var contrasena = formulario.querySelector("[name='contrasena']");
+    var errorContrasena = formulario.querySelector("[data-error-contrasena]");
     botonContrasena.addEventListener("click", function () {
-        sugerir(
-            botonContrasena,
-            botonContrasena.dataset.url,
-            contrasena,
-            errorContrasena,
-            "contrasena"
-        );
+        botonContrasena.disabled = true;
+        errorContrasena.hidden = true;
+
+        fetch(botonContrasena.dataset.url, {headers: {Accept: "application/json"}, cache: "no-store"})
+            .then(function (respuesta) {
+                return respuesta.json().then(function (datos) {
+                    if (!respuesta.ok) throw new Error(datos.error || "No se pudo generar la contraseña.");
+                    return datos;
+                });
+            })
+            .then(function (datos) {
+                contrasena.value = datos.contrasena;
+            })
+            .catch(function (excepcion) {
+                errorContrasena.textContent = excepcion.message;
+                errorContrasena.hidden = false;
+            })
+            .finally(function () {
+                botonContrasena.disabled = false;
+            });
     });
 });

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}Crear cuenta | Academia TM{% endblock %}
 
@@ -6,7 +7,7 @@
 <section class="tarjeta tarjeta-formulario">
     <h1>Crear cuenta</h1>
 
-    <form method="post" novalidate>
+    <form method="post" novalidate data-nombre-usuario-url="{% url 'nombre_usuario_disponible' %}">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -28,6 +29,9 @@
                 {% for error in campo.errors %}
                     <p class="error-campo">{{ error }}</p>
                 {% endfor %}
+                {% if campo.name == "nombre_usuario" %}
+                    <p class="error-campo" data-error-nombre-usuario hidden></p>
+                {% endif %}
             </div>
         {% endfor %}
 
@@ -37,4 +41,5 @@
         </div>
     </form>
 </section>
+<script src="{% static 'js/usuario-sugerencias.js' %}" defer></script>
 {% endblock %}

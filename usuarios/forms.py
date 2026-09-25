@@ -7,14 +7,12 @@ import phonenumbers
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import validate_password
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from common.fechas import fecha_minima_nacimiento, validar_fecha_nacimiento
 
 from .models import Rol, Usuario, UsuarioRol
-
-_PATRON_NOMBRE_USUARIO = re.compile(r"^[a-z0-9._-]+$")
 
 
 class InicioSesionForm(AuthenticationForm):
@@ -42,7 +40,7 @@ class InicioSesionForm(AuthenticationForm):
 
 def _normalizar_para_usuario(texto):
     texto = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
-    return re.sub(r"[^a-z0-9]", "", texto.lower())
+    return re.sub(r"[^a-z]", "", texto.lower())
 
 
 def validar_nombre_sin_numeros(valor):
@@ -59,31 +57,48 @@ def validar_email_disponible(email, *, excluir_usuario=None):
     return email
 
 
-def validar_nombre_usuario_disponible(nombre_usuario):
-    if len(nombre_usuario) < 3:
-        raise forms.ValidationError("Debe tener al menos 3 caracteres.")
-    if not _PATRON_NOMBRE_USUARIO.match(nombre_usuario):
-        raise forms.ValidationError(
-            "Solo se permiten minúsculas, números, puntos, guiones y guiones bajos."
-        )
-    if Usuario.objects.filter(username__iexact=nombre_usuario).exists():
-        raise forms.ValidationError("Ya existe un usuario con ese nombre de usuario.")
-    return nombre_usuario
-
-
-def sugerir_nombre_usuario(nombre, apellido):
-    """Genera el apellido seguido por la inicial del nombre."""
+def generar_nombre_usuario(nombre, apellido):
     validar_nombre_sin_numeros(nombre)
     validar_nombre_sin_numeros(apellido)
     base = _normalizar_para_usuario(apellido)
     inicial = _normalizar_para_usuario(nombre)[:1]
-    candidato = f"{base}{inicial}" if inicial else base
-    sufijo = 2
+    if not base or not inicial:
+        raise forms.ValidationError(
+            "Ingresá un nombre y un apellido con letras para generar el usuario."
+        )
+    candidato = f"{base}{inicial}"
+    sufijo = 1
     resultado = candidato
     while Usuario.objects.filter(username__iexact=resultado).exists():
         resultado = f"{candidato}{sufijo}"
         sufijo += 1
     return resultado
+
+
+def crear_usuario_con_nombre_generado(nombre, apellido, **datos):
+    while True:
+        nombre_usuario = generar_nombre_usuario(nombre, apellido)
+        try:
+            with transaction.atomic():
+                return Usuario.objects.create_user(
+                    username=nombre_usuario,
+                    first_name=nombre,
+                    last_name=apellido,
+                    **datos,
+                )
+        except IntegrityError:
+            # Si otra alta ocupó el nombre, se busca el siguiente sufijo disponible.
+            if not Usuario.objects.filter(username__iexact=nombre_usuario).exists():
+                raise
+
+
+class NombreUsuarioAutomaticoMixin:
+    def clean_nombre_usuario(self):
+        nombre = self.cleaned_data.get("nombre")
+        apellido = self.cleaned_data.get("apellido")
+        if nombre and apellido:
+            return generar_nombre_usuario(nombre, apellido)
+        return ""
 
 
 def generar_contrasena():
@@ -141,7 +156,7 @@ def validar_celular_ar(valor):
     return phonenumbers.format_number(numero, phonenumbers.PhoneNumberFormat.E164)
 
 
-class UsuarioRegistroForm(forms.Form):
+class UsuarioRegistroForm(NombreUsuarioAutomaticoMixin, forms.Form):
     nombre = forms.CharField(
         max_length=100,
         validators=[validar_nombre_sin_numeros],
@@ -170,9 +185,10 @@ class UsuarioRegistroForm(forms.Form):
     )
     nombre_usuario = forms.CharField(
         label="Nombre de usuario",
-        max_length=100,
+        max_length=150,
+        required=False,
+        disabled=True,
         widget=forms.TextInput(attrs={"class": "form-control"}),
-        help_text="Minúsculas, números, puntos, guiones y guiones bajos.",
     )
     contrasena = forms.CharField(
         label="Contraseña",
@@ -192,10 +208,6 @@ class UsuarioRegistroForm(forms.Form):
     def clean_email(self):
         email = self.cleaned_data["email"].strip()
         return validar_email_disponible(email)
-
-    def clean_nombre_usuario(self):
-        nombre_usuario = self.cleaned_data["nombre_usuario"].strip().lower()
-        return validar_nombre_usuario_disponible(nombre_usuario)
 
     def clean_celular_contacto(self):
         return validar_celular_ar(self.cleaned_data["celular_contacto"])
@@ -221,19 +233,18 @@ class UsuarioRegistroForm(forms.Form):
 
     def guardar(self):
         with transaction.atomic():
-            return Usuario.objects.create_user(
-                username=self.cleaned_data["nombre_usuario"],
+            return crear_usuario_con_nombre_generado(
+                self.cleaned_data["nombre"],
+                self.cleaned_data["apellido"],
                 email=self.cleaned_data["email"],
                 password=self.cleaned_data["contrasena"],
-                first_name=self.cleaned_data["nombre"],
-                last_name=self.cleaned_data["apellido"],
                 celular_contacto=self.cleaned_data["celular_contacto"],
                 fecha_nacimiento=self.cleaned_data.get("fecha_nacimiento"),
                 debe_cambiar_contrasena=False,
             )
 
 
-class UsuarioCrearForm(forms.Form):
+class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
     nombre = forms.CharField(
         max_length=100,
         validators=[validar_nombre_sin_numeros],
@@ -260,9 +271,11 @@ class UsuarioCrearForm(forms.Form):
         ),
     )
     nombre_usuario = forms.CharField(
-        max_length=100,
+        label="Nombre de usuario",
+        max_length=150,
+        required=False,
+        disabled=True,
         widget=forms.TextInput(attrs={"class": "form-control"}),
-        help_text="Minúsculas, números, puntos, guiones y guiones bajos.",
     )
     contrasena = forms.CharField(
         label="Contraseña",
@@ -285,10 +298,6 @@ class UsuarioCrearForm(forms.Form):
         email = self.cleaned_data["email"].strip()
         return validar_email_disponible(email)
 
-    def clean_nombre_usuario(self):
-        nombre_usuario = self.cleaned_data["nombre_usuario"].strip().lower()
-        return validar_nombre_usuario_disponible(nombre_usuario)
-
     def clean_celular_contacto(self):
         return validar_celular_ar(self.cleaned_data["celular_contacto"])
 
@@ -305,12 +314,11 @@ class UsuarioCrearForm(forms.Form):
 
     def guardar(self, *, exigir_cambio_contrasena=True, es_superusuario=False):
         with transaction.atomic():
-            usuario = Usuario.objects.create_user(
-                username=self.cleaned_data["nombre_usuario"],
+            usuario = crear_usuario_con_nombre_generado(
+                self.cleaned_data["nombre"],
+                self.cleaned_data["apellido"],
                 email=self.cleaned_data["email"],
                 password=self.cleaned_data["contrasena"],
-                first_name=self.cleaned_data["nombre"],
-                last_name=self.cleaned_data["apellido"],
                 celular_contacto=self.cleaned_data["celular_contacto"],
                 fecha_nacimiento=self.cleaned_data.get("fecha_nacimiento"),
                 observaciones=self.cleaned_data.get("observaciones", ""),

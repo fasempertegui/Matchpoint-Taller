@@ -143,21 +143,21 @@ No existe un flujo separado de "registrar usuario": toda persona gestionada por 
 
 - **Objetivo:** crear un usuario activo con credenciales de acceso, Público y Reservas, y opcionalmente Profesor o Alumno.
 - **Actor:** administrador.
-- **Entradas:** nombre, apellido, celular y email obligatorios; nombre de usuario y contraseña, sugeridos por el sistema y editables; fecha de nacimiento y observaciones opcionales; roles adicionales opcionales (Profesor, Alumno o ambos).
+- **Entradas:** nombre, apellido, celular y email obligatorios; contraseña ingresada o sugerida por el sistema; fecha de nacimiento y observaciones opcionales; roles adicionales opcionales (Profesor, Alumno o ambos). El nombre de usuario se genera automáticamente y no es editable.
 
 Recorrido:
 
 1. El administrador completa nombre, apellido, celular y email.
-2. El administrador puede pedir por separado un nombre de usuario formado por el apellido y la inicial del nombre, agregando un número si ya existe, y una contraseña alfanumérica aleatoria. Cada sugerencia completa su campo sin enviar el formulario ni modificar el otro. El administrador puede aceptarlas o reemplazarlas; en ambos casos se aplican los validadores de contraseña configurados en Django.
+2. Al escribir nombre y apellido, el sistema muestra el nombre de usuario formado por el apellido normalizado y la inicial del nombre. Consulta si ya existe y, si hace falta, agrega el primer número disponible desde `1`. El campo no se puede editar. El administrador puede pedir una contraseña alfanumérica aleatoria o ingresar una propia; en ambos casos se aplican los validadores de contraseña configurados en Django.
 3. El administrador puede marcar, opcionalmente, los roles Profesor o Alumno para otorgar junto con el alta.
-4. El sistema valida los campos obligatorios, que nombre y apellido no contengan números y la unicidad de email y nombre de usuario sin distinguir mayúsculas de minúsculas.
+4. Al confirmar, el sistema valida los campos obligatorios y que nombre y apellido no contengan números. Genera nuevamente el nombre de usuario disponible y comprueba la unicidad del email sin distinguir mayúsculas de minúsculas.
 5. Django genera el hash PBKDF2-SHA256 de la contraseña; la base nunca recibe la contraseña en texto plano.
 6. En una transacción, el sistema crea el usuario con estado **Activo** y `debe_cambiar_contrasena = true`, le asigna automáticamente **Público** y **Reservas** y, si se marcaron, los roles Profesor o Alumno seleccionados. Cada asignación guarda una clave foránea al catálogo `roles`.
-7. Muestra la contraseña provisoria en texto plano una única vez, para que el administrador se la comunique a la persona.
+7. Muestra el nombre de usuario definitivo y la contraseña provisoria en texto plano una única vez, para que el administrador se los comunique a la persona.
 
 Alternativas:
 
-- El celular puede pertenecer a un tercero y no es único. El email y el nombre de usuario, en cambio, son siempre obligatorios y únicos sin distinguir mayúsculas de minúsculas.
+- El celular puede pertenecer a un tercero y no es único. El email y el nombre de usuario, en cambio, son siempre obligatorios y únicos sin distinguir mayúsculas de minúsculas. Si otro usuario ocupa el nombre mostrado antes de guardar, se asigna el siguiente sufijo disponible.
 - La persona debe reemplazar la contraseña provisoria en su primer inicio de sesión mediante **FL-68**. Si no la recuerda, puede establecer una propia mediante recuperación (**FL-46**).
 - Administrador, Público y Reservas no pueden elegirse en este paso: Administrador se crea mediante el comando de gestión `crear_administrador`; Público y Reservas se asignan automáticamente.
 - No marcar ningún rol adicional no impide asignarlo después mediante **FL-07**.
@@ -169,15 +169,14 @@ Alternativas:
 
 ```mermaid
 flowchart TD
-    A[Ingresar nombre apellido celular y email] --> B[Sugerir usuario y contraseña por separado]
-    B --> C{Acepta o reemplaza}
-    C --> D[Marcar roles adicionales opcionales]
+    A[Ingresar nombre apellido celular y email] --> B[Mostrar usuario y completar contraseña]
+    B --> D[Marcar roles adicionales opcionales]
     D --> E{Datos válidos y únicos}
     E -->|No| F[Solicitar corrección]
     F --> A
     E -->|Sí| G[Crear usuario activo con cambio obligatorio]
     G --> H[Asignar Público, Reservas y roles adicionales]
-    H --> I[Mostrar contraseña provisoria una vez]
+    H --> I[Mostrar usuario y contraseña provisoria]
 ```
 
 #### FL-03. Consultar un usuario
@@ -320,19 +319,20 @@ flowchart TD
 
 - **Objetivo:** crear una cuenta de usuario con credenciales propias, igual que **FL-02** pero autogestionada desde el portal.
 - **Actor:** público, sin cuenta previa.
-- **Entradas:** nombre, apellido, celular, email, nombre de usuario y contraseña.
+- **Entradas:** nombre, apellido, celular, email y contraseña. El nombre de usuario se genera automáticamente y no es editable.
 
 Recorrido:
 
-1. La persona completa sus datos personales y de acceso, desde el portal.
-2. El sistema valida obligatorios, que nombre y apellido no contengan números y la unicidad de email y nombre de usuario sin distinguir mayúsculas de minúsculas.
+1. La persona completa sus datos personales y contraseña desde el portal. Al escribir nombre y apellido, ve el nombre de usuario generado según la regla de **FL-02**.
+2. Al confirmar, el sistema valida los campos obligatorios y que nombre y apellido no contengan números. Genera nuevamente el nombre de usuario disponible y comprueba la unicidad del email sin distinguir mayúsculas de minúsculas.
 3. Django genera el hash PBKDF2-SHA256 de la contraseña.
 4. En una transacción, crea el usuario **Activo** y le asigna automáticamente **Público** y **Reservas**, igual que en **FL-02**.
 5. Envía la confirmación de alta por email (ver 4.2).
+6. Muestra el nombre de usuario definitivo para que la persona pueda iniciar sesión.
 
 Alternativas:
 
-- Si el email o el nombre de usuario ya pertenecen a un usuario existente (por ejemplo, registrado antes por la administración mediante **FL-02**), el alta se rechaza informando que la cuenta ya existe; la persona podrá iniciar sesión con esas credenciales o recuperar la contraseña (**FL-46**) en vez de registrarse de nuevo.
+- Si el email ya pertenece a un usuario existente (por ejemplo, registrado antes por la administración mediante **FL-02**), el alta se rechaza informando que la cuenta ya existe; la persona podrá iniciar sesión con esas credenciales o recuperar la contraseña (**FL-46**) en vez de registrarse de nuevo. Si otro usuario ocupa el nombre mostrado antes de guardar, se asigna el siguiente sufijo disponible.
 - La base nunca recibe la contraseña en texto plano.
 
 - **Resultado:** nuevo usuario activo con Público, Reservas y sesión iniciable.
@@ -340,11 +340,12 @@ Alternativas:
 
 ```mermaid
 flowchart TD
-    A[Ingresar datos y contraseña] --> B{Datos y credenciales únicos}
+    A[Ingresar datos y contraseña] --> B{Email disponible y datos válidos}
     B -->|No| C[Rechazar: la cuenta ya existe]
     B -->|Sí| D[Crear usuario activo]
     D --> E[Asignar Público y Reservas]
     E --> F[Enviar email de confirmación]
+    F --> G[Mostrar nombre de usuario definitivo]
 ```
 
 #### FL-07. Asignar o quitar un rol a un usuario

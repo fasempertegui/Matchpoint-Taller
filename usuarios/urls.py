@@ -8,11 +8,6 @@ urlpatterns = [
     path("", views.usuario_lista, name="usuario_lista"),
     path("nuevo/", views.usuario_crear, name="usuario_crear"),
     path(
-        "nuevo/sugerir-usuario/",
-        views.usuario_sugerir_nombre,
-        name="usuario_sugerir_nombre",
-    ),
-    path(
         "nuevo/sugerir-contrasena/",
         views.usuario_sugerir_contrasena,
         name="usuario_sugerir_contrasena",

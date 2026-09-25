@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
 from django.http import JsonResponse
@@ -15,7 +15,6 @@ from .forms import (
     UsuarioEditarForm,
     generar_contrasena,
     generar_contrasena_valida,
-    sugerir_nombre_usuario,
 )
 from .models import Rol, Usuario, UsuarioRol
 
@@ -104,25 +103,6 @@ def usuario_crear(request):
 
     formulario = UsuarioCrearForm()
     return render(request, "usuarios/usuario_formulario.html", {"formulario": formulario})
-
-
-@login_required
-@permission_required("usuarios.add_usuario", raise_exception=True)
-@require_GET
-def usuario_sugerir_nombre(request):
-    nombre = request.GET.get("nombre", "").strip()
-    apellido = request.GET.get("apellido", "").strip()
-    if not nombre or not apellido:
-        return JsonResponse(
-            {"error": "Ingresá el nombre y el apellido antes de generar el usuario."},
-            status=400,
-        )
-
-    try:
-        nombre_usuario = sugerir_nombre_usuario(nombre, apellido)
-    except ValidationError as error:
-        return JsonResponse({"error": error.messages[0]}, status=400)
-    return JsonResponse({"nombre_usuario": nombre_usuario})
 
 
 @login_required

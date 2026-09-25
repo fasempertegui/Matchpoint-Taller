@@ -439,7 +439,6 @@ tbody tr:last-child td {
     list-style: none;
     color: var(--primario);
     font-weight: 700;
-    text-decoration: underline;
     cursor: pointer;
 }
 
@@ -523,6 +522,11 @@ tbody tr:last-child td {
     font: inherit;
 }
 
+.form-control:disabled {
+    background: var(--estado-inactivo-fondo);
+    color: var(--estado-inactivo-texto);
+}
+
 .campo-con-boton {
     display: flex;
     align-items: stretch;
@@ -548,6 +552,12 @@ tbody tr:last-child td {
 .boton-icono:disabled {
     cursor: wait;
     opacity: 0.6;
+}
+
+.aviso-campo {
+    margin: 8px 0 0;
+    color: var(--texto-suave);
+    font-size: 0.88rem;
 }
 
 textarea.form-control {

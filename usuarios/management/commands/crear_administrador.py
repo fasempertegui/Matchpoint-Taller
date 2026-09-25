@@ -16,7 +16,6 @@ class Command(BaseCommand):
             "apellido": input("Apellido: ").strip(),
             "email": input("Email: ").strip(),
             "celular_contacto": input("Celular: ").strip(),
-            "nombre_usuario": input("Nombre de usuario: ").strip(),
             "contrasena": getpass("Contraseña provisoria: "),
         }
         confirmacion = getpass("Contraseña provisoria (confirmación): ")
