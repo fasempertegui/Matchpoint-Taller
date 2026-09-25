@@ -109,21 +109,23 @@ def usuario_crear(request):
 @login_required
 @permission_required("usuarios.add_usuario", raise_exception=True)
 @require_GET
-def usuario_sugerir_credenciales(request):
+def usuario_sugerir_nombre(request):
     nombre = request.GET.get("nombre", "").strip()
     apellido = request.GET.get("apellido", "").strip()
     if not nombre or not apellido:
         return JsonResponse(
-            {"error": "Ingresá el nombre y el apellido antes de generar las credenciales."},
+            {"error": "Ingresá el nombre y el apellido antes de generar el usuario."},
             status=400,
         )
 
-    return JsonResponse(
-        {
-            "nombre_usuario": sugerir_nombre_usuario(nombre, apellido),
-            "contrasena": generar_contrasena(),
-        }
-    )
+    return JsonResponse({"nombre_usuario": sugerir_nombre_usuario(nombre, apellido)})
+
+
+@login_required
+@permission_required("usuarios.add_usuario", raise_exception=True)
+@require_GET
+def usuario_sugerir_contrasena(request):
+    return JsonResponse({"contrasena": generar_contrasena()})
 
 
 @login_required

@@ -1,16 +1,40 @@
 document.addEventListener("DOMContentLoaded", function () {
-    var boton = document.querySelector("[data-sugerir-credenciales]");
-    if (!boton) return;
+    var botonUsuario = document.querySelector("[data-sugerir-usuario]");
+    if (!botonUsuario) return;
 
-    var formulario = boton.closest("form");
+    var formulario = botonUsuario.closest("form");
+    var botonContrasena = formulario.querySelector("[data-sugerir-contrasena]");
     var nombre = formulario.querySelector("[name='nombre']");
     var apellido = formulario.querySelector("[name='apellido']");
     var nombreUsuario = formulario.querySelector("[name='nombre_usuario']");
     var contrasena = formulario.querySelector("[name='contrasena']");
-    var error = formulario.querySelector("[data-error-sugerencias]");
-    var textoOriginal = boton.textContent.trim();
+    var errorUsuario = formulario.querySelector("[data-error-usuario]");
+    var errorContrasena = formulario.querySelector("[data-error-contrasena]");
 
-    boton.addEventListener("click", function () {
+    function sugerir(boton, url, campo, error, propiedad) {
+        boton.disabled = true;
+        error.hidden = true;
+
+        fetch(url, {headers: {Accept: "application/json"}, cache: "no-store"})
+            .then(function (respuesta) {
+                return respuesta.json().then(function (datos) {
+                    if (!respuesta.ok) throw new Error(datos.error || "No se pudo generar la sugerencia.");
+                    return datos;
+                });
+            })
+            .then(function (datos) {
+                campo.value = datos[propiedad];
+            })
+            .catch(function (excepcion) {
+                error.textContent = excepcion.message;
+                error.hidden = false;
+            })
+            .finally(function () {
+                boton.disabled = false;
+            });
+    }
+
+    botonUsuario.addEventListener("click", function () {
         if (!nombre.value.trim()) {
             nombre.reportValidity();
             nombre.focus();
@@ -22,32 +46,19 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        var url = new URL(boton.dataset.url, window.location.origin);
+        var url = new URL(botonUsuario.dataset.url, window.location.origin);
         url.searchParams.set("nombre", nombre.value.trim());
         url.searchParams.set("apellido", apellido.value.trim());
+        sugerir(botonUsuario, url, nombreUsuario, errorUsuario, "nombre_usuario");
+    });
 
-        boton.disabled = true;
-        boton.textContent = "Generando...";
-        error.hidden = true;
-
-        fetch(url, {headers: {Accept: "application/json"}})
-            .then(function (respuesta) {
-                return respuesta.json().then(function (datos) {
-                    if (!respuesta.ok) throw new Error(datos.error || "No se pudieron generar las credenciales.");
-                    return datos;
-                });
-            })
-            .then(function (datos) {
-                nombreUsuario.value = datos.nombre_usuario;
-                contrasena.value = datos.contrasena;
-            })
-            .catch(function (excepcion) {
-                error.textContent = excepcion.message;
-                error.hidden = false;
-            })
-            .finally(function () {
-                boton.disabled = false;
-                boton.textContent = textoOriginal;
-            });
+    botonContrasena.addEventListener("click", function () {
+        sugerir(
+            botonContrasena,
+            botonContrasena.dataset.url,
+            contrasena,
+            errorContrasena,
+            "contrasena"
+        );
     });
 });

@@ -442,6 +442,33 @@ tbody tr:last-child td {
     font: inherit;
 }
 
+.campo-con-boton {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.campo-con-boton .form-control {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+}
+
+.boton-icono {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.boton-icono:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
 textarea.form-control {
     min-height: 112px;
     resize: vertical;

@@ -19,25 +19,42 @@
         {% endif %}
 
         {% for campo in formulario %}
-            {% if campo.name == "nombre_usuario" %}
-                <div class="acciones-formulario">
-                    <button
-                        class="boton boton-secundario"
-                        type="button"
-                        data-sugerir-credenciales
-                        data-url="{% url 'usuarios:usuario_sugerir_credenciales' %}"
-                    >
-                        Sugerir usuario y contraseña
-                    </button>
-                </div>
-                <p class="error-campo" data-error-sugerencias hidden></p>
-            {% endif %}
             <div class="grupo-campo">
                 <label for="{{ campo.id_for_label }}">
                     {{ campo.label }}
                     {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
                 </label>
-                {{ campo }}
+                {% if campo.name == "nombre_usuario" or campo.name == "contrasena" %}
+                    <div class="campo-con-boton">
+                        {{ campo }}
+                        {% if campo.name == "nombre_usuario" %}
+                            <button
+                                class="boton boton-primario boton-icono"
+                                type="button"
+                                data-sugerir-usuario
+                                data-url="{% url 'usuarios:usuario_sugerir_nombre' %}"
+                                aria-label="Sugerir nombre de usuario"
+                                title="Sugerir nombre de usuario"
+                            >✨</button>
+                        {% else %}
+                            <button
+                                class="boton boton-primario boton-icono"
+                                type="button"
+                                data-sugerir-contrasena
+                                data-url="{% url 'usuarios:usuario_sugerir_contrasena' %}"
+                                aria-label="Sugerir contraseña"
+                                title="Sugerir contraseña"
+                            >✨</button>
+                        {% endif %}
+                    </div>
+                    {% if campo.name == "nombre_usuario" %}
+                        <p class="error-campo" data-error-usuario hidden></p>
+                    {% else %}
+                        <p class="error-campo" data-error-contrasena hidden></p>
+                    {% endif %}
+                {% else %}
+                    {{ campo }}
+                {% endif %}
                 {% if campo.help_text %}
                     <small>{{ campo.help_text }}</small>
                 {% endif %}

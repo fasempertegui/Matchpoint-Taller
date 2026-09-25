@@ -148,7 +148,7 @@ No existe un flujo separado de "registrar usuario": toda persona gestionada por 
 Recorrido:
 
 1. El administrador completa nombre, apellido, celular y email.
-2. El sistema sugiere un nombre de usuario formado por el apellido y la inicial del nombre, agregando un número si ya existe, y genera una contraseña alfanumérica aleatoria. Las credenciales se completan en el formulario sin enviarlo ni perder los demás datos ingresados. El administrador puede aceptarlas o reemplazarlas; en ambos casos se aplican los validadores de contraseña configurados en Django.
+2. El administrador puede pedir por separado un nombre de usuario formado por el apellido y la inicial del nombre, agregando un número si ya existe, y una contraseña alfanumérica aleatoria. Cada sugerencia completa su campo sin enviar el formulario ni modificar el otro. El administrador puede aceptarlas o reemplazarlas; en ambos casos se aplican los validadores de contraseña configurados en Django.
 3. El administrador puede marcar, opcionalmente, los roles Profesor o Alumno para otorgar junto con el alta.
 4. El sistema valida los campos obligatorios y la unicidad de email y nombre de usuario sin distinguir mayúsculas de minúsculas.
 5. Django genera el hash PBKDF2-SHA256 de la contraseña; la base nunca recibe la contraseña en texto plano.
@@ -169,7 +169,7 @@ Alternativas:
 
 ```mermaid
 flowchart TD
-    A[Ingresar nombre apellido celular y email] --> B[Sugerir usuario y generar contraseña]
+    A[Ingresar nombre apellido celular y email] --> B[Sugerir usuario y contraseña por separado]
     B --> C{Acepta o reemplaza}
     C --> D[Marcar roles adicionales opcionales]
     D --> E{Datos válidos y únicos}
