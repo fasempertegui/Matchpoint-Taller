@@ -193,7 +193,6 @@ class UsuarioRegistroForm(NombreUsuarioAutomaticoMixin, forms.Form):
         ),
     )
     fecha_nacimiento = forms.DateField(
-        required=False,
         validators=[validar_fecha_nacimiento],
         widget=forms.DateInput(
             format="%Y-%m-%d",
@@ -257,7 +256,7 @@ class UsuarioRegistroForm(NombreUsuarioAutomaticoMixin, forms.Form):
                 email=self.cleaned_data["email"],
                 password=self.cleaned_data["contrasena"],
                 celular_contacto=self.cleaned_data["celular_contacto"],
-                fecha_nacimiento=self.cleaned_data.get("fecha_nacimiento"),
+                fecha_nacimiento=self.cleaned_data["fecha_nacimiento"],
                 debe_cambiar_contrasena=False,
             )
 
@@ -287,7 +286,6 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
         ),
     )
     fecha_nacimiento = forms.DateField(
-        required=False,
         validators=[validar_fecha_nacimiento],
         widget=forms.DateInput(
             format="%Y-%m-%d",
@@ -352,7 +350,7 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
                 email=self.cleaned_data["email"],
                 password=self.cleaned_data["contrasena"],
                 celular_contacto=self.cleaned_data["celular_contacto"],
-                fecha_nacimiento=self.cleaned_data.get("fecha_nacimiento"),
+                fecha_nacimiento=self.cleaned_data["fecha_nacimiento"],
                 observaciones=self.cleaned_data.get("observaciones", ""),
                 debe_cambiar_contrasena=exigir_cambio_contrasena,
                 is_superuser=es_superusuario,

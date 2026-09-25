@@ -22,8 +22,6 @@ Ejecutar los siguientes comandos desde la consola.
    docker compose exec web python manage.py crear_administrador
    ```
 
-   La contraseña ingresada es provisoria. El administrador deberá reemplazarla en su primer inicio de sesión antes de acceder a las funciones del sistema.
-
 4. Abrir la aplicación en <http://localhost:8000/>.
 
 ## Actualizar el proyecto

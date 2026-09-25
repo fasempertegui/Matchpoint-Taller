@@ -30,7 +30,7 @@ La fecha y hora de un ingreso representa el momento real en que se recibió el d
 
 Los feriados pueden registrarse desde el inicio de operaciones hasta cinco años calendario después de la fecha local actual. Registrar o quitar un feriado pasado no modifica retroactivamente las clases que ya fueron generadas.
 
-La fecha de nacimiento es opcional y debe estar comprendida entre la fecha local actual menos 120 años y la fecha local actual. No se establece una edad mínima para ser usuario.
+La fecha de nacimiento es obligatoria y debe estar comprendida entre la fecha local actual menos 120 años y la fecha local actual. No se establece una edad mínima para ser usuario.
 
 Todos estos límites se validan en el servidor y se exponen además en los controles HTML como ayuda de carga. Las comparaciones con el día o momento actual usan la zona `America/Argentina/Buenos_Aires`. Los servicios que escriben datos vuelven a validar las reglas aunque la interfaz ya lo haya hecho, para que no puedan evitarse manipulando formularios o URLs.
 

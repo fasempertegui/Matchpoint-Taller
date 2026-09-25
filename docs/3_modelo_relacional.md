@@ -66,7 +66,7 @@ Representa a toda persona gestionada por la academia —alumno, profesor, admini
 | | `fecha_baja` | `timestamptz` | Sí | | `2026-03-20 18:45:00-03` |
 | | `debe_cambiar_contrasena` | `boolean` | | | `true` |
 | | `date_joined` | `timestamptz` | | | `2026-03-01 10:15:00-03` |
-| | `fecha_nacimiento` | `date` | Sí | | `1998-04-12` |
+| | `fecha_nacimiento` | `date` | | | `1998-04-12` |
 | | `celular_contacto` | `varchar(30)` | | | `+54 387 555-1234` |
 | | `observaciones` | `text` | | | `Celular es de la madre` |
 | | `actualizado_en` | `timestamptz` | | | `2026-03-01 10:15:00-03` |

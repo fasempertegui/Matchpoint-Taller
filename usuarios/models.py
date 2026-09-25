@@ -91,8 +91,6 @@ class Usuario(AbstractUser):
         "correo electrónico",
     )
     fecha_nacimiento = models.DateField(
-        null=True,
-        blank=True,
         validators=[validar_fecha_nacimiento],
     )
     celular_contacto = models.CharField(

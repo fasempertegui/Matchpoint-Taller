@@ -143,14 +143,14 @@ No existe un flujo separado de "registrar usuario": toda persona gestionada por 
 
 - **Objetivo:** crear un usuario activo con credenciales de acceso, Público y Reservas, y opcionalmente Profesor o Alumno.
 - **Actor:** administrador.
-- **Entradas:** nombre, apellido, celular y email obligatorios; contraseña ingresada o sugerida por el sistema; fecha de nacimiento y observaciones opcionales; roles adicionales opcionales (Profesor, Alumno o ambos). El nombre de usuario se genera automáticamente y no es editable.
+- **Entradas:** nombre, apellido, celular, email y fecha de nacimiento obligatorios; contraseña ingresada o sugerida por el sistema; observaciones opcionales; roles adicionales opcionales (Profesor, Alumno o ambos). El nombre de usuario se genera automáticamente y no es editable.
 
 Recorrido:
 
-1. El administrador completa nombre, apellido, celular y email.
+1. El administrador completa nombre, apellido, celular, email y fecha de nacimiento.
 2. Al escribir nombre y apellido, el sistema muestra el nombre de usuario formado por el apellido normalizado y la inicial del nombre. Consulta si ya existe y, si hace falta, agrega el primer número disponible desde `1`. El campo no se puede editar. El administrador puede pedir una contraseña alfanumérica aleatoria o ingresar una propia; en ambos casos se aplican los validadores de contraseña configurados en Django.
 3. El administrador puede marcar, opcionalmente, los roles Profesor o Alumno para otorgar junto con el alta.
-4. Al confirmar, el sistema valida los campos obligatorios y que nombre y apellido no contengan números. Genera nuevamente el nombre de usuario disponible y comprueba la unicidad del email sin distinguir mayúsculas de minúsculas.
+4. Al confirmar, el sistema valida los campos obligatorios, que la fecha de nacimiento esté dentro del rango permitido y que nombre y apellido no contengan números. Genera nuevamente el nombre de usuario disponible y comprueba la unicidad del email sin distinguir mayúsculas de minúsculas.
 5. Django genera el hash PBKDF2-SHA256 de la contraseña; la base nunca recibe la contraseña en texto plano.
 6. En una transacción, el sistema crea el usuario con estado **Activo** y `debe_cambiar_contrasena = true`, le asigna automáticamente **Público** y **Reservas** y, si se marcaron, los roles Profesor o Alumno seleccionados. Cada asignación guarda una clave foránea al catálogo `roles`.
 7. Muestra el nombre de usuario definitivo y la contraseña provisoria en texto plano una única vez, para que el administrador se los comunique a la persona.
@@ -169,7 +169,7 @@ Alternativas:
 
 ```mermaid
 flowchart TD
-    A[Ingresar nombre apellido celular y email] --> B[Mostrar usuario y completar contraseña]
+    A[Ingresar nombre apellido celular email y fecha de nacimiento] --> B[Mostrar usuario y completar contraseña]
     B --> D[Marcar roles adicionales opcionales]
     D --> E{Datos válidos y únicos}
     E -->|No| F[Solicitar corrección]
@@ -319,12 +319,12 @@ flowchart TD
 
 - **Objetivo:** crear una cuenta de usuario con credenciales propias, igual que **FL-02** pero autogestionada desde el portal.
 - **Actor:** público, sin cuenta previa.
-- **Entradas:** nombre, apellido, celular, email y contraseña. El nombre de usuario se genera automáticamente y no es editable.
+- **Entradas:** nombre, apellido, celular, email, fecha de nacimiento y contraseña, todos obligatorios. El nombre de usuario se genera automáticamente y no es editable.
 
 Recorrido:
 
 1. La persona completa sus datos personales y contraseña desde el portal. Al escribir nombre y apellido, ve el nombre de usuario generado según la regla de **FL-02**.
-2. Al confirmar, el sistema valida los campos obligatorios y que nombre y apellido no contengan números. Genera nuevamente el nombre de usuario disponible y comprueba la unicidad del email sin distinguir mayúsculas de minúsculas.
+2. Al confirmar, el sistema valida los campos obligatorios, que la fecha de nacimiento esté dentro del rango permitido y que nombre y apellido no contengan números. Genera nuevamente el nombre de usuario disponible y comprueba la unicidad del email sin distinguir mayúsculas de minúsculas.
 3. Django genera el hash PBKDF2-SHA256 de la contraseña.
 4. En una transacción, crea el usuario **Activo** y le asigna automáticamente **Público** y **Reservas**, igual que en **FL-02**.
 5. Envía la confirmación de alta por email (ver 4.2).
