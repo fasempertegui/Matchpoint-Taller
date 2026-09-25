@@ -430,6 +430,45 @@ tbody tr:last-child td {
     font-weight: 700;
 }
 
+.campo-opcion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.campo-opcion input[type="checkbox"] {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--primario);
+    cursor: pointer;
+}
+
+.campo-opcion label {
+    display: inline;
+    margin: 0;
+    cursor: pointer;
+}
+
+.grupo-roles {
+    margin: 20px 0;
+    padding: 12px 14px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 2px;
+}
+
+.grupo-roles legend {
+    padding: 0 6px;
+    font-weight: 700;
+}
+
+.grupo-roles .grupo-campo:last-child {
+    margin-bottom: 0;
+}
+
 .form-control,
 .grupo-campo input {
     width: 100%;

@@ -269,8 +269,8 @@ class UsuarioCrearForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control"}),
         help_text="Se muestra una sola vez: comunicásela a la persona.",
     )
-    rol_profesor = forms.BooleanField(required=False, label="Otorgar rol Profesor")
-    rol_alumno = forms.BooleanField(required=False, label="Otorgar rol Alumno")
+    rol_profesor = forms.BooleanField(required=False, label="Profesor")
+    rol_alumno = forms.BooleanField(required=False, label="Alumno")
     observaciones = forms.CharField(
         required=False, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3})
     )

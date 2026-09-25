@@ -19,49 +19,73 @@
         {% endif %}
 
         {% for campo in formulario %}
-            <div class="grupo-campo">
-                <label for="{{ campo.id_for_label }}">
-                    {{ campo.label }}
-                    {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
-                </label>
-                {% if campo.name == "nombre_usuario" or campo.name == "contrasena" %}
-                    <div class="campo-con-boton">
-                        {{ campo }}
-                        {% if campo.name == "nombre_usuario" %}
-                            <button
-                                class="boton boton-primario boton-icono"
-                                type="button"
-                                data-sugerir-usuario
-                                data-url="{% url 'usuarios:usuario_sugerir_nombre' %}"
-                                aria-label="Sugerir nombre de usuario"
-                                title="Sugerir nombre de usuario"
-                            >✨</button>
-                        {% else %}
-                            <button
-                                class="boton boton-primario boton-icono"
-                                type="button"
-                                data-sugerir-contrasena
-                                data-url="{% url 'usuarios:usuario_sugerir_contrasena' %}"
-                                aria-label="Sugerir contraseña"
-                                title="Sugerir contraseña"
-                            >✨</button>
-                        {% endif %}
+            {% if campo.name == "rol_profesor" %}
+                <fieldset class="grupo-roles">
+                    <legend>Roles adicionales</legend>
+                    <div class="grupo-campo">
+                        <div class="campo-opcion">
+                            {{ formulario.rol_profesor }}
+                            <label for="{{ formulario.rol_profesor.id_for_label }}">{{ formulario.rol_profesor.label }}</label>
+                        </div>
+                        {% for error in formulario.rol_profesor.errors %}
+                            <p class="error-campo">{{ error }}</p>
+                        {% endfor %}
                     </div>
-                    {% if campo.name == "nombre_usuario" %}
-                        <p class="error-campo" data-error-usuario hidden></p>
+                    <div class="grupo-campo">
+                        <div class="campo-opcion">
+                            {{ formulario.rol_alumno }}
+                            <label for="{{ formulario.rol_alumno.id_for_label }}">{{ formulario.rol_alumno.label }}</label>
+                        </div>
+                        {% for error in formulario.rol_alumno.errors %}
+                            <p class="error-campo">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+            {% elif campo.name != "rol_alumno" %}
+                <div class="grupo-campo">
+                    <label for="{{ campo.id_for_label }}">
+                        {{ campo.label }}
+                        {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
+                    </label>
+                    {% if campo.name == "nombre_usuario" or campo.name == "contrasena" %}
+                        <div class="campo-con-boton">
+                            {{ campo }}
+                            {% if campo.name == "nombre_usuario" %}
+                                <button
+                                    class="boton boton-primario boton-icono"
+                                    type="button"
+                                    data-sugerir-usuario
+                                    data-url="{% url 'usuarios:usuario_sugerir_nombre' %}"
+                                    aria-label="Sugerir nombre de usuario"
+                                    title="Sugerir nombre de usuario"
+                                >✨</button>
+                            {% else %}
+                                <button
+                                    class="boton boton-primario boton-icono"
+                                    type="button"
+                                    data-sugerir-contrasena
+                                    data-url="{% url 'usuarios:usuario_sugerir_contrasena' %}"
+                                    aria-label="Sugerir contraseña"
+                                    title="Sugerir contraseña"
+                                >✨</button>
+                            {% endif %}
+                        </div>
+                        {% if campo.name == "nombre_usuario" %}
+                            <p class="error-campo" data-error-usuario hidden></p>
+                        {% else %}
+                            <p class="error-campo" data-error-contrasena hidden></p>
+                        {% endif %}
                     {% else %}
-                        <p class="error-campo" data-error-contrasena hidden></p>
+                        {{ campo }}
                     {% endif %}
-                {% else %}
-                    {{ campo }}
-                {% endif %}
-                {% if campo.help_text %}
-                    <small>{{ campo.help_text }}</small>
-                {% endif %}
-                {% for error in campo.errors %}
-                    <p class="error-campo">{{ error }}</p>
-                {% endfor %}
-            </div>
+                    {% if campo.help_text %}
+                        <small>{{ campo.help_text }}</small>
+                    {% endif %}
+                    {% for error in campo.errors %}
+                        <p class="error-campo">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
         {% endfor %}
 
         <div class="acciones-formulario">
