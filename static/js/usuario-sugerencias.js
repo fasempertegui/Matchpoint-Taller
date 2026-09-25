@@ -11,6 +11,13 @@ document.addEventListener("DOMContentLoaded", function () {
     var errorUsuario = formulario.querySelector("[data-error-usuario]");
     var errorContrasena = formulario.querySelector("[data-error-contrasena]");
 
+    nombre.addEventListener("input", function () {
+        nombre.setCustomValidity("");
+    });
+    apellido.addEventListener("input", function () {
+        apellido.setCustomValidity("");
+    });
+
     function sugerir(boton, url, campo, error, propiedad) {
         boton.disabled = true;
         error.hidden = true;
@@ -41,6 +48,18 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         if (!apellido.value.trim()) {
+            apellido.reportValidity();
+            apellido.focus();
+            return;
+        }
+        if (/\p{Number}/u.test(nombre.value)) {
+            nombre.setCustomValidity("No se permiten números.");
+            nombre.reportValidity();
+            nombre.focus();
+            return;
+        }
+        if (/\p{Number}/u.test(apellido.value)) {
+            apellido.setCustomValidity("No se permiten números.");
             apellido.reportValidity();
             apellido.focus();
             return;

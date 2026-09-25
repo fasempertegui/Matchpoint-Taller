@@ -150,7 +150,7 @@ Recorrido:
 1. El administrador completa nombre, apellido, celular y email.
 2. El administrador puede pedir por separado un nombre de usuario formado por el apellido y la inicial del nombre, agregando un número si ya existe, y una contraseña alfanumérica aleatoria. Cada sugerencia completa su campo sin enviar el formulario ni modificar el otro. El administrador puede aceptarlas o reemplazarlas; en ambos casos se aplican los validadores de contraseña configurados en Django.
 3. El administrador puede marcar, opcionalmente, los roles Profesor o Alumno para otorgar junto con el alta.
-4. El sistema valida los campos obligatorios y la unicidad de email y nombre de usuario sin distinguir mayúsculas de minúsculas.
+4. El sistema valida los campos obligatorios, que nombre y apellido no contengan números y la unicidad de email y nombre de usuario sin distinguir mayúsculas de minúsculas.
 5. Django genera el hash PBKDF2-SHA256 de la contraseña; la base nunca recibe la contraseña en texto plano.
 6. En una transacción, el sistema crea el usuario con estado **Activo** y `debe_cambiar_contrasena = true`, le asigna automáticamente **Público** y **Reservas** y, si se marcaron, los roles Profesor o Alumno seleccionados. Cada asignación guarda una clave foránea al catálogo `roles`.
 7. Muestra la contraseña provisoria en texto plano una única vez, para que el administrador se la comunique a la persona.
@@ -325,7 +325,7 @@ flowchart TD
 Recorrido:
 
 1. La persona completa sus datos personales y de acceso, desde el portal.
-2. El sistema valida obligatorios y la unicidad de email y nombre de usuario sin distinguir mayúsculas de minúsculas.
+2. El sistema valida obligatorios, que nombre y apellido no contengan números y la unicidad de email y nombre de usuario sin distinguir mayúsculas de minúsculas.
 3. Django genera el hash PBKDF2-SHA256 de la contraseña.
 4. En una transacción, crea el usuario **Activo** y le asigna automáticamente **Público** y **Reservas**, igual que en **FL-02**.
 5. Envía la confirmación de alta por email (ver 4.2).

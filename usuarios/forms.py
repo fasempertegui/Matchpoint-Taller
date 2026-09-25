@@ -45,6 +45,11 @@ def _normalizar_para_usuario(texto):
     return re.sub(r"[^a-z0-9]", "", texto.lower())
 
 
+def validar_nombre_sin_numeros(valor):
+    if any(caracter.isnumeric() for caracter in valor):
+        raise forms.ValidationError("No se permiten números.")
+
+
 def validar_email_disponible(email, *, excluir_usuario=None):
     usuarios = Usuario.objects.filter(email__iexact=email)
     if excluir_usuario and excluir_usuario.pk:
@@ -68,6 +73,8 @@ def validar_nombre_usuario_disponible(nombre_usuario):
 
 def sugerir_nombre_usuario(nombre, apellido):
     """Genera el apellido seguido por la inicial del nombre."""
+    validar_nombre_sin_numeros(nombre)
+    validar_nombre_sin_numeros(apellido)
     base = _normalizar_para_usuario(apellido)
     inicial = _normalizar_para_usuario(nombre)[:1]
     candidato = f"{base}{inicial}" if inicial else base
@@ -137,10 +144,12 @@ def validar_celular_ar(valor):
 class UsuarioRegistroForm(forms.Form):
     nombre = forms.CharField(
         max_length=100,
+        validators=[validar_nombre_sin_numeros],
         widget=forms.TextInput(attrs={"class": "form-control", "autofocus": True}),
     )
     apellido = forms.CharField(
         max_length=100,
+        validators=[validar_nombre_sin_numeros],
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
     email = forms.EmailField(widget=forms.EmailInput(attrs={"class": "form-control"}))
@@ -227,10 +236,13 @@ class UsuarioRegistroForm(forms.Form):
 class UsuarioCrearForm(forms.Form):
     nombre = forms.CharField(
         max_length=100,
+        validators=[validar_nombre_sin_numeros],
         widget=forms.TextInput(attrs={"class": "form-control", "autofocus": True}),
     )
     apellido = forms.CharField(
-        max_length=100, widget=forms.TextInput(attrs={"class": "form-control"})
+        max_length=100,
+        validators=[validar_nombre_sin_numeros],
+        widget=forms.TextInput(attrs={"class": "form-control"}),
     )
     email = forms.EmailField(widget=forms.EmailInput(attrs={"class": "form-control"}))
     celular_contacto = forms.CharField(
