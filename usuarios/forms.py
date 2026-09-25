@@ -195,6 +195,7 @@ class UsuarioRegistroForm(NombreUsuarioAutomaticoMixin, forms.Form):
         required=False,
         disabled=True,
         widget=forms.TextInput(attrs={"class": "form-control"}),
+        help_text="El nombre de usuario se genera automáticamente a partir del nombre y apellido",
     )
     contrasena = forms.CharField(
         label="Contraseña",
@@ -288,11 +289,12 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
         required=False,
         disabled=True,
         widget=forms.TextInput(attrs={"class": "form-control"}),
+        help_text="El nombre de usuario se genera automáticamente a partir del nombre y apellido",
     )
     contrasena = forms.CharField(
         label="Contraseña",
         widget=forms.TextInput(attrs={"class": "form-control"}),
-        help_text="Se muestra una sola vez: comunicásela a la persona.",
+        help_text="La contraseña se muestra una sola vez: comunicásela a la persona",
     )
     rol_profesor = forms.BooleanField(required=False, label="Profesor")
     rol_alumno = forms.BooleanField(required=False, label="Alumno")
