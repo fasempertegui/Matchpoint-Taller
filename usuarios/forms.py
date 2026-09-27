@@ -249,16 +249,15 @@ class UsuarioRegistroForm(NombreUsuarioAutomaticoMixin, forms.Form):
         return datos
 
     def guardar(self):
-        with transaction.atomic():
-            return crear_usuario_con_nombre_generado(
-                self.cleaned_data["nombre"],
-                self.cleaned_data["apellido"],
-                email=self.cleaned_data["email"],
-                password=self.cleaned_data["contrasena"],
-                celular_contacto=self.cleaned_data["celular_contacto"],
-                fecha_nacimiento=self.cleaned_data["fecha_nacimiento"],
-                debe_cambiar_contrasena=False,
-            )
+        return crear_usuario_con_nombre_generado(
+            self.cleaned_data["nombre"],
+            self.cleaned_data["apellido"],
+            email=self.cleaned_data["email"],
+            password=self.cleaned_data["contrasena"],
+            celular_contacto=self.cleaned_data["celular_contacto"],
+            fecha_nacimiento=self.cleaned_data["fecha_nacimiento"],
+            debe_cambiar_contrasena=False,
+        )
 
 
 class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
