@@ -145,16 +145,12 @@ def usuario_restablecer_contrasena(request, pk):
         return redirect("usuarios:usuario_detalle", pk=usuario.pk)
 
     if request.method == "POST":
-        with transaction.atomic():
-            usuario = get_object_or_404(
-                Usuario.objects.select_for_update(), pk=pk
-            )
-            contrasena = generar_contrasena_valida(usuario)
-            usuario.set_password(contrasena)
-            usuario.debe_cambiar_contrasena = True
-            usuario.save(
-                update_fields=["password", "debe_cambiar_contrasena", "actualizado_en"]
-            )
+        contrasena = generar_contrasena_valida(usuario)
+        usuario.set_password(contrasena)
+        usuario.debe_cambiar_contrasena = True
+        usuario.save(
+            update_fields=["password", "debe_cambiar_contrasena", "actualizado_en"]
+        )
 
         return render(
             request,
