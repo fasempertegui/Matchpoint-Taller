@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser, UserManager
-from django.db import models, router, transaction
+from django.db import models, transaction
 from django.db.models.functions import Lower
 
 from common.fechas import validar_fecha_nacimiento
@@ -60,21 +60,16 @@ class UsuarioRol(models.Model):
 
 class UsuarioManager(UserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
-        using = self._db or router.db_for_write(self.model)
-        with transaction.atomic(using=using):
+        with transaction.atomic():
             usuario = super().create_user(
                 username,
                 email=email,
                 password=password,
                 **extra_fields,
             )
-            RolModelo = self.model._meta.apps.get_model("usuarios", "Rol")
-            UsuarioRolModelo = self.model._meta.apps.get_model(
-                "usuarios", "UsuarioRol"
-            )
             for codigo in Rol.INICIALES:
-                rol = RolModelo.objects.using(using).get(codigo=codigo)
-                UsuarioRolModelo.objects.using(using).create(
+                rol = Rol.objects.get(codigo=codigo)
+                UsuarioRol.objects.create(
                     usuario=usuario,
                     rol=rol,
                 )
