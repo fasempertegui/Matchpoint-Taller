@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import Resolver404, resolve
 
@@ -24,8 +23,6 @@ class CambioContrasenaObligatorioMiddleware:
         return self.get_response(request)
 
     def _ruta_permitida(self, ruta):
-        if settings.STATIC_URL and ruta.startswith(settings.STATIC_URL):
-            return True
         try:
             coincidencia = resolve(ruta)
         except Resolver404:
