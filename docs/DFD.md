@@ -13,10 +13,6 @@ Cada diagrama representa una sola intención y contiene:
 
 Los números escritos sobre las flechas identifican los datos descriptos debajo de cada diagrama. No expresan orden, tiempo ni una secuencia de ejecución. Dos flujos pueden producirse al mismo tiempo y un DFD no indica que un proceso deba ejecutarse antes o después de otro. La numeración de los diagramas solo permite identificarlos y tampoco establece un orden de ejecución.
 
-No se combinan acciones opuestas dentro de un mismo proceso. Activar y desactivar son procesos diferentes, al igual que asignar y retirar un rol. El inicio de sesión normal también se separa del inicio de sesión con una contraseña provisoria.
-
-El comando `crear_administrador` corresponde a la preparación técnica del entorno y no a una operación cotidiana de los actores del sistema, por lo que no se representa como proceso. La sugerencia de credenciales y la asignación automática de roles forman parte del alta que las origina y no constituyen intenciones externas independientes.
-
 ### Almacenes
 
 - **D1: Usuarios**
