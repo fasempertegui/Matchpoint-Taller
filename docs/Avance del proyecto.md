@@ -26,3 +26,15 @@ Se incorporaron los roles Administrador, Profesor, Alumno, Reservas y Público, 
 - **Interfaz y navegación:** se incorporaron páginas de inicio para el portal y la administración, se unificaron colores, tipografías y logotipo, y se mejoraron formularios, mensajes y accesos a las acciones desde las pantallas de detalle.
 
 Estos ajustes forman parte de la revisión del hito 2 y consolidan las funcionalidades de instalaciones, usuarios y seguridad desarrolladas hasta esta etapa.
+
+## Hito 3: reservas
+
+Para el tercer hito se acordó desarrollar el proceso completo de reservas normales de cancha, desde su registración hasta su finalización o anulación, con consulta y comprobante imprimible. La implementación está pendiente e incluye el ABM de precios por duración y la configuración de horarios por sede.
+
+Cada reserva tendrá una cabecera y un detalle con uno o varios turnos, relacionados con usuarios, canchas y tarifas. El número de comprobante, la fecha de registración, el usuario responsable y el estado inicial Programada serán automáticos. El sistema calculará horarios e importes y registrará toda la operación mediante una transacción, validando disponibilidad para evitar superposiciones.
+
+La consulta permitirá filtrar por rango de fechas, estado, organizador, sede y cancha, y visualizar el detalle. El rol Reservas podrá registrar, consultar y emitir comprobantes de sus propias reservas; el Administrador tendrá acceso a todas.
+
+La anulación quedará restringida al Administrador y registrará motivo, fecha y usuario, con estado Anulada. Liberará todos los turnos en una transacción, conservando los registros. La finalización también será administrativa y sólo podrá realizarse cuando hayan terminado todos los turnos.
+
+Esta adaptación agrupa varios turnos en lugar del único evento previsto en la documentación y utiliza Anulada como estado de baja. La anulación propia, los bloqueos por cancelación y la reprogramación quedan fuera de esta entrega, junto con pases, invitados, ingresos, notificaciones y finalización automática. Los documentos del sistema completo conservan su alcance; estas diferencias se registran únicamente aquí.
