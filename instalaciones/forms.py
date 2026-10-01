@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Cancha, Sede
+from .models import Cancha, Sede, SedeHorario
 
 
 class SedeForm(forms.ModelForm):
@@ -97,3 +97,19 @@ class CanchaForm(forms.ModelForm):
         if commit:
             cancha.save()
         return cancha
+
+
+class SedeHorarioForm(forms.ModelForm):
+    class Meta:
+        model = SedeHorario
+        fields = ("hora_inicio_1", "hora_fin_1", "hora_inicio_2", "hora_fin_2")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for campo in self.fields.values():
+            campo.required = False
+            campo.input_formats = ["%H:%M"]
+            campo.widget = forms.TimeInput(
+                format="%H:%M",
+                attrs={"class": "form-control", "type": "time", "step": "60"},
+            )

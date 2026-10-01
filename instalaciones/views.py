@@ -1,11 +1,16 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.exceptions import PermissionDenied
+from django.db import transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
-from .forms import CanchaForm, SedeForm
-from .models import Cancha, Sede
+from usuarios.models import Rol
+
+from .forms import CanchaForm, SedeForm, SedeHorarioForm
+from .models import Cancha, Sede, SedeHorario
 
 
 @login_required
@@ -28,6 +33,11 @@ def sede_lista(request):
 @permission_required("instalaciones.view_sede", raise_exception=True)
 def sede_detalle(request, pk):
     sede = get_object_or_404(Sede, pk=pk)
+    horarios = {horario.dia_semana: horario for horario in sede.horarios.all()}
+    horarios_semana = [
+        {"dia": dia, "nombre": nombre, "horario": horarios.get(dia)}
+        for dia, nombre in SedeHorario.DiaSemana.choices
+    ]
     canchas = sede.canchas.all()
     estado_cancha = request.GET.get("estado_cancha", "")
     if estado_cancha in Cancha.Estado.values:
@@ -42,6 +52,57 @@ def sede_detalle(request, pk):
             "canchas": canchas,
             "estados_cancha": Cancha.Estado.choices,
             "estado_cancha_actual": estado_cancha,
+            "horarios_semana": horarios_semana,
+            "puede_configurar_horarios": (
+                request.user.has_perm("instalaciones.change_sede")
+                and request.user.tiene_rol(Rol.ADMINISTRADOR)
+            ),
+        },
+    )
+
+
+@login_required
+@permission_required("instalaciones.change_sede", raise_exception=True)
+@require_http_methods(["GET", "POST"])
+def sede_horario_configurar(request, pk, dia):
+    if not request.user.tiene_rol(Rol.ADMINISTRADOR):
+        raise PermissionDenied
+    if dia not in SedeHorario.DiaSemana.values:
+        raise Http404
+
+    with transaction.atomic():
+        sedes = Sede.objects.all()
+        if request.method == "POST":
+            sedes = sedes.select_for_update()
+        sede = get_object_or_404(sedes, pk=pk)
+        horario = sede.horarios.filter(dia_semana=dia).first()
+        if horario is None:
+            horario = SedeHorario(sede=sede, dia_semana=dia)
+        formulario = SedeHorarioForm(
+            request.POST if request.method == "POST" else None,
+            instance=horario,
+        )
+
+        if request.method == "POST" and formulario.is_valid():
+            if formulario.cleaned_data["hora_inicio_1"] is None:
+                sede.horarios.filter(dia_semana=dia).delete()
+            else:
+                formulario.save()
+            sede.save(update_fields=["actualizado_en"])
+            messages.success(
+                request,
+                f'El horario del {horario.get_dia_semana_display().lower()} '
+                f'en la sede "{sede.nombre}" fue actualizado.',
+            )
+            return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#horarios")
+
+    return render(
+        request,
+        "instalaciones/sede_horario_formulario.html",
+        {
+            "sede": sede,
+            "dia_nombre": horario.get_dia_semana_display(),
+            "formulario": formulario,
         },
     )
 

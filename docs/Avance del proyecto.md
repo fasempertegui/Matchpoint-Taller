@@ -29,7 +29,9 @@ Estos ajustes forman parte de la revisión del hito 2 y consolidan las funcional
 
 ## Hito 3: reservas
 
-Para el tercer hito se acordó desarrollar el proceso completo de reservas normales de cancha, desde su registración hasta su finalización o anulación, con consulta y comprobante imprimible. La implementación está pendiente e incluye el ABM de precios por duración y la configuración de horarios por sede.
+Para el tercer hito se acordó desarrollar el proceso completo de reservas normales de cancha, desde su registración hasta su finalización o anulación, con consulta y comprobante imprimible. El módulo de reservas y el ABM de precios por duración están pendientes.
+
+La configuración de horarios por sede permite definir hasta dos franjas por día, con validaciones de intervalos completos y sin superposiciones. Los días sin franjas quedan sin funcionamiento. Su administración está restringida al Administrador.
 
 Cada reserva tendrá una cabecera y un detalle con uno o varios turnos, relacionados con usuarios, canchas y tarifas. El número de comprobante, la fecha de registración, el usuario responsable y el estado inicial Programada serán automáticos. El sistema calculará horarios e importes y registrará toda la operación mediante una transacción, validando disponibilidad para evitar superposiciones.
 

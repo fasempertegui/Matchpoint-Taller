@@ -9,6 +9,11 @@ urlpatterns = [
     path("nueva/", views.sede_crear, name="sede_crear"),
     path("<int:pk>/", views.sede_detalle, name="sede_detalle"),
     path("<int:pk>/editar/", views.sede_editar, name="sede_editar"),
+    path(
+        "<int:pk>/horarios/<int:dia>/",
+        views.sede_horario_configurar,
+        name="sede_horario_configurar",
+    ),
     path("<int:pk>/cambiar-estado/", views.sede_cambiar_estado, name="sede_cambiar_estado"),
     path("<int:sede_pk>/canchas/nueva/", views.cancha_crear, name="cancha_crear"),
     path("<int:sede_pk>/canchas/<int:pk>/editar/", views.cancha_editar, name="cancha_editar"),

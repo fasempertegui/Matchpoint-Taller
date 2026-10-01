@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block titulo %}Horario del {{ dia_nombre|lower }} en {{ sede.nombre }} | Academia TM{% endblock %}
+
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario">
+    <h1>Horario del {{ dia_nombre|lower }}</h1>
+    <p>{{ sede.nombre }}</p>
+    <p>Indicá una o dos franjas. Dejá todos los campos vacíos para que la sede quede sin funcionamiento este día.</p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if formulario.non_field_errors %}
+            <div class="mensaje mensaje-error" role="alert">
+                {{ formulario.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="detalle-grid">
+            {% for campo in formulario %}
+                <div class="grupo-campo">
+                    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                    {{ campo }}
+                    {% for error in campo.errors %}
+                        <p class="error-campo" role="alert">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="acciones-formulario">
+            <a class="boton boton-secundario" href="{% url 'instalaciones:sede_detalle' sede.pk %}#horarios">Cancelar</a>
+            <button class="boton boton-primario" type="submit">Guardar horarios</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

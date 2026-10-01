@@ -23,6 +23,7 @@
     <div class="pestanas-botones" role="tablist">
         <button type="button" class="pestana-boton" data-pestana="detalles" aria-selected="true">Detalles</button>
         <button type="button" class="pestana-boton" data-pestana="canchas" aria-selected="false">Canchas</button>
+        <button type="button" class="pestana-boton" data-pestana="horarios" aria-selected="false">Horarios</button>
     </div>
 
     <div class="pestana-panel" data-panel="detalles">
@@ -115,6 +116,51 @@
                             <td class="estado-vacio" colspan="4">
                                 Esta sede todavía no tiene canchas.
                             </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </div>
+    <div class="pestana-panel" data-panel="horarios" hidden>
+        <div class="encabezado-pagina encabezado-seccion">
+            <h2>Horarios de funcionamiento</h2>
+        </div>
+        <section class="tarjeta tabla-contenedor">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Día</th>
+                        <th>Primera franja</th>
+                        <th>Segunda franja</th>
+                        {% if puede_configurar_horarios %}<th class="acciones-columna">Acciones</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dia in horarios_semana %}
+                        <tr>
+                            <td>{{ dia.nombre }}</td>
+                            <td>
+                                {% if dia.horario %}
+                                    {{ dia.horario.hora_inicio_1|time:"H:i" }} a {{ dia.horario.hora_fin_1|time:"H:i" }}
+                                {% else %}
+                                    Sin funcionamiento
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if dia.horario.hora_inicio_2 %}
+                                    {{ dia.horario.hora_inicio_2|time:"H:i" }} a {{ dia.horario.hora_fin_2|time:"H:i" }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            {% if puede_configurar_horarios %}
+                                <td class="acciones">
+                                    <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_horario_configurar' sede.pk dia.dia %}">
+                                        {% if dia.horario %}Editar{% else %}Configurar{% endif %}
+                                    </a>
+                                </td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>
