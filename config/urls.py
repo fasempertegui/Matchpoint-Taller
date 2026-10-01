@@ -22,5 +22,6 @@ urlpatterns = [
     path('cuentas/', include('usuarios.urls_autenticacion')),
     path('sedes/', include('instalaciones.urls')),
     path('usuarios/', include('usuarios.urls')),
+    path('reservas/', include('reservas.urls')),
     path('', views.inicio, name='inicio'),
 ]

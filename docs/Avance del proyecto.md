@@ -29,9 +29,11 @@ Estos ajustes forman parte de la revisión del hito 2 y consolidan las funcional
 
 ## Hito 3: reservas
 
-Para el tercer hito se acordó desarrollar el proceso completo de reservas normales de cancha, desde su registración hasta su finalización o anulación, con consulta y comprobante imprimible. El módulo de reservas y el ABM de precios por duración están pendientes.
+Para el tercer hito se acordó desarrollar el proceso completo de reservas normales de cancha, desde su registración hasta su finalización o anulación, con consulta y comprobante imprimible. El proceso de reservas está pendiente.
 
 La configuración de horarios por sede permite definir hasta dos franjas por día, con validaciones de intervalos completos y sin superposiciones. Los días sin franjas quedan sin funcionamiento. Su administración está restringida al Administrador.
+
+El ABM de precios permite registrar tarifas de entre 1 y 24 horas enteras, consultar por estado y horas, modificar el importe y activar o desactivar registros. Sólo el Administrador puede operar y existe una sola tarifa activa por duración.
 
 Cada reserva tendrá una cabecera y un detalle con uno o varios turnos, relacionados con usuarios, canchas y tarifas. El número de comprobante, la fecha de registración, el usuario responsable y el estado inicial Programada serán automáticos. El sistema calculará horarios e importes y registrará toda la operación mediante una transacción, validando disponibilidad para evitar superposiciones.
 
@@ -39,4 +41,4 @@ La consulta permitirá filtrar por rango de fechas, estado, organizador, sede y 
 
 La anulación quedará restringida al Administrador y registrará motivo, fecha y usuario, con estado Anulada. Liberará todos los turnos en una transacción, conservando los registros. La finalización también será administrativa y sólo podrá realizarse cuando hayan terminado todos los turnos.
 
-Esta adaptación agrupa varios turnos en lugar del único evento previsto en la documentación y utiliza Anulada como estado de baja. La anulación propia, los bloqueos por cancelación y la reprogramación quedan fuera de esta entrega, junto con pases, invitados, ingresos, notificaciones y finalización automática. Los documentos del sistema completo conservan su alcance; estas diferencias se registran únicamente aquí.
+Esta adaptación agrupa varios turnos en lugar del único evento previsto en la documentación y utiliza Anulada como estado de baja. La anulación propia, los bloqueos por cancelación y la reprogramación quedan fuera de esta entrega, junto con pases, invitados, ingresos, notificaciones y finalización automática. Las tarifas requieren un importe positivo, aunque la especificación admite precios de cero. Los documentos del sistema completo conservan su alcance; estas diferencias se registran únicamente aquí.

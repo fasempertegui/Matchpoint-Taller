@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ precio }} | Academia TM{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta encabezado-pagina">
+    <h1>{{ precio }}</h1>
+    <div class="acciones">
+        {% if perms.reservas.change_precioreserva %}
+            <a class="boton boton-secundario" href="{% url 'reservas:precio_editar' precio.pk %}">Editar importe</a>
+            <a class="boton boton-secundario" href="{% url 'reservas:precio_cambiar_estado' precio.pk %}">
+                {% if precio.estado == "activo" %}Desactivar{% else %}Activar{% endif %}
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<section class="tarjeta detalle-grid">
+    <div>
+        <span class="etiqueta">Duración</span>
+        <p>{{ precio.duracion_horas }} hora{{ precio.duracion_horas|pluralize:"s" }}</p>
+    </div>
+    <div>
+        <span class="etiqueta">Importe total (ARS)</span>
+        <p>$ {{ precio.precio_vigente|floatformat:2 }}</p>
+    </div>
+    <div>
+        <span class="etiqueta">Estado</span>
+        <p><span class="estado estado-{% if precio.estado == 'activo' %}activa{% else %}inactiva{% endif %}">{{ precio.get_estado_display }}</span></p>
+    </div>
+    <div>
+        <span class="etiqueta">Creada</span>
+        <p>{{ precio.creado_en|date:"d/m/Y H:i" }}</p>
+    </div>
+    <div>
+        <span class="etiqueta">Última actualización</span>
+        <p>{{ precio.actualizado_en|date:"d/m/Y H:i" }}</p>
+    </div>
+</section>
+
+{% endblock %}

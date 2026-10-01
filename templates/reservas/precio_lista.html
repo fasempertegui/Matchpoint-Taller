@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block titulo %}Precios de reservas | Academia TM{% endblock %}
+
+{% block contenido %}
+<div class="tarjeta encabezado-pagina">
+    <h1>Precios de reservas</h1>
+    {% if perms.reservas.add_precioreserva %}
+        <a class="boton boton-primario" href="{% url 'reservas:precio_crear' %}">Nueva tarifa</a>
+    {% endif %}
+</div>
+
+<form method="get" class="tarjeta tarjeta-busqueda" novalidate>
+    {% for campo in formulario %}
+        <div class="grupo-campo">
+            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+            {{ campo }}
+            {% for error in campo.errors %}
+                <p class="error-campo" role="alert">{{ error }}</p>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <div class="acciones-formulario">
+        <button class="boton boton-primario" type="submit">Filtrar</button>
+    </div>
+</form>
+
+<section class="tarjeta tabla-contenedor">
+    <table>
+        <thead>
+            <tr>
+                <th>Duración</th>
+                <th>Importe (ARS)</th>
+                <th>Estado</th>
+                <th class="acciones-columna">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for precio in precios %}
+                <tr>
+                    <td>{{ precio.duracion_horas }} hora{{ precio.duracion_horas|pluralize:"s" }}</td>
+                    <td>$ {{ precio.precio_vigente|floatformat:2 }}</td>
+                    <td>
+                        <span class="estado estado-{% if precio.estado == 'activo' %}activa{% else %}inactiva{% endif %}">{{ precio.get_estado_display }}</span>
+                    </td>
+                    <td class="acciones">
+                        <a class="boton boton-secundario boton-chico" href="{% url 'reservas:precio_detalle' precio.pk %}">Detalles</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td class="estado-vacio" colspan="4">No hay tarifas para mostrar.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
