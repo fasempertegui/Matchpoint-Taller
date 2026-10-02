@@ -37,8 +37,8 @@
             <h3>Reservas</h3>
             <p>Consulta de disponibilidad y gestión de reservas de cancha.</p>
             <span class="inicio-modulo-estado">En preparación</span>
-            {% if perms.reservas.view_precioreserva %}
-                <a class="inicio-modulo-enlace" href="{% url 'reservas:precio_lista' %}">Administrar precios</a>
+            {% if perms.reservas.view_precioreserva and perms.instalaciones.view_sede %}
+                <a class="inicio-modulo-enlace" href="{% url 'instalaciones:sede_lista' %}">Configurar precios por sede</a>
             {% endif %}
         </article>
 

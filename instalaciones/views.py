@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
+from reservas.forms import PrecioReservaFiltroForm
 from usuarios.models import Rol
 
 from .forms import CanchaForm, SedeForm, SedeHorarioForm
@@ -44,6 +45,24 @@ def sede_detalle(request, pk):
         canchas = canchas.filter(estado=estado_cancha)
     else:
         estado_cancha = ""
+    puede_consultar_precios = (
+        request.user.has_perm("reservas.view_precioreserva")
+        and request.user.tiene_rol(Rol.ADMINISTRADOR)
+    )
+    formulario_precios = None
+    precios = None
+    if puede_consultar_precios:
+        formulario_precios = PrecioReservaFiltroForm(request.GET, prefix="precio")
+        precios = sede.precios_reservas.all()
+        if formulario_precios.is_valid():
+            estado_precio = formulario_precios.cleaned_data["estado"]
+            duracion = formulario_precios.cleaned_data["duracion_horas"]
+            if estado_precio:
+                precios = precios.filter(estado=estado_precio)
+            if duracion is not None:
+                precios = precios.filter(duracion_horas=duracion)
+        else:
+            precios = precios.none()
     return render(
         request,
         "instalaciones/sede_detalle.html",
@@ -53,6 +72,9 @@ def sede_detalle(request, pk):
             "estados_cancha": Cancha.Estado.choices,
             "estado_cancha_actual": estado_cancha,
             "horarios_semana": horarios_semana,
+            "puede_consultar_precios": puede_consultar_precios,
+            "formulario_precios": formulario_precios,
+            "precios": precios,
             "puede_configurar_horarios": (
                 request.user.has_perm("instalaciones.change_sede")
                 and request.user.tiene_rol(Rol.ADMINISTRADOR)

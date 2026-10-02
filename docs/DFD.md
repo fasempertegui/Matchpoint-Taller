@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes y canchas. Mas adelante se inluiran los demas.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas y precios de reservas por sede. Los demás procesos del sistema están pendientes de representación.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -21,6 +21,7 @@ Los números escritos sobre las flechas identifican los datos descriptos debajo 
 - **D4: Sesiones** (almacén técnico de autenticación)
 - **D5: Sedes**
 - **D6: Canchas**
+- **D7: Precios de reservas**
 
 ---
 
@@ -667,3 +668,145 @@ flowchart LR
 3. Datos de la sesión autenticada.
 4. Sesión que debe invalidarse.
 5. Confirmación del cierre de sesión.
+
+---
+
+## 6. Precios de reservas por sede
+
+### DFD 25: consultar precios de reservas de una sede
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((25. Consultar precios de reservas de una sede))
+    D5[(D5: Sedes)]
+    D7[(D7: Precios de reservas)]
+
+    A -->|1| P
+    P -->|2| D5
+    D5 -->|3| P
+    P -->|4| D7
+    D7 -->|5| P
+    P -->|6| A
+```
+
+**Datos que circulan**
+
+1. Sede seleccionada, filtros de estado y duración o tarifa seleccionada.
+2. Identificador de la sede consultada.
+3. Datos de la sede.
+4. Criterios de consulta de precios de esa sede.
+5. Datos de las tarifas encontradas.
+6. Listado o detalle de precios de la sede.
+
+### DFD 26: registrar un precio de reserva en una sede
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((26. Registrar un precio de reserva en una sede))
+    D5[(D5: Sedes)]
+    D7[(D7: Precios de reservas)]
+
+    A -->|1| P
+    P -->|2| D5
+    D5 -->|3| P
+    P -->|4| D7
+    D7 -->|5| P
+    P -->|6| D7
+    P -->|7| A
+```
+
+**Datos que circulan**
+
+1. Sede seleccionada, duración, importe y confirmación del alta.
+2. Identificador de la sede seleccionada.
+3. Datos de la sede.
+4. Sede y duración para consultar tarifas activas.
+5. Tarifa activa existente para esa sede y duración, si la hay.
+6. Nueva tarifa de la sede, con duración, importe y estado Activo.
+7. Resultado del alta o errores de validación.
+
+### DFD 27: actualizar el importe de un precio de reserva
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((27. Actualizar el importe de un precio de reserva))
+    D5[(D5: Sedes)]
+    D7[(D7: Precios de reservas)]
+
+    A -->|1| P
+    P -->|2| D5
+    D5 -->|3| P
+    P -->|4| D7
+    D7 -->|5| P
+    P -->|6| D7
+    P -->|7| A
+```
+
+**Datos que circulan**
+
+1. Sede y tarifa seleccionadas, nuevo importe y confirmación.
+2. Identificador de la sede consultada.
+3. Datos de la sede.
+4. Identificadores de la sede y tarifa consultadas.
+5. Datos de la tarifa de esa sede.
+6. Nuevo importe vigente y fecha de actualización.
+7. Resultado de la actualización o errores de validación.
+
+### DFD 28: activar un precio de reserva
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((28. Activar un precio de reserva))
+    D5[(D5: Sedes)]
+    D7[(D7: Precios de reservas)]
+
+    A -->|1| P
+    P -->|2| D5
+    D5 -->|3| P
+    P -->|4| D7
+    D7 -->|5| P
+    P -->|6| D7
+    P -->|7| A
+```
+
+**Datos que circulan**
+
+1. Sede y tarifa seleccionadas, con confirmación de activación.
+2. Identificador de la sede consultada.
+3. Datos de la sede.
+4. Sede y tarifa seleccionadas y criterio de tarifas activas de esa sede y duración.
+5. Datos de la tarifa seleccionada y de otras activas de esa sede y duración, si las hay.
+6. Estado Activo y fecha de actualización de la tarifa.
+7. Resultado de la activación o conflicto por otra tarifa activa de esa sede y duración.
+
+### DFD 29: desactivar un precio de reserva
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((29. Desactivar un precio de reserva))
+    D5[(D5: Sedes)]
+    D7[(D7: Precios de reservas)]
+
+    A -->|1| P
+    P -->|2| D5
+    D5 -->|3| P
+    P -->|4| D7
+    D7 -->|5| P
+    P -->|6| D7
+    P -->|7| A
+```
+
+**Datos que circulan**
+
+1. Sede y tarifa seleccionadas, con confirmación de desactivación.
+2. Identificador de la sede consultada.
+3. Datos de la sede.
+4. Identificadores de la sede y tarifa consultadas.
+5. Datos de la tarifa de esa sede.
+6. Estado Inactivo y fecha de actualización de la tarifa.
+7. Resultado de la desactivación o errores de validación.

@@ -33,7 +33,7 @@ Para el tercer hito se acordó desarrollar el proceso completo de reservas norma
 
 La configuración de horarios por sede permite definir hasta dos franjas por día, con validaciones de intervalos completos y sin superposiciones. Los días sin franjas quedan sin funcionamiento. Su administración está restringida al Administrador.
 
-El ABM de precios permite registrar tarifas de entre 1 y 24 horas enteras, consultar por estado y horas, modificar el importe y activar o desactivar registros. Sólo el Administrador puede operar y existe una sola tarifa activa por duración.
+El ABM de precios se configura desde la pestaña Precios de reservas del detalle de cada sede. Permite registrar tarifas de entre 1 y 24 horas enteras, consultar por estado y horas, modificar el importe y activar o desactivar registros. Sus precios son comunes a todas las canchas de la sede. Sólo el Administrador puede operar y existe una sola tarifa activa por sede y duración, validada también en PostgreSQL. La sede y duración quedan fijas al crear la tarifa.
 
 Cada reserva tendrá una cabecera y un detalle con uno o varios turnos, relacionados con usuarios, canchas y tarifas. El número de comprobante, la fecha de registración, el usuario responsable y el estado inicial Programada serán automáticos. El sistema calculará horarios e importes y registrará toda la operación mediante una transacción, validando disponibilidad para evitar superposiciones.
 

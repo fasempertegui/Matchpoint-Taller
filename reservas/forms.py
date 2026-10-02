@@ -21,8 +21,9 @@ class PrecioReservaForm(forms.ModelForm):
             ),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, sede, **kwargs):
         super().__init__(*args, **kwargs)
+        self.instance.sede = sede
         if self.instance.pk:
             self.fields["duracion_horas"].disabled = True
             self.fields["duracion_horas"].help_text = "La duración se define al crear la tarifa."
@@ -33,6 +34,7 @@ class PrecioReservaForm(forms.ModelForm):
         duracion = self.cleaned_data["duracion_horas"]
         if self.instance.estado == PrecioReserva.Estado.ACTIVO:
             precios = PrecioReserva.objects.filter(
+                sede=self.instance.sede,
                 duracion_horas=duracion,
                 estado=PrecioReserva.Estado.ACTIVO,
             )
@@ -40,7 +42,7 @@ class PrecioReservaForm(forms.ModelForm):
                 precios = precios.exclude(pk=self.instance.pk)
             if precios.exists():
                 raise forms.ValidationError(
-                    "Ya existe una tarifa activa para esa duración."
+                    "Ya existe una tarifa activa para esa duración en esta sede."
                 )
         return duracion
 

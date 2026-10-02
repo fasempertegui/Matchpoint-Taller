@@ -94,9 +94,9 @@ Ambas variantes comparten el resto de las características:
 
 Cualquier persona puede reservar una cancha, siempre que haya disponibilidad. La reserva representa un intervalo continuo de una o más horas y se administra como una única actividad indivisible.
 
-Cada reserva se paga por separado, según su duración. No se trabaja con reservas recurrentes o fijas.
+Cada reserva se paga por separado, según su sede y duración. Cada sede define sus propios precios para las distintas duraciones, comunes a todas sus canchas. No se trabaja con reservas recurrentes o fijas.
 
-En una **reserva normal**, el organizador paga el precio correspondiente a su duración. La cantidad e identidad de los invitados no modifica el precio y no necesita registrarse.
+En una **reserva normal**, el organizador paga el precio correspondiente a su sede y duración. La cantidad e identidad de los invitados no modifica el precio y no necesita registrarse.
 
 En una **reserva con pase**, el organizador utiliza una membresía de pase vigente. Se conoce la cantidad total de invitados y se identifica a quienes ya existen como clientes. Si un invitado identificado posee un pase vigente con horas disponibles ese día, se registra cuál de sus membresías lo cubre; los demás invitados generan el precio adicional correspondiente. El límite diario del pase (ver 3.2) se aplica igual para el organizador y para cada invitado cubierto.
 

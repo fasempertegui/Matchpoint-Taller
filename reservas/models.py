@@ -10,6 +10,11 @@ class PrecioReserva(models.Model):
         INACTIVO = "inactivo", "Inactivo"
 
     id = models.BigAutoField(primary_key=True)
+    sede = models.ForeignKey(
+        "instalaciones.Sede",
+        on_delete=models.PROTECT,
+        related_name="precios_reservas",
+    )
     duracion_horas = models.PositiveSmallIntegerField(
         "Duración en horas",
         validators=[MinValueValidator(1), MaxValueValidator(24)],
@@ -31,7 +36,7 @@ class PrecioReserva(models.Model):
 
     class Meta:
         db_table = "precios_reservas_cancha"
-        ordering = ("duracion_horas", "-creado_en")
+        ordering = ("sede__nombre", "duracion_horas", "-creado_en")
         default_permissions = ("add", "change", "view")
         constraints = [
             models.CheckConstraint(
@@ -51,10 +56,10 @@ class PrecioReserva(models.Model):
                 name="precio_reserva_estado_valido",
             ),
             models.UniqueConstraint(
-                fields=("duracion_horas",),
+                fields=("sede", "duracion_horas"),
                 condition=models.Q(estado="activo"),
-                name="precio_reserva_duracion_activa_unica",
-                violation_error_message="Ya existe una tarifa activa para esa duración.",
+                name="precio_reserva_sede_duracion_activa_unica",
+                violation_error_message="Ya existe una tarifa activa para esa duración en esta sede.",
             ),
         ]
         verbose_name = "precio de reserva"
@@ -62,4 +67,4 @@ class PrecioReserva(models.Model):
 
     def __str__(self):
         unidad = "hora" if self.duracion_horas == 1 else "horas"
-        return f"Reserva de {self.duracion_horas} {unidad}"
+        return f"Reserva de {self.duracion_horas} {unidad} ({self.sede.nombre})"

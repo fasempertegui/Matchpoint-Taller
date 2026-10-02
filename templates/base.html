@@ -31,9 +31,6 @@
                     {% if perms.usuarios.view_usuario %}
                         <a href="{% url 'usuarios:usuario_lista' %}">Usuarios</a>
                     {% endif %}
-                    {% if perms.reservas.view_precioreserva %}
-                        <a href="{% url 'reservas:precio_lista' %}">Precios de reservas</a>
-                    {% endif %}
                     <a href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Mi perfil</a>
                     <form class="formulario-en-linea" method="post" action="{% url 'logout' %}">
                         {% csrf_token %}

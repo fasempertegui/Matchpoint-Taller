@@ -5,9 +5,10 @@ from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
+from instalaciones.models import Sede
 from usuarios.models import Rol
 
-from .forms import PrecioReservaEstadoForm, PrecioReservaFiltroForm, PrecioReservaForm
+from .forms import PrecioReservaEstadoForm, PrecioReservaForm
 from .models import PrecioReserva
 
 
@@ -17,47 +18,30 @@ def _exigir_administrador(usuario):
 
 
 def _informar_duracion_duplicada(formulario, error):
-    if error.__cause__.diag.constraint_name != "precio_reserva_duracion_activa_unica":
+    if error.__cause__.diag.constraint_name != "precio_reserva_sede_duracion_activa_unica":
         raise error
-    formulario.add_error(None, "Ya existe una tarifa activa para esa duración.")
+    formulario.add_error(None, "Ya existe una tarifa activa para esa duración en esta sede.")
 
 
 @login_required
 @permission_required("reservas.view_precioreserva", raise_exception=True)
-def precio_lista(request):
+def precio_detalle(request, sede_pk, pk):
     _exigir_administrador(request.user)
-    formulario = PrecioReservaFiltroForm(request.GET)
-    precios = PrecioReserva.objects.all()
-    if formulario.is_valid():
-        estado = formulario.cleaned_data["estado"]
-        duracion = formulario.cleaned_data["duracion_horas"]
-        if estado:
-            precios = precios.filter(estado=estado)
-        if duracion is not None:
-            precios = precios.filter(duracion_horas=duracion)
-    else:
-        precios = precios.none()
-    return render(
-        request,
-        "reservas/precio_lista.html",
-        {"precios": precios, "formulario": formulario},
-    )
-
-
-@login_required
-@permission_required("reservas.view_precioreserva", raise_exception=True)
-def precio_detalle(request, pk):
-    _exigir_administrador(request.user)
-    precio = get_object_or_404(PrecioReserva, pk=pk)
-    return render(request, "reservas/precio_detalle.html", {"precio": precio})
+    sede = get_object_or_404(Sede, pk=sede_pk)
+    precio = get_object_or_404(sede.precios_reservas.all(), pk=pk)
+    return render(request, "reservas/precio_detalle.html", {"sede": sede, "precio": precio})
 
 
 @login_required
 @permission_required("reservas.add_precioreserva", raise_exception=True)
 @require_http_methods(["GET", "POST"])
-def precio_crear(request):
+def precio_crear(request, sede_pk):
     _exigir_administrador(request.user)
-    formulario = PrecioReservaForm(request.POST if request.method == "POST" else None)
+    sede = get_object_or_404(Sede, pk=sede_pk)
+    formulario = PrecioReservaForm(
+        request.POST if request.method == "POST" else None,
+        sede=sede,
+    )
     if request.method == "POST" and formulario.is_valid():
         try:
             with transaction.atomic():
@@ -66,12 +50,13 @@ def precio_crear(request):
             _informar_duracion_duplicada(formulario, error)
         else:
             messages.success(request, f'La tarifa "{precio}" fue creada.')
-            return redirect("reservas:precio_detalle", pk=precio.pk)
+            return redirect("reservas:precio_detalle", sede_pk=sede.pk, pk=precio.pk)
 
     return render(
         request,
         "reservas/precio_formulario.html",
         {
+            "sede": sede,
             "formulario": formulario,
             "titulo": "Nuevo precio de reserva",
             "texto_boton": "Crear tarifa",
@@ -82,27 +67,30 @@ def precio_crear(request):
 @login_required
 @permission_required("reservas.change_precioreserva", raise_exception=True)
 @require_http_methods(["GET", "POST"])
-def precio_editar(request, pk):
+def precio_editar(request, sede_pk, pk):
     _exigir_administrador(request.user)
+    sede = get_object_or_404(Sede, pk=sede_pk)
     with transaction.atomic():
-        precios = PrecioReserva.objects.all()
+        precios = sede.precios_reservas.all()
         if request.method == "POST":
             precios = precios.select_for_update()
         precio = get_object_or_404(precios, pk=pk)
         formulario = PrecioReservaForm(
             request.POST if request.method == "POST" else None,
             instance=precio,
+            sede=sede,
         )
         if request.method == "POST" and formulario.is_valid():
             precio = formulario.save(commit=False)
             precio.save(update_fields=["precio_vigente", "actualizado_en"])
             messages.success(request, f'La tarifa "{precio}" fue actualizada.')
-            return redirect("reservas:precio_detalle", pk=precio.pk)
+            return redirect("reservas:precio_detalle", sede_pk=sede.pk, pk=precio.pk)
 
     return render(
         request,
         "reservas/precio_formulario.html",
         {
+            "sede": sede,
             "formulario": formulario,
             "titulo": "Editar precio de reserva",
             "texto_boton": "Guardar cambios",
@@ -114,10 +102,11 @@ def precio_editar(request, pk):
 @login_required
 @permission_required("reservas.change_precioreserva", raise_exception=True)
 @require_http_methods(["GET", "POST"])
-def precio_cambiar_estado(request, pk):
+def precio_cambiar_estado(request, sede_pk, pk):
     _exigir_administrador(request.user)
+    sede = get_object_or_404(Sede, pk=sede_pk)
     with transaction.atomic():
-        precios = PrecioReserva.objects.all()
+        precios = sede.precios_reservas.all()
         if request.method == "POST":
             precios = precios.select_for_update()
         precio = get_object_or_404(precios, pk=pk)
@@ -146,10 +135,15 @@ def precio_cambiar_estado(request, pk):
                     request,
                     f'La tarifa "{precio}" quedó {precio.get_estado_display().lower()}.',
                 )
-                return redirect("reservas:precio_detalle", pk=precio.pk)
+                return redirect("reservas:precio_detalle", sede_pk=sede.pk, pk=precio.pk)
 
     return render(
         request,
         "reservas/precio_confirmar_cambio_estado.html",
-        {"precio": precio, "nuevo_estado": nuevo_estado, "formulario": formulario},
+        {
+            "sede": sede,
+            "precio": precio,
+            "nuevo_estado": nuevo_estado,
+            "formulario": formulario,
+        },
     )

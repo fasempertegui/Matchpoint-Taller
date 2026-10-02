@@ -24,6 +24,9 @@
         <button type="button" class="pestana-boton" data-pestana="detalles" aria-selected="true">Detalles</button>
         <button type="button" class="pestana-boton" data-pestana="canchas" aria-selected="false">Canchas</button>
         <button type="button" class="pestana-boton" data-pestana="horarios" aria-selected="false">Horarios</button>
+        {% if puede_consultar_precios %}
+            <button type="button" class="pestana-boton" data-pestana="precios" aria-selected="false">Precios de reservas</button>
+        {% endif %}
     </div>
 
     <div class="pestana-panel" data-panel="detalles">
@@ -167,6 +170,62 @@
             </table>
         </section>
     </div>
+    {% if puede_consultar_precios %}
+        <div class="pestana-panel" data-panel="precios" hidden>
+            <div class="encabezado-pagina encabezado-seccion">
+                <h2>Precios de reservas</h2>
+                {% if perms.reservas.add_precioreserva %}
+                    <a class="boton boton-primario boton-chico" href="{% url 'reservas:precio_crear' sede.pk %}">Nueva tarifa</a>
+                {% endif %}
+            </div>
+
+            <form method="get" action="{% url 'instalaciones:sede_detalle' sede.pk %}#precios" class="tarjeta tarjeta-busqueda" novalidate>
+                {% for campo in formulario_precios %}
+                    <div class="grupo-campo">
+                        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                        {{ campo }}
+                        {% for error in campo.errors %}
+                            <p class="error-campo" role="alert">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <div class="acciones-formulario">
+                    <button class="boton boton-primario" type="submit">Filtrar</button>
+                </div>
+            </form>
+
+            <section class="tarjeta tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Duración</th>
+                            <th>Importe (ARS)</th>
+                            <th>Estado</th>
+                            <th class="acciones-columna">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for precio in precios %}
+                            <tr>
+                                <td>{{ precio.duracion_horas }} hora{{ precio.duracion_horas|pluralize:"s" }}</td>
+                                <td>$ {{ precio.precio_vigente|floatformat:2 }}</td>
+                                <td>
+                                    <span class="estado estado-{% if precio.estado == 'activo' %}activa{% else %}inactiva{% endif %}">{{ precio.get_estado_display }}</span>
+                                </td>
+                                <td class="acciones">
+                                    <a class="boton boton-secundario boton-chico" href="{% url 'reservas:precio_detalle' sede.pk precio.pk %}">Detalles</a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td class="estado-vacio" colspan="4">No hay tarifas para mostrar.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    {% endif %}
 </div>
 
 {% endblock %}

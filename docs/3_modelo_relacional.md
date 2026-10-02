@@ -174,6 +174,8 @@ Relaciones:
 - Una cancha pertenece a exactamente una sede.
 - Una sede puede tener cero a siete horarios de funcionamiento, uno por día de la semana.
 - Un horario de funcionamiento pertenece a exactamente una sede.
+- Una sede puede tener cero, uno o varios precios de reservas.
+- Un precio de reserva pertenece a exactamente una sede.
 
 ### 4.4 `canchas`
 
@@ -190,7 +192,7 @@ Representa una cancha disponible dentro de una sede.
 | | `creado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
 
-PostgreSQL garantiza la unicidad de la combinación `sede_id, LOWER(nombre)`, por lo que no admite nombres equivalentes sin distinguir mayúsculas de minúsculas dentro de una misma sede. El formulario aplica la misma comparación para informar el conflicto antes de guardar. Dos sedes diferentes sí pueden tener canchas con el mismo nombre. La sede se obtiene siempre a través de la cancha; no se duplica en otras tablas.
+PostgreSQL garantiza la unicidad de la combinación `sede_id, LOWER(nombre)`, por lo que no admite nombres equivalentes sin distinguir mayúsculas de minúsculas dentro de una misma sede. El formulario aplica la misma comparación para informar el conflicto antes de guardar. Dos sedes diferentes sí pueden tener canchas con el mismo nombre. La sede de un evento se obtiene a través de la cancha; no se duplica en el evento ni en sus subtipos.
 
 Relaciones:
 
@@ -298,21 +300,24 @@ Relaciones:
 
 ### 4.9 `precios_reservas_cancha`
 
-Representa una configuración de precio vigente para una reserva normal, según su duración.
+Representa una configuración de precio para una reserva normal de una sede y duración determinadas, común a todas las canchas de esa sede.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `1` |
+| FK | `sede_id` | `bigint` | | | `1` |
 | | `duracion_horas` | `smallint` | | | `1` |
 | | `precio_vigente` | `numeric(12,2)` | | | `8000.00` |
 | | `estado` | `varchar(10)` | | | `activo` (o `inactivo`) |
 | | `creado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
 
-Habrá una sola configuración activa por duración. Su estructura no cambia después de ser utilizada.
+PostgreSQL garantiza una sola configuración activa por combinación de `sede_id` y `duracion_horas` mediante una restricción de unicidad condicional para `estado = 'activo'`. La misma duración puede tener importes distintos en sedes diferentes. La sede y duración de una configuración no cambian después de ser utilizada. Los precios inactivos y los importes aplicados en reservas se conservan.
 
 Relaciones:
 
+- Un precio de reserva pertenece a exactamente una sede.
+- Una sede puede tener cero, uno o varios precios de reservas.
 - Un precio de reserva puede estar aplicado en cero, una o varias reservas.
 - Una reserva normal utiliza, como máximo, un precio de reserva.
 
@@ -737,7 +742,7 @@ El sistema aplica, como mínimo:
 10. Al menos un profesor activo por clase.
 11. Protección de clases y reservas terminales (canceladas o completadas) y autorización para completarlas.
 12. Exclusividad entre precio normal y membresía de pase en reservas.
-13. Coherencia entre duración de reserva normal y `precios_reservas_cancha`.
+13. Coherencia entre la duración de la reserva normal y su tarifa de `precios_reservas_cancha`, cuya sede debe coincidir con la de la cancha del evento. La tarifa debe estar activa al registrar y ser la única activa para esa sede y duración.
 14. Vigencia, titularidad, día habilitado según el tipo de pase (`pases.tipo`) y horas diarias disponibles del pase del organizador al crear o modificar una reserva con pase; el día se valida antes que las horas.
 15. Coherencia de invitados, cantidad declarada, membresías de pase aplicadas, día habilitado y horas diarias disponibles de cada invitado identificado con pase.
 16. Congelamiento de reservas e invitados al cancelar o completar el evento.
@@ -786,7 +791,7 @@ Al modificar la planilla y volver a generar un período ya generado, eliminará 
 
 ### 7.4 Reserva normal
 
-Se ejecuta cuando el organizador no tiene una membresía de pase vigente para la fecha elegida, o no quiere usarla. Creará un evento continuo, copiará el precio aplicable, creará la reserva y registrará el ingreso opcional. Todo el intervalo deberá estar disponible. Tanto el horario de funcionamiento de la sede (`sedes_horarios`) como el máximo de catorce días de anticipación se rechazan sin excepción cuando organiza un usuario de autoservicio, y se advierten con confirmación explícita cuando gestiona el administrador.
+Se ejecuta cuando el organizador no tiene una membresía de pase vigente para la fecha elegida, o no quiere usarla. Ofrecerá únicamente tarifas activas de la sede seleccionada y comprobará al confirmar que la tarifa siga activa, corresponda a la duración elegida y pertenezca a la sede de la cancha. Si no existe una tarifa aplicable, rechazará la reserva normal. Creará un evento continuo, copiará el precio aplicable, creará la reserva y registrará el ingreso opcional. Todo el intervalo deberá estar disponible. Tanto el horario de funcionamiento de la sede (`sedes_horarios`) como el máximo de catorce días de anticipación se rechazan sin excepción cuando organiza un usuario de autoservicio, y se advierten con confirmación explícita cuando gestiona el administrador.
 
 ### 7.5 Reserva con pase
 

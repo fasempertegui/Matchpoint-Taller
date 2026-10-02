@@ -73,7 +73,7 @@ Toda reserva respeta el horario de funcionamiento de su sede (ver introducción 
 
 El sistema también limitará con cuánta anticipación puede crearse una reserva: como máximo, catorce días corridos desde la fecha en que se crea. Para una reserva autogestionada desde el portal esa fecha límite es inflexible; para el administrador es, otra vez, solo una advertencia con confirmación explícita, no un bloqueo.
 
-Una reserva será un evento continuo e indivisible de una o más horas. Podrá ser normal, con precio determinado por su duración, o utilizar una membresía de pase vigente del organizador.
+Una reserva será un evento continuo e indivisible de una o más horas. Podrá ser normal, con precio determinado por su sede y duración, o utilizar una membresía de pase vigente del organizador.
 
 Toda cancelación de reserva exigirá un motivo. Un administrador solo puede cancelar la reserva de un usuario por una causa ajena al organizador —clima adverso, torneo, mantenimiento u otro imprevisto—: si el organizador quiere cancelar su propia reserva, debe hacerlo él mismo desde el portal (autoservicio). Para este sistema, que cada usuario tenga y use su propia cuenta para gestionar sus reservas no es una comodidad opcional: es un requisito, precisamente para que esta distinción tenga sentido.
 
@@ -147,9 +147,11 @@ Las membresías contemplarán:
 
 `membresias_usuarios` vinculará un usuario con una membresía durante un mes calendario y conservará el precio aplicado en ese momento. Las clases no serán originadas por planes; la asignación y la asistencia serán las relaciones del usuario con cada clase.
 
-Las reservas de cancha normales, en cambio, se pagarán por uso según su duración, mediante una configuración de precio (`precios_reservas_cancha`) independiente de las membresías.
+Las reservas de cancha normales, en cambio, se pagarán por uso según su sede y duración, mediante una configuración de precio (`precios_reservas_cancha`) independiente de las membresías. Cada configuración pertenecerá a una sede y habrá una sola activa por combinación de sede y duración. Sus importes serán comunes a todas las canchas de esa sede.
 
-Esos precios de reserva se gestionarán por separado de las membresías. Cada reserva copiará el precio aplicado para conservar su historia. El dinero efectivamente cobrado se registrará por separado como ingreso.
+El Administrador configurará esos precios desde el detalle de cada sede, como sus horarios de funcionamiento. En una reserva normal se seleccionará la sede antes de ofrecer sus tarifas activas; si no existe una tarifa activa para la duración solicitada, no podrá confirmarse la reserva normal. El servidor comprobará que la tarifa pertenezca a la sede de la cancha y siga activa al confirmar. Una sede inactiva conservará su configuración, pero no admitirá nuevas reservas.
+
+Cada reserva copiará el precio aplicado para conservar su historia. Modificar el importe o desactivar una tarifa no alterará las reservas registradas. La sede y duración de una tarifa utilizada no podrán modificarse. El dinero efectivamente cobrado se registrará por separado como ingreso.
 
 El sistema no controlará automáticamente la cantidad de clases, frecuencia ni cumplimiento de un plan mensual. Las reservas cubiertas por un pase seguirán registrándose como reservas concretas.
 

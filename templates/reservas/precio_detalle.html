@@ -7,8 +7,8 @@
     <h1>{{ precio }}</h1>
     <div class="acciones">
         {% if perms.reservas.change_precioreserva %}
-            <a class="boton boton-secundario" href="{% url 'reservas:precio_editar' precio.pk %}">Editar importe</a>
-            <a class="boton boton-secundario" href="{% url 'reservas:precio_cambiar_estado' precio.pk %}">
+            <a class="boton boton-secundario" href="{% url 'reservas:precio_editar' sede.pk precio.pk %}">Editar importe</a>
+            <a class="boton boton-secundario" href="{% url 'reservas:precio_cambiar_estado' sede.pk precio.pk %}">
                 {% if precio.estado == "activo" %}Desactivar{% else %}Activar{% endif %}
             </a>
         {% endif %}
@@ -16,6 +16,10 @@
 </div>
 
 <section class="tarjeta detalle-grid">
+    <div>
+        <span class="etiqueta">Sede</span>
+        <p><a href="{% url 'instalaciones:sede_detalle' sede.pk %}#precios">{{ sede.nombre }}</a></p>
+    </div>
     <div>
         <span class="etiqueta">Duración</span>
         <p>{{ precio.duracion_horas }} hora{{ precio.duracion_horas|pluralize:"s" }}</p>

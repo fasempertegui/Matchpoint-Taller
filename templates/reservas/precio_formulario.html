@@ -5,6 +5,7 @@
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario">
     <h1>{{ titulo }}</h1>
+    <p>Sede: <a href="{% url 'instalaciones:sede_detalle' sede.pk %}#precios">{{ sede.nombre }}</a></p>
     <form method="post" novalidate>
         {% csrf_token %}
 
@@ -27,7 +28,7 @@
         {% endfor %}
 
         <div class="acciones-formulario">
-            <a class="boton boton-secundario" href="{% if precio %}{% url 'reservas:precio_detalle' precio.pk %}{% else %}{% url 'reservas:precio_lista' %}{% endif %}">Cancelar</a>
+            <a class="boton boton-secundario" href="{% if precio %}{% url 'reservas:precio_detalle' sede.pk precio.pk %}{% else %}{% url 'instalaciones:sede_detalle' sede.pk %}#precios{% endif %}">Cancelar</a>
             <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
         </div>
     </form>
