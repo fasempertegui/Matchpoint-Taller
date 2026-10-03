@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -9,13 +9,41 @@ from django.views.decorators.http import require_http_methods
 from instalaciones.models import Sede
 from usuarios.models import Rol
 
-from .forms import PrecioReservaForm
+from .disponibilidad import consultar_disponibilidad
+from .forms import DisponibilidadForm, PrecioReservaForm
 from .models import PrecioReserva
 
 
 def _exigir_administrador(usuario):
     if not usuario.tiene_rol(Rol.ADMINISTRADOR):
         raise PermissionDenied
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def disponibilidad(request):
+    if not request.user.is_active or not request.user.roles.filter(
+        rol__codigo__in=(Rol.ADMINISTRADOR, Rol.RESERVAS)
+    ).exists():
+        raise PermissionDenied
+
+    formulario = DisponibilidadForm(request.POST if request.method == "POST" else None)
+    resultado = None
+    if request.method == "POST" and formulario.is_valid():
+        try:
+            resultado = consultar_disponibilidad(
+                formulario.cleaned_data["cancha"],
+                formulario.cleaned_data["fecha"],
+                formulario.cleaned_data["cantidad_horas"],
+            )
+        except ValidationError as error:
+            formulario.add_error(None, error)
+
+    return render(request, "reservas/disponibilidad.html", {
+        "formulario": formulario,
+        "resultado": resultado,
+        "hay_sedes": formulario.fields["sede"].queryset.exists(),
+    })
 
 
 @login_required
