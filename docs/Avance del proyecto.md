@@ -41,3 +41,13 @@ La configuración de precios está disponible en la pestaña Precios de reservas
 Cada precio pertenece a una sede y tiene un importe positivo por turno de una hora, común a todas sus canchas. El total de una reserva se calcula multiplicando ese importe por la cantidad de turnos.
 
 Sólo puede existir un precio activo por sede; esta condición está garantizada en la base de datos. Actualizar desactiva el precio actual y crea un registro nuevo en una única transacción, bloqueando la sede para coordinar operaciones simultáneas. Un importe igual al actual se rechaza sin guardar cambios. Los precios inactivos quedan disponibles para consulta y no pueden editarse ni reactivarse. Las operaciones están restringidas al Administrador.
+
+### Modelo de reservas
+
+El modelo cuenta con las tablas Turno, Reserva y ReservaTurno. Un turno identifica una cancha, una fecha y un intervalo de una hora. La reserva es la cabecera: guarda el organizador, el usuario que registra, el precio aplicado, las observaciones y el estado. Cada detalle vincula la reserva con uno de sus turnos.
+
+La base de datos impide repetir un turno para la misma cancha, fecha y hora de inicio, y repetir un mismo turno dentro de una reserva. También exige que los turnos comiencen en punto, duren exactamente una hora y terminen dentro de la misma fecha.
+
+La reserva tiene estado inicial Programada y fecha de registración automática. Los estados permitidos son Programada, Anulada y Finalizada. La base exige fecha, responsable y motivo con contenido para una anulación, y fecha y responsable para una finalización. Estos datos sólo pueden estar presentes en el estado correspondiente. Las relaciones protegen los registros vinculados contra la eliminación física.
+
+La preparación de turnos, la consulta de disponibilidad y las operaciones de registro, consulta, anulación, finalización e impresión están pendientes de implementación. El registro debe comprobar que los detalles formen un intervalo continuo de una única cancha y fecha, aplicar el precio de su sede y garantizar la disponibilidad dentro de una transacción.
