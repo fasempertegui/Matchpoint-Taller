@@ -174,10 +174,14 @@
         <div class="pestana-panel" data-panel="precios" hidden>
             <div class="encabezado-pagina encabezado-seccion">
                 <h2>Precios de reservas</h2>
-                {% if perms.reservas.add_precioreserva %}
-                    <a class="boton boton-primario boton-chico" href="{% url 'reservas:precio_crear' sede.pk %}">Nueva tarifa</a>
+                {% if not precio_activo and perms.reservas.add_precioreserva %}
+                    <a class="boton boton-primario boton-chico" href="{% url 'reservas:precio_crear' sede.pk %}">Crear precio</a>
                 {% endif %}
             </div>
+
+            {% if not precio_activo %}
+                <p>La sede no tiene un precio por turno configurado.</p>
+            {% endif %}
 
             <form method="get" action="{% url 'instalaciones:sede_detalle' sede.pk %}#precios" class="tarjeta tarjeta-busqueda" novalidate>
                 {% for campo in formulario_precios %}
@@ -198,8 +202,8 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Duración</th>
-                            <th>Importe (ARS)</th>
+                            <th>Creado</th>
+                            <th>Precio por turno</th>
                             <th>Estado</th>
                             <th class="acciones-columna">Acciones</th>
                         </tr>
@@ -207,18 +211,20 @@
                     <tbody>
                         {% for precio in precios %}
                             <tr>
-                                <td>{{ precio.duracion_horas }} hora{{ precio.duracion_horas|pluralize:"s" }}</td>
-                                <td>$ {{ precio.precio_vigente|floatformat:2 }}</td>
+                                <td>{{ precio.creado_en|date:"d/m/Y H:i" }}</td>
+                                <td>$ {{ precio.importe|floatformat:2 }}</td>
                                 <td>
                                     <span class="estado estado-{% if precio.estado == 'activo' %}activa{% else %}inactiva{% endif %}">{{ precio.get_estado_display }}</span>
                                 </td>
                                 <td class="acciones">
-                                    <a class="boton boton-secundario boton-chico" href="{% url 'reservas:precio_detalle' sede.pk precio.pk %}">Detalles</a>
+                                    {% if precio.estado == "activo" and perms.reservas.change_precioreserva %}
+                                        <a class="boton boton-secundario boton-chico" href="{% url 'reservas:precio_actualizar' sede.pk precio.pk %}">Actualizar precio</a>
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td class="estado-vacio" colspan="4">No hay tarifas para mostrar.</td>
+                                <td class="estado-vacio" colspan="5">No hay precios para mostrar.</td>
                             </tr>
                         {% endfor %}
                     </tbody>

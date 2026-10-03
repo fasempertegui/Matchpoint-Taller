@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -15,16 +15,12 @@ class PrecioReserva(models.Model):
         on_delete=models.PROTECT,
         related_name="precios_reservas",
     )
-    duracion_horas = models.PositiveSmallIntegerField(
-        "Duración en horas",
-        validators=[MinValueValidator(1), MaxValueValidator(24)],
-    )
-    precio_vigente = models.DecimalField(
-        "Importe (ARS)",
+    importe = models.DecimalField(
+        "Precio por turno (ARS)",
         max_digits=12,
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.01"))],
-        help_text="Importe total para la duración indicada.",
+        help_text="Importe por un turno de una hora, común a todas las canchas de la sede.",
     )
     estado = models.CharField(
         max_length=10,
@@ -36,19 +32,11 @@ class PrecioReserva(models.Model):
 
     class Meta:
         db_table = "precios_reservas_cancha"
-        ordering = ("sede__nombre", "duracion_horas", "-creado_en")
+        ordering = ("sede__nombre", "-creado_en", "-pk")
         default_permissions = ("add", "change", "view")
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(duracion_horas__gte=1),
-                name="precio_reserva_duracion_positiva",
-            ),
-            models.CheckConstraint(
-                condition=models.Q(duracion_horas__lte=24),
-                name="precio_reserva_duracion_maxima",
-            ),
-            models.CheckConstraint(
-                condition=models.Q(precio_vigente__gte=Decimal("0.01")),
+                condition=models.Q(importe__gte=Decimal("0.01")),
                 name="precio_reserva_importe_positivo",
             ),
             models.CheckConstraint(
@@ -56,15 +44,14 @@ class PrecioReserva(models.Model):
                 name="precio_reserva_estado_valido",
             ),
             models.UniqueConstraint(
-                fields=("sede", "duracion_horas"),
+                fields=("sede",),
                 condition=models.Q(estado="activo"),
-                name="precio_reserva_sede_duracion_activa_unica",
-                violation_error_message="Ya existe una tarifa activa para esa duración en esta sede.",
+                name="precio_reserva_sede_activo_unico",
+                violation_error_message="Ya existe un precio activo para esta sede.",
             ),
         ]
         verbose_name = "precio de reserva"
         verbose_name_plural = "precios de reservas"
 
     def __str__(self):
-        unidad = "hora" if self.duracion_horas == 1 else "horas"
-        return f"Reserva de {self.duracion_horas} {unidad} ({self.sede.nombre})"
+        return f"Precio por turno ({self.sede.nombre})"

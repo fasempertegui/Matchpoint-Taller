@@ -6,6 +6,10 @@
 <section class="tarjeta tarjeta-formulario">
     <h1>{{ titulo }}</h1>
     <p>Sede: <a href="{% url 'instalaciones:sede_detalle' sede.pk %}#precios">{{ sede.nombre }}</a></p>
+    {% if precio %}
+        <p>Precio actual por turno: <strong>$ {{ precio.importe|floatformat:2 }}</strong>.</p>
+        <p>El nuevo precio se aplicará a las reservas que se confirmen desde su actualización.</p>
+    {% endif %}
     <form method="post" novalidate>
         {% csrf_token %}
 
@@ -28,7 +32,7 @@
         {% endfor %}
 
         <div class="acciones-formulario">
-            <a class="boton boton-secundario" href="{% if precio %}{% url 'reservas:precio_detalle' sede.pk precio.pk %}{% else %}{% url 'instalaciones:sede_detalle' sede.pk %}#precios{% endif %}">Cancelar</a>
+            <a class="boton boton-secundario" href="{% url 'instalaciones:sede_detalle' sede.pk %}#precios">Cancelar</a>
             <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
         </div>
     </form>

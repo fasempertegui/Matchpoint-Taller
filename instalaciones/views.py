@@ -51,16 +51,15 @@ def sede_detalle(request, pk):
     )
     formulario_precios = None
     precios = None
+    precio_activo = None
     if puede_consultar_precios:
         formulario_precios = PrecioReservaFiltroForm(request.GET, prefix="precio")
         precios = sede.precios_reservas.all()
+        precio_activo = precios.filter(estado="activo").first()
         if formulario_precios.is_valid():
             estado_precio = formulario_precios.cleaned_data["estado"]
-            duracion = formulario_precios.cleaned_data["duracion_horas"]
             if estado_precio:
                 precios = precios.filter(estado=estado_precio)
-            if duracion is not None:
-                precios = precios.filter(duracion_horas=duracion)
         else:
             precios = precios.none()
     return render(
@@ -75,6 +74,7 @@ def sede_detalle(request, pk):
             "puede_consultar_precios": puede_consultar_precios,
             "formulario_precios": formulario_precios,
             "precios": precios,
+            "precio_activo": precio_activo,
             "puede_configurar_horarios": (
                 request.user.has_perm("instalaciones.change_sede")
                 and request.user.tiene_rol(Rol.ADMINISTRADOR)

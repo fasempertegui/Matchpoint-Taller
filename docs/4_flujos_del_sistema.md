@@ -77,7 +77,6 @@ Todos los flujos de este documento aplican los límites temporales definidos en 
 | Precios | FL-47 | Consultar precios de reservas |
 | Precios | FL-48 | Registrar un precio de reserva |
 | Precios | FL-49 | Actualizar un precio de reserva |
-| Precios | FL-50 | Cambiar el estado de un precio |
 | Reservas | FL-51 | Crear una reserva para un usuario |
 | Reservas | FL-52 | Modificar invitados identificados de una reserva con pase |
 | Consultas | FL-53 | Consultar el uso de un pase |
@@ -1450,18 +1449,18 @@ Recorrido:
 1. El usuario selecciona sede e indica fecha y hora de inicio; puede consultar disponibilidad antes mediante **FL-01**.
 2. El sistema comprueba que la fecha no supere el máximo de catorce días de anticipación; si lo supera, rechaza la operación.
 3. Busca si el usuario tiene una membresía de pase vigente que cubra esa fecha (día habilitado según su tipo). Si no tiene ninguna, sigue como reserva normal (paso 4). Si tiene, pregunta si quiere usarla: si no, sigue como reserva normal (paso 4); si sí, sigue como reserva con pase (paso 5).
-4. **Camino normal:** el sistema propone únicamente precios activos de la sede seleccionada según la duración elegida; su cantidad de horas determina la duración total y su importe se copia como precio aplicado. Continúa en el paso 6.
+4. **Camino normal:** el usuario elige la duración en horas enteras. El sistema utiliza el único precio activo de la sede y calcula el total multiplicando su importe por la duración. Continúa en el paso 6.
 5. **Camino con pase:** el sistema calcula las horas ya usadas ese día por el pase, como organizador o como invitado, en reservas no canceladas, y las horas disponibles como la diferencia hasta el límite diario configurado del pase (**FL-16**). Si no queda ninguna, informa que no tiene más horas por hoy y sigue como reserva normal (paso 4). Si le queda alguna, la duración elegida no podrá superarla.
 6. Selecciona una cancha de esa sede. El sistema calcula la hora de fin y comprueba que el intervalo completo esté libre y caiga dentro de una franja de **FL-57** para esa sede y día de la semana; si no, rechaza la operación.
 7. Si viene del camino con pase, informa la cantidad total de invitados, sin contar al organizador, e identifica opcionalmente invitados entre los usuarios ya registrados, sin que la identificación requiera que tengan pase; el sistema busca para cada uno un pase vigente que cubra la fecha y tenga horas suficientes, y calcula el adicional de los que no califican.
 8. Muestra un resumen del intervalo, duración, precio o pase aplicado y, si corresponde, invitados y adicional.
-9. El usuario confirma una sola vez. En el camino normal, el sistema vuelve a comprobar que la tarifa siga activa y corresponda a la sede de la cancha y duración elegidas. Crea en una transacción todos los registros nuevos preparados.
+9. El usuario confirma una sola vez. En el camino normal, el sistema vuelve a comprobar que el precio siga activo y corresponda a la sede de la cancha; si cambió desde el resumen, muestra el nuevo total y pide confirmar nuevamente. Crea en una transacción todos los registros nuevos preparados.
 10. Envía la confirmación por email al usuario y, si hubo invitados identificados, la notificación de invitación a cada uno (ver 4.2).
 
 Alternativas:
 
 - Este flujo nunca actúa sobre otro usuario: el organizador es siempre quien está autenticado.
-- Sin una tarifa activa para la sede y duración elegidas no puede confirmarse una reserva normal. Cambiar de sede exige seleccionar una tarifa de esa sede y volver a calcular el importe.
+- Sin un precio activo para la sede no puede confirmarse una reserva normal. Cambiar de sede exige utilizar el precio de esa sede y volver a calcular el total.
 - Un intervalo fuera del horario de funcionamiento de la sede, incluido un día sin franjas configuradas, o una fecha más allá de las dos semanas de anticipación, rechazan la operación sin excepción.
 - Un evento superpuesto en cualquier parte del intervalo obliga a elegir otro turno.
 - Si el usuario ya participa en otra actividad no cancelada superpuesta en el horario, el sistema advierte, sin bloquear la confirmación.
@@ -1479,7 +1478,7 @@ flowchart TD
     A[Elegir sede e indicar fecha y hora] --> B{Dentro de las dos semanas}
     B -->|No| Z[Rechazar]
     B -->|Sí| C{Tiene pase vigente para la fecha}
-    C -->|No| D[Camino normal: elegir tarifa activa de la sede y duración]
+    C -->|No| D[Camino normal: elegir duración y calcular con el precio activo de la sede]
     C -->|Sí| E{Quiere usarlo}
     E -->|No| D
     E -->|Sí| F{Horas disponibles ese día}
@@ -1494,7 +1493,7 @@ flowchart TD
     J -->|No| L[Mostrar resumen]
     K --> L
     L --> M{Confirmar}
-    M -->|Sí| N[Validar tarifa y crear todo en una transacción]
+    M -->|Sí| N[Validar precio y crear todo en una transacción]
     N --> O[Notificar confirmación e invitaciones]
 ```
 
@@ -1790,117 +1789,96 @@ flowchart TD
 
 #### FL-47. Consultar precios de reservas
 
-- **Objetivo:** consultar las configuraciones de precios de reservas de una sede.
+- **Objetivo:** consultar el precio activo y los precios históricos de una sede.
 - **Actor:** administrador.
-- **Entradas:** sede, estado y duración opcional.
+- **Entradas:** sede y estado opcional.
 
 Recorrido:
 
 1. El administrador abre la pestaña Precios de reservas del detalle de una sede.
-2. El sistema aplica los filtros y muestra únicamente las configuraciones de esa sede y sus importes vigentes.
-3. El administrador puede abrir una configuración para ejecutar **FL-49** o **FL-50**.
+2. El sistema muestra el precio activo, si existe, y un listado de precios filtrable por estado.
+3. La fila del precio activo permite actualizarlo mediante **FL-49**. Si no existe uno activo, puede registrar uno mediante **FL-48** desde la cabecera de la tabla.
 
 Alternativas:
 
-- Los precios inactivos se muestran como historia y no se proponen en operaciones nuevas.
-- La consulta no muestra membresías porque poseen su propio precio vigente y se gestionan mediante **FL-15**.
+- Los precios inactivos se conservan para consulta. No se editan ni se reactivan.
+- Cada fila muestra importe por turno de una hora, estado, fecha de creación y fecha de desactivación cuando corresponda.
+- La consulta no muestra membresías porque poseen su propio precio y se gestionan mediante **FL-15**.
 
-- **Resultado:** precios consultados sin modificar datos.
+- **Resultado:** precio activo e historia consultados sin modificar datos.
 - **Datos:** sede y sus precios de reservas.
 
 ```mermaid
 flowchart TD
-    A[Abrir precios de reservas de la sede] --> B[Aplicar filtros de estado y duración]
-    B --> C[Mostrar configuraciones de esa sede]
-    C --> D{Selecciona una}
-    D -->|Sí| E[Ofrecer FL-49 o FL-50]
+    A[Abrir precios de reservas de la sede] --> B[Consultar precio activo y filtrar historia por estado]
+    B --> C[Mostrar precios de esa sede]
 ```
 
 #### FL-48. Registrar un precio de reserva
 
-- **Objetivo:** habilitar una configuración comercial para reservas normales de una sede y duración determinadas.
+- **Objetivo:** establecer el precio por turno de una sede que no tiene precio activo.
 - **Actor:** administrador.
-- **Entradas:** sede del detalle abierto, duración positiva en horas enteras y precio vigente no negativo.
+- **Entradas:** sede del detalle abierto e importe positivo por turno de una hora.
 
 Recorrido:
 
-1. Desde la pestaña Precios de reservas de una sede, el administrador completa duración y precio. La sede se obtiene del detalle abierto y no se ingresa manualmente.
-2. El sistema comprueba que no exista otra configuración activa para esa sede y duración.
-3. El administrador confirma.
-4. El sistema registra el precio como **Activo**, vinculado a esa sede.
+1. El administrador solicita crear el precio desde el detalle de la sede.
+2. Ingresa el importe y confirma.
+3. En una transacción, el sistema bloquea la sede y comprueba que no exista un precio activo.
+4. Crea un precio Activo con la sede y las fechas automáticas de registración.
+5. Vuelve a la pestaña Precios de reservas de la sede, donde se muestra el precio creado en la tabla.
 
 Alternativas:
 
-- Cada sede y duración poseen su propio precio, común a todas las canchas de esa sede; el sistema no multiplica automáticamente el valor de una hora.
-- La misma duración puede tener tarifas activas con importes distintos en sedes diferentes.
-- Registrar duraciones superiores a dos horas permite aplicarlas cuando la academia defina su política comercial.
+- Si existe un precio activo, se ofrece actualizarlo; no se permite crear otro activo por separado.
+- Un importe vacío, no numérico, no positivo o con más de dos decimales se rechaza.
+- Cada sede puede tener un importe distinto, común a todas sus canchas.
 
-- **Resultado:** nuevo precio de reserva disponible.
+- **Resultado:** un precio activo por turno para la sede.
 - **Datos:** sede y sus precios de reservas.
 
 ```mermaid
 flowchart TD
-    A[Ingresar duración y precio en la sede] --> B{Existe tarifa activa para esa sede y duración}
-    B -->|Sí| C[Impedir duplicación]
-    B -->|No| D{Confirmar}
-    D -->|Sí| E[Registrar precio activo]
+    A[Ingresar importe por turno y confirmar] --> B[Bloquear sede y validar importe]
+    B --> C{Existe precio activo}
+    C -->|Sí| D[Informar que corresponde actualizar]
+    C -->|No| E[Crear precio activo y confirmar transacción]
 ```
 
 #### FL-49. Actualizar un precio de reserva
 
-- **Objetivo:** cambiar el importe vigente sin alterar operaciones históricas.
+- **Objetivo:** establecer un nuevo precio por turno y conservar el precio aplicado en operaciones registradas.
 - **Actor:** administrador.
-- **Entrada:** nuevo precio no negativo.
+- **Entradas:** precio activo seleccionado y nuevo importe positivo.
 
 Recorrido:
 
-1. El administrador abre una configuración de precio perteneciente a la sede consultada.
-2. Modifica únicamente su importe vigente.
-3. El sistema muestra que las operaciones existentes conservan el precio aplicado que copiaron al crearse.
-4. El administrador confirma y el sistema guarda el nuevo importe.
-
-Alternativas:
-
-- La sede y duración de un precio de reserva no se modifican si la configuración ya fue utilizada.
-
-- **Resultado:** precio vigente actualizado hacia adelante.
-- **Datos:** sede y sus precios de reservas.
-
-```mermaid
-flowchart TD
-    A[Abrir configuración] --> B[Ingresar nuevo importe]
-    B --> C[Mostrar alcance no retroactivo]
-    C --> D{Confirmar}
-    D -->|Sí| E[Actualizar precio vigente]
-```
-
-#### FL-50. Cambiar el estado de un precio
-
-- **Objetivo:** controlar si una configuración puede utilizarse en reservas nuevas.
-- **Actor:** administrador.
-- **Entrada:** estado **Activo** o **Inactivo**.
-
-Recorrido:
-
-1. El administrador utiliza la acción **Activar** o **Desactivar** del precio, separada de la edición de su importe.
-2. El sistema valida que el precio pertenezca a la sede consultada y que al activar no exista otra configuración activa para esa misma sede y duración.
+1. El administrador solicita actualizar el precio desde su fila activa en la tabla de la sede.
+2. El sistema muestra el importe actual y permite ingresar el nuevo.
 3. El administrador confirma.
-4. El sistema cambia el estado sin alterar operaciones existentes.
+4. En una transacción, el sistema bloquea la sede y comprueba que el precio seleccionado siga activo y que el nuevo importe sea válido y diferente.
+5. Desactiva el precio seleccionado, registra su fecha de desactivación y crea un nuevo precio Activo.
+6. Confirma la transacción y vuelve a la pestaña Precios de reservas de la sede, donde se muestra el nuevo precio en la tabla.
 
 Alternativas:
 
-- Un precio utilizado no se elimina.
-- Inactivarlo no cancela reservas que ya lo copiaron.
+- Si el importe es igual al vigente, se rechaza sin guardar cambios.
+- Si otra operación actualizó el precio seleccionado, se solicita consultar el precio activo antes de continuar.
+- Los precios inactivos no admiten actualización ni reactivación.
+- Si falla la creación, se revierte también la desactivación.
+- Las reservas registradas conservan su referencia al precio aplicado y su importe total.
 
-- **Resultado:** disponibilidad futura de la configuración actualizada.
+- **Resultado:** nuevo precio activo y precio sustituido conservado como inactivo.
 - **Datos:** sede y sus precios de reservas.
 
 ```mermaid
 flowchart TD
-    A[Solicitar cambio de estado] --> B{Activación válida}
-    B -->|No| C[Impedir cambio]
-    B -->|Sí| D{Confirmar}
-    D -->|Sí| E[Cambiar estado]
+    A[Solicitar actualización desde la fila activa] --> B[Ingresar nuevo importe y confirmar]
+    B --> C[Bloquear sede y validar]
+    C --> D{Precio todavía activo e importe diferente}
+    D -->|No| E[Informar error sin guardar cambios]
+    D -->|Sí| F[Desactivar precio actual y crear el nuevo]
+    F --> G[Confirmar ambos cambios en una transacción]
 ```
 
 ### 3.14 Reservas creadas por el administrador
@@ -1918,20 +1896,20 @@ Recorrido:
 1. El administrador busca y selecciona al organizador entre los usuarios ya existentes.
 2. Selecciona sede e indica fecha y hora de inicio. Si la fecha supera el máximo de catorce días de anticipación, el sistema advierte y pide una confirmación explícita para continuar.
 3. Busca si el organizador tiene una membresía de pase activa que cubra esa fecha, habilite ese día según su tipo y conserve al menos una hora disponible. Solo en ese caso muestra la opción de usar el pase. Si el administrador no la selecciona, sigue como reserva normal (paso 4); si la selecciona, sigue como reserva con pase (paso 5).
-4. **Camino normal:** selecciona un precio activo de esa sede; su cantidad de horas determina la duración total y su importe se copia como precio aplicado. Continúa en el paso 6.
+4. **Camino normal:** el administrador elige la duración en horas enteras. El sistema utiliza el único precio activo de la sede y calcula el total multiplicando su importe por la duración. Continúa en el paso 6.
 5. **Camino con pase:** el sistema calcula las horas ya usadas ese día por el pase, como organizador o como invitado, en reservas no canceladas, y las horas disponibles como la diferencia hasta el límite diario configurado del pase (**FL-16**). La duración elegida no puede superar las horas disponibles.
 6. Selecciona una cancha de esa sede. El sistema calcula la hora de fin y comprueba disponibilidad y si el intervalo cae dentro de una franja de **FL-57** para esa sede y día de la semana; si no, advierte que está fuera del horario de funcionamiento de la sede y pide una confirmación explícita para continuar.
 7. Si viene del camino con pase, informa la cantidad total de invitados, sin contar al organizador, e identifica opcionalmente invitados entre los usuarios ya registrados, sin que la identificación requiera que tengan pase; el sistema busca para cada uno un pase vigente que cubra la fecha y tenga horas suficientes, y calcula el adicional de los que no califican.
 8. Pregunta si se recibió un pago; de ser así, prepara **FL-43** con la reserva como origen y solicita monto, medio, fecha y observaciones.
 9. Muestra un resumen del organizador, intervalo, duración, precio o pase aplicado, invitados si corresponde, el ingreso opcional, y cualquier advertencia pendiente de confirmar (horario, anticipación).
-10. El administrador confirma una sola vez. En el camino normal, el sistema vuelve a comprobar que la tarifa siga activa y corresponda a la sede de la cancha y duración elegidas. Crea en una transacción todos los registros nuevos preparados.
+10. El administrador confirma una sola vez. En el camino normal, el sistema vuelve a comprobar que el precio siga activo y corresponda a la sede de la cancha; si cambió desde el resumen, muestra el nuevo total y pide confirmar nuevamente. Crea en una transacción todos los registros nuevos preparados.
 11. Envía al organizador la confirmación de la reserva y, a cada invitado identificado, la notificación de invitación (ver 4.2).
 
 Alternativas:
 
 - Si el organizador todavía no existe como usuario, el administrador debe registrarlo primero mediante **FL-02** (o dirigirlo a **FL-06**) y luego volver a este flujo; no hay alta inline.
 - El organizador y los invitados identificados se seleccionan entre usuarios activos.
-- Sin una tarifa activa para la sede y duración elegidas no puede confirmarse una reserva normal. Cambiar de sede exige seleccionar una tarifa de esa sede y volver a calcular el importe.
+- Sin un precio activo para la sede no puede confirmarse una reserva normal. Cambiar de sede exige utilizar el precio de esa sede y volver a calcular el total.
 - Un intervalo fuera del horario de funcionamiento de la sede, incluido un día sin franjas configuradas, o una fecha más allá de las dos semanas de anticipación, no impiden continuar: generan advertencia y piden confirmación explícita, sin bloquear.
 - Un evento superpuesto en cualquier parte del intervalo obliga a elegir otro turno.
 - Si el organizador, o un invitado identificado, ya participa en otra actividad no cancelada superpuesta en el horario, el sistema advierte, sin bloquear la confirmación.
@@ -1956,7 +1934,7 @@ flowchart TD
     C -->|No| C2{Confirmar fuera de anticipación}
     C2 -->|No| B
     C2 -->|Sí| D
-    D -->|No| E[Camino normal: elegir tarifa activa de la sede y duración]
+    D -->|No| E[Camino normal: elegir duración y calcular con el precio activo de la sede]
     D -->|Sí| F{Quiere usarlo}
     F -->|No| E
     F -->|Sí| H[Camino con pase: duración dentro del tope]
@@ -1974,7 +1952,7 @@ flowchart TD
     M -->|No| O[Mostrar resumen]
     N --> O
     O --> P{Confirmar}
-    P -->|Sí| Q[Validar tarifa y crear todo en una transacción]
+    P -->|Sí| Q[Validar precio y crear todo en una transacción]
     Q --> R[Notificar organizador e invitados]
 ```
 

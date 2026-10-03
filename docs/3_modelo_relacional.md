@@ -300,26 +300,29 @@ Relaciones:
 
 ### 4.9 `precios_reservas_cancha`
 
-Representa una configuración de precio para una reserva normal de una sede y duración determinadas, común a todas las canchas de esa sede.
+Representa un precio por turno de una hora de una sede, común a todas sus canchas.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `1` |
 | FK | `sede_id` | `bigint` | | | `1` |
-| | `duracion_horas` | `smallint` | | | `1` |
-| | `precio_vigente` | `numeric(12,2)` | | | `8000.00` |
+| | `importe` | `numeric(12,2)` | | | `8000.00` |
 | | `estado` | `varchar(10)` | | | `activo` (o `inactivo`) |
-| | `creado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
+| | `creado_en` | `timestamptz` | | | `2026-08-05 09:00:00-03` |
+| | `actualizado_en` | `timestamptz` | | | `2026-08-05 09:00:00-03` |
 
-PostgreSQL garantiza una sola configuración activa por combinación de `sede_id` y `duracion_horas` mediante una restricción de unicidad condicional para `estado = 'activo'`. La misma duración puede tener importes distintos en sedes diferentes. La sede y duración de una configuración no cambian después de ser utilizada. Los precios inactivos y los importes aplicados en reservas se conservan.
+El importe debe ser positivo. PostgreSQL garantiza un solo precio activo por `sede_id` mediante una restricción de unicidad condicional para `estado = 'activo'`.
+
+La sede y el importe de un precio registrado no se modifican. Si la sede no tiene precio activo, el Administrador puede crear uno. Actualizar desactiva el precio actual y crea uno nuevo en una única transacción; ambas operaciones bloquean primero la sede. Un importe igual al actual se rechaza sin guardar cambios. `actualizado_en` registra la fecha de desactivación cuando el precio queda inactivo.
+
+Los precios inactivos se conservan para consulta y para las reservas que los referencian. No se eliminan ni se reactivan. El total de una reserva normal es el importe del precio aplicado multiplicado por su duración en horas.
 
 Relaciones:
 
 - Un precio de reserva pertenece a exactamente una sede.
-- Una sede puede tener cero, uno o varios precios de reservas.
+- Una sede puede tener cero, uno o varios precios históricos, con un máximo de uno activo.
 - Un precio de reserva puede estar aplicado en cero, una o varias reservas.
-- Una reserva normal utiliza, como máximo, un precio de reserva.
+- Una reserva normal utiliza exactamente un precio de reserva.
 
 ### 4.10 `feriados`
 
@@ -742,7 +745,7 @@ El sistema aplica, como mínimo:
 10. Al menos un profesor activo por clase.
 11. Protección de clases y reservas terminales (canceladas o completadas) y autorización para completarlas.
 12. Exclusividad entre precio normal y membresía de pase en reservas.
-13. Coherencia entre la duración de la reserva normal y su tarifa de `precios_reservas_cancha`, cuya sede debe coincidir con la de la cancha del evento. La tarifa debe estar activa al registrar y ser la única activa para esa sede y duración.
+13. El precio de `precios_reservas_cancha` aplicado a una reserva normal pertenece a la sede de la cancha y es el único activo al confirmar. El total se calcula multiplicando su importe por la duración en horas. La sede y el importe de cada precio son inmutables.
 14. Vigencia, titularidad, día habilitado según el tipo de pase (`pases.tipo`) y horas diarias disponibles del pase del organizador al crear o modificar una reserva con pase; el día se valida antes que las horas.
 15. Coherencia de invitados, cantidad declarada, membresías de pase aplicadas, día habilitado y horas diarias disponibles de cada invitado identificado con pase.
 16. Congelamiento de reservas e invitados al cancelar o completar el evento.
@@ -791,7 +794,7 @@ Al modificar la planilla y volver a generar un período ya generado, eliminará 
 
 ### 7.4 Reserva normal
 
-Se ejecuta cuando el organizador no tiene una membresía de pase vigente para la fecha elegida, o no quiere usarla. Ofrecerá únicamente tarifas activas de la sede seleccionada y comprobará al confirmar que la tarifa siga activa, corresponda a la duración elegida y pertenezca a la sede de la cancha. Si no existe una tarifa aplicable, rechazará la reserva normal. Creará un evento continuo, copiará el precio aplicable, creará la reserva y registrará el ingreso opcional. Todo el intervalo deberá estar disponible. Tanto el horario de funcionamiento de la sede (`sedes_horarios`) como el máximo de catorce días de anticipación se rechazan sin excepción cuando organiza un usuario de autoservicio, y se advierten con confirmación explícita cuando gestiona el administrador.
+Se ejecuta cuando el organizador no tiene una membresía de pase vigente para la fecha elegida, o no quiere usarla. Usará el único precio activo de la sede seleccionada y comprobará al confirmar que siga activo y pertenezca a la sede de la cancha. Si no existe, rechazará la reserva normal. Calculará el total multiplicando el importe por turno por la duración en horas. Creará un evento continuo, registrará la reserva con su precio aplicado y total calculado, y registrará el ingreso opcional. Todo el intervalo deberá estar disponible. Tanto el horario de funcionamiento de la sede (`sedes_horarios`) como el máximo de catorce días de anticipación se rechazan sin excepción cuando organiza un usuario de autoservicio, y se advierten con confirmación explícita cuando gestiona el administrador.
 
 ### 7.5 Reserva con pase
 

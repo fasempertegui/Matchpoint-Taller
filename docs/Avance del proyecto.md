@@ -1,44 +1,43 @@
 # Avance del proyecto
+
 ## Academia de Tenis TM
 
-El proyecto consiste en desarrollar un sistema para la administración de una academia de tenis. Su alcance contempla sedes y canchas, usuarios, clases, asistencia, pagos y reservas. El desarrollo se organiza por hitos, incorporando las funcionalidades solicitadas en cada entrega.
+El proyecto es una aplicación para administrar una academia de tenis. El sistema completo contempla instalaciones, usuarios, clases, asistencia, membresías, reservas e ingresos. La aplicación utiliza Python, Django y PostgreSQL, con ejecución mediante Docker Compose.
 
-## Hito 1: sedes y canchas
+Este documento describe las funcionalidades implementadas y el trabajo pendiente para el hito 3. La propuesta de la entrega se desarrolla en [Propuesta hito 3](Propuesta%20hito%203.md).
 
-En el primer hito se desarrolló el ABM de sedes y canchas, como base para registrar las instalaciones de la academia. Se implementaron los formularios de alta y modificación, las consultas y la baja lógica mediante la desactivación de los registros.
+## 1. Hito 1: sedes y canchas
 
-Cada cancha quedó vinculada a una sede, con sus datos de identificación y tipo de superficie. Se incorporaron validaciones para evitar nombres de sedes duplicados y nombres de canchas repetidos dentro de una misma sede.
+La aplicación cuenta con alta, consulta, modificación, activación y desactivación de sedes y canchas. La baja es lógica: los registros se conservan con estado inactivo.
 
-Esta etapa estableció la base de la aplicación y la persistencia de los datos, utilizando Python, Django y PostgreSQL.
+Cada cancha pertenece a una sede y tiene un nombre, un tipo de superficie y observaciones opcionales. Se valida que no existan nombres de sedes duplicados ni nombres de canchas repetidos dentro de una misma sede, sin distinguir mayúsculas y minúsculas.
 
-## Hito 2: usuarios y seguridad
+## 2. Hito 2: usuarios y seguridad
 
-En el segundo hito se incorporó la gestión de usuarios y el control de acceso al sistema. Se desarrollaron el alta, la consulta, la modificación del correo y la baja lógica de usuarios. Las modificaciones registran automáticamente su fecha y la baja conserva los datos del usuario, indicando su estado inactivo y la fecha de desactivación.
+La aplicación permite registrar usuarios desde la administración y mediante autorregistro. Cuenta con consulta y búsqueda, modificación del correo, activación y desactivación, y restablecimiento administrativo de contraseñas.
 
-También se implementaron el inicio y cierre de sesión y el restablecimiento administrativo de contraseñas. Las contraseñas se almacenan mediante hash y las cuentas creadas por un administrador, o cuya contraseña fue restablecida, deben reemplazar la contraseña provisoria en el siguiente ingreso.
+El nombre de usuario se genera automáticamente a partir del apellido y la inicial del nombre. Se comprueba su disponibilidad y se agrega un número cuando es necesario. La fecha de nacimiento es obligatoria y los nombres y apellidos no admiten números. Se valida el formato del correo y que no esté registrado por otro usuario. El celular debe ser un número móvil argentino válido.
 
-Se incorporaron los roles Administrador, Profesor, Alumno, Reservas y Público, junto con los controles de permisos para acceder a las operaciones disponibles. Así, la administración de sedes y canchas quedó integrada con la autenticación y la seguridad del sistema.
+La autenticación incluye inicio y cierre de sesión y cambio de contraseña. Las contraseñas se almacenan mediante hash. Las cuentas creadas por otra persona y las cuentas con contraseña restablecida deben reemplazar la contraseña provisoria antes de acceder a las operaciones habituales. La nueva contraseña debe ser diferente de la vigente.
 
-## Ajustes posteriores a la devolución del hito 2
+Existen los roles Administrador, Profesor, Alumno, Reservas y Público. Público y Reservas se asignan automáticamente al crear un usuario. La administración permite asignar y retirar Profesor, Alumno y Reservas. El rol Administrador se establece mediante el comando de creación de administradores.
 
-- **Generación de usuarios:** el nombre de usuario pasó a generarse automáticamente con el apellido y la inicial del nombre, agregando un número cuando existe una coincidencia. El campo se muestra sin permitir su edición.
-- **Validaciones y contraseñas:** se corrigió la aceptación de números en nombres y apellidos, se hizo obligatoria la fecha de nacimiento y se impidió utilizar la contraseña vigente como nueva contraseña.
-- **Interfaz y navegación:** se incorporaron páginas de inicio para el portal y la administración, se unificaron colores, tipografías y logotipo, y se mejoraron formularios, mensajes y accesos a las acciones desde las pantallas de detalle.
+La desactivación registra fecha y hora de baja; la reactivación elimina esa marca. Una persona no puede desactivar su propia cuenta y debe conservarse al menos un administrador activo.
 
-Estos ajustes forman parte de la revisión del hito 2 y consolidan las funcionalidades de instalaciones, usuarios y seguridad desarrolladas hasta esta etapa.
+La aplicación dispone de una página de inicio administrativa y una página de inicio para el portal. Desde el portal se puede consultar el perfil propio. Las pantallas utilizan estilos visuales compartidos.
 
-## Hito 3: reservas
+## 3. Funcionalidades disponibles para el hito 3
 
-Para el tercer hito se acordó desarrollar el proceso completo de reservas normales de cancha, desde su registración hasta su finalización o anulación, con consulta y comprobante imprimible. El proceso de reservas está pendiente.
+### Horarios de funcionamiento
 
-La configuración de horarios por sede permite definir hasta dos franjas por día, con validaciones de intervalos completos y sin superposiciones. Los días sin franjas quedan sin funcionamiento. Su administración está restringida al Administrador.
+Cada sede permite configurar hasta dos franjas de funcionamiento por día de la semana. Se validan intervalos completos, horas de fin posteriores al inicio y ausencia de superposición entre franjas. Un día sin franjas configuradas queda sin funcionamiento.
 
-El ABM de precios se configura desde la pestaña Precios de reservas del detalle de cada sede. Permite registrar tarifas de entre 1 y 24 horas enteras, consultar por estado y horas, modificar el importe y activar o desactivar registros. Sus precios son comunes a todas las canchas de la sede. Sólo el Administrador puede operar y existe una sola tarifa activa por sede y duración, validada también en PostgreSQL. La sede y duración quedan fijas al crear la tarifa.
+La configuración está disponible desde el detalle de la sede y su administración está restringida al Administrador.
 
-Cada reserva tendrá una cabecera y un detalle con uno o varios turnos, relacionados con usuarios, canchas y tarifas. El número de comprobante, la fecha de registración, el usuario responsable y el estado inicial Programada serán automáticos. El sistema calculará horarios e importes y registrará toda la operación mediante una transacción, validando disponibilidad para evitar superposiciones.
+### Precios de reservas
 
-La consulta permitirá filtrar por rango de fechas, estado, organizador, sede y cancha, y visualizar el detalle. El rol Reservas podrá registrar, consultar y emitir comprobantes de sus propias reservas; el Administrador tendrá acceso a todas.
+La configuración de precios está disponible en la pestaña Precios de reservas del detalle de cada sede. La tabla muestra importes, estados y fechas de creación y desactivación, y permite filtrar por estado. Se puede crear un precio si no existe uno activo o actualizar el vigente desde su fila.
 
-La anulación quedará restringida al Administrador y registrará motivo, fecha y usuario, con estado Anulada. Liberará todos los turnos en una transacción, conservando los registros. La finalización también será administrativa y sólo podrá realizarse cuando hayan terminado todos los turnos.
+Cada precio pertenece a una sede y tiene un importe positivo por turno de una hora, común a todas sus canchas. El total de una reserva se calcula multiplicando ese importe por la cantidad de turnos.
 
-Esta adaptación agrupa varios turnos en lugar del único evento previsto en la documentación y utiliza Anulada como estado de baja. La anulación propia, los bloqueos por cancelación y la reprogramación quedan fuera de esta entrega, junto con pases, invitados, ingresos, notificaciones y finalización automática. Las tarifas requieren un importe positivo, aunque la especificación admite precios de cero. Los documentos del sistema completo conservan su alcance; estas diferencias se registran únicamente aquí.
+Sólo puede existir un precio activo por sede; esta condición está garantizada en la base de datos. Actualizar desactiva el precio actual y crea un registro nuevo en una única transacción, bloqueando la sede para coordinar operaciones simultáneas. Un importe igual al actual se rechaza sin guardar cambios. Los precios inactivos quedan disponibles para consulta y no pueden editarse ni reactivarse. Las operaciones están restringidas al Administrador.
