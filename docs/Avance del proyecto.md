@@ -50,14 +50,24 @@ La base de datos impide repetir un turno para la misma cancha, fecha y hora de i
 
 La reserva tiene estado inicial Programada y fecha de registración automática. Los estados permitidos son Programada, Anulada y Finalizada. La base exige fecha, responsable y motivo con contenido para una anulación, y fecha y responsable para una finalización. Estos datos sólo pueden estar presentes en el estado correspondiente. Las relaciones protegen los registros vinculados contra la eliminación física.
 
-Las operaciones de registro, consulta de reservas, anulación, finalización e impresión están pendientes de implementación. El registro debe comprobar que los detalles formen un intervalo continuo de una única cancha y fecha, aplicar el precio de su sede y garantizar la disponibilidad dentro de una transacción.
+La consulta de reservas con filtros, la anulación, la finalización y la impresión están pendientes de implementación.
 
 ### Turnos y disponibilidad
 
-El backend prepara y consulta disponibilidad para una cancha, fecha de uso y cantidad de horas. La fecha debe estar entre hoy y catorce días después, inclusive, y la sede y la cancha deben estar activas. La sede necesita un precio vigente.
-
-Una pantalla de apoyo en `/reservas/disponibilidad/` permite observar los resultados del backend durante la implementación. Es accesible por su dirección para usuarios activos con rol Administrador o Reservas y no tiene enlaces desde el inicio. Su formulario ofrece sedes activas con precio vigente y canchas activas; el servidor comprueba que la cancha pertenezca a la sede seleccionada. La interfaz definitiva incorpora la selección de horarios disponibles al registro de una reserva.
+El backend prepara y consulta los turnos disponibles para una cancha y fecha de uso. La fecha debe estar entre hoy y catorce días después, inclusive, y la sede y la cancha deben estar activas. La sede necesita un precio vigente.
 
 Al enviar la consulta se preparan los turnos faltantes de esa cancha y fecha, dentro de una transacción que bloquea la sede y la cancha. Se generan únicamente horas completas que comiencen en punto y estén dentro de una franja de funcionamiento. La consulta conserva todos los turnos existentes y no registra ni ocupa una reserva.
 
-El resultado muestra los horarios de inicio y fin que permiten completar la cantidad de horas elegida con turnos consecutivos, futuros y libres, dentro de una misma franja. Las reservas Programadas y Finalizadas ocupan sus turnos; las Anuladas dejan de contarse como ocupación. Se aplican los horarios actuales de la sede: los turnos que queden fuera de ellos se conservan, pero no se ofrecen. Un día sin horario configurado no tiene disponibilidad.
+El resultado contiene los turnos futuros y libres. Las reservas Programadas y Finalizadas ocupan sus turnos; las Anuladas dejan de contarse como ocupación. Se aplican los horarios actuales de la sede: los turnos que queden fuera de ellos se conservan, pero no se ofrecen. Un día sin horario configurado no tiene disponibilidad.
+
+### Registro de reservas
+
+Nueva reserva está disponible desde el inicio administrativo y el portal. El Administrador selecciona un organizador activo; el usuario con rol Reservas reserva para sí mismo. El formulario muestra organizador, sede y canchas en una columna, y el calendario y los turnos en otra. El calendario habilita las fechas dentro del rango permitido y las canchas se ofrecen según la sede seleccionada.
+
+El usuario marca uno, dos o más turnos consecutivos de la misma cancha y fecha, dentro de una misma franja de funcionamiento. La cantidad de horas y el total se obtienen de la selección. Cada turno tiene el importe vigente de la sede. El total se actualiza en el navegador y se pide confirmación mediante un diálogo antes de enviar el registro.
+
+Cada turno se muestra como una opción con su rango horario. El precio por turno aparece una sola vez junto al total de la selección.
+
+El servidor comprueba la selección, los permisos, los estados de usuarios e instalaciones, los horarios y el precio dentro de una transacción. Bloquea las cuentas participantes, la sede, la cancha y los turnos seleccionados; vuelve a comprobar la ocupación antes de guardar. Crea una cabecera en estado Programada y todos sus detalles, con número, fecha y responsable automáticos. Si falla la operación, no queda una reserva parcial. Si cambió el precio, se muestra el actualizado y se exige una nueva confirmación.
+
+El detalle de la reserva muestra organizador, responsable, fecha de registro, cancha, fecha de uso, duración, turnos, subtotales y total. El Administrador puede consultar cualquier reserva; el usuario con rol Reservas sólo puede acceder a las propias. Los importes se obtienen del precio referenciado por la cabecera y la cantidad de detalles. El rol Reservas no puede retirarse mientras el usuario tenga reservas propias Programadas; esta comprobación se coordina con el registro mediante el bloqueo de su cuenta.

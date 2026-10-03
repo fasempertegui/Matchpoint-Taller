@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load static l10n %}
+
+{% block titulo %}Nueva reserva | Academia TM{% endblock %}
+
+{% block contenido %}
+<header class="encabezado-pagina"><h1>Nueva reserva</h1></header>
+
+{% if hay_sedes %}
+<div class="reserva-distribucion">
+    <form id="reserva-datos" class="tarjeta reserva-configuracion" method="post" novalidate data-reserva-datos>
+        {% csrf_token %}
+        {% if formulario.non_field_errors %}
+            <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+        {% endif %}
+        <div class="grupo-campo">
+            {% if es_administrador %}
+                <label for="{{ formulario.organizador.id_for_label }}">Organizador</label>
+                {{ formulario.organizador }}
+                {% for error in formulario.organizador.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            {% else %}
+                <span class="etiqueta">Organizador</span><p>{{ request.user }}</p>
+            {% endif %}
+        </div>
+        <div class="grupo-campo">
+            <label for="{{ formulario.sede.id_for_label }}">Sede</label>
+            {{ formulario.sede }}
+            {% for error in formulario.sede.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+        <fieldset class="reserva-canchas">
+            <legend>Cancha</legend>
+            {% for opcion in formulario.cancha %}
+                <label class="reserva-opcion reserva-cancha">{{ opcion.tag }}<span>{{ opcion.choice_label }}</span></label>
+            {% endfor %}
+            <p class="texto-secundario" data-aviso-canchas hidden></p>
+            {% for error in formulario.cancha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        </fieldset>
+    </form>
+
+    <section class="tarjeta reserva-horarios">
+        <div class="grupo-campo">
+            <label id="fecha-titulo" for="{{ formulario.fecha.id_for_label }}">Fecha de uso</label>
+            {{ formulario.fecha }}
+            {% for error in formulario.fecha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="reserva-calendario" data-calendario hidden aria-labelledby="fecha-titulo">
+            <div class="reserva-calendario-cabecera">
+                <button class="boton boton-secundario boton-chico" type="button" data-mes-anterior aria-label="Mes anterior">‹</button>
+                <strong data-mes-actual aria-live="polite"></strong>
+                <button class="boton boton-secundario boton-chico" type="button" data-mes-siguiente aria-label="Mes siguiente">›</button>
+            </div>
+            <div class="reserva-semana" aria-hidden="true"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span></div>
+            <div class="reserva-dias" data-dias-calendario></div>
+        </div>
+        <div class="acciones-formulario">
+            <button class="boton boton-primario" type="submit" form="reserva-datos" name="accion" value="consultar">Ver turnos</button>
+        </div>
+
+        {% if resultado %}
+        <section class="reserva-seleccion" data-reserva-seleccion aria-labelledby="turnos-titulo">
+            <header class="reserva-turnos-cabecera"><h2 id="turnos-titulo">Turnos</h2></header>
+            <form method="post" novalidate data-reserva-turnos data-precio-centavos="{{ precio_centavos|unlocalize }}"
+                  data-fecha="{{ formulario.cleaned_data.fecha|date:'d/m/Y' }}" data-cancha="{{ formulario.cleaned_data.cancha }}"
+                  data-organizador="{% if es_administrador %}{{ formulario.cleaned_data.organizador }}{% else %}{{ request.user }}{% endif %}"
+                  data-confirmar="¿Confirmar esta reserva?" data-confirmar-si="[name='turnos']:checked">
+                {% csrf_token %}
+                {% for campo in formulario %}<input type="hidden" name="{{ campo.html_name }}" value="{{ campo.value|default_if_none:'' }}">{% endfor %}
+                <input type="hidden" name="precio_reserva" value="{{ resultado.precio.pk }}">
+                <input type="hidden" name="accion" value="registrar">
+                {% if formulario_turnos.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario_turnos.non_field_errors }}</div>{% endif %}
+                {% for error in formulario_turnos.turnos.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                {% for error in formulario_turnos.precio_reserva.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                <div class="reserva-turnos" role="group" aria-labelledby="turnos-titulo">
+                    {% for fila in filas_turnos %}
+                        <label class="reserva-opcion reserva-turno">
+                            <input type="checkbox" name="turnos" value="{{ fila.turno.pk }}"
+                                   data-inicio="{{ fila.turno.hora_inicio.hour }}" data-fin="{{ fila.turno.hora_fin.hour }}" data-franja="{{ fila.franja }}"
+                                   {% if fila.turno.pk|stringformat:"s" in turnos_seleccionados %}checked{% endif %}>
+                            <span>{{ fila.turno.hora_inicio|time:"H:i" }}–{{ fila.turno.hora_fin|time:"H:i" }}</span>
+                        </label>
+                    {% empty %}
+                        <p class="texto-secundario">No hay turnos disponibles para esta cancha y fecha.</p>
+                    {% endfor %}
+                </div>
+                {% if resultado.turnos %}
+                    <div class="reserva-importes">
+                        <p class="texto-secundario">Precio por turno: $ {{ resultado.precio.importe|floatformat:2 }}</p>
+                        <p class="reserva-total" aria-live="polite" data-reserva-total>Total: $ 0,00</p>
+                    </div>
+                    <p class="error-campo" role="alert" data-error-seleccion hidden></p>
+                    {% include "componentes/observaciones_opcionales.html" with campo=formulario_turnos.observaciones %}
+                    <div class="acciones-formulario"><button class="boton boton-primario" type="submit" data-registrar-reserva>Reservar turnos</button></div>
+                {% endif %}
+            </form>
+        </section>
+        {% endif %}
+    </section>
+</div>
+{% else %}
+    <p class="tarjeta estado-vacio">No hay sedes activas con un precio por turno configurado.</p>
+{% endif %}
+
+<a class="enlace-texto" href="{% url 'inicio' %}">Volver al inicio</a>
+<script src="{% static 'js/reserva-formulario.js' %}" defer></script>
+{% endblock %}

@@ -182,6 +182,10 @@ class Reserva(models.Model):
     def __str__(self):
         return f"Reserva {self.pk}"
 
+    @property
+    def numero(self):
+        return f"R-{self.pk:06d}" if self.pk is not None else ""
+
 
 class ReservaTurno(models.Model):
     id = models.BigAutoField(primary_key=True)

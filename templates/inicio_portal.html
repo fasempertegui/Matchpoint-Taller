@@ -8,5 +8,8 @@
     <h1 id="inicio-portal-titulo">Hola, {{ request.user.first_name|default:request.user.username }}</h1>
     <p class="inicio-portal-descripcion">Bienvenido a la Academia de Tenis TM. Desde acá podés consultar los datos de tu cuenta.</p>
     <a class="boton boton-primario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Ver mi perfil</a>
+    {% if puede_reservar %}
+        <a class="enlace-texto" href="{% url 'reservas:reserva_crear' %}">Reservar una cancha</a>
+    {% endif %}
 </section>
 {% endblock %}

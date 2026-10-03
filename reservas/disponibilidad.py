@@ -16,10 +16,8 @@ def validar_fecha_reserva(fecha):
 
 
 @transaction.atomic
-def consultar_disponibilidad(cancha, fecha, cantidad_horas):
+def consultar_disponibilidad(cancha, fecha):
     validar_fecha_reserva(fecha)
-    if not 1 <= cantidad_horas <= 23:
-        raise ValidationError("La cantidad de horas debe estar entre 1 y 23.")
 
     # La sede coordina la preparación con los cambios de horarios y precios.
     sede = Sede.objects.select_for_update().get(pk=cancha.sede_id)
@@ -67,25 +65,10 @@ def consultar_disponibilidad(cancha, fecha, cantidad_horas):
         )
     ).order_by("hora_inicio")
     ahora = timezone.localtime()
-    turnos_por_inicio = {
-        turno.hora_inicio: turno
+    turnos = [
+        turno
         for turno in turnos_libres
         if fecha > ahora.date() or (fecha == ahora.date() and turno.hora_inicio > ahora.time())
-    }
+    ]
 
-    intervalos = []
-    for inicio in turnos_por_inicio:
-        hora_fin = inicio.hour + cantidad_horas
-        if hora_fin > 23:
-            continue
-        fin = time(hora_fin)
-        if not any(inicio >= inicio_franja and fin <= fin_franja for inicio_franja, fin_franja in franjas):
-            continue
-        turnos = [
-            turnos_por_inicio.get(time(hora))
-            for hora in range(inicio.hour, hora_fin)
-        ]
-        if all(turno is not None for turno in turnos):
-            intervalos.append({"hora_inicio": inicio, "hora_fin": fin, "turnos": turnos})
-
-    return {"precio": precio, "intervalos": intervalos}
+    return {"precio": precio, "turnos": turnos, "franjas": franjas}

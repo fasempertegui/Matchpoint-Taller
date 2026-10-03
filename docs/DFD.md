@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas y precios de reservas por sede. Los demás procesos del sistema están pendientes de representación.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas y consulta de su detalle. Los demás procesos del sistema están pendientes de representación.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -22,6 +22,10 @@ Los números escritos sobre las flechas identifican los datos descriptos debajo 
 - **D5: Sedes**
 - **D6: Canchas**
 - **D7: Precios de reservas**
+- **D8: Horarios de sedes**
+- **D9: Turnos**
+- **D10: Reservas**
+- **D11: Detalles de reservas**
 
 ---
 
@@ -495,6 +499,7 @@ flowchart LR
     D1[(D1: Usuarios)]
     D2[(D2: Roles)]
     D3[(D3: Usuarios_Roles)]
+    D10[(D10: Reservas)]
 
     A -->|1| P
     P -->|2| D1
@@ -503,8 +508,10 @@ flowchart LR
     D2 -->|5| P
     P -->|6| D3
     D3 -->|7| P
-    P -->|8| D3
-    P -->|9| A
+    P -->|8| D10
+    D10 -->|9| P
+    P -->|10| D3
+    P -->|11| A
 ```
 
 **Datos que circulan**
@@ -516,8 +523,10 @@ flowchart LR
 5. Datos del rol permitido.
 6. Usuario y rol cuya asignación debe consultarse.
 7. Asignación existente y datos necesarios para validar el retiro.
-8. Asignación que debe eliminarse.
-9. Resultado del retiro o motivo del rechazo.
+8. Usuario para consultar sus reservas Programadas cuando se retira el rol Reservas.
+9. Reservas Programadas del usuario, si las hay.
+10. Asignación que debe eliminarse.
+11. Resultado del retiro o motivo del rechazo.
 
 ### DFD 19: restablecer la contraseña de otro usuario
 
@@ -756,3 +765,125 @@ flowchart LR
 6. Estado Inactivo y fecha de desactivación del precio sustituido.
 7. Nuevo precio por turno de la sede, con estado Activo y fechas de registración.
 8. Resultado de la actualización o errores de validación.
+
+---
+
+## 7. Reservas de cancha
+
+### DFD 28: registrar una reserva de cancha
+
+```mermaid
+flowchart LR
+    U[Administrador o usuario con rol Reservas]
+    P((28. Registrar una reserva de cancha))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D7[(D7: Precios de reservas)]
+    D8[(D8: Horarios de sedes)]
+    D9[(D9: Turnos)]
+    D10[(D10: Reservas)]
+    D11[(D11: Detalles de reservas)]
+
+    U -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D5
+    D5 -->|7| P
+    P -->|8| D6
+    D6 -->|9| P
+    P -->|10| D7
+    D7 -->|11| P
+    P -->|12| D8
+    D8 -->|13| P
+    P -->|14| D9
+    D9 -->|15| P
+    P -->|16| D9
+    P -->|17| D11
+    D11 -->|18| P
+    P -->|19| D10
+    D10 -->|20| P
+    P -->|21| D10
+    P -->|22| D11
+    P -->|23| U
+```
+
+**Datos que circulan**
+
+1. Sede, cancha, fecha, organizador, turnos seleccionados, observaciones y confirmación.
+2. Identidad del actor y del organizador.
+3. Datos y estados de las cuentas, incluido el cambio obligatorio de contraseña del actor.
+4. Usuario que solicita registrar la reserva.
+5. Roles asignados al actor.
+6. Sede seleccionada.
+7. Datos y estado de la sede.
+8. Cancha seleccionada.
+9. Datos, sede y estado de la cancha.
+10. Sede cuyo precio vigente debe aplicarse.
+11. Identificación e importe del precio activo por turno.
+12. Sede y día de la semana de la fecha elegida.
+13. Franjas de funcionamiento para ese día.
+14. Cancha, fecha y turnos seleccionados.
+15. Turnos existentes con sus fechas y horas.
+16. Turnos de una hora que faltan dentro de las franjas habilitadas.
+17. Turnos para consultar sus vínculos con reservas.
+18. Detalles que relacionan los turnos con sus reservas.
+19. Reservas relacionadas con los turnos seleccionados.
+20. Estados de las reservas que determinan la ocupación.
+21. Nueva cabecera con organizador, responsable, precio aplicado, estado Programada, observaciones y fecha de registro.
+22. Detalles que vinculan la nueva reserva con todos los turnos seleccionados.
+23. Turnos ofrecidos, importes calculados y resultado del registro o errores de validación.
+
+### DFD 29: consultar el detalle de una reserva
+
+```mermaid
+flowchart LR
+    U[Administrador o usuario con rol Reservas]
+    P((29. Consultar el detalle de una reserva))
+    D1[(D1: Usuarios)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D7[(D7: Precios de reservas)]
+    D9[(D9: Turnos)]
+    D10[(D10: Reservas)]
+    D11[(D11: Detalles de reservas)]
+
+    U -->|1| P
+    P -->|2| D10
+    D10 -->|3| P
+    P -->|4| D1
+    D1 -->|5| P
+    P -->|6| D11
+    D11 -->|7| P
+    P -->|8| D9
+    D9 -->|9| P
+    P -->|10| D6
+    D6 -->|11| P
+    P -->|12| D5
+    D5 -->|13| P
+    P -->|14| D7
+    D7 -->|15| P
+    P -->|16| U
+```
+
+**Datos que circulan**
+
+1. Reserva seleccionada e identidad del usuario que consulta.
+2. Identificador de la reserva y criterio de acceso a las propias para el usuario del portal.
+3. Cabecera de la reserva con organizador, responsable, estado, precio y fecha de registro.
+4. Identificadores del organizador y del responsable del registro.
+5. Datos de los usuarios relacionados.
+6. Reserva cuyos detalles deben consultarse.
+7. Vínculos de la reserva con sus turnos.
+8. Turnos incluidos en los detalles.
+9. Fecha de uso, horas y cancha de cada turno.
+10. Cancha de los turnos reservados.
+11. Datos de la cancha y su sede.
+12. Sede de la cancha reservada.
+13. Datos de la sede.
+14. Precio referenciado por la reserva.
+15. Importe histórico por turno.
+16. Detalle de la reserva con estado, usuarios, fecha, cancha, turnos, duración, subtotales y total, o rechazo del acceso.

@@ -4,14 +4,16 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.formats import number_format
 from django.views.decorators.http import require_http_methods
 
 from instalaciones.models import Sede
 from usuarios.models import Rol
 
 from .disponibilidad import consultar_disponibilidad
-from .forms import DisponibilidadForm, PrecioReservaForm
-from .models import PrecioReserva
+from .forms import PrecioReservaForm, ReservaDatosForm, ReservaTurnosForm
+from .models import PrecioReserva, Reserva
+from .servicios import exigir_acceso_reservas, registrar_reserva
 
 
 def _exigir_administrador(usuario):
@@ -21,28 +23,91 @@ def _exigir_administrador(usuario):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def disponibilidad(request):
-    if not request.user.is_active or not request.user.roles.filter(
-        rol__codigo__in=(Rol.ADMINISTRADOR, Rol.RESERVAS)
-    ).exists():
-        raise PermissionDenied
-
-    formulario = DisponibilidadForm(request.POST if request.method == "POST" else None)
+def reserva_crear(request):
+    es_administrador = exigir_acceso_reservas(request.user)
+    formulario = ReservaDatosForm(
+        request.POST if request.method == "POST" else None,
+        es_administrador=es_administrador,
+    )
     resultado = None
+    formulario_turnos = None
     if request.method == "POST" and formulario.is_valid():
+        accion = request.POST.get("accion")
         try:
+            if accion not in ("consultar", "registrar"):
+                raise ValidationError("La acción solicitada no es válida.")
             resultado = consultar_disponibilidad(
                 formulario.cleaned_data["cancha"],
                 formulario.cleaned_data["fecha"],
-                formulario.cleaned_data["cantidad_horas"],
             )
+            formulario_turnos = ReservaTurnosForm(
+                request.POST if accion == "registrar" else None,
+                turnos=resultado["turnos"],
+            )
+            if accion == "registrar" and formulario_turnos.is_valid():
+                try:
+                    reserva, total = registrar_reserva(
+                        request.user,
+                        formulario.cleaned_data.get("organizador", request.user),
+                        formulario.cleaned_data["cancha"],
+                        formulario.cleaned_data["fecha"],
+                        formulario_turnos.cleaned_data["turnos"],
+                        formulario_turnos.cleaned_data["precio_reserva"],
+                        formulario_turnos.cleaned_data["observaciones"],
+                    )
+                except ValidationError as error:
+                    resultado = consultar_disponibilidad(
+                        formulario.cleaned_data["cancha"],
+                        formulario.cleaned_data["fecha"],
+                    )
+                    formulario_turnos = ReservaTurnosForm(request.POST, turnos=resultado["turnos"])
+                    formulario_turnos.add_error(None, error)
+                else:
+                    messages.success(request, f"La reserva {reserva.numero} fue registrada. Total: $ {number_format(total, decimal_pos=2)}.")
+                    return redirect("reservas:reserva_detalle", pk=reserva.pk)
         except ValidationError as error:
             formulario.add_error(None, error)
+            resultado = None
+            formulario_turnos = None
 
-    return render(request, "reservas/disponibilidad.html", {
+    filas_turnos = []
+    if resultado is not None:
+        filas_turnos = [
+            {
+                "turno": turno,
+                "franja": next(
+                    numero for numero, (inicio, fin) in enumerate(resultado["franjas"])
+                    if turno.hora_inicio >= inicio and turno.hora_fin <= fin
+                ),
+            }
+            for turno in resultado["turnos"]
+        ]
+    return render(request, "reservas/reserva_formulario.html", {
         "formulario": formulario,
+        "formulario_turnos": formulario_turnos,
         "resultado": resultado,
+        "filas_turnos": filas_turnos,
+        "turnos_seleccionados": request.POST.getlist("turnos"),
+        "precio_centavos": int(resultado["precio"].importe * 100) if resultado else None,
+        "es_administrador": es_administrador,
         "hay_sedes": formulario.fields["sede"].queryset.exists(),
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def reserva_detalle(request, pk):
+    es_administrador = exigir_acceso_reservas(request.user)
+    reservas = Reserva.objects.select_related("organizador", "registrado_por", "precio_reserva")
+    if not es_administrador:
+        reservas = reservas.filter(organizador=request.user)
+    reserva = get_object_or_404(reservas, pk=pk)
+    detalles = list(reserva.detalles.select_related("turno__cancha__sede").all())
+    return render(request, "reservas/reserva_detalle.html", {
+        "reserva": reserva,
+        "detalles": detalles,
+        "cantidad_horas": len(detalles),
+        "total": reserva.precio_reserva.importe * len(detalles),
     })
 
 

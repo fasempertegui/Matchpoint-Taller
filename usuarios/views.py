@@ -9,6 +9,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods
 
+from reservas.models import Reserva
+
 from .forms import (
     UsuarioBusquedaForm,
     UsuarioCrearForm,
@@ -242,6 +244,9 @@ def usuario_rol_toggle(request, pk, rol):
         )
 
         if asignacion:
+            if rol == Rol.RESERVAS and usuario.reservas.filter(estado=Reserva.Estado.PROGRAMADA).exists():
+                messages.error(request, "No se puede quitar el rol Reservas mientras el usuario tenga reservas Programadas.")
+                return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
             asignacion.delete()
             messages.success(request, f"Se quitó el rol {rol_obj.nombre}.")
         else:
