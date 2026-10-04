@@ -71,7 +71,9 @@
                                         <small>{% if rol.asignado %}Asignado{% else %}Sin asignar{% endif %}</small>
                                     </div>
                                     <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_rol_toggle' usuario_obj.pk rol.codigo %}"
-                                          data-confirmar="{% if rol.asignado %}¿Quitar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% else %}¿Asignar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% endif %}">
+                                          data-confirmar="{% if rol.asignado %}¿Quitar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% else %}¿Asignar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% endif %}"
+                                          data-confirmar-titulo="{% if rol.asignado %}Quitar rol{% else %}Asignar rol{% endif %}"
+                                          data-confirmar-boton="{% if rol.asignado %}Quitar {{ rol.nombre }}{% else %}Asignar {{ rol.nombre }}{% endif %}">
                                         {% csrf_token %}
                                         <button class="boton boton-secundario boton-chico" type="submit">
                                             {% if rol.asignado %}Quitar {{ rol.nombre }}{% else %}Asignar {{ rol.nombre }}{% endif %}
@@ -124,11 +126,15 @@
                     {% else %}
                         <a class="perfil-enlace" href="{% url 'usuarios:usuario_restablecer_contrasena' usuario_obj.pk %}">Restablecer contraseña</a>
                         <div class="perfil-estado-cuenta">
-                            {% if usuario_obj.is_active %}
-                                <a class="perfil-enlace perfil-accion-desactivar" href="{% url 'usuarios:usuario_cambiar_estado' usuario_obj.pk %}">Desactivar cuenta</a>
-                            {% else %}
-                                <a class="boton boton-primario boton-chico" href="{% url 'usuarios:usuario_cambiar_estado' usuario_obj.pk %}">Activar cuenta</a>
-                            {% endif %}
+                            <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_cambiar_estado' usuario_obj.pk %}"
+                                  data-confirmar="{% if usuario_obj.is_active %}¿Desactivar la cuenta de {{ usuario_obj.get_full_name|default:usuario_obj.username }}? No va a poder iniciar sesión hasta que se reactive su cuenta.{% else %}¿Activar la cuenta de {{ usuario_obj.get_full_name|default:usuario_obj.username }}? Va a poder iniciar sesión de nuevo.{% endif %}"
+                                  data-confirmar-titulo="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta"
+                                  data-confirmar-boton="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta">
+                                {% csrf_token %}
+                                <button class="perfil-enlace perfil-accion-cuenta{% if usuario_obj.is_active %} perfil-accion-desactivar{% endif %}" type="submit">
+                                    {% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta
+                                </button>
+                            </form>
                         </div>
                     {% endif %}
                 </section>

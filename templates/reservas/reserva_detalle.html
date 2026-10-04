@@ -51,7 +51,9 @@
 {% endif %}
 {% if puede_anular %}
 <header class="encabezado-seccion"><h2>Anular reserva</h2></header>
-<form class="tarjeta" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}" data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? Se liberarán todos sus turnos.">
+<form class="tarjeta" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}"
+      data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? Se liberarán todos sus turnos."
+      data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular reserva">
     {% csrf_token %}
     <div class="grupo-campo">
         <label for="{{ formulario_anulacion.motivo.id_for_label }}">{{ formulario_anulacion.motivo.label }} <span aria-hidden="true">*</span></label>
@@ -67,7 +69,9 @@
     <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Volver a reservas</a>
     <a class="boton boton-secundario" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
     {% if puede_finalizar %}
-        <form class="formulario-en-linea" method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}" data-confirmar="¿Confirmás la finalización de la reserva {{ reserva.numero }}?">
+        <form class="formulario-en-linea" method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}"
+              data-confirmar="¿Confirmás la finalización de la reserva {{ reserva.numero }}?"
+              data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">
             {% csrf_token %}
             <button class="boton boton-secundario" type="submit">Finalizar reserva</button>
         </form>

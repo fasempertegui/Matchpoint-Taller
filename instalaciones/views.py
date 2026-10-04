@@ -177,26 +177,19 @@ def sede_editar(request, pk):
 
 @login_required
 @permission_required("instalaciones.change_sede", raise_exception=True)
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["POST"])
 def sede_cambiar_estado(request, pk):
     sede = get_object_or_404(Sede, pk=pk)
     nuevo_estado = (
         Sede.Estado.INACTIVA if sede.estado == Sede.Estado.ACTIVA else Sede.Estado.ACTIVA
     )
 
-    if request.method == "POST":
-        sede.estado = nuevo_estado
-        sede.save(update_fields=["estado", "actualizado_en"])
-        messages.success(
-            request, f'La sede "{sede.nombre}" quedó {sede.get_estado_display().lower()}.'
-        )
-        return redirect("instalaciones:sede_detalle", pk=sede.pk)
-
-    return render(
-        request,
-        "instalaciones/sede_confirmar_cambio_estado.html",
-        {"sede": sede, "nuevo_estado": nuevo_estado},
+    sede.estado = nuevo_estado
+    sede.save(update_fields=["estado", "actualizado_en"])
+    messages.success(
+        request, f'La sede "{sede.nombre}" quedó {sede.get_estado_display().lower()}.'
     )
+    return redirect("instalaciones:sede_detalle", pk=sede.pk)
 
 
 @login_required

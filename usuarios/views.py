@@ -172,58 +172,49 @@ def usuario_restablecer_contrasena(request, pk):
 
 @login_required
 @permission_required("usuarios.change_usuario", raise_exception=True)
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["POST"])
 def usuario_cambiar_estado(request, pk):
-    if request.method == "POST":
-        # Todas las solicitudes toman primero los mismos bloqueos y en el mismo
-        # orden para que dos cambios concurrentes no dejen cero administradores.
-        with transaction.atomic():
-            administradores_activos = list(
-                Usuario.objects.select_for_update(of=("self",))
-                .filter(
-                    is_active=True,
-                    roles__rol__codigo=Rol.ADMINISTRADOR,
-                )
-                .order_by("pk")
-                .values_list("pk", flat=True)
+    # Todas las solicitudes toman primero los mismos bloqueos y en el mismo
+    # orden para que dos cambios concurrentes no dejen cero administradores.
+    with transaction.atomic():
+        administradores_activos = list(
+            Usuario.objects.select_for_update(of=("self",))
+            .filter(
+                is_active=True,
+                roles__rol__codigo=Rol.ADMINISTRADOR,
             )
-            usuario = get_object_or_404(
-                Usuario.objects.select_for_update(), pk=pk
-            )
-            activar = not usuario.is_active
-
-            if not activar and usuario.pk == request.user.pk:
-                messages.error(request, "No podés desactivar tu propia cuenta.")
-                return redirect("usuarios:usuario_detalle", pk=usuario.pk)
-
-            if (
-                not activar
-                and usuario.tiene_rol(Rol.ADMINISTRADOR)
-                and len(administradores_activos) <= 1
-            ):
-                messages.error(
-                    request,
-                    "No se puede desactivar al último administrador activo.",
-                )
-                return redirect("usuarios:usuario_detalle", pk=usuario.pk)
-
-            usuario.is_active = activar
-            usuario.fecha_baja = None if activar else timezone.now()
-            usuario.save(update_fields=["is_active", "fecha_baja", "actualizado_en"])
-
-        messages.success(
-            request,
-            f'El usuario "{usuario}" quedó {"activo" if activar else "inactivo"}.',
+            .order_by("pk")
+            .values_list("pk", flat=True)
         )
-        return redirect("usuarios:usuario_detalle", pk=usuario.pk)
+        usuario = get_object_or_404(
+            Usuario.objects.select_for_update(), pk=pk
+        )
+        activar = not usuario.is_active
 
-    usuario = get_object_or_404(Usuario, pk=pk)
-    activar = not usuario.is_active
-    return render(
+        if not activar and usuario.pk == request.user.pk:
+            messages.error(request, "No podés desactivar tu propia cuenta.")
+            return redirect("usuarios:usuario_detalle", pk=usuario.pk)
+
+        if (
+            not activar
+            and usuario.tiene_rol(Rol.ADMINISTRADOR)
+            and len(administradores_activos) <= 1
+        ):
+            messages.error(
+                request,
+                "No se puede desactivar al último administrador activo.",
+            )
+            return redirect("usuarios:usuario_detalle", pk=usuario.pk)
+
+        usuario.is_active = activar
+        usuario.fecha_baja = None if activar else timezone.now()
+        usuario.save(update_fields=["is_active", "fecha_baja", "actualizado_en"])
+
+    messages.success(
         request,
-        "usuarios/usuario_confirmar_cambio_estado.html",
-        {"usuario_obj": usuario, "activar": activar},
+        f'El usuario "{usuario}" quedó {"activo" if activar else "inactivo"}.',
     )
+    return redirect("usuarios:usuario_detalle", pk=usuario.pk)
 
 
 @login_required

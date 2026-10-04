@@ -62,7 +62,8 @@
             <form method="post" novalidate data-reserva-turnos data-precio-centavos="{{ precio_centavos|unlocalize }}"
                   data-fecha="{{ formulario.cleaned_data.fecha|date:'d/m/Y' }}" data-cancha="{{ formulario.cleaned_data.cancha }}"
                   data-organizador="{% if es_administrador %}{{ formulario.cleaned_data.organizador }}{% else %}{{ request.user }}{% endif %}"
-                  data-confirmar="¿Confirmar esta reserva?" data-confirmar-si="[name='turnos']:checked">
+                  data-confirmar="¿Confirmar esta reserva?" data-confirmar-si="[name='turnos']:checked"
+                  data-confirmar-titulo="Confirmar reserva" data-confirmar-boton="Reservar turnos">
                 {% csrf_token %}
                 {% for campo in formulario %}<input type="hidden" name="{{ campo.html_name }}" value="{{ campo.value|default_if_none:'' }}">{% endfor %}
                 <input type="hidden" name="precio_reserva" value="{{ resultado.precio.pk }}">
