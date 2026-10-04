@@ -61,7 +61,7 @@
                 {% endif %}
 
                 {% if perms.usuarios.change_usuario %}
-                    <details class="perfil-gestion-roles" data-gestion-roles>
+                    <details class="perfil-desplegable" data-gestion-roles>
                         <summary>Modificar roles</summary>
                         <ul class="perfil-roles-opciones">
                             {% for rol in roles_gestionables %}

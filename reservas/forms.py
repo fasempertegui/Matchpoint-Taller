@@ -84,17 +84,45 @@ class ReservaFiltroForm(forms.Form):
         input_formats=["%Y-%m-%d"],
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
     )
+    organizador = forms.CharField(
+        label="Nombre o apellido",
+        required=False,
+        max_length=150,
+        widget=forms.TextInput(attrs={"class": "form-control", "type": "search"}),
+    )
+    numero = forms.RegexField(
+        label="Número de reserva",
+        required=False,
+        regex=r"(?i)\A(?:R-)?[0-9]+\Z",
+        max_length=22,
+        error_messages={"invalid": "Ingresá un número de reserva, por ejemplo R-000002 o 2."},
+        widget=forms.TextInput(attrs={"class": "form-control", "type": "search", "placeholder": "R-000002"}),
+    )
     estado = forms.ChoiceField(
         required=False,
         choices=(("", "Todos"), *Reserva.Estado.choices),
         widget=forms.Select(attrs={"class": "form-control"}),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, es_administrador, **kwargs):
         super().__init__(*args, **kwargs)
+        if not es_administrador:
+            self.fields.pop("organizador")
+        self.order_fields(["sede", "fecha_desde", "organizador", "estado", "cancha", "fecha_hasta", "numero"])
+        if not es_administrador:
+            self.order_fields(["sede", "fecha_desde", "numero", "estado", "cancha", "fecha_hasta"])
         sede = self.data.get("sede", "")
         if not sede:
             self.fields["cancha"].widget.attrs["disabled"] = True
+
+    def clean_numero(self):
+        numero = self.cleaned_data["numero"]
+        if not numero:
+            return None
+        numero = int(numero.upper().removeprefix("R-"))
+        if not 1 <= numero <= 9223372036854775807:
+            raise forms.ValidationError("Ingresá un número de reserva válido.")
+        return numero
 
     def clean(self):
         datos = super().clean()

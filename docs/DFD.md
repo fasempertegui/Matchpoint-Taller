@@ -930,7 +930,7 @@ flowchart LR
 
 **Datos que circulan**
 
-1. Identidad del actor y filtros opcionales de sede, cancha, fechas de uso y estado.
+1. Identidad del actor y filtros opcionales de sede, cancha, fechas de uso, organizador, número de reserva y estado.
 2. Identidad del actor y de los organizadores de las reservas consultadas.
 3. Estado de acceso del actor y datos de los organizadores.
 4. Usuario que solicita consultar reservas.
@@ -943,7 +943,7 @@ flowchart LR
 11. Cancha, fecha y horas de los turnos.
 12. Reservas y turnos cuyos vínculos deben consultarse.
 13. Detalles que relacionan cada reserva con todos sus turnos.
-14. Criterios de estado y acceso a todas las reservas o sólo a las propias.
+14. Criterios de organizador, número de reserva y estado, con acceso a todas las reservas o sólo a las propias.
 15. Cabeceras de las reservas que cumplen los filtros.
 16. Precios aplicados a las reservas consultadas.
 17. Importes históricos por turno.

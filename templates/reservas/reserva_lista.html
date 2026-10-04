@@ -9,9 +9,9 @@
     <a class="boton boton-primario" href="{% url 'reservas:reserva_crear' %}">Nueva reserva</a>
 </div>
 
-<form method="get" action="{% url 'reservas:reserva_lista' %}" class="tarjeta tarjeta-busqueda filtros-compactos filtros-reservas" data-reserva-filtros data-filtros-automaticos>
+<form method="get" action="{% url 'reservas:reserva_lista' %}" class="tarjeta tarjeta-busqueda filtros-compactos filtros-reservas{% if not es_administrador %} filtros-reservas-propias{% endif %}" data-reserva-filtros data-filtros-automaticos>
     {% for campo in formulario %}
-        <div class="grupo-campo">
+        <div class="grupo-campo filtros-campo-{{ campo.name }}">
             <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
             {{ campo }}
             {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
@@ -47,7 +47,7 @@
                         <span class="texto-secundario">{{ fila.fecha|date:"d/m/Y" }} · {{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</span>
                     </td>
                     <td class="tabla-importe"><strong>$ {{ fila.total|floatformat:"2g" }}</strong></td>
-                    <td><span class="estado">{{ fila.reserva.get_estado_display }}</span></td>
+                    <td>{% include "componentes/badge_estado.html" with estado=fila.reserva.estado texto=fila.reserva.get_estado_display only %}</td>
                     <td>
                         <div class="acciones">
                             <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_detalle' fila.reserva.pk %}" aria-label="Ver detalles de la reserva {{ fila.reserva.numero }}">Detalles</a>

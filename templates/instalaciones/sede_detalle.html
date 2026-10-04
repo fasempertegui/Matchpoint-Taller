@@ -67,7 +67,7 @@
                     {% if perms.instalaciones.change_sede %}
                         <section class="perfil-seccion" aria-labelledby="sede-administracion-titulo">
                             <h2 id="sede-administracion-titulo">Administración</h2>
-                            <div class="sede-acciones">
+                            <div class="perfil-acciones">
                                 <a class="perfil-enlace" href="{% url 'instalaciones:sede_editar' sede.pk %}">Editar sede</a>
                                 <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:sede_cambiar_estado' sede.pk %}"
                                       data-confirmar="{% if sede.estado == 'activa' %}¿Desactivar la sede {{ sede.nombre }}? Dejará de ofrecerse para nuevas clases y reservas. Las canchas, clases y reservas ya existentes no se modifican.{% else %}¿Activar la sede {{ sede.nombre }}? Volverá a ofrecerse para nuevas clases y reservas.{% endif %}"

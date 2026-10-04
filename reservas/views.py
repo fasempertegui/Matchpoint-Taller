@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.formats import number_format
@@ -27,7 +27,7 @@ def _exigir_administrador(usuario):
 @require_http_methods(["GET"])
 def reserva_lista(request):
     es_administrador = exigir_acceso_reservas(request.user)
-    formulario = ReservaFiltroForm(request.GET)
+    formulario = ReservaFiltroForm(request.GET, es_administrador=es_administrador)
     reservas = Reserva.objects.select_related("organizador", "precio_reserva").prefetch_related(
         Prefetch("detalles", queryset=ReservaTurno.objects.select_related("turno__cancha__sede"))
     )
@@ -49,6 +49,13 @@ def reserva_lista(request):
             reservas = reservas.filter(**filtros_turnos).distinct()
         if datos["estado"]:
             reservas = reservas.filter(estado=datos["estado"])
+        if datos["numero"] is not None:
+            reservas = reservas.filter(pk=datos["numero"])
+        for palabra in datos.get("organizador", "").split():
+            reservas = reservas.filter(
+                Q(organizador__first_name__icontains=palabra)
+                | Q(organizador__last_name__icontains=palabra)
+            )
     else:
         reservas = reservas.none()
 
@@ -206,6 +213,8 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
         "cantidad_horas": len(detalles),
         "total": reserva.precio_reserva.importe * len(detalles),
         "puede_anular": puede_anular,
+        "hora_inicio": primer_turno.hora_inicio if primer_turno else None,
+        "hora_fin": ultimo_turno.hora_fin if ultimo_turno else None,
         "es_administrador": es_administrador,
         "impedimento_anulacion": impedimento_anulacion,
         "puede_finalizar": puede_finalizar,

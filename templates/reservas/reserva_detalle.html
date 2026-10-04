@@ -1,86 +1,173 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}Reserva {{ reserva.numero }} | Academia TM{% endblock %}
 
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
+{% endblock %}
+
 {% block contenido %}
-<header class="encabezado-pagina">
-    <h1>Reserva {{ reserva.numero }}</h1>
-    <span class="estado">{{ reserva.get_estado_display }}</span>
-</header>
-<section class="tarjeta">
-    <div class="detalle-grid">
-        <div><span class="etiqueta">Organizador</span><p>{{ reserva.organizador }}</p></div>
-        <div><span class="etiqueta">Registrada por</span><p>{{ reserva.registrado_por }}</p></div>
-        <div><span class="etiqueta">Fecha de registro</span><p>{{ reserva.creado_en|date:"d/m/Y H:i" }}</p></div>
-        <div><span class="etiqueta">Cancha</span><p>{{ detalles.0.turno.cancha }}</p></div>
-        <div><span class="etiqueta">Fecha de uso</span><p>{{ detalles.0.turno.fecha|date:"d/m/Y" }}</p></div>
-        <div><span class="etiqueta">Duración</span><p>{{ cantidad_horas }} hora{{ cantidad_horas|pluralize:"s" }}</p></div>
-        <div><span class="etiqueta">Precio por turno (ARS)</span><p>$ {{ reserva.precio_reserva.importe|floatformat:2 }}</p></div>
-        <div><span class="etiqueta">Total (ARS)</span><p><strong>$ {{ total|floatformat:2 }}</strong></p></div>
-        {% if reserva.observaciones %}<div class="detalle-ancho"><span class="etiqueta">Observaciones</span><p>{{ reserva.observaciones|linebreaksbr }}</p></div>{% endif %}
-        {% if reserva.estado == "anulada" %}
-            <div><span class="etiqueta">Fecha de anulación</span><p>{{ reserva.anulado_en|date:"d/m/Y H:i" }}</p></div>
-            <div><span class="etiqueta">Anulada por</span><p>{{ reserva.anulado_por }}</p></div>
-            <div class="detalle-ancho"><span class="etiqueta">Motivo de anulación</span><p>{{ reserva.motivo_anulacion|linebreaksbr }}</p></div>
-        {% elif reserva.estado == "finalizada" %}
-            <div><span class="etiqueta">Fecha de finalización</span><p>{{ reserva.finalizado_en|date:"d/m/Y H:i" }}</p></div>
-            <div><span class="etiqueta">Finalizada por</span><p>{{ reserva.finalizado_por }}</p></div>
-        {% endif %}
-    </div>
-</section>
-<header class="encabezado-seccion"><h2>Turnos reservados</h2></header>
-<section class="tarjeta tabla-contenedor">
-    <table>
-        <thead><tr><th scope="col">Inicio</th><th scope="col">Fin</th><th scope="col">Subtotal (ARS)</th></tr></thead>
-        <tbody>
-            {% for detalle in detalles %}
-                <tr>
-                    <td>{{ detalle.turno.hora_inicio|time:"H:i" }}</td>
-                    <td>{{ detalle.turno.hora_fin|time:"H:i" }}</td>
-                    <td>$ {{ reserva.precio_reserva.importe|floatformat:2 }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</section>
+<a class="perfil-volver" href="{% url 'reservas:reserva_lista' %}">Volver a reservas</a>
+
 {% if formulario_anulacion.non_field_errors %}
     <div class="mensaje mensaje-error" role="alert">{{ formulario_anulacion.non_field_errors }}</div>
 {% endif %}
 {% if not puede_anular %}
     {% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-    {% if not es_administrador and reserva.estado == "programada" %}
-        <p class="texto-secundario">{{ impedimento_anulacion }}</p>
-    {% endif %}
 {% endif %}
-{% if puede_anular %}
-<header class="encabezado-seccion"><h2>Anular reserva</h2></header>
-<form class="tarjeta" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}"
-      data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? Se liberarán todos sus turnos."
-      data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular reserva">
-    {% csrf_token %}
-    {% if not es_administrador %}
-        <p class="texto-secundario">Podés anular tu reserva con al menos una hora de antelación al inicio del primer turno.</p>
-    {% endif %}
-    <div class="grupo-campo">
-        <label for="{{ formulario_anulacion.motivo.id_for_label }}">{{ formulario_anulacion.motivo.label }} <span aria-hidden="true">*</span></label>
-        {{ formulario_anulacion.motivo }}
-        {% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+
+<article class="tarjeta perfil">
+    <header class="perfil-cabecera">
+        <div>
+            <p class="perfil-contexto">Detalle de reserva</p>
+            <div class="perfil-identidad">
+                <h1>{{ reserva.numero }}</h1>
+                {% include "componentes/badge_estado.html" with estado=reserva.estado texto=reserva.get_estado_display only %}
+            </div>
+        </div>
+        <div class="perfil-total">
+            <span>Total (ARS)</span>
+            <strong>$ {{ total|floatformat:"2g" }}</strong>
+        </div>
+    </header>
+
+    <div class="perfil-cuerpo">
+        <div class="perfil-datos">
+            <section class="perfil-seccion" aria-labelledby="reserva-datos-titulo">
+                <h2 id="reserva-datos-titulo">Datos de la reserva</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila">
+                        <dt>Organizador</dt>
+                        <dd>{{ reserva.organizador }}</dd>
+                    </div>
+                    <div class="perfil-fila">
+                        <dt>Sede</dt>
+                        <dd>{{ detalles.0.turno.cancha.sede.nombre }}</dd>
+                    </div>
+                    <div class="perfil-fila">
+                        <dt>Cancha</dt>
+                        <dd>{{ detalles.0.turno.cancha.nombre }}</dd>
+                    </div>
+                    <div class="perfil-fila">
+                        <dt>Fecha de uso</dt>
+                        <dd>{{ detalles.0.turno.fecha|date:"d/m/Y" }}</dd>
+                    </div>
+                    <div class="perfil-fila">
+                        <dt>Horario</dt>
+                        <dd>{{ hora_inicio|time:"H:i" }} a {{ hora_fin|time:"H:i" }}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="perfil-seccion" aria-labelledby="reserva-turnos-titulo">
+                <h2 id="reserva-turnos-titulo">Turnos reservados</h2>
+                <div class="tabla-contenedor">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">Horario</th>
+                                <th scope="col" class="tabla-importe">Subtotal (ARS)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in detalles %}
+                                <tr>
+                                    <td>{{ detalle.turno.hora_inicio|time:"H:i" }} a {{ detalle.turno.hora_fin|time:"H:i" }}</td>
+                                    <td class="tabla-importe">$ {{ reserva.precio_reserva.importe|floatformat:"2g" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {% if reserva.observaciones %}
+                <section class="perfil-seccion" aria-labelledby="reserva-observaciones-titulo">
+                    <h2 id="reserva-observaciones-titulo">Observaciones</h2>
+                    <p class="perfil-observaciones">{{ reserva.observaciones|linebreaksbr }}</p>
+                </section>
+            {% endif %}
+
+            {% if reserva.estado == "anulada" %}
+                <section class="perfil-seccion" aria-labelledby="reserva-motivo-titulo">
+                    <h2 id="reserva-motivo-titulo">Motivo de anulación</h2>
+                    <p class="perfil-observaciones">{{ reserva.motivo_anulacion|linebreaksbr }}</p>
+                </section>
+            {% endif %}
+        </div>
+
+        <aside class="perfil-lateral" aria-label="Registro y acciones de la reserva">
+            <section class="perfil-seccion" aria-labelledby="reserva-registro-titulo">
+                <h2 id="reserva-registro-titulo">Registro</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila">
+                        <dt>Fecha de registro</dt>
+                        <dd>{{ reserva.creado_en|date:"d/m/Y H:i" }}</dd>
+                    </div>
+                    <div class="perfil-fila">
+                        <dt>Registrada por</dt>
+                        <dd>{{ reserva.registrado_por }}</dd>
+                    </div>
+                    {% if reserva.estado == "anulada" %}
+                        <div class="perfil-fila">
+                            <dt>Fecha de anulación</dt>
+                            <dd>{{ reserva.anulado_en|date:"d/m/Y H:i" }}</dd>
+                        </div>
+                        <div class="perfil-fila">
+                            <dt>Anulada por</dt>
+                            <dd>{{ reserva.anulado_por }}</dd>
+                        </div>
+                    {% elif reserva.estado == "finalizada" %}
+                        <div class="perfil-fila">
+                            <dt>Fecha de finalización</dt>
+                            <dd>{{ reserva.finalizado_en|date:"d/m/Y H:i" }}</dd>
+                        </div>
+                        <div class="perfil-fila">
+                            <dt>Finalizada por</dt>
+                            <dd>{{ reserva.finalizado_por }}</dd>
+                        </div>
+                    {% endif %}
+                </dl>
+            </section>
+
+            <section class="perfil-seccion" aria-labelledby="reserva-acciones-titulo">
+                <h2 id="reserva-acciones-titulo">Acciones</h2>
+                <div class="perfil-acciones">
+                    <a class="perfil-enlace" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
+                    {% if puede_finalizar %}
+                        <form class="formulario-en-linea" method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}"
+                              data-confirmar="¿Confirmás la finalización de la reserva {{ reserva.numero }}?"
+                              data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">
+                            {% csrf_token %}
+                            <button class="perfil-enlace perfil-accion" type="submit">Finalizar reserva</button>
+                        </form>
+                    {% endif %}
+                </div>
+
+                {% if puede_anular %}
+                    <details class="perfil-desplegable" id="anulacion"{% if formulario_anulacion.is_bound %} open{% endif %}>
+                        <summary class="perfil-accion-desactivar">Anular reserva</summary>
+                        <form class="perfil-formulario" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}"
+                              data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? Se liberarán todos sus turnos."
+                              data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular reserva">
+                            {% csrf_token %}
+                            {% if not es_administrador %}
+                                <p class="perfil-descripcion">Podés anular tu reserva con al menos una hora de antelación al inicio del primer turno.</p>
+                            {% endif %}
+                            <div class="grupo-campo">
+                                <label for="{{ formulario_anulacion.motivo.id_for_label }}">{{ formulario_anulacion.motivo.label }} <span aria-hidden="true">*</span></label>
+                                {{ formulario_anulacion.motivo }}
+                                {% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                            </div>
+                            <button class="boton boton-secundario boton-chico" type="submit">Anular reserva</button>
+                        </form>
+                    </details>
+                {% elif not es_administrador and reserva.estado == "programada" %}
+                    <p class="perfil-descripcion perfil-impedimento">{{ impedimento_anulacion }}</p>
+                {% endif %}
+            </section>
+        </aside>
     </div>
-    <div class="acciones-formulario">
-        <button class="boton boton-secundario" type="submit">Anular reserva</button>
-    </div>
-</form>
-{% endif %}
-<div class="acciones-formulario">
-    <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Volver a reservas</a>
-    <a class="boton boton-secundario" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
-    {% if puede_finalizar %}
-        <form class="formulario-en-linea" method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}"
-              data-confirmar="¿Confirmás la finalización de la reserva {{ reserva.numero }}?"
-              data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">
-            {% csrf_token %}
-            <button class="boton boton-secundario" type="submit">Finalizar reserva</button>
-        </form>
-    {% endif %}
-</div>
+</article>
 {% endblock %}
