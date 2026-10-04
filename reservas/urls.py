@@ -8,6 +8,7 @@ urlpatterns = [
     path("", views.reserva_lista, name="reserva_lista"),
     path("nueva/", views.reserva_crear, name="reserva_crear"),
     path("<int:pk>/", views.reserva_detalle, name="reserva_detalle"),
+    path("<int:pk>/anular/", views.reserva_anular, name="reserva_anular"),
     path("sedes/<int:sede_pk>/precios/nuevo/", views.precio_crear, name="precio_crear"),
     path(
         "sedes/<int:sede_pk>/precios/<int:pk>/actualizar/",

@@ -43,6 +43,26 @@
         </tbody>
     </table>
 </section>
+{% if formulario_anulacion.non_field_errors %}
+    <div class="mensaje mensaje-error" role="alert">{{ formulario_anulacion.non_field_errors }}</div>
+{% endif %}
+{% if not puede_anular %}
+    {% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+{% endif %}
+{% if puede_anular %}
+<header class="encabezado-seccion"><h2>Anular reserva</h2></header>
+<form class="tarjeta" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}" data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? Se liberarán todos sus turnos.">
+    {% csrf_token %}
+    <div class="grupo-campo">
+        <label for="{{ formulario_anulacion.motivo.id_for_label }}">{{ formulario_anulacion.motivo.label }} <span aria-hidden="true">*</span></label>
+        {{ formulario_anulacion.motivo }}
+        {% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="acciones-formulario">
+        <button class="boton boton-secundario" type="submit">Anular reserva</button>
+    </div>
+</form>
+{% endif %}
 <div class="acciones-formulario">
     <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Volver a reservas</a>
     <a class="boton boton-primario" href="{% url 'reservas:reserva_crear' %}">Nueva reserva</a>

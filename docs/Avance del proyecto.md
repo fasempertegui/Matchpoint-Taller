@@ -50,7 +50,7 @@ La base de datos impide repetir un turno para la misma cancha, fecha y hora de i
 
 La reserva tiene estado inicial Programada y fecha de registración automática. Los estados permitidos son Programada, Anulada y Finalizada. La base exige fecha, responsable y motivo con contenido para una anulación, y fecha y responsable para una finalización. Estos datos sólo pueden estar presentes en el estado correspondiente. Las relaciones protegen los registros vinculados contra la eliminación física.
 
-La anulación, la finalización y la impresión están pendientes de implementación.
+La finalización y la impresión están pendientes de implementación.
 
 ### Turnos y disponibilidad
 
@@ -81,3 +81,13 @@ Los filtros son opcionales: sede, cancha, fecha de uso desde, fecha de uso hasta
 El selector de cancha se habilita al elegir una sede y ofrece sólo sus canchas. Al cambiar la sede, se descarta una cancha que no le pertenezca. El servidor valida los identificadores, la pertenencia de la cancha, las fechas y el estado; ante filtros inválidos muestra los errores y no devuelve resultados. Las opciones incluyen sedes y canchas inactivas para conservar la consulta de reservas históricas.
 
 Cada reserva aparece una sola vez, aunque incluya varios turnos. El horario y el total se obtienen de todos sus detalles y del precio aplicado al registrarla. El detalle muestra también los datos de anulación o finalización cuando corresponden y permite volver al listado.
+
+### Anulación de reservas
+
+El detalle ofrece un formulario de anulación al Administrador cuando la reserva está Programada y todavía no comenzó su primer turno. El motivo es obligatorio y no puede contener sólo espacios. Al solicitar la anulación, el navegador pide confirmación e indica que se liberarán todos los turnos de esa reserva.
+
+La anulación se confirma al enviar el formulario y el servidor rechaza el acceso de otros roles. En una única transacción bloquea la cuenta del administrador, los turnos en orden de identificador y la cabecera de la reserva. Vuelve a comprobar el permiso, el motivo, el estado y la hora de inicio después de obtener los bloqueos.
+
+La reserva pasa a Anulada y registra automáticamente fecha, hora y administrador responsable, junto con el motivo ingresado. Los turnos dejan de estar ocupados por esa reserva y pueden ofrecerse nuevamente si cumplen las condiciones actuales de disponibilidad. La cabecera, los detalles y el precio aplicado se conservan para consultar la historia.
+
+Las reservas iniciadas, Anuladas o Finalizadas no pueden anularse. Una segunda solicitud no sobrescribe los datos de la primera anulación. La operación no exige que el organizador, la sede o la cancha estén activos ni que el precio aplicado siga vigente. Si falla una validación o escritura, la transacción no modifica la reserva ni su ocupación. Al completar la operación se vuelve al detalle, que muestra el motivo, la fecha y el responsable de la anulación.

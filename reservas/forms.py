@@ -161,6 +161,14 @@ class ReservaDatosForm(forms.Form):
         return datos
 
 
+class ReservaAnulacionForm(forms.Form):
+    motivo = forms.CharField(
+        label="Motivo de anulación",
+        error_messages={"required": "Indicá el motivo de la anulación."},
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+    )
+
+
 class ReservaTurnosForm(forms.Form):
     turnos = forms.TypedMultipleChoiceField(
         label="Turnos",

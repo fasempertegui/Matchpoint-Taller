@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado y consulta de su detalle. Los demás procesos del sistema están pendientes de representación.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle y anulación. Los demás procesos del sistema están pendientes de representación.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -948,3 +948,61 @@ flowchart LR
 16. Precios aplicados a las reservas consultadas.
 17. Importes históricos por turno.
 18. Opciones de filtros y listado con número, organizador cuando corresponde, sede, cancha, fecha, horario, total, estado y acceso al detalle, o errores de validación y acceso.
+
+### DFD 31: anular una reserva de cancha
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((31. Anular una reserva de cancha))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D7[(D7: Precios de reservas)]
+    D9[(D9: Turnos)]
+    D10[(D10: Reservas)]
+    D11[(D11: Detalles de reservas)]
+
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D10
+    D10 -->|7| P
+    P -->|8| D11
+    D11 -->|9| P
+    P -->|10| D9
+    D9 -->|11| P
+    P -->|12| D6
+    D6 -->|13| P
+    P -->|14| D5
+    D5 -->|15| P
+    P -->|16| D7
+    D7 -->|17| P
+    P -->|18| D10
+    P -->|19| A
+```
+
+**Datos que circulan**
+
+1. Reserva seleccionada, motivo de anulación, identidad del actor y confirmación.
+2. Identidad del actor y de los usuarios relacionados con la reserva.
+3. Estado de acceso del actor y datos de los usuarios relacionados.
+4. Usuario que solicita anular la reserva.
+5. Roles asignados al actor.
+6. Identificador de la reserva seleccionada.
+7. Cabecera con estado, organizador, responsables, precio aplicado y datos de registro o anulación.
+8. Reserva cuyos detalles deben consultarse.
+9. Vínculos de la reserva con todos sus turnos.
+10. Turnos incluidos en la reserva.
+11. Fecha, hora de inicio, hora de fin y cancha de cada turno.
+12. Cancha de los turnos reservados.
+13. Datos de la cancha y su sede.
+14. Sede de la cancha reservada.
+15. Datos de la sede.
+16. Precio aplicado a la reserva.
+17. Importe histórico por turno para mostrar el total de la reserva.
+18. Estado Anulada, motivo, fecha, hora y administrador responsable; este estado libera la ocupación de todos sus turnos.
+19. Resultado de la anulación y detalle conservado de la reserva, o errores de validación y acceso.
