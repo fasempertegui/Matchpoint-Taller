@@ -26,13 +26,9 @@
     <table>
         <thead>
             <tr>
-                <th scope="col">Número</th>
-                {% if es_administrador %}<th scope="col">Organizador</th>{% endif %}
-                <th scope="col">Sede</th>
-                <th scope="col">Cancha</th>
-                <th scope="col">Fecha de uso</th>
-                <th scope="col">Horario</th>
-                <th scope="col">Total (ARS)</th>
+                <th scope="col">Reserva</th>
+                <th scope="col">Sede y horario</th>
+                <th scope="col" class="tabla-importe">Total (ARS)</th>
                 <th scope="col">Estado</th>
                 <th scope="col" class="acciones-columna">Acciones</th>
             </tr>
@@ -40,21 +36,27 @@
         <tbody>
             {% for fila in reservas %}
                 <tr>
-                    <td>{{ fila.reserva.numero }}</td>
-                    {% if es_administrador %}<td>{{ fila.reserva.organizador }}</td>{% endif %}
-                    <td>{{ fila.cancha.sede.nombre }}</td>
-                    <td>{{ fila.cancha.nombre }}</td>
-                    <td>{{ fila.fecha|date:"d/m/Y" }}</td>
-                    <td>{{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</td>
-                    <td>$ {{ fila.total|floatformat:2 }}</td>
+                    <td class="tabla-resumen">
+                        <strong>{{ fila.reserva.numero }}</strong>
+                        {% if es_administrador %}
+                            <span class="texto-secundario">{{ fila.reserva.organizador }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="tabla-resumen">
+                        <strong>{{ fila.cancha.sede.nombre }} · {{ fila.cancha.nombre }}</strong> 
+                        <span class="texto-secundario">{{ fila.fecha|date:"d/m/Y" }} · {{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</span>
+                    </td>
+                    <td class="tabla-importe"><strong>$ {{ fila.total|floatformat:"2g" }}</strong></td>
                     <td><span class="estado">{{ fila.reserva.get_estado_display }}</span></td>
-                    <td class="acciones">
-                        <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_detalle' fila.reserva.pk %}">Detalles</a>
+                    <td>
+                        <div class="acciones">
+                            <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_detalle' fila.reserva.pk %}" aria-label="Ver detalles de la reserva {{ fila.reserva.numero }}">Detalles</a>
+                        </div>
                     </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td class="estado-vacio" colspan="{% if es_administrador %}9{% else %}8{% endif %}">
+                    <td class="estado-vacio" colspan="5">
                         {% if filtros_validos %}No se encontraron reservas.{% else %}Corregí los filtros para consultar las reservas.{% endif %}
                     </td>
                 </tr>
