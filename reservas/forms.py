@@ -73,13 +73,13 @@ class ReservaFiltroForm(forms.Form):
         widget=CanchaReservaSelect(attrs={"class": "form-control"}),
     )
     fecha_desde = forms.DateField(
-        label="Fecha de uso desde",
+        label="Fecha desde",
         required=False,
         input_formats=["%Y-%m-%d"],
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
     )
     fecha_hasta = forms.DateField(
-        label="Fecha de uso hasta",
+        label="Fecha hasta",
         required=False,
         input_formats=["%Y-%m-%d"],
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),

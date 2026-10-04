@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         formulario.addEventListener("change", function (evento) {
-            if (evento.target.matches("select")) formulario.requestSubmit();
+            if (evento.target.matches('select, input[type="date"]')) formulario.requestSubmit();
         });
 
         formulario.addEventListener("focusout", function (evento) {

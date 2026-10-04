@@ -9,19 +9,16 @@
     <a class="boton boton-primario" href="{% url 'reservas:reserva_crear' %}">Nueva reserva</a>
 </div>
 
-<form method="get" class="tarjeta tarjeta-busqueda" data-reserva-filtros>
-    <div class="detalle-grid">
-        {% for campo in formulario %}
-            <div class="grupo-campo">
-                <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-                {{ campo }}
-                {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-            </div>
-        {% endfor %}
-    </div>
-    <div class="acciones-formulario">
-        <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Limpiar</a>
-        <button class="boton boton-secundario" type="submit">Filtrar</button>
+<form method="get" action="{% url 'reservas:reserva_lista' %}" class="tarjeta tarjeta-busqueda filtros-compactos filtros-reservas" data-reserva-filtros data-filtros-automaticos>
+    {% for campo in formulario %}
+        <div class="grupo-campo">
+            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+            {{ campo }}
+            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+    {% endfor %}
+    <div class="filtros-acciones">
+        <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}" data-limpiar-filtros>Limpiar filtros</a>
     </div>
 </form>
 
@@ -66,4 +63,5 @@
     </table>
 </section>
 <script src="{% static 'js/reserva-filtros.js' %}" defer></script>
+<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

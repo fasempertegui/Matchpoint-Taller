@@ -324,6 +324,16 @@ h2 {
     gap: 4px;
 }
 
+.tarjeta-busqueda.filtros-reservas {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+}
+
+.filtros-reservas > .grupo-campo {
+    width: auto;
+    min-width: 0;
+}
+
 .lista-roles {
     display: flex;
     flex-wrap: wrap;
@@ -1022,6 +1032,12 @@ html.modal-abierto {
     }
 }
 
+@media (max-width: 900px) {
+    .tarjeta-busqueda.filtros-reservas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 720px) {
     .filtros-compactos > .grupo-campo {
         width: 100%;
@@ -1076,5 +1092,11 @@ html.modal-abierto {
     .acciones {
         justify-content: flex-start;
         flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .tarjeta-busqueda.filtros-reservas {
+        grid-template-columns: 1fr;
     }
 }
