@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle y anulación. Los demás procesos del sistema están pendientes de representación.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación y finalización. Los demás procesos del sistema están pendientes de representación.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -1006,3 +1006,46 @@ flowchart LR
 17. Importe histórico por turno para mostrar el total de la reserva.
 18. Estado Anulada, motivo, fecha, hora y administrador responsable; este estado libera la ocupación de todos sus turnos.
 19. Resultado de la anulación y detalle conservado de la reserva, o errores de validación y acceso.
+
+### DFD 32: finalizar una reserva de cancha
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((32. Finalizar una reserva de cancha))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D9[(D9: Turnos)]
+    D10[(D10: Reservas)]
+    D11[(D11: Detalles de reservas)]
+
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D10
+    D10 -->|7| P
+    P -->|8| D11
+    D11 -->|9| P
+    P -->|10| D9
+    D9 -->|11| P
+    P -->|12| D10
+    P -->|13| A
+```
+
+**Datos que circulan**
+
+1. Reserva seleccionada, identidad del actor y confirmación de finalización.
+2. Identidad del usuario que solicita finalizar la reserva.
+3. Datos y estado de acceso de la cuenta del actor.
+4. Usuario cuyos roles deben consultarse.
+5. Roles asignados al actor.
+6. Identificador de la reserva seleccionada.
+7. Estado y datos de finalización de la reserva.
+8. Reserva cuyos turnos deben consultarse.
+9. Vínculos de la reserva con todos sus turnos.
+10. Turnos incluidos en la reserva.
+11. Fechas y horas de los turnos para determinar el fin del intervalo completo.
+12. Estado Finalizada, fecha, hora y administrador responsable.
+13. Resultado de la finalización o errores de validación y acceso.

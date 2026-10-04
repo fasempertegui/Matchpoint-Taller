@@ -50,7 +50,7 @@ La base de datos impide repetir un turno para la misma cancha, fecha y hora de i
 
 La reserva tiene estado inicial Programada y fecha de registración automática. Los estados permitidos son Programada, Anulada y Finalizada. La base exige fecha, responsable y motivo con contenido para una anulación, y fecha y responsable para una finalización. Estos datos sólo pueden estar presentes en el estado correspondiente. Las relaciones protegen los registros vinculados contra la eliminación física.
 
-La finalización y la impresión están pendientes de implementación.
+La impresión está pendiente de implementación.
 
 ### Turnos y disponibilidad
 
@@ -91,3 +91,13 @@ La anulación se confirma al enviar el formulario y el servidor rechaza el acces
 La reserva pasa a Anulada y registra automáticamente fecha, hora y administrador responsable, junto con el motivo ingresado. Los turnos dejan de estar ocupados por esa reserva y pueden ofrecerse nuevamente si cumplen las condiciones actuales de disponibilidad. La cabecera, los detalles y el precio aplicado se conservan para consultar la historia.
 
 Las reservas iniciadas, Anuladas o Finalizadas no pueden anularse. Una segunda solicitud no sobrescribe los datos de la primera anulación. La operación no exige que el organizador, la sede o la cancha estén activos ni que el precio aplicado siga vigente. Si falla una validación o escritura, la transacción no modifica la reserva ni su ocupación. Al completar la operación se vuelve al detalle, que muestra el motivo, la fecha y el responsable de la anulación.
+
+### Finalización de reservas
+
+El detalle ofrece Finalizar reserva al Administrador cuando la reserva está Programada y ya terminó su último turno. Se pide confirmación mediante un diálogo del navegador. El paso del tiempo mantiene la reserva Programada hasta que el Administrador registra la finalización.
+
+En una única transacción se bloquean la cuenta del administrador, todos los turnos en orden de identificador y la cabecera, con el mismo orden que en la anulación. El servidor vuelve a validar el permiso, el estado y la fecha y hora de fin del último turno después de obtener los bloqueos. La operación sólo se confirma al enviar el formulario y se rechaza para otros roles, incluso mediante acceso directo.
+
+La reserva pasa a Finalizada y guarda automáticamente la fecha, hora y administrador responsable. Conserva todos sus detalles, el precio aplicado y la ocupación histórica de sus turnos. La operación permite finalizar reservas con organizador, sede o cancha inactivos y con precios históricos.
+
+Las reservas que todavía no terminaron, las Anuladas y las Finalizadas se rechazan. Una solicitud repetida no sobrescribe la fecha ni el responsable de la finalización. Ante un error, la transacción conserva el estado y los datos de la reserva. El resultado se muestra al volver al detalle, junto con los datos de finalización cuando corresponde.

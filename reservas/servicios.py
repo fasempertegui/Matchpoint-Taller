@@ -124,3 +124,34 @@ def anular_reserva(anulado_por, reserva_id, motivo):
     reserva.motivo_anulacion = motivo
     reserva.save(update_fields=["estado", "anulado_en", "anulado_por", "motivo_anulacion"])
     return reserva
+
+
+@transaction.atomic
+def finalizar_reserva(finalizado_por, reserva_id):
+    finalizado_por = Usuario.objects.select_for_update().get(pk=finalizado_por.pk)
+    if not exigir_acceso_reservas(finalizado_por):
+        raise PermissionDenied
+
+    # Se respeta el mismo orden de bloqueo que en la anulación.
+    turnos = list(
+        Turno.objects.select_for_update(of=("self",))
+        .filter(reservas_turnos__reserva_id=reserva_id)
+        .order_by("pk")
+    )
+    reserva = Reserva.objects.select_for_update().get(pk=reserva_id)
+    if reserva.estado != Reserva.Estado.PROGRAMADA:
+        raise ValidationError("Sólo se pueden finalizar reservas Programadas.")
+    if not turnos:
+        raise ValidationError("La reserva no tiene turnos asociados.")
+    ultimo_turno = max(turnos, key=lambda turno: (turno.fecha, turno.hora_fin))
+    ahora = timezone.localtime()
+    if ultimo_turno.fecha > ahora.date() or (
+        ultimo_turno.fecha == ahora.date() and ultimo_turno.hora_fin > ahora.time()
+    ):
+        raise ValidationError("Sólo se puede finalizar una reserva cuando terminó su último turno.")
+
+    reserva.estado = Reserva.Estado.FINALIZADA
+    reserva.finalizado_en = ahora
+    reserva.finalizado_por = finalizado_por
+    reserva.save(update_fields=["estado", "finalizado_en", "finalizado_por"])
+    return reserva
