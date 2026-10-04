@@ -75,12 +75,15 @@ def usuario_detalle(request, pk):
         "usuarios/usuario_detalle.html",
         {
             "usuario_obj": usuario,
-            "roles_actuales": roles_actuales,
             "roles_asignados": roles_asignados,
-            "usuario_es_administrador": Rol.ADMINISTRADOR in roles_actuales,
-            "rol_reservas": Rol.RESERVAS,
-            "rol_profesor": Rol.PROFESOR,
-            "rol_alumno": Rol.ALUMNO,
+            "roles_gestionables": [
+                {"codigo": codigo, "nombre": nombre, "asignado": codigo in roles_actuales}
+                for codigo, nombre in (
+                    (Rol.RESERVAS, "Reservas"),
+                    (Rol.PROFESOR, "Profesor"),
+                    (Rol.ALUMNO, "Alumno"),
+                )
+            ],
         },
     )
 

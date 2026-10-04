@@ -26,6 +26,8 @@ La desactivación registra fecha y hora de baja; la reactivación elimina esa ma
 
 La aplicación dispone de una página de inicio administrativa y una página de inicio para el portal. Desde el portal se puede consultar el perfil propio. Las pantallas utilizan estilos visuales compartidos.
 
+El perfil se presenta como una ficha con identidad y estado en la cabecera. Los datos personales y los roles se muestran en la columna principal; cuenta y seguridad, en una columna lateral que se apila en pantallas angostas. El correo ofrece su acción de modificación junto al valor. Los roles asignados permanecen visibles y sus controles de modificación se despliegan cuando hay permiso. La ficha incluye fecha de alta, fecha de baja cuando corresponde y la indicación de cambio de contraseña pendiente. Las observaciones se ofrecen según el permiso de consulta y las acciones conservan los permisos y confirmaciones vigentes. La organización se desarrolla en [Diseño del perfil de usuario](Diseño%20del%20perfil%20de%20usuario.md).
+
 ## 3. Funcionalidades disponibles para el hito 3
 
 ### Horarios de funcionamiento

@@ -1,124 +1,140 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}{{ usuario_obj.get_full_name|default:usuario_obj.username }} | Academia TM{% endblock %}
 
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/usuario-perfil.css' %}">
+{% endblock %}
+
 {% block contenido %}
-<div class="tarjeta encabezado-pagina">
-    <div>
-        <h1>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</h1>
-    </div>
-    <div class="acciones">
-        {% if request.user.pk == usuario_obj.pk %}
-            <a class="boton boton-secundario" href="{% url 'password_change' %}">
-                Cambiar mi contraseña
-            </a>
-        {% endif %}
-        {% if perms.usuarios.change_usuario %}
-            <a class="boton boton-secundario" href="{% url 'usuarios:usuario_editar' usuario_obj.pk %}">
-                Modificar correo
-            </a>
-            {% if request.user.pk != usuario_obj.pk %}
-                <a class="boton boton-secundario" href="{% url 'usuarios:usuario_restablecer_contrasena' usuario_obj.pk %}">
-                    Restablecer contraseña
-                </a>
-                <a class="boton boton-secundario" href="{% url 'usuarios:usuario_cambiar_estado' usuario_obj.pk %}">
-                    {% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %}
-                </a>
-            {% endif %}
-        {% endif %}
-    </div>
-</div>
+{% if perms.usuarios.view_usuario %}
+    <a class="perfil-volver" href="{% url 'usuarios:usuario_lista' %}">Volver a usuarios</a>
+{% else %}
+    <a class="perfil-volver" href="{% url 'inicio' %}">Volver al inicio</a>
+{% endif %}
 
-<div data-pestanas>
-    <div class="pestanas-botones" role="tablist">
-        <button type="button" class="pestana-boton" data-pestana="detalles" aria-selected="true">Detalles</button>
-        <button type="button" class="pestana-boton" data-pestana="roles" aria-selected="false">Roles</button>
-    </div>
+<article class="tarjeta perfil">
+    <header class="perfil-cabecera">
+        <div>
+            <p class="perfil-contexto">{% if request.user.pk == usuario_obj.pk %}Mi perfil{% else %}Perfil de usuario{% endif %}</p>
+            <h1>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</h1>
+        </div>
+        <span class="estado estado-{% if usuario_obj.is_active %}activa{% else %}inactiva{% endif %}">
+            {% if usuario_obj.is_active %}Activo{% else %}Inactivo{% endif %}
+        </span>
+    </header>
 
-    <div class="pestana-panel" data-panel="detalles">
-        <section class="tarjeta detalle-grid">
-            <div>
-                <span class="etiqueta">Nombre de usuario</span>
-                <p>{{ usuario_obj.username }}</p>
-            </div>
-            <div>
-                <span class="etiqueta">Email</span>
-                <p>{{ usuario_obj.email }}</p>
-            </div>
-            <div>
-                <span class="etiqueta">Celular</span>
-                <p>{{ usuario_obj.celular_contacto }}</p>
-            </div>
-            <div>
-                <span class="etiqueta">Fecha de nacimiento</span>
-                <p>{{ usuario_obj.fecha_nacimiento|date:"d/m/Y"|default:"Sin informar" }}</p>
-            </div>
-            <div>
-                <span class="etiqueta">Estado</span>
-                <p>
-                    <span class="estado estado-{% if usuario_obj.is_active %}activa{% else %}inactiva{% endif %}">
-                        {% if usuario_obj.is_active %}Activo{% else %}Inactivo{% endif %}
-                    </span>
-                </p>
-            </div>
-            {% if usuario_obj.fecha_baja %}
-            <div>
-                <span class="etiqueta">Fecha de baja</span>
-                <p>{{ usuario_obj.fecha_baja|date:"d/m/Y H:i" }}</p>
-            </div>
-            {% endif %}
-            {% if perms.usuarios.view_usuario %}
-            <div class="detalle-ancho">
-                <span class="etiqueta">Observaciones</span>
-                <p>{{ usuario_obj.observaciones|default:"Sin observaciones"|linebreaksbr }}</p>
-            </div>
-            {% endif %}
-        </section>
-    </div>
+    <div class="perfil-cuerpo">
+        <div class="perfil-datos">
+            <section class="perfil-seccion" aria-labelledby="datos-titulo">
+                <h2 id="datos-titulo">Datos personales</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila">
+                        <dt>Correo electrónico</dt>
+                        <dd class="perfil-valor-accion">
+                            <span>{{ usuario_obj.email|default:"Sin informar" }}</span>
+                            {% if perms.usuarios.change_usuario %}
+                                <a class="perfil-enlace" href="{% url 'usuarios:usuario_editar' usuario_obj.pk %}">Modificar correo</a>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div class="perfil-fila">
+                        <dt>Celular</dt>
+                        <dd>{{ usuario_obj.celular_contacto|default:"Sin informar" }}</dd>
+                    </div>
+                    <div class="perfil-fila">
+                        <dt>Fecha de nacimiento</dt>
+                        <dd>{{ usuario_obj.fecha_nacimiento|date:"d/m/Y"|default:"Sin informar" }}</dd>
+                    </div>
+                </dl>
+            </section>
 
-    <div class="pestana-panel" data-panel="roles" hidden>
-        <section class="tarjeta">
-            <span class="etiqueta">Roles actuales</span>
-            <div class="lista-roles">
-                {% if usuario_es_administrador %}
-                    <span class="estado estado-activa">Administrador</span>
+            <section class="perfil-seccion" id="roles" aria-labelledby="roles-titulo">
+                <h2 id="roles-titulo">Roles en la academia</h2>
+                {% if roles_asignados %}
+                    <ul class="perfil-roles" aria-label="Roles asignados">
+                        {% for rol in roles_asignados %}<li>{{ rol.nombre }}</li>{% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="texto-secundario">Sin roles asignados.</p>
                 {% endif %}
-                {% for rol in roles_asignados %}
-                    {% if rol.codigo != "administrador" %}
-                        <span class="estado estado-activa">{{ rol.nombre }}</span>
-                    {% endif %}
-                {% endfor %}
-            </div>
 
-            {% if perms.usuarios.change_usuario %}
-                <span class="etiqueta">Gestionar</span>
-                <div class="lista-roles">
-                    <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_rol_toggle' usuario_obj.pk rol_reservas %}"
-                          data-confirmar="{% if rol_reservas in roles_actuales %}¿Quitar el rol Reservas a {{ usuario_obj }}?{% else %}¿Otorgar el rol Reservas a {{ usuario_obj }}?{% endif %}">
-                        {% csrf_token %}
-                        <button class="boton boton-secundario boton-chico" type="submit">
-                            {% if rol_reservas in roles_actuales %}Quitar Reservas{% else %}Otorgar Reservas{% endif %}
-                        </button>
-                    </form>
-                    <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_rol_toggle' usuario_obj.pk rol_profesor %}"
-                          data-confirmar="{% if rol_profesor in roles_actuales %}¿Quitar el rol Profesor a {{ usuario_obj }}?{% else %}¿Otorgar el rol Profesor a {{ usuario_obj }}?{% endif %}">
-                        {% csrf_token %}
-                        <button class="boton boton-secundario boton-chico" type="submit">
-                            {% if rol_profesor in roles_actuales %}Quitar Profesor{% else %}Otorgar Profesor{% endif %}
-                        </button>
-                    </form>
-                    <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_rol_toggle' usuario_obj.pk rol_alumno %}"
-                          data-confirmar="{% if rol_alumno in roles_actuales %}¿Quitar el rol Alumno a {{ usuario_obj }}?{% else %}¿Otorgar el rol Alumno a {{ usuario_obj }}?{% endif %}">
-                        {% csrf_token %}
-                        <button class="boton boton-secundario boton-chico" type="submit">
-                            {% if rol_alumno in roles_actuales %}Quitar Alumno{% else %}Otorgar Alumno{% endif %}
-                        </button>
-                    </form>
-                </div>
+                {% if perms.usuarios.change_usuario %}
+                    <details class="perfil-gestion-roles" data-gestion-roles>
+                        <summary>Modificar roles</summary>
+                        <ul class="perfil-roles-opciones">
+                            {% for rol in roles_gestionables %}
+                                <li class="perfil-rol-opcion">
+                                    <div>
+                                        <strong>{{ rol.nombre }}</strong>
+                                        <small>{% if rol.asignado %}Asignado{% else %}Sin asignar{% endif %}</small>
+                                    </div>
+                                    <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_rol_toggle' usuario_obj.pk rol.codigo %}"
+                                          data-confirmar="{% if rol.asignado %}¿Quitar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% else %}¿Asignar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% endif %}">
+                                        {% csrf_token %}
+                                        <button class="boton boton-secundario boton-chico" type="submit">
+                                            {% if rol.asignado %}Quitar {{ rol.nombre }}{% else %}Asignar {{ rol.nombre }}{% endif %}
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </details>
+                {% endif %}
+            </section>
+
+            {% if perms.usuarios.view_usuario %}
+                <section class="perfil-seccion" aria-labelledby="observaciones-titulo">
+                    <h2 id="observaciones-titulo">Observaciones</h2>
+                    <p class="perfil-observaciones{% if not usuario_obj.observaciones %} texto-secundario{% endif %}">{{ usuario_obj.observaciones|default:"Sin observaciones"|linebreaksbr }}</p>
+                </section>
             {% endif %}
-        </section>
+        </div>
+
+        <aside class="perfil-cuenta" aria-labelledby="cuenta-titulo">
+            <section class="perfil-seccion">
+                <h2 id="cuenta-titulo">Cuenta</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila">
+                        <dt>Nombre de usuario</dt>
+                        <dd>{{ usuario_obj.username }}</dd>
+                    </div>
+                    <div class="perfil-fila">
+                        <dt>Fecha de alta</dt>
+                        <dd>{{ usuario_obj.date_joined|date:"d/m/Y" }}</dd>
+                    </div>
+                    {% if usuario_obj.fecha_baja %}
+                        <div class="perfil-fila">
+                            <dt>Fecha de baja</dt>
+                            <dd>{{ usuario_obj.fecha_baja|date:"d/m/Y H:i" }}</dd>
+                        </div>
+                    {% endif %}
+                </dl>
+            </section>
+
+            {% if request.user.pk == usuario_obj.pk or perms.usuarios.change_usuario %}
+                <section class="perfil-seccion" aria-labelledby="acceso-titulo">
+                    <h2 id="acceso-titulo">Acceso y seguridad</h2>
+                    {% if usuario_obj.debe_cambiar_contrasena %}
+                        <p class="perfil-aviso-acceso">Cambio de contraseña pendiente.</p>
+                    {% endif %}
+                    {% if request.user.pk == usuario_obj.pk %}
+                        <a class="perfil-enlace" href="{% url 'password_change' %}">Cambiar mi contraseña</a>
+                    {% else %}
+                        <a class="perfil-enlace" href="{% url 'usuarios:usuario_restablecer_contrasena' usuario_obj.pk %}">Restablecer contraseña</a>
+                        <div class="perfil-estado-cuenta">
+                            {% if usuario_obj.is_active %}
+                                <a class="perfil-enlace perfil-accion-desactivar" href="{% url 'usuarios:usuario_cambiar_estado' usuario_obj.pk %}">Desactivar cuenta</a>
+                            {% else %}
+                                <a class="boton boton-primario boton-chico" href="{% url 'usuarios:usuario_cambiar_estado' usuario_obj.pk %}">Activar cuenta</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </section>
+            {% endif %}
+        </aside>
     </div>
-
-</div>
-
+</article>
+<script src="{% static 'js/usuario-perfil.js' %}" defer></script>
 {% endblock %}

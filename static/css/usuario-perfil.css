@@ -1,0 +1,262 @@
+.perfil-volver {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: var(--texto-suave);
+    text-decoration: none;
+}
+
+.perfil-volver:hover {
+    color: var(--primario);
+    text-decoration: underline;
+}
+
+.perfil {
+    padding: 0;
+    border-top: 3px solid var(--primario);
+}
+
+.perfil-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 28px 32px;
+    border-bottom: 1px solid var(--borde);
+}
+
+.perfil-contexto {
+    margin: 0 0 8px;
+    color: var(--texto-suave);
+    font-size: 0.9rem;
+}
+
+.perfil h1 {
+    overflow-wrap: anywhere;
+}
+
+.perfil-cabecera .estado {
+    flex-shrink: 0;
+}
+
+.perfil-cuerpo {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+.perfil-datos,
+.perfil-cuenta {
+    min-width: 0;
+    padding: 28px 32px;
+}
+
+.perfil-cuenta {
+    border-left: 1px solid var(--borde);
+}
+
+.perfil-seccion + .perfil-seccion {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--borde);
+}
+
+.perfil-seccion h2 {
+    margin-bottom: 20px;
+    font-size: 1.15rem;
+}
+
+.perfil-lista {
+    margin: 0;
+}
+
+.perfil-fila {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 10px 20px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--borde);
+}
+
+.perfil-fila:first-child {
+    padding-top: 0;
+}
+
+.perfil-fila:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.perfil-lista dt {
+    color: var(--texto-suave);
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+
+.perfil-lista dd {
+    min-width: 0;
+    margin: 0;
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+}
+
+.perfil-valor-accion {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+}
+
+.perfil-valor-accion > span {
+    min-width: 0;
+}
+
+.perfil-enlace {
+    color: var(--primario);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-underline-offset: 3px;
+}
+
+.perfil-enlace:hover {
+    color: var(--primario-hover);
+}
+
+.perfil-cuenta .perfil-fila {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    border-bottom: 0;
+}
+
+.perfil-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.perfil-roles li {
+    padding: 5px 10px;
+    border: 1px solid var(--borde);
+    border-radius: 2px;
+    font-size: 0.9rem;
+}
+
+.perfil-gestion-roles {
+    margin-top: 20px;
+}
+
+.perfil-gestion-roles summary {
+    width: fit-content;
+    color: var(--primario);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.perfil-gestion-roles summary:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: 4px;
+}
+
+.perfil-roles-opciones {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.perfil-rol-opcion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--borde);
+}
+
+.perfil-rol-opcion:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.perfil-rol-opcion small {
+    display: block;
+    margin-top: 3px;
+    color: var(--texto-suave);
+    font-size: 0.85rem;
+}
+
+.perfil-observaciones {
+    margin: 0;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.perfil-aviso-acceso {
+    margin: 0 0 16px;
+    padding-left: 12px;
+    border-left: 3px solid var(--acento);
+    color: var(--texto-suave);
+    font-size: 0.9rem;
+}
+
+.perfil-estado-cuenta {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--borde);
+}
+
+.perfil-accion-desactivar {
+    color: var(--peligro);
+}
+
+.perfil-accion-desactivar:hover {
+    color: var(--peligro);
+}
+
+@media (max-width: 900px) {
+    .perfil-cuerpo {
+        grid-template-columns: minmax(0, 1fr) 260px;
+    }
+
+    .perfil-cabecera,
+    .perfil-datos,
+    .perfil-cuenta {
+        padding: 24px;
+    }
+
+    .perfil-fila {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+}
+
+@media (max-width: 640px) {
+    .perfil-cabecera {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .perfil-cuerpo {
+        grid-template-columns: 1fr;
+    }
+
+    .perfil-cuenta {
+        border-top: 1px solid var(--borde);
+        border-left: 0;
+    }
+
+    .perfil-cabecera,
+    .perfil-datos,
+    .perfil-cuenta {
+        padding: 20px;
+    }
+
+    .perfil-rol-opcion {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+}
