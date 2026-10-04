@@ -13,18 +13,13 @@
     <section class="tarjeta inicio-portal-opcion" aria-labelledby="inicio-perfil-titulo">
         <h2 id="inicio-perfil-titulo">Mi perfil</h2>
         <p>Consultá tus datos personales, tus roles y las opciones de seguridad de tu cuenta.</p>
-        <div class="inicio-portal-acciones">
-            <a class="boton boton-primario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Ver mi perfil</a>
-        </div>
+        <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Ver mi perfil</a>
     </section>
     {% if puede_reservar %}
         <section class="tarjeta inicio-portal-opcion" aria-labelledby="inicio-reservas-titulo">
             <h2 id="inicio-reservas-titulo">Reservas</h2>
-            <p>Reservá una cancha o consultá los horarios, importes y estados de tus reservas.</p>
-            <div class="inicio-portal-acciones">
-                <a class="boton boton-primario" href="{% url 'reservas:reserva_crear' %}">Reservar una cancha</a>
-                <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Mis reservas</a>
-            </div>
+            <p>Consultá los horarios, importes y estados de tus reservas. Desde el listado podés reservar una cancha.</p>
+            <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Ver mis reservas</a>
         </section>
     {% endif %}
 </div>

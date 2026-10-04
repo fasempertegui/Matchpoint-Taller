@@ -21,7 +21,7 @@
     </div>
     <div class="acciones-formulario">
         <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Limpiar</a>
-        <button class="boton boton-primario" type="submit">Filtrar</button>
+        <button class="boton boton-secundario" type="submit">Filtrar</button>
     </div>
 </form>
 
@@ -65,6 +65,5 @@
         </tbody>
     </table>
 </section>
-<a class="enlace-texto" href="{% url 'inicio' %}">Volver al inicio</a>
 <script src="{% static 'js/reserva-filtros.js' %}" defer></script>
 {% endblock %}

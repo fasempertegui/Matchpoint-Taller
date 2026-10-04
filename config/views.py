@@ -12,7 +12,5 @@ def inicio(request):
         else "inicio_portal.html"
     )
     return render(request, plantilla, {
-        "puede_reservar": request.user.roles.filter(
-            rol__codigo__in=(Rol.ADMINISTRADOR, Rol.RESERVAS)
-        ).exists(),
+        "puede_reservar": request.user.puede_reservar,
     })

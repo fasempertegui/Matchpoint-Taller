@@ -166,15 +166,9 @@ a {
     flex: 1;
 }
 
-.inicio-modulo-enlace {
+.inicio-modulo > .boton,
+.inicio-portal-opcion > .boton {
     align-self: flex-start;
-    color: var(--primario);
-    font-weight: 700;
-    text-decoration: none;
-}
-
-.inicio-modulo-enlace:hover {
-    text-decoration: underline;
 }
 
 .inicio-modulo-estado {
@@ -226,12 +220,6 @@ a {
     flex: 1;
     margin: 0;
     color: var(--texto-suave);
-}
-
-.inicio-portal-acciones {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
 }
 
 .encabezado-pagina {

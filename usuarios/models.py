@@ -132,3 +132,7 @@ class Usuario(AbstractUser):
 
     def tiene_rol(self, rol):
         return self.roles.filter(rol__codigo=rol).exists()
+
+    @property
+    def puede_reservar(self):
+        return self.roles.filter(rol__codigo__in=(Rol.ADMINISTRADOR, Rol.RESERVAS)).exists()

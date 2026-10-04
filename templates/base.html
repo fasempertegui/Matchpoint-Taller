@@ -32,6 +32,9 @@
                     {% if perms.usuarios.view_usuario %}
                         <a href="{% url 'usuarios:usuario_lista' %}">Usuarios</a>
                     {% endif %}
+                    {% if request.user.puede_reservar %}
+                        <a href="{% url 'reservas:reserva_lista' %}">Reservas</a>
+                    {% endif %}
                     <a href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Mi perfil</a>
                     <form class="formulario-en-linea" method="post" action="{% url 'logout' %}">
                         {% csrf_token %}

@@ -15,15 +15,15 @@
             <h3>Usuarios</h3>
             <p>Alta, consulta y gestión de usuarios, roles y acceso al sistema.</p>
             {% if perms.usuarios.view_usuario %}
-                <a class="inicio-modulo-enlace" href="{% url 'usuarios:usuario_lista' %}">Ir a usuarios</a>
+                <a class="boton boton-secundario" href="{% url 'usuarios:usuario_lista' %}">Ver usuarios</a>
             {% endif %}
         </article>
 
         <article class="tarjeta inicio-modulo">
             <h3>Sedes y canchas</h3>
-            <p>Consulta y gestión de las sedes y sus canchas asociadas.</p>
+            <p>Consulta y gestión de sedes, canchas, horarios y precios.</p>
             {% if perms.instalaciones.view_sede %}
-                <a class="inicio-modulo-enlace" href="{% url 'instalaciones:sede_lista' %}">Ir a sedes y canchas</a>
+                <a class="boton boton-secundario" href="{% url 'instalaciones:sede_lista' %}">Ver sedes</a>
             {% endif %}
         </article>
 
@@ -37,11 +37,7 @@
             <h3>Reservas</h3>
             <p>Consulta de disponibilidad y gestión de reservas de cancha.</p>
             {% if puede_reservar %}
-                <a class="inicio-modulo-enlace" href="{% url 'reservas:reserva_lista' %}">Consultar reservas</a>
-                <a class="inicio-modulo-enlace" href="{% url 'reservas:reserva_crear' %}">Nueva reserva</a>
-            {% endif %}
-            {% if perms.reservas.view_precioreserva and perms.instalaciones.view_sede %}
-                <a class="inicio-modulo-enlace" href="{% url 'instalaciones:sede_lista' %}">Configurar precios por sede</a>
+                <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Ver reservas</a>
             {% endif %}
         </article>
 
