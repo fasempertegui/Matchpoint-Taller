@@ -1,0 +1,227 @@
+.comprobante,
+.comprobante-acciones {
+    max-width: 900px;
+    margin-inline: auto;
+}
+
+.comprobante {
+    padding: 36px;
+    border-radius: 6px;
+    overflow-wrap: anywhere;
+}
+
+.comprobante-cabecera {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--borde);
+}
+
+.comprobante-cabecera h1 {
+    margin-top: 12px;
+    font-size: 1.6rem;
+}
+
+.comprobante-identificacion {
+    text-align: right;
+}
+
+.comprobante-identificacion p {
+    margin: 0 0 8px;
+    font-family: var(--fuente-titulos);
+    font-size: clamp(1.9rem, 4vw, 2.5rem);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.comprobante-identificacion .estado {
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+
+.comprobante .etiqueta {
+    color: var(--texto-suave);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+}
+
+.comprobante .detalle-grid p {
+    margin-top: 8px;
+    font-size: 1.05rem;
+}
+
+.comprobante-uso {
+    margin-top: 24px;
+    padding: 24px;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+}
+
+.comprobante-uso p {
+    font-weight: 700;
+}
+
+.comprobante .detalle-grid.comprobante-datos {
+    grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr));
+    margin-top: 20px;
+}
+
+.comprobante-seccion {
+    margin-top: 28px;
+}
+
+.comprobante-seccion h2 {
+    margin-bottom: 16px;
+}
+
+.comprobante th,
+.comprobante td {
+    padding: 16px;
+}
+
+.comprobante-importe {
+    text-align: right;
+}
+
+.comprobante-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 24px;
+    border: 2px solid var(--borde);
+    border-radius: 6px;
+}
+
+.comprobante-total strong {
+    font-family: var(--fuente-titulos);
+    font-size: 2rem;
+    line-height: 1.2;
+}
+
+.comprobante-anulacion {
+    padding: 16px;
+    border: 2px solid var(--peligro);
+    border-radius: 6px;
+}
+
+.comprobante-registro {
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--borde);
+}
+
+.comprobante .comprobante-registro p {
+    font-size: 0.9rem;
+}
+
+.comprobante-pie {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--borde);
+    color: var(--texto-suave);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.comprobante-pie strong,
+.comprobante-pie span {
+    display: block;
+}
+
+@media screen and (max-width: 720px) {
+    .comprobante-cabecera {
+        flex-direction: column;
+    }
+
+    .comprobante-identificacion {
+        text-align: left;
+    }
+
+    .comprobante {
+        padding: 20px;
+    }
+
+    .comprobante .detalle-grid.comprobante-datos {
+        grid-template-columns: 1fr;
+    }
+}
+
+@page {
+    size: A4;
+    margin: 0;
+}
+
+@media print {
+    body {
+        background: #ffffff;
+        color: #000000;
+        font-size: 10pt;
+    }
+
+    .barra-superior,
+    .mensajes,
+    .comprobante-acciones {
+        display: none;
+    }
+
+    .contenido-principal {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .comprobante {
+        max-width: none;
+        padding: 15mm;
+        border: 0;
+        border-radius: 0;
+        box-decoration-break: clone;
+    }
+
+    .comprobante .detalle-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 24px;
+    }
+
+    .comprobante .detalle-ancho {
+        grid-column: 1 / -1;
+    }
+
+    .comprobante th,
+    .comprobante-pie {
+        color: #000000;
+    }
+
+    .comprobante th,
+    .comprobante td {
+        padding: 12px 16px;
+    }
+
+    .comprobante h2 {
+        break-after: avoid;
+    }
+
+    .comprobante-cabecera,
+    .comprobante-uso,
+    .comprobante-datos > div,
+    .comprobante-registro,
+    .comprobante tr,
+    .comprobante-total,
+    .comprobante-pie {
+        break-inside: avoid;
+    }
+
+    .comprobante thead {
+        display: table-header-group;
+    }
+
+    .comprobante-anulacion {
+        border-color: #000000;
+    }
+}

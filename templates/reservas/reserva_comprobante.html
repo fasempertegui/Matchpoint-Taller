@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}Comprobante {{ reserva.numero }} | Academia TM{% endblock %}
+
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/reserva-comprobante.css' %}">
+{% endblock %}
+
+{% block contenido %}
+<article class="tarjeta comprobante">
+    <header class="comprobante-cabecera">
+        <div>
+            <div class="marca">
+                <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="44" height="44">
+                <span>Academia TM</span>
+            </div>
+            <h1>Comprobante de reserva</h1>
+        </div>
+        <div class="comprobante-identificacion">
+            <p><strong>{{ reserva.numero }}</strong></p>
+            <span class="estado">{{ reserva.get_estado_display }}</span>
+        </div>
+    </header>
+
+    <section class="comprobante-uso" aria-label="Datos de uso de la cancha">
+        <div class="detalle-grid">
+            <div><span class="etiqueta">Fecha de uso</span><p>{{ detalles.0.turno.fecha|date:"d/m/Y" }}</p></div>
+            <div><span class="etiqueta">Horario</span><p>{{ hora_inicio|time:"H:i" }} a {{ hora_fin|time:"H:i" }}</p></div>
+            <div><span class="etiqueta">Sede</span><p>{{ detalles.0.turno.cancha.sede.nombre }}</p></div>
+            <div><span class="etiqueta">Cancha</span><p>{{ detalles.0.turno.cancha.nombre }}</p></div>
+        </div>
+    </section>
+
+    <div class="detalle-grid comprobante-datos">
+        <div><span class="etiqueta">Organizador</span><p>{{ reserva.organizador }}</p></div>
+        <div><span class="etiqueta">Duración</span><p>{{ cantidad_horas }} hora{{ cantidad_horas|pluralize:"s" }}</p></div>
+        <div><span class="etiqueta">Precio por turno (ARS)</span><p>$ {{ reserva.precio_reserva.importe|floatformat:"2g" }}</p></div>
+    </div>
+
+    <section class="comprobante-seccion" aria-labelledby="turnos-titulo">
+        <h2 id="turnos-titulo">Turnos reservados</h2>
+        <table>
+            <thead><tr><th scope="col">Horario</th><th scope="col" class="comprobante-importe">Subtotal (ARS)</th></tr></thead>
+            <tbody>
+                {% for detalle in detalles %}
+                    <tr>
+                        <td>{{ detalle.turno.hora_inicio|time:"H:i" }} a {{ detalle.turno.hora_fin|time:"H:i" }}</td>
+                        <td class="comprobante-importe">$ {{ reserva.precio_reserva.importe|floatformat:"2g" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="comprobante-total">
+            <span class="etiqueta">Total (ARS)</span>
+            <strong>$ {{ total|floatformat:"2g" }}</strong>
+        </div>
+    </section>
+
+    {% if reserva.estado == "anulada" %}
+        <section class="comprobante-seccion comprobante-anulacion" aria-labelledby="anulacion-titulo">
+            <h2 id="anulacion-titulo">Reserva anulada</h2>
+            <p>{{ reserva.anulado_en|date:"d/m/Y H:i" }} · {{ reserva.anulado_por }}</p>
+            <p><strong>Motivo:</strong> {{ reserva.motivo_anulacion|linebreaksbr }}</p>
+        </section>
+    {% elif reserva.estado == "finalizada" %}
+        <section class="comprobante-seccion" aria-labelledby="finalizacion-titulo">
+            <h2 id="finalizacion-titulo">Finalización</h2>
+            <p>{{ reserva.finalizado_en|date:"d/m/Y H:i" }} · {{ reserva.finalizado_por }}</p>
+        </section>
+    {% endif %}
+
+    {% if reserva.observaciones %}
+        <section class="comprobante-seccion" aria-labelledby="observaciones-titulo">
+            <h2 id="observaciones-titulo">Observaciones</h2>
+            <p>{{ reserva.observaciones|linebreaksbr }}</p>
+        </section>
+    {% endif %}
+    <div class="detalle-grid comprobante-registro">
+        <div><span class="etiqueta">Fecha de registro</span><p>{{ reserva.creado_en|date:"d/m/Y H:i" }}</p></div>
+        <div><span class="etiqueta">Registrada por</span><p>{{ reserva.registrado_por }}</p></div>
+    </div>
+    <footer class="comprobante-pie">
+        <strong>Academia TM</strong>
+        <span>Este comprobante acredita la reserva de cancha.</span>
+    </footer>
+</article>
+
+<div class="acciones-formulario comprobante-acciones">
+    <a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' reserva.pk %}">Volver a la reserva</a>
+    <button class="boton boton-primario" type="button" data-imprimir-comprobante>Imprimir</button>
+</div>
+<script src="{% static 'js/reserva-comprobante.js' %}" defer></script>
+{% endblock %}

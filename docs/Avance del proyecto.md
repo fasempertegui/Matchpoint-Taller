@@ -4,7 +4,7 @@
 
 El proyecto es una aplicación para administrar una academia de tenis. El sistema completo contempla instalaciones, usuarios, clases, asistencia, membresías, reservas e ingresos. La aplicación utiliza Python, Django y PostgreSQL, con ejecución mediante Docker Compose.
 
-Este documento describe las funcionalidades implementadas y el trabajo pendiente para el hito 3. La propuesta de la entrega se desarrolla en [Propuesta hito 3](Propuesta%20hito%203.md).
+Este documento describe las funcionalidades implementadas para el hito 3. La propuesta de la entrega se desarrolla en [Propuesta hito 3](Propuesta%20hito%203.md).
 
 ## 1. Hito 1: sedes y canchas
 
@@ -50,7 +50,7 @@ La base de datos impide repetir un turno para la misma cancha, fecha y hora de i
 
 La reserva tiene estado inicial Programada y fecha de registración automática. Los estados permitidos son Programada, Anulada y Finalizada. La base exige fecha, responsable y motivo con contenido para una anulación, y fecha y responsable para una finalización. Estos datos sólo pueden estar presentes en el estado correspondiente. Las relaciones protegen los registros vinculados contra la eliminación física.
 
-La impresión está pendiente de implementación.
+El proceso incluye registro, consulta con filtros y detalle, anulación, finalización y comprobante imprimible.
 
 ### Turnos y disponibilidad
 
@@ -101,3 +101,15 @@ En una única transacción se bloquean la cuenta del administrador, todos los tu
 La reserva pasa a Finalizada y guarda automáticamente la fecha, hora y administrador responsable. Conserva todos sus detalles, el precio aplicado y la ocupación histórica de sus turnos. La operación permite finalizar reservas con organizador, sede o cancha inactivos y con precios históricos.
 
 Las reservas que todavía no terminaron, las Anuladas y las Finalizadas se rechazan. Una solicitud repetida no sobrescribe la fecha ni el responsable de la finalización. Ante un error, la transacción conserva el estado y los datos de la reserva. El resultado se muestra al volver al detalle, junto con los datos de finalización cuando corresponde.
+
+### Comprobante de reserva
+
+El detalle ofrece Ver comprobante para abrir una página preparada para imprimir. Incluye el logo y el nombre de la academia, número de reserva, estado, fecha de registro, organizador, responsable del registro, sede, cancha, fecha de uso, duración, precio aplicado, turnos con sus subtotales y total. Las observaciones se muestran cuando tienen contenido.
+
+El número y el total se destacan con mayor tamaño. Los datos de uso se agrupan en un bloque superior con fecha, horario completo, sede y cancha. Debajo se alinean organizador, duración y precio por turno en una fila de tres columnas; en pantallas angostas se apilan. Los datos de registro se muestran abajo con menor tamaño. Las etiquetas son grises tanto en pantalla como al imprimir y tienen menor peso visual que los valores. El espacio entre la cabecera, el bloque de uso y la fila de datos mantiene una distribución compacta. La tabla dispone de espacio entre filas y los importes incluyen separador de miles y dos decimales. Las cajas tienen bordes redondeados suaves y el pie muestra el nombre de la academia y el texto que acredita la reserva, centrados.
+
+Para una reserva Anulada se destaca su estado y se incluyen fecha, responsable y motivo de anulación. Para una Finalizada se muestran fecha y responsable de la finalización. El número se obtiene de la reserva y los importes se calculan con todos sus detalles y el precio histórico referenciado. La consulta conserva acceso a usuarios, sedes, canchas y precios inactivos.
+
+El botón Imprimir abre el diálogo del navegador, que permite imprimir o guardar como PDF. El formato utiliza A4 con margen de página cero y espacio interior propio, oculta la navegación, los avisos y los botones, y admite que la tabla continúe en más de una página. Los encabezados o pies que agregue el navegador pueden desactivarse en su diálogo de impresión. Consultar o imprimir el comprobante no modifica la reserva ni crea registros adicionales.
+
+La vista comparte el control de acceso del detalle: el Administrador puede consultar cualquier comprobante y el usuario con rol Reservas sólo los propios, incluso mediante acceso directo. El comprobante refleja el estado de la reserva al consultar la página y acredita su registración.

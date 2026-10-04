@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación y finalización. Los demás procesos del sistema están pendientes de representación.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización y emisión del comprobante. Los demás procesos del sistema están pendientes de representación.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -1049,3 +1049,59 @@ flowchart LR
 11. Fechas y horas de los turnos para determinar el fin del intervalo completo.
 12. Estado Finalizada, fecha, hora y administrador responsable.
 13. Resultado de la finalización o errores de validación y acceso.
+
+### DFD 33: emitir el comprobante de una reserva
+
+```mermaid
+flowchart LR
+    U[Administrador o usuario con rol Reservas]
+    P((33. Emitir el comprobante de una reserva))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D7[(D7: Precios de reservas)]
+    D9[(D9: Turnos)]
+    D10[(D10: Reservas)]
+    D11[(D11: Detalles de reservas)]
+
+    U -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D10
+    D10 -->|7| P
+    P -->|8| D11
+    D11 -->|9| P
+    P -->|10| D9
+    D9 -->|11| P
+    P -->|12| D6
+    D6 -->|13| P
+    P -->|14| D5
+    D5 -->|15| P
+    P -->|16| D7
+    D7 -->|17| P
+    P -->|18| U
+```
+
+**Datos que circulan**
+
+1. Reserva seleccionada e identidad del actor que solicita el comprobante.
+2. Identidad del actor, del organizador y de los responsables del registro, anulación o finalización.
+3. Estado de acceso del actor y datos de los usuarios relacionados.
+4. Usuario cuyos roles deben consultarse.
+5. Roles asignados al actor.
+6. Identificador de la reserva y criterio de acceso a todas las reservas o sólo a las propias.
+7. Cabecera con número, estado, precio aplicado, observaciones, responsables y fechas de registro, anulación o finalización.
+8. Reserva cuyos detalles deben incluirse en el comprobante.
+9. Vínculos de la reserva con todos sus turnos.
+10. Turnos incluidos en los detalles.
+11. Fecha de uso, horas y cancha de cada turno.
+12. Cancha de los turnos reservados.
+13. Nombre de la cancha y sede a la que pertenece.
+14. Sede de la cancha reservada.
+15. Nombre de la sede.
+16. Precio aplicado al registrar la reserva.
+17. Importe histórico por turno.
+18. Comprobante imprimible con identificación de la academia, número, estado, usuarios, fechas, sede, cancha, turnos, duración, subtotales, total y datos de anulación o finalización, o rechazo del acceso.

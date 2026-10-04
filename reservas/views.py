@@ -149,14 +149,33 @@ def reserva_crear(request):
 @login_required
 @require_http_methods(["GET"])
 def reserva_detalle(request, pk):
-    es_administrador = exigir_acceso_reservas(request.user)
+    reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk)
+    return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador))
+
+
+@login_required
+@require_http_methods(["GET"])
+def reserva_comprobante(request, pk):
+    reserva, _ = _obtener_reserva_para_consulta(request.user, pk)
+    detalles = list(reserva.detalles.select_related("turno__cancha__sede").all())
+    return render(request, "reservas/reserva_comprobante.html", {
+        "reserva": reserva,
+        "detalles": detalles,
+        "cantidad_horas": len(detalles),
+        "total": reserva.precio_reserva.importe * len(detalles),
+        "hora_inicio": detalles[0].turno.hora_inicio if detalles else None,
+        "hora_fin": detalles[-1].turno.hora_fin if detalles else None,
+    })
+
+
+def _obtener_reserva_para_consulta(usuario, pk):
+    es_administrador = exigir_acceso_reservas(usuario)
     reservas = Reserva.objects.select_related(
         "organizador", "registrado_por", "precio_reserva", "anulado_por", "finalizado_por",
     )
     if not es_administrador:
-        reservas = reservas.filter(organizador=request.user)
-    reserva = get_object_or_404(reservas, pk=pk)
-    return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador))
+        reservas = reservas.filter(organizador=usuario)
+    return get_object_or_404(reservas, pk=pk), es_administrador
 
 
 def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=None):

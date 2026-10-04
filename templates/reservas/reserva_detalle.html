@@ -65,6 +65,7 @@
 {% endif %}
 <div class="acciones-formulario">
     <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Volver a reservas</a>
+    <a class="boton boton-secundario" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
     {% if puede_finalizar %}
         <form class="formulario-en-linea" method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}" data-confirmar="¿Confirmás la finalización de la reserva {{ reserva.numero }}?">
             {% csrf_token %}
