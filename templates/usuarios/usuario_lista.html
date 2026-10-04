@@ -54,9 +54,7 @@
                 </td>
                 <td>{{ usuario_obj.email }}</td>
                 <td>
-                    <span class="estado estado-{% if usuario_obj.is_active %}activa{% else %}inactiva{% endif %}">
-                        {% if usuario_obj.is_active %}Activo{% else %}Inactivo{% endif %}
-                    </span>
+                    {% include "componentes/badge_estado.html" with estado=usuario_obj.is_active|yesno:"activo,inactivo" texto=usuario_obj.is_active|yesno:"Activo,Inactivo" only %}
                 </td>
                 <td class="acciones">
                     <a class="boton boton-secundario boton-chico"

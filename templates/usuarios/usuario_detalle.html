@@ -18,11 +18,11 @@
     <header class="perfil-cabecera">
         <div>
             <p class="perfil-contexto">{% if request.user.pk == usuario_obj.pk %}Mi perfil{% else %}Perfil de usuario{% endif %}</p>
-            <h1>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</h1>
+            <div class="perfil-identidad">
+                <h1>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</h1>
+                {% include "componentes/badge_estado.html" with estado=usuario_obj.is_active|yesno:"activo,inactivo" texto=usuario_obj.is_active|yesno:"Activo,Inactivo" only %}
+            </div>
         </div>
-        <span class="estado estado-{% if usuario_obj.is_active %}activa{% else %}inactiva{% endif %}">
-            {% if usuario_obj.is_active %}Activo{% else %}Inactivo{% endif %}
-        </span>
     </header>
 
     <div class="perfil-cuerpo">

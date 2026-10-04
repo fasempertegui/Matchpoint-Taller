@@ -14,8 +14,6 @@
     --acento-suave: #f4f8e2;
     --acento-texto: #3d4b0c;
     --peligro: #b42318;
-    --estado-activo-fondo: #f4f8e2;
-    --estado-activo-texto: #3d4b0c;
     --estado-inactivo-fondo: #eef1f5;
     --estado-inactivo-texto: #596474;
 }
@@ -387,20 +385,45 @@ tbody tr:last-child td {
     font-weight: 700;
 }
 
-.estado-activa,
-.estado-inactiva {
+.badge-estado {
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
-    min-width: 80px;
+    flex-shrink: 0;
+    gap: 0.4rem;
+    min-width: 6.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-family: var(--fuente-detalles);
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
-.estado-activa {
-    background: var(--estado-activo-fondo);
-    color: var(--estado-activo-texto);
+.badge-estado::before {
+    content: "";
+    flex: 0 0 0.5rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
 }
 
-.estado-inactiva {
-    background: var(--estado-inactivo-fondo);
-    color: var(--estado-inactivo-texto);
+.badge-estado-activo {
+    background: var(--acento-suave);
+    color: var(--acento-texto);
+}
+
+.badge-estado-activo::before {
+    background: var(--acento);
+}
+
+.badge-estado-inactivo {
+    background: #eceaf0;
+    color: #4b4755;
+}
+
+.badge-estado-inactivo::before {
+    background: #9a94a6;
 }
 
 .estado-vacio {

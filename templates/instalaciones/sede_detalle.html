@@ -15,9 +15,11 @@
     <header class="perfil-cabecera">
         <div>
             <p class="perfil-contexto">Perfil de sede</p>
-            <h1>{{ sede.nombre }}</h1>
+            <div class="perfil-identidad">
+                <h1>{{ sede.nombre }}</h1>
+                {% include "componentes/badge_estado.html" with estado=sede.estado texto=sede.get_estado_display only %}
+            </div>
         </div>
-        <span class="estado estado-{{ sede.estado }}">{{ sede.get_estado_display }}</span>
     </header>
 
     <section class="sede-operaciones" data-pestanas aria-label="Información de la sede">
@@ -110,9 +112,7 @@
                                 <td>{{ cancha.nombre }}</td>
                                 <td>{{ cancha.get_superficie_display }}</td>
                                 <td>
-                                    <span class="estado estado-{{ cancha.estado }}">
-                                        {{ cancha.get_estado_display }}
-                                    </span>
+                                    {% include "componentes/badge_estado.html" with estado=cancha.estado texto=cancha.get_estado_display only %}
                                 </td>
                                 <td class="acciones">
                                     {% if perms.instalaciones.change_cancha %}
@@ -231,7 +231,7 @@
                                     <td>{{ precio.creado_en|date:"d/m/Y H:i" }}</td>
                                     <td>$ {{ precio.importe|floatformat:"2g" }}</td>
                                     <td>
-                                        <span class="estado estado-{% if precio.estado == 'activo' %}activa{% else %}inactiva{% endif %}">{{ precio.get_estado_display }}</span>
+                                        {% include "componentes/badge_estado.html" with estado=precio.estado texto=precio.get_estado_display only %}
                                     </td>
                                     <td class="acciones">
                                         {% if precio.estado == "activo" and perms.reservas.change_precioreserva %}

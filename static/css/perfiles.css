@@ -34,8 +34,11 @@
     overflow-wrap: anywhere;
 }
 
-.perfil-cabecera .estado {
-    flex-shrink: 0;
+.perfil-identidad {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .perfil-cuerpo {

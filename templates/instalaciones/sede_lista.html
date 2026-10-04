@@ -44,9 +44,7 @@
                     <td>{{ sede.nombre }}</td>
                     <td>{{ sede.direccion|default:"-" }}</td>
                     <td>
-                        <span class="estado estado-{{ sede.estado }}">
-                            {{ sede.get_estado_display }}
-                        </span>
+                        {% include "componentes/badge_estado.html" with estado=sede.estado texto=sede.get_estado_display only %}
                     </td>
                     <td class="acciones">
                         <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}">
