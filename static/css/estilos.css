@@ -184,10 +184,9 @@ a {
 }
 
 .tarjeta.inicio-portal {
-    max-width: 680px;
-    margin: 40px auto 0;
-    padding: 32px;
-    border: 0;
+    margin-bottom: 20px;
+    padding: 28px 32px;
+    border-top: 3px solid var(--primario);
 }
 
 .inicio-portal-etiqueta {
@@ -201,9 +200,38 @@ a {
 }
 
 .inicio-portal-descripcion {
-    max-width: 50ch;
-    margin: 16px 0 24px;
+    max-width: 78ch;
+    margin: 16px 0 0;
     color: var(--texto-suave);
+}
+
+.inicio-portal-opciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.inicio-portal-opcion {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.inicio-portal-opcion:only-child {
+    grid-column: 1 / -1;
+}
+
+.inicio-portal-opcion p {
+    flex: 1;
+    margin: 0;
+    color: var(--texto-suave);
+}
+
+.inicio-portal-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .encabezado-pagina {
@@ -1042,8 +1070,11 @@ html.modal-abierto {
     }
 
     .tarjeta.inicio-portal {
-        margin-top: 0;
         padding: 24px;
+    }
+
+    .inicio-portal-opciones {
+        grid-template-columns: 1fr;
     }
 
     .detalle-grid {
