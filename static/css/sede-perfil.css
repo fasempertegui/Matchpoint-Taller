@@ -1,0 +1,65 @@
+.sede-acciones {
+    display: grid;
+    justify-items: start;
+    gap: 16px;
+}
+
+.sede-operaciones .pestana-panel:not([data-panel="detalles"]) {
+    padding: 28px 32px 32px;
+}
+
+.sede-operaciones .pestanas-botones {
+    gap: 8px;
+    margin: 0;
+    padding: 16px 32px 0;
+}
+
+.sede-operaciones .pestana-boton {
+    padding-inline: 18px;
+}
+
+.sede-operaciones .pestana-boton:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: 3px;
+}
+
+.sede-operaciones .encabezado-seccion {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.sede-operaciones .tarjeta-busqueda {
+    padding: 16px;
+    background: var(--fondo);
+}
+
+.sede-operaciones td:first-child {
+    font-weight: 500;
+}
+
+@media (max-width: 900px) {
+    .sede-operaciones .pestana-panel:not([data-panel="detalles"]) {
+        padding: 24px;
+    }
+
+    .sede-operaciones .pestanas-botones {
+        padding-inline: 24px;
+    }
+}
+
+@media (max-width: 640px) {
+    .sede-operaciones .pestana-panel:not([data-panel="detalles"]) {
+        padding: 20px;
+    }
+
+    .sede-operaciones .pestanas-botones {
+        gap: 0;
+        padding-inline: 20px;
+    }
+
+    .sede-operaciones .pestana-boton {
+        flex: 1;
+        padding-inline: 8px;
+        font-size: 0.9rem;
+    }
+}

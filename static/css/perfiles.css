@@ -44,12 +44,12 @@
 }
 
 .perfil-datos,
-.perfil-cuenta {
+.perfil-lateral {
     min-width: 0;
     padding: 28px 32px;
 }
 
-.perfil-cuenta {
+.perfil-lateral {
     border-left: 1px solid var(--borde);
 }
 
@@ -122,7 +122,7 @@
     color: var(--primario-hover);
 }
 
-.perfil-cuenta .perfil-fila {
+.perfil-lateral .perfil-fila {
     grid-template-columns: 1fr;
     gap: 6px;
     border-bottom: 0;
@@ -207,7 +207,7 @@
     border-top: 1px solid var(--borde);
 }
 
-.perfil-accion-cuenta {
+.perfil-accion {
     padding: 0;
     border: 0;
     background: transparent;
@@ -228,7 +228,7 @@
 
     .perfil-cabecera,
     .perfil-datos,
-    .perfil-cuenta {
+    .perfil-lateral {
         padding: 24px;
     }
 
@@ -249,14 +249,14 @@
         grid-template-columns: 1fr;
     }
 
-    .perfil-cuenta {
+    .perfil-lateral {
         border-top: 1px solid var(--borde);
         border-left: 0;
     }
 
     .perfil-cabecera,
     .perfil-datos,
-    .perfil-cuenta {
+    .perfil-lateral {
         padding: 20px;
     }
 

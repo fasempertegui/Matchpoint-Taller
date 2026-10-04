@@ -1,206 +1,109 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}{{ sede.nombre }} | Academia TM{% endblock %}
 
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
+<link rel="stylesheet" href="{% static 'css/sede-perfil.css' %}">
+{% endblock %}
+
 {% block contenido %}
-<div class="tarjeta encabezado-pagina">
-    <div>
-        <h1>{{ sede.nombre }}</h1>
-    </div>
-    <div class="acciones">
-        {% if perms.instalaciones.change_sede %}
-            <a class="boton boton-secundario" href="{% url 'instalaciones:sede_editar' sede.pk %}">
-                Editar
-            </a>
-            <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:sede_cambiar_estado' sede.pk %}"
-                  data-confirmar="{% if sede.estado == 'activa' %}¿Desactivar la sede {{ sede.nombre }}? Dejará de ofrecerse para nuevas clases y reservas. Las canchas, clases y reservas ya existentes no se modifican.{% else %}¿Activar la sede {{ sede.nombre }}? Volverá a ofrecerse para nuevas clases y reservas.{% endif %}"
-                  data-confirmar-titulo="{% if sede.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} sede"
-                  data-confirmar-boton="{% if sede.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} sede">
-                {% csrf_token %}
-                <button class="boton boton-secundario" type="submit">
-                    {% if sede.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
-                </button>
-            </form>
-        {% endif %}
-    </div>
-</div>
+<a class="perfil-volver" href="{% url 'instalaciones:sede_lista' %}">Volver a sedes</a>
 
-<div data-pestanas>
-    <div class="pestanas-botones" role="tablist">
-        <button type="button" class="pestana-boton" data-pestana="detalles" aria-selected="true">Detalles</button>
-        <button type="button" class="pestana-boton" data-pestana="canchas" aria-selected="false">Canchas</button>
-        <button type="button" class="pestana-boton" data-pestana="horarios" aria-selected="false">Horarios</button>
-        {% if puede_consultar_precios %}
-            <button type="button" class="pestana-boton" data-pestana="precios" aria-selected="false">Precios de reservas</button>
-        {% endif %}
-    </div>
+<article class="tarjeta perfil">
+    <header class="perfil-cabecera">
+        <div>
+            <p class="perfil-contexto">Perfil de sede</p>
+            <h1>{{ sede.nombre }}</h1>
+        </div>
+        <span class="estado estado-{{ sede.estado }}">{{ sede.get_estado_display }}</span>
+    </header>
 
-    <div class="pestana-panel" data-panel="detalles">
-        <section class="tarjeta detalle-grid">
-            <div>
-                <span class="etiqueta">Dirección</span>
-                <p>{{ sede.direccion|default:"Sin dirección informada" }}</p>
-            </div>
-            <div>
-                <span class="etiqueta">Estado</span>
-                <p><span class="estado estado-{{ sede.estado }}">{{ sede.get_estado_display }}</span></p>
-            </div>
-            <div class="detalle-ancho">
-                <span class="etiqueta">Observaciones</span>
-                <p>{{ sede.observaciones|default:"Sin observaciones"|linebreaksbr }}</p>
-            </div>
-            <div>
-                <span class="etiqueta">Creada</span>
-                <p>{{ sede.creado_en|date:"d/m/Y H:i" }}</p>
-            </div>
-            <div>
-                <span class="etiqueta">Última actualización</span>
-                <p>{{ sede.actualizado_en|date:"d/m/Y H:i" }}</p>
-            </div>
-        </section>
-    </div>
-
-    <div class="pestana-panel" data-panel="canchas" hidden>
-        <div class="encabezado-pagina encabezado-seccion">
-            <h2>Canchas</h2>
-            {% if perms.instalaciones.add_cancha %}
-                <a class="boton boton-primario boton-chico" href="{% url 'instalaciones:cancha_crear' sede.pk %}">
-                    Nueva cancha
-                </a>
+    <section class="sede-operaciones" data-pestanas aria-label="Información de la sede">
+        <div class="pestanas-botones" role="tablist" aria-label="Información de la sede">
+            <button type="button" class="pestana-boton" id="sede-tab-detalles" role="tab" aria-controls="sede-panel-detalles" data-pestana="detalles" aria-selected="true">Detalles</button>
+            <button type="button" class="pestana-boton" id="sede-tab-canchas" role="tab" aria-controls="sede-panel-canchas" data-pestana="canchas" aria-selected="false" tabindex="-1">Canchas</button>
+            <button type="button" class="pestana-boton" id="sede-tab-horarios" role="tab" aria-controls="sede-panel-horarios" data-pestana="horarios" aria-selected="false" tabindex="-1">Horarios</button>
+            {% if puede_consultar_precios %}
+                <button type="button" class="pestana-boton" id="sede-tab-precios" role="tab" aria-controls="sede-panel-precios" data-pestana="precios" aria-selected="false" tabindex="-1">Precios</button>
             {% endif %}
         </div>
 
-        <form method="get" action="{% url 'instalaciones:sede_detalle' sede.pk %}#canchas" class="tarjeta tarjeta-busqueda">
-            <div class="grupo-campo">
-                <label for="estado_cancha">Estado</label>
-                <select class="form-control" name="estado_cancha" id="estado_cancha">
-                    <option value="">Todas</option>
-                    {% for valor, etiqueta in estados_cancha %}
-                        <option value="{{ valor }}" {% if valor == estado_cancha_actual %}selected{% endif %}>{{ etiqueta }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="acciones-formulario">
-                <button class="boton boton-primario" type="submit">Filtrar</button>
-            </div>
-        </form>
+        <div class="pestana-panel" id="sede-panel-detalles" role="tabpanel" aria-labelledby="sede-tab-detalles" tabindex="0" data-panel="detalles">
+            <div class="perfil-cuerpo">
+                <div class="perfil-datos">
+                    <section class="perfil-seccion" aria-labelledby="sede-datos-titulo">
+                        <h2 id="sede-datos-titulo">Datos de la sede</h2>
+                        <dl class="perfil-lista">
+                            <div class="perfil-fila">
+                                <dt>Dirección</dt>
+                                <dd>{{ sede.direccion|default:"Sin dirección informada" }}</dd>
+                            </div>
+                        </dl>
+                    </section>
+                    <section class="perfil-seccion" aria-labelledby="sede-observaciones-titulo">
+                        <h2 id="sede-observaciones-titulo">Observaciones</h2>
+                        <p class="perfil-observaciones{% if not sede.observaciones %} texto-secundario{% endif %}">{{ sede.observaciones|default:"Sin observaciones"|linebreaksbr }}</p>
+                    </section>
+                </div>
 
-        <section class="tarjeta tabla-contenedor">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Superficie</th>
-                        <th>Estado</th>
-                        <th class="acciones-columna">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for cancha in canchas %}
-                        <tr>
-                            <td>{{ cancha.nombre }}</td>
-                            <td>{{ cancha.get_superficie_display }}</td>
-                            <td>
-                                <span class="estado estado-{{ cancha.estado }}">
-                                    {{ cancha.get_estado_display }}
-                                </span>
-                            </td>
-                            <td class="acciones">
-                                {% if perms.instalaciones.change_cancha %}
-                                    <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:cancha_editar' sede.pk cancha.pk %}">
-                                        Editar
-                                    </a>
-                                    <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:cancha_cambiar_estado' sede.pk cancha.pk %}"
-                                          data-confirmar="¿{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} la cancha {{ cancha.nombre }}?"
-                                          data-confirmar-titulo="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha"
-                                          data-confirmar-boton="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha">
-                                        {% csrf_token %}
-                                        <button class="boton boton-secundario boton-chico" type="submit">
-                                            {% if cancha.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
-                                        </button>
-                                    </form>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td class="estado-vacio" colspan="4">
-                                Esta sede todavía no tiene canchas.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-    </div>
-    <div class="pestana-panel" data-panel="horarios" hidden>
-        <div class="encabezado-pagina encabezado-seccion">
-            <h2>Horarios de funcionamiento</h2>
+                <aside class="perfil-lateral" aria-label="Registro y administración de la sede">
+                    <section class="perfil-seccion" aria-labelledby="sede-registro-titulo">
+                        <h2 id="sede-registro-titulo">Registro</h2>
+                        <dl class="perfil-lista">
+                            <div class="perfil-fila">
+                                <dt>Fecha de alta</dt>
+                                <dd>{{ sede.creado_en|date:"d/m/Y H:i" }}</dd>
+                            </div>
+                            <div class="perfil-fila">
+                                <dt>Última actualización</dt>
+                                <dd>{{ sede.actualizado_en|date:"d/m/Y H:i" }}</dd>
+                            </div>
+                        </dl>
+                    </section>
+                    {% if perms.instalaciones.change_sede %}
+                        <section class="perfil-seccion" aria-labelledby="sede-administracion-titulo">
+                            <h2 id="sede-administracion-titulo">Administración</h2>
+                            <div class="sede-acciones">
+                                <a class="perfil-enlace" href="{% url 'instalaciones:sede_editar' sede.pk %}">Editar sede</a>
+                                <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:sede_cambiar_estado' sede.pk %}"
+                                      data-confirmar="{% if sede.estado == 'activa' %}¿Desactivar la sede {{ sede.nombre }}? Dejará de ofrecerse para nuevas clases y reservas. Las canchas, clases y reservas ya existentes no se modifican.{% else %}¿Activar la sede {{ sede.nombre }}? Volverá a ofrecerse para nuevas clases y reservas.{% endif %}"
+                                      data-confirmar-titulo="{% if sede.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} sede"
+                                      data-confirmar-boton="{% if sede.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} sede">
+                                    {% csrf_token %}
+                                    <button class="perfil-enlace perfil-accion{% if sede.estado == 'activa' %} perfil-accion-desactivar{% endif %}" type="submit">
+                                        {% if sede.estado == "activa" %}Desactivar{% else %}Activar{% endif %} sede
+                                    </button>
+                                </form>
+                            </div>
+                        </section>
+                    {% endif %}
+                </aside>
+            </div>
+
         </div>
-        <section class="tarjeta tabla-contenedor">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Día</th>
-                        <th>Primera franja</th>
-                        <th>Segunda franja</th>
-                        {% if puede_configurar_horarios %}<th class="acciones-columna">Acciones</th>{% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for dia in horarios_semana %}
-                        <tr>
-                            <td>{{ dia.nombre }}</td>
-                            <td>
-                                {% if dia.horario %}
-                                    {{ dia.horario.hora_inicio_1|time:"H:i" }} a {{ dia.horario.hora_fin_1|time:"H:i" }}
-                                {% else %}
-                                    Sin funcionamiento
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if dia.horario.hora_inicio_2 %}
-                                    {{ dia.horario.hora_inicio_2|time:"H:i" }} a {{ dia.horario.hora_fin_2|time:"H:i" }}
-                                {% else %}
-                                    —
-                                {% endif %}
-                            </td>
-                            {% if puede_configurar_horarios %}
-                                <td class="acciones">
-                                    <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_horario_configurar' sede.pk dia.dia %}">
-                                        {% if dia.horario %}Editar{% else %}Configurar{% endif %}
-                                    </a>
-                                </td>
-                            {% endif %}
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-    </div>
-    {% if puede_consultar_precios %}
-        <div class="pestana-panel" data-panel="precios" hidden>
+
+        <div class="pestana-panel" id="sede-panel-canchas" role="tabpanel" aria-labelledby="sede-tab-canchas" tabindex="0" data-panel="canchas" hidden>
             <div class="encabezado-pagina encabezado-seccion">
-                <h2>Precios de reservas</h2>
-                {% if not precio_activo and perms.reservas.add_precioreserva %}
-                    <a class="boton boton-primario boton-chico" href="{% url 'reservas:precio_crear' sede.pk %}">Crear precio</a>
+                <h2>Canchas</h2>
+                {% if perms.instalaciones.add_cancha %}
+                    <a class="boton boton-primario boton-chico" href="{% url 'instalaciones:cancha_crear' sede.pk %}">
+                        Nueva cancha
+                    </a>
                 {% endif %}
             </div>
 
-            {% if not precio_activo %}
-                <p>La sede no tiene un precio por turno configurado.</p>
-            {% endif %}
-
-            <form method="get" action="{% url 'instalaciones:sede_detalle' sede.pk %}#precios" class="tarjeta tarjeta-busqueda" novalidate>
-                {% for campo in formulario_precios %}
-                    <div class="grupo-campo">
-                        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-                        {{ campo }}
-                        {% for error in campo.errors %}
-                            <p class="error-campo" role="alert">{{ error }}</p>
+            <form method="get" action="{% url 'instalaciones:sede_detalle' sede.pk %}#canchas" class="tarjeta tarjeta-busqueda">
+                <div class="grupo-campo">
+                    <label for="estado_cancha">Estado</label>
+                    <select class="form-control" name="estado_cancha" id="estado_cancha">
+                        <option value="">Todas</option>
+                        {% for valor, etiqueta in estados_cancha %}
+                            <option value="{{ valor }}" {% if valor == estado_cancha_actual %}selected{% endif %}>{{ etiqueta }}</option>
                         {% endfor %}
-                    </div>
-                {% endfor %}
+                    </select>
+                </div>
                 <div class="acciones-formulario">
                     <button class="boton boton-primario" type="submit">Filtrar</button>
                 </div>
@@ -210,36 +113,158 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Creado</th>
-                            <th>Precio por turno</th>
+                            <th>Nombre</th>
+                            <th>Superficie</th>
                             <th>Estado</th>
                             <th class="acciones-columna">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for precio in precios %}
+                        {% for cancha in canchas %}
                             <tr>
-                                <td>{{ precio.creado_en|date:"d/m/Y H:i" }}</td>
-                                <td>$ {{ precio.importe|floatformat:2 }}</td>
+                                <td>{{ cancha.nombre }}</td>
+                                <td>{{ cancha.get_superficie_display }}</td>
                                 <td>
-                                    <span class="estado estado-{% if precio.estado == 'activo' %}activa{% else %}inactiva{% endif %}">{{ precio.get_estado_display }}</span>
+                                    <span class="estado estado-{{ cancha.estado }}">
+                                        {{ cancha.get_estado_display }}
+                                    </span>
                                 </td>
                                 <td class="acciones">
-                                    {% if precio.estado == "activo" and perms.reservas.change_precioreserva %}
-                                        <a class="boton boton-secundario boton-chico" href="{% url 'reservas:precio_actualizar' sede.pk precio.pk %}">Actualizar precio</a>
+                                    {% if perms.instalaciones.change_cancha %}
+                                        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:cancha_editar' sede.pk cancha.pk %}">
+                                            Editar
+                                        </a>
+                                        <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:cancha_cambiar_estado' sede.pk cancha.pk %}"
+                                              data-confirmar="¿{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} la cancha {{ cancha.nombre }}?"
+                                              data-confirmar-titulo="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha"
+                                              data-confirmar-boton="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha">
+                                            {% csrf_token %}
+                                            <button class="boton boton-secundario boton-chico" type="submit">
+                                                {% if cancha.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
+                                            </button>
+                                        </form>
                                     {% endif %}
                                 </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td class="estado-vacio" colspan="5">No hay precios para mostrar.</td>
+                                <td class="estado-vacio" colspan="4">
+                                    {% if estado_cancha_actual %}No hay canchas para el estado seleccionado.{% else %}Esta sede todavía no tiene canchas.{% endif %}
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </section>
         </div>
-    {% endif %}
-</div>
+        <div class="pestana-panel" id="sede-panel-horarios" role="tabpanel" aria-labelledby="sede-tab-horarios" tabindex="0" data-panel="horarios" hidden>
+            <div class="encabezado-pagina encabezado-seccion">
+                <h2>Horarios de funcionamiento</h2>
+            </div>
+            <section class="tarjeta tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Día</th>
+                            <th>Primera franja</th>
+                            <th>Segunda franja</th>
+                            {% if puede_configurar_horarios %}<th class="acciones-columna">Acciones</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dia in horarios_semana %}
+                            <tr>
+                                <td>{{ dia.nombre }}</td>
+                                <td>
+                                    {% if dia.horario %}
+                                        {{ dia.horario.hora_inicio_1|time:"H:i" }} a {{ dia.horario.hora_fin_1|time:"H:i" }}
+                                    {% else %}
+                                        Sin funcionamiento
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if dia.horario.hora_inicio_2 %}
+                                        {{ dia.horario.hora_inicio_2|time:"H:i" }} a {{ dia.horario.hora_fin_2|time:"H:i" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                {% if puede_configurar_horarios %}
+                                    <td class="acciones">
+                                        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_horario_configurar' sede.pk dia.dia %}">
+                                            {% if dia.horario %}Editar{% else %}Configurar{% endif %}
+                                        </a>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        </div>
+        {% if puede_consultar_precios %}
+            <div class="pestana-panel" id="sede-panel-precios" role="tabpanel" aria-labelledby="sede-tab-precios" tabindex="0" data-panel="precios" hidden>
+                <div class="encabezado-pagina encabezado-seccion">
+                    <h2>Precios de reservas</h2>
+                    {% if not precio_activo and perms.reservas.add_precioreserva %}
+                        <a class="boton boton-primario boton-chico" href="{% url 'reservas:precio_crear' sede.pk %}">Crear precio</a>
+                    {% endif %}
+                </div>
+
+                {% if not precio_activo %}
+                    <p>La sede no tiene un precio por turno configurado.</p>
+                {% endif %}
+
+                <form method="get" action="{% url 'instalaciones:sede_detalle' sede.pk %}#precios" class="tarjeta tarjeta-busqueda" novalidate>
+                    {% for campo in formulario_precios %}
+                        <div class="grupo-campo">
+                            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                            {{ campo }}
+                            {% for error in campo.errors %}
+                                <p class="error-campo" role="alert">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="acciones-formulario">
+                        <button class="boton boton-primario" type="submit">Filtrar</button>
+                    </div>
+                </form>
+
+                <section class="tarjeta tabla-contenedor">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Creado</th>
+                                <th>Precio por turno</th>
+                                <th>Estado</th>
+                                <th class="acciones-columna">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for precio in precios %}
+                                <tr>
+                                    <td>{{ precio.creado_en|date:"d/m/Y H:i" }}</td>
+                                    <td>$ {{ precio.importe|floatformat:"2g" }}</td>
+                                    <td>
+                                        <span class="estado estado-{% if precio.estado == 'activo' %}activa{% else %}inactiva{% endif %}">{{ precio.get_estado_display }}</span>
+                                    </td>
+                                    <td class="acciones">
+                                        {% if precio.estado == "activo" and perms.reservas.change_precioreserva %}
+                                            <a class="boton boton-secundario boton-chico" href="{% url 'reservas:precio_actualizar' sede.pk precio.pk %}">Actualizar precio</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td class="estado-vacio" colspan="4">No hay precios para mostrar.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        {% endif %}
+    </section>
+</article>
 
 {% endblock %}

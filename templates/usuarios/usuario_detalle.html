@@ -4,7 +4,7 @@
 {% block titulo %}{{ usuario_obj.get_full_name|default:usuario_obj.username }} | Academia TM{% endblock %}
 
 {% block estilos %}
-<link rel="stylesheet" href="{% static 'css/usuario-perfil.css' %}">
+<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -94,7 +94,7 @@
             {% endif %}
         </div>
 
-        <aside class="perfil-cuenta" aria-labelledby="cuenta-titulo">
+        <aside class="perfil-lateral" aria-labelledby="cuenta-titulo">
             <section class="perfil-seccion">
                 <h2 id="cuenta-titulo">Cuenta</h2>
                 <dl class="perfil-lista">
@@ -131,7 +131,7 @@
                                   data-confirmar-titulo="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta"
                                   data-confirmar-boton="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta">
                                 {% csrf_token %}
-                                <button class="perfil-enlace perfil-accion-cuenta{% if usuario_obj.is_active %} perfil-accion-desactivar{% endif %}" type="submit">
+                                <button class="perfil-enlace perfil-accion{% if usuario_obj.is_active %} perfil-accion-desactivar{% endif %}" type="submit">
                                     {% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta
                                 </button>
                             </form>
