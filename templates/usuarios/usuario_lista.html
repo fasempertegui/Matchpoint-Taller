@@ -47,7 +47,7 @@
             {% for usuario_obj in usuarios %}
             <tr>
                 <td>
-                    {{ usuario_obj.get_full_name|default:usuario_obj.username }}
+                    <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>
                     {% if usuario_obj.es_administrador_listado %}
                         <span role="img" aria-label="Administrador" title="Administrador">⭐</span>
                     {% endif %}

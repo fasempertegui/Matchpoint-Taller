@@ -41,7 +41,7 @@
         <tbody>
             {% for sede in sedes %}
                 <tr>
-                    <td>{{ sede.nombre }}</td>
+                    <td><strong>{{ sede.nombre }}</strong></td>
                     <td>{{ sede.direccion|default:"-" }}</td>
                     <td>
                         {% include "componentes/badge_estado.html" with estado=sede.estado texto=sede.get_estado_display only %}
