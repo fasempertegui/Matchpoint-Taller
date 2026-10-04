@@ -7,7 +7,7 @@
     <div class="encabezado-pagina">
         <div>
             <h1>Modificar correo</h1>
-            <p class="texto-secundario">{{ usuario_obj.get_full_name|default:usuario_obj.username }}</p>
+            <p class="texto-secundario">{{ usuario_obj.get_full_name|default:usuario_obj.username }} (@{{ usuario_obj.username }})</p>
         </div>
     </div>
     <form method="post" novalidate>
