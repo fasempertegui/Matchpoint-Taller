@@ -2117,7 +2117,7 @@ flowchart TD
 
 - **Objetivo:** cancelar una reserva propia, sin ofrecer reprogramación.
 - **Actor:** usuario con rol Reservas, sobre su propia reserva.
-- **Precondición:** reserva propia en estado **Programada**, localizada mediante **FL-55**.
+- **Precondición:** reserva propia en estado **Programada**, localizada mediante **FL-55**, con al menos una hora de antelación al inicio del primer turno.
 - **Entrada:** motivo obligatorio en texto libre.
 
 Recorrido:
@@ -2130,6 +2130,7 @@ Recorrido:
 Alternativas:
 
 - Un usuario con rol Reservas no puede cancelar una reserva ajena.
+- El plazo se verifica nuevamente dentro de la transacción al confirmar. Exactamente una hora antes del primer turno se permite cancelar; con menos tiempo, o cuando la reserva ya comenzó, se rechaza sin modificar el registro ni su ocupación.
 - Este flujo nunca ofrece reprogramación, sin importar el motivo ni la anticipación: reprogramar una reserva cancelada es exclusivo del administrador (ver **FL-61**, **FL-41**).
 - Una cancelación por este flujo nunca genera devolución (ver `2_criterios_del_sistema.md`, 2.2).
 - Los ingresos originales no se anulan ni se modifican. Una reserva cancelada no podrá recibir nuevos ingresos.
@@ -2153,7 +2154,7 @@ flowchart TD
 
 - **Objetivo:** cancelar la reserva de cualquier usuario por una causa ajena al organizador, y ofrecer reprogramarla en el momento.
 - **Actor:** administrador.
-- **Precondición:** reserva en estado **Programada**, localizada mediante **FL-55**.
+- **Precondición:** reserva en estado **Programada**, localizada mediante **FL-55**, cuyo primer turno todavía no comenzó.
 - **Entrada:** motivo obligatorio en texto libre, siempre una causa ajena al organizador, y su clasificación en uno de cuatro tipos: clima adverso, torneo, mantenimiento u otro imprevisto.
 
 Recorrido:
@@ -2169,6 +2170,7 @@ Alternativas:
 
 - Este flujo no es el camino para que un organizador cancele su propia reserva por su propio deseo: si el organizador quiere cancelar, lo hace él mismo mediante **FL-60**, que siempre libera el turno sin importar el motivo. Tener cuenta y gestionar la propia reserva es, en este sistema, un requisito, no una comodidad opcional.
 - A diferencia de la cancelación propia (**FL-60**), este flujo siempre ofrece reprogramar, y su motivo se clasifica para decidir si el turno original queda bloqueado.
+- El administrador puede cancelar aunque falte menos de una hora, pero nunca desde el inicio del primer turno. El límite se verifica nuevamente dentro de la transacción al confirmar.
 - Si el administrador no reprograma en el momento, no se crea ningún registro adicional: resolver el dinero ya cobrado queda fuera del sistema (ver `1_organizacion.md`, 5.2).
 - Ninguna cancelación genera devolución dentro del sistema, se reprograme o no.
 - Los ingresos originales no se anulan ni se modifican. Una reserva cancelada no podrá recibir nuevos ingresos.

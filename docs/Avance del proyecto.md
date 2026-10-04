@@ -64,11 +64,11 @@ Cada reserva se presenta una sola vez, con número, organizador según el permis
 
 ### Anulación
 
-Sólo el Administrador puede anular una reserva Programada antes de que comience su primer turno. El motivo es obligatorio y debe tener contenido.
+El Administrador puede anular cualquier reserva Programada antes de que comience su primer turno. El usuario con rol Reservas puede anular únicamente las propias con al menos una hora de antelación al primer turno. El motivo es obligatorio y debe tener contenido.
 
 La operación cambia el estado a Anulada, registra motivo, fecha, hora y responsable, y libera todos sus turnos. Conserva la cabecera, los detalles y el precio aplicado. Se ejecuta en una única transacción, validando nuevamente permisos, estado y horario después de obtener los bloqueos.
 
-Se rechazan reservas iniciadas, Anuladas o Finalizadas. Una solicitud repetida no sobrescribe la auditoría. No se exige que el organizador, las instalaciones o el precio sigan activos. Ante un error, no se modifica la reserva ni su ocupación.
+Se rechazan reservas iniciadas, Anuladas o Finalizadas, solicitudes sobre reservas ajenas desde el portal y anulaciones propias fuera del plazo. Una solicitud repetida no sobrescribe la auditoría. El actor debe conservar el acceso habilitado; el Administrador puede operar aunque el organizador esté inactivo. No se exige que las instalaciones o el precio sigan activos. Ante un error, no se modifica la reserva ni su ocupación.
 
 ### Finalización
 

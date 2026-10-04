@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -91,11 +93,25 @@ def registrar_reserva(registrado_por, organizador, cancha, fecha, identificadore
     return reserva, precio.importe * len(turnos)
 
 
+def validar_anulacion_reserva(reserva, primer_turno, es_administrador, ahora):
+    if reserva.estado != Reserva.Estado.PROGRAMADA:
+        raise ValidationError("Sólo se pueden anular reservas Programadas.")
+    if primer_turno is None:
+        raise ValidationError("La reserva no tiene turnos asociados.")
+    inicio = timezone.make_aware(
+        datetime.combine(primer_turno.fecha, primer_turno.hora_inicio),
+        timezone.get_current_timezone(),
+    )
+    if ahora >= inicio:
+        raise ValidationError("Sólo se puede anular una reserva antes de su inicio.")
+    if not es_administrador and ahora > inicio - timedelta(hours=1):
+        raise ValidationError("Para anular tu reserva debe faltar al menos una hora para el inicio del primer turno.")
+
+
 @transaction.atomic
 def anular_reserva(anulado_por, reserva_id, motivo):
     anulado_por = Usuario.objects.select_for_update().get(pk=anulado_por.pk)
-    if not exigir_acceso_reservas(anulado_por):
-        raise PermissionDenied
+    es_administrador = exigir_acceso_reservas(anulado_por)
     motivo = motivo.strip()
     if not motivo:
         raise ValidationError("Indicá el motivo de la anulación.")
@@ -107,16 +123,11 @@ def anular_reserva(anulado_por, reserva_id, motivo):
         .order_by("pk")
     )
     reserva = Reserva.objects.select_for_update().get(pk=reserva_id)
-    if reserva.estado != Reserva.Estado.PROGRAMADA:
-        raise ValidationError("Sólo se pueden anular reservas Programadas.")
-    if not turnos:
-        raise ValidationError("La reserva no tiene turnos asociados.")
-    primer_turno = min(turnos, key=lambda turno: (turno.fecha, turno.hora_inicio))
+    if not es_administrador and reserva.organizador_id != anulado_por.pk:
+        raise PermissionDenied
+    primer_turno = min(turnos, key=lambda turno: (turno.fecha, turno.hora_inicio)) if turnos else None
     ahora = timezone.localtime()
-    if primer_turno.fecha < ahora.date() or (
-        primer_turno.fecha == ahora.date() and primer_turno.hora_inicio <= ahora.time()
-    ):
-        raise ValidationError("Sólo se puede anular una reserva antes de su inicio.")
+    validar_anulacion_reserva(reserva, primer_turno, es_administrador, ahora)
 
     reserva.estado = Reserva.Estado.ANULADA
     reserva.anulado_en = ahora

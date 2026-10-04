@@ -48,6 +48,9 @@
 {% endif %}
 {% if not puede_anular %}
     {% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    {% if not es_administrador and reserva.estado == "programada" %}
+        <p class="texto-secundario">{{ impedimento_anulacion }}</p>
+    {% endif %}
 {% endif %}
 {% if puede_anular %}
 <header class="encabezado-seccion"><h2>Anular reserva</h2></header>
@@ -55,6 +58,9 @@
       data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? Se liberarán todos sus turnos."
       data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular reserva">
     {% csrf_token %}
+    {% if not es_administrador %}
+        <p class="texto-secundario">Podés anular tu reserva con al menos una hora de antelación al inicio del primer turno.</p>
+    {% endif %}
     <div class="grupo-campo">
         <label for="{{ formulario_anulacion.motivo.id_for_label }}">{{ formulario_anulacion.motivo.label }} <span aria-hidden="true">*</span></label>
         {{ formulario_anulacion.motivo }}

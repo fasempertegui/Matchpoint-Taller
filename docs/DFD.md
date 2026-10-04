@@ -953,7 +953,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[Administrador]
+    A[Administrador o usuario con rol Reservas]
     P((31. Anular una reserva de cancha))
     D1[(D1: Usuarios)]
     D3[(D3: Usuarios_Roles)]
@@ -992,7 +992,7 @@ flowchart LR
 3. Estado de acceso del actor y datos de los usuarios relacionados.
 4. Usuario que solicita anular la reserva.
 5. Roles asignados al actor.
-6. Identificador de la reserva seleccionada.
+6. Identificador de la reserva seleccionada y criterio de acceso a las propias para el usuario del portal.
 7. Cabecera con estado, organizador, responsables, precio aplicado y datos de registro o anulación.
 8. Reserva cuyos detalles deben consultarse.
 9. Vínculos de la reserva con todos sus turnos.
@@ -1004,8 +1004,10 @@ flowchart LR
 15. Datos de la sede.
 16. Precio aplicado a la reserva.
 17. Importe histórico por turno para mostrar el total de la reserva.
-18. Estado Anulada, motivo, fecha, hora y administrador responsable; este estado libera la ocupación de todos sus turnos.
+18. Estado Anulada, motivo, fecha, hora y usuario responsable; este estado libera la ocupación de todos sus turnos.
 19. Resultado de la anulación y detalle conservado de la reserva, o errores de validación y acceso.
+
+El Administrador puede anular cualquier reserva Programada antes del inicio. El usuario con rol Reservas sólo puede anular las propias con al menos una hora de antelación al primer turno. Una reserva Anulada o Finalizada no puede anularse.
 
 ### DFD 32: finalizar una reserva de cancha
 
