@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.formats import number_format
@@ -11,14 +12,64 @@ from instalaciones.models import Sede
 from usuarios.models import Rol
 
 from .disponibilidad import consultar_disponibilidad
-from .forms import PrecioReservaForm, ReservaDatosForm, ReservaTurnosForm
-from .models import PrecioReserva, Reserva
+from .forms import PrecioReservaForm, ReservaDatosForm, ReservaFiltroForm, ReservaTurnosForm
+from .models import PrecioReserva, Reserva, ReservaTurno
 from .servicios import exigir_acceso_reservas, registrar_reserva
 
 
 def _exigir_administrador(usuario):
     if not usuario.tiene_rol(Rol.ADMINISTRADOR):
         raise PermissionDenied
+
+
+@login_required
+@require_http_methods(["GET"])
+def reserva_lista(request):
+    es_administrador = exigir_acceso_reservas(request.user)
+    formulario = ReservaFiltroForm(request.GET)
+    reservas = Reserva.objects.select_related("organizador", "precio_reserva").prefetch_related(
+        Prefetch("detalles", queryset=ReservaTurno.objects.select_related("turno__cancha__sede"))
+    )
+    if not es_administrador:
+        reservas = reservas.filter(organizador=request.user)
+    filtros_validos = formulario.is_valid()
+    if filtros_validos:
+        datos = formulario.cleaned_data
+        filtros_turnos = {}
+        if datos["sede"]:
+            filtros_turnos["detalles__turno__cancha__sede"] = datos["sede"]
+        if datos["cancha"]:
+            filtros_turnos["detalles__turno__cancha"] = datos["cancha"]
+        if datos["fecha_desde"]:
+            filtros_turnos["detalles__turno__fecha__gte"] = datos["fecha_desde"]
+        if datos["fecha_hasta"]:
+            filtros_turnos["detalles__turno__fecha__lte"] = datos["fecha_hasta"]
+        if filtros_turnos:
+            reservas = reservas.filter(**filtros_turnos).distinct()
+        if datos["estado"]:
+            reservas = reservas.filter(estado=datos["estado"])
+    else:
+        reservas = reservas.none()
+
+    filas = []
+    for reserva in reservas:
+        detalles = list(reserva.detalles.all())
+        primer_turno = detalles[0].turno
+        ultimo_turno = detalles[-1].turno
+        filas.append({
+            "reserva": reserva,
+            "cancha": primer_turno.cancha,
+            "fecha": primer_turno.fecha,
+            "hora_inicio": primer_turno.hora_inicio,
+            "hora_fin": ultimo_turno.hora_fin,
+            "total": reserva.precio_reserva.importe * len(detalles),
+        })
+    return render(request, "reservas/reserva_lista.html", {
+        "formulario": formulario,
+        "reservas": filas,
+        "es_administrador": es_administrador,
+        "filtros_validos": filtros_validos,
+    })
 
 
 @login_required
@@ -98,7 +149,9 @@ def reserva_crear(request):
 @require_http_methods(["GET"])
 def reserva_detalle(request, pk):
     es_administrador = exigir_acceso_reservas(request.user)
-    reservas = Reserva.objects.select_related("organizador", "registrado_por", "precio_reserva")
+    reservas = Reserva.objects.select_related(
+        "organizador", "registrado_por", "precio_reserva", "anulado_por", "finalizado_por",
+    )
     if not es_administrador:
         reservas = reservas.filter(organizador=request.user)
     reserva = get_object_or_404(reservas, pk=pk)

@@ -18,6 +18,14 @@
         <div><span class="etiqueta">Precio por turno (ARS)</span><p>$ {{ reserva.precio_reserva.importe|floatformat:2 }}</p></div>
         <div><span class="etiqueta">Total (ARS)</span><p><strong>$ {{ total|floatformat:2 }}</strong></p></div>
         {% if reserva.observaciones %}<div class="detalle-ancho"><span class="etiqueta">Observaciones</span><p>{{ reserva.observaciones|linebreaksbr }}</p></div>{% endif %}
+        {% if reserva.estado == "anulada" %}
+            <div><span class="etiqueta">Fecha de anulación</span><p>{{ reserva.anulado_en|date:"d/m/Y H:i" }}</p></div>
+            <div><span class="etiqueta">Anulada por</span><p>{{ reserva.anulado_por }}</p></div>
+            <div class="detalle-ancho"><span class="etiqueta">Motivo de anulación</span><p>{{ reserva.motivo_anulacion|linebreaksbr }}</p></div>
+        {% elif reserva.estado == "finalizada" %}
+            <div><span class="etiqueta">Fecha de finalización</span><p>{{ reserva.finalizado_en|date:"d/m/Y H:i" }}</p></div>
+            <div><span class="etiqueta">Finalizada por</span><p>{{ reserva.finalizado_por }}</p></div>
+        {% endif %}
     </div>
 </section>
 <header class="encabezado-seccion"><h2>Turnos reservados</h2></header>
@@ -36,7 +44,7 @@
     </table>
 </section>
 <div class="acciones-formulario">
-    <a class="boton boton-secundario" href="{% url 'inicio' %}">Volver al inicio</a>
+    <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Volver a reservas</a>
     <a class="boton boton-primario" href="{% url 'reservas:reserva_crear' %}">Nueva reserva</a>
 </div>
 {% endblock %}

@@ -8,7 +8,7 @@ from instalaciones.models import Cancha, Sede
 from usuarios.models import Usuario
 
 from .disponibilidad import validar_fecha_reserva
-from .models import PrecioReserva
+from .models import PrecioReserva, Reserva
 
 
 class PrecioReservaForm(forms.Form):
@@ -49,6 +49,64 @@ class OrganizadorReservaField(forms.ModelChoiceField):
 class CanchaReservaField(forms.ModelChoiceField):
     def label_from_instance(self, cancha):
         return cancha.nombre
+
+
+class CanchaReservaSelect(forms.Select):
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        opcion = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if value:
+            opcion["attrs"]["data-sede"] = value.instance.sede_id
+        return opcion
+
+
+class ReservaFiltroForm(forms.Form):
+    sede = forms.ModelChoiceField(
+        queryset=Sede.objects.all(),
+        required=False,
+        empty_label="Todas las sedes",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    cancha = CanchaReservaField(
+        queryset=Cancha.objects.select_related("sede"),
+        required=False,
+        empty_label="Todas las canchas",
+        widget=CanchaReservaSelect(attrs={"class": "form-control"}),
+    )
+    fecha_desde = forms.DateField(
+        label="Fecha de uso desde",
+        required=False,
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+    fecha_hasta = forms.DateField(
+        label="Fecha de uso hasta",
+        required=False,
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+    estado = forms.ChoiceField(
+        required=False,
+        choices=(("", "Todos"), *Reserva.Estado.choices),
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        sede = self.data.get("sede", "")
+        if not sede:
+            self.fields["cancha"].widget.attrs["disabled"] = True
+
+    def clean(self):
+        datos = super().clean()
+        sede = datos.get("sede")
+        cancha = datos.get("cancha")
+        if cancha and (not sede or cancha.sede_id != sede.pk):
+            self.add_error("cancha", "Elegí una sede y una cancha que pertenezca a ella.")
+        desde = datos.get("fecha_desde")
+        hasta = datos.get("fecha_hasta")
+        if desde and hasta and desde > hasta:
+            self.add_error("fecha_hasta", "La fecha hasta debe ser igual o posterior a la fecha desde.")
+        return datos
 
 
 class ReservaDatosForm(forms.Form):

@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas y consulta de su detalle. Los demás procesos del sistema están pendientes de representación.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado y consulta de su detalle. Los demás procesos del sistema están pendientes de representación.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -844,6 +844,7 @@ flowchart LR
     U[Administrador o usuario con rol Reservas]
     P((29. Consultar el detalle de una reserva))
     D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
     D5[(D5: Sedes)]
     D6[(D6: Canchas)]
     D7[(D7: Precios de reservas)]
@@ -867,15 +868,17 @@ flowchart LR
     P -->|14| D7
     D7 -->|15| P
     P -->|16| U
+    P -->|17| D3
+    D3 -->|18| P
 ```
 
 **Datos que circulan**
 
 1. Reserva seleccionada e identidad del usuario que consulta.
 2. Identificador de la reserva y criterio de acceso a las propias para el usuario del portal.
-3. Cabecera de la reserva con organizador, responsable, estado, precio y fecha de registro.
-4. Identificadores del organizador y del responsable del registro.
-5. Datos de los usuarios relacionados.
+3. Cabecera de la reserva con organizador, responsables, estado, precio, observaciones y fechas de registro, anulación o finalización.
+4. Identidad del actor e identificadores del organizador y de los responsables del registro, anulación o finalización.
+5. Datos de los usuarios relacionados y estado de acceso del actor.
 6. Reserva cuyos detalles deben consultarse.
 7. Vínculos de la reserva con sus turnos.
 8. Turnos incluidos en los detalles.
@@ -886,4 +889,62 @@ flowchart LR
 13. Datos de la sede.
 14. Precio referenciado por la reserva.
 15. Importe histórico por turno.
-16. Detalle de la reserva con estado, usuarios, fecha, cancha, turnos, duración, subtotales y total, o rechazo del acceso.
+16. Detalle de la reserva con estado, usuarios, fecha, cancha, turnos, duración, subtotales, total y datos de anulación o finalización, o rechazo del acceso.
+17. Usuario que solicita consultar el detalle.
+18. Roles asignados al actor.
+
+### DFD 30: consultar reservas de cancha
+
+```mermaid
+flowchart LR
+    U[Administrador o usuario con rol Reservas]
+    P((30. Consultar reservas de cancha))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D7[(D7: Precios de reservas)]
+    D9[(D9: Turnos)]
+    D10[(D10: Reservas)]
+    D11[(D11: Detalles de reservas)]
+
+    U -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D5
+    D5 -->|7| P
+    P -->|8| D6
+    D6 -->|9| P
+    P -->|10| D9
+    D9 -->|11| P
+    P -->|12| D11
+    D11 -->|13| P
+    P -->|14| D10
+    D10 -->|15| P
+    P -->|16| D7
+    D7 -->|17| P
+    P -->|18| U
+```
+
+**Datos que circulan**
+
+1. Identidad del actor y filtros opcionales de sede, cancha, fechas de uso y estado.
+2. Identidad del actor y de los organizadores de las reservas consultadas.
+3. Estado de acceso del actor y datos de los organizadores.
+4. Usuario que solicita consultar reservas.
+5. Roles asignados al actor.
+6. Criterios de consulta de sedes para el filtro y el listado.
+7. Datos de las sedes, incluidas las inactivas.
+8. Sede seleccionada y canchas relacionadas con las reservas consultadas.
+9. Datos de las canchas y su pertenencia a las sedes, incluidas las inactivas.
+10. Cancha, rango de fechas de uso y turnos relacionados con las reservas consultadas.
+11. Cancha, fecha y horas de los turnos.
+12. Reservas y turnos cuyos vínculos deben consultarse.
+13. Detalles que relacionan cada reserva con todos sus turnos.
+14. Criterios de estado y acceso a todas las reservas o sólo a las propias.
+15. Cabeceras de las reservas que cumplen los filtros.
+16. Precios aplicados a las reservas consultadas.
+17. Importes históricos por turno.
+18. Opciones de filtros y listado con número, organizador cuando corresponde, sede, cancha, fecha, horario, total, estado y acceso al detalle, o errores de validación y acceso.

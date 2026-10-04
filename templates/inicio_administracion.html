@@ -37,6 +37,7 @@
             <h3>Reservas</h3>
             <p>Consulta de disponibilidad y gestión de reservas de cancha.</p>
             {% if puede_reservar %}
+                <a class="inicio-modulo-enlace" href="{% url 'reservas:reserva_lista' %}">Consultar reservas</a>
                 <a class="inicio-modulo-enlace" href="{% url 'reservas:reserva_crear' %}">Nueva reserva</a>
             {% endif %}
             {% if perms.reservas.view_precioreserva and perms.instalaciones.view_sede %}

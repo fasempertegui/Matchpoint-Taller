@@ -50,7 +50,7 @@ La base de datos impide repetir un turno para la misma cancha, fecha y hora de i
 
 La reserva tiene estado inicial Programada y fecha de registración automática. Los estados permitidos son Programada, Anulada y Finalizada. La base exige fecha, responsable y motivo con contenido para una anulación, y fecha y responsable para una finalización. Estos datos sólo pueden estar presentes en el estado correspondiente. Las relaciones protegen los registros vinculados contra la eliminación física.
 
-La consulta de reservas con filtros, la anulación, la finalización y la impresión están pendientes de implementación.
+La anulación, la finalización y la impresión están pendientes de implementación.
 
 ### Turnos y disponibilidad
 
@@ -71,3 +71,13 @@ Cada turno se muestra como una opción con su rango horario. El precio por turno
 El servidor comprueba la selección, los permisos, los estados de usuarios e instalaciones, los horarios y el precio dentro de una transacción. Bloquea las cuentas participantes, la sede, la cancha y los turnos seleccionados; vuelve a comprobar la ocupación antes de guardar. Crea una cabecera en estado Programada y todos sus detalles, con número, fecha y responsable automáticos. Si falla la operación, no queda una reserva parcial. Si cambió el precio, se muestra el actualizado y se exige una nueva confirmación.
 
 El detalle de la reserva muestra organizador, responsable, fecha de registro, cancha, fecha de uso, duración, turnos, subtotales y total. El Administrador puede consultar cualquier reserva; el usuario con rol Reservas sólo puede acceder a las propias. Los importes se obtienen del precio referenciado por la cabecera y la cantidad de detalles. El rol Reservas no puede retirarse mientras el usuario tenga reservas propias Programadas; esta comprobación se coordina con el registro mediante el bloqueo de su cuenta.
+
+### Consulta de reservas
+
+El inicio administrativo ofrece Consultar reservas y el portal ofrece Mis reservas. El listado utiliza las tablas y los estilos compartidos del proyecto. Muestra número, sede, cancha, fecha de uso, horario completo, total, estado y acceso al detalle. El Administrador ve todas las reservas y el organizador de cada una; el usuario con rol Reservas sólo obtiene las propias.
+
+Los filtros son opcionales: sede, cancha, fecha de uso desde, fecha de uso hasta y estado. Las fechas se eligen mediante selectores y permiten consultar un día o un rango, incluidos registros históricos. Sus límites son inclusivos; la fecha hasta no puede ser anterior a la fecha desde. La acción Limpiar vuelve al listado sin filtros.
+
+El selector de cancha se habilita al elegir una sede y ofrece sólo sus canchas. Al cambiar la sede, se descarta una cancha que no le pertenezca. El servidor valida los identificadores, la pertenencia de la cancha, las fechas y el estado; ante filtros inválidos muestra los errores y no devuelve resultados. Las opciones incluyen sedes y canchas inactivas para conservar la consulta de reservas históricas.
+
+Cada reserva aparece una sola vez, aunque incluya varios turnos. El horario y el total se obtienen de todos sus detalles y del precio aplicado al registrarla. El detalle muestra también los datos de anulación o finalización cuando corresponden y permite volver al listado.
