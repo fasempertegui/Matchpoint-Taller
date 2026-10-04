@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}Sedes | Academia TM{% endblock %}
 
@@ -12,7 +13,7 @@
     {% endif %}
 </div>
 
-<form method="get" class="tarjeta tarjeta-busqueda">
+<form method="get" action="{% url 'instalaciones:sede_lista' %}" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
     <div class="grupo-campo">
         <label for="estado">Estado</label>
         <select class="form-control" name="estado" id="estado">
@@ -22,8 +23,8 @@
             {% endfor %}
         </select>
     </div>
-    <div class="acciones-formulario">
-        <button class="boton boton-primario" type="submit">Filtrar</button>
+    <div class="filtros-acciones">
+        <a class="boton boton-secundario" href="{% url 'instalaciones:sede_lista' %}" data-limpiar-filtros>Limpiar filtros</a>
     </div>
 </form>
 
@@ -63,4 +64,5 @@
         </tbody>
     </table>
 </section>
+<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

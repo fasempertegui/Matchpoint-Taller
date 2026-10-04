@@ -167,11 +167,11 @@ flowchart LR
 
 **Datos que circulan**
 
-1. Sede seleccionada y criterio de estado de las canchas.
+1. Sede seleccionada.
 2. Identificador de la sede.
 3. Datos de la sede encontrada.
-4. Sede y criterio de consulta de canchas.
-5. Datos de las canchas encontradas.
+4. Sede cuyas canchas se consultan.
+5. Datos de todas las canchas de la sede, activas e inactivas.
 6. Listado o detalle de las canchas de la sede.
 
 ### DFD 7: dar de alta una cancha

@@ -394,18 +394,18 @@ flowchart TD
 
 - **Objetivo:** visualizar las sedes y sus canchas asociadas.
 - **Actor:** administrador.
-- **Entradas:** filtros opcionales por nombre, estado o superficie.
+- **Entradas:** sede seleccionada y filtros opcionales por nombre o estado de la sede.
 
 Recorrido:
 
 1. El administrador accede a la consulta.
 2. El sistema muestra las sedes.
-3. Al seleccionar una sede, muestra sus canchas, superficies y estados.
+3. Al seleccionar una sede, muestra todas sus canchas, activas e inactivas, con sus superficies y estados.
 
 Alternativas:
 
 - Una sede sin canchas muestra una lista vacía.
-- La consulta puede incluir registros inactivos.
+- La consulta de sedes puede incluir registros inactivos.
 
 - **Resultado:** jerarquía de sedes y canchas sin modificaciones.
 - **Datos:** sedes y canchas.

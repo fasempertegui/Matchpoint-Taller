@@ -28,11 +28,6 @@
     margin-bottom: 20px;
 }
 
-.sede-operaciones .tarjeta-busqueda {
-    padding: 16px;
-    background: var(--fondo);
-}
-
 .sede-operaciones td:first-child {
     font-weight: 500;
 }

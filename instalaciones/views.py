@@ -40,11 +40,6 @@ def sede_detalle(request, pk):
         for dia, nombre in SedeHorario.DiaSemana.choices
     ]
     canchas = sede.canchas.all()
-    estado_cancha = request.GET.get("estado_cancha", "")
-    if estado_cancha in Cancha.Estado.values:
-        canchas = canchas.filter(estado=estado_cancha)
-    else:
-        estado_cancha = ""
     puede_consultar_precios = (
         request.user.has_perm("reservas.view_precioreserva")
         and request.user.tiene_rol(Rol.ADMINISTRADOR)
@@ -68,8 +63,6 @@ def sede_detalle(request, pk):
         {
             "sede": sede,
             "canchas": canchas,
-            "estados_cancha": Cancha.Estado.choices,
-            "estado_cancha_actual": estado_cancha,
             "horarios_semana": horarios_semana,
             "puede_consultar_precios": puede_consultar_precios,
             "formulario_precios": formulario_precios,

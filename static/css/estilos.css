@@ -277,6 +277,39 @@ h2 {
     margin-top: 0;
 }
 
+.tarjeta-busqueda.filtros-compactos {
+    gap: 12px;
+    padding: 10px 16px;
+}
+
+.filtros-compactos > .grupo-campo {
+    width: 200px;
+}
+
+.filtros-compactos .detalle-grid {
+    min-width: 0;
+    gap: 12px;
+}
+
+.filtros-compactos .grupo-campo label {
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+}
+
+.filtros-compactos .form-control,
+.filtros-compactos .boton {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+}
+
+.filtros-acciones {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
 .lista-roles {
     display: flex;
     flex-wrap: wrap;
@@ -951,6 +984,16 @@ html.modal-abierto {
 }
 
 @media (max-width: 720px) {
+    .filtros-compactos > .grupo-campo {
+        width: 100%;
+    }
+
+    .filtros-acciones {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
     .reserva-distribucion {
         grid-template-columns: 1fr;
     }

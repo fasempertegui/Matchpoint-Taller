@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}Usuarios | Academia TM{% endblock %}
 
@@ -12,7 +13,7 @@
     {% endif %}
 </div>
 
-<form method="get" class="tarjeta tarjeta-busqueda">
+<form method="get" action="{% url 'usuarios:usuario_lista' %}" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
     <div class="detalle-grid">
         <div class="grupo-campo">
             <label for="{{ formulario_busqueda.q.id_for_label }}">{{ formulario_busqueda.q.label }}</label>
@@ -27,8 +28,8 @@
             {{ formulario_busqueda.estado }}
         </div>
     </div>
-    <div class="acciones-formulario">
-        <button class="boton boton-primario" type="submit">Buscar</button>
+    <div class="filtros-acciones">
+        <a class="boton boton-secundario" href="{% url 'usuarios:usuario_lista' %}" data-limpiar-filtros>Limpiar filtros</a>
     </div>
 </form>
 
@@ -74,4 +75,5 @@
         </tbody>
     </table>
 </section>
+<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}
