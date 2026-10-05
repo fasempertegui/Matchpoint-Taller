@@ -60,10 +60,6 @@ Ejecutar los siguientes comandos desde la consola.
 
 ## Tareas automáticas
 
-Redis transporta las tareas, Celery Worker las ejecuta y Celery Beat programa la finalización de reservas cada hora en punto, según la zona horaria de Buenos Aires. Sólo debe ejecutarse una instancia de Beat. Las reservas Programadas pasan a Finalizadas cuando terminó su último turno; la tarea conserva la fecha y hora de finalización y no modifica reservas Anuladas o Finalizadas.
-
-Los servicios deben permanecer encendidos para que la ejecución sea automática. La siguiente ejecución horaria procesa todas las reservas vencidas pendientes. Redis y la agenda de Beat utilizan volúmenes persistentes.
-
 Para consultar los registros de ejecución:
 
 ```powershell
