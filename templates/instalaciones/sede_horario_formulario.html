@@ -6,7 +6,7 @@
 <section class="tarjeta tarjeta-formulario">
     <h1>Horario del {{ dia_nombre|lower }}</h1>
     <p>{{ sede.nombre }}</p>
-    <p>Indicá una o dos franjas. Dejá todos los campos vacíos para que la sede quede sin funcionamiento este día.</p>
+    <p>Indicá una o dos franjas con horarios en punto, separadas por al menos una hora sin funcionamiento. Dejá todos los campos vacíos para que la sede quede sin funcionamiento este día.</p>
 
     <form method="post" novalidate>
         {% csrf_token %}

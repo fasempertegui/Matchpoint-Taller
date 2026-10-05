@@ -636,7 +636,7 @@ Recorrido:
 
 1. El administrador selecciona la sede y un día de la semana, mediante **FL-57**.
 2. Ingresa la primera franja y, opcionalmente, una segunda.
-3. El sistema valida que cada franja tenga el fin posterior al inicio y que, si hay dos, no se superpongan.
+3. El sistema valida que todos los horarios sean en punto, que cada franja tenga el fin posterior al inicio y que, si hay dos, exista al menos una hora sin funcionamiento entre el fin de la primera y el inicio de la segunda. Se rechazan horarios con minutos o segundos distintos de cero y franjas contiguas o superpuestas.
 4. El administrador confirma y el sistema guarda la configuración de ese día, reemplazando la anterior si existía.
 
 Alternativas:

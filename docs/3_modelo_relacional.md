@@ -640,7 +640,7 @@ Representa el horario de funcionamiento de una sede: por día de la semana, hast
 | | `creado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
 
-`hora_inicio_2` y `hora_fin_2` están ambas presentes o ambas vacías. Un día de la semana sin fila para la sede indica que esa sede no funciona ese día. `hora_fin_1` es siempre posterior a `hora_inicio_1`; cuando existe la segunda franja, `hora_inicio_2` es igual o posterior a `hora_fin_1`, y `hora_fin_2` es posterior a `hora_inicio_2`.
+Los cuatro campos horarios admiten únicamente horas en punto, con minutos, segundos y fracciones de segundo en cero. `hora_inicio_2` y `hora_fin_2` están ambas presentes o ambas vacías. Un día de la semana sin fila para la sede indica que esa sede no funciona ese día. El fin de cada franja debe ser posterior a su inicio. Si existe una segunda franja, debe comenzar al menos una hora después de terminar la primera. Las franjas no pueden ser contiguas ni superponerse. El formulario y las restricciones de base de datos controlan estas condiciones.
 
 Relaciones:
 

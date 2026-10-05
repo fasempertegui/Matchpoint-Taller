@@ -1,6 +1,12 @@
+from datetime import date, datetime, time, timedelta
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.functions import Lower
+from django.db.models.lookups import GreaterThanOrEqual
+
+
+HORAS_EN_PUNTO = tuple(time(hora) for hora in range(24))
 
 
 class Sede(models.Model):
@@ -109,6 +115,24 @@ class SedeHorario(models.Model):
                 name="sede_horario_dia_valido",
             ),
             models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        hora_inicio_1__in=HORAS_EN_PUNTO,
+                        hora_fin_1__in=HORAS_EN_PUNTO,
+                    )
+                    & (
+                        models.Q(hora_inicio_2__isnull=True)
+                        | models.Q(hora_inicio_2__in=HORAS_EN_PUNTO)
+                    )
+                    & (
+                        models.Q(hora_fin_2__isnull=True)
+                        | models.Q(hora_fin_2__in=HORAS_EN_PUNTO)
+                    )
+                ),
+                name="sede_horario_horas_en_punto",
+                violation_error_message="Los horarios deben ser en punto.",
+            ),
+            models.CheckConstraint(
                 condition=models.Q(hora_fin_1__gt=models.F("hora_inicio_1")),
                 name="sede_horario_primera_franja_valida",
             ),
@@ -129,9 +153,13 @@ class SedeHorario(models.Model):
             models.CheckConstraint(
                 condition=(
                     models.Q(hora_inicio_2__isnull=True)
-                    | models.Q(hora_inicio_2__gte=models.F("hora_fin_1"))
+                    | GreaterThanOrEqual(
+                        models.F("hora_inicio_2") - models.F("hora_fin_1"),
+                        models.Value(timedelta(hours=1)),
+                    )
                 ),
-                name="sede_horario_franjas_sin_superposicion",
+                name="sede_horario_pausa_minima",
+                violation_error_message="Debe haber al menos una hora sin funcionamiento entre las dos franjas.",
             ),
         ]
         verbose_name = "horario de sede"
@@ -170,10 +198,18 @@ class SedeHorario(models.Model):
         if self.hora_inicio_2 is not None and self.hora_fin_2 is not None:
             if self.hora_fin_2 <= self.hora_inicio_2:
                 errores["hora_fin_2"] = "El fin debe ser posterior al inicio."
-            if self.hora_fin_1 is not None and self.hora_inicio_2 < self.hora_fin_1:
-                errores["hora_inicio_2"] = (
-                    "La segunda franja debe comenzar al terminar la primera o después."
-                )
+            if self.hora_fin_1 is not None:
+                fin_primera = datetime.combine(date.min, self.hora_fin_1)
+                inicio_segunda = datetime.combine(date.min, self.hora_inicio_2)
+                if inicio_segunda - fin_primera < timedelta(hours=1):
+                    errores["hora_inicio_2"] = (
+                        "La segunda franja debe comenzar al menos una hora después de terminar la primera."
+                    )
+
+        for nombre in ("hora_inicio_1", "hora_fin_1", "hora_inicio_2", "hora_fin_2"):
+            hora = getattr(self, nombre)
+            if hora is not None and hora not in HORAS_EN_PUNTO:
+                errores[nombre] = "Ingresá una hora en punto, por ejemplo 09:00."
 
         if errores:
             raise ValidationError(errores)

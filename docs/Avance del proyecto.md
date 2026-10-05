@@ -28,7 +28,7 @@ Desactivar registra fecha y hora de baja; reactivar elimina esa marca. No se per
 
 ### Horarios y precios
 
-El Administrador puede configurar hasta dos franjas de funcionamiento por día para cada sede. Los intervalos deben estar completos, terminar después de comenzar y no superponerse. Un día sin franjas no tiene disponibilidad.
+El Administrador puede configurar hasta dos franjas de funcionamiento por día para cada sede. Los horarios deben ser en punto, los intervalos deben estar completos y terminar después de comenzar. Si hay dos franjas, debe existir al menos una hora sin funcionamiento entre ellas. Estas condiciones se validan en el formulario y en la base de datos. Un día sin franjas no tiene disponibilidad.
 
 Cada sede tiene un único precio activo, positivo y común a todas sus canchas, por turno de una hora. El Administrador puede crearlo o actualizarlo. Actualizar desactiva el precio vigente y crea otro en una única transacción; no se admite repetir el importe actual. Los precios inactivos se conservan para consulta y no pueden editarse ni reactivarse.
 

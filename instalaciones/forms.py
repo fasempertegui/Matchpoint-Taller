@@ -111,5 +111,5 @@ class SedeHorarioForm(forms.ModelForm):
             campo.input_formats = ["%H:%M"]
             campo.widget = forms.TimeInput(
                 format="%H:%M",
-                attrs={"class": "form-control", "type": "time", "step": "60"},
+                attrs={"class": "form-control", "type": "time", "step": "3600"},
             )
