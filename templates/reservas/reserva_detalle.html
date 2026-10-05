@@ -158,6 +158,7 @@
                             <div class="grupo-campo">
                                 <label for="{{ formulario_anulacion.motivo.id_for_label }}">{{ formulario_anulacion.motivo.label }} <span aria-hidden="true">*</span></label>
                                 {{ formulario_anulacion.motivo }}
+                                <small class="nota-campo" id="{{ formulario_anulacion.motivo.auto_id }}_helptext">{{ formulario_anulacion.motivo.help_text }}</small>
                                 {% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
                             </div>
                             <button class="boton boton-secundario boton-chico" type="submit">Anular reserva</button>

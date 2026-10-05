@@ -2119,7 +2119,7 @@ flowchart TD
 - **Objetivo:** cancelar una reserva propia, sin ofrecer reprogramación.
 - **Actor:** usuario con rol Reservas, sobre su propia reserva.
 - **Precondición:** reserva propia en estado **Programada**, localizada mediante **FL-55**, con al menos una hora de antelación al inicio del primer turno.
-- **Entrada:** motivo obligatorio en texto libre.
+- **Entrada:** motivo obligatorio en texto libre de al menos 25 caracteres, sin contar los espacios al principio y al final. El formulario y el servidor validan ese mínimo.
 
 Recorrido:
 
@@ -2156,7 +2156,7 @@ flowchart TD
 - **Objetivo:** cancelar la reserva de cualquier usuario por una causa ajena al organizador, y ofrecer reprogramarla en el momento.
 - **Actor:** administrador.
 - **Precondición:** reserva en estado **Programada**, localizada mediante **FL-55**, cuyo primer turno todavía no comenzó.
-- **Entrada:** motivo obligatorio en texto libre, siempre una causa ajena al organizador, y su clasificación en uno de cuatro tipos: clima adverso, torneo, mantenimiento u otro imprevisto.
+- **Entrada:** motivo obligatorio en texto libre de al menos 25 caracteres, sin contar los espacios al principio y al final, siempre una causa ajena al organizador, y su clasificación en uno de cuatro tipos: clima adverso, torneo, mantenimiento u otro imprevisto. El formulario y el servidor validan ese mínimo.
 
 Recorrido:
 

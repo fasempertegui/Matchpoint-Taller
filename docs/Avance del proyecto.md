@@ -64,7 +64,7 @@ Cada reserva se presenta una sola vez, con número, organizador según el permis
 
 ### Anulación
 
-El Administrador puede anular cualquier reserva Programada antes de que comience su primer turno. El usuario con rol Reservas puede anular únicamente las propias con al menos una hora de antelación al primer turno. El motivo es obligatorio y debe tener contenido.
+El Administrador puede anular cualquier reserva Programada antes de que comience su primer turno. El usuario con rol Reservas puede anular únicamente las propias con al menos una hora de antelación al primer turno. El motivo es obligatorio y debe tener al menos 25 caracteres, sin contar los espacios al principio y al final. El formulario y el procesamiento de la anulación validan ese mínimo.
 
 La operación cambia el estado a Anulada, registra motivo, fecha, hora y responsable, y libera todos sus turnos. Conserva la cabecera, los detalles y el precio aplicado. Se ejecuta en una única transacción, validando nuevamente permisos, estado y horario después de obtener los bloqueos.
 

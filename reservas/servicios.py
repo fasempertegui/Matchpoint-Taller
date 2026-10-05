@@ -117,6 +117,8 @@ def anular_reserva(anulado_por, reserva_id, motivo):
     motivo = motivo.strip()
     if not motivo:
         raise ValidationError("Indicá el motivo de la anulación.")
+    if len(motivo) < 25:
+        raise ValidationError("El motivo de anulación debe tener al menos 25 caracteres.")
 
     # Los turnos coordinan la ocupación con el registro y se bloquean antes de la cabecera.
     turnos = list(
