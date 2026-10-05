@@ -30,22 +30,6 @@ class SedeForm(forms.ModelForm):
             ),
         }
 
-    def clean_nombre(self):
-        nombre = self.cleaned_data["nombre"].strip()
-        sedes_con_mismo_nombre = Sede.objects.filter(nombre__iexact=nombre)
-
-        if self.instance.pk:
-            sedes_con_mismo_nombre = sedes_con_mismo_nombre.exclude(
-                pk=self.instance.pk
-            )
-
-        if sedes_con_mismo_nombre.exists():
-            raise forms.ValidationError(
-                "Ya existe una sede con ese nombre."
-            )
-
-        return nombre
-
 
 class CanchaForm(forms.ModelForm):
     class Meta:
