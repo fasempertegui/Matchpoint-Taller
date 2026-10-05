@@ -40,18 +40,19 @@ def sede_detalle(request, pk):
         {"dia": dia, "nombre": nombre, "horario": horarios.get(dia)}
         for dia, nombre in SedeHorario.DiaSemana.choices
     ]
-    canchas = sede.canchas.all()
+    canchas = sede.canchas.order_by("nombre")
+    es_administrador = request.user.tiene_rol(Rol.ADMINISTRADOR)
     puede_consultar_precios = (
         request.user.has_perm("reservas.view_precioreserva")
-        and request.user.tiene_rol(Rol.ADMINISTRADOR)
+        and es_administrador
     )
     formulario_precios = None
     precios = None
-    precio_activo = None
+    precio_activo = False
     if puede_consultar_precios:
         formulario_precios = PrecioReservaFiltroForm(request.GET, prefix="precio")
-        precios = sede.precios_reservas.all()
-        precio_activo = precios.filter(estado="activo").first()
+        precios = sede.precios_reservas.order_by("-creado_en", "-pk")
+        precio_activo = precios.filter(estado="activo").exists()
         if formulario_precios.is_valid():
             estado_precio = formulario_precios.cleaned_data["estado"]
             if estado_precio:
@@ -71,7 +72,7 @@ def sede_detalle(request, pk):
             "precio_activo": precio_activo,
             "puede_configurar_horarios": (
                 request.user.has_perm("instalaciones.change_sede")
-                and request.user.tiene_rol(Rol.ADMINISTRADOR)
+                and es_administrador
             ),
         },
     )
