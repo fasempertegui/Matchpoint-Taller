@@ -8,6 +8,8 @@ La aplicación administra una academia de tenis mediante Python, Django y Postgr
 
 Se dispone de alta, consulta, modificación, activación y desactivación de sedes y canchas. La baja es lógica y conserva los registros.
 
+No se permite desactivar una sede o cancha con reservas Programadas, incluidas las vencidas pendientes de finalizar. La comprobación se coordina con el registro de reservas mediante una transacción y bloqueos. La reactivación está permitida y editar los datos no cambia el estado.
+
 Cada cancha pertenece a una sede y tiene nombre, superficie y observaciones opcionales. No se permiten nombres de sedes duplicados ni nombres de canchas repetidos dentro de una sede, sin distinguir mayúsculas y minúsculas.
 
 ## 2. Hito 2: usuarios y seguridad

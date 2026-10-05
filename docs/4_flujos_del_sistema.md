@@ -483,22 +483,28 @@ Recorrido:
 1. El administrador solicita el nuevo estado.
 2. El sistema muestra las canchas asociadas y el impacto operativo.
 3. El administrador confirma.
-4. El sistema actualiza el estado de la sede.
+4. El sistema bloquea la sede dentro de una transacción. Si se solicita inactivarla, comprueba que ninguna de sus canchas tenga reservas Programadas; si las hay, conserva el estado e informa el impedimento.
+5. Si la operación está permitida, establece el estado solicitado. Repetir la solicitud no invierte la acción.
 
 Alternativas:
 
 - La operación no elimina ni cambia automáticamente el estado de sus canchas.
 - Una sede inactiva no se ofrece para nuevas actividades.
+- Una reserva en curso o vencida que siga Programada también impide inactivar. Las futuras pueden cancelarse según sus reglas; las vencidas deben finalizarse y las que están en curso deben terminar antes de finalizarse. Las canceladas y completadas no impiden inactivar.
+- La reactivación se permite aunque haya reservas Programadas. Editar los datos de la sede no modifica su estado.
 
 - **Resultado:** sede activa o inactiva.
-- **Datos:** sedes y canchas para informar impacto.
+- **Datos:** sedes, canchas, turnos y reservas con sus detalles para informar impacto y validar la desactivación.
 
 ```mermaid
 flowchart TD
     A[Solicitar cambio] --> B[Mostrar canchas e impacto]
     B --> C{Confirmar}
     C -->|No| D[Conservar estado]
-    C -->|Sí| E[Actualizar sede]
+    C -->|Sí| E[Bloquear sede y comprobar reservas]
+    E --> F{Activar o sin reservas Programadas}
+    F -->|Sí| G[Establecer estado solicitado]
+    F -->|No| H[Conservar estado e informar impedimento]
 ```
 
 #### FL-12. Registrar una cancha
@@ -570,22 +576,28 @@ Recorrido:
 1. El administrador solicita el nuevo estado.
 2. El sistema muestra el impacto sobre nuevas actividades.
 3. El administrador confirma.
-4. El sistema actualiza el estado.
+4. El sistema bloquea primero la sede y después la cancha dentro de una transacción. Si se solicita inactivarla, comprueba que no tenga reservas Programadas; si las hay, conserva el estado e informa el impedimento.
+5. Si la operación está permitida, establece el estado solicitado. Repetir la solicitud no invierte la acción.
 
 Alternativas:
 
 - Una cancha inactiva no se ofrece para nuevas clases, reservas o turnos de planilla.
 - Las actividades históricas conservan la referencia.
+- Las reservas en curso o vencidas que sigan Programadas también impiden inactivar. Las canceladas y completadas no lo impiden.
+- La reactivación está permitida aunque haya reservas Programadas. No activa la sede ni habilita nuevas reservas si la sede sigue inactiva. Editar los datos de la cancha no modifica su estado.
 
 - **Resultado:** cancha activa o inactiva.
-- **Datos:** canchas.
+- **Datos:** sede, cancha, turnos y reservas con sus detalles para validar la desactivación.
 
 ```mermaid
 flowchart TD
     A[Solicitar cambio] --> B[Mostrar impacto]
     B --> C{Confirmar}
     C -->|No| D[Conservar estado]
-    C -->|Sí| E[Actualizar cancha]
+    C -->|Sí| E[Bloquear sede y cancha y comprobar reservas]
+    E --> F{Activar o sin reservas Programadas}
+    F -->|Sí| G[Establecer estado solicitado]
+    F -->|No| H[Conservar estado e informar impedimento]
 ```
 
 #### FL-57. Consultar el horario de funcionamiento de una sede

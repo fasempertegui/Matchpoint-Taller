@@ -128,12 +128,24 @@ flowchart LR
     A[Administrador]
     P((5. Desactivar una sede))
     D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D9[(D9: Turnos)]
+    D10[(D10: Reservas)]
+    D11[(D11: Detalles de reservas)]
 
     A -->|1| P
     P -->|2| D5
     D5 -->|3| P
-    P -->|4| D5
-    P -->|5| A
+    P -->|4| D6
+    D6 -->|5| P
+    P -->|6| D9
+    D9 -->|7| P
+    P -->|8| D11
+    D11 -->|9| P
+    P -->|10| D10
+    D10 -->|11| P
+    P -->|12| D5
+    P -->|13| A
 ```
 
 **Datos que circulan**
@@ -141,8 +153,16 @@ flowchart LR
 1. Sede seleccionada y confirmación de desactivación.
 2. Identificador de la sede.
 3. Datos y estado actual de la sede.
-4. Estado inactivo y fecha de modificación.
-5. Resultado de la desactivación.
+4. Sede cuyas canchas deben consultarse.
+5. Canchas de la sede, incluidas las inactivas.
+6. Canchas cuyos turnos deben consultarse.
+7. Turnos pertenecientes a esas canchas.
+8. Turnos para consultar las reservas vinculadas.
+9. Detalles que relacionan esos turnos con sus reservas.
+10. Reservas vinculadas y criterio de estado Programada.
+11. Reservas Programadas que impiden desactivar.
+12. Estado inactivo y fecha de modificación, si no hay reservas Programadas.
+13. Resultado de la desactivación o impedimento por reservas Programadas.
 
 ---
 
@@ -259,22 +279,42 @@ flowchart LR
 flowchart LR
     A[Administrador]
     P((10. Desactivar una cancha))
+    D5[(D5: Sedes)]
     D6[(D6: Canchas)]
+    D9[(D9: Turnos)]
+    D10[(D10: Reservas)]
+    D11[(D11: Detalles de reservas)]
 
     A -->|1| P
-    P -->|2| D6
-    D6 -->|3| P
+    P -->|2| D5
+    D5 -->|3| P
     P -->|4| D6
-    P -->|5| A
+    D6 -->|5| P
+    P -->|6| D9
+    D9 -->|7| P
+    P -->|8| D11
+    D11 -->|9| P
+    P -->|10| D10
+    D10 -->|11| P
+    P -->|12| D6
+    P -->|13| A
 ```
 
 **Datos que circulan**
 
 1. Cancha seleccionada y confirmación de desactivación.
-2. Identificador de la cancha y de su sede.
-3. Datos y estado actual de la cancha.
-4. Estado inactivo y fecha de modificación.
-5. Resultado de la desactivación.
+2. Identificador de la sede de la cancha.
+3. Datos de la sede.
+4. Identificador de la cancha y sede a la que debe pertenecer.
+5. Datos y estado actual de la cancha.
+6. Cancha cuyos turnos deben consultarse.
+7. Turnos pertenecientes a la cancha.
+8. Turnos para consultar las reservas vinculadas.
+9. Detalles que relacionan esos turnos con sus reservas.
+10. Reservas vinculadas y criterio de estado Programada.
+11. Reservas Programadas que impiden desactivar.
+12. Estado inactivo y fecha de modificación, si no hay reservas Programadas.
+13. Resultado de la desactivación o impedimento por reservas Programadas.
 
 ---
 

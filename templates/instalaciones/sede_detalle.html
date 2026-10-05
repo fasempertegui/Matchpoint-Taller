@@ -70,10 +70,11 @@
                             <div class="perfil-acciones">
                                 <a class="perfil-enlace" href="{% url 'instalaciones:sede_editar' sede.pk %}">Editar sede</a>
                                 <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:sede_cambiar_estado' sede.pk %}"
-                                      data-confirmar="{% if sede.estado == 'activa' %}¿Desactivar la sede {{ sede.nombre }}? Dejará de ofrecerse para nuevas clases y reservas. Las canchas, clases y reservas ya existentes no se modifican.{% else %}¿Activar la sede {{ sede.nombre }}? Volverá a ofrecerse para nuevas clases y reservas.{% endif %}"
+                                      data-confirmar="{% if sede.estado == 'activa' %}¿Desactivar la sede {{ sede.nombre }}? Dejará de ofrecerse para nuevas clases y reservas. No puede tener reservas Programadas. Las canchas y el historial se conservan.{% else %}¿Activar la sede {{ sede.nombre }}? Volverá a ofrecerse para nuevas clases y reservas.{% endif %}"
                                       data-confirmar-titulo="{% if sede.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} sede"
                                       data-confirmar-boton="{% if sede.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} sede">
                                     {% csrf_token %}
+                                    <input type="hidden" name="estado" value="{% if sede.estado == 'activa' %}inactiva{% else %}activa{% endif %}">
                                     <button class="perfil-enlace perfil-accion{% if sede.estado == 'activa' %} perfil-accion-desactivar{% endif %}" type="submit">
                                         {% if sede.estado == "activa" %}Desactivar{% else %}Activar{% endif %} sede
                                     </button>
@@ -120,10 +121,11 @@
                                             Editar
                                         </a>
                                         <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:cancha_cambiar_estado' sede.pk cancha.pk %}"
-                                              data-confirmar="¿{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} la cancha {{ cancha.nombre }}?"
+                                              data-confirmar="{% if cancha.estado == 'activa' %}¿Desactivar la cancha {{ cancha.nombre }}? No puede tener reservas Programadas. El historial se conserva.{% else %}¿Activar la cancha {{ cancha.nombre }}?{% endif %}"
                                               data-confirmar-titulo="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha"
                                               data-confirmar-boton="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha">
                                             {% csrf_token %}
+                                            <input type="hidden" name="estado" value="{% if cancha.estado == 'activa' %}inactiva{% else %}activa{% endif %}">
                                             <button class="boton boton-secundario boton-chico" type="submit">
                                                 {% if cancha.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
                                             </button>
