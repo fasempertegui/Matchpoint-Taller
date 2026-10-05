@@ -48,7 +48,7 @@ Las reservas Programadas y Finalizadas ocupan sus turnos; las Anuladas los liber
 
 ### Registro
 
-El Administrador puede registrar una reserva para un organizador activo. El usuario con rol Reservas sólo puede reservar para sí mismo. Los datos relacionados se seleccionan entre las opciones disponibles, sin ingresar claves foráneas manualmente.
+El Administrador puede registrar una reserva para un organizador activo con rol Reservas o Administrador. La selección y la confirmación validan esas condiciones; registrar una reserva no asigna roles automáticamente. El usuario con rol Reservas sólo puede reservar para sí mismo. Los datos relacionados se seleccionan entre las opciones disponibles, sin ingresar claves foráneas manualmente.
 
 Se admite uno o más turnos consecutivos de una misma cancha y fecha, dentro de una única franja de funcionamiento. La duración, los subtotales y el total se calculan automáticamente con el precio de la sede y la cantidad de turnos.
 

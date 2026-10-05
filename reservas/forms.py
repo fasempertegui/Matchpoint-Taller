@@ -5,7 +5,7 @@ from django import forms
 from django.utils import timezone
 
 from instalaciones.models import Cancha, Sede
-from usuarios.models import Usuario
+from usuarios.models import Rol, Usuario
 
 from .disponibilidad import validar_fecha_reserva
 from .models import PrecioReserva, Reserva
@@ -141,6 +141,7 @@ class ReservaDatosForm(forms.Form):
     organizador = OrganizadorReservaField(
         queryset=Usuario.objects.none(),
         empty_label="Elegí un organizador",
+        error_messages={"invalid_choice": "Elegí un organizador válido."},
         widget=forms.Select(attrs={"class": "form-control"}),
     )
     sede = forms.ModelChoiceField(
@@ -162,7 +163,10 @@ class ReservaDatosForm(forms.Form):
     def __init__(self, *args, es_administrador, **kwargs):
         super().__init__(*args, **kwargs)
         if es_administrador:
-            self.fields["organizador"].queryset = Usuario.objects.filter(is_active=True).order_by("first_name", "last_name", "username")
+            self.fields["organizador"].queryset = Usuario.objects.filter(
+                is_active=True,
+                roles__rol__codigo__in=(Rol.RESERVAS, Rol.ADMINISTRADOR),
+            ).distinct().order_by("first_name", "last_name", "username")
         else:
             self.fields.pop("organizador")
         hoy = timezone.localdate()

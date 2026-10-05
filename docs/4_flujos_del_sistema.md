@@ -1893,7 +1893,7 @@ flowchart TD
 
 Recorrido:
 
-1. El administrador busca y selecciona al organizador entre los usuarios ya existentes.
+1. El administrador busca y selecciona al organizador entre los usuarios existentes y activos con rol Reservas o Administrador.
 2. Selecciona sede e indica fecha y hora de inicio. Si la fecha supera el máximo de catorce días de anticipación, el sistema advierte y pide una confirmación explícita para continuar.
 3. Busca si el organizador tiene una membresía de pase activa que cubra esa fecha, habilite ese día según su tipo y conserve al menos una hora disponible. Solo en ese caso muestra la opción de usar el pase. Si el administrador no la selecciona, sigue como reserva normal (paso 4); si la selecciona, sigue como reserva con pase (paso 5).
 4. **Camino normal:** el administrador elige la duración en horas enteras. El sistema utiliza el único precio activo de la sede y calcula el total multiplicando su importe por la duración. Continúa en el paso 6.
@@ -1908,7 +1908,8 @@ Recorrido:
 Alternativas:
 
 - Si el organizador todavía no existe como usuario, el administrador debe registrarlo primero mediante **FL-02** (o dirigirlo a **FL-06**) y luego volver a este flujo; no hay alta inline.
-- El organizador y los invitados identificados se seleccionan entre usuarios activos.
+- El organizador se selecciona entre usuarios activos con rol Reservas o Administrador; los invitados identificados, entre usuarios activos. Si el organizador no tiene ninguno de esos roles, debe asignarse Reservas antes de reservar para él. Registrar una reserva no asigna roles automáticamente.
+- Al confirmar se vuelven a comprobar el estado activo y el rol habilitado del organizador dentro de la transacción.
 - Sin un precio activo para la sede no puede confirmarse una reserva normal. Cambiar de sede exige utilizar el precio de esa sede y volver a calcular el total.
 - Un intervalo fuera del horario de funcionamiento de la sede, incluido un día sin franjas configuradas, o una fecha más allá de las dos semanas de anticipación, no impiden continuar: generan advertencia y piden confirmación explícita, sin bloquear.
 - Un evento superpuesto en cualquier parte del intervalo obliga a elegir otro turno.

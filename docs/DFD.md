@@ -816,8 +816,8 @@ flowchart LR
 1. Sede, cancha, fecha, organizador, turnos seleccionados, observaciones y confirmación.
 2. Identidad del actor y del organizador.
 3. Datos y estados de las cuentas, incluido el cambio obligatorio de contraseña del actor.
-4. Usuario que solicita registrar la reserva.
-5. Roles asignados al actor.
+4. Actor que solicita registrar la reserva y organizador seleccionado.
+5. Roles asignados al actor y al organizador.
 6. Sede seleccionada.
 7. Datos y estado de la sede.
 8. Cancha seleccionada.

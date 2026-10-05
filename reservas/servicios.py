@@ -63,6 +63,8 @@ def registrar_reserva(registrado_por, organizador, cancha, fecha, identificadore
         raise PermissionDenied
     if not organizador.is_active:
         raise ValidationError("El organizador debe estar activo para registrar la reserva.")
+    if not organizador.puede_reservar:
+        raise ValidationError("El organizador debe tener el rol Reservas o Administrador para registrar la reserva.")
 
     disponibilidad = consultar_disponibilidad(cancha, fecha)
     list(Turno.objects.select_for_update().filter(
