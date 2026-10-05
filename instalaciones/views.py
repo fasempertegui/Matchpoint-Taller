@@ -128,7 +128,7 @@ def sede_horario_configurar(request, pk, dia):
 @permission_required("instalaciones.add_sede", raise_exception=True)
 @require_http_methods(["GET", "POST"])
 def sede_crear(request):
-    formulario = SedeForm(request.POST or None)
+    formulario = SedeForm(request.POST if request.method == "POST" else None)
 
     if request.method == "POST" and formulario.is_valid():
         sede = formulario.save()
@@ -151,7 +151,10 @@ def sede_crear(request):
 @require_http_methods(["GET", "POST"])
 def sede_editar(request, pk):
     sede = get_object_or_404(Sede, pk=pk)
-    formulario = SedeForm(request.POST or None, instance=sede)
+    formulario = SedeForm(
+        request.POST if request.method == "POST" else None,
+        instance=sede,
+    )
 
     if request.method == "POST" and formulario.is_valid():
         sede = formulario.save(commit=False)
@@ -207,7 +210,10 @@ def sede_cambiar_estado(request, pk):
 @require_http_methods(["GET", "POST"])
 def cancha_crear(request, sede_pk):
     sede = get_object_or_404(Sede, pk=sede_pk)
-    formulario = CanchaForm(request.POST or None, sede=sede)
+    formulario = CanchaForm(
+        request.POST if request.method == "POST" else None,
+        sede=sede,
+    )
 
     if request.method == "POST" and formulario.is_valid():
         cancha = formulario.save()
@@ -232,7 +238,11 @@ def cancha_crear(request, sede_pk):
 def cancha_editar(request, sede_pk, pk):
     sede = get_object_or_404(Sede, pk=sede_pk)
     cancha = get_object_or_404(Cancha, pk=pk, sede=sede)
-    formulario = CanchaForm(request.POST or None, sede=sede, instance=cancha)
+    formulario = CanchaForm(
+        request.POST if request.method == "POST" else None,
+        sede=sede,
+        instance=cancha,
+    )
 
     if request.method == "POST" and formulario.is_valid():
         cancha = formulario.save(commit=False)
