@@ -190,7 +190,7 @@ def sede_cambiar_estado(request, pk):
             messages.error(
                 request,
                 "No se puede desactivar la sede mientras tenga reservas Programadas. "
-                "Anulá las futuras o finalizá las que ya terminaron.",
+                "Anulá las futuras o esperá su finalización automática.",
             )
             return redirect("instalaciones:sede_detalle", pk=sede.pk)
         sede.estado = nuevo_estado
@@ -274,7 +274,7 @@ def cancha_cambiar_estado(request, sede_pk, pk):
             messages.error(
                 request,
                 "No se puede desactivar la cancha mientras tenga reservas Programadas. "
-                "Anulá las futuras o finalizá las que ya terminaron.",
+                "Anulá las futuras o esperá su finalización automática.",
             )
             return redirect(destino)
         cancha.estado = nuevo_estado

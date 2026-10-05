@@ -2,6 +2,7 @@ name: atm
 
 services:
   web:
+    image: atm-app
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,18 +16,63 @@ services:
       echo 'Contenedor listo. Crea el proyecto Django dentro de /app.';
       tail -f /dev/null;
       fi"
-    environment:
+    environment: &entorno_aplicacion
       DB_NAME: atm
       DB_USER: atm
       DB_PASSWORD: atm_dev
       DB_HOST: db
       DB_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
     ports:
       - "8000:8000"
     volumes:
       - .:/app
     depends_on:
       db:
+        condition: service_healthy
+
+  redis:
+    image: redis:8-alpine
+    container_name: atm_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    image: atm-app
+    container_name: atm_worker
+    restart: unless-stopped
+    working_dir: /app
+    command: celery -A config worker --loglevel=INFO --concurrency=2
+    environment: *entorno_aplicacion
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    image: atm-app
+    container_name: atm_beat
+    restart: unless-stopped
+    working_dir: /app
+    command: celery -A config beat --loglevel=INFO --schedule=/var/lib/celery/celerybeat-schedule
+    environment: *entorno_aplicacion
+    volumes:
+      - .:/app
+      - celery_schedule:/var/lib/celery
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   db:
@@ -62,3 +108,5 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+  celery_schedule:

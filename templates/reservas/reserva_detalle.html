@@ -123,10 +123,6 @@
                             <dt>Fecha de finalización</dt>
                             <dd>{{ reserva.finalizado_en|date:"d/m/Y H:i" }}</dd>
                         </div>
-                        <div class="perfil-fila">
-                            <dt>Finalizada por</dt>
-                            <dd>{{ reserva.finalizado_por }}</dd>
-                        </div>
                     {% endif %}
                 </dl>
             </section>
@@ -135,14 +131,6 @@
                 <h2 id="reserva-acciones-titulo">Acciones</h2>
                 <div class="perfil-acciones">
                     <a class="perfil-enlace" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
-                    {% if puede_finalizar %}
-                        <form class="formulario-en-linea" method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}"
-                              data-confirmar="¿Confirmás la finalización de la reserva {{ reserva.numero }}?"
-                              data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">
-                            {% csrf_token %}
-                            <button class="perfil-enlace perfil-accion" type="submit">Finalizar reserva</button>
-                        </form>
-                    {% endif %}
                 </div>
 
                 {% if puede_anular %}

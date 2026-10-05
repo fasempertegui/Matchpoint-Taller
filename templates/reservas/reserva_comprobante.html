@@ -66,7 +66,7 @@
     {% elif reserva.estado == "finalizada" %}
         <section class="comprobante-seccion" aria-labelledby="finalizacion-titulo">
             <h2 id="finalizacion-titulo">Finalización</h2>
-            <p>{{ reserva.finalizado_en|date:"d/m/Y H:i" }} · {{ reserva.finalizado_por }}</p>
+            <p>{{ reserva.finalizado_en|date:"d/m/Y H:i" }}</p>
         </section>
     {% endif %}
 

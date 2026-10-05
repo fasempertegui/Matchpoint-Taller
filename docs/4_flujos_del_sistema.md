@@ -67,7 +67,6 @@ Todos los flujos de este documento aplican los límites temporales definidos en 
 | Asistencia | FL-39 | Registrar la asistencia de una clase |
 | Reservas | FL-40 | Crear una reserva propia |
 | Reservas | FL-41 | Reprogramar una reserva |
-| Reservas | FL-42 | Completar una reserva |
 | Ingresos | FL-43 | Registrar un ingreso |
 | Ingresos | FL-44 | Anular un ingreso |
 | Acceso | FL-45 | Iniciar sesión normalmente |
@@ -490,7 +489,7 @@ Alternativas:
 
 - La operación no elimina ni cambia automáticamente el estado de sus canchas.
 - Una sede inactiva no se ofrece para nuevas actividades.
-- Una reserva en curso o vencida que siga Programada también impide inactivar. Las futuras pueden cancelarse según sus reglas; las vencidas deben finalizarse y las que están en curso deben terminar antes de finalizarse. Las canceladas y completadas no impiden inactivar.
+- Una reserva en curso o vencida que siga Programada también impide inactivar. Las futuras pueden cancelarse según sus reglas; las vencidas o en curso deben esperar la finalización automática después del último turno. Las canceladas y completadas no impiden inactivar.
 - La reactivación se permite aunque haya reservas Programadas. Editar los datos de la sede no modifica su estado.
 
 - **Resultado:** sede activa o inactiva.
@@ -1543,37 +1542,7 @@ flowchart TD
     E --> F[Vincular como reprogramación]
 ```
 
-#### FL-42. Completar una reserva
-
-- **Objetivo:** registrar que una reserva programada fue utilizada.
-- **Actor:** administrador.
-- **Precondiciones:** reserva en estado **Programada**, localizada mediante **FL-55**, e intervalo completo finalizado.
-
-Recorrido:
-
-1. El administrador abre la reserva.
-2. Solicita marcarla como utilizada.
-3. El sistema verifica que la hora de fin haya pasado y muestra el cambio de estado.
-4. El administrador confirma.
-5. El sistema marca el evento **Completado** y conserva administrador y momento.
-
-Alternativas:
-
-- Una reserva cancelada no puede completarse.
-- Una reserva no puede completarse antes de finalizar su horario.
-- Completar actúa sobre la reserva completa y conserva el evento como historia.
-- Si nadie la completa manualmente, una tarea periódica la completa automáticamente más tarde (ver 4.3).
-
-- **Resultado:** reserva completada.
-- **Datos:** reservas, eventos y usuarios.
-
-```mermaid
-flowchart TD
-    A[Abrir reserva programada] --> B[Solicitar completar]
-    B --> C{Confirmar}
-    C -->|No| D[Conservar programada]
-    C -->|Sí| E[Marcar completada]
-```
+La finalización de reservas es automática, sin intervención del administrador; se describe en el proceso interno 4.3. Una reserva completada indica que terminó su horario y no acredita asistencia ni pago.
 
 ### 3.11 Ingresos
 
@@ -2083,7 +2052,7 @@ Recorrido:
 Alternativas:
 
 - Un usuario con rol Reservas solo ve las reservas donde es organizador, en modo de solo lectura.
-- Esta consulta es la vía para localizar una reserva y ejecutar **FL-42**, **FL-60** o **FL-61**; una reserva ya cancelada por el administrador también puede reprogramarse desde aquí mediante **FL-41**.
+- Esta consulta es la vía para localizar una reserva y ejecutar **FL-60** o **FL-61**; una reserva ya cancelada por el administrador también puede reprogramarse desde aquí mediante **FL-41**. La finalización se realiza automáticamente mediante 4.3.
 
 - **Resultado:** listado y detalle de reservas sin modificaciones.
 - **Datos:** usuarios, reservas, eventos, invitados, precios de reservas, membresías de pases e ingresos.
@@ -2388,7 +2357,7 @@ flowchart TD
 
 ## 4. Procesos automáticos
 
-Estos procesos no son flujos: no representan la intención de un actor humano que busca completar una tarea, sino comportamiento que el sistema ejecuta por sí solo. Se documentan aparte, con el mismo nivel de detalle que un flujo, y se referencian desde los flujos que los disparan o que compiten con ellos (por ejemplo, **FL-38** y **FL-42** para la finalización manual que la 4.3 también puede hacer).
+Estos procesos no son flujos: no representan la intención de un actor humano que busca completar una tarea, sino comportamiento que el sistema ejecuta por sí solo. Se documentan aparte, con el mismo nivel de detalle que un flujo, y se referencian desde los flujos que los disparan o que compiten con ellos; por ejemplo, **FL-38** para la finalización manual de clases que la 4.3 también puede hacer. Las reservas se finalizan exclusivamente mediante 4.3.
 
 ### 4.1 Vencimiento de membresías
 
@@ -2453,7 +2422,7 @@ flowchart TD
 
 ### 4.3 Auto-completado de clases y reservas vencidas
 
-- **Objetivo:** completar automáticamente las clases y reservas cuyo horario ya finalizó y que nadie marcó manualmente como completadas.
+- **Objetivo:** completar automáticamente las clases y reservas Programadas cuyo horario ya finalizó.
 - **Disparador:** tarea periódica de Celery, ejecución horaria, en el minuto en punto.
 
 Recorrido:
@@ -2461,8 +2430,9 @@ Recorrido:
 1. Celery Beat programa la ejecución cada una hora, en el minuto en punto.
 2. Un worker invoca la operación idempotente de auto-completado.
 3. El sistema localiza eventos (de clase o de reserva) en estado **Programado** cuya fecha y hora de fin sea **igual o anterior** al momento de ejecución.
-4. Marca esos eventos como **Completados**, sin usuario asociado a la finalización.
-5. Registra la cantidad procesada como resultado de la tarea.
+4. Después de bloquear cada evento, vuelve a comprobar el estado y el fin del intervalo completo. En reservas, se utiliza la fecha y hora de fin del último turno.
+5. Marca esos eventos como **Completados** y guarda la fecha y hora de procesamiento, sin usuario asociado a la finalización.
+6. Registra la cantidad procesada en los logs de la tarea.
 
 Alternativas:
 
@@ -2470,7 +2440,8 @@ Alternativas:
 - La hora en punto se eligió porque todo bloque (clase o reserva) empieza y termina en una hora exacta; una hora de margen es la granularidad natural, no hace falta mayor precisión.
 - Sin eventos elegibles, la operación finaliza sin modificaciones.
 - Una repetición procesa solamente los eventos que todavía permanezcan programados: ya completar o cancelar un evento antes de que corra la tarea lo saca de su alcance.
-- No reemplaza la finalización manual: **FL-38** y **FL-42** siguen disponibles para que un administrador o profesor complete en el momento; esta tarea solo atrapa lo que quedó sin marcar.
+- Las reservas no tienen acción manual ni campo de responsable de finalización. Las clases conservan **FL-38** para que un administrador o profesor complete en el momento.
+- Cada ejecución procesa todas las vencidas pendientes, incluidas las que terminaron mientras los servicios estuvieron apagados. Una reserva se procesa en su propia transacción; un error no revierte las ya finalizadas y una nueva ejecución no sobrescribe su fecha.
 - No modifica el registro de asistencia: para una clase, sigue habilitándose recién a partir de la finalización, automática o manual (ver **FL-39**).
 - Los eventos cancelados no se ven afectados.
 

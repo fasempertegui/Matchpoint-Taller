@@ -132,13 +132,6 @@ class Reserva(models.Model):
     )
     motivo_anulacion = models.TextField(blank=True)
     finalizado_en = models.DateTimeField(blank=True, null=True)
-    finalizado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="reservas_finalizadas",
-        blank=True,
-        null=True,
-    )
 
     class Meta:
         db_table = "reservas"
@@ -153,7 +146,6 @@ class Reserva(models.Model):
                         anulado_por__isnull=True,
                         motivo_anulacion="",
                         finalizado_en__isnull=True,
-                        finalizado_por__isnull=True,
                     )
                     | models.Q(
                         estado="anulada",
@@ -161,7 +153,6 @@ class Reserva(models.Model):
                         anulado_por__isnull=False,
                         motivo_anulacion__regex=r"\S",
                         finalizado_en__isnull=True,
-                        finalizado_por__isnull=True,
                     )
                     | models.Q(
                         estado="finalizada",
@@ -169,7 +160,6 @@ class Reserva(models.Model):
                         anulado_por__isnull=True,
                         motivo_anulacion="",
                         finalizado_en__isnull=False,
-                        finalizado_por__isnull=False,
                     )
                 ),
                 name="reserva_estado_y_auditoria_validos",

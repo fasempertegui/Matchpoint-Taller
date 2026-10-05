@@ -917,7 +917,7 @@ flowchart LR
 1. Reserva seleccionada e identidad del usuario que consulta.
 2. Identificador de la reserva y criterio de acceso a las propias para el usuario del portal.
 3. Cabecera de la reserva con organizador, responsables, estado, precio, observaciones y fechas de registro, anulación o finalización.
-4. Identidad del actor e identificadores del organizador y de los responsables del registro, anulación o finalización.
+4. Identidad del actor e identificadores del organizador y de los responsables del registro o anulación.
 5. Datos de los usuarios relacionados y estado de acceso del actor.
 6. Reserva cuyos detalles deben consultarse.
 7. Vínculos de la reserva con sus turnos.
@@ -1049,48 +1049,9 @@ flowchart LR
 
 El Administrador puede anular cualquier reserva Programada antes del inicio. El usuario con rol Reservas sólo puede anular las propias con al menos una hora de antelación al primer turno. Una reserva Anulada o Finalizada no puede anularse.
 
-### DFD 32: finalizar una reserva de cancha
+### Finalización automática de reservas
 
-```mermaid
-flowchart LR
-    A[Administrador]
-    P((32. Finalizar una reserva de cancha))
-    D1[(D1: Usuarios)]
-    D3[(D3: Usuarios_Roles)]
-    D9[(D9: Turnos)]
-    D10[(D10: Reservas)]
-    D11[(D11: Detalles de reservas)]
-
-    A -->|1| P
-    P -->|2| D1
-    D1 -->|3| P
-    P -->|4| D3
-    D3 -->|5| P
-    P -->|6| D10
-    D10 -->|7| P
-    P -->|8| D11
-    D11 -->|9| P
-    P -->|10| D9
-    D9 -->|11| P
-    P -->|12| D10
-    P -->|13| A
-```
-
-**Datos que circulan**
-
-1. Reserva seleccionada, identidad del actor y confirmación de finalización.
-2. Identidad del usuario que solicita finalizar la reserva.
-3. Datos y estado de acceso de la cuenta del actor.
-4. Usuario cuyos roles deben consultarse.
-5. Roles asignados al actor.
-6. Identificador de la reserva seleccionada.
-7. Estado y datos de finalización de la reserva.
-8. Reserva cuyos turnos deben consultarse.
-9. Vínculos de la reserva con todos sus turnos.
-10. Turnos incluidos en la reserva.
-11. Fechas y horas de los turnos para determinar el fin del intervalo completo.
-12. Estado Finalizada, fecha, hora y administrador responsable.
-13. Resultado de la finalización o errores de validación y acceso.
+La finalización es un proceso interno programado por Celery Beat cada hora en punto. No representa una intención externa y no tiene un DFD de nivel 1. Consulta Reservas (D10), Detalles de reservas (D11) y Turnos (D9), y actualiza únicamente las Programadas cuyo último turno terminó. Registra estado Finalizada y fecha y hora de procesamiento, sin usuario responsable. La operación se describe en `Automatización de reservas.md`.
 
 ### DFD 33: emitir el comprobante de una reserva
 
@@ -1130,7 +1091,7 @@ flowchart LR
 **Datos que circulan**
 
 1. Reserva seleccionada e identidad del actor que solicita el comprobante.
-2. Identidad del actor, del organizador y de los responsables del registro, anulación o finalización.
+2. Identidad del actor, del organizador y de los responsables del registro o anulación.
 3. Estado de acceso del actor y datos de los usuarios relacionados.
 4. Usuario cuyos roles deben consultarse.
 5. Roles asignados al actor.
