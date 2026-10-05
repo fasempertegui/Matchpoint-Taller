@@ -131,6 +131,14 @@
                 <h2 id="reserva-acciones-titulo">Acciones</h2>
                 <div class="perfil-acciones">
                     <a class="perfil-enlace" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
+                    {% if puede_finalizar %}
+                        <form class="formulario-en-linea" method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}"
+                              data-confirmar="¿Finalizar la reserva {{ reserva.numero }}? Se conservarán sus turnos y su ocupación histórica."
+                              data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">
+                            {% csrf_token %}
+                            <button class="perfil-enlace perfil-accion" type="submit">Finalizar reserva</button>
+                        </form>
+                    {% endif %}
                 </div>
 
                 {% if puede_anular %}

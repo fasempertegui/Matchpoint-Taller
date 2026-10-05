@@ -142,6 +142,40 @@ def anular_reserva(anulado_por, reserva_id, motivo):
     return reserva
 
 
+def validar_finalizacion_reserva(reserva, ultimo_turno, ahora):
+    if reserva.estado != Reserva.Estado.PROGRAMADA:
+        raise ValidationError("Sólo se pueden finalizar reservas Programadas.")
+    if ultimo_turno is None:
+        raise ValidationError("La reserva no tiene turnos asociados.")
+    fin = timezone.make_aware(datetime.combine(ultimo_turno.fecha, ultimo_turno.hora_fin))
+    if ahora < fin:
+        raise ValidationError("Sólo se puede finalizar una reserva cuando terminó su último turno.")
+
+
+@transaction.atomic
+def finalizar_reserva(reserva_id, usuario=None):
+    if usuario is not None:
+        usuario = Usuario.objects.select_for_update().get(pk=usuario.pk)
+        if not exigir_acceso_reservas(usuario):
+            raise PermissionDenied
+
+    # La anulación también bloquea los turnos antes de la cabecera.
+    turnos = list(
+        Turno.objects.select_for_update(of=("self",))
+        .filter(reservas_turnos__reserva_id=reserva_id)
+        .order_by("pk")
+    )
+    reserva = Reserva.objects.select_for_update().get(pk=reserva_id)
+    ultimo_turno = max(turnos, key=lambda turno: (turno.fecha, turno.hora_fin)) if turnos else None
+    ahora = timezone.localtime()
+    validar_finalizacion_reserva(reserva, ultimo_turno, ahora)
+
+    reserva.estado = Reserva.Estado.FINALIZADA
+    reserva.finalizado_en = ahora
+    reserva.save(update_fields=["estado", "finalizado_en"])
+    return reserva
+
+
 def finalizar_reservas_vencidas():
     ahora = timezone.localtime()
     # Todos los turnos de una reserva pertenecen a la misma fecha.
@@ -155,25 +189,10 @@ def finalizar_reservas_vencidas():
 
     finalizadas = 0
     for reserva_id in pendientes.iterator(chunk_size=500):
-        with transaction.atomic():
-            # La anulación también bloquea los turnos antes de la cabecera.
-            turnos = list(
-                Turno.objects.select_for_update(of=("self",))
-                .filter(reservas_turnos__reserva_id=reserva_id)
-                .order_by("pk")
-            )
-            reserva = Reserva.objects.select_for_update().get(pk=reserva_id)
-            if reserva.estado != Reserva.Estado.PROGRAMADA or not turnos:
-                continue
-
-            ultimo_turno = max(turnos, key=lambda turno: (turno.fecha, turno.hora_fin))
-            fin = timezone.make_aware(datetime.combine(ultimo_turno.fecha, ultimo_turno.hora_fin))
-            ahora = timezone.localtime()
-            if ahora < fin:
-                continue
-
-            reserva.estado = Reserva.Estado.FINALIZADA
-            reserva.finalizado_en = ahora
-            reserva.save(update_fields=["estado", "finalizado_en"])
+        try:
+            finalizar_reserva(reserva_id)
+        except ValidationError:
+            continue
+        else:
             finalizadas += 1
     return finalizadas

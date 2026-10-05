@@ -15,7 +15,14 @@ from usuarios.models import Rol
 from .disponibilidad import consultar_disponibilidad
 from .forms import PrecioReservaForm, ReservaAnulacionForm, ReservaDatosForm, ReservaFiltroForm, ReservaTurnosForm
 from .models import PrecioReserva, Reserva, ReservaTurno
-from .servicios import anular_reserva, exigir_acceso_reservas, registrar_reserva, validar_anulacion_reserva
+from .servicios import (
+    anular_reserva,
+    exigir_acceso_reservas,
+    finalizar_reserva,
+    registrar_reserva,
+    validar_anulacion_reserva,
+    validar_finalizacion_reserva,
+)
 
 
 def _exigir_administrador(usuario):
@@ -198,12 +205,21 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
     else:
         puede_anular = True
         impedimento_anulacion = ""
+    puede_finalizar = False
+    if es_administrador:
+        try:
+            validar_finalizacion_reserva(reserva, ultimo_turno, ahora)
+        except ValidationError:
+            pass
+        else:
+            puede_finalizar = True
     return {
         "reserva": reserva,
         "detalles": detalles,
         "cantidad_horas": len(detalles),
         "total": reserva.precio_reserva.importe * len(detalles),
         "puede_anular": puede_anular,
+        "puede_finalizar": puede_finalizar,
         "hora_inicio": primer_turno.hora_inicio if primer_turno else None,
         "hora_fin": ultimo_turno.hora_fin if ultimo_turno else None,
         "es_administrador": es_administrador,
@@ -227,6 +243,21 @@ def reserva_anular(request, pk):
             messages.success(request, f"La reserva {reserva.numero} fue anulada. Sus turnos quedaron liberados.")
             return redirect("reservas:reserva_detalle", pk=reserva.pk)
     return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador, formulario))
+
+
+@login_required
+@require_http_methods(["POST"])
+def reserva_finalizar(request, pk):
+    reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk)
+    if not es_administrador:
+        raise PermissionDenied
+    try:
+        reserva = finalizar_reserva(reserva.pk, usuario=request.user)
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+    else:
+        messages.success(request, f"La reserva {reserva.numero} fue finalizada.")
+    return redirect("reservas:reserva_detalle", pk=reserva.pk)
 
 
 @login_required

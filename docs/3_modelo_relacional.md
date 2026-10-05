@@ -754,7 +754,7 @@ El sistema aplica, como mínimo:
 19. Inmutabilidad de ingresos salvo su anulación.
 20. Bloqueo de registro o modificación de una asistencia en estado `presente` o `ausente` mientras el evento de la clase no esté `completado`.
 21. Bloqueo de superposición horaria de un mismo profesor entre actividades no canceladas, sin importar la cancha.
-22. Un usuario activo autorizado (administrador, o el propio organizador en una reserva de autoservicio) registrará usuario y momento al cancelar un evento. La finalización automática de reservas registra únicamente el momento de procesamiento; las clases conservan responsable cuando la finalización es manual.
+22. Un usuario activo autorizado (administrador, o el propio organizador en una reserva de autoservicio) registrará usuario y momento al cancelar un evento. La finalización de reservas registra únicamente el momento de procesamiento; las clases conservan responsable cuando la finalización es manual.
 23. Alta automática de Público y Reservas en `usuarios_roles` para todo usuario nuevo, en la misma transacción que lo crea. Público no puede retirarse; Reservas solo puede retirarse si el usuario no tiene reservas programadas. Cada asignación referencia una fila del catálogo `roles`.
 24. Alta automática del rol `alumno` en `usuarios_roles` para el usuario titular al registrarse su primer plan (subtipo `planes`) en estado `activa`, si aún no lo posee; un pase no lo otorga (además de la asignación manual por un administrador, ver FL-07).
 25. Auto-completado idempotente de eventos `programado` cuya `hora_fin` ya pasó.
@@ -825,7 +825,7 @@ Al recibir el webhook, validará primero su firma (`x-signature`, `x-request-id`
 
 ### 7.11 Auto-completado de clases y reservas vencidas
 
-Función idempotente, análoga a `vencer_membresias_usuarios()`, ejecutada por Celery Beat cada hora en punto de Buenos Aires. Localizará los `eventos` en estado `programado` cuyo `fecha + hora_fin` sea menor o igual al momento de ejecución, los marcará `completado` con `completado_por_id` nulo y guardará el momento real de procesamiento en `completado_en`, sin modificar asistencias. En reservas, el fin corresponde al último turno y no existe finalización manual ni campo de responsable propio de la reserva. Cada ejecución procesa todas las vencidas pendientes y vuelve a comprobar estado y horario dentro de la transacción antes de modificar cada una; las canceladas o completadas permanecen intactas.
+Función idempotente, análoga a `vencer_membresias_usuarios()`, ejecutada por Celery Beat cada hora en punto de Buenos Aires. Localizará los `eventos` en estado `programado` cuyo `fecha + hora_fin` sea menor o igual al momento de ejecución, los marcará `completado` con `completado_por_id` nulo y guardará el momento real de procesamiento en `completado_en`, sin modificar asistencias. En reservas, el fin corresponde al último turno y no existe campo de responsable propio de la reserva. El administrador también podrá ejecutar la finalización individual de emergencia con las mismas condiciones, sin asignar responsable ni depender de Celery o Redis. Cada ejecución procesa todas las vencidas pendientes y vuelve a comprobar estado y horario dentro de la transacción antes de modificar cada una; las canceladas o completadas permanecen intactas. La acción manual y la tarea automática no sobrescriben una finalización registrada.
 
 ### 7.12 Aviso de vencimiento próximo de una membresía
 

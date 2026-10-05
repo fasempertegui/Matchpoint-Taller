@@ -74,7 +74,7 @@ Se rechazan reservas iniciadas, Anuladas o Finalizadas, solicitudes sobre reserv
 
 ### Finalización
 
-Celery finaliza automáticamente las reservas Programadas cada hora en punto cuando la fecha y hora de fin de su último turno es igual o anterior al momento actual.
+Celery finaliza automáticamente las reservas Programadas cada hora en punto cuando la fecha y hora de fin de su último turno es igual o anterior al momento actual. El Administrador también puede finalizar una reserva vencida como acción de emergencia, con las mismas condiciones y sin depender de Celery ni Redis.
 
 Cada reserva se procesa en una transacción, comprobando nuevamente el estado y horario después de bloquear los turnos y la cabecera. Registra estado Finalizada, fecha y hora de procesamiento, sin responsable. Conserva los detalles, el precio y la ocupación histórica, aunque los registros relacionados estén inactivos. No modifica reservas que no terminaron, Anuladas o Finalizadas, ni sobrescribe datos ante ejecuciones repetidas. La siguiente ejecución procesa todas las vencidas que sigan pendientes.
 
