@@ -56,11 +56,13 @@
                 <td>
                     {% include "componentes/badge_estado.html" with estado=usuario_obj.is_active|yesno:"activo,inactivo" texto=usuario_obj.is_active|yesno:"Activo,Inactivo" only %}
                 </td>
-                <td class="acciones">
-                    <a class="boton boton-secundario boton-chico"
-                        href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}">
-                        Detalles
-                    </a>
+                <td>
+                    <div class="acciones">
+                        <a class="boton boton-secundario boton-chico"
+                            href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}">
+                            Detalles
+                        </a>
+                    </div>
                 </td>
             </tr>
             {% empty %}

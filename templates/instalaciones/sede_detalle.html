@@ -115,22 +115,24 @@
                                 <td>
                                     {% include "componentes/badge_estado.html" with estado=cancha.estado texto=cancha.get_estado_display only %}
                                 </td>
-                                <td class="acciones">
-                                    {% if perms.instalaciones.change_cancha %}
-                                        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:cancha_editar' sede.pk cancha.pk %}">
-                                            Editar
-                                        </a>
-                                        <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:cancha_cambiar_estado' sede.pk cancha.pk %}"
-                                              data-confirmar="{% if cancha.estado == 'activa' %}¿Desactivar la cancha {{ cancha.nombre }}? No puede tener reservas Programadas. El historial se conserva.{% else %}¿Activar la cancha {{ cancha.nombre }}?{% endif %}"
-                                              data-confirmar-titulo="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha"
-                                              data-confirmar-boton="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="estado" value="{% if cancha.estado == 'activa' %}inactiva{% else %}activa{% endif %}">
-                                            <button class="boton boton-secundario boton-chico" type="submit">
-                                                {% if cancha.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
-                                            </button>
-                                        </form>
-                                    {% endif %}
+                                <td>
+                                    <div class="acciones">
+                                        {% if perms.instalaciones.change_cancha %}
+                                            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:cancha_editar' sede.pk cancha.pk %}">
+                                                Editar
+                                            </a>
+                                            <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:cancha_cambiar_estado' sede.pk cancha.pk %}"
+                                                  data-confirmar="{% if cancha.estado == 'activa' %}¿Desactivar la cancha {{ cancha.nombre }}? No puede tener reservas Programadas. El historial se conserva.{% else %}¿Activar la cancha {{ cancha.nombre }}?{% endif %}"
+                                                  data-confirmar-titulo="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha"
+                                                  data-confirmar-boton="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="estado" value="{% if cancha.estado == 'activa' %}inactiva{% else %}activa{% endif %}">
+                                                <button class="boton boton-secundario boton-chico" type="submit">
+                                                    {% if cancha.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                         {% empty %}
@@ -177,10 +179,12 @@
                                     {% endif %}
                                 </td>
                                 {% if puede_configurar_horarios %}
-                                    <td class="acciones">
-                                        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_horario_configurar' sede.pk dia.dia %}">
-                                            {% if dia.horario %}Editar{% else %}Configurar{% endif %}
-                                        </a>
+                                    <td>
+                                        <div class="acciones">
+                                            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_horario_configurar' sede.pk dia.dia %}">
+                                                {% if dia.horario %}Editar{% else %}Configurar{% endif %}
+                                            </a>
+                                        </div>
                                     </td>
                                 {% endif %}
                             </tr>
@@ -235,10 +239,12 @@
                                     <td>
                                         {% include "componentes/badge_estado.html" with estado=precio.estado texto=precio.get_estado_display only %}
                                     </td>
-                                    <td class="acciones">
-                                        {% if precio.estado == "activo" and perms.reservas.change_precioreserva %}
-                                            <a class="boton boton-secundario boton-chico" href="{% url 'reservas:precio_actualizar' sede.pk precio.pk %}">Actualizar precio</a>
-                                        {% endif %}
+                                    <td>
+                                        <div class="acciones">
+                                            {% if precio.estado == "activo" and perms.reservas.change_precioreserva %}
+                                                <a class="boton boton-secundario boton-chico" href="{% url 'reservas:precio_actualizar' sede.pk precio.pk %}">Actualizar precio</a>
+                                            {% endif %}
+                                        </div>
                                     </td>
                                 </tr>
                             {% empty %}
