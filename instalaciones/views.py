@@ -1,11 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
+from psycopg.errors import UniqueViolation
 
 from reservas.forms import PrecioReservaFiltroForm
 from reservas.models import Reserva
@@ -131,9 +132,19 @@ def sede_crear(request):
     formulario = SedeForm(request.POST if request.method == "POST" else None)
 
     if request.method == "POST" and formulario.is_valid():
-        sede = formulario.save()
-        messages.success(request, f'La sede "{sede.nombre}" fue creada.')
-        return redirect("instalaciones:sede_lista")
+        try:
+            with transaction.atomic():
+                sede = formulario.save()
+        except IntegrityError as error:
+            if (
+                not isinstance(error.__cause__, UniqueViolation)
+                or error.__cause__.diag.constraint_name != "sede_nombre_unico_sin_mayusculas"
+            ):
+                raise
+            formulario.add_error("nombre", "Ya existe una sede con ese nombre.")
+        else:
+            messages.success(request, f'La sede "{sede.nombre}" fue creada.')
+            return redirect("instalaciones:sede_lista")
 
     return render(
         request,
@@ -158,9 +169,19 @@ def sede_editar(request, pk):
 
     if request.method == "POST" and formulario.is_valid():
         sede = formulario.save(commit=False)
-        sede.save(update_fields=["nombre", "direccion", "observaciones", "actualizado_en"])
-        messages.success(request, f'La sede "{sede.nombre}" fue actualizada.')
-        return redirect("instalaciones:sede_lista")
+        try:
+            with transaction.atomic():
+                sede.save(update_fields=["nombre", "direccion", "observaciones", "actualizado_en"])
+        except IntegrityError as error:
+            if (
+                not isinstance(error.__cause__, UniqueViolation)
+                or error.__cause__.diag.constraint_name != "sede_nombre_unico_sin_mayusculas"
+            ):
+                raise
+            formulario.add_error("nombre", "Ya existe una sede con ese nombre.")
+        else:
+            messages.success(request, f'La sede "{sede.nombre}" fue actualizada.')
+            return redirect("instalaciones:sede_lista")
 
     return render(
         request,
@@ -216,9 +237,19 @@ def cancha_crear(request, sede_pk):
     )
 
     if request.method == "POST" and formulario.is_valid():
-        cancha = formulario.save()
-        messages.success(request, f'La cancha "{cancha.nombre}" fue creada.')
-        return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas")
+        try:
+            with transaction.atomic():
+                cancha = formulario.save()
+        except IntegrityError as error:
+            if (
+                not isinstance(error.__cause__, UniqueViolation)
+                or error.__cause__.diag.constraint_name != "cancha_nombre_unico_por_sede_sin_mayusculas"
+            ):
+                raise
+            formulario.add_error("nombre", "Ya existe una cancha con ese nombre en esta sede.")
+        else:
+            messages.success(request, f'La cancha "{cancha.nombre}" fue creada.')
+            return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas")
 
     return render(
         request,
@@ -246,9 +277,19 @@ def cancha_editar(request, sede_pk, pk):
 
     if request.method == "POST" and formulario.is_valid():
         cancha = formulario.save(commit=False)
-        cancha.save(update_fields=["nombre", "superficie", "observaciones", "actualizado_en"])
-        messages.success(request, f'La cancha "{cancha.nombre}" fue actualizada.')
-        return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas")
+        try:
+            with transaction.atomic():
+                cancha.save(update_fields=["nombre", "superficie", "observaciones", "actualizado_en"])
+        except IntegrityError as error:
+            if (
+                not isinstance(error.__cause__, UniqueViolation)
+                or error.__cause__.diag.constraint_name != "cancha_nombre_unico_por_sede_sin_mayusculas"
+            ):
+                raise
+            formulario.add_error("nombre", "Ya existe una cancha con ese nombre en esta sede.")
+        else:
+            messages.success(request, f'La cancha "{cancha.nombre}" fue actualizada.')
+            return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas")
 
     return render(
         request,
