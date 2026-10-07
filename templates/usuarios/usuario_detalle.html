@@ -54,7 +54,7 @@
                     <p class="texto-secundario">Sin roles asignados.</p>
                 {% endif %}
 
-                {% if perms.usuarios.change_usuario %}
+                {% if perms.usuarios.change_usuario and roles_gestionables %}
                     <details class="perfil-desplegable" data-gestion-roles>
                         <summary>Modificar roles</summary>
                         <ul class="perfil-roles-opciones">

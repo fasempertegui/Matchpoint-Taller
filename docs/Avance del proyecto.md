@@ -20,7 +20,7 @@ El nombre de usuario se genera a partir del apellido y la inicial del nombre, ag
 
 La autenticación incluye inicio y cierre de sesión y cambio de contraseña. Las contraseñas se almacenan mediante hash. Las cuentas creadas por otra persona o con contraseña restablecida deben reemplazar la contraseña provisoria antes de operar; la nueva debe ser diferente de la vigente.
 
-Los roles son Administrador, Profesor, Alumno, Reservas y Público. Público y Reservas se asignan al crear un usuario. La administración puede asignar y retirar Profesor, Alumno y Reservas; Administrador se establece mediante el comando de creación de administradores.
+Los roles son Administrador, Profesor, Alumno, Reservas y Público. Las cuentas no administrativas reciben Público y Reservas al crearse; la administración puede asignarles y retirarles Profesor, Alumno y Reservas. Las cuentas administrativas tienen únicamente Administrador, asignado mediante el comando de creación, y no admiten roles adicionales.
 
 Desactivar registra fecha y hora de baja; reactivar elimina esa marca. No se permite desactivar la cuenta propia ni al último administrador activo.
 

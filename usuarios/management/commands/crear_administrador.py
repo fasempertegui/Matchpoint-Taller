@@ -3,10 +3,8 @@ from getpass import getpass
 
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction
 
 from usuarios.forms import UsuarioCrearForm
-from usuarios.models import Rol, UsuarioRol
 
 
 class Command(BaseCommand):
@@ -47,16 +45,10 @@ class Command(BaseCommand):
             )
             raise CommandError(f"No se pudo crear el administrador: {errores}")
 
-        with transaction.atomic():
-            usuario = formulario.guardar(
-                exigir_cambio_contrasena=True,
-                es_superusuario=True,
-            )
-            rol_administrador = Rol.objects.get(codigo=Rol.ADMINISTRADOR)
-            UsuarioRol.objects.create(
-                usuario=usuario,
-                rol=rol_administrador,
-            )
+        usuario = formulario.guardar(
+            exigir_cambio_contrasena=True,
+            es_superusuario=True,
+        )
 
         self.stdout.write(
             self.style.SUCCESS(

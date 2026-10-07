@@ -539,6 +539,8 @@ flowchart LR
 8. Nueva asignación con el administrador que la realizó.
 9. Resultado de la asignación o errores encontrados.
 
+Sólo se asignan roles adicionales a cuentas no administrativas. Administrador es exclusivo y el proceso rechaza una solicitud sobre una cuenta administrativa.
+
 ### DFD 18: retirar un rol de un usuario
 
 ```mermaid
@@ -597,7 +599,7 @@ flowchart LR
 18. Asignación que debe retirarse cuando está permitido.
 19. Resultado del retiro o motivo del rechazo.
 
-Público y Administrador no se retiran desde la aplicación. Reservas se conserva mientras el usuario tenga reservas propias Programadas; Alumno, mientras tenga un plan contratado Activo; Profesor, mientras tenga asignaciones activas en clases Programadas.
+Las asignaciones de roles sólo se modifican para cuentas no administrativas. Público y Administrador no se retiran desde la aplicación. Reservas se conserva mientras el usuario tenga reservas propias Programadas; Alumno, mientras tenga un plan contratado Activo; Profesor, mientras tenga asignaciones activas en clases Programadas.
 
 ### DFD 19: restablecer la contraseña de otro usuario
 

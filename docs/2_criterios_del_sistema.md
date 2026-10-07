@@ -115,13 +115,13 @@ Los roles se almacenan en la tabla fija `roles`; `usuarios_roles.rol_id` los ref
 
 Los roles serán:
 
-- **Administrador**: acceso total al sistema. Se representa mediante una asignación en `usuarios_roles`; la marca técnica `is_superuser` permite que Django le conceda todos los permisos. Se crea con el comando `crear_administrador` ejecutado por el desarrollador y opera desde la interfaz de Academia TM. Ningún administrador puede asignar ni quitar este rol desde la aplicación.
+- **Administrador**: acceso total al sistema. Es un rol exclusivo: una cuenta administrativa sólo tiene esta asignación en `usuarios_roles`, sin Público, Reservas, Profesor ni Alumno. La marca técnica `is_superuser` permite que Django le conceda todos los permisos. Se crea con el comando `crear_administrador` ejecutado por el desarrollador y opera desde la interfaz de Academia TM. Ningún administrador puede asignar ni quitar este rol desde la aplicación.
 - **Profesor**: gestiona sus propias clases asignadas. Lo asigna un administrador, al crear el usuario o mediante la gestión de roles. Solo puede quitarse si el usuario no tiene clases programadas como profesor.
-- **Público**: permite consultar el catálogo de la academia, suscribirse a planes o pases y consultar el perfil propio. Corresponde a una cuenta registrada y autenticada, no a un visitante anónimo. Se asigna automáticamente al crear la cuenta y no puede quitarse desde la aplicación.
-- **Reservas**: permite crear, cancelar y consultar reservas propias. Todo usuario lo recibe automáticamente desde su alta, se autoregistre o lo registre la administración. Un administrador puede quitarlo únicamente si el usuario no tiene reservas programadas. El catálogo, la suscripción y el perfil corresponden al rol Público.
-- **Alumno**: permite consultar sus clases asignadas y su historial de asistencia. Se obtiene al registrar una contratación Activa de plan, presencial o mediante el portal, si el usuario no lo tiene; el alta administrativa no exige que se haya registrado un ingreso. Un pase no otorga este rol. También puede asignarlo un administrador al crear la cuenta o mediante la gestión de roles. No se retira automáticamente al vencer una contratación; sólo un administrador puede quitarlo respetando las condiciones del retiro.
+- **Público**: permite consultar el catálogo de la academia, suscribirse a planes o pases y consultar el perfil propio. Corresponde a una cuenta registrada y autenticada, no a un visitante anónimo. Se asigna automáticamente al crear una cuenta no administrativa y no puede quitarse desde la aplicación.
+- **Reservas**: permite crear, cancelar y consultar reservas propias. Toda cuenta no administrativa lo recibe automáticamente desde su alta, se autoregistre o la registre la administración. Un administrador puede quitarlo únicamente si el usuario no tiene reservas programadas. El catálogo, la suscripción y el perfil corresponden al rol Público.
+- **Alumno**: permite consultar sus clases asignadas y su historial de asistencia. Una cuenta no administrativa lo obtiene al registrar una contratación Activa de plan, presencial o mediante el portal, si no lo tiene; el alta administrativa no exige que se haya registrado un ingreso. Un pase no otorga este rol. También puede asignarlo un administrador al crear la cuenta o mediante la gestión de roles. No se retira automáticamente al vencer una contratación; sólo un administrador puede quitarlo respetando las condiciones del retiro.
 
-Todo usuario recibe Público y Reservas en la misma transacción del alta y puede acumular, además, varios de los demás roles a la vez; por ejemplo, Alumno.
+Las cuentas no administrativas reciben Público y Reservas en la misma transacción del alta y pueden acumular Profesor o Alumno. Las cuentas administrativas reciben únicamente Administrador, que habilita el acceso total sin roles adicionales. Las asignaciones automáticas también respetan esta exclusividad.
 
 La edición de una cuenta se limita a estas operaciones:
 
@@ -140,7 +140,7 @@ El autorregistro no activa esa obligación: la persona elige y confirma su propi
 
 A fines prácticos, un usuario con rol Alumno se considera vigente en un período determinado cuando tiene actividad de clases en ese período, por ejemplo un plan activo. Esto es informativo, para reportes y consultas; no equivale al estado de la cuenta ni condiciona ninguna otra regla del sistema.
 
-La administración podrá asignar o quitar Profesor y Alumno, y volver a otorgar o quitar Reservas después del alta. Público no puede retirarse y Administrador se gestiona mediante `crear_administrador`, fuera de las pantallas de la aplicación.
+La administración podrá asignar o quitar Profesor y Alumno, y volver a otorgar o quitar Reservas después del alta, únicamente a cuentas no administrativas. Los perfiles de administradores no ofrecen la modificación de roles y el servidor rechaza cualquier intento de asignarles otros. Público no puede retirarse y Administrador se gestiona mediante `crear_administrador`, fuera de las pantallas de la aplicación.
 
 El retiro de roles debe respetar las siguientes condiciones:
 
@@ -176,7 +176,7 @@ Un usuario puede tener un plan y un pase para el mismo mes, pero no dos contrata
 
 Una anulación administrativa exige motivo y conserva administrador y momento. No modifica automáticamente ingresos, clases, reservas ni coberturas aplicadas. El vencimiento periódico procesa por separado las contrataciones Activas de ambas tablas cuyo mes terminó. El aviso por email conserva su marca de envío en cada contratación.
 
-Registrar una contratación Activa de plan otorga Alumno si falta ese rol; un pase no lo otorga. El titular puede consultar sus propias contrataciones de ambos tipos y el acceso a un pase no exige Alumno. Las clases se organizan mediante asignaciones y asistencia; contratar un plan no genera clases ni asigna horarios automáticamente. La frecuencia contratada se administra según la organización de la academia, sin un control automático de cumplimiento del plan.
+Registrar una contratación Activa de plan otorga Alumno si falta ese rol y el titular no es administrador; un pase no lo otorga. El titular puede consultar sus propias contrataciones de ambos tipos y el acceso a un pase no exige Alumno. Las clases se organizan mediante asignaciones y asistencia; contratar un plan no genera clases ni asigna horarios automáticamente. La frecuencia contratada se administra según la organización de la academia, sin un control automático de cumplimiento del plan.
 
 Los precios siguen el mismo criterio en los tres productos:
 

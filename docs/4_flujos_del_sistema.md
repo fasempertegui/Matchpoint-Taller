@@ -136,7 +136,7 @@ flowchart TD
 
 ### 3.2 Usuarios
 
-No existe un flujo separado de "registrar usuario": toda persona gestionada por la academia se registra como usuario mediante **FL-02**, siempre con credenciales de acceso propias y con Público y Reservas otorgados automáticamente en la misma operación. Los roles Profesor y Alumno pueden asignarse ya en ese mismo alta o en cualquier momento posterior mediante **FL-07**; Alumno, además, puede otorgarse automáticamente (ver **FL-20** y 4.4). Las asignaciones referencian el catálogo fijo `roles`, sin flujos para crear, modificar o eliminar sus cinco registros.
+No existe un flujo separado de "registrar usuario": las cuentas no administrativas gestionadas por la academia se registran mediante **FL-02**, con credenciales de acceso propias y con Público y Reservas otorgados automáticamente en la misma operación. Los roles Profesor y Alumno pueden asignarse ya en ese mismo alta o en cualquier momento posterior mediante **FL-07**; Alumno, además, puede otorgarse automáticamente (ver **FL-20** y 4.4). Las cuentas administrativas se crean mediante `crear_administrador` y sólo reciben Administrador. Las asignaciones referencian el catálogo fijo `roles`, sin flujos para crear, modificar o eliminar sus cinco registros.
 
 El perfil propio permite consultar la información y cambiar únicamente la contraseña mediante **FL-59**. La edición administrativa de datos personales se limita al correo (**FL-04**); el restablecimiento de la contraseña de otra cuenta se realiza mediante **FL-69**. Nombre, apellido, nombre de usuario, celular, fecha de nacimiento y observaciones se cargan en el alta y no tienen un flujo de edición. El estado y los roles utilizan **FL-05** y **FL-07** por separado.
 
@@ -352,7 +352,7 @@ flowchart TD
 
 #### FL-07. Asignar o quitar un rol a un usuario
 
-- **Objetivo:** otorgar o retirar Reservas, Profesor o Alumno a un usuario, conservando la coherencia con sus actividades y contrataciones.
+- **Objetivo:** otorgar o retirar Reservas, Profesor o Alumno a un usuario no administrador, conservando la coherencia con sus actividades y contrataciones.
 - **Actor:** administrador.
 - **Precondición:** usuario localizado mediante **FL-03**.
 - **Entrada:** rol (Reservas, Profesor o Alumno) y acción (asignar o quitar).
@@ -367,7 +367,7 @@ Recorrido:
 
 Alternativas:
 
-- **Público no se puede quitar.** Se asigna automáticamente en el alta. Administrador se gestiona exclusivamente mediante comandos ejecutados por el desarrollador. Este flujo tampoco permite crear, renombrar ni eliminar registros del catálogo `roles`.
+- **Público no se puede quitar.** Se asigna automáticamente en el alta de cuentas no administrativas. Administrador se gestiona exclusivamente mediante comandos ejecutados por el desarrollador y no puede combinarse con otros roles. Su perfil no ofrece la modificación de roles y el servidor rechaza solicitudes sobre esas cuentas. Este flujo tampoco permite crear, renombrar ni eliminar registros del catálogo `roles`.
 - Reservas sigue asignándose automáticamente en el alta (**FL-02**, **FL-06**), pero puede retirarse si no hay reservas propias programadas y otorgarse nuevamente mediante este flujo.
 - Si el usuario tiene reservas programadas, se rechaza el retiro de Reservas. Si tiene un plan contratado Activo, se rechaza el retiro de Alumno; un pase contratado no impide retirar ese rol. Si tiene clases programadas con una asignación activa como profesor, se rechaza el retiro de Profesor.
 - Ante un rechazo, se informa la causa, se conserva el rol y no se cancelan ni modifican las relaciones que lo bloquean. Los estados registrados determinan el bloqueo; una fecha pasada por sí sola no lo libera.
@@ -828,7 +828,7 @@ Recorrido:
 3. El Administrador establece el importe final cuando corresponde un ajuste y confirma.
 4. En una transacción, bloquea al usuario y verifica que no exista otra contratación no Anulada del mismo tipo para ese mes.
 5. Registra una fila en `planes_usuarios` o `pases_usuarios`, con su producto obligatorio, mes, importe aplicado y responsable. Si el mes terminó nace Vencida; en otro caso, Activa.
-6. Si registra un plan Activo y falta Alumno, asigna el rol en la misma transacción.
+6. Si registra un plan Activo, falta Alumno y el titular no es administrador, asigna el rol en la misma transacción.
 
 Alternativas:
 
@@ -847,7 +847,7 @@ flowchart TD
     B --> C{Confirmar}
     C -->|Sí| D[Bloquear usuario y validar exclusividad]
     D --> E[Registrar contratación en su tabla]
-    E --> F{Es un plan Activo}
+    E --> F{Plan Activo de titular no administrador}
     F -->|Sí| G[Asignar Alumno si falta]
     F -->|No| H[Terminar]
     G --> H
@@ -2496,7 +2496,7 @@ Procedimiento:
 4. En una aprobación, bloquea el intento y al usuario, y comprueba si ya existen los resultados de esa aprobación.
 5. Si no existe una contratación no Anulada del mismo tipo para ese usuario y mes, registra `planes_usuarios` o `pases_usuarios` según el producto. Copia el mes y el importe acordado del intento.
 6. Crea un ingreso con medio MercadoPago que referencia esa contratación, sin administrador responsable del registro.
-7. Guarda la contratación resultante y el ingreso en el intento Aprobado, dentro de la misma transacción. Sólo un plan que queda Activo otorga Alumno si el titular no lo tiene.
+7. Guarda la contratación resultante y el ingreso en el intento Aprobado, dentro de la misma transacción. Sólo un plan que queda Activo otorga Alumno si el titular no lo tiene y no es administrador.
 8. Envía la confirmación cuando se aplicó la contratación y responde a la plataforma.
 
 Condiciones:
@@ -2526,7 +2526,7 @@ flowchart TD
     F -->|No| H{Mes disponible e importe válido}
     H -->|No| I[Señalar aprobación sin activar]
     H -->|Sí| J[Crear contratación e ingreso en una transacción]
-    J --> K[Asignar Alumno sólo para plan Activo y notificar]
+    J --> K[Asignar Alumno si corresponde y notificar]
 ```
 
 ### 4.5 Aviso de vencimiento próximo de una contratación

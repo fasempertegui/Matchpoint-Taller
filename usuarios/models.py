@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser, UserManager
+from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models.functions import Lower
 
@@ -57,6 +58,23 @@ class UsuarioRol(models.Model):
     def __str__(self):
         return f"{self.usuario} - {self.rol}"
 
+    def clean(self):
+        super().clean()
+        if not self.usuario_id or not self.rol_id:
+            return
+        otros_roles = self.usuario.roles.exclude(pk=self.pk)
+        if self.rol.codigo == Rol.ADMINISTRADOR:
+            if otros_roles.exists():
+                raise ValidationError("Administrador es un rol exclusivo y no puede combinarse con otros roles.")
+        elif self.usuario.is_superuser or otros_roles.filter(rol__codigo=Rol.ADMINISTRADOR).exists():
+            raise ValidationError("Los administradores solo pueden tener el rol Administrador.")
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            self.usuario = Usuario.objects.select_for_update().get(pk=self.usuario_id)
+            self.clean()
+            return super().save(*args, **kwargs)
+
 
 class UsuarioManager(UserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
@@ -67,7 +85,8 @@ class UsuarioManager(UserManager):
                 password=password,
                 **extra_fields,
             )
-            for codigo in Rol.INICIALES:
+            roles_iniciales = (Rol.ADMINISTRADOR,) if usuario.is_superuser else Rol.INICIALES
+            for codigo in roles_iniciales:
                 rol = Rol.objects.get(codigo=codigo)
                 UsuarioRol.objects.create(
                     usuario=usuario,

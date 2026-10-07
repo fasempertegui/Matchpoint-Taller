@@ -354,9 +354,9 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
                 debe_cambiar_contrasena=exigir_cambio_contrasena,
                 is_superuser=es_superusuario,
             )
-            if self.cleaned_data.get("rol_profesor"):
+            if not es_superusuario and self.cleaned_data.get("rol_profesor"):
                 UsuarioRol.objects.create(usuario=usuario, rol=Rol.objects.get(codigo=Rol.PROFESOR))
-            if self.cleaned_data.get("rol_alumno"):
+            if not es_superusuario and self.cleaned_data.get("rol_alumno"):
                 UsuarioRol.objects.create(usuario=usuario, rol=Rol.objects.get(codigo=Rol.ALUMNO))
         return usuario
 

@@ -89,7 +89,7 @@ def usuario_detalle(request, pk):
                     (Rol.PROFESOR, "Profesor"),
                     (Rol.ALUMNO, "Alumno"),
                 )
-            ],
+            ] if not (usuario.is_superuser or Rol.ADMINISTRADOR in roles_actuales) else [],
         },
     )
 
@@ -255,6 +255,9 @@ def usuario_rol_toggle(request, pk, rol):
         usuario = get_object_or_404(
             Usuario.objects.select_for_update(), pk=pk
         )
+        if usuario.is_superuser or usuario.tiene_rol(Rol.ADMINISTRADOR):
+            messages.error(request, "Los administradores solo pueden tener el rol Administrador.")
+            return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
         asignacion = (
             UsuarioRol.objects.select_for_update()
             .filter(usuario=usuario, rol=rol_obj)

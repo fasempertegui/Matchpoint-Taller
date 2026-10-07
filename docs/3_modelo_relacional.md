@@ -43,18 +43,6 @@ En las tablas de la sección 4, ambas columnas solo muestran `Sí` cuando aplica
 
 Un turno representa una hora de una cancha en una fecha. Un evento representa la actividad que utiliza uno o varios turnos y concentra su estado. Cada evento corresponde exactamente a una reserva, una clase o un bloqueo; las tres especializaciones son excluyentes.
 
-```mermaid
-erDiagram
-    CANCHAS ||--o{ TURNOS : tiene
-    TURNOS ||--o{ EVENTOS_TURNOS : participa
-    EVENTOS ||--|{ EVENTOS_TURNOS : utiliza
-    EVENTOS ||--o| RESERVAS : corresponde_a
-    EVENTOS ||--o| CLASES : corresponde_a
-    EVENTOS ||--o| BLOQUEOS : corresponde_a
-    BLOQUEOS ||--o{ BLOQUEOS_ORIGENES : registra
-    EVENTOS ||--o| BLOQUEOS_ORIGENES : origina
-```
-
 Las restricciones únicas identifican cada turno y evitan repetir vínculos. Para confirmar una actividad, se bloquean sus turnos y se comprueba que ningún evento Programado o Finalizado los ocupe. La consulta de disponibilidad utiliza `eventos_turnos` y `eventos.estado`, sin consultar por separado reservas, clases y bloqueos. El esquema no necesita una exclusión de intervalos mediante `btree_gist`: la ocupación se coordina por identificadores de turnos dentro de las operaciones transaccionales.
 
 ## 4. Tablas
@@ -101,7 +89,7 @@ Al inactivar una cuenta, la aplicación establece `is_active = false` y registra
 
 Relaciones:
 
-- Un usuario puede tener uno o varios roles asignados.
+- Un usuario no administrador puede tener varios roles asignados. Un administrador tiene únicamente el rol Administrador.
 - Un rol asignado pertenece a exactamente un usuario.
 - Un usuario puede tener cero, una o varias contrataciones en `planes_usuarios` y en `pases_usuarios`.
 - Cada contratación pertenece exactamente a un usuario.
@@ -148,7 +136,9 @@ Representa que un usuario tiene asignado uno de los roles del catálogo cerrado 
 | FK | `asignado_por_id` | `bigint` | Sí | | `4` |
 | | `creado_en` | `timestamptz` | | | `2026-03-01 10:15:00-03` |
 
-La restricción única `(usuario_id, rol_id)` impide repetir una asignación. `rol_id` referencia `roles.id`: no acepta roles inexistentes y Django protege contra el borrado de roles referenciados. Público y Reservas se asignan automáticamente en la misma transacción del alta. Público no puede retirarse; Reservas, Profesor y Alumno se gestionan según las condiciones de FL-07. Alumno también puede otorgarse automáticamente (ver sección 6).
+La restricción única `(usuario_id, rol_id)` impide repetir una asignación. `rol_id` referencia `roles.id`: no acepta roles inexistentes y Django protege contra el borrado de roles referenciados. Público y Reservas se asignan automáticamente en la misma transacción del alta de cuentas no administrativas. Público no puede retirarse; Reservas, Profesor y Alumno se gestionan según las condiciones de FL-07. Alumno también puede otorgarse automáticamente a cuentas no administrativas (ver sección 6).
+
+Administrador es exclusivo: su asignación no puede coexistir con ninguna otra del mismo usuario. La aplicación valida esta regla al guardar una asignación y bloquea la cuenta durante la operación para coordinar cambios concurrentes. La creación de una cuenta administrativa guarda únicamente este rol junto con el usuario en una misma transacción.
 
 Para eliminar una asignación de `usuarios_roles`, se aplican estas reglas entre tablas:
 
@@ -168,7 +158,7 @@ En el DER, `roles` se relaciona uno a muchos con `usuarios_roles`, y `usuarios` 
 Relaciones:
 
 - Un rol asignado pertenece a exactamente un usuario.
-- Un usuario puede tener uno o varios roles asignados.
+- Un usuario no administrador puede tener varios roles asignados. Un administrador tiene únicamente el rol Administrador.
 
 ### 4.3 `sedes`
 
@@ -304,7 +294,7 @@ Representa la contratación de un plan por un usuario para un mes calendario.
 
 La combinación usuario y mes es única entre registros Activos o Vencidos. Los Anulados se conservan y permiten registrar un reemplazo. Usuario, plan, mes y precio aplicado son inmutables; renovar para otro mes crea otra fila. Se bloquea al usuario al comprobar exclusividad e insertar.
 
-El alta de un mes pasado nace Vencida. Una contratación de un mes futuro puede estar Activa, pero su vigencia corresponde a ese mes. Registrar una contratación Activa de plan otorga Alumno si el usuario no lo tiene; anular o vencer no retira ese rol automáticamente.
+El alta de un mes pasado nace Vencida. Una contratación de un mes futuro puede estar Activa, pero su vigencia corresponde a ese mes. Registrar una contratación Activa de plan otorga Alumno si el usuario no lo tiene y no es administrador; anular o vencer no retira ese rol automáticamente.
 
 `registrado_por_id` queda vacío sólo para altas automáticas por MercadoPago. Observaciones y motivo admiten una cadena vacía. Anular exige administrador, momento y motivo no vacío; esos datos permanecen vacíos en estados Activo y Vencido. La operación actualiza la marca de modificación y conserva ingresos e historia.
 
@@ -906,7 +896,7 @@ El límite diario de horas de un pase depende de una suma sobre turnos de reserv
 
 Registrar un plan o pase guarda una fila completa en su catálogo. Actualizar modifica datos comerciales y precios vigentes, protegiendo la configuración estructural usada en contrataciones.
 
-Contratar guarda una fila en `planes_usuarios` o `pases_usuarios`, con usuario, producto, mes e importe acordado. El alta bloquea al usuario y comprueba la exclusividad del mes en la tabla correspondiente. La contratación de un mes pasado nace Vencida; una Activa de plan otorga Alumno en la misma transacción cuando falta ese rol. El ingreso manual se registra mediante su operación específica.
+Contratar guarda una fila en `planes_usuarios` o `pases_usuarios`, con usuario, producto, mes e importe acordado. El alta bloquea al usuario y comprueba la exclusividad del mes en la tabla correspondiente. La contratación de un mes pasado nace Vencida; una Activa de plan otorga Alumno en la misma transacción cuando falta ese rol y el titular no es administrador. El ingreso manual se registra mediante su operación específica.
 
 Anular una contratación bloquea su fila, valida estado Activo y registra actor, momento y motivo. Conserva ingresos y relaciones históricas; una anulación de pase no modifica reservas ni coberturas ya registradas.
 
@@ -958,7 +948,7 @@ La operación centralizada de creación guardará la fila de `usuarios` con sus 
 
 Valida la notificación y consulta el pago confirmado en la plataforma. Localiza el intento por su referencia externa y valida moneda e importe contra `precio_aplicado`. Una referencia ajena al sistema se descarta sin crear datos.
 
-En una aprobación, bloquea el intento y al usuario, y comprueba si su efecto ya fue aplicado. Si no existe una contratación incompatible para ese mes, crea una fila en `planes_usuarios` o `pases_usuarios` según el producto y copia el importe congelado. Registra un ingreso con medio MercadoPago que referencia esa contratación. Guarda en el intento la contratación resultante y el ingreso, y asigna Alumno sólo para un plan que queda Activo.
+En una aprobación, bloquea el intento y al usuario, y comprueba si su efecto ya fue aplicado. Si no existe una contratación incompatible para ese mes, crea una fila en `planes_usuarios` o `pases_usuarios` según el producto y copia el importe congelado. Registra un ingreso con medio MercadoPago que referencia esa contratación. Guarda en el intento la contratación resultante y el ingreso, y asigna Alumno sólo para un plan que queda Activo cuyo titular no sea administrador.
 
 Todo el efecto se confirma en una transacción. Si aparece un conflicto de exclusividad, el intento queda Aprobado sin resultados y se identifica para resolución administrativa. Una repetición no duplica datos. Pendiente y Rechazado no crean contrataciones ni ingresos; un estado terminal no vuelve a Pendiente.
 
