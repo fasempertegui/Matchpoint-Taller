@@ -1,0 +1,18 @@
+{% if breadcrumbs %}
+<nav class="breadcrumbs" aria-label="Ruta de navegación">
+    <ol>
+        {% for texto, enlace in breadcrumbs %}
+            <li>
+                {% if not forloop.first %}<span class="breadcrumbs-separador" aria-hidden="true">/</span>{% endif %}
+                {% if forloop.last %}
+                    <span aria-current="page">{{ texto }}</span>
+                {% elif enlace %}
+                    <a href="{{ enlace }}">{{ texto }}</a>
+                {% else %}
+                    <span>{{ texto }}</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+</nav>
+{% endif %}

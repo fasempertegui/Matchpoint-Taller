@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.formats import number_format
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
@@ -18,6 +19,16 @@ from .servicios import (
     validar_anulacion_reserva,
     validar_finalizacion_reserva,
 )
+
+
+def _breadcrumbs_reserva(es_administrador, reserva=None):
+    breadcrumbs = [
+        ("Inicio", reverse("inicio")),
+        ("Reservas" if es_administrador else "Mis reservas", reverse("reservas:reserva_lista")),
+    ]
+    if reserva is not None:
+        breadcrumbs.append((reserva.numero, reverse("reservas:reserva_detalle", args=[reserva.pk])))
+    return breadcrumbs
 
 
 @login_required
@@ -74,6 +85,7 @@ def reserva_lista(request):
         "reservas": filas,
         "es_administrador": es_administrador,
         "filtros_validos": filtros_validos,
+        "breadcrumbs": _breadcrumbs_reserva(es_administrador),
     })
 
 
@@ -147,6 +159,7 @@ def reserva_crear(request):
         "precio_centavos": int(resultado["precio_por_turno"] * 100) if resultado else None,
         "es_administrador": es_administrador,
         "hay_sedes": formulario.fields["sede"].queryset.exists(),
+        "breadcrumbs": _breadcrumbs_reserva(es_administrador) + [("Nueva reserva", None)],
     })
 
 
@@ -160,7 +173,7 @@ def reserva_detalle(request, pk):
 @login_required
 @require_http_methods(["GET"])
 def reserva_comprobante(request, pk):
-    reserva, _ = _obtener_reserva_para_consulta(request.user, pk)
+    reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk)
     turnos = list(reserva.evento.turnos.select_related("cancha__sede").all())
     return render(request, "reservas/reserva_comprobante.html", {
         "reserva": reserva,
@@ -169,6 +182,7 @@ def reserva_comprobante(request, pk):
         "total": reserva.precio_por_turno_aplicado * len(turnos),
         "hora_inicio": turnos[0].hora_inicio if turnos else None,
         "hora_fin": turnos[-1].hora_fin if turnos else None,
+        "breadcrumbs": _breadcrumbs_reserva(es_administrador, reserva) + [("Comprobante", None)],
     })
 
 
@@ -214,6 +228,7 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
         "hora_fin": ultimo_turno.hora_fin if ultimo_turno else None,
         "es_administrador": es_administrador,
         "impedimento_anulacion": impedimento_anulacion,
+        "breadcrumbs": _breadcrumbs_reserva(es_administrador, reserva),
         "formulario_anulacion": formulario_anulacion if formulario_anulacion is not None else ReservaAnulacionForm(),
     }
 

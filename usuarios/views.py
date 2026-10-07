@@ -19,6 +19,7 @@ from .forms import (
     generar_contrasena_valida,
 )
 from .models import Rol, Usuario, UsuarioRol
+from .navegacion import breadcrumbs_usuario
 
 ROLES_GESTIONABLES = {Rol.RESERVAS, Rol.PROFESOR, Rol.ALUMNO}
 
@@ -55,7 +56,11 @@ def usuario_lista(request):
     return render(
         request,
         "usuarios/usuario_lista.html",
-        {"usuarios": usuarios, "formulario_busqueda": formulario_busqueda},
+        {
+            "usuarios": usuarios,
+            "formulario_busqueda": formulario_busqueda,
+            "breadcrumbs": breadcrumbs_usuario(request.user),
+        },
     )
 
 
@@ -75,6 +80,7 @@ def usuario_detalle(request, pk):
         "usuarios/usuario_detalle.html",
         {
             "usuario_obj": usuario,
+            "breadcrumbs": breadcrumbs_usuario(request.user, usuario),
             "roles_asignados": roles_asignados,
             "roles_gestionables": [
                 {"codigo": codigo, "nombre": nombre, "asignado": codigo in roles_actuales}
@@ -102,12 +108,19 @@ def usuario_crear(request):
                 {
                     "usuario_obj": usuario,
                     "contrasena": formulario.cleaned_data["contrasena"],
+                    "breadcrumbs": breadcrumbs_usuario(request.user, usuario) + [("Usuario creado", None)],
                 },
             )
-        return render(request, "usuarios/usuario_formulario.html", {"formulario": formulario})
+        return render(request, "usuarios/usuario_formulario.html", {
+            "formulario": formulario,
+            "breadcrumbs": breadcrumbs_usuario(request.user) + [("Nuevo usuario", None)],
+        })
 
     formulario = UsuarioCrearForm()
-    return render(request, "usuarios/usuario_formulario.html", {"formulario": formulario})
+    return render(request, "usuarios/usuario_formulario.html", {
+        "formulario": formulario,
+        "breadcrumbs": breadcrumbs_usuario(request.user) + [("Nuevo usuario", None)],
+    })
 
 
 @login_required
@@ -132,7 +145,11 @@ def usuario_editar(request, pk):
     return render(
         request,
         "usuarios/usuario_editar.html",
-        {"formulario": formulario, "usuario_obj": usuario},
+        {
+            "formulario": formulario,
+            "usuario_obj": usuario,
+            "breadcrumbs": breadcrumbs_usuario(request.user, usuario) + [("Modificar correo", None)],
+        },
     )
 
 
@@ -160,13 +177,20 @@ def usuario_restablecer_contrasena(request, pk):
         return render(
             request,
             "usuarios/usuario_contrasena_restablecida.html",
-            {"usuario_obj": usuario, "contrasena": contrasena},
+            {
+                "usuario_obj": usuario,
+                "contrasena": contrasena,
+                "breadcrumbs": breadcrumbs_usuario(request.user, usuario) + [("Contraseña restablecida", None)],
+            },
         )
 
     return render(
         request,
         "usuarios/usuario_restablecer_contrasena.html",
-        {"usuario_obj": usuario},
+        {
+            "usuario_obj": usuario,
+            "breadcrumbs": breadcrumbs_usuario(request.user, usuario) + [("Restablecer contraseña", None)],
+        },
     )
 
 

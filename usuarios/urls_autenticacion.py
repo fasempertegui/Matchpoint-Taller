@@ -3,6 +3,7 @@ from django.urls import path
 
 from .views_autenticacion import (
     CambioContrasenaView,
+    CambioContrasenaCompletadoView,
     InicioSesionView,
     RegistroView,
     nombre_usuario_disponible,
@@ -24,9 +25,7 @@ urlpatterns = [
     ),
     path(
         "password_change/done/",
-        views.PasswordChangeDoneView.as_view(
-            template_name="autenticacion/cambio_contrasena_completado.html"
-        ),
+        CambioContrasenaCompletadoView.as_view(),
         name="password_change_done",
     ),
 ]

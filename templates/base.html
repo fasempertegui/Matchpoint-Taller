@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+    <link rel="stylesheet" href="{% static 'css/breadcrumbs.css' %}">
     {% block estilos %}{% endblock %}
     <script src="{% static 'js/pestanas.js' %}" defer></script>
     <script src="{% static 'js/mensajes.js' %}" defer></script>
@@ -57,6 +58,9 @@
             </section>
         {% endif %}
 
+        {% block breadcrumbs %}
+            {% include "componentes/breadcrumbs.html" with breadcrumbs=breadcrumbs only %}
+        {% endblock %}
         {% block contenido %}{% endblock %}
     </main>
     {% include "componentes/modal_confirmacion.html" %}

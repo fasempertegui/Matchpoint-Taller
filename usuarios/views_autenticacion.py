@@ -9,6 +9,7 @@ from django.views.generic.edit import FormView
 from django.views.decorators.http import require_GET
 
 from .forms import CambioContrasenaForm, InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario
+from .navegacion import breadcrumbs_usuario
 
 
 @require_GET
@@ -31,6 +32,9 @@ class RegistroView(FormView):
     template_name = "usuarios/registro_formulario.html"
     form_class = UsuarioRegistroForm
     success_url = reverse_lazy("login")
+    extra_context = {
+        "breadcrumbs": [("Acceso", None), ("Iniciar sesión", reverse_lazy("login")), ("Crear cuenta", None)],
+    }
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -50,6 +54,7 @@ class InicioSesionView(auth_views.LoginView):
     template_name = "autenticacion/iniciar_sesion.html"
     authentication_form = InicioSesionForm
     redirect_authenticated_user = True
+    extra_context = {"breadcrumbs": [("Acceso", None), ("Iniciar sesión", None)]}
 
     def get_success_url(self):
         if self.request.user.debe_cambiar_contrasena:
@@ -62,6 +67,14 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
     form_class = CambioContrasenaForm
     success_url = reverse_lazy("password_change_done")
 
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        if self.request.user.debe_cambiar_contrasena:
+            contexto["breadcrumbs"] = [("Acceso", None), ("Cambiar contraseña", None)]
+        else:
+            contexto["breadcrumbs"] = breadcrumbs_usuario(self.request.user, self.request.user) + [("Cambiar contraseña", None)]
+        return contexto
+
     @transaction.atomic
     def form_valid(self, form):
         respuesta = super().form_valid(form)
@@ -70,3 +83,12 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
             update_fields=("debe_cambiar_contrasena", "actualizado_en")
         )
         return respuesta
+
+
+class CambioContrasenaCompletadoView(auth_views.PasswordChangeDoneView):
+    template_name = "autenticacion/cambio_contrasena_completado.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["breadcrumbs"] = breadcrumbs_usuario(self.request.user, self.request.user) + [("Contraseña actualizada", None)]
+        return contexto

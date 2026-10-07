@@ -1,15 +1,3 @@
-.perfil-volver {
-    display: inline-block;
-    margin-bottom: 20px;
-    color: var(--texto-suave);
-    text-decoration: none;
-}
-
-.perfil-volver:hover {
-    color: var(--primario);
-    text-decoration: underline;
-}
-
 .perfil {
     padding: 0;
     border-top: 3px solid var(--primario);

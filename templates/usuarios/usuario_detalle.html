@@ -8,12 +8,6 @@
 {% endblock %}
 
 {% block contenido %}
-{% if perms.usuarios.view_usuario %}
-    <a class="perfil-volver" href="{% url 'usuarios:usuario_lista' %}">Volver a usuarios</a>
-{% else %}
-    <a class="perfil-volver" href="{% url 'inicio' %}">Volver al inicio</a>
-{% endif %}
-
 <article class="tarjeta perfil">
     <header class="perfil-cabecera">
         <div>

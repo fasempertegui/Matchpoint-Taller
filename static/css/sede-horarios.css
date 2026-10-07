@@ -17,18 +17,6 @@
     --horario-ancho-hora: 110px;
 }
 
-.horario-volver {
-    display: inline-block;
-    margin-bottom: var(--horario-espacio-16);
-    color: var(--horario-secundario);
-    text-decoration: none;
-}
-
-.horario-volver:hover {
-    color: var(--horario-violeta);
-    text-decoration: underline;
-}
-
 .horario-encabezado {
     margin-bottom: var(--horario-espacio-24);
 }
@@ -135,7 +123,6 @@
 }
 
 .horario-dia:has(input:focus-visible),
-.horario-volver:focus-visible,
 .horario-atajos button:focus-visible,
 .horario-acciones .boton:focus-visible,
 .horario-segunda-opcion input:focus-visible {
