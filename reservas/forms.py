@@ -8,7 +8,7 @@ from instalaciones.models import Cancha, Sede
 from usuarios.models import Rol, Usuario
 
 from .disponibilidad import validar_fecha_reserva
-from .models import Reserva
+from .models import Evento
 
 
 class CanchaReservaRadioSelect(forms.RadioSelect):
@@ -78,7 +78,7 @@ class ReservaFiltroForm(forms.Form):
     )
     estado = forms.ChoiceField(
         required=False,
-        choices=(("", "Todos"), *Reserva.Estado.choices),
+        choices=(("", "Todos"), *Evento.Estado.choices),
         widget=forms.Select(attrs={"class": "form-control"}),
     )
 

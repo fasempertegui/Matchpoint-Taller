@@ -1,1 +1,1 @@
-<span class="badge-estado badge-estado-{% if estado == 'activo' or estado == 'activa' %}activo{% elif estado == 'inactivo' or estado == 'inactiva' %}inactivo{% else %}{{ estado }}{% endif %}">{{ texto }}</span>
+<span class="badge-estado badge-estado-{% if estado == 'activo' or estado == 'activa' %}activo{% elif estado == 'inactivo' or estado == 'inactiva' %}inactivo{% elif estado == 'programado' %}programada{% elif estado == 'finalizado' %}finalizada{% elif estado == 'anulado' %}anulada{% else %}{{ estado }}{% endif %}">{{ texto }}</span>

@@ -34,11 +34,11 @@ Cada sede guarda una tarifa vigente, positiva y común a todas sus canchas, por 
 
 ### Cabecera y detalles
 
-El proceso utiliza las tablas Turno, Reserva y ReservaTurno, relacionadas con usuarios y canchas. Cada Turno representa una hora de una cancha en una fecha y guarda su inicio; el fin se calcula sumando una hora. Reserva es la cabecera y guarda organizador, responsable del registro, importe por turno aplicado, observaciones y estado. Cada ReservaTurno es un detalle que vincula la cabecera con un turno.
+El proceso utiliza Turno, Evento, EventoTurno y Reserva. Turno identifica una hora de una cancha en una fecha; su fin se calcula desde el inicio. Evento concentra estado, observaciones y auditoría. Reserva referencia un único evento y guarda organizador, precio por turno aplicado y origen de la anulación. EventoTurno vincula cada evento con todos los turnos que utiliza.
 
-La base de datos impide duplicar turnos para una cancha, fecha y hora, o repetir un turno dentro de una reserva. Exige inicios en punto entre las 00:00 y las 22:00; la duración fija de una hora determina el fin dentro de la misma fecha. Las relaciones protegen los registros vinculados contra la eliminación física.
+La base de datos impide duplicar turnos para una cancha, fecha y hora, o repetir un turno dentro de un evento. Exige inicios en punto entre las 00:00 y las 22:00; la duración fija de una hora determina el fin dentro de la misma fecha. Las relaciones protegen los registros vinculados contra la eliminación física.
 
-Los estados son Programada, Anulada y Finalizada. Se exigen los datos de auditoría correspondientes a cada estado.
+Los estados del evento son Programado, Anulado y Finalizado, con auditoría coherente para cada caso. La base común admite los tipos Reserva, Clase y Bloqueo; el proceso implementado registra reservas. El registro crea evento, reserva y vínculos horarios en una única transacción.
 
 ### Disponibilidad
 
@@ -46,7 +46,7 @@ Se preparan y consultan turnos para una cancha y fecha entre hoy y catorce días
 
 Los turnos faltantes se generan dentro de una transacción, según las franjas actuales de funcionamiento. Sólo se ofrecen turnos futuros y libres. Preparar turnos no registra una reserva ni ocupa horarios.
 
-Las reservas Programadas y Finalizadas ocupan sus turnos; las Anuladas los liberan. Los turnos existentes fuera de los horarios actuales se conservan, pero no se ofrecen.
+Los eventos Programados y Finalizados ocupan sus turnos; los Anulados los liberan. La disponibilidad consulta esa relación común y conserva los vínculos históricos. Los turnos existentes fuera de los horarios actuales se conservan, pero no se ofrecen.
 
 ### Registro
 
@@ -54,7 +54,7 @@ El Administrador puede registrar una reserva para un organizador activo con rol 
 
 Se admite uno o más turnos consecutivos de una misma cancha y fecha, dentro de una única franja de funcionamiento. La duración, los subtotales y el total se calculan automáticamente con el precio de la sede y la cantidad de turnos.
 
-El servidor valida permisos, selección, estados, horarios, precio y disponibilidad dentro de una transacción, con bloqueos para coordinar solicitudes simultáneas. Registra la cabecera en estado Programada y todos sus detalles, con número, fecha y usuario responsable automáticos. Ante un error, no queda una reserva parcial. Si cambia el precio antes del registro, se exige revisar el importe y confirmar nuevamente.
+El servidor valida permisos, selección, estados, horarios, precio y disponibilidad dentro de una transacción, con bloqueos para coordinar solicitudes simultáneas. Registra la reserva y su evento Programado con todos los vínculos horarios, número, fecha y usuario responsable automáticos. Ante un error, no queda una reserva parcial. Si cambia el precio antes del registro, se exige revisar el importe y confirmar nuevamente.
 
 El importe por turno se copia desde la tarifa validada de la sede al registrar y se conserva en la reserva. El total se calcula con ese importe y la cantidad de turnos; actualizar la tarifa no modifica reservas existentes. No se permite retirar el rol Reservas a un usuario con reservas propias Programadas.
 
@@ -68,7 +68,7 @@ Cada reserva se presenta una sola vez, con número, organizador según el permis
 
 El Administrador puede anular cualquier reserva Programada antes de que comience su primer turno. El usuario con rol Reservas puede anular únicamente las propias con al menos una hora de antelación al primer turno. El motivo es obligatorio y debe tener al menos 25 caracteres, sin contar los espacios al principio y al final. El formulario y el procesamiento de la anulación validan ese mínimo.
 
-La operación cambia el estado a Anulada, registra motivo, fecha, hora y responsable, y libera todos sus turnos. Conserva la cabecera, los detalles y el precio aplicado. Se ejecuta en una única transacción, validando nuevamente permisos, estado y horario después de obtener los bloqueos.
+La operación cambia el evento a Anulado, registra motivo, fecha, hora y responsable, y libera todos sus turnos. Guarda en la reserva si la anulación corresponde al organizador o a la administración. Conserva reserva, evento, vínculos horarios e importe aplicado. Se ejecuta en una única transacción, validando nuevamente permisos, estado y horario después de obtener los bloqueos.
 
 Se rechazan reservas iniciadas, Anuladas o Finalizadas, solicitudes sobre reservas ajenas desde el portal y anulaciones propias fuera del plazo. Una solicitud repetida no sobrescribe la auditoría. El actor debe conservar el acceso habilitado; el Administrador puede operar aunque el organizador esté inactivo. No se exige que las instalaciones o el precio sigan activos. Ante un error, no se modifica la reserva ni su ocupación.
 
@@ -76,7 +76,7 @@ Se rechazan reservas iniciadas, Anuladas o Finalizadas, solicitudes sobre reserv
 
 Celery finaliza automáticamente las reservas Programadas cada hora en punto cuando la fecha y hora de fin de su último turno es igual o anterior al momento actual. El Administrador también puede finalizar una reserva vencida como acción de emergencia, con las mismas condiciones y sin depender de Celery ni Redis.
 
-Cada reserva se procesa en una transacción, comprobando nuevamente el estado y horario después de bloquear los turnos y la cabecera. Registra estado Finalizada, fecha y hora de procesamiento, sin responsable. Conserva los detalles, el precio y la ocupación histórica, aunque los registros relacionados estén inactivos. No modifica reservas que no terminaron, Anuladas o Finalizadas, ni sobrescribe datos ante ejecuciones repetidas. La siguiente ejecución procesa todas las vencidas que sigan pendientes.
+Cada reserva se procesa en una transacción, comprobando nuevamente el estado y horario después de bloquear los turnos y el evento. Registra estado Finalizado, fecha y hora de procesamiento en el evento, sin responsable. Conserva los vínculos horarios, el precio y la ocupación histórica, aunque los registros relacionados estén inactivos. No modifica reservas que no terminaron, Anuladas o Finalizadas, ni sobrescribe datos ante ejecuciones repetidas. La siguiente ejecución procesa todas las vencidas que sigan pendientes.
 
 ### Comprobante
 

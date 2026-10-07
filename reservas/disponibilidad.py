@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from instalaciones.models import Cancha, Sede
 
-from .models import Reserva, Turno
+from .models import Evento, Turno
 
 
 def validar_fecha_reserva(fecha):
@@ -58,9 +58,9 @@ def consultar_disponibilidad(cancha, fecha):
         fecha=fecha,
         hora_inicio__in=inicios_habilitados,
     ).exclude(
-        reservas_turnos__reserva__estado__in=(
-            Reserva.Estado.PROGRAMADA,
-            Reserva.Estado.FINALIZADA,
+        eventos__estado__in=(
+            Evento.Estado.PROGRAMADO,
+            Evento.Estado.FINALIZADO,
         )
     ).order_by("hora_inicio")
     ahora = timezone.localtime()

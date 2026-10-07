@@ -9,7 +9,7 @@ from django.views.decorators.http import require_http_methods
 
 from .disponibilidad import consultar_disponibilidad
 from .forms import ReservaAnulacionForm, ReservaDatosForm, ReservaFiltroForm, ReservaTurnosForm
-from .models import Reserva, ReservaTurno
+from .models import Reserva, Turno
 from .servicios import (
     anular_reserva,
     exigir_acceso_reservas,
@@ -25,8 +25,8 @@ from .servicios import (
 def reserva_lista(request):
     es_administrador = exigir_acceso_reservas(request.user)
     formulario = ReservaFiltroForm(request.GET, es_administrador=es_administrador)
-    reservas = Reserva.objects.select_related("organizador").prefetch_related(
-        Prefetch("detalles", queryset=ReservaTurno.objects.select_related("turno__cancha__sede"))
+    reservas = Reserva.objects.select_related("organizador", "evento").prefetch_related(
+        Prefetch("evento__turnos", queryset=Turno.objects.select_related("cancha__sede"))
     )
     if not es_administrador:
         reservas = reservas.filter(organizador=request.user)
@@ -35,17 +35,17 @@ def reserva_lista(request):
         datos = formulario.cleaned_data
         filtros_turnos = {}
         if datos["sede"]:
-            filtros_turnos["detalles__turno__cancha__sede"] = datos["sede"]
+            filtros_turnos["evento__turnos__cancha__sede"] = datos["sede"]
         if datos["cancha"]:
-            filtros_turnos["detalles__turno__cancha"] = datos["cancha"]
+            filtros_turnos["evento__turnos__cancha"] = datos["cancha"]
         if datos["fecha_desde"]:
-            filtros_turnos["detalles__turno__fecha__gte"] = datos["fecha_desde"]
+            filtros_turnos["evento__turnos__fecha__gte"] = datos["fecha_desde"]
         if datos["fecha_hasta"]:
-            filtros_turnos["detalles__turno__fecha__lte"] = datos["fecha_hasta"]
+            filtros_turnos["evento__turnos__fecha__lte"] = datos["fecha_hasta"]
         if filtros_turnos:
             reservas = reservas.filter(**filtros_turnos).distinct()
         if datos["estado"]:
-            reservas = reservas.filter(estado=datos["estado"])
+            reservas = reservas.filter(evento__estado=datos["estado"])
         if datos["numero"] is not None:
             reservas = reservas.filter(pk=datos["numero"])
         for palabra in datos.get("organizador", "").split():
@@ -58,16 +58,16 @@ def reserva_lista(request):
 
     filas = []
     for reserva in reservas:
-        detalles = list(reserva.detalles.all())
-        primer_turno = detalles[0].turno
-        ultimo_turno = detalles[-1].turno
+        turnos = list(reserva.evento.turnos.all())
+        primer_turno = turnos[0]
+        ultimo_turno = turnos[-1]
         filas.append({
             "reserva": reserva,
             "cancha": primer_turno.cancha,
             "fecha": primer_turno.fecha,
             "hora_inicio": primer_turno.hora_inicio,
             "hora_fin": ultimo_turno.hora_fin,
-            "total": reserva.precio_por_turno_aplicado * len(detalles),
+            "total": reserva.precio_por_turno_aplicado * len(turnos),
         })
     return render(request, "reservas/reserva_lista.html", {
         "formulario": formulario,
@@ -161,21 +161,21 @@ def reserva_detalle(request, pk):
 @require_http_methods(["GET"])
 def reserva_comprobante(request, pk):
     reserva, _ = _obtener_reserva_para_consulta(request.user, pk)
-    detalles = list(reserva.detalles.select_related("turno__cancha__sede").all())
+    turnos = list(reserva.evento.turnos.select_related("cancha__sede").all())
     return render(request, "reservas/reserva_comprobante.html", {
         "reserva": reserva,
-        "detalles": detalles,
-        "cantidad_horas": len(detalles),
-        "total": reserva.precio_por_turno_aplicado * len(detalles),
-        "hora_inicio": detalles[0].turno.hora_inicio if detalles else None,
-        "hora_fin": detalles[-1].turno.hora_fin if detalles else None,
+        "turnos": turnos,
+        "cantidad_horas": len(turnos),
+        "total": reserva.precio_por_turno_aplicado * len(turnos),
+        "hora_inicio": turnos[0].hora_inicio if turnos else None,
+        "hora_fin": turnos[-1].hora_fin if turnos else None,
     })
 
 
 def _obtener_reserva_para_consulta(usuario, pk):
     es_administrador = exigir_acceso_reservas(usuario)
     reservas = Reserva.objects.select_related(
-        "organizador", "registrado_por", "anulado_por",
+        "organizador", "evento__registrado_por", "evento__anulado_por",
     )
     if not es_administrador:
         reservas = reservas.filter(organizador=usuario)
@@ -183,10 +183,10 @@ def _obtener_reserva_para_consulta(usuario, pk):
 
 
 def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=None):
-    detalles = list(reserva.detalles.select_related("turno__cancha__sede").all())
+    turnos = list(reserva.evento.turnos.select_related("cancha__sede").all())
     ahora = timezone.localtime()
-    primer_turno = detalles[0].turno if detalles else None
-    ultimo_turno = detalles[-1].turno if detalles else None
+    primer_turno = turnos[0] if turnos else None
+    ultimo_turno = turnos[-1] if turnos else None
     try:
         validar_anulacion_reserva(reserva, primer_turno, es_administrador, ahora)
     except ValidationError as error:
@@ -205,9 +205,9 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
             puede_finalizar = True
     return {
         "reserva": reserva,
-        "detalles": detalles,
-        "cantidad_horas": len(detalles),
-        "total": reserva.precio_por_turno_aplicado * len(detalles),
+        "turnos": turnos,
+        "cantidad_horas": len(turnos),
+        "total": reserva.precio_por_turno_aplicado * len(turnos),
         "puede_anular": puede_anular,
         "puede_finalizar": puede_finalizar,
         "hora_inicio": primer_turno.hora_inicio if primer_turno else None,

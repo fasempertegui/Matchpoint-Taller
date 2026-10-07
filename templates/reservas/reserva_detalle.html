@@ -23,7 +23,7 @@
             <p class="perfil-contexto">Detalle de reserva</p>
             <div class="perfil-identidad">
                 <h1>{{ reserva.numero }}</h1>
-                {% include "componentes/badge_estado.html" with estado=reserva.estado texto=reserva.get_estado_display only %}
+                {% include "componentes/badge_estado.html" with estado=reserva.evento.estado texto=reserva.evento.get_estado_display only %}
             </div>
         </div>
         <div class="perfil-total">
@@ -43,15 +43,15 @@
                     </div>
                     <div class="perfil-fila">
                         <dt>Sede</dt>
-                        <dd>{{ detalles.0.turno.cancha.sede.nombre }}</dd>
+                        <dd>{{ turnos.0.cancha.sede.nombre }}</dd>
                     </div>
                     <div class="perfil-fila">
                         <dt>Cancha</dt>
-                        <dd>{{ detalles.0.turno.cancha.nombre }}</dd>
+                        <dd>{{ turnos.0.cancha.nombre }}</dd>
                     </div>
                     <div class="perfil-fila">
                         <dt>Fecha de uso</dt>
-                        <dd>{{ detalles.0.turno.fecha|date:"d/m/Y" }}</dd>
+                        <dd>{{ turnos.0.fecha|date:"d/m/Y" }}</dd>
                     </div>
                     <div class="perfil-fila">
                         <dt>Horario</dt>
@@ -71,9 +71,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for detalle in detalles %}
+                            {% for turno in turnos %}
                                 <tr>
-                                    <td>{{ detalle.turno.hora_inicio|time:"H:i" }} a {{ detalle.turno.hora_fin|time:"H:i" }}</td>
+                                    <td>{{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</td>
                                     <td class="tabla-importe">$ {{ reserva.precio_por_turno_aplicado|floatformat:"2g" }}</td>
                                 </tr>
                             {% endfor %}
@@ -82,17 +82,17 @@
                 </div>
             </section>
 
-            {% if reserva.observaciones %}
+            {% if reserva.evento.observaciones %}
                 <section class="perfil-seccion" aria-labelledby="reserva-observaciones-titulo">
                     <h2 id="reserva-observaciones-titulo">Observaciones</h2>
-                    <p class="perfil-observaciones">{{ reserva.observaciones|linebreaksbr }}</p>
+                    <p class="perfil-observaciones">{{ reserva.evento.observaciones|linebreaksbr }}</p>
                 </section>
             {% endif %}
 
-            {% if reserva.estado == "anulada" %}
+            {% if reserva.evento.estado == "anulado" %}
                 <section class="perfil-seccion" aria-labelledby="reserva-motivo-titulo">
                     <h2 id="reserva-motivo-titulo">Motivo de anulación</h2>
-                    <p class="perfil-observaciones">{{ reserva.motivo_anulacion|linebreaksbr }}</p>
+                    <p class="perfil-observaciones">{{ reserva.evento.motivo_anulacion|linebreaksbr }}</p>
                 </section>
             {% endif %}
         </div>
@@ -103,25 +103,25 @@
                 <dl class="perfil-lista">
                     <div class="perfil-fila">
                         <dt>Fecha de registro</dt>
-                        <dd>{{ reserva.creado_en|date:"d/m/Y H:i" }}</dd>
+                        <dd>{{ reserva.evento.creado_en|date:"d/m/Y H:i" }}</dd>
                     </div>
                     <div class="perfil-fila">
                         <dt>Registrada por</dt>
-                        <dd>{{ reserva.registrado_por }}</dd>
+                        <dd>{{ reserva.evento.registrado_por }}</dd>
                     </div>
-                    {% if reserva.estado == "anulada" %}
+                    {% if reserva.evento.estado == "anulado" %}
                         <div class="perfil-fila">
                             <dt>Fecha de anulación</dt>
-                            <dd>{{ reserva.anulado_en|date:"d/m/Y H:i" }}</dd>
+                            <dd>{{ reserva.evento.anulado_en|date:"d/m/Y H:i" }}</dd>
                         </div>
                         <div class="perfil-fila">
                             <dt>Anulada por</dt>
-                            <dd>{{ reserva.anulado_por }}</dd>
+                            <dd>{{ reserva.evento.anulado_por }}</dd>
                         </div>
-                    {% elif reserva.estado == "finalizada" %}
+                    {% elif reserva.evento.estado == "finalizado" %}
                         <div class="perfil-fila">
                             <dt>Fecha de finalización</dt>
-                            <dd>{{ reserva.finalizado_en|date:"d/m/Y H:i" }}</dd>
+                            <dd>{{ reserva.evento.finalizado_en|date:"d/m/Y H:i" }}</dd>
                         </div>
                     {% endif %}
                 </dl>
@@ -160,7 +160,7 @@
                             <button class="boton boton-secundario boton-chico" type="submit">Anular reserva</button>
                         </form>
                     </details>
-                {% elif not es_administrador and reserva.estado == "programada" %}
+                {% elif not es_administrador and reserva.evento.estado == "programado" %}
                     <p class="perfil-descripcion perfil-impedimento">{{ impedimento_anulacion }}</p>
                 {% endif %}
             </section>

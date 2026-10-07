@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from psycopg.errors import UniqueViolation
 
-from reservas.models import Reserva
+from reservas.models import Evento
 from usuarios.models import Rol
 
 from .forms import CanchaForm, SedeForm, SedeHorarioForm, SedePrecioForm
@@ -235,9 +235,10 @@ def sede_cambiar_estado(request, pk):
         if nuevo_estado == sede.estado:
             messages.info(request, f'La sede "{sede.nombre}" ya está {sede.get_estado_display().lower()}.')
             return redirect("instalaciones:sede_detalle", pk=sede.pk)
-        if nuevo_estado == Sede.Estado.INACTIVA and Reserva.objects.filter(
-            estado=Reserva.Estado.PROGRAMADA,
-            detalles__turno__cancha__sede=sede,
+        if nuevo_estado == Sede.Estado.INACTIVA and Evento.objects.filter(
+            tipo=Evento.Tipo.RESERVA,
+            estado=Evento.Estado.PROGRAMADO,
+            turnos__cancha__sede=sede,
         ).exists():
             messages.error(
                 request,
@@ -346,9 +347,10 @@ def cancha_cambiar_estado(request, sede_pk, pk):
         if nuevo_estado == cancha.estado:
             messages.info(request, f'La cancha "{cancha.nombre}" ya está {cancha.get_estado_display().lower()}.')
             return redirect(destino)
-        if nuevo_estado == Cancha.Estado.INACTIVA and Reserva.objects.filter(
-            estado=Reserva.Estado.PROGRAMADA,
-            detalles__turno__cancha=cancha,
+        if nuevo_estado == Cancha.Estado.INACTIVA and Evento.objects.filter(
+            tipo=Evento.Tipo.RESERVA,
+            estado=Evento.Estado.PROGRAMADO,
+            turnos__cancha=cancha,
         ).exists():
             messages.error(
                 request,

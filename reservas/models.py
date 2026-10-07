@@ -44,22 +44,123 @@ class Turno(models.Model):
         return (datetime.combine(self.fecha, self.hora_inicio) + timedelta(hours=1)).time()
 
 
-class Reserva(models.Model):
+class Evento(models.Model):
+    class Tipo(models.TextChoices):
+        RESERVA = "reserva", "Reserva"
+        CLASE = "clase", "Clase"
+        BLOQUEO = "bloqueo", "Bloqueo"
+
     class Estado(models.TextChoices):
-        PROGRAMADA = "programada", "Programada"
-        FINALIZADA = "finalizada", "Finalizada"
-        ANULADA = "anulada", "Anulada"
+        PROGRAMADO = "programado", "Programado"
+        ANULADO = "anulado", "Anulado"
+        FINALIZADO = "finalizado", "Finalizado"
 
     id = models.BigAutoField(primary_key=True)
+    tipo = models.CharField(max_length=10, choices=Tipo.choices)
+    estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.PROGRAMADO)
+    registrado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="eventos_registrados",
+    )
+    observaciones = models.TextField(blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+    anulado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="eventos_anulados",
+        blank=True,
+        null=True,
+    )
+    anulado_en = models.DateTimeField(blank=True, null=True)
+    motivo_anulacion = models.TextField(blank=True)
+    finalizado_en = models.DateTimeField(blank=True, null=True)
+    turnos = models.ManyToManyField(Turno, through="EventoTurno", related_name="eventos")
+
+    class Meta:
+        db_table = "eventos"
+        ordering = ("-creado_en", "-pk")
+        default_permissions = ()
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(tipo__in=("reserva", "clase", "bloqueo")),
+                name="evento_tipo_valido",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        estado="programado",
+                        anulado_por__isnull=True,
+                        anulado_en__isnull=True,
+                        motivo_anulacion="",
+                        finalizado_en__isnull=True,
+                    )
+                    | models.Q(
+                        estado="anulado",
+                        anulado_por__isnull=False,
+                        anulado_en__isnull=False,
+                        motivo_anulacion__regex=r"\S",
+                        finalizado_en__isnull=True,
+                    )
+                    | models.Q(
+                        estado="finalizado",
+                        anulado_por__isnull=True,
+                        anulado_en__isnull=True,
+                        motivo_anulacion="",
+                        finalizado_en__isnull=False,
+                    )
+                ),
+                name="evento_estado_y_auditoria_validos",
+                violation_error_message="Los datos de anulación y finalización deben corresponder al estado del evento.",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(tipo="bloqueo", estado="finalizado"),
+                name="evento_bloqueo_no_finalizado",
+            ),
+        ]
+        verbose_name = "evento"
+        verbose_name_plural = "eventos"
+
+    def __str__(self):
+        return f"Evento {self.pk}"
+
+
+class EventoTurno(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    evento = models.ForeignKey(Evento, on_delete=models.PROTECT, related_name="detalles")
+    turno = models.ForeignKey(Turno, on_delete=models.PROTECT, related_name="vinculos_eventos")
+
+    class Meta:
+        db_table = "eventos_turnos"
+        ordering = ("turno__fecha", "turno__hora_inicio", "pk")
+        default_permissions = ()
+        constraints = [
+            models.UniqueConstraint(
+                fields=("evento", "turno"),
+                name="evento_turno_unico",
+                violation_error_message="El turno ya está incluido en este evento.",
+            ),
+        ]
+        verbose_name = "turno de evento"
+        verbose_name_plural = "turnos de eventos"
+
+    def __str__(self):
+        return f"{self.evento} - {self.turno}"
+
+
+class Reserva(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    evento = models.OneToOneField(
+        Evento,
+        on_delete=models.PROTECT,
+        related_name="reserva",
+        limit_choices_to={"tipo": Evento.Tipo.RESERVA},
+    )
     organizador = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="reservas",
-    )
-    registrado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="reservas_registradas",
     )
     precio_por_turno_aplicado = models.DecimalField(
         "Precio por turno aplicado (ARS)",
@@ -67,59 +168,16 @@ class Reserva(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.01"))],
     )
-    estado = models.CharField(
-        max_length=10,
-        choices=Estado.choices,
-        default=Estado.PROGRAMADA,
-    )
-    observaciones = models.TextField(blank=True)
-    creado_en = models.DateTimeField(auto_now_add=True)
-    anulado_en = models.DateTimeField(blank=True, null=True)
-    anulado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="reservas_anuladas",
-        blank=True,
-        null=True,
-    )
-    motivo_anulacion = models.TextField(blank=True)
-    finalizado_en = models.DateTimeField(blank=True, null=True)
+    anulada_por_organizador = models.BooleanField(blank=True, null=True)
 
     class Meta:
         db_table = "reservas"
-        ordering = ("-creado_en", "-pk")
+        ordering = ("-evento__creado_en", "-pk")
         default_permissions = ("add", "view")
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(precio_por_turno_aplicado__gte=Decimal("0.01")),
                 name="reserva_precio_por_turno_positivo",
-            ),
-            models.CheckConstraint(
-                condition=(
-                    models.Q(
-                        estado="programada",
-                        anulado_en__isnull=True,
-                        anulado_por__isnull=True,
-                        motivo_anulacion="",
-                        finalizado_en__isnull=True,
-                    )
-                    | models.Q(
-                        estado="anulada",
-                        anulado_en__isnull=False,
-                        anulado_por__isnull=False,
-                        motivo_anulacion__regex=r"\S",
-                        finalizado_en__isnull=True,
-                    )
-                    | models.Q(
-                        estado="finalizada",
-                        anulado_en__isnull=True,
-                        anulado_por__isnull=True,
-                        motivo_anulacion="",
-                        finalizado_en__isnull=False,
-                    )
-                ),
-                name="reserva_estado_y_auditoria_validos",
-                violation_error_message=("Los datos de anulación y finalización deben corresponder al estado de la reserva. La anulación requiere un motivo."),
             ),
         ]
         verbose_name = "reserva"
@@ -131,34 +189,3 @@ class Reserva(models.Model):
     @property
     def numero(self):
         return f"R-{self.pk:06d}" if self.pk is not None else ""
-
-
-class ReservaTurno(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    reserva = models.ForeignKey(
-        Reserva,
-        on_delete=models.PROTECT,
-        related_name="detalles",
-    )
-    turno = models.ForeignKey(
-        Turno,
-        on_delete=models.PROTECT,
-        related_name="reservas_turnos",
-    )
-
-    class Meta:
-        db_table = "reservas_turnos"
-        ordering = ("turno__fecha", "turno__hora_inicio", "pk")
-        default_permissions = ()
-        constraints = [
-            models.UniqueConstraint(
-                fields=("reserva", "turno"),
-                name="reserva_turno_unico",
-                violation_error_message="El turno ya está incluido en esta reserva.",
-            ),
-        ]
-        verbose_name = "turno de reserva"
-        verbose_name_plural = "turnos de reserva"
-
-    def __str__(self):
-        return f"{self.reserva} - {self.turno}"

@@ -8,7 +8,7 @@ from django.utils import timezone
 from usuarios.models import Rol, Usuario
 
 from .disponibilidad import consultar_disponibilidad
-from .models import Reserva, ReservaTurno, Turno
+from .models import Evento, EventoTurno, Reserva, Turno
 
 
 def exigir_acceso_reservas(usuario):
@@ -75,29 +75,35 @@ def registrar_reserva(registrado_por, organizador, cancha, fecha, identificadore
     ahora = timezone.localtime()
     if fecha < ahora.date() or (fecha == ahora.date() and turnos[0].hora_inicio <= ahora.time()):
         raise ValidationError("La reserva debe comenzar en un horario futuro. Elegí nuevamente.")
-    if ReservaTurno.objects.filter(
-        turno__in=turnos,
-        reserva__estado__in=(Reserva.Estado.PROGRAMADA, Reserva.Estado.FINALIZADA),
+    if Evento.objects.filter(
+        turnos__in=turnos,
+        estado__in=(Evento.Estado.PROGRAMADO, Evento.Estado.FINALIZADO),
     ).exists():
         raise ValidationError("Uno o más turnos fueron reservados. Elegí nuevamente.")
     precio = disponibilidad["precio_por_turno"]
     if precio != precio_mostrado:
         raise ValidationError("El precio por turno cambió. Revisá el nuevo total y confirmá nuevamente.")
 
-    reserva = Reserva.objects.create(
-        organizador=organizador,
+    evento = Evento.objects.create(
+        tipo=Evento.Tipo.RESERVA,
         registrado_por=registrado_por,
-        precio_por_turno_aplicado=precio,
         observaciones=observaciones,
     )
-    ReservaTurno.objects.bulk_create([
-        ReservaTurno(reserva=reserva, turno=turno) for turno in turnos
+    reserva = Reserva.objects.create(
+        evento=evento,
+        organizador=organizador,
+        precio_por_turno_aplicado=precio,
+    )
+    EventoTurno.objects.bulk_create([
+        EventoTurno(evento=evento, turno=turno) for turno in turnos
     ])
     return reserva, precio * len(turnos)
 
 
 def validar_anulacion_reserva(reserva, primer_turno, es_administrador, ahora):
-    if reserva.estado != Reserva.Estado.PROGRAMADA:
+    if reserva.evento.tipo != Evento.Tipo.RESERVA:
+        raise ValidationError("El evento no corresponde a una reserva.")
+    if reserva.evento.estado != Evento.Estado.PROGRAMADO:
         raise ValidationError("Sólo se pueden anular reservas Programadas.")
     if primer_turno is None:
         raise ValidationError("La reserva no tiene turnos asociados.")
@@ -111,6 +117,18 @@ def validar_anulacion_reserva(reserva, primer_turno, es_administrador, ahora):
         raise ValidationError("Para anular tu reserva debe faltar al menos una hora para el inicio del primer turno.")
 
 
+def _bloquear_reserva(reserva_id):
+    reserva = Reserva.objects.get(pk=reserva_id)
+    # Los turnos coordinan la ocupación y se bloquean antes del evento.
+    turnos = list(
+        Turno.objects.select_for_update(of=("self",))
+        .filter(eventos=reserva.evento_id)
+        .order_by("pk")
+    )
+    reserva.evento = Evento.objects.select_for_update().get(pk=reserva.evento_id)
+    return reserva, turnos
+
+
 @transaction.atomic
 def anular_reserva(anulado_por, reserva_id, motivo):
     anulado_por = Usuario.objects.select_for_update().get(pk=anulado_por.pk)
@@ -121,29 +139,28 @@ def anular_reserva(anulado_por, reserva_id, motivo):
     if len(motivo) < 25:
         raise ValidationError("El motivo de anulación debe tener al menos 25 caracteres.")
 
-    # Los turnos coordinan la ocupación con el registro y se bloquean antes de la cabecera.
-    turnos = list(
-        Turno.objects.select_for_update(of=("self",))
-        .filter(reservas_turnos__reserva_id=reserva_id)
-        .order_by("pk")
-    )
-    reserva = Reserva.objects.select_for_update().get(pk=reserva_id)
+    reserva, turnos = _bloquear_reserva(reserva_id)
     if not es_administrador and reserva.organizador_id != anulado_por.pk:
         raise PermissionDenied
     primer_turno = min(turnos, key=lambda turno: (turno.fecha, turno.hora_inicio)) if turnos else None
     ahora = timezone.localtime()
     validar_anulacion_reserva(reserva, primer_turno, es_administrador, ahora)
 
-    reserva.estado = Reserva.Estado.ANULADA
-    reserva.anulado_en = ahora
-    reserva.anulado_por = anulado_por
-    reserva.motivo_anulacion = motivo
-    reserva.save(update_fields=["estado", "anulado_en", "anulado_por", "motivo_anulacion"])
+    evento = reserva.evento
+    evento.estado = Evento.Estado.ANULADO
+    evento.anulado_en = ahora
+    evento.anulado_por = anulado_por
+    evento.motivo_anulacion = motivo
+    evento.save(update_fields=["estado", "anulado_en", "anulado_por", "motivo_anulacion", "actualizado_en"])
+    reserva.anulada_por_organizador = not es_administrador
+    reserva.save(update_fields=["anulada_por_organizador"])
     return reserva
 
 
 def validar_finalizacion_reserva(reserva, ultimo_turno, ahora):
-    if reserva.estado != Reserva.Estado.PROGRAMADA:
+    if reserva.evento.tipo != Evento.Tipo.RESERVA:
+        raise ValidationError("El evento no corresponde a una reserva.")
+    if reserva.evento.estado != Evento.Estado.PROGRAMADO:
         raise ValidationError("Sólo se pueden finalizar reservas Programadas.")
     if ultimo_turno is None:
         raise ValidationError("La reserva no tiene turnos asociados.")
@@ -159,29 +176,24 @@ def finalizar_reserva(reserva_id, usuario=None):
         if not exigir_acceso_reservas(usuario):
             raise PermissionDenied
 
-    # La anulación también bloquea los turnos antes de la cabecera.
-    turnos = list(
-        Turno.objects.select_for_update(of=("self",))
-        .filter(reservas_turnos__reserva_id=reserva_id)
-        .order_by("pk")
-    )
-    reserva = Reserva.objects.select_for_update().get(pk=reserva_id)
+    reserva, turnos = _bloquear_reserva(reserva_id)
     ultimo_turno = max(turnos, key=lambda turno: (turno.fecha, turno.hora_inicio)) if turnos else None
     ahora = timezone.localtime()
     validar_finalizacion_reserva(reserva, ultimo_turno, ahora)
 
-    reserva.estado = Reserva.Estado.FINALIZADA
-    reserva.finalizado_en = ahora
-    reserva.save(update_fields=["estado", "finalizado_en"])
+    evento = reserva.evento
+    evento.estado = Evento.Estado.FINALIZADO
+    evento.finalizado_en = ahora
+    evento.save(update_fields=["estado", "finalizado_en", "actualizado_en"])
     return reserva
 
 
 def finalizar_reservas_vencidas():
     limite_inicio = timezone.localtime() - timedelta(hours=1)
     # Todos los turnos de una reserva pertenecen a la misma fecha.
-    pendientes = Reserva.objects.filter(estado=Reserva.Estado.PROGRAMADA).annotate(
-        fecha_ultimo_turno=Max("detalles__turno__fecha"),
-        hora_ultimo_turno=Max("detalles__turno__hora_inicio"),
+    pendientes = Reserva.objects.filter(evento__estado=Evento.Estado.PROGRAMADO).annotate(
+        fecha_ultimo_turno=Max("evento__turnos__fecha"),
+        hora_ultimo_turno=Max("evento__turnos__hora_inicio"),
     ).filter(
         Q(fecha_ultimo_turno__lt=limite_inicio.date())
         | Q(fecha_ultimo_turno=limite_inicio.date(), hora_ultimo_turno__lte=limite_inicio.time())
