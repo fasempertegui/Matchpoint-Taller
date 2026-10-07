@@ -25,7 +25,7 @@ Este documento transforma las decisiones de `1_organizacion.md` y `2_criterios_d
 
 ### 2.3 Valores fijos y auditoría
 
-Los estados, modalidades, superficies, tipos de pase y medios de pago se validan mediante las opciones definidas en Django antes de guardar. Los roles se almacenan en un catálogo fijo `roles`, referenciado mediante una clave foránea desde `usuarios_roles`. Las tablas mutables tienen `creado_en` y `actualizado_en`; Django mantiene automáticamente la segunda marca al guardar cada registro.
+Los estados, modalidades, superficies, tipos de pase y medios de pago se validan mediante las opciones definidas en Django antes de guardar. Los roles se almacenan en un catálogo fijo `roles`, referenciado mediante una clave foránea desde `usuarios_roles`. Las actividades guardan `creado_en` y `actualizado_en` en `eventos`. La modificación de sus datos específicos actualiza también la marca del evento. Las demás tablas mutables mantienen sus propias marcas; las tablas de vínculos inmutables no necesitan una fecha de modificación.
 
 ### 2.4 Contraseñas
 
@@ -39,11 +39,23 @@ En las tablas de la sección 4, ambas columnas solo muestran `Sí` cuando aplica
 
 ---
 
-## 3. Extensiones de PostgreSQL
+## 3. Estructura de ocupación
 
-Se habilitará `btree_gist` para aplicar una restricción de exclusión que impida eventos superpuestos en una misma cancha.
+Un turno representa una hora de una cancha en una fecha. Un evento representa la actividad que utiliza uno o varios turnos y concentra su estado. Cada evento corresponde exactamente a una reserva, una clase o un bloqueo; las tres especializaciones son excluyentes.
 
----
+```mermaid
+erDiagram
+    CANCHAS ||--o{ TURNOS : tiene
+    TURNOS ||--o{ EVENTOS_TURNOS : participa
+    EVENTOS ||--|{ EVENTOS_TURNOS : utiliza
+    EVENTOS ||--o| RESERVAS : corresponde_a
+    EVENTOS ||--o| CLASES : corresponde_a
+    EVENTOS ||--o| BLOQUEOS : corresponde_a
+    BLOQUEOS ||--o{ BLOQUEOS_ORIGENES : registra
+    EVENTOS ||--o| BLOQUEOS_ORIGENES : origina
+```
+
+Las restricciones únicas identifican cada turno y evitan repetir vínculos. Para confirmar una actividad, se bloquean sus turnos y se comprueba que ningún evento Programado o Finalizado los ocupe. La consulta de disponibilidad utiliza `eventos_turnos` y `eventos.estado`, sin consultar por separado reservas, clases y bloqueos. El esquema no necesita una exclusión de intervalos mediante `btree_gist`: la ocupación se coordina por identificadores de turnos dentro de las operaciones transaccionales.
 
 ## 4. Tablas
 
@@ -67,15 +79,21 @@ Representa a toda persona gestionada por la academia —alumno, profesor, admini
 | | `debe_cambiar_contrasena` | `boolean` | | | `true` |
 | | `date_joined` | `timestamptz` | | | `2026-03-01 10:15:00-03` |
 | | `fecha_nacimiento` | `date` | | | `1998-04-12` |
-| | `celular_contacto` | `varchar(30)` | | | `+54 387 555-1234` |
+| | `celular_contacto` | `varchar(30)` | | | `+5493875551234` |
 | | `observaciones` | `text` | | | `Celular es de la madre` |
 | | `actualizado_en` | `timestamptz` | | | `2026-03-01 10:15:00-03` |
 
 `Usuario` hereda de `AbstractUser`; por eso `password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `is_staff`, `is_active` y `date_joined` son columnas físicas de `usuarios`. `date_joined` registra el alta, `actualizado_en` la última modificación y `fecha_baja` el momento de la inactivación. Una cuenta activa conserva `fecha_baja = NULL`. `observaciones` admite una cadena vacía, pero no `NULL`.
 
+Los formularios de alta exigen nombre, apellido, correo, celular y fecha de nacimiento. Nombre y apellido admiten hasta 100 caracteres y no contienen números; sus columnas heredadas de Django admiten hasta 150. El celular se valida como móvil argentino y se guarda en formato internacional E.164; puede pertenecer a un tercero y no es único. La fecha de nacimiento se encuentra entre la fecha local actual menos 120 años y la fecha local actual, sin una edad mínima adicional.
+
+Después del alta, la única columna de datos personales editable es `email`, mediante la gestión administrativa. El titular cambia su propia contraseña mediante el mecanismo de autenticación, que guarda su hash en `password`. `first_name`, `last_name`, `username`, `celular_contacto`, `fecha_nacimiento` y `observaciones` no tienen edición desde la aplicación. El estado y los roles se modifican mediante operaciones independientes. `actualizado_en` se actualiza al modificar el correo, cambiar o restablecer la contraseña y activar o desactivar la cuenta; `date_joined` conserva el momento del alta.
+
 PostgreSQL garantiza la unicidad de `email` y `username` sin distinguir mayúsculas de minúsculas mediante restricciones funcionales sobre `LOWER(email)` y `LOWER(username)`. Los formularios comprueban la disponibilidad del email antes de guardar. En el alta administrativa y el autorregistro, el sistema genera `username` combinando el apellido normalizado con la inicial del nombre y agrega un sufijo numérico desde `1` cuando la combinación ya existe. El nombre generado se muestra sin permitir su edición y se confirma al guardar. `celular_contacto` no es único. `is_active` determina si la cuenta puede autenticarse. `is_superuser` vale `true` para las cuentas con el rol Administrador y permite que el sistema de permisos de Django les conceda acceso total. `is_staff` permanece en `false`, garantizado por la restricción `usuarios_is_staff_false`, porque la aplicación no expone la interfaz administrativa técnica de Django.
 
 `debe_cambiar_contrasena` indica que la contraseña vigente fue establecida por otra persona durante el alta administrativa, la creación mediante `crear_administrador` o un restablecimiento, y es provisoria. Mientras vale `true`, la sesión queda restringida al cambio o recuperación de contraseña y al cierre de sesión. El sistema guarda el hash de la contraseña elegida por la persona y cambia la marca a `false` en la misma transacción. El restablecimiento administrativo solo puede aplicarse a otro usuario; para la cuenta propia se utiliza el cambio de contraseña o la recuperación.
+
+El autorregistro guarda `debe_cambiar_contrasena = false`, porque la contraseña fue elegida y confirmada por su titular. El cambio voluntario y el obligatorio exigen verificar la contraseña actual y confirmar una nueva distinta que cumpla los validadores de Django. Si el cambio falla, no se modifica el hash ni la marca. Las contraseñas provisorias del alta y del restablecimiento se muestran una sola vez y no pueden recuperarse desde el hash almacenado.
 
 Los atributos heredados `groups` y `user_permissions` son relaciones muchos a muchos, no columnas de `usuarios`. Django las almacena en las tablas intermedias `usuarios_groups` y `usuarios_user_permissions`; sirven para sus permisos de autenticación y son independientes de los roles funcionales de `roles` y `usuarios_roles`.
 
@@ -135,7 +153,7 @@ La restricción única `(usuario_id, rol_id)` impide repetir una asignación. `r
 Para eliminar una asignación de `usuarios_roles`, se aplican estas reglas entre tablas:
 
 - **Público:** se rechaza siempre su retiro.
-- **Reservas:** se rechaza si existe una fila de `reservas` cuyo `usuario_id` sea el titular y cuyo evento relacionado tenga `estado = 'programado'`.
+- **Reservas:** se rechaza si existe una fila de `reservas` cuyo `organizador_id` sea el titular y cuyo evento relacionado tenga `estado = 'programado'`.
 - **Alumno:** se rechaza si existe una fila de `membresias_usuarios` del titular con `estado = 'activa'`, tanto si corresponde a un plan como a un pase.
 - **Profesor:** se rechaza si existe una fila de `clases_profesores` del usuario con `estado = 'activo'`, vinculada a una clase cuyo evento tenga `estado = 'programado'`.
 
@@ -192,7 +210,7 @@ Representa una cancha disponible dentro de una sede.
 | | `creado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
 
-PostgreSQL garantiza la unicidad de la combinación `sede_id, LOWER(nombre)`, por lo que no admite nombres equivalentes sin distinguir mayúsculas de minúsculas dentro de una misma sede. El formulario aplica la misma comparación para informar el conflicto antes de guardar. Dos sedes diferentes sí pueden tener canchas con el mismo nombre. La sede de un evento se obtiene a través de la cancha; no se duplica en el evento ni en sus subtipos.
+PostgreSQL garantiza la unicidad de la combinación `sede_id, LOWER(nombre)`, por lo que no admite nombres equivalentes sin distinguir mayúsculas de minúsculas dentro de una misma sede. El formulario aplica la misma comparación para informar el conflicto antes de guardar. Dos sedes diferentes sí pueden tener canchas con el mismo nombre. La sede de una actividad se obtiene mediante sus turnos y la cancha de cada turno; no se duplica en el evento ni en sus especializaciones.
 
 Relaciones:
 
@@ -200,8 +218,8 @@ Relaciones:
 - Una sede puede tener cero, una o varias canchas.
 - Una cancha puede tener cero, uno o varios turnos de planilla.
 - Un turno de planilla pertenece a exactamente una cancha.
-- Una cancha puede tener cero, uno o varios eventos.
-- Un evento pertenece a exactamente una cancha.
+- Una cancha puede tener cero, uno o varios turnos concretos.
+- Un turno concreto pertenece a exactamente una cancha.
 
 ### 4.5 `membresias`
 
@@ -403,69 +421,115 @@ Relaciones:
 - Una previsión de usuario es exactamente un usuario.
 - Un usuario puede estar previsto en cero, uno o varios turnos de planilla como alumno.
 
-### 4.14 `eventos`
+### 4.14 Turnos y eventos
 
-Representa una utilización concreta y exclusiva de una cancha, en un día y horario determinados: es la tabla base común a clases, reservas y bloqueos.
+#### 4.14.1 `turnos`
+
+Representa una unidad indivisible de una hora de una cancha en una fecha. Su existencia no indica ocupación: un turno puede estar libre o vinculado a eventos históricos.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `900` |
-| | `tipo` | `varchar(10)` | | | `clase` (o `reserva`, `bloqueo`) |
 | FK | `cancha_id` | `bigint` | | | `1` |
-| | `fecha` | `date` | | | `2026-03-04` |
+| | `fecha` | `date` | | | `2026-10-06` |
 | | `hora_inicio` | `time` | | | `18:00` |
-| | `hora_fin` | `time` | | | `19:00` |
-| FK | `registrado_por_id` | `bigint` | | | `4` |
-| | `motivo_cancelacion` | `text` | Sí | | `Cancha en mantenimiento` |
-| | `cancelada_por_usuario` | `boolean` | Sí | | `false` |
-| FK | `cancelado_por_id` | `bigint` | Sí | | `4` |
-| | `cancelado_en` | `timestamptz` | Sí | | `2026-03-03 09:00:00-03` |
-| FK | `completado_por_id` | `bigint` | Sí | | `6` |
-| | `completado_en` | `timestamptz` | Sí | | `2026-03-04 19:05:00-03` |
-| | `estado` | `varchar(12)` | | | `programado` (o `cancelado`, `completado`) |
-| | `creado_en` | `timestamptz` | | | `2026-02-20 15:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-02-20 15:00:00-03` |
+| | `creado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
 
-`cancelada_por_usuario` solo se completa al cancelar una reserva; queda vacío para clases, bloqueos y para eventos programados o completados. La exclusión GiST sobre `[fecha + hora_inicio, fecha + hora_fin)` impide superposiciones entre eventos no cancelados de una misma cancha — un bloqueo ocupa el turno exactamente igual que una clase o una reserva. `registrado_por_id`, `cancelado_por_id` y `completado_por_id` son referencias de auditoría a `usuarios`, no relaciones de negocio. Toda operación que edita o cambia el estado de un evento bloquea esta fila hasta confirmar la transacción, de modo que cancelación, finalización, cobro y edición no decidan sobre estados obsoletos. `hora_inicio` siempre cae en punto (minutos y segundos en cero); junto con la duración exacta de clases y horas enteras de reservas, garantiza que `hora_fin` también caiga en punto (un bloqueo no tiene esa restricción de duración, solo la de `hora_inicio` en punto). Todo evento comienza y finaliza dentro de la misma fecha: un intervalo que atravesaría la medianoche se rechaza.
+La combinación `cancha_id, fecha, hora_inicio` es única. El inicio es una hora en punto; el fin se calcula sumando una hora. El turno comienza y termina dentro de la misma fecha, por lo que su inicio se encuentra entre 00:00 y 22:00 inclusive. Cancha, fecha y hora son inmutables. La sede se obtiene mediante la cancha.
+
+Los turnos se preparan al consultar disponibilidad o registrar una actividad, sin duplicar los existentes. La preparación no registra un evento ni ocupa la cancha. Los turnos de reservas se ofrecen dentro de las franjas de funcionamiento; las clases y bloqueos aplican sus reglas de calendario específicas. Cambiar un horario de sede no modifica los turnos ni eventos históricos.
 
 Relaciones:
 
-- Un evento pertenece a exactamente una cancha.
-- Una cancha puede tener cero, uno o varios eventos.
-- Un evento corresponde a exactamente una clase, a exactamente una reserva o a exactamente un bloqueo.
-- Una clase pertenece a exactamente un evento.
-- Una reserva pertenece a exactamente un evento.
-- Un bloqueo pertenece a exactamente un evento.
+- Una cancha tiene cero, uno o varios turnos.
+- Un turno pertenece exactamente a una cancha.
+- Un turno puede participar en cero, uno o varios eventos históricos mediante `eventos_turnos`.
+- Sólo un evento Programado o Finalizado puede conservar la ocupación de ese turno.
+
+#### 4.14.2 `eventos`
+
+Representa una reserva, una clase o un bloqueo y concentra su estado, observaciones y auditoría. La cancha, fechas, horas y duración se obtienen de sus turnos; no se almacenan en esta tabla ni en sus especializaciones.
+
+| Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
+|---|---|---|---|---|---|
+| PK | `id` | `bigint` identity | | | `1200` |
+| | `tipo` | `varchar(10)` | | | `reserva` (o `clase`, `bloqueo`) |
+| | `estado` | `varchar(10)` | | | `programado` (o `anulado`, `finalizado`) |
+| FK | `registrado_por_id` | `bigint` | | | `4` |
+| | `observaciones` | `text` | | | `Solicitó cancha techada` |
+| | `creado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
+| | `actualizado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
+| FK | `anulado_por_id` | `bigint` | Sí | | `4` |
+| | `anulado_en` | `timestamptz` | Sí | | `2026-10-05 09:00:00-03` |
+| | `motivo_anulacion` | `text` | | | `Cancha cerrada por mantenimiento` |
+| | `finalizado_en` | `timestamptz` | Sí | | `2026-10-06 20:00:00-03` |
+
+`observaciones` y `motivo_anulacion` admiten una cadena vacía, sin `NULL`. Las referencias a usuarios identifican quién registra o anula la actividad. La responsabilidad de finalización manual se registra únicamente en `clases.finalizado_por_id`; una reserva no tiene ese campo, tampoco cuando se finaliza mediante la acción de emergencia.
+
+El estado rige sobre todos los turnos vinculados:
+
+- **Programado:** ocupa sus turnos. No tiene datos de anulación ni de finalización.
+- **Anulado:** deja de ocuparlos, conservando usuario, momento y motivo. Una liberación de bloqueo utiliza este estado.
+- **Finalizado:** conserva la ocupación histórica y el momento de procesamiento, sin datos de anulación. Sólo corresponde a clases y reservas.
+
+Las únicas transiciones son Programado a Anulado y Programado a Finalizado. Una operación repetida no sobrescribe su auditoría. La finalización exige que el último turno termine antes o en el momento actual. Un bloqueo no se finaliza automáticamente: se libera mediante su anulación.
+
+Cada evento tiene exactamente una fila en `reservas`, `clases` o `bloqueos`, coherente con `tipo`. Una clase tiene exactamente un turno. Una reserva tiene uno o varios turnos consecutivos de la misma cancha y fecha, dentro de una misma franja. Un bloqueo tiene uno o varios turnos y un único motivo.
+
+Relaciones:
+
+- Un evento contiene uno o varios vínculos en `eventos_turnos`.
+- Un evento corresponde exactamente a una reserva, una clase o un bloqueo.
+- Cada reserva, clase o bloqueo pertenece exactamente a un evento.
+
+#### 4.14.3 `eventos_turnos`
+
+Relaciona cada evento con los turnos que utiliza.
+
+| Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
+|---|---|---|---|---|---|
+| PK | `id` | `bigint` identity | | | `1800` |
+| FK | `evento_id` | `bigint` | | | `1200` |
+| FK | `turno_id` | `bigint` | | | `900` |
+
+El par `evento_id, turno_id` es único. Las consultas de disponibilidad utilizan un índice sobre `turno_id`; el índice único del par permite consultar los turnos de cada evento. `turno_id` no es único por sí solo: una reserva anulada y otra que utiliza el mismo turno conservan ambos vínculos históricos. La unicidad del par no garantiza la exclusividad de ocupación; esa condición se comprueba después de bloquear los turnos dentro de la transacción.
+
+Para una reserva, estos vínculos son sus detalles horarios. Reservar tres horas registra una reserva, un evento y tres vínculos; no crea tres reservas ni tres eventos. La cantidad de vínculos determina la duración y, en una reserva normal, cada detalle tiene como subtotal el importe por turno del precio histórico aplicado.
+
+Relaciones:
+
+- Cada vínculo pertenece exactamente a un evento y a un turno.
+- Un evento tiene uno o varios vínculos.
+- Un turno tiene cero, uno o varios vínculos históricos.
 
 ### 4.15 `clases`
 
-Representa una clase concreta, dictada o a dictarse, de exactamente una hora de duración.
+Representa los datos específicos de una clase de una hora. Su evento tiene exactamente un turno.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `700` |
-| FK | `evento_id` | `bigint` | | Sí | `900` |
+| FK | `evento_id` | `bigint` | | Sí | `1200` |
 | FK | `turno_planilla_id` | `bigint` | Sí | | `55` |
 | | `es_generada` | `boolean` | | | `true` |
 | | `modalidad` | `varchar(15)` | Sí | | `grupal` (o `individual`) |
-| | `observaciones` | `text` | Sí | | `Recupera Martina, faltó el lunes` |
-| | `creado_en` | `timestamptz` | | | `2026-02-25 10:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-02-25 10:00:00-03` |
+| FK | `finalizado_por_id` | `bigint` | Sí | | `6` |
 
-`evento_id` es único: el evento debe ser de tipo `clase` y durar exactamente una hora. `es_generada` distingue si la clase se creó por la planilla (`true`) o directamente por un administrador (`false`); la usa la regeneración de un período para saber qué clases puede eliminar y recrear. `turno_planilla_id` queda vacío tanto en clases creadas manualmente como en clases cuyo turno de origen ya fue eliminado de la planilla.
+`evento_id` es único y referencia un evento de tipo `clase`. El estado, observaciones y fechas de registro, modificación, anulación y finalización pertenecen al evento. Los profesores, alumnos y asistencias utilizan sus tablas relacionadas.
+
+`es_generada` indica si la clase proviene de la planilla. La regeneración lo utiliza para determinar qué clases puede eliminar y recrear. `turno_planilla_id` queda vacío para las clases manuales y cuando se elimina el turno de planilla que originó una clase; `es_generada` conserva su valor.
+
+`finalizado_por_id` sólo se informa al finalizar manualmente y el evento debe quedar Finalizado en la misma transacción. La finalización automática lo deja vacío. Antes de finalizar y en una clase Anulada permanece vacío.
+
+Cambiar la cancha de una clase Programada sustituye su vínculo horario por el turno de la nueva cancha en la misma fecha y hora. No modifica el turno original ni los eventos de otras actividades. La operación bloquea los turnos involucrados y valida la disponibilidad del destino. Fecha y hora no pueden cambiarse mediante esta edición.
 
 Relaciones:
 
-- Una clase pertenece a exactamente un evento.
-- Un evento corresponde, cuando es de tipo clase, a exactamente una clase.
-- Una clase puede provenir, como máximo, de un turno de planilla.
-- Un turno de planilla puede haber originado cero, una o varias clases.
-- Una clase puede tener uno o varios profesores asignados.
-- Una asignación de profesor pertenece a exactamente una clase.
-- Una clase puede tener cero, uno o varios usuarios asignados como alumnos.
-- Una asignación de alumno pertenece a exactamente una clase.
-- Una clase puede tener cero, uno o varios registros de asistencia.
-- Un registro de asistencia pertenece a exactamente una clase.
+- Una clase pertenece exactamente a un evento de tipo clase.
+- Una clase puede provenir de un turno de planilla.
+- Un turno de planilla puede originar cero, una o varias clases.
+- Una clase tiene uno o varios profesores asignados.
+- Una clase tiene cero, uno o varios alumnos asignados y registros de asistencia.
 
 ### 4.16 `clases_profesores`
 
@@ -513,7 +577,7 @@ Relaciones:
 
 ### 4.18 `asistencias`
 
-Representa la asistencia efectiva de un usuario a una clase concreta. Solo puede registrarse o modificarse en estado `presente` o `ausente` cuando el evento de la clase ya está completado.
+Representa la asistencia efectiva de un usuario a una clase concreta. Solo puede registrarse o modificarse en estado `presente` o `ausente` cuando el evento de la clase ya está Finalizado.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
@@ -536,41 +600,40 @@ Relaciones:
 
 ### 4.19 `reservas`
 
-Representa una reserva normal o con pase, continua e indivisible.
+Representa los datos comerciales de una reserva normal o con pase. Su evento contiene todos los turnos consecutivos reservados.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `1200` |
-| FK | `evento_id` | `bigint` | | Sí | `901` |
-| FK | `usuario_id` | `bigint` | | | `1` |
+| FK | `evento_id` | `bigint` | | Sí | `1300` |
+| FK | `organizador_id` | `bigint` | | | `1` |
 | FK | `precio_reserva_id` | `bigint` | Sí | | `1` |
 | FK | `membresia_pase_id` | `bigint` | Sí | | `301` |
 | | `cantidad_invitados` | `integer` | Sí | | `3` |
 | | `precio_invitado_aplicado` | `numeric(12,2)` | Sí | | `1500.00` |
-| | `precio_aplicado` | `numeric(12,2)` | | | `8000.00` |
 | FK | `reprogramada_desde_id` | `bigint` | Sí | Sí | `1180` |
-| | `observaciones` | `text` | Sí | | `Cliente pidió cancha techada` |
-| | `creado_en` | `timestamptz` | | | `2026-03-02 17:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-03-02 17:00:00-03` |
+| | `anulada_por_organizador` | `boolean` | Sí | | `true` |
 
-Exactamente uno de `precio_reserva_id` y `membresia_pase_id` está informado. `reprogramada_desde_id` se completa cuando esta reserva nace de reprogramar otra cancelada por un motivo ajeno al organizador (ver `2_criterios_del_sistema.md`, 2.2); es único cuando está informado, para que una reserva cancelada no se reprograme dos veces. El organizador, la modalidad, el intervalo y la cancha son inmutables; para cambiarlos se cancela la reserva y se crea otra.
+`evento_id` es único y referencia un evento de tipo `reserva`. Organizador y responsable del registro pueden ser personas diferentes; el segundo se obtiene de `eventos.registrado_por_id`. El número se presenta como `R-000001` a partir del identificador de la reserva y la fecha de registro se obtiene de `eventos.creado_en`.
+
+Exactamente uno de `precio_reserva_id` y `membresia_pase_id` está informado:
+
+- **Reserva normal:** referencia el precio histórico de la sede. Invitados y precio adicional quedan vacíos. El total se calcula multiplicando `precios_reservas_cancha.importe` por la cantidad de turnos; no se almacena otro importe ni un total en la reserva.
+- **Reserva con pase:** referencia la membresía aplicada al organizador. Conserva la cantidad total de invitados y el precio adicional unitario aplicado, porque el catálogo de pases puede modificar ese importe. El total es ese precio unitario por la cantidad de invitados sin cobertura, incluidos los no identificados. Los invitados identificados y sus membresías se guardan en `reservas_invitados`.
+
+`anulada_por_organizador` permanece vacío mientras el evento no esté Anulado. Vale verdadero para la anulación del organizador desde el portal y falso para la administrativa. Es una condición de negocio para la reprogramación; usuario, motivo y momento de la operación se conservan en el evento.
+
+`reprogramada_desde_id` referencia una reserva anulada administrativamente y no puede repetirse. El organizador, la modalidad, el precio o pase aplicado y los turnos son inmutables. Cambiar cancha, fecha u horario requiere anular y registrar otra reserva. Las modificaciones de invitados admitidas por PP sólo se realizan mientras el evento siga Programado y actualizan también `eventos.actualizado_en`.
 
 Relaciones:
 
-- Una reserva pertenece a exactamente un evento.
-- Un evento corresponde, cuando es de tipo reserva, a exactamente una reserva.
-- Una reserva pertenece a exactamente un usuario organizador.
-- Un usuario puede organizar cero, una o varias reservas.
-- Una reserva normal utiliza, como máximo, un precio de reserva.
-- Un precio de reserva puede estar aplicado en cero, una o varias reservas.
-- Una reserva con pase utiliza, como máximo, una membresía de usuario de tipo pase.
-- Una membresía de usuario de tipo pase puede estar aplicada en cero, una o varias reservas.
-- Una reserva puede tener cero, uno o varios invitados identificados.
-- Un invitado identificado pertenece a exactamente una reserva.
-- Una reserva puede provenir, como máximo, de otra reserva que reprograma.
-- Una reserva puede haber sido reprogramada, como máximo, por otra reserva.
+- Una reserva pertenece exactamente a un evento de tipo reserva.
+- Una reserva pertenece exactamente a un organizador.
+- Una reserva normal utiliza exactamente un precio histórico.
+- Una reserva con pase utiliza exactamente una membresía de pase del organizador.
+- Una reserva tiene cero, uno o varios invitados identificados.
+- Una reserva puede reemplazar una reserva anulada y ser reemplazada por otra, como máximo una en cada caso.
 - Una reserva puede recibir cero, uno o varios ingresos.
-- Un ingreso tiene como origen, como máximo, una reserva.
 
 ### 4.20 `reservas_invitados`
 
@@ -627,7 +690,7 @@ Relaciones:
 
 ### 4.22 `sedes_horarios`
 
-Representa el horario de funcionamiento de una sede: por día de la semana, hasta dos franjas horarias en las que la sede opera. Rige tanto para clases como para reservas, aunque con distinta exigencia: bloqueante para una reserva autogestionada desde el portal, solo advertencia para el administrador (ver `2_criterios_del_sistema.md`, 2).
+Representa el horario de funcionamiento de una sede: por día de la semana, hasta dos franjas horarias en las que la sede opera. Rige para todas las reservas, tanto del portal como administrativas. Las clases mantienen su advertencia administrativa confirmable fuera de horario (ver `2_criterios_del_sistema.md`, 2).
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
@@ -680,28 +743,42 @@ Relaciones:
 - Un intento de pago con MercadoPago genera, como máximo, una membresía de usuario.
 - Un intento de pago con MercadoPago genera, como máximo, un ingreso.
 
-### 4.24 `bloqueos`
+### 4.24 Bloqueos y trazabilidad
 
-Representa un bloqueo administrativo de un turno: mismo patrón de subtipo exclusivo de `eventos` que `clases`/`reservas` (4.15/4.19), pero sin usuario ni actividad asociada — ocupa la cancha sin ser ni una clase ni una reserva. Nace de dos caminos: bloquear directamente un turno hoy libre (lluvia, mantenimiento, torneo — ver `4_flujos_del_sistema.md`, FL-63/FL-64), o quedar creado automáticamente cuando un administrador cancela una reserva o una clase por uno de esos mismos motivos (ver 2.2, "Toda cancelación administrativa...").
+#### 4.24.1 `bloqueos`
+
+Representa una restricción de uso que ocupa uno o varios turnos por un mismo motivo. Puede crearse sobre turnos libres o al anular actividades por una causa que impide utilizar la cancha.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `40` |
-| FK | `evento_id` | `bigint` | | Sí | `950` |
+| FK | `evento_id` | `bigint` | | Sí | `1400` |
 | | `motivo` | `varchar(20)` | | | `clima_adverso` (o `torneo`, `mantenimiento`) |
-| | `observaciones` | `text` | Sí | | `Cancha 3 anegada, se seca en dos días` |
-| FK | `evento_origen_id` | `bigint` | Sí | Sí | `900` |
-| | `creado_en` | `timestamptz` | | | `2026-03-03 09:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-03-03 09:00:00-03` |
 
-`motivo` nunca incluye `otro`: a diferencia del motivo de cancelación de una reserva o clase (texto libre, ver 4.14 y 4.19), un bloqueo por definición existe solo para uno de los tres motivos que impiden liberar el turno — si el motivo administrativo es "otro imprevisto", el turno se libera y no queda ningún bloqueo (ver 2.2). `evento_origen_id` referencia al evento cancelado que dio origen al bloqueo, cuando nace de cancelar una reserva o clase existente; queda vacío cuando el bloqueo se creó directamente sobre un turno libre. `evento_id` es único: el evento debe ser de tipo `bloqueo`. Un bloqueo se libera de la misma forma que se cancela una clase o una reserva: pasa a `estado = 'cancelado'` en su evento y el turno vuelve a quedar disponible.
+`evento_id` es único y referencia un evento de tipo `bloqueo`. Sus turnos se vinculan mediante `eventos_turnos`. Estado, observaciones y auditoría se guardan en el evento.
+
+`motivo` no admite `otro`: una anulación administrativa por otro imprevisto libera los turnos sin crear un bloqueo. Liberar un bloqueo cambia su evento a Anulado y guarda usuario, momento y motivo de liberación. La operación actúa sobre todos sus turnos y conserva los vínculos históricos.
+
+La liberación parcial de los turnos de un mismo bloqueo es una decisión funcional pendiente. No se representa un estado independiente por vínculo ni se modifica la historia para simular una liberación parcial.
 
 Relaciones:
 
-- Un bloqueo pertenece a exactamente un evento.
-- Un evento corresponde, cuando es de tipo bloqueo, a exactamente un bloqueo.
-- Un bloqueo referencia, como máximo, un evento de origen (la reserva o clase cancelada que lo generó).
-- Un evento puede haber originado, como máximo, un bloqueo.
+- Un bloqueo pertenece exactamente a un evento de tipo bloqueo.
+- Su evento tiene uno o varios turnos.
+- Un bloqueo puede registrar cero, uno o varios eventos de origen mediante `bloqueos_origenes`.
+
+#### 4.24.2 `bloqueos_origenes`
+
+Relaciona un bloqueo con las actividades anuladas que dieron origen a su creación.
+
+| Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
+|---|---|---|---|---|---|
+| PK, FK | `bloqueo_id` | `bigint` | | | `40` |
+| PK, FK | `evento_origen_id` | `bigint` | | Sí | `1300` |
+
+El par forma la clave primaria y `evento_origen_id` es único: una actividad anulada puede originar como máximo un bloqueo. Un bloqueo directo sobre turnos libres no tiene filas de origen. Si reemplaza varias reservas o clases, registra una fila por cada evento Anulado. Los orígenes deben ser de tipo reserva o clase, estar anulados y compartir turnos con el bloqueo. Registrar la anulación, el bloqueo y sus orígenes forma una única operación transaccional.
+
+Estas referencias se conservan para consultar la historia; liberar el bloqueo no elimina sus orígenes.
 
 ### 4.25 Recuperación de contraseña con Django
 
@@ -720,12 +797,12 @@ Al completar la recuperación cambia el hash de la contraseña, por lo que el en
 - `usuarios_roles` utilizará cascada desde `usuarios`.
 - `usuarios_roles.rol_id` referencia `roles.id`; la integridad referencial impide borrar un rol que tenga asignaciones.
 - Las asignaciones de un turno de planilla (`turnos_planilla_profesores`, `turnos_planilla_usuarios`) utilizarán cascada desde `turnos_planilla`.
-- `sedes_horarios` utilizará cascada desde `sedes`.
+- `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
 - `clases.turno_planilla_id` utilizará `ON DELETE SET NULL`: eliminar un turno de la planilla no elimina las clases que ya generó, solo desvincula su origen.
-- Eliminar un evento eliminará su clase o reserva únicamente dentro de operaciones expresamente autorizadas (regeneración de clases sin historia, ver 7.3).
+- Turnos y eventos históricos se conservan. Sólo pueden eliminarse eventos de clases generadas sin actividad efectiva mediante las operaciones autorizadas; se eliminan sus vínculos y datos de clase en la misma transacción, sin borrar los turnos ni otras actividades (ver 7.3).
 - Clases, reservas, membresías de usuarios e ingresos con historia no se eliminarán como mecanismo operativo habitual.
 - `pagos_mercadopago` utilizará `ON DELETE RESTRICT` desde `usuarios` y `membresias`: es historia de intentos de pago y no se elimina como mecanismo operativo habitual.
-- `bloqueos.evento_origen_id` utilizará `ON DELETE SET NULL`: es solo trazabilidad hacia el evento cancelado que originó el bloqueo, no una relación de negocio que deba impedir su eliminación.
+- `eventos_turnos` protege sus turnos; `reservas`, `clases` y `bloqueos` protegen su evento. Las referencias de `bloqueos_origenes` se conservan y protegen los eventos de origen mientras exista trazabilidad.
 
 ---
 
@@ -740,39 +817,44 @@ El sistema aplica, como mínimo:
 5. Vencimiento idempotente de membresías de usuarios.
 6. Unicidad de `turnos_planilla` por cancha, día de la semana y hora.
 7. Exactamente un subtipo por `eventos` y coherencia con `eventos.tipo`.
-8. Duración exacta de una hora para eventos de clase y horas enteras para reservas; `hora_inicio` con minutos y segundos en cero.
+8. Turnos de una hora con inicio en punto y fin calculado. Unicidad por cancha, fecha y hora; una clase tiene exactamente un turno y una reserva tiene turnos consecutivos de una misma cancha, fecha y franja.
 9. Sede y cancha activas al crear o mover eventos.
 10. Al menos un profesor activo por clase.
-11. Protección de clases y reservas terminales (canceladas o completadas) y autorización para completarlas.
+11. Protección de clases y reservas con evento Anulado o Finalizado y autorización para finalizarlas.
 12. Exclusividad entre precio normal y membresía de pase en reservas.
 13. El precio de `precios_reservas_cancha` aplicado a una reserva normal pertenece a la sede de la cancha y es el único activo al confirmar. El total se calcula multiplicando su importe por la duración en horas. La sede y el importe de cada precio son inmutables.
 14. Vigencia, titularidad, día habilitado según el tipo de pase (`pases.tipo`) y horas diarias disponibles del pase del organizador al crear o modificar una reserva con pase; el día se valida antes que las horas.
 15. Coherencia de invitados, cantidad declarada, membresías de pase aplicadas, día habilitado y horas diarias disponibles de cada invitado identificado con pase.
-16. Congelamiento de reservas e invitados al cancelar o completar el evento.
+16. Congelamiento de reservas, sus vínculos horarios e invitados cuando el evento queda Anulado o Finalizado.
 17. Exactamente un origen por ingreso.
 18. Registro obligatorio de motivo al cancelar una reserva.
 19. Inmutabilidad de ingresos salvo su anulación.
-20. Bloqueo de registro o modificación de una asistencia en estado `presente` o `ausente` mientras el evento de la clase no esté `completado`.
+20. Bloqueo de registro o modificación de una asistencia en estado `presente` o `ausente` mientras el evento de la clase no esté `finalizado`.
 21. Bloqueo de superposición horaria de un mismo profesor entre actividades no canceladas, sin importar la cancha.
 22. Un usuario activo autorizado (administrador, o el propio organizador en una reserva de autoservicio) registrará usuario y momento al cancelar un evento. La finalización de reservas registra únicamente el momento de procesamiento; las clases conservan responsable cuando la finalización es manual.
 23. Alta automática de Público y Reservas en `usuarios_roles` para todo usuario nuevo, en la misma transacción que lo crea. Público no puede retirarse; Reservas solo puede retirarse si el usuario no tiene reservas programadas. Cada asignación referencia una fila del catálogo `roles`.
 24. Alta automática del rol `alumno` en `usuarios_roles` para el usuario titular al registrarse su primer plan (subtipo `planes`) en estado `activa`, si aún no lo posee; un pase no lo otorga (además de la asignación manual por un administrador, ver FL-07).
-25. Auto-completado idempotente de eventos `programado` cuya `hora_fin` ya pasó.
+25. Finalización idempotente de eventos de clase o reserva Programados cuyo último turno terminó; su fin se obtiene de los vínculos horarios y la duración fija del turno.
 26. Aviso idempotente de vencimiento próximo de membresías, con marca de envío para no repetirlo.
 27. Recordatorio idempotente de la próxima clase asignada, con marca de envío por asignación alumno–clase para no repetirlo, reseteada al reactivar la asignación.
-28. Al regenerar las clases de un período, eliminar y recrear únicamente las clases en estado `programada` con `es_generada = true`; las clases `completada`, `cancelada` o con `es_generada = false` no se tocan.
+28. Al regenerar clases, eliminar y recrear sólo las generadas por planilla cuyo evento esté `programado` y sin actividad efectiva. Las clases con evento `finalizado` o `anulado`, o con `es_generada = false`, se conservan.
 29. En `pagos_mercadopago`: `mes_cubierto` es siempre el primer día de un mes; `membresia_usuario_id` e `ingreso_id` están ambos presentes o ambos ausentes, y solo pueden estar presentes cuando `estado = 'aprobado'`; a lo sumo un intento `pendiente` por `usuario_id`, `membresia_id` y `mes_cubierto` (unicidad parcial).
 30. Retiro condicionado de roles: no se permite retirar Alumno mientras el usuario tenga una membresía activa, ni Profesor mientras tenga una asignación activa como profesor en una clase programada. Junto con el ítem 23, estas restricciones se verifican en la misma operación que elimina la asignación (ver 4.2 y FL-07).
 31. Contraseña provisoria obligatoria: el alta administrativa realizada desde la aplicación, la creación mediante `crear_administrador` y el restablecimiento administrativo de una contraseña activan `usuarios.debe_cambiar_contrasena`; mientras permanezca activa, el usuario solo puede cambiar o recuperar su contraseña o cerrar sesión. El nuevo hash y la desactivación de la marca se guardan en la misma transacción (ver FL-68 y FL-69).
 32. Estado y fecha de baja coherentes: una cuenta inactiva registra el momento de su baja y una cuenta activa conserva `fecha_baja = NULL` (ver FL-05).
+33. Edición de usuarios limitada al correo por el Administrador y a la contraseña propia por su titular. El restablecimiento administrativo sólo se aplica a otra cuenta; nombre, apellido, nombre de usuario, celular, fecha de nacimiento y observaciones no se editan desde la aplicación (ver FL-04, FL-59 y FL-69).
+34. En el cambio voluntario u obligatorio de contraseña se verifica la vigente y se exige una nueva distinta, confirmada y validada por Django. El autorregistro no activa el cambio obligatorio, mientras que el alta administrativa y el restablecimiento sí lo hacen.
+35. Estado y auditoría únicos en `eventos`; sus especializaciones no repiten esos campos. El estado sólo admite `programado`, `anulado` o `finalizado`, con los datos coherentes para cada caso; un bloqueo no admite Finalizado.
+36. Vínculos únicos por evento y turno, al menos uno por evento y sólo un evento no Anulado que conserve la ocupación de cada turno. Las operaciones bloquean los turnos y consultan su ocupación antes de escribir.
+37. Trazabilidad de bloqueos mediante `bloqueos_origenes`, conservando todas las actividades anuladas que originaron un bloqueo.
 
 Las reglas que deben observar varias filas se ejecutan dentro de operaciones transaccionales. Cuando existe riesgo de concurrencia, el backend bloquea las filas involucradas antes de validar y guardar.
 
-La superposición horaria de una persona se comprueba en el backend sobre todos sus modos de participación: profesor o alumno de una clase, organizador o invitado identificado de una reserva. Las operaciones que crean clases o reservas y la generación desde la planilla bloquean las filas de los usuarios involucrados en orden de identificador antes de consultar y escribir. Para un profesor la superposición rechaza la operación; para los demás participantes produce una advertencia confirmable. La garantía supone que las escrituras operativas pasan por estos servicios; no reemplaza la exclusión GiST que protege la ocupación de cada cancha en la base.
+La superposición horaria de una persona se comprueba en el backend sobre todos sus modos de participación: profesor o alumno de una clase, organizador o invitado identificado de una reserva. Las operaciones que crean clases o reservas y la generación desde la planilla bloquean las filas de los usuarios involucrados en orden de identificador antes de consultar y escribir. Para un profesor la superposición rechaza la operación; para los demás participantes produce una advertencia confirmable. La garantía supone que las escrituras operativas pasan por estos servicios; se complementa con el bloqueo de los turnos concretos y la comprobación de ocupación compartida en `eventos_turnos` y `eventos`.
 
-El horario de funcionamiento de la sede (`sedes_horarios`) tampoco se valida mediante una restricción de base de datos, porque su exigencia depende de quién actúa: para una reserva de autoservicio es bloqueante, y para cualquier actividad gestionada por el administrador (clase o reserva) es solo una advertencia que este puede confirmar. Ambos casos quedan a cargo del backend, que conoce el actor de la operación.
+El horario de funcionamiento se comprueba en el backend porque depende de datos de otra tabla. Toda reserva debe permanecer dentro de una misma franja de `sedes_horarios`, también cuando la crea el Administrador. Las clases mantienen su advertencia administrativa confirmable fuera de horario. Crear un turno fuera de una franja no autoriza por sí solo a reservarlo.
 
-El máximo de catorce días corridos de anticipación para crear una reserva sigue el mismo esquema: bloqueante para una reserva de autoservicio, solo una advertencia con confirmación para el administrador. Tampoco es una restricción de base de datos, por la misma razón.
+Una reserva nueva debe comenzar en un horario futuro y su fecha debe estar entre hoy y catorce días después, inclusive. El backend vuelve a validar ese límite al confirmar, tanto para el Administrador como para el portal.
 
 El límite diario de horas de un pase (ítem 14) depende de una suma agregada sobre reservas existentes, no de una condición evaluable con un `CHECK`. La transacción que crea o modifica una reserva con pase deberá bloquear, con `SELECT ... FOR UPDATE` sobre `membresias_usuarios`, la fila de cada membresía de pase involucrada antes de calcular las horas ya usadas ese día: la del organizador y la de cada invitado identificado cuyo propio pase se esté evaluando para cubrirlo. Esto serializa intentos concurrentes sobre un mismo pase, sea como organizador o como invitado, y evita que dos reservas simultáneas lo superen sin verse entre sí. Cuando una misma transacción deba bloquear más de una membresía de pase, lo hará en un orden estable (por `id` ascendente) para evitar interbloqueos con otra transacción que bloquee las mismas filas en orden distinto.
 
@@ -786,23 +868,35 @@ Creará la fila base y exactamente un subtipo en una transacción.
 
 ### 7.2 Generación de clases para un período
 
-Dado un rango de fechas y una sede, recorrerá los `turnos_planilla` vigentes de las canchas de esa sede y, para cada fecha del período que coincida con el día de la semana del turno, no sea feriado (ver `feriados`) y no choque con un evento ya existente en esa cancha y horario, creará un evento de una hora y su clase con `es_generada = true`. Las fechas puntuales en conflicto se omiten y se informan; no interrumpen el resto de la generación. Las fechas fuera del horario de funcionamiento de la sede (`sedes_horarios`) no se omiten, solo se listan como advertencia en la vista previa: las dos confirmaciones explícitas descriptas en `2_criterios_del_sistema.md` (2) ya cubren esa advertencia. La operación no admite deshacer automático.
+Para cada fecha que corresponde a un turno de planilla y no es feriado, obtiene o crea el turno concreto de la cancha. Bloquea los turnos involucrados en orden de identificador y comprueba su ocupación mediante eventos no Anulados. Crea un evento Programado, un vínculo horario, una clase con `es_generada = true` y sus asignaciones.
+
+Las fechas ocupadas se omiten y se informan. Las fechas fuera del horario de la sede se incluyen como advertencia confirmable en la vista previa. La generación conserva las confirmaciones y límites de período descriptos en los criterios del sistema.
 
 ### 7.3 Regeneración de clases para un período
 
-Al modificar la planilla y volver a generar un período ya generado, eliminará primero, en la misma transacción, las clases de ese período en estado `programada` con `es_generada = true` junto con sus eventos, y luego repetirá el procedimiento de 7.2. No toca clases `completada`, `cancelada` ni creadas manualmente (`es_generada = false`).
+En una transacción, elimina únicamente los eventos de clases generadas por planilla que siguen Programados y no tienen actividad efectiva, con sus vínculos y datos de clase. Conserva los turnos concretos. Vuelve a generar sobre esos turnos aplicando 7.2, sin modificar reservas, bloqueos, clases Anuladas o Finalizadas ni clases manuales.
 
 ### 7.4 Reserva normal
 
-Se ejecuta cuando el organizador no tiene una membresía de pase vigente para la fecha elegida, o no quiere usarla. Usará el único precio activo de la sede seleccionada y comprobará al confirmar que siga activo y pertenezca a la sede de la cancha. Si no existe, rechazará la reserva normal. Calculará el total multiplicando el importe por turno por la duración en horas. Creará un evento continuo, registrará la reserva con su precio aplicado y total calculado, y registrará el ingreso opcional. Todo el intervalo deberá estar disponible. Tanto el horario de funcionamiento de la sede (`sedes_horarios`) como el máximo de catorce días de anticipación se rechazan sin excepción cuando organiza un usuario de autoservicio, y se advierten con confirmación explícita cuando gestiona el administrador.
+Exige un organizador activo con rol Reservas o Administrador y un actor con acceso vigente. El portal sólo puede reservar para sí mismo. Comprueba sede y cancha activas, fecha entre hoy y catorce días después, inicio futuro y uno o varios turnos consecutivos de una misma cancha y fecha, dentro de una franja de la sede. El Administrador aplica las mismas condiciones.
+
+Obtiene el precio activo de la sede y calcula el total multiplicando su importe por la cantidad de turnos. Si el precio cambió desde la confirmación preparada, presenta el nuevo total y exige confirmar nuevamente.
+
+Bloquea los turnos en orden de identificador y vuelve a comprobar que ningún evento Programado o Finalizado los ocupe. Registra un evento Programado, la reserva y todos los vínculos horarios, junto con el ingreso opcional autorizado. Guarda el precio histórico como referencia, sin copiar otro total en la reserva. Un error revierte toda la operación.
 
 ### 7.5 Reserva con pase
 
-Se ejecuta cuando el organizador tiene una membresía de pase vigente para la fecha elegida y decide usarla. Validará el horario de funcionamiento de la sede y el máximo de anticipación (igual que 7.4) y la membresía del organizador (vigencia, día habilitado según `pases.tipo`, horas disponibles), a los invitados identificados y sus pases; calculará el precio y creará evento, reserva, invitados e ingreso opcional en una transacción.
+Aplica las mismas reglas de turnos, acceso y calendario de 7.4. Valida vigencia, titularidad, día habilitado y horas disponibles del pase del organizador, así como la cobertura de los invitados identificados.
+
+Bloquea las membresías de pase involucradas y los turnos en un orden estable. El consumo diario se obtiene contando los turnos de eventos de reservas no Anulados, tanto como organizador como invitado cubierto. Crea evento, vínculos horarios, reserva, invitados e ingreso opcional en una transacción. Conserva el precio adicional unitario aplicado y calcula el total según los invitados sin cobertura.
 
 ### 7.6 Cancelación de una reserva
 
-Cancelará el evento completo con motivo obligatorio. Si cancela el propio organizador (autoservicio), `cancelada_por_usuario` queda fijo en verdadero y la operación termina ahí. Un administrador solo cancela por una causa ajena al organizador (clima, fuerza mayor, mantenimiento u otro imprevisto) — si el organizador quiere cancelar su propia reserva, lo hace él mismo por autoservicio —, así que `cancelada_por_usuario` queda fijo en falso y, a continuación, podrá encadenar 7.7 en la misma operación. No modificará los ingresos ni membresías originales.
+Bloquea los turnos y el evento de la reserva. Valida estado Programado, permiso, motivo de al menos 25 caracteres y plazo: antes del primer turno para el Administrador y con al menos una hora de antelación para el organizador del portal.
+
+Cambia el evento a Anulado y registra actor, momento y motivo. En `reservas.anulada_por_organizador` registra el origen de la anulación. Conserva los vínculos horarios, el precio o pase aplicado y los ingresos.
+
+Una anulación administrativa por clima adverso, torneo o mantenimiento crea un bloqueo sobre todos los turnos afectados y vincula su evento de origen mediante `bloqueos_origenes`, en la misma transacción. Por otro imprevisto, los turnos quedan libres. La reprogramación sigue las condiciones de 7.7.
 
 ### 7.7 Reprogramación de una reserva
 
@@ -823,9 +917,15 @@ Al recibir el webhook, validará primero su firma (`x-signature`, `x-request-id`
 - **Rechazado:** si el intento no está ya en un estado terminal, lo marca `rechazado`; no activa nada.
 - **Aprobado:** si el intento ya tiene `membresia_usuario_id` o `ingreso_id`, no repite la activación. Si no, valida monto y moneda contra `precio_aplicado`. Si el usuario sigue sin tener una membresía vigente incompatible para ese mes, en una única transacción crea la fila de `membresias_usuarios` (o la renueva) con el `precio_aplicado` ya calculado en `pagos_mercadopago` — no lo recalcula —, registra el ingreso con `medio_pago = 'mercadopago'` vinculado a esa membresía, otorga el rol `alumno` al usuario si todavía no lo tiene, y guarda en el intento sus referencias a la membresía de usuario y al ingreso creados. `membresias_usuarios.registrada_por_id` e `ingresos.registrado_por_id` quedarán nulos. Si el conflicto de exclusividad se detecta recién en este paso, el intento queda `aprobado` sin esas referencias: el dinero fue cobrado pero la activación queda pendiente de resolución manual. Si la operación falla, no quedará ninguna membresía activada a medias. Responderá `200`/`201` dentro de los 22 segundos que MercadoPago espera antes de reintentar.
 
-### 7.11 Auto-completado de clases y reservas vencidas
+### 7.11 Finalización de clases y reservas vencidas
 
-Función idempotente, análoga a `vencer_membresias_usuarios()`, ejecutada por Celery Beat cada hora en punto de Buenos Aires. Localizará los `eventos` en estado `programado` cuyo `fecha + hora_fin` sea menor o igual al momento de ejecución, los marcará `completado` con `completado_por_id` nulo y guardará el momento real de procesamiento en `completado_en`, sin modificar asistencias. En reservas, el fin corresponde al último turno y no existe campo de responsable propio de la reserva. El administrador también podrá ejecutar la finalización individual de emergencia con las mismas condiciones, sin asignar responsable ni depender de Celery o Redis. Cada ejecución procesa todas las vencidas pendientes y vuelve a comprobar estado y horario dentro de la transacción antes de modificar cada una; las canceladas o completadas permanecen intactas. La acción manual y la tarea automática no sobrescriben una finalización registrada.
+Celery Beat ejecuta la tarea cada hora en punto de Buenos Aires. Consulta eventos de tipo clase o reserva que siguen Programados y cuyo último turno terminó antes o en el momento actual. Para cada uno, bloquea los turnos y luego el evento, y vuelve a comprobar las condiciones.
+
+Cambia el evento a Finalizado y guarda `finalizado_en` con el momento real de procesamiento. No modifica asistencias ni sobrescribe eventos Anulados o Finalizados. En clases, la finalización automática deja `clases.finalizado_por_id` vacío. Los bloqueos quedan fuera de esta tarea.
+
+El Administrador puede finalizar una reserva vencida mediante la acción de emergencia, con las mismas condiciones y sin depender de Celery ni Redis. Las reservas no tienen responsable de finalización. La finalización manual de clases registra al administrador o profesor autorizado en `clases.finalizado_por_id`.
+
+Cada ejecución procesa todas las vencidas pendientes, incluidas las que terminaron durante una interrupción de los servicios. La concurrencia entre finalización manual, tarea automática y anulación se coordina mediante los mismos turnos y evento; una segunda operación no sobrescribe el momento registrado.
 
 ### 7.12 Aviso de vencimiento próximo de una membresía
 
@@ -833,4 +933,10 @@ Tarea diaria idempotente. Localizará `membresias_usuarios` en estado `activa` c
 
 ### 7.13 Recordatorio de la próxima clase asignada
 
-Tarea diaria idempotente. Localizará asignaciones `clases_usuarios` en estado `activo` de clases cuyo evento esté `programado` con `fecha` igual a la de mañana y `recordatorio_enviado = false`. Enviará el email a cada alumno por su propia asignación y marcará `recordatorio_enviado = true` en la misma operación por fila, de forma independiente por alumno.
+Tarea diaria idempotente. Localizará asignaciones `clases_usuarios` en estado `activo` de clases cuyo evento esté `programado` y cuyo turno tenga `fecha` igual a la de mañana y `recordatorio_enviado = false`. Enviará el email a cada alumno por su propia asignación y marcará `recordatorio_enviado = true` en la misma operación por fila, de forma independiente por alumno.
+
+### 7.14 Registro y liberación de bloqueos
+
+El registro obtiene los turnos seleccionados, los bloquea en orden estable y comprueba su ocupación. Si reemplaza reservas o clases, sólo permite anular actividades completas y aplica sus condiciones de anulación. Registra el evento de bloqueo, sus vínculos horarios y todos los orígenes anulados en una misma transacción.
+
+Liberar un bloqueo cambia su evento Programado a Anulado y registra actor, momento y motivo. Conserva vínculos y orígenes, y libera todos los turnos del evento. La operación en lote actúa sobre bloqueos completos. La liberación parcial permanece pendiente de definición funcional.

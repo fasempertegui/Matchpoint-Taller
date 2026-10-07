@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización y emisión del comprobante. Los demás procesos del sistema están pendientes de representación.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización y emisión del comprobante. Los demás procesos del sistema están pendientes de representación. La ocupación y auditoría pertenecen a Eventos (D12); las reservas guardan sus datos específicos y se vinculan con sus turnos mediante Eventos_Turnos (D11). Una fecha y hora de fin se obtiene del último turno, sumando una hora a su inicio.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -25,7 +25,16 @@ Los números escritos sobre las flechas identifican los datos descriptos debajo 
 - **D8: Horarios de sedes**
 - **D9: Turnos**
 - **D10: Reservas**
-- **D11: Detalles de reservas**
+- **D11: Eventos_Turnos**
+- **D12: Eventos**
+- **D13: Membresías de usuarios**
+- **D14: Pases**
+- **D15: Invitados de reservas**
+- **D16: Ingresos**
+- **D17: Bloqueos**
+- **D18: Orígenes de bloqueos**
+- **D19: Clases**
+- **D20: Profesores de clases**
 
 ---
 
@@ -130,8 +139,8 @@ flowchart LR
     D5[(D5: Sedes)]
     D6[(D6: Canchas)]
     D9[(D9: Turnos)]
-    D10[(D10: Reservas)]
-    D11[(D11: Detalles de reservas)]
+    D11[(D11: Eventos_Turnos)]
+    D12[(D12: Eventos)]
 
     A -->|1| P
     P -->|2| D5
@@ -142,26 +151,26 @@ flowchart LR
     D9 -->|7| P
     P -->|8| D11
     D11 -->|9| P
-    P -->|10| D10
-    D10 -->|11| P
+    P -->|10| D12
+    D12 -->|11| P
     P -->|12| D5
     P -->|13| A
 ```
 
 **Datos que circulan**
 
-1. Sede seleccionada y confirmación de desactivación.
+1. Sede seleccionada y confirmación.
 2. Identificador de la sede.
 3. Datos y estado actual de la sede.
 4. Sede cuyas canchas deben consultarse.
 5. Canchas de la sede, incluidas las inactivas.
-6. Canchas cuyos turnos deben consultarse.
-7. Turnos pertenecientes a esas canchas.
-8. Turnos para consultar las reservas vinculadas.
-9. Detalles que relacionan esos turnos con sus reservas.
-10. Reservas vinculadas y criterio de estado Programada.
-11. Reservas Programadas que impiden desactivar.
-12. Estado inactivo y fecha de modificación, si no hay reservas Programadas.
+6. Canchas cuyos turnos se consultan.
+7. Turnos pertenecientes a las canchas.
+8. Turnos para consultar sus vínculos con eventos.
+9. Vínculos de los turnos con eventos.
+10. Eventos relacionados y criterio de tipo Reserva y estado Programado.
+11. Eventos de reservas Programados que impiden desactivar.
+12. Estado inactivo y fecha de modificación, si la operación está permitida.
 13. Resultado de la desactivación o impedimento por reservas Programadas.
 
 ---
@@ -282,8 +291,8 @@ flowchart LR
     D5[(D5: Sedes)]
     D6[(D6: Canchas)]
     D9[(D9: Turnos)]
-    D10[(D10: Reservas)]
-    D11[(D11: Detalles de reservas)]
+    D11[(D11: Eventos_Turnos)]
+    D12[(D12: Eventos)]
 
     A -->|1| P
     P -->|2| D5
@@ -294,26 +303,26 @@ flowchart LR
     D9 -->|7| P
     P -->|8| D11
     D11 -->|9| P
-    P -->|10| D10
-    D10 -->|11| P
+    P -->|10| D12
+    D12 -->|11| P
     P -->|12| D6
     P -->|13| A
 ```
 
 **Datos que circulan**
 
-1. Cancha seleccionada y confirmación de desactivación.
-2. Identificador de la sede de la cancha.
+1. Cancha seleccionada y confirmación.
+2. Identificador de la sede.
 3. Datos de la sede.
 4. Identificador de la cancha y sede a la que debe pertenecer.
 5. Datos y estado actual de la cancha.
-6. Cancha cuyos turnos deben consultarse.
-7. Turnos pertenecientes a la cancha.
-8. Turnos para consultar las reservas vinculadas.
-9. Detalles que relacionan esos turnos con sus reservas.
-10. Reservas vinculadas y criterio de estado Programada.
-11. Reservas Programadas que impiden desactivar.
-12. Estado inactivo y fecha de modificación, si no hay reservas Programadas.
+6. Cancha cuyos turnos se consultan.
+7. Turnos de la cancha.
+8. Turnos para consultar sus vínculos con eventos.
+9. Vínculos de los turnos con eventos.
+10. Eventos relacionados y criterio de tipo Reserva y estado Programado.
+11. Eventos de reservas Programados que impiden desactivar.
+12. Estado inactivo y fecha de modificación, si la operación está permitida.
 13. Resultado de la desactivación o impedimento por reservas Programadas.
 
 ---
@@ -540,6 +549,10 @@ flowchart LR
     D2[(D2: Roles)]
     D3[(D3: Usuarios_Roles)]
     D10[(D10: Reservas)]
+    D12[(D12: Eventos)]
+    D13[(D13: Membresías de usuarios)]
+    D19[(D19: Clases)]
+    D20[(D20: Profesores de clases)]
 
     A -->|1| P
     P -->|2| D1
@@ -550,23 +563,41 @@ flowchart LR
     D3 -->|7| P
     P -->|8| D10
     D10 -->|9| P
-    P -->|10| D3
-    P -->|11| A
+    P -->|10| D13
+    D13 -->|11| P
+    P -->|12| D20
+    D20 -->|13| P
+    P -->|14| D19
+    D19 -->|15| P
+    P -->|16| D12
+    D12 -->|17| P
+    P -->|18| D3
+    P -->|19| A
 ```
 
 **Datos que circulan**
 
-1. Usuario y rol seleccionados.
+1. Usuario, rol seleccionado y confirmación del retiro.
 2. Identificador del usuario.
-3. Datos básicos del usuario encontrado.
+3. Datos de la cuenta.
 4. Código del rol seleccionado.
-5. Datos del rol permitido.
-6. Usuario y rol cuya asignación debe consultarse.
-7. Asignación existente y datos necesarios para validar el retiro.
-8. Usuario para consultar sus reservas Programadas cuando se retira el rol Reservas.
-9. Reservas Programadas del usuario, si las hay.
-10. Asignación que debe eliminarse.
-11. Resultado del retiro o motivo del rechazo.
+5. Rol del catálogo y condiciones de retiro.
+6. Usuario y rol para consultar la asignación.
+7. Asignación vigente, si existe.
+8. Organizador para consultar sus reservas.
+9. Reservas del usuario y eventos asociados.
+10. Titular para consultar sus membresías.
+11. Membresías activas que impiden retirar Alumno.
+12. Profesor para consultar sus asignaciones activas.
+13. Clases con asignaciones activas del profesor.
+14. Clases que deben consultar sus eventos.
+15. Eventos asociados a las clases.
+16. Eventos de las reservas o clases y criterio de estado Programado.
+17. Estados que determinan si hay relaciones que impiden el retiro.
+18. Asignación que debe retirarse cuando está permitido.
+19. Resultado del retiro o motivo del rechazo.
+
+Público y Administrador no se retiran desde la aplicación. Reservas se conserva mientras el usuario tenga reservas propias Programadas; Alumno, mientras tenga una membresía activa; Profesor, mientras tenga asignaciones activas en clases Programadas.
 
 ### DFD 19: restablecer la contraseña de otro usuario
 
@@ -669,6 +700,8 @@ flowchart LR
 5. Datos actualizados de la sesión autenticada.
 6. Acceso normal o errores de validación.
 
+La contraseña nueva debe ser distinta de la provisoria, coincidir con su confirmación y superar los validadores de Django. El cambio correcto desactiva la obligación y actualiza la fecha de última modificación en la misma transacción.
+
 ### DFD 23: cambiar la contraseña propia
 
 ```mermaid
@@ -694,6 +727,8 @@ flowchart LR
 4. Nuevo hash y fecha de modificación.
 5. Datos actualizados de la sesión autenticada.
 6. Resultado del cambio o errores de validación.
+
+Sólo el titular puede cambiar su contraseña. La nueva debe ser distinta de la vigente, coincidir con su confirmación y superar los validadores de Django. El cambio conserva la sesión actual y no modifica los demás datos del perfil.
 
 ### DFD 24: cerrar sesión
 
@@ -814,7 +849,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    U[Administrador o usuario con rol Reservas]
+    A[Administrador o usuario con rol Reservas]
     P((28. Registrar una reserva de cancha))
     D1[(D1: Usuarios)]
     D3[(D3: Usuarios_Roles)]
@@ -824,9 +859,14 @@ flowchart LR
     D8[(D8: Horarios de sedes)]
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
-    D11[(D11: Detalles de reservas)]
+    D11[(D11: Eventos_Turnos)]
+    D12[(D12: Eventos)]
+    D13[(D13: Membresías de usuarios)]
+    D14[(D14: Pases)]
+    D15[(D15: Invitados de reservas)]
+    D16[(D16: Ingresos)]
 
-    U -->|1| P
+    A -->|1| P
     P -->|2| D1
     D1 -->|3| P
     P -->|4| D3
@@ -835,53 +875,77 @@ flowchart LR
     D5 -->|7| P
     P -->|8| D6
     D6 -->|9| P
-    P -->|10| D7
-    D7 -->|11| P
-    P -->|12| D8
-    D8 -->|13| P
+    P -->|10| D8
+    D8 -->|11| P
+    P -->|12| D9
+    D9 -->|13| P
     P -->|14| D9
-    D9 -->|15| P
-    P -->|16| D9
-    P -->|17| D11
-    D11 -->|18| P
+    P -->|15| D11
+    D11 -->|16| P
+    P -->|17| D12
+    D12 -->|18| P
     P -->|19| D10
     D10 -->|20| P
-    P -->|21| D10
-    P -->|22| D11
-    P -->|23| U
+    P -->|21| D13
+    D13 -->|22| P
+    P -->|23| D14
+    D14 -->|24| P
+    P -->|25| D15
+    D15 -->|26| P
+    P -->|27| D7
+    D7 -->|28| P
+    P -->|29| D12
+    P -->|30| D10
+    P -->|31| D11
+    P -->|32| D15
+    P -->|33| D16
+    P -->|34| A
 ```
 
 **Datos que circulan**
 
-1. Sede, cancha, fecha, organizador, turnos seleccionados, observaciones y confirmación.
-2. Identidad del actor y del organizador.
-3. Datos y estados de las cuentas, incluido el cambio obligatorio de contraseña del actor.
-4. Actor que solicita registrar la reserva y organizador seleccionado.
-5. Roles asignados al actor y al organizador.
+1. Organizador, sede, cancha, fecha, turnos, observaciones y confirmación; pase, invitados e ingreso opcional cuando correspondan.
+2. Identidad del actor, organizador e invitados identificados.
+3. Datos y estados de las cuentas, incluido el cambio obligatorio del actor.
+4. Actor y organizador cuyos roles deben comprobarse.
+5. Roles asignados.
 6. Sede seleccionada.
 7. Datos y estado de la sede.
 8. Cancha seleccionada.
 9. Datos, sede y estado de la cancha.
-10. Sede cuyo precio vigente debe aplicarse.
-11. Identificación e importe del precio activo por turno.
-12. Sede y día de la semana de la fecha elegida.
-13. Franjas de funcionamiento para ese día.
-14. Cancha, fecha y turnos seleccionados.
-15. Turnos existentes con sus fechas y horas.
-16. Turnos de una hora que faltan dentro de las franjas habilitadas.
-17. Turnos para consultar sus vínculos con reservas.
-18. Detalles que relacionan los turnos con sus reservas.
-19. Reservas relacionadas con los turnos seleccionados.
-20. Estados de las reservas que determinan la ocupación.
-21. Nueva cabecera con organizador, responsable, precio aplicado, estado Programada, observaciones y fecha de registro.
-22. Detalles que vinculan la nueva reserva con todos los turnos seleccionados.
-23. Turnos ofrecidos, importes calculados y resultado del registro o errores de validación.
+10. Sede y día de la fecha elegida.
+11. Franjas de funcionamiento.
+12. Cancha, fecha y turnos solicitados.
+13. Turnos existentes con su cancha, fecha y hora de inicio.
+14. Turnos de una hora que faltan, sin ocuparlos.
+15. Turnos para consultar sus vínculos horarios y el uso de pases.
+16. Vínculos existentes con eventos.
+17. Eventos relacionados con los turnos y reservas consultadas.
+18. Estados que determinan ocupación y consumo de pase.
+19. Reservas de los titulares cuyos pases se evalúan.
+20. Organizadores, pases aplicados y eventos de las reservas.
+21. Titulares y fecha para consultar sus pases vigentes.
+22. Membresías de pase y vigencia.
+23. Pases para consultar día habilitado, límite diario y adicional vigente.
+24. Configuración de los pases.
+25. Invitados cubiertos para consultar el consumo de sus pases.
+26. Cobertura aplicada en otras reservas.
+27. Sede para consultar el precio normal vigente.
+28. Precio activo e importe por turno.
+29. Nuevo evento de reserva Programado, con responsable, observaciones y fecha de registro.
+30. Nueva reserva con organizador y precio histórico o pase aplicado; datos de invitados cuando correspondan.
+31. Vínculos del evento nuevo con todos los turnos seleccionados.
+32. Invitados identificados y cobertura aplicada, sólo para una reserva con pase.
+33. Ingreso opcional autorizado por el Administrador, con la reserva como origen.
+34. Selección y cálculos para confirmar; número y resultado del registro, o errores de validación.
+
+Todos los turnos deben ser futuros, libres y consecutivos, de una misma cancha, fecha y franja. La confirmación registra una reserva y un evento con todos sus vínculos dentro de una transacción; el portal no registra ingresos.
 
 ### DFD 29: consultar el detalle de una reserva
 
 ```mermaid
 flowchart LR
-    U[Administrador o usuario con rol Reservas]
+    A[Administrador o usuario con rol Reservas]
     P((29. Consultar el detalle de una reserva))
     D1[(D1: Usuarios)]
     D3[(D3: Usuarios_Roles)]
@@ -890,54 +954,74 @@ flowchart LR
     D7[(D7: Precios de reservas)]
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
-    D11[(D11: Detalles de reservas)]
+    D11[(D11: Eventos_Turnos)]
+    D12[(D12: Eventos)]
+    D13[(D13: Membresías de usuarios)]
+    D15[(D15: Invitados de reservas)]
+    D16[(D16: Ingresos)]
 
-    U -->|1| P
-    P -->|2| D10
-    D10 -->|3| P
-    P -->|4| D1
-    D1 -->|5| P
-    P -->|6| D11
-    D11 -->|7| P
-    P -->|8| D9
-    D9 -->|9| P
-    P -->|10| D6
-    D6 -->|11| P
-    P -->|12| D5
-    D5 -->|13| P
-    P -->|14| D7
-    D7 -->|15| P
-    P -->|16| U
-    P -->|17| D3
-    D3 -->|18| P
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D10
+    D10 -->|7| P
+    P -->|8| D12
+    D12 -->|9| P
+    P -->|10| D11
+    D11 -->|11| P
+    P -->|12| D9
+    D9 -->|13| P
+    P -->|14| D6
+    D6 -->|15| P
+    P -->|16| D5
+    D5 -->|17| P
+    P -->|18| D7
+    D7 -->|19| P
+    P -->|20| D13
+    D13 -->|21| P
+    P -->|22| D15
+    D15 -->|23| P
+    P -->|24| D16
+    D16 -->|25| P
+    P -->|26| A
 ```
 
 **Datos que circulan**
 
-1. Reserva seleccionada e identidad del usuario que consulta.
-2. Identificador de la reserva y criterio de acceso a las propias para el usuario del portal.
-3. Cabecera de la reserva con organizador, responsables, estado, precio, observaciones y fechas de registro, anulación o finalización.
-4. Identidad del actor e identificadores del organizador y de los responsables del registro o anulación.
-5. Datos de los usuarios relacionados y estado de acceso del actor.
-6. Reserva cuyos detalles deben consultarse.
-7. Vínculos de la reserva con sus turnos.
-8. Turnos incluidos en los detalles.
-9. Fecha de uso, horas y cancha de cada turno.
-10. Cancha de los turnos reservados.
-11. Datos de la cancha y su sede.
-12. Sede de la cancha reservada.
-13. Datos de la sede.
-14. Precio referenciado por la reserva.
-15. Importe histórico por turno.
-16. Detalle de la reserva con estado, usuarios, fecha, cancha, turnos, duración, subtotales, total y datos de anulación o finalización, o rechazo del acceso.
-17. Usuario que solicita consultar el detalle.
-18. Roles asignados al actor.
+1. Reserva seleccionada e identidad del actor.
+2. Actor y usuarios relacionados.
+3. Datos de las cuentas y estado de acceso.
+4. Actor cuyos roles deben consultarse.
+5. Roles asignados.
+6. Reserva seleccionada y acceso a todas o sólo a las propias.
+7. Organizador, evento, precio o pase aplicado y datos comerciales.
+8. Evento asociado a la reserva.
+9. Estado, observaciones, responsables y fechas de registro, anulación o finalización.
+10. Evento cuyos vínculos deben consultarse.
+11. Turnos incluidos en el evento.
+12. Turnos de la reserva.
+13. Cancha, fecha e inicio de cada turno, para calcular fin y duración.
+14. Cancha de los turnos.
+15. Datos de la cancha y su sede.
+16. Sede relacionada.
+17. Datos de la sede.
+18. Precio histórico de la reserva normal.
+19. Importe histórico por turno.
+20. Membresía de pase aplicada cuando corresponda.
+21. Titular y vigencia del pase aplicado.
+22. Reserva cuyos invitados se consultan.
+23. Invitados identificados y su cobertura.
+24. Reserva cuyos ingresos deben consultarse.
+25. Ingresos y estados para calcular el resumen de cobro.
+26. Detalle, turnos, importes, auditoría y acciones habilitadas, o rechazo del acceso.
 
 ### DFD 30: consultar reservas de cancha
 
 ```mermaid
 flowchart LR
-    U[Administrador o usuario con rol Reservas]
+    A[Administrador o usuario con rol Reservas]
     P((30. Consultar reservas de cancha))
     D1[(D1: Usuarios)]
     D3[(D3: Usuarios_Roles)]
@@ -946,9 +1030,11 @@ flowchart LR
     D7[(D7: Precios de reservas)]
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
-    D11[(D11: Detalles de reservas)]
+    D11[(D11: Eventos_Turnos)]
+    D12[(D12: Eventos)]
+    D15[(D15: Invitados de reservas)]
 
-    U -->|1| P
+    A -->|1| P
     P -->|2| D1
     D1 -->|3| P
     P -->|4| D3
@@ -961,33 +1047,41 @@ flowchart LR
     D9 -->|11| P
     P -->|12| D11
     D11 -->|13| P
-    P -->|14| D10
-    D10 -->|15| P
-    P -->|16| D7
-    D7 -->|17| P
-    P -->|18| U
+    P -->|14| D12
+    D12 -->|15| P
+    P -->|16| D10
+    D10 -->|17| P
+    P -->|18| D7
+    D7 -->|19| P
+    P -->|20| D15
+    D15 -->|21| P
+    P -->|22| A
 ```
 
 **Datos que circulan**
 
-1. Identidad del actor y filtros opcionales de sede, cancha, fechas de uso, organizador, número de reserva y estado.
-2. Identidad del actor y de los organizadores de las reservas consultadas.
-3. Estado de acceso del actor y datos de los organizadores.
-4. Usuario que solicita consultar reservas.
-5. Roles asignados al actor.
-6. Criterios de consulta de sedes para el filtro y el listado.
-7. Datos de las sedes, incluidas las inactivas.
-8. Sede seleccionada y canchas relacionadas con las reservas consultadas.
-9. Datos de las canchas y su pertenencia a las sedes, incluidas las inactivas.
-10. Cancha, rango de fechas de uso y turnos relacionados con las reservas consultadas.
-11. Cancha, fecha y horas de los turnos.
-12. Reservas y turnos cuyos vínculos deben consultarse.
-13. Detalles que relacionan cada reserva con todos sus turnos.
-14. Criterios de organizador, número de reserva y estado, con acceso a todas las reservas o sólo a las propias.
-15. Cabeceras de las reservas que cumplen los filtros.
-16. Precios aplicados a las reservas consultadas.
-17. Importes históricos por turno.
-18. Opciones de filtros y listado con número, organizador cuando corresponde, sede, cancha, fecha, horario, total, estado y acceso al detalle, o errores de validación y acceso.
+1. Identidad del actor y filtros opcionales de sede, cancha, fechas de uso, organizador, número y estado.
+2. Actor y organizadores consultados.
+3. Estado de acceso y datos de los organizadores.
+4. Actor cuyos roles deben consultarse.
+5. Roles asignados.
+6. Criterios de consulta de sedes.
+7. Sedes, incluidas las inactivas.
+8. Sede seleccionada y canchas relacionadas.
+9. Canchas y su pertenencia a las sedes.
+10. Cancha y rango de fechas de uso.
+11. Turnos con cancha, fecha y hora de inicio.
+12. Turnos o eventos cuyos vínculos se consultan.
+13. Vínculos completos que permiten obtener duración e intervalo.
+14. Eventos asociados y filtro de estado.
+15. Estados y fechas de registro de los eventos.
+16. Criterios de número y organizador, con acceso a todas o sólo a las propias.
+17. Reservas, evento asociado y datos del precio o pase aplicado.
+18. Precios históricos de las reservas normales.
+19. Importes históricos por turno.
+20. Invitados de reservas con pase para calcular adicionales.
+21. Coberturas de los invitados identificados.
+22. Filtros y listado con número, organizador cuando corresponde, cancha, fecha, horario, total, estado y acceso al detalle, o errores.
 
 ### DFD 31: anular una reserva de cancha
 
@@ -997,12 +1091,12 @@ flowchart LR
     P((31. Anular una reserva de cancha))
     D1[(D1: Usuarios)]
     D3[(D3: Usuarios_Roles)]
-    D5[(D5: Sedes)]
-    D6[(D6: Canchas)]
-    D7[(D7: Precios de reservas)]
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
-    D11[(D11: Detalles de reservas)]
+    D11[(D11: Eventos_Turnos)]
+    D12[(D12: Eventos)]
+    D17[(D17: Bloqueos)]
+    D18[(D18: Orígenes de bloqueos)]
 
     A -->|1| P
     P -->|2| D1
@@ -1011,43 +1105,45 @@ flowchart LR
     D3 -->|5| P
     P -->|6| D10
     D10 -->|7| P
-    P -->|8| D11
-    D11 -->|9| P
-    P -->|10| D9
-    D9 -->|11| P
-    P -->|12| D6
-    D6 -->|13| P
-    P -->|14| D5
-    D5 -->|15| P
-    P -->|16| D7
-    D7 -->|17| P
-    P -->|18| D10
-    P -->|19| A
+    P -->|8| D12
+    D12 -->|9| P
+    P -->|10| D11
+    D11 -->|11| P
+    P -->|12| D9
+    D9 -->|13| P
+    P -->|14| D12
+    P -->|15| D10
+    P -->|16| D12
+    P -->|17| D17
+    P -->|18| D11
+    P -->|19| D18
+    P -->|20| A
 ```
 
 **Datos que circulan**
 
-1. Reserva seleccionada, motivo de anulación, identidad del actor y confirmación.
-2. Identidad del actor y de los usuarios relacionados con la reserva.
-3. Estado de acceso del actor y datos de los usuarios relacionados.
-4. Usuario que solicita anular la reserva.
-5. Roles asignados al actor.
-6. Identificador de la reserva seleccionada y criterio de acceso a las propias para el usuario del portal.
-7. Cabecera con estado, organizador, responsables, precio aplicado y datos de registro o anulación.
-8. Reserva cuyos detalles deben consultarse.
-9. Vínculos de la reserva con todos sus turnos.
-10. Turnos incluidos en la reserva.
-11. Fecha, hora de inicio, hora de fin y cancha de cada turno.
-12. Cancha de los turnos reservados.
-13. Datos de la cancha y su sede.
-14. Sede de la cancha reservada.
-15. Datos de la sede.
-16. Precio aplicado a la reserva.
-17. Importe histórico por turno para mostrar el total de la reserva.
-18. Estado Anulada, motivo, fecha, hora y usuario responsable; este estado libera la ocupación de todos sus turnos.
-19. Resultado de la anulación y detalle conservado de la reserva, o errores de validación y acceso.
+1. Reserva, motivo y confirmación; clasificación administrativa cuando corresponda.
+2. Identidad del actor.
+3. Estado de acceso y datos de la cuenta.
+4. Actor cuyos roles deben comprobarse.
+5. Roles asignados.
+6. Reserva seleccionada, con criterio de titularidad para el portal.
+7. Organizador, evento asociado y origen de una anulación previa, si existe.
+8. Evento asociado a la reserva.
+9. Estado y auditoría vigente.
+10. Evento cuyos turnos deben consultarse.
+11. Vínculos del evento con sus turnos.
+12. Turnos de la reserva.
+13. Fechas y horas de inicio para comprobar el plazo.
+14. Estado Anulado, actor, momento, motivo y fecha de modificación del evento.
+15. Origen de la anulación: organizador o administración.
+16. Evento de bloqueo Programado con su responsable y observaciones, sólo por causa bloqueante.
+17. Bloqueo con motivo de clima adverso, torneo o mantenimiento, cuando corresponda.
+18. Vínculos del bloqueo con todos los turnos de la reserva anulada, cuando corresponda.
+19. Vínculo del bloqueo con el evento anulado de origen.
+20. Resultado de la anulación y condición de los turnos, o errores de acceso, motivo, estado o plazo.
 
-El Administrador puede anular cualquier reserva Programada antes del inicio. El usuario con rol Reservas sólo puede anular las propias con al menos una hora de antelación al primer turno. Una reserva Anulada o Finalizada no puede anularse.
+El Administrador puede anular antes del primer turno; el organizador del portal necesita al menos una hora de antelación. Los vínculos históricos se conservan. Las causas administrativas bloqueantes crean el bloqueo y su trazabilidad en la misma transacción.
 
 ### DFD 32: finalizar una reserva de cancha
 
@@ -1059,7 +1155,8 @@ flowchart LR
     D3[(D3: Usuarios_Roles)]
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
-    D11[(D11: Detalles de reservas)]
+    D11[(D11: Eventos_Turnos)]
+    D12[(D12: Eventos)]
 
     A -->|1| P
     P -->|2| D1
@@ -1068,41 +1165,45 @@ flowchart LR
     D3 -->|5| P
     P -->|6| D10
     D10 -->|7| P
-    P -->|8| D11
-    D11 -->|9| P
-    P -->|10| D9
-    D9 -->|11| P
-    P -->|12| D10
-    P -->|13| A
+    P -->|8| D12
+    D12 -->|9| P
+    P -->|10| D11
+    D11 -->|11| P
+    P -->|12| D9
+    D9 -->|13| P
+    P -->|14| D12
+    P -->|15| A
 ```
 
 **Datos que circulan**
 
-1. Reserva seleccionada, identidad del administrador y confirmación.
-2. Identidad del usuario que solicita finalizar la reserva.
-3. Estado de acceso del usuario.
-4. Usuario cuyos roles deben consultarse.
-5. Roles asignados al usuario.
-6. Identificador de la reserva seleccionada.
-7. Estado y fecha de finalización de la reserva.
-8. Reserva cuyos detalles deben consultarse.
-9. Vínculos de la reserva con sus turnos.
-10. Turnos incluidos en la reserva.
-11. Fecha y hora de fin de cada turno.
-12. Estado Finalizada y fecha y hora de procesamiento.
-13. Resultado de la finalización o rechazo por acceso, estado u horario.
+1. Reserva seleccionada, identidad del Administrador y confirmación.
+2. Identidad del actor.
+3. Estado de acceso.
+4. Actor cuyos roles deben consultarse.
+5. Roles asignados.
+6. Reserva seleccionada.
+7. Evento asociado a la reserva.
+8. Evento que se solicita finalizar.
+9. Estado y fecha de finalización existente.
+10. Evento cuyos turnos deben consultarse.
+11. Vínculos con todos los turnos.
+12. Turnos de la reserva.
+13. Fechas e inicios para calcular el fin del último turno.
+14. Estado Finalizado, momento de procesamiento y fecha de modificación.
+15. Resultado de la finalización o rechazo por acceso, estado u horario.
 
-La acción manual de emergencia sólo está habilitada para administradores cuando la reserva sigue Programada y terminó su último turno. Conserva los datos históricos y no registra un responsable de finalización. La validación se repite dentro de la transacción y una solicitud repetida o concurrente con la tarea automática no sobrescribe la fecha registrada.
+La acción de emergencia sólo finaliza eventos de reservas Programados cuyo último turno terminó. No registra responsable de finalización ni sobrescribe una fecha existente. La finalización manual y la tarea automática coordinan la operación con los mismos turnos y evento.
 
 ### Finalización automática de reservas
 
-La finalización es un proceso interno programado por Celery Beat cada hora en punto. No representa una intención externa y no tiene un DFD de nivel 1. Consulta Reservas (D10), Detalles de reservas (D11) y Turnos (D9), y actualiza únicamente las Programadas cuyo último turno terminó. Registra estado Finalizada y fecha y hora de procesamiento, sin usuario responsable. La operación se describe en `Automatización de reservas.md`.
+La tarea horaria es un proceso interno y no tiene un DFD de nivel 1. Consulta Eventos (D12), Eventos_Turnos (D11) y Turnos (D9), y actualiza sólo eventos de tipo Reserva Programados cuyo último turno terminó. Registra estado Finalizado y momento de procesamiento, sin responsable. Conserva vínculos y ocupación histórica. Las clases utilizan la misma condición y los bloqueos quedan fuera de la tarea. Su operación se describe en `3_modelo_relacional.md`, sección 7.11, y `4_flujos_del_sistema.md`, sección 4.3.
 
 ### DFD 33: emitir el comprobante de una reserva
 
 ```mermaid
 flowchart LR
-    U[Administrador o usuario con rol Reservas]
+    A[Administrador o usuario con rol Reservas]
     P((33. Emitir el comprobante de una reserva))
     D1[(D1: Usuarios)]
     D3[(D3: Usuarios_Roles)]
@@ -1111,45 +1212,62 @@ flowchart LR
     D7[(D7: Precios de reservas)]
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
-    D11[(D11: Detalles de reservas)]
+    D11[(D11: Eventos_Turnos)]
+    D12[(D12: Eventos)]
+    D13[(D13: Membresías de usuarios)]
+    D15[(D15: Invitados de reservas)]
 
-    U -->|1| P
+    A -->|1| P
     P -->|2| D1
     D1 -->|3| P
     P -->|4| D3
     D3 -->|5| P
     P -->|6| D10
     D10 -->|7| P
-    P -->|8| D11
-    D11 -->|9| P
-    P -->|10| D9
-    D9 -->|11| P
-    P -->|12| D6
-    D6 -->|13| P
-    P -->|14| D5
-    D5 -->|15| P
-    P -->|16| D7
-    D7 -->|17| P
-    P -->|18| U
+    P -->|8| D12
+    D12 -->|9| P
+    P -->|10| D11
+    D11 -->|11| P
+    P -->|12| D9
+    D9 -->|13| P
+    P -->|14| D6
+    D6 -->|15| P
+    P -->|16| D5
+    D5 -->|17| P
+    P -->|18| D7
+    D7 -->|19| P
+    P -->|20| D13
+    D13 -->|21| P
+    P -->|22| D15
+    D15 -->|23| P
+    P -->|24| A
 ```
 
 **Datos que circulan**
 
-1. Reserva seleccionada e identidad del actor que solicita el comprobante.
-2. Identidad del actor, del organizador y de los responsables del registro o anulación.
-3. Estado de acceso del actor y datos de los usuarios relacionados.
-4. Usuario cuyos roles deben consultarse.
-5. Roles asignados al actor.
-6. Identificador de la reserva y criterio de acceso a todas las reservas o sólo a las propias.
-7. Cabecera con número, estado, precio aplicado, observaciones, responsables y fechas de registro, anulación o finalización.
-8. Reserva cuyos detalles deben incluirse en el comprobante.
-9. Vínculos de la reserva con todos sus turnos.
-10. Turnos incluidos en los detalles.
-11. Fecha de uso, horas y cancha de cada turno.
-12. Cancha de los turnos reservados.
-13. Nombre de la cancha y sede a la que pertenece.
-14. Sede de la cancha reservada.
-15. Nombre de la sede.
-16. Precio aplicado al registrar la reserva.
-17. Importe histórico por turno.
-18. Comprobante imprimible con identificación de la academia, número, estado, usuarios, fechas, sede, cancha, turnos, duración, subtotales, total y datos de anulación o finalización, o rechazo del acceso.
+1. Reserva seleccionada e identidad del actor.
+2. Actor, organizador y responsables relacionados.
+3. Datos de las cuentas y estado de acceso del actor.
+4. Actor cuyos roles deben consultarse.
+5. Roles asignados.
+6. Reserva y criterio de acceso a todas o sólo a las propias.
+7. Número, organizador, evento y datos comerciales del precio o pase.
+8. Evento asociado a la reserva.
+9. Estado, observaciones y auditoría.
+10. Evento cuyos vínculos se consultan.
+11. Vínculos con todos los turnos.
+12. Turnos incluidos en el comprobante.
+13. Cancha, fecha e inicio para calcular fin y duración.
+14. Cancha de los turnos.
+15. Datos de la cancha y sede.
+16. Sede relacionada.
+17. Nombre y datos de la sede.
+18. Precio histórico de la reserva normal.
+19. Importe histórico por turno.
+20. Pase aplicado al organizador cuando corresponda.
+21. Identificación y vigencia de la membresía aplicada.
+22. Invitados de la reserva con pase.
+23. Identificación y cobertura de invitados.
+24. Comprobante imprimible con número, estado, usuarios, fechas, sede, cancha, turnos, duración, importes y auditoría, o rechazo del acceso.
+
+El comprobante se obtiene de los datos de la reserva, su evento y sus relaciones. Emitirlo no modifica datos ni registra un cobro.
