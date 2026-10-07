@@ -1,20 +1,15 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils.formats import number_format
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from instalaciones.models import Sede
-from usuarios.models import Rol
-
 from .disponibilidad import consultar_disponibilidad
-from .forms import PrecioReservaForm, ReservaAnulacionForm, ReservaDatosForm, ReservaFiltroForm, ReservaTurnosForm
-from .models import PrecioReserva, Reserva, ReservaTurno
+from .forms import ReservaAnulacionForm, ReservaDatosForm, ReservaFiltroForm, ReservaTurnosForm
+from .models import Reserva, ReservaTurno
 from .servicios import (
     anular_reserva,
     exigir_acceso_reservas,
@@ -25,17 +20,12 @@ from .servicios import (
 )
 
 
-def _exigir_administrador(usuario):
-    if not usuario.tiene_rol(Rol.ADMINISTRADOR):
-        raise PermissionDenied
-
-
 @login_required
 @require_http_methods(["GET"])
 def reserva_lista(request):
     es_administrador = exigir_acceso_reservas(request.user)
     formulario = ReservaFiltroForm(request.GET, es_administrador=es_administrador)
-    reservas = Reserva.objects.select_related("organizador", "precio_reserva").prefetch_related(
+    reservas = Reserva.objects.select_related("organizador").prefetch_related(
         Prefetch("detalles", queryset=ReservaTurno.objects.select_related("turno__cancha__sede"))
     )
     if not es_administrador:
@@ -77,7 +67,7 @@ def reserva_lista(request):
             "fecha": primer_turno.fecha,
             "hora_inicio": primer_turno.hora_inicio,
             "hora_fin": ultimo_turno.hora_fin,
-            "total": reserva.precio_reserva.importe * len(detalles),
+            "total": reserva.precio_por_turno_aplicado * len(detalles),
         })
     return render(request, "reservas/reserva_lista.html", {
         "formulario": formulario,
@@ -118,7 +108,7 @@ def reserva_crear(request):
                         formulario.cleaned_data["cancha"],
                         formulario.cleaned_data["fecha"],
                         formulario_turnos.cleaned_data["turnos"],
-                        formulario_turnos.cleaned_data["precio_reserva"],
+                        formulario_turnos.cleaned_data["precio_mostrado"],
                         formulario_turnos.cleaned_data["observaciones"],
                     )
                 except ValidationError as error:
@@ -154,7 +144,7 @@ def reserva_crear(request):
         "resultado": resultado,
         "filas_turnos": filas_turnos,
         "turnos_seleccionados": request.POST.getlist("turnos"),
-        "precio_centavos": int(resultado["precio"].importe * 100) if resultado else None,
+        "precio_centavos": int(resultado["precio_por_turno"] * 100) if resultado else None,
         "es_administrador": es_administrador,
         "hay_sedes": formulario.fields["sede"].queryset.exists(),
     })
@@ -176,7 +166,7 @@ def reserva_comprobante(request, pk):
         "reserva": reserva,
         "detalles": detalles,
         "cantidad_horas": len(detalles),
-        "total": reserva.precio_reserva.importe * len(detalles),
+        "total": reserva.precio_por_turno_aplicado * len(detalles),
         "hora_inicio": detalles[0].turno.hora_inicio if detalles else None,
         "hora_fin": detalles[-1].turno.hora_fin if detalles else None,
     })
@@ -185,7 +175,7 @@ def reserva_comprobante(request, pk):
 def _obtener_reserva_para_consulta(usuario, pk):
     es_administrador = exigir_acceso_reservas(usuario)
     reservas = Reserva.objects.select_related(
-        "organizador", "registrado_por", "precio_reserva", "anulado_por",
+        "organizador", "registrado_por", "anulado_por",
     )
     if not es_administrador:
         reservas = reservas.filter(organizador=usuario)
@@ -217,7 +207,7 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
         "reserva": reserva,
         "detalles": detalles,
         "cantidad_horas": len(detalles),
-        "total": reserva.precio_reserva.importe * len(detalles),
+        "total": reserva.precio_por_turno_aplicado * len(detalles),
         "puede_anular": puede_anular,
         "puede_finalizar": puede_finalizar,
         "hora_inicio": primer_turno.hora_inicio if primer_turno else None,
@@ -258,88 +248,3 @@ def reserva_finalizar(request, pk):
     else:
         messages.success(request, f"La reserva {reserva.numero} fue finalizada.")
     return redirect("reservas:reserva_detalle", pk=reserva.pk)
-
-
-@login_required
-@permission_required("reservas.add_precioreserva", raise_exception=True)
-@require_http_methods(["GET", "POST"])
-def precio_crear(request, sede_pk):
-    _exigir_administrador(request.user)
-    formulario = PrecioReservaForm(request.POST if request.method == "POST" else None)
-    with transaction.atomic():
-        sedes = Sede.objects.all()
-        if request.method == "POST":
-            # La sede coordina las escrituras incluso cuando todavía no tiene precio.
-            sedes = sedes.select_for_update()
-        sede = get_object_or_404(sedes, pk=sede_pk)
-        precio_activo = sede.precios_reservas.filter(estado=PrecioReserva.Estado.ACTIVO).first()
-        if precio_activo and request.method == "GET":
-            messages.info(request, "La sede ya tiene un precio activo. Podés actualizarlo.")
-            return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#precios")
-        if request.method == "POST" and formulario.is_valid():
-            if precio_activo:
-                formulario.add_error(None, "La sede ya tiene un precio activo. Actualizalo desde la tabla de precios.",)
-            else:
-                PrecioReserva.objects.create(
-                    sede=sede,
-                    importe=formulario.cleaned_data["importe"],
-                )
-                messages.success(request, "El precio por turno fue creado.")
-                return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#precios")
-
-    return render(
-        request,
-        "reservas/precio_formulario.html",
-        {
-            "sede": sede,
-            "formulario": formulario,
-            "titulo": "Crear precio por turno",
-            "texto_boton": "Crear precio",
-        },
-    )
-
-
-@login_required
-@permission_required("reservas.change_precioreserva", raise_exception=True)
-@require_http_methods(["GET", "POST"])
-def precio_actualizar(request, sede_pk, pk):
-    _exigir_administrador(request.user)
-    with transaction.atomic():
-        sedes = Sede.objects.all()
-        if request.method == "POST":
-            sedes = sedes.select_for_update()
-        sede = get_object_or_404(sedes, pk=sede_pk)
-        precio = get_object_or_404(sede.precios_reservas.all(), pk=pk)
-        if precio.estado != PrecioReserva.Estado.ACTIVO and request.method == "GET":
-            messages.info(request, "Los precios inactivos se conservan para consulta. Actualizá el precio activo desde la tabla de precios.",)
-            return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#precios")
-        formulario = PrecioReservaForm(
-            request.POST if request.method == "POST" else None,
-            initial={"importe": precio.importe},
-        )
-        if request.method == "POST" and formulario.is_valid():
-            if precio.estado != PrecioReserva.Estado.ACTIVO:
-                formulario.add_error(None, "El precio ya fue actualizado. Consultá el precio activo de la sede antes de continuar.",)
-            elif formulario.cleaned_data["importe"] == precio.importe:
-                formulario.add_error("importe", "El nuevo importe debe ser diferente del precio actual.")
-            else:
-                precio.estado = PrecioReserva.Estado.INACTIVO
-                precio.save(update_fields=["estado", "actualizado_en"])
-                PrecioReserva.objects.create(
-                    sede=sede,
-                    importe=formulario.cleaned_data["importe"],
-                )
-                messages.success(request, "El precio por turno fue actualizado.")
-                return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#precios")
-
-    return render(
-        request,
-        "reservas/precio_formulario.html",
-        {
-            "sede": sede,
-            "formulario": formulario,
-            "titulo": "Actualizar precio por turno",
-            "texto_boton": "Actualizar precio",
-            "precio": precio,
-        },
-    )

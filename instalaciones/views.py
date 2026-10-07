@@ -8,11 +8,10 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from psycopg.errors import UniqueViolation
 
-from reservas.forms import PrecioReservaFiltroForm
 from reservas.models import Reserva
 from usuarios.models import Rol
 
-from .forms import CanchaForm, SedeForm, SedeHorarioForm
+from .forms import CanchaForm, SedeForm, SedeHorarioForm, SedePrecioForm
 from .models import Cancha, Sede, SedeHorario
 
 
@@ -43,23 +42,6 @@ def sede_detalle(request, pk):
     ]
     canchas = sede.canchas.order_by("nombre")
     es_administrador = request.user.tiene_rol(Rol.ADMINISTRADOR)
-    puede_consultar_precios = (
-        request.user.has_perm("reservas.view_precioreserva")
-        and es_administrador
-    )
-    formulario_precios = None
-    precios = None
-    precio_activo = False
-    if puede_consultar_precios:
-        formulario_precios = PrecioReservaFiltroForm(request.GET, prefix="precio")
-        precios = sede.precios_reservas.order_by("-creado_en", "-pk")
-        precio_activo = precios.filter(estado="activo").exists()
-        if formulario_precios.is_valid():
-            estado_precio = formulario_precios.cleaned_data["estado"]
-            if estado_precio:
-                precios = precios.filter(estado=estado_precio)
-        else:
-            precios = precios.none()
     return render(
         request,
         "instalaciones/sede_detalle.html",
@@ -67,16 +49,61 @@ def sede_detalle(request, pk):
             "sede": sede,
             "canchas": canchas,
             "horarios_semana": horarios_semana,
-            "puede_consultar_precios": puede_consultar_precios,
-            "formulario_precios": formulario_precios,
-            "precios": precios,
-            "precio_activo": precio_activo,
+            "puede_consultar_precio": es_administrador,
+            "puede_configurar_precio": (
+                request.user.has_perm("instalaciones.change_sede")
+                and es_administrador
+            ),
             "puede_configurar_horarios": (
                 request.user.has_perm("instalaciones.change_sede")
                 and es_administrador
             ),
         },
     )
+
+
+@login_required
+@permission_required("instalaciones.change_sede", raise_exception=True)
+@require_http_methods(["GET", "POST"])
+def sede_precio_configurar(request, pk):
+    if not request.user.tiene_rol(Rol.ADMINISTRADOR):
+        raise PermissionDenied
+
+    with transaction.atomic():
+        sedes = Sede.objects.all()
+        if request.method == "POST":
+            sedes = sedes.select_for_update()
+        sede = get_object_or_404(sedes, pk=pk)
+        precio_actual = sede.precio_reserva_vigente
+        formulario = SedePrecioForm(
+            request.POST if request.method == "POST" else None,
+            instance=sede,
+        )
+
+        if request.method == "POST" and formulario.is_valid():
+            if formulario.cleaned_data["precio_mostrado"] != precio_actual:
+                datos = request.POST.copy()
+                datos["precio_mostrado"] = str(precio_actual) if precio_actual is not None else ""
+                formulario = SedePrecioForm(datos, instance=sede)
+                formulario.add_error(
+                    None, "El precio cambió. Revisá el importe vigente y confirmá nuevamente."
+                )
+            elif formulario.cleaned_data["precio_reserva_vigente"] == precio_actual:
+                formulario.add_error(
+                    "precio_reserva_vigente", "El nuevo importe debe ser diferente del precio actual."
+                )
+            else:
+                sede = formulario.save(commit=False)
+                sede.save(update_fields=["precio_reserva_vigente", "actualizado_en"])
+                messages.success(request, "El precio por turno fue guardado.")
+                return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#precios")
+
+    return render(request, "instalaciones/sede_precio_formulario.html", {
+        "sede": sede,
+        "formulario": formulario,
+        "precio_actual": precio_actual,
+        "titulo": "Configurar precio por turno" if precio_actual is None else "Actualizar precio por turno",
+    })
 
 
 @login_required

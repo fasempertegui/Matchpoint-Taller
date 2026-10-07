@@ -66,11 +66,11 @@
                   data-confirmar-titulo="Confirmar reserva" data-confirmar-boton="Reservar turnos">
                 {% csrf_token %}
                 {% for campo in formulario %}<input type="hidden" name="{{ campo.html_name }}" value="{{ campo.value|default_if_none:'' }}">{% endfor %}
-                <input type="hidden" name="precio_reserva" value="{{ resultado.precio.pk }}">
+                <input type="hidden" name="precio_mostrado" value="{{ resultado.precio_por_turno|unlocalize }}">
                 <input type="hidden" name="accion" value="registrar">
                 {% if formulario_turnos.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario_turnos.non_field_errors }}</div>{% endif %}
                 {% for error in formulario_turnos.turnos.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-                {% for error in formulario_turnos.precio_reserva.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                {% for error in formulario_turnos.precio_mostrado.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
                 <div class="reserva-turnos" role="group" aria-labelledby="turnos-titulo">
                     {% for fila in filas_turnos %}
                         <label class="reserva-opcion reserva-turno">
@@ -85,7 +85,7 @@
                 </div>
                 {% if resultado.turnos %}
                     <div class="reserva-importes">
-                        <p class="texto-secundario">Precio por turno: $ {{ resultado.precio.importe|floatformat:2 }}</p>
+                        <p class="texto-secundario">Precio por turno: $ {{ resultado.precio_por_turno|floatformat:"2g" }}</p>
                         <p class="reserva-total" aria-live="polite" data-reserva-total>Total: $ 0,00</p>
                     </div>
                     <p class="error-campo" role="alert" data-error-seleccion hidden></p>

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import forms
 
 from .models import Cancha, Sede, SedeHorario
@@ -29,6 +31,31 @@ class SedeForm(forms.ModelForm):
                 }
             ),
         }
+
+
+class SedePrecioForm(forms.ModelForm):
+    precio_mostrado = forms.DecimalField(
+        required=False,
+        max_digits=12,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        widget=forms.HiddenInput(),
+    )
+
+    class Meta:
+        model = Sede
+        fields = ("precio_reserva_vigente",)
+        localized_fields = ("precio_reserva_vigente",)
+        widgets = {
+            "precio_reserva_vigente": forms.TextInput(
+                attrs={"class": "form-control", "inputmode": "decimal", "autofocus": True}
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["precio_reserva_vigente"].required = True
+        self.fields["precio_mostrado"].initial = self.instance.precio_reserva_vigente
 
 
 class CanchaForm(forms.ModelForm):

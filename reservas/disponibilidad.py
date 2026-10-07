@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from instalaciones.models import Cancha, Sede
 
-from .models import PrecioReserva, Reserva, Turno
+from .models import Reserva, Turno
 
 
 def validar_fecha_reserva(fecha):
@@ -24,9 +24,9 @@ def consultar_disponibilidad(cancha, fecha):
     cancha = Cancha.objects.select_for_update().get(pk=cancha.pk, sede=sede)
     if sede.estado != Sede.Estado.ACTIVA or cancha.estado != Cancha.Estado.ACTIVA:
         raise ValidationError("La sede y la cancha deben estar activas para consultar disponibilidad.")
-    precio = sede.precios_reservas.filter(estado=PrecioReserva.Estado.ACTIVO).first()
+    precio = sede.precio_reserva_vigente
     if precio is None:
-        raise ValidationError("La sede necesita un precio activo para ofrecer turnos.")
+        raise ValidationError("La sede necesita un precio por turno configurado para ofrecer turnos.")
 
     horario = sede.horarios.filter(dia_semana=fecha.isoweekday()).first()
     franjas = []
@@ -71,4 +71,4 @@ def consultar_disponibilidad(cancha, fecha):
         if fecha > ahora.date() or (fecha == ahora.date() and turno.hora_inicio > ahora.time())
     ]
 
-    return {"precio": precio, "turnos": turnos, "franjas": franjas}
+    return {"precio_por_turno": precio, "turnos": turnos, "franjas": franjas}

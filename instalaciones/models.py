@@ -1,6 +1,8 @@
 from datetime import date, datetime, time, timedelta
+from decimal import Decimal
 
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models.functions import Lower
 from django.db.models.lookups import GreaterThanOrEqual
@@ -18,6 +20,15 @@ class Sede(models.Model):
     id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=120)
     direccion = models.CharField(max_length=250)
+    precio_reserva_vigente = models.DecimalField(
+        "Precio por turno (ARS)",
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.01"))],
+        blank=True,
+        null=True,
+        help_text="Importe por un turno de una hora, común a todas las canchas de la sede.",
+    )
     observaciones = models.TextField(blank=True, null=True)
     estado = models.CharField(
         max_length=10,
@@ -35,6 +46,14 @@ class Sede(models.Model):
                 Lower("nombre"),
                 name="sede_nombre_unico_sin_mayusculas",
                 violation_error_message="Ya existe una sede con ese nombre.",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(precio_reserva_vigente__isnull=True)
+                    | models.Q(precio_reserva_vigente__gte=Decimal("0.01"))
+                ),
+                name="sede_precio_reserva_positivo",
+                violation_error_message="El precio por turno debe ser positivo.",
             ),
         ]
         verbose_name = "sede"

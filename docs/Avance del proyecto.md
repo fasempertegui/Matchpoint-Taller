@@ -30,11 +30,11 @@ Desactivar registra fecha y hora de baja; reactivar elimina esa marca. No se per
 
 El Administrador puede configurar hasta dos franjas de funcionamiento por día para cada sede. Los horarios deben ser en punto, los intervalos deben estar completos y terminar después de comenzar. Si hay dos franjas, debe existir al menos una hora sin funcionamiento entre ellas. Estas condiciones se validan en el formulario y en la base de datos. Un día sin franjas no tiene disponibilidad.
 
-Cada sede tiene un único precio activo, positivo y común a todas sus canchas, por turno de una hora. El Administrador puede crearlo o actualizarlo. Actualizar desactiva el precio vigente y crea otro en una única transacción; no se admite repetir el importe actual. Los precios inactivos se conservan para consulta y no pueden editarse ni reactivarse.
+Cada sede guarda una tarifa vigente, positiva y común a todas sus canchas, por turno de una hora. El Administrador puede configurarla o actualizarla. Guardar modifica el valor de la sede dentro de una transacción; se rechazan importes iguales al actual y cambios concurrentes que requieren revisar nuevamente el precio.
 
 ### Cabecera y detalles
 
-El proceso utiliza las tablas Turno, Reserva y ReservaTurno, relacionadas con usuarios, canchas y precios. Cada Turno representa una hora de una cancha en una fecha. Reserva es la cabecera y guarda organizador, responsable del registro, precio aplicado, observaciones y estado. Cada ReservaTurno es un detalle que vincula la cabecera con un turno.
+El proceso utiliza las tablas Turno, Reserva y ReservaTurno, relacionadas con usuarios y canchas. Cada Turno representa una hora de una cancha en una fecha. Reserva es la cabecera y guarda organizador, responsable del registro, importe por turno aplicado, observaciones y estado. Cada ReservaTurno es un detalle que vincula la cabecera con un turno.
 
 La base de datos impide duplicar turnos para una cancha, fecha y hora, o repetir un turno dentro de una reserva. Exige horas de inicio en punto, duración de una hora y finalización dentro de la misma fecha. Las relaciones protegen los registros vinculados contra la eliminación física.
 
@@ -42,7 +42,7 @@ Los estados son Programada, Anulada y Finalizada. Se exigen los datos de auditor
 
 ### Disponibilidad
 
-Se preparan y consultan turnos para una cancha y fecha entre hoy y catorce días después, inclusive. La sede y la cancha deben estar activas, y la sede debe tener un precio vigente.
+Se preparan y consultan turnos para una cancha y fecha entre hoy y catorce días después, inclusive. La sede y la cancha deben estar activas, y la sede debe tener una tarifa vigente configurada.
 
 Los turnos faltantes se generan dentro de una transacción, según las franjas actuales de funcionamiento. Sólo se ofrecen turnos futuros y libres. Preparar turnos no registra una reserva ni ocupa horarios.
 
@@ -56,7 +56,7 @@ Se admite uno o más turnos consecutivos de una misma cancha y fecha, dentro de 
 
 El servidor valida permisos, selección, estados, horarios, precio y disponibilidad dentro de una transacción, con bloqueos para coordinar solicitudes simultáneas. Registra la cabecera en estado Programada y todos sus detalles, con número, fecha y usuario responsable automáticos. Ante un error, no queda una reserva parcial. Si cambia el precio antes del registro, se exige revisar el importe y confirmar nuevamente.
 
-El precio aplicado se conserva como referencia histórica. No se permite retirar el rol Reservas a un usuario con reservas propias Programadas.
+El importe por turno se copia desde la tarifa validada de la sede al registrar y se conserva en la reserva. El total se calcula con ese importe y la cantidad de turnos; actualizar la tarifa no modifica reservas existentes. No se permite retirar el rol Reservas a un usuario con reservas propias Programadas.
 
 ### Consulta
 

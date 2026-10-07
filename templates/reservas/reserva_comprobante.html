@@ -35,7 +35,7 @@
     <div class="detalle-grid comprobante-datos">
         <div><span class="etiqueta">Organizador</span><p>{{ reserva.organizador }}</p></div>
         <div><span class="etiqueta">Duración</span><p>{{ cantidad_horas }} hora{{ cantidad_horas|pluralize:"s" }}</p></div>
-        <div><span class="etiqueta">Precio por turno (ARS)</span><p>$ {{ reserva.precio_reserva.importe|floatformat:"2g" }}</p></div>
+        <div><span class="etiqueta">Precio por turno (ARS)</span><p>$ {{ reserva.precio_por_turno_aplicado|floatformat:"2g" }}</p></div>
     </div>
 
     <section class="comprobante-seccion" aria-labelledby="turnos-titulo">
@@ -46,7 +46,7 @@
                 {% for detalle in detalles %}
                     <tr>
                         <td>{{ detalle.turno.hora_inicio|time:"H:i" }} a {{ detalle.turno.hora_fin|time:"H:i" }}</td>
-                        <td class="comprobante-importe">$ {{ reserva.precio_reserva.importe|floatformat:"2g" }}</td>
+                        <td class="comprobante-importe">$ {{ reserva.precio_por_turno_aplicado|floatformat:"2g" }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

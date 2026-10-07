@@ -6,18 +6,18 @@
 <section class="tarjeta tarjeta-formulario">
     <h1>{{ titulo }}</h1>
     <p>Sede: <a href="{% url 'instalaciones:sede_detalle' sede.pk %}#precios">{{ sede.nombre }}</a></p>
-    {% if precio %}
-        <p>Precio actual por turno: <strong>$ {{ precio.importe|floatformat:2 }}</strong>.</p>
-        <p>El nuevo precio se aplicará a las reservas que se confirmen desde su actualización.</p>
+    {% if precio_actual is not None %}
+        <p>Precio actual por turno: <strong>$ {{ precio_actual|floatformat:"2g" }}</strong>.</p>
     {% endif %}
     <form method="post" novalidate>
         {% csrf_token %}
+        {{ formulario.precio_mostrado }}
 
         {% if formulario.non_field_errors %}
             <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
         {% endif %}
 
-        {% for campo in formulario %}
+        {% for campo in formulario.visible_fields %}
             <div class="grupo-campo">
                 <label for="{{ campo.id_for_label }}">
                     {{ campo.label }}
@@ -30,10 +30,13 @@
                 {% endfor %}
             </div>
         {% endfor %}
+        {% for error in formulario.precio_mostrado.errors %}
+            <p class="error-campo" role="alert">{{ error }}</p>
+        {% endfor %}
 
         <div class="acciones-formulario">
             <a class="boton boton-secundario" href="{% url 'instalaciones:sede_detalle' sede.pk %}#precios">Cancelar</a>
-            <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
+            <button class="boton boton-primario" type="submit">Guardar precio</button>
         </div>
     </form>
 </section>

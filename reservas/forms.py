@@ -8,29 +8,7 @@ from instalaciones.models import Cancha, Sede
 from usuarios.models import Rol, Usuario
 
 from .disponibilidad import validar_fecha_reserva
-from .models import PrecioReserva, Reserva
-
-
-class PrecioReservaForm(forms.Form):
-    importe = forms.DecimalField(
-        label="Precio por turno (ARS)",
-        max_digits=12,
-        decimal_places=2,
-        min_value=Decimal("0.01"),
-        localize=True,
-        help_text="Importe por un turno de una hora, común a todas las canchas de la sede.",
-        widget=forms.TextInput(
-            attrs={"class": "form-control", "inputmode": "decimal", "autofocus": True}
-        ),
-    )
-
-
-class PrecioReservaFiltroForm(forms.Form):
-    estado = forms.ChoiceField(
-        required=False,
-        choices=(("", "Todos"), *PrecioReserva.Estado.choices),
-        widget=forms.Select(attrs={"class": "form-control"}),
-    )
+from .models import Reserva
 
 
 class CanchaReservaRadioSelect(forms.RadioSelect):
@@ -177,7 +155,7 @@ class ReservaDatosForm(forms.Form):
         })
         self.fields["sede"].queryset = Sede.objects.filter(
             estado=Sede.Estado.ACTIVA,
-            precios_reservas__estado=PrecioReserva.Estado.ACTIVO,
+            precio_reserva_vigente__isnull=False,
         )
         self.fields["cancha"].queryset = Cancha.objects.filter(
             estado=Cancha.Estado.ACTIVA,
@@ -215,7 +193,12 @@ class ReservaTurnosForm(forms.Form):
             "invalid_choice": "Uno o más turnos ya no están disponibles. Elegí nuevamente.",
         },
     )
-    precio_reserva = forms.IntegerField(min_value=1, widget=forms.HiddenInput())
+    precio_mostrado = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        widget=forms.HiddenInput(),
+    )
     observaciones = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),

@@ -45,7 +45,7 @@ def validar_turnos_seleccionados(disponibilidad, identificadores):
 
 
 @transaction.atomic
-def registrar_reserva(registrado_por, organizador, cancha, fecha, identificadores, precio_reserva_id, observaciones):
+def registrar_reserva(registrado_por, organizador, cancha, fecha, identificadores, precio_mostrado, observaciones):
     participantes = {registrado_por.pk, organizador.pk}
     # La desactivación de cuentas también bloquea primero los administradores activos.
     list(
@@ -80,20 +80,20 @@ def registrar_reserva(registrado_por, organizador, cancha, fecha, identificadore
         reserva__estado__in=(Reserva.Estado.PROGRAMADA, Reserva.Estado.FINALIZADA),
     ).exists():
         raise ValidationError("Uno o más turnos fueron reservados. Elegí nuevamente.")
-    precio = disponibilidad["precio"]
-    if precio.pk != precio_reserva_id:
+    precio = disponibilidad["precio_por_turno"]
+    if precio != precio_mostrado:
         raise ValidationError("El precio por turno cambió. Revisá el nuevo total y confirmá nuevamente.")
 
     reserva = Reserva.objects.create(
         organizador=organizador,
         registrado_por=registrado_por,
-        precio_reserva=precio,
+        precio_por_turno_aplicado=precio,
         observaciones=observaciones,
     )
     ReservaTurno.objects.bulk_create([
         ReservaTurno(reserva=reserva, turno=turno) for turno in turnos
     ])
-    return reserva, precio.importe * len(turnos)
+    return reserva, precio * len(turnos)
 
 
 def validar_anulacion_reserva(reserva, primer_turno, es_administrador, ahora):

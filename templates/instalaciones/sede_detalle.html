@@ -27,8 +27,8 @@
             <button type="button" class="pestana-boton" id="sede-tab-detalles" role="tab" aria-controls="sede-panel-detalles" data-pestana="detalles" aria-selected="true">Detalles</button>
             <button type="button" class="pestana-boton" id="sede-tab-canchas" role="tab" aria-controls="sede-panel-canchas" data-pestana="canchas" aria-selected="false" tabindex="-1">Canchas</button>
             <button type="button" class="pestana-boton" id="sede-tab-horarios" role="tab" aria-controls="sede-panel-horarios" data-pestana="horarios" aria-selected="false" tabindex="-1">Horarios</button>
-            {% if puede_consultar_precios %}
-                <button type="button" class="pestana-boton" id="sede-tab-precios" role="tab" aria-controls="sede-panel-precios" data-pestana="precios" aria-selected="false" tabindex="-1">Precios</button>
+            {% if puede_consultar_precio %}
+                <button type="button" class="pestana-boton" id="sede-tab-precios" role="tab" aria-controls="sede-panel-precios" data-pestana="precios" aria-selected="false" tabindex="-1">Precio</button>
             {% endif %}
         </div>
 
@@ -193,74 +193,25 @@
                 </table>
             </section>
         </div>
-        {% if puede_consultar_precios %}
+        {% if puede_consultar_precio %}
             <div class="pestana-panel" id="sede-panel-precios" role="tabpanel" aria-labelledby="sede-tab-precios" tabindex="0" data-panel="precios" hidden>
                 <div class="encabezado-pagina encabezado-seccion">
-                    <h2>Precios de reservas</h2>
-                    {% if not precio_activo and perms.reservas.add_precioreserva %}
-                        <a class="boton boton-primario boton-chico" href="{% url 'reservas:precio_crear' sede.pk %}">Crear precio</a>
+                    <h2>Precio de reservas</h2>
+                    {% if puede_configurar_precio %}
+                        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_precio_configurar' sede.pk %}">
+                            {% if sede.precio_reserva_vigente is None %}Configurar precio{% else %}Actualizar precio{% endif %}
+                        </a>
                     {% endif %}
                 </div>
-
-                {% if not precio_activo %}
-                    <p>La sede no tiene un precio por turno configurado.</p>
-                {% endif %}
-
-                <form method="get" action="{% url 'instalaciones:sede_detalle' sede.pk %}#precios" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos novalidate>
-                    {% for campo in formulario_precios %}
-                        <div class="grupo-campo">
-                            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-                            {{ campo }}
-                            {% for error in campo.errors %}
-                                <p class="error-campo" role="alert">{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
-                    <div class="filtros-acciones">
-                        <a class="boton boton-secundario" href="{% url 'instalaciones:sede_detalle' sede.pk %}#precios" data-limpiar-filtros>Limpiar filtros</a>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila">
+                        <dt>Precio por turno (ARS)</dt>
+                        <dd>{% if sede.precio_reserva_vigente is None %}Sin configurar{% else %}$ {{ sede.precio_reserva_vigente|floatformat:"2g" }}{% endif %}</dd>
                     </div>
-                </form>
-
-                <section class="tarjeta tabla-contenedor">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Creado</th>
-                                <th>Precio por turno</th>
-                                <th>Estado</th>
-                                <th class="acciones-columna">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for precio in precios %}
-                                <tr>
-                                    <td>{{ precio.creado_en|date:"d/m/Y H:i" }}</td>
-                                    <td>$ {{ precio.importe|floatformat:"2g" }}</td>
-                                    <td>
-                                        {% include "componentes/badge_estado.html" with estado=precio.estado texto=precio.get_estado_display only %}
-                                    </td>
-                                    <td>
-                                        <div class="acciones">
-                                            {% if precio.estado == "activo" and perms.reservas.change_precioreserva %}
-                                                <a class="boton boton-secundario boton-chico" href="{% url 'reservas:precio_actualizar' sede.pk precio.pk %}">Actualizar precio</a>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td class="estado-vacio" colspan="4">No hay precios para mostrar.</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </section>
+                </dl>
             </div>
         {% endif %}
     </section>
 </article>
 
-{% if puede_consultar_precios %}
-    <script src="{% static 'js/filtros.js' %}" defer></script>
-{% endif %}
 {% endblock %}
