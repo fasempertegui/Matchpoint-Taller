@@ -109,10 +109,10 @@ def sede_precio_configurar(request, pk):
 @login_required
 @permission_required("instalaciones.change_sede", raise_exception=True)
 @require_http_methods(["GET", "POST"])
-def sede_horario_configurar(request, pk, dia):
+def sede_horario_configurar(request, pk, dia=None):
     if not request.user.tiene_rol(Rol.ADMINISTRADOR):
         raise PermissionDenied
-    if dia not in SedeHorario.DiaSemana.values:
+    if dia is not None and dia not in SedeHorario.DiaSemana.values:
         raise Http404
 
     with transaction.atomic():
@@ -120,24 +120,35 @@ def sede_horario_configurar(request, pk, dia):
         if request.method == "POST":
             sedes = sedes.select_for_update()
         sede = get_object_or_404(sedes, pk=pk)
-        horario = sede.horarios.filter(dia_semana=dia).first()
-        if horario is None:
-            horario = SedeHorario(sede=sede, dia_semana=dia)
+        horarios = {horario.dia_semana: horario for horario in sede.horarios.all()}
+        horario = horarios.get(dia)
+        inicial = {"dias": [dia] if dia is not None else []}
+        if horario is not None:
+            inicial.update({
+                nombre: getattr(horario, nombre).hour if getattr(horario, nombre) is not None else None
+                for nombre in SedeHorarioForm.campos_horarios
+            })
+            inicial["segunda_franja"] = horario.hora_inicio_2 is not None
         formulario = SedeHorarioForm(
             request.POST if request.method == "POST" else None,
-            instance=horario,
+            initial=inicial,
         )
 
         if request.method == "POST" and formulario.is_valid():
-            if formulario.cleaned_data["hora_inicio_1"] is None:
-                sede.horarios.filter(dia_semana=dia).delete()
+            dias = sorted(set(formulario.cleaned_data["dias"]))
+            if formulario.cleaned_data["accion"] == "cerrar":
+                sede.horarios.filter(dia_semana__in=dias).delete()
             else:
-                formulario.save()
+                for dia_seleccionado in dias:
+                    sede.horarios.update_or_create(
+                        dia_semana=dia_seleccionado,
+                        defaults=formulario.cleaned_data["horas"],
+                    )
             sede.save(update_fields=["actualizado_en"])
             messages.success(
                 request,
-                f'El horario del {horario.get_dia_semana_display().lower()} '
-                f'en la sede "{sede.nombre}" fue actualizado.',
+                f'Los horarios de la sede "{sede.nombre}" fueron actualizados '
+                f'para {len(dias)} {"día" if len(dias) == 1 else "días"}.',
             )
             return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#horarios")
 
@@ -146,8 +157,11 @@ def sede_horario_configurar(request, pk, dia):
         "instalaciones/sede_horario_formulario.html",
         {
             "sede": sede,
-            "dia_nombre": horario.get_dia_semana_display(),
             "formulario": formulario,
+            "horarios_semana": [
+                {"nombre": nombre, "horario": horarios.get(dia_semana)}
+                for dia_semana, nombre in SedeHorario.DiaSemana.choices
+            ],
         },
     )
 

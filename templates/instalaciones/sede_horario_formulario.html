@@ -1,38 +1,120 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block titulo %}Horario del {{ dia_nombre|lower }} en {{ sede.nombre }} | Academia TM{% endblock %}
+{% block titulo %}Horarios de {{ sede.nombre }} | Academia TM{% endblock %}
+
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/sede-horarios.css' %}">
+{% endblock %}
 
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1>Horario del {{ dia_nombre|lower }}</h1>
-    <p>{{ sede.nombre }}</p>
-    <p>Indicá una o dos franjas con horarios en punto, separadas por al menos una hora sin funcionamiento. Dejá todos los campos vacíos para que la sede quede sin funcionamiento este día.</p>
+<div class="horarios-pagina">
+    <a class="horario-volver" href="{% url 'instalaciones:sede_detalle' sede.pk %}#horarios">Volver a la sede</a>
 
-    <form method="post" novalidate>
-        {% csrf_token %}
+    <header class="horario-encabezado">
+        <h1>Horarios de funcionamiento</h1>
+        <p class="texto-secundario">{{ sede.nombre }}</p>
+    </header>
 
-        {% if formulario.non_field_errors %}
-            <div class="mensaje mensaje-error" role="alert">
-                {{ formulario.non_field_errors }}
-            </div>
-        {% endif %}
+    <div class="horario-distribucion">
+        <section class="tarjeta horario-configuracion" aria-labelledby="horario-configuracion-titulo">
+            <form method="post" novalidate data-horarios>
+                {% csrf_token %}
+                <header class="horario-tarjeta-encabezado">
+                    <h2 id="horario-configuracion-titulo">Configuración rápida</h2>
+                    <p class="horario-ayuda">Elegí los días y cargá el horario.</p>
+                </header>
 
-        <div class="detalle-grid">
-            {% for campo in formulario %}
-                <div class="grupo-campo">
-                    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-                    {{ campo }}
-                    {% for error in campo.errors %}
-                        <p class="error-campo" role="alert">{{ error }}</p>
-                    {% endfor %}
+                {% if formulario.non_field_errors %}
+                    <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+                {% endif %}
+                {% for error in formulario.accion.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+
+                <fieldset class="horario-dias">
+                    <legend>Días a modificar</legend>
+                    <div class="horario-seleccion-dias">
+                        {% for opcion in formulario.dias %}
+                            <label class="horario-dia" title="{{ opcion.choice_label }}">
+                                {{ opcion.tag }}<span>{{ opcion.choice_label|slice:":3" }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {% for error in formulario.dias.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    <div class="horario-atajos" data-atajos-dias hidden>
+                        <button type="button" data-dias="1,2,3,4,5">Lunes a viernes</button>
+                        <button type="button" data-dias="6,7">Fin de semana</button>
+                        <button type="button" data-dias="1,2,3,4,5,6,7">Todos</button>
+                        <button type="button" data-dias="">Limpiar</button>
+                    </div>
+                </fieldset>
+
+                <div class="horario-franjas">
+                    <div class="horario-franja" role="group" aria-labelledby="primera-franja-titulo">
+                        <span class="horario-etiqueta" id="primera-franja-titulo">Primera franja</span>
+                        <div class="horario-franja-controles">
+                            {% include "instalaciones/_horario_hora.html" with campo=formulario.hora_inicio_1 only %}
+                            <span class="horario-hasta" aria-hidden="true">a</span>
+                            {% include "instalaciones/_horario_hora.html" with campo=formulario.hora_fin_1 only %}
+                        </div>
+                    </div>
+
+                    <div class="horario-franja" role="group" aria-labelledby="segunda-franja-titulo">
+                        <label class="horario-segunda-opcion" id="segunda-franja-titulo" for="{{ formulario.segunda_franja.id_for_label }}">
+                            {{ formulario.segunda_franja }}<span>Segunda franja</span>
+                        </label>
+                        <fieldset class="horario-segunda-controles" data-segunda-franja>
+                            <legend class="horario-solo-lectores">Horas de la segunda franja</legend>
+                            <div class="horario-franja-controles">
+                                {% include "instalaciones/_horario_hora.html" with campo=formulario.hora_inicio_2 only %}
+                                <span class="horario-hasta" aria-hidden="true">a</span>
+                                {% include "instalaciones/_horario_hora.html" with campo=formulario.hora_fin_2 only %}
+                            </div>
+                        </fieldset>
+                    </div>
+                    <p class="horario-ayuda">Dejá al menos una hora entre franjas.</p>
                 </div>
-            {% endfor %}
-        </div>
 
-        <div class="acciones-formulario">
-            <a class="boton boton-secundario" href="{% url 'instalaciones:sede_detalle' sede.pk %}#horarios">Cancelar</a>
-            <button class="boton boton-primario" type="submit">Guardar horarios</button>
-        </div>
-    </form>
-</section>
+                <div class="horario-acciones">
+                    <button class="boton horario-aplicar" type="submit" name="accion" value="aplicar" data-aplicar-horarios>Aplicar horarios</button>
+                    <button class="boton horario-cerrar" type="submit" name="accion" value="cerrar" data-cerrar-dias>Marcar como sin funcionamiento</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="tarjeta horario-semana" aria-labelledby="horario-semana-titulo">
+            <header class="horario-tarjeta-encabezado">
+                <h2 id="horario-semana-titulo">Semana actual</h2>
+            </header>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr><th scope="col">Día</th><th scope="col">Primera franja</th><th scope="col">Segunda franja</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for dia in horarios_semana %}
+                            <tr>
+                                <th scope="row">{{ dia.nombre }}</th>
+                                <td>
+                                    {% if dia.horario %}
+                                        {{ dia.horario.hora_inicio_1|time:"H:i" }} a {{ dia.horario.hora_fin_1|time:"H:i" }}
+                                    {% else %}
+                                        <span class="horario-sin-funcionamiento">Sin funcionamiento</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if dia.horario.hora_inicio_2 %}
+                                        {{ dia.horario.hora_inicio_2|time:"H:i" }} a {{ dia.horario.hora_fin_2|time:"H:i" }}
+                                    {% else %}
+                                        <span class="horario-vacio">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+<script src="{% static 'js/sede-horarios.js' %}" defer></script>
 {% endblock %}

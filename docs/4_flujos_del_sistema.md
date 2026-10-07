@@ -631,37 +631,39 @@ flowchart TD
 
 #### FL-58. Configurar el horario de funcionamiento de una sede
 
-- **Objetivo:** definir o modificar, para un día de la semana, hasta dos franjas horarias en las que la sede funciona.
+- **Objetivo:** definir o modificar hasta dos franjas horarias de funcionamiento para uno o varios días de la semana.
 - **Actor:** administrador.
 - **Precondición:** sede localizada mediante **FL-08**.
-- **Entradas:** día de la semana y, para ese día, ninguna, una o dos franjas horarias (hora de inicio y fin de cada una).
+- **Entradas:** días de la semana seleccionados y una o dos franjas horarias, o la indicación de dejarlos sin funcionamiento.
 
 Recorrido:
 
-1. El administrador selecciona la sede y un día de la semana, mediante **FL-57**.
-2. Ingresa la primera franja y, opcionalmente, una segunda.
+1. El administrador selecciona la sede mediante **FL-57** y marca los días que quiere modificar. Puede seleccionar lunes a viernes, fin de semana o toda la semana mediante accesos rápidos. Si abre la edición de un día, se precargan ese día y sus franjas.
+2. Ingresa las horas de inicio y fin de la primera franja mediante campos numéricos de 0 a 23. Los minutos permanecen fijos en cero. Puede habilitar una segunda franja.
 3. El sistema valida que todos los horarios sean en punto, que cada franja tenga el fin posterior al inicio y que, si hay dos, exista al menos una hora sin funcionamiento entre el fin de la primera y el inicio de la segunda. Se rechazan horarios con minutos o segundos distintos de cero y franjas contiguas o superpuestas.
-4. El administrador confirma y el sistema guarda la configuración de ese día, reemplazando la anterior si existía.
+4. El administrador aplica el horario y el sistema guarda la misma configuración en todos los días seleccionados, reemplazando sus franjas anteriores en una única transacción. Los días no seleccionados conservan su configuración.
 
 Alternativas:
 
-- Guardar el día sin ninguna franja lo deja sin funcionamiento ese día, tanto para reservas como para clases.
+- La acción «Marcar como sin funcionamiento» elimina las franjas de los días seleccionados sin exigir horas de inicio ni fin, tanto para reservas como para clases.
 - Este horario es independiente de la planilla (ver **FL-23** a **FL-26**): configurarlo no crea, modifica ni elimina turnos de planilla. Sí afecta la generación de clases (**FL-28**, **FL-29**) y la creación o el cambio de cancha de clases, y la creación o reprogramación de reservas, que lo validan en el momento (ver **FL-34**, **FL-35**, **FL-40**, **FL-51**).
 - Cambiar el horario no afecta clases ni reservas ya creadas; solo rige para actividades nuevas a partir de ese momento.
 
-- **Resultado:** horario de funcionamiento de la sede, para ese día, actualizado.
+- **Resultado:** horario de funcionamiento de la sede actualizado para los días seleccionados.
 - **Datos:** sedes y horarios de sede.
 
 ```mermaid
 flowchart TD
-    A[Seleccionar sede y día] --> B[Ingresar primera franja]
+    A[Seleccionar sede y días] --> H{Acción}
+    H -->|Sin funcionamiento| I[Eliminar franjas de los días seleccionados]
+    H -->|Aplicar horarios| B[Ingresar primera franja]
     B --> C{Agregar segunda franja}
     C -->|Sí| D[Ingresar segunda franja]
     C -->|No| E{Franjas válidas y sin superposición}
     D --> E
     E -->|No| B
     E -->|Sí| F{Confirmar}
-    F -->|Sí| G[Guardar horario del día]
+    F -->|Sí| G[Guardar horarios de los días seleccionados]
 ```
 
 ### 3.4 Catálogos de planes y pases

@@ -1,3 +1,4 @@
+from datetime import time
 from decimal import Decimal
 
 from django import forms
@@ -110,17 +111,62 @@ class CanchaForm(forms.ModelForm):
         return cancha
 
 
-class SedeHorarioForm(forms.ModelForm):
-    class Meta:
-        model = SedeHorario
-        fields = ("hora_inicio_1", "hora_fin_1", "hora_inicio_2", "hora_fin_2")
+class SedeHorarioForm(forms.Form):
+    dias = forms.TypedMultipleChoiceField(
+        label="Días",
+        choices=SedeHorario.DiaSemana.choices,
+        coerce=int,
+        widget=forms.CheckboxSelectMultiple(),
+        error_messages={"required": "Seleccioná al menos un día."},
+    )
+    hora_inicio_1 = forms.IntegerField(label="Inicio de la primera franja", min_value=0, max_value=23, required=False)
+    hora_fin_1 = forms.IntegerField(label="Fin de la primera franja", min_value=0, max_value=23, required=False)
+    segunda_franja = forms.BooleanField(label="Segunda franja", required=False)
+    hora_inicio_2 = forms.IntegerField(label="Inicio de la segunda franja", min_value=0, max_value=23, required=False)
+    hora_fin_2 = forms.IntegerField(label="Fin de la segunda franja", min_value=0, max_value=23, required=False)
+    accion = forms.ChoiceField(choices=(("aplicar", "Aplicar horarios"), ("cerrar", "Sin funcionamiento")))
+
+    campos_horarios = ("hora_inicio_1", "hora_fin_1", "hora_inicio_2", "hora_fin_2")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for campo in self.fields.values():
-            campo.required = False
-            campo.input_formats = ["%H:%M"]
-            campo.widget = forms.TimeInput(
-                format="%H:%M",
-                attrs={"class": "form-control", "type": "time", "step": "3600"},
+        for nombre in self.campos_horarios:
+            self.fields[nombre].widget = forms.NumberInput(
+                attrs={"class": "form-control", "min": 0, "max": 23, "step": 1, "inputmode": "numeric"},
             )
+        if self.is_bound:
+            self.data = self.data.copy()
+            if self.data.get("accion") == "cerrar":
+                campos_ignorados = self.campos_horarios
+            elif not self.fields["segunda_franja"].to_python(self.data.get("segunda_franja")):
+                campos_ignorados = self.campos_horarios[2:]
+            else:
+                campos_ignorados = ()
+            for nombre in campos_ignorados:
+                self.data.pop(nombre, None)
+
+    def clean(self):
+        datos = super().clean()
+        if datos.get("accion") != "aplicar":
+            return datos
+
+        campos_requeridos = self.campos_horarios if datos.get("segunda_franja") else self.campos_horarios[:2]
+        for nombre in campos_requeridos:
+            if nombre not in self.errors and datos.get(nombre) is None:
+                self.add_error(nombre, "Ingresá una hora entre 0 y 23.")
+        if any(nombre in self.errors for nombre in self.campos_horarios):
+            return datos
+
+        horas = {
+            nombre: time(datos[nombre]) if datos.get(nombre) is not None else None
+            for nombre in self.campos_horarios
+        }
+        horario = SedeHorario(**horas)
+        try:
+            horario.clean()
+        except forms.ValidationError as error:
+            for nombre, errores in error.message_dict.items():
+                self.add_error(nombre, errores)
+        else:
+            datos["horas"] = horas
+        return datos

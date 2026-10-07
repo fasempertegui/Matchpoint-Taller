@@ -10,6 +10,7 @@ urlpatterns = [
     path("<int:pk>/", views.sede_detalle, name="sede_detalle"),
     path("<int:pk>/editar/", views.sede_editar, name="sede_editar"),
     path("<int:pk>/precio/", views.sede_precio_configurar, name="sede_precio_configurar"),
+    path("<int:pk>/horarios/", views.sede_horario_configurar, name="sede_horarios_configurar"),
     path(
         "<int:pk>/horarios/<int:dia>/",
         views.sede_horario_configurar,

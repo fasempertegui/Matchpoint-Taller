@@ -1,0 +1,411 @@
+.horarios-pagina {
+    --horario-espacio-4: 4px;
+    --horario-espacio-8: 8px;
+    --horario-espacio-12: 12px;
+    --horario-espacio-16: 16px;
+    --horario-espacio-24: 24px;
+    --horario-fondo: var(--superficie);
+    --horario-texto: var(--texto);
+    --horario-secundario: var(--texto-suave);
+    --horario-borde: var(--borde);
+    --horario-violeta: var(--primario);
+    --horario-violeta-suave: var(--primario-suave);
+    --horario-control-atenuado: var(--fondo);
+    --horario-vacio: #a1a8b3;
+    --horario-alto-control: 36px;
+    --horario-ancho-etiqueta: 110px;
+    --horario-ancho-hora: 110px;
+}
+
+.horario-volver {
+    display: inline-block;
+    margin-bottom: var(--horario-espacio-16);
+    color: var(--horario-secundario);
+    text-decoration: none;
+}
+
+.horario-volver:hover {
+    color: var(--horario-violeta);
+    text-decoration: underline;
+}
+
+.horario-encabezado {
+    margin-bottom: var(--horario-espacio-24);
+}
+
+.horario-encabezado p {
+    margin: var(--horario-espacio-8) 0 0;
+}
+
+.horario-distribucion {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: stretch;
+    gap: var(--horario-espacio-24);
+}
+
+.horario-distribucion > .tarjeta {
+    min-width: 0;
+    padding: var(--horario-espacio-24);
+    border: 1px solid var(--horario-borde);
+    border-radius: var(--horario-espacio-12);
+    background: var(--horario-fondo);
+}
+
+.horario-tarjeta-encabezado {
+    margin-bottom: var(--horario-espacio-24);
+}
+
+.horario-ayuda {
+    margin: var(--horario-espacio-8) 0 0;
+    color: var(--horario-secundario);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.horario-dias,
+.horario-segunda-controles {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.horario-dias {
+    margin-bottom: var(--horario-espacio-24);
+}
+
+.horario-dias legend,
+.horario-etiqueta,
+.horario-segunda-opcion {
+    color: var(--horario-secundario);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.horario-dias legend {
+    margin-bottom: var(--horario-espacio-8);
+    padding: 0;
+}
+
+.horario-seleccion-dias {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: var(--horario-espacio-4);
+}
+
+.horario-dia {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    height: var(--horario-alto-control);
+    border: 1px solid var(--horario-borde);
+    border-radius: var(--horario-espacio-8);
+    background: var(--horario-fondo);
+    color: var(--horario-secundario);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.horario-dia:hover {
+    border-color: var(--horario-violeta);
+}
+
+.horario-dia:has(input:checked) {
+    border-color: var(--horario-violeta);
+    background: var(--horario-violeta-suave);
+    color: var(--horario-violeta);
+}
+
+.horario-solo-lectores,
+.horario-dia input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+.horario-dia:has(input:focus-visible),
+.horario-volver:focus-visible,
+.horario-atajos button:focus-visible,
+.horario-acciones .boton:focus-visible,
+.horario-segunda-opcion input:focus-visible {
+    outline: 2px solid var(--horario-violeta);
+    outline-offset: var(--horario-espacio-4);
+}
+
+.horario-atajos {
+    display: flex;
+    align-items: center;
+    gap: var(--horario-espacio-12);
+    margin-top: var(--horario-espacio-8);
+}
+
+.horario-atajos button {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--horario-violeta);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.horario-atajos button:hover {
+    text-decoration: underline;
+}
+
+.horario-franjas {
+    margin-bottom: var(--horario-espacio-24);
+}
+
+.horario-franja {
+    display: grid;
+    grid-template-columns: var(--horario-ancho-etiqueta) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--horario-espacio-8);
+}
+
+.horario-franja + .horario-franja {
+    margin-top: var(--horario-espacio-12);
+}
+
+.horario-etiqueta,
+.horario-segunda-opcion {
+    display: flex;
+    align-items: center;
+    min-height: var(--horario-alto-control);
+}
+
+.horario-segunda-opcion {
+    gap: var(--horario-espacio-8);
+    cursor: pointer;
+}
+
+.horario-segunda-opcion input {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--horario-violeta);
+}
+
+.horario-segunda-controles {
+    grid-column: 2;
+}
+
+.horario-franja-controles {
+    display: grid;
+    grid-template-columns: minmax(0, var(--horario-ancho-hora)) max-content minmax(0, var(--horario-ancho-hora));
+    gap: var(--horario-espacio-8);
+    align-items: start;
+}
+
+.horario-campo {
+    min-width: 0;
+}
+
+.horario-hora {
+    position: relative;
+    height: var(--horario-alto-control);
+    border: 1px solid var(--horario-borde);
+    border-radius: var(--horario-espacio-8);
+    background: var(--horario-fondo);
+    font-variant-numeric: tabular-nums;
+}
+
+.horario-hora .form-control {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    padding: 0 var(--horario-espacio-12) 0 var(--horario-espacio-8);
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: var(--horario-texto);
+    font-size: 14px;
+    line-height: 1;
+    text-align: right;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.horario-hora input::-webkit-inner-spin-button,
+.horario-hora input::-webkit-outer-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+}
+
+.horario-hora:focus-within {
+    outline: 2px solid var(--horario-violeta);
+    outline-offset: var(--horario-espacio-4);
+}
+
+.horario-hora .form-control:focus {
+    outline: none;
+}
+
+.horario-hora:has(input[aria-invalid="true"]) {
+    border-color: var(--peligro);
+}
+
+.horario-segunda-controles:disabled .horario-hora {
+    background: var(--horario-control-atenuado);
+}
+
+.horario-segunda-controles:disabled .form-control {
+    color: var(--horario-secundario);
+    opacity: 0.65;
+}
+
+.horario-hasta {
+    display: flex;
+    align-items: center;
+    height: var(--horario-alto-control);
+    color: var(--horario-secundario);
+    font-size: 13px;
+}
+
+.horario-acciones {
+    display: flex;
+    gap: var(--horario-espacio-8);
+}
+
+.horario-acciones .boton {
+    min-width: 0;
+    height: 40px;
+    min-height: 40px;
+    padding: var(--horario-espacio-4) var(--horario-espacio-12);
+    border-radius: var(--horario-espacio-8);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 16px;
+    text-align: center;
+}
+
+.horario-aplicar {
+    flex: 1;
+    background: var(--horario-violeta);
+    color: var(--horario-fondo);
+}
+
+.horario-aplicar:hover {
+    background: var(--primario-hover);
+}
+
+.horario-cerrar {
+    flex: 1.5;
+    border-color: var(--horario-borde);
+    background: var(--horario-fondo);
+    color: var(--horario-texto);
+}
+
+.horario-cerrar:hover {
+    background: var(--horario-control-atenuado);
+}
+
+.horario-semana .tabla-contenedor {
+    border: 1px solid var(--horario-borde);
+    border-radius: var(--horario-espacio-8);
+}
+
+.horario-semana tr {
+    height: 44px;
+}
+
+.horario-semana th,
+.horario-semana td {
+    padding: var(--horario-espacio-8) var(--horario-espacio-12);
+    vertical-align: middle;
+}
+
+.horario-semana thead th {
+    color: var(--horario-secundario);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.horario-semana tbody th,
+.horario-semana tbody td {
+    color: var(--horario-texto);
+    font-family: var(--fuente-interfaz);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+}
+
+.horario-semana tbody tr:last-child th {
+    border-bottom: 0;
+}
+
+.horario-sin-funcionamiento {
+    color: var(--horario-secundario);
+}
+
+.horario-vacio {
+    color: var(--horario-vacio);
+}
+
+.horarios-pagina .error-campo {
+    margin: var(--horario-espacio-8) 0 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.horarios-pagina [hidden] {
+    display: none;
+}
+
+@media (max-width: 899px) {
+    .horario-distribucion {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .horario-distribucion > .tarjeta {
+        padding: var(--horario-espacio-16);
+    }
+
+    .horario-atajos {
+        gap: var(--horario-espacio-8);
+        overflow-x: auto;
+        padding-bottom: var(--horario-espacio-4);
+    }
+
+    .horario-franja {
+        grid-template-columns: 96px minmax(0, 1fr);
+    }
+
+    .horario-franja-controles {
+        grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
+    }
+
+    .horario-hora .form-control {
+        padding-left: var(--horario-espacio-4);
+        padding-right: var(--horario-espacio-8);
+    }
+
+    .horario-acciones .boton {
+        padding-inline: var(--horario-espacio-8);
+    }
+}

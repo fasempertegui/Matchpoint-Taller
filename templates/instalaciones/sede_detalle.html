@@ -149,6 +149,9 @@
         <div class="pestana-panel" id="sede-panel-horarios" role="tabpanel" aria-labelledby="sede-tab-horarios" tabindex="0" data-panel="horarios" hidden>
             <div class="encabezado-pagina encabezado-seccion">
                 <h2>Horarios de funcionamiento</h2>
+                {% if puede_configurar_horarios %}
+                    <a class="boton boton-primario boton-chico" href="{% url 'instalaciones:sede_horarios_configurar' sede.pk %}">Configurar horarios</a>
+                {% endif %}
             </div>
             <section class="tarjeta tabla-contenedor">
                 <table>
@@ -157,7 +160,6 @@
                             <th>Día</th>
                             <th>Primera franja</th>
                             <th>Segunda franja</th>
-                            {% if puede_configurar_horarios %}<th class="acciones-columna">Acciones</th>{% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -178,15 +180,6 @@
                                         —
                                     {% endif %}
                                 </td>
-                                {% if puede_configurar_horarios %}
-                                    <td>
-                                        <div class="acciones">
-                                            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_horario_configurar' sede.pk dia.dia %}">
-                                                {% if dia.horario %}Editar{% else %}Configurar{% endif %}
-                                            </a>
-                                        </div>
-                                    </td>
-                                {% endif %}
                             </tr>
                         {% endfor %}
                     </tbody>

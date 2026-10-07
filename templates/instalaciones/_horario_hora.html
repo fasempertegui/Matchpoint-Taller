@@ -1,0 +1,14 @@
+<div class="horario-campo">
+    <label class="horario-solo-lectores" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+    <div class="horario-hora">
+        <input class="form-control" type="number" name="{{ campo.html_name }}" id="{{ campo.id_for_label }}"
+               min="0" max="23" step="1" inputmode="numeric" placeholder="HH"
+               value="{% if campo.value != None %}{% if campo.value|stringformat:'s'|length == 1 %}0{% endif %}{{ campo.value }}{% endif %}"
+               {% if campo.errors %}aria-invalid="true" aria-describedby="{{ campo.id_for_label }}_errores"{% endif %}>
+    </div>
+    {% if campo.errors %}
+        <div id="{{ campo.id_for_label }}_errores">
+            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+    {% endif %}
+</div>
