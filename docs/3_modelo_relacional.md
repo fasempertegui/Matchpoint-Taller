@@ -103,8 +103,8 @@ Relaciones:
 
 - Un usuario puede tener uno o varios roles asignados.
 - Un rol asignado pertenece a exactamente un usuario.
-- Un usuario puede tener cero, una o varias membresías de usuario.
-- Una membresía de usuario pertenece a exactamente un usuario.
+- Un usuario puede tener cero, una o varias contrataciones en `planes_usuarios` y en `pases_usuarios`.
+- Cada contratación pertenece exactamente a un usuario.
 - Un usuario puede organizar cero, una o varias reservas.
 - Una reserva pertenece a exactamente un usuario organizador.
 - Un usuario puede ser invitado en cero, una o varias reservas.
@@ -154,10 +154,10 @@ Para eliminar una asignación de `usuarios_roles`, se aplican estas reglas entre
 
 - **Público:** se rechaza siempre su retiro.
 - **Reservas:** se rechaza si existe una fila de `reservas` cuyo `organizador_id` sea el titular y cuyo evento relacionado tenga `estado = 'programado'`.
-- **Alumno:** se rechaza si existe una fila de `membresias_usuarios` del titular con `estado = 'activa'`, tanto si corresponde a un plan como a un pase.
+- **Alumno:** se rechaza si existe una fila de `planes_usuarios` del titular con `estado = 'activo'`. Una contratación de pase no impide retirar este rol.
 - **Profesor:** se rechaza si existe una fila de `clases_profesores` del usuario con `estado = 'activo'`, vinculada a una clase cuyo evento tenga `estado = 'programado'`.
 
-La comprobación y el retiro forman una única operación transaccional, coordinada con las operaciones que crean o reactivan esas relaciones para impedir que una escritura concurrente invalide la comprobación. Un rechazo conserva la asignación y no modifica las reservas, membresías ni clases. El retiro permitido conserva sus registros históricos y no elimina ninguna fila del catálogo `roles`.
+La comprobación y el retiro forman una única operación transaccional, coordinada con las operaciones que crean o reactivan esas relaciones para impedir que una escritura concurrente invalide la comprobación. Un rechazo conserva la asignación y no modifica las reservas, contrataciones ni clases. El retiro permitido conserva sus registros históricos y no elimina ninguna fila del catálogo `roles`.
 
 Administrador es un rol funcional almacenado en `usuarios_roles`, igual que los demás roles del catálogo. Una cuenta activa con esa asignación mantiene `is_superuser = true`, por lo que Django le concede todos los permisos; los usuarios sin el rol conservan el comportamiento normal de permisos individuales y por grupos. El comando `crear_administrador` crea la cuenta con contraseña provisoria, activa `debe_cambiar_contrasena` e `is_superuser`, y registra su asignación en una sola transacción. La aplicación no permite otorgar ni retirar Administrador desde sus pantallas.
 
@@ -179,6 +179,7 @@ Representa una sede física donde opera la academia.
 | PK | `id` | `bigint` identity | | | `1` |
 | | `nombre` | `varchar(120)` | | Sí | `Sociedad Española` |
 | | `direccion` | `varchar(250)` | | | `Av. Sarmiento 320` |
+| | `precio_reserva_vigente` | `numeric(12,2)` | Sí | | `30000.00` |
 | | `observaciones` | `text` | Sí | | `Ingreso por calle lateral` |
 | | `estado` | `varchar(10)` | | | `activa` (o `inactiva`) |
 | | `creado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
@@ -186,14 +187,14 @@ Representa una sede física donde opera la academia.
 
 PostgreSQL garantiza la unicidad de `nombre` sin distinguir mayúsculas de minúsculas mediante una restricción funcional sobre `LOWER(nombre)`; por ejemplo, no permite registrar `CENTRO` cuando ya existe `Centro`. El formulario aplica la misma comparación para informar el conflicto antes de guardar.
 
+La sede conserva un único precio vigente por turno, común a todas sus canchas. Puede quedar vacío mientras no se configure; cuando está informado debe ser positivo. El Administrador lo establece o actualiza en una transacción que bloquea la sede y actualiza `actualizado_en`. Una reserva normal copia el valor validado en `reservas.precio_por_turno_aplicado` al registrarse.
+
 Relaciones:
 
 - Una sede puede tener cero, una o varias canchas.
 - Una cancha pertenece a exactamente una sede.
 - Una sede puede tener cero a siete horarios de funcionamiento, uno por día de la semana.
 - Un horario de funcionamiento pertenece a exactamente una sede.
-- Una sede puede tener cero, uno o varios precios de reservas.
-- Un precio de reserva pertenece a exactamente una sede.
 
 ### 4.4 `canchas`
 
@@ -221,126 +222,156 @@ Relaciones:
 - Una cancha puede tener cero, uno o varios turnos concretos.
 - Un turno concreto pertenece a exactamente una cancha.
 
-### 4.5 `membresias`
+### 4.5 `planes`
 
-Representa una membresía mensual ofrecida por la academia: un plan de clases o un pase de cancha. Cada fila es la cabecera comercial (nombre y precio); el detalle específico vive en `planes` o `pases`.
+Representa un producto mensual de clases, completo en su propia tabla.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `12` |
-| | `nombre` | `varchar(150)` | | | `Grupal 3 veces por semana` |
-| | `descripcion` | `text` | | | `Clases grupales de una hora, lunes/miércoles/viernes` |
-| | `precio_vigente` | `numeric(12,2)` | | | `45000.00` |
-| | `estado` | `varchar(10)` | | | `activa` (o `inactiva`) |
-| | `creado_en` | `timestamptz` | | | `2026-01-10 12:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-01-10 12:00:00-03` |
-
-`nombre` es único entre membresías activas. Cada fila tendrá exactamente un subtipo (`planes` o `pases`).
-
-Relaciones:
-
-- Una membresía se completa con exactamente un plan o un pase.
-- Un plan completa exactamente una membresía.
-- Un pase completa exactamente una membresía.
-- Una membresía puede estar asociada a cero, una o varias membresías de usuarios.
-- Una membresía de usuario pertenece a exactamente una membresía.
-- Una membresía puede estar asociada a cero, uno o varios intentos de pago con MercadoPago.
-- Un intento de pago con MercadoPago referencia exactamente una membresía del catálogo.
-
-### 4.6 `planes`
-
-Representa la configuración propia de una membresía de plan de clases. Cada combinación de modalidad, frecuencia y duración es una membresía distinta en el catálogo.
-
-| Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
-|---|---|---|---|---|---|
-| PK, FK | `membresia_id` | `bigint` | | | `12` |
+| | `nombre` | `varchar(150)` | | | `Grupal dos encuentros semanales` |
+| | `descripcion` | `text` | | | `Dos clases de una hora por encuentro` |
 | | `modalidad` | `varchar(15)` | | | `grupal` (o `individual`) |
-| | `frecuencia_semanal` | `smallint` | | | `3` (entre 1 y 7) |
-| | `cantidad_clases_por_encuentro` | `smallint` | | | `1` (o `2`) |
+| | `frecuencia_semanal` | `smallint` | | | `2` |
+| | `cantidad_clases_por_encuentro` | `smallint` | | | `2` |
+| | `precio_vigente` | `numeric(12,2)` | | | `45000.00` |
+| | `estado` | `varchar(10)` | | | `activo` (o `inactivo`) |
+| | `creado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
+| | `actualizado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
+
+El nombre es único entre planes activos. La frecuencia se encuentra entre uno y siete y la cantidad de clases por encuentro es uno o dos. Cada clase concreta dura una hora. Descripción admite una cadena vacía, sin `NULL`. El precio no puede ser negativo.
+
+Nombre, descripción y precio vigente pueden actualizarse. Modalidad, frecuencia y cantidad de clases por encuentro no se modifican si el plan tiene contrataciones históricas. Desactivar impide nuevas contrataciones y conserva las existentes. Las clases se organizan independientemente: contratar un plan no genera clases ni asigna horarios automáticamente.
 
 Relaciones:
 
-- Un plan completa exactamente una membresía.
-- Una membresía se completa, cuando corresponde, con exactamente un plan.
+- Un plan puede tener cero, una o varias contrataciones en `planes_usuarios`.
+- Cada contratación referencia exactamente un plan.
+- Un plan puede aparecer en cero, uno o varios intentos de pago online.
 
-### 4.7 `pases`
+### 4.6 `pases`
 
-Representa la configuración propia de una membresía de pase de cancha. El pase libre y el pase de fin de semana son dos filas distintas y autónomas del catálogo: el día habilitado es una propiedad fija de cada variante (`tipo`), no un campo configurable aparte.
+Representa un producto mensual de acceso a canchas, completo en su propia tabla.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
-| PK, FK | `membresia_id` | `bigint` | | | `18` |
+| PK | `id` | `bigint` identity | | | `18` |
+| | `nombre` | `varchar(150)` | | | `Pase libre` |
+| | `descripcion` | `text` | | | `Acceso todos los días` |
 | | `tipo` | `varchar(15)` | | | `libre` (o `fin_de_semana`) |
 | | `limite_horas_diarias` | `smallint` | | | `2` |
+| | `precio_vigente` | `numeric(12,2)` | | | `35000.00` |
 | | `precio_invitado_vigente` | `numeric(12,2)` | | | `1500.00` |
+| | `estado` | `varchar(10)` | | | `activo` (o `inactivo`) |
+| | `creado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
+| | `actualizado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
 
-`tipo = fin_de_semana` habilita únicamente sábados y domingos; `tipo = libre` habilita todos los días. Esta correspondencia es fija en el sistema, no editable por fila.
+El nombre es único entre pases activos, independientemente de los nombres de planes. El límite diario es positivo y los precios no pueden ser negativos. Descripción admite una cadena vacía. Libre habilita todos los días y Fin de semana sólo sábados y domingos; no se configura otro calendario por fila.
+
+Nombre, descripción y precios vigentes pueden actualizarse. Tipo y límite diario no se modifican si el pase tiene contrataciones históricas. Desactivar impide nuevas contrataciones y conserva las existentes. Contratar un pase no otorga Alumno.
 
 Relaciones:
 
-- Un pase completa exactamente una membresía.
-- Una membresía se completa, cuando corresponde, con exactamente un pase.
+- Un pase puede tener cero, una o varias contrataciones en `pases_usuarios`.
+- Cada contratación referencia exactamente un pase.
+- Un pase puede aparecer en cero, uno o varios intentos de pago online.
 
-### 4.8 `membresias_usuarios`
+### 4.7 `planes_usuarios`
 
-Representa que un usuario adquirió una membresía para un mes calendario, con el precio que pagó en ese momento.
+Representa la contratación de un plan por un usuario para un mes calendario.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `301` |
 | FK | `usuario_id` | `bigint` | | | `1` |
-| FK | `membresia_id` | `bigint` | | | `12` |
-| | `fecha_alta` | `date` | | | `2026-03-01` |
-| | `fecha_inicio` | `date` | | | `2026-03-01` |
-| | `fecha_fin` | `date` | | | `2026-03-31` |
+| FK | `plan_id` | `bigint` | | | `12` |
+| | `mes_cubierto` | `date` | | | `2026-10-01` |
+| | `fecha_alta` | `date` | | | `2026-10-01` |
 | | `precio_aplicado` | `numeric(12,2)` | | | `42750.00` |
-| FK | `registrada_por_id` | `bigint` | Sí | | `4` |
-| | `observaciones` | `text` | Sí | | `Pagó con descuento por adelantado` |
-| | `estado` | `varchar(12)` | | | `activa` (o `cancelada`, `vencida`) |
+| FK | `registrado_por_id` | `bigint` | Sí | | `4` |
+| | `observaciones` | `text` | | | `Importe acordado con descuento` |
+| | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
 | | `aviso_vencimiento_enviado` | `boolean` | | | `false` |
-| | `creado_en` | `timestamptz` | | | `2026-03-01 11:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-03-01 11:00:00-03` |
+| FK | `anulado_por_id` | `bigint` | Sí | | `4` |
+| | `anulado_en` | `timestamptz` | Sí | | `2026-10-02 11:00:00-03` |
+| | `motivo_anulacion` | `text` | | | `Contratación cargada por error` |
+| | `creado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
+| | `actualizado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
 
-`registrada_por_id` queda nulo cuando la fila se creó automáticamente por la confirmación de pago de MercadoPago. `fecha_inicio` es el primer día del mes y `fecha_fin` su último día. El alta bloquea la fila del usuario durante la comprobación de exclusividad y la inserción, por lo que dos altas concurrentes del mismo titular se evalúan de forma serial.
+`mes_cubierto` siempre es el primer día del mes contratado. Inicio y fin se calculan a partir de ese mes. `fecha_alta` es la fecha efectiva de alta y `creado_en` el momento de carga; una carga histórica puede tener fechas diferentes.
+
+`precio_aplicado` es el importe mensual acordado, no la suma abonada. En el alta administrativa se propone el precio vigente y se permite establecer el importe final cuando corresponde un ajuste. En un alta por MercadoPago se copia el importe congelado del intento aprobado. No se recalcula al cambiar el catálogo.
+
+La combinación usuario y mes es única entre registros Activos o Vencidos. Los Anulados se conservan y permiten registrar un reemplazo. Usuario, plan, mes y precio aplicado son inmutables; renovar para otro mes crea otra fila. Se bloquea al usuario al comprobar exclusividad e insertar.
+
+El alta de un mes pasado nace Vencida. Una contratación de un mes futuro puede estar Activa, pero su vigencia corresponde a ese mes. Registrar una contratación Activa de plan otorga Alumno si el usuario no lo tiene; anular o vencer no retira ese rol automáticamente.
+
+`registrado_por_id` queda vacío sólo para altas automáticas por MercadoPago. Observaciones y motivo admiten una cadena vacía. Anular exige administrador, momento y motivo no vacío; esos datos permanecen vacíos en estados Activo y Vencido. La operación actualiza la marca de modificación y conserva ingresos e historia.
 
 Relaciones:
 
-- Una membresía de usuario pertenece a exactamente un usuario.
-- Un usuario puede tener cero, una o varias membresías de usuario.
-- Una membresía de usuario pertenece a exactamente una membresía.
-- Una membresía puede estar asociada a cero, una o varias membresías de usuarios.
-- Una membresía de usuario puede recibir cero, uno o varios ingresos.
-- Un ingreso tiene como origen, como máximo, una membresía de usuario.
-- Una membresía de usuario de tipo pase puede estar aplicada en cero, una o varias reservas.
-- Una reserva con pase utiliza exactamente una membresía de usuario de tipo pase.
-- Una membresía de usuario de tipo pase puede estar aplicada a cero, uno o varios invitados de reserva.
-- Un invitado de reserva puede tener, como máximo, una membresía de usuario de tipo pase.
+- Cada contratación pertenece exactamente a un usuario y a un plan.
+- Una contratación puede recibir cero, uno o varios ingresos.
+- El titular puede consultar sus propias contrataciones.
+- Las asignaciones y asistencias de clases no se duplican en esta tabla.
 
-### 4.9 `precios_reservas_cancha`
+### 4.8 `pases_usuarios`
 
-Representa un precio por turno de una hora de una sede, común a todas sus canchas.
+Representa la contratación de un pase por un usuario para un mes calendario.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
-| PK | `id` | `bigint` identity | | | `1` |
-| FK | `sede_id` | `bigint` | | | `1` |
-| | `importe` | `numeric(12,2)` | | | `8000.00` |
-| | `estado` | `varchar(10)` | | | `activo` (o `inactivo`) |
-| | `creado_en` | `timestamptz` | | | `2026-08-05 09:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-08-05 09:00:00-03` |
+| PK | `id` | `bigint` identity | | | `340` |
+| FK | `usuario_id` | `bigint` | | | `1` |
+| FK | `pase_id` | `bigint` | | | `18` |
+| | `mes_cubierto` | `date` | | | `2026-10-01` |
+| | `fecha_alta` | `date` | | | `2026-10-01` |
+| | `precio_aplicado` | `numeric(12,2)` | | | `35000.00` |
+| FK | `registrado_por_id` | `bigint` | Sí | | `4` |
+| | `observaciones` | `text` | | | `Pase contratado en sede` |
+| | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
+| | `aviso_vencimiento_enviado` | `boolean` | | | `false` |
+| FK | `anulado_por_id` | `bigint` | Sí | | `4` |
+| | `anulado_en` | `timestamptz` | Sí | | `2026-10-02 11:00:00-03` |
+| | `motivo_anulacion` | `text` | | | `Contratación cargada por error` |
+| | `creado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
+| | `actualizado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
 
-El importe debe ser positivo. PostgreSQL garantiza un solo precio activo por `sede_id` mediante una restricción de unicidad condicional para `estado = 'activo'`.
+Aplica las reglas de mes, fecha efectiva, precio acordado, exclusividad, auditoría y renovación de 4.7 dentro de su propia tabla, con referencia obligatoria a un pase. Un usuario puede combinar un plan y un pase para el mismo mes.
 
-La sede y el importe de un precio registrado no se modifican. Si la sede no tiene precio activo, el Administrador puede crear uno. Actualizar desactiva el precio actual y crea uno nuevo en una única transacción; ambas operaciones bloquean primero la sede. Un importe igual al actual se rechaza sin guardar cambios. `actualizado_en` registra la fecha de desactivación cuando el precio queda inactivo.
+La cobertura de una reserva exige titular correcto, estado Activo, mes que incluya la fecha de uso, día habilitado por el tipo de pase y horas disponibles. El consumo diario se calcula contando turnos de eventos de reservas no Anulados como organizador o invitado cubierto. No se almacena un saldo de horas.
 
-Los precios inactivos se conservan para consulta y para las reservas que los referencian. No se eliminan ni se reactivan. El total de una reserva normal es el importe del precio aplicado multiplicado por su duración en horas.
+Anular impide nuevas aplicaciones del pase, sin modificar automáticamente reservas, coberturas o ingresos ya registrados. Consultar el pase propio no exige Alumno. Los campos de anulación se completan sólo en estado Anulado.
 
 Relaciones:
 
-- Un precio de reserva pertenece a exactamente una sede.
-- Una sede puede tener cero, uno o varios precios históricos, con un máximo de uno activo.
-- Un precio de reserva puede estar aplicado en cero, una o varias reservas.
-- Una reserva normal utiliza exactamente un precio de reserva.
+- Cada contratación pertenece exactamente a un usuario y a un pase.
+- Una contratación puede recibir cero, uno o varios ingresos.
+- Una contratación puede cubrir cero, una o varias reservas del organizador.
+- Una contratación puede cubrir cero, uno o varios invitados de reservas.
+
+### 4.9 Precios vigentes e importes aplicados
+
+El precio vigente es el valor actual del catálogo o de la sede para una operación nueva. El importe aplicado se conserva en la operación y no cambia cuando se actualiza ese valor.
+
+| Precio vigente | Importe conservado |
+|---|---|
+| `planes.precio_vigente` | `planes_usuarios.precio_aplicado` |
+| `pases.precio_vigente` | `pases_usuarios.precio_aplicado` |
+| `sedes.precio_reserva_vigente` | `reservas.precio_por_turno_aplicado` |
+| `pases.precio_invitado_vigente` | `reservas.precio_invitado_aplicado` |
+
+Actualizar modifica el valor vigente y la marca de modificación de su registro. El historial comercial se obtiene de los importes conservados en contrataciones y reservas, sin un historial independiente de cambios del catálogo.
+
+Una reserva normal calcula su total con cantidad de turnos por precio unitario aplicado. Una contratación mensual conserva el importe acordado, con los descuentos o recargos que correspondan. Los cobros efectivos se registran en Ingresos.
+
+```mermaid
+erDiagram
+    USUARIOS ||--o{ PLANES_USUARIOS : contrata
+    PLANES ||--o{ PLANES_USUARIOS : define
+    USUARIOS ||--o{ PASES_USUARIOS : contrata
+    PASES ||--o{ PASES_USUARIOS : define
+```
 
 ### 4.10 `feriados`
 
@@ -494,7 +525,7 @@ Relaciona cada evento con los turnos que utiliza.
 
 El par `evento_id, turno_id` es único. Las consultas de disponibilidad utilizan un índice sobre `turno_id`; el índice único del par permite consultar los turnos de cada evento. `turno_id` no es único por sí solo: una reserva anulada y otra que utiliza el mismo turno conservan ambos vínculos históricos. La unicidad del par no garantiza la exclusividad de ocupación; esa condición se comprueba después de bloquear los turnos dentro de la transacción.
 
-Para una reserva, estos vínculos son sus detalles horarios. Reservar tres horas registra una reserva, un evento y tres vínculos; no crea tres reservas ni tres eventos. La cantidad de vínculos determina la duración y, en una reserva normal, cada detalle tiene como subtotal el importe por turno del precio histórico aplicado.
+Para una reserva, estos vínculos son sus detalles horarios. Reservar tres horas registra una reserva, un evento y tres vínculos; no crea tres reservas ni tres eventos. La cantidad de vínculos determina la duración y, en una reserva normal, cada detalle tiene como subtotal el importe conservado en `precio_por_turno_aplicado`.
 
 Relaciones:
 
@@ -607,8 +638,8 @@ Representa los datos comerciales de una reserva normal o con pase. Su evento con
 | PK | `id` | `bigint` identity | | | `1200` |
 | FK | `evento_id` | `bigint` | | Sí | `1300` |
 | FK | `organizador_id` | `bigint` | | | `1` |
-| FK | `precio_reserva_id` | `bigint` | Sí | | `1` |
-| FK | `membresia_pase_id` | `bigint` | Sí | | `301` |
+| | `precio_por_turno_aplicado` | `numeric(12,2)` | Sí | | `30000.00` |
+| FK | `pase_usuario_id` | `bigint` | Sí | | `340` |
 | | `cantidad_invitados` | `integer` | Sí | | `3` |
 | | `precio_invitado_aplicado` | `numeric(12,2)` | Sí | | `1500.00` |
 | FK | `reprogramada_desde_id` | `bigint` | Sí | Sí | `1180` |
@@ -616,21 +647,21 @@ Representa los datos comerciales de una reserva normal o con pase. Su evento con
 
 `evento_id` es único y referencia un evento de tipo `reserva`. Organizador y responsable del registro pueden ser personas diferentes; el segundo se obtiene de `eventos.registrado_por_id`. El número se presenta como `R-000001` a partir del identificador de la reserva y la fecha de registro se obtiene de `eventos.creado_en`.
 
-Exactamente uno de `precio_reserva_id` y `membresia_pase_id` está informado:
+Exactamente uno de `precio_por_turno_aplicado` y `pase_usuario_id` está informado:
 
-- **Reserva normal:** referencia el precio histórico de la sede. Invitados y precio adicional quedan vacíos. El total se calcula multiplicando `precios_reservas_cancha.importe` por la cantidad de turnos; no se almacena otro importe ni un total en la reserva.
-- **Reserva con pase:** referencia la membresía aplicada al organizador. Conserva la cantidad total de invitados y el precio adicional unitario aplicado, porque el catálogo de pases puede modificar ese importe. El total es ese precio unitario por la cantidad de invitados sin cobertura, incluidos los no identificados. Los invitados identificados y sus membresías se guardan en `reservas_invitados`.
+- **Reserva normal:** guarda una copia positiva del precio vigente validado de la sede en `precio_por_turno_aplicado`. Invitados y precio adicional quedan vacíos. El total se calcula multiplicando ese importe por la cantidad de turnos; no se almacena un total adicional.
+- **Reserva con pase:** referencia la contratación en `pases_usuarios` aplicada al organizador. Conserva la cantidad total de invitados y el precio adicional unitario aplicado, porque el catálogo de pases puede modificar ese importe. El total es ese precio unitario por la cantidad de invitados sin cobertura, incluidos los no identificados. Los invitados identificados y sus contrataciones de pase aplicadas se guardan en `reservas_invitados`.
 
 `anulada_por_organizador` permanece vacío mientras el evento no esté Anulado. Vale verdadero para la anulación del organizador desde el portal y falso para la administrativa. Es una condición de negocio para la reprogramación; usuario, motivo y momento de la operación se conservan en el evento.
 
-`reprogramada_desde_id` referencia una reserva anulada administrativamente y no puede repetirse. El organizador, la modalidad, el precio o pase aplicado y los turnos son inmutables. Cambiar cancha, fecha u horario requiere anular y registrar otra reserva. Las modificaciones de invitados admitidas por PP sólo se realizan mientras el evento siga Programado y actualizan también `eventos.actualizado_en`.
+`reprogramada_desde_id` referencia una reserva anulada administrativamente y no puede repetirse. El organizador, la modalidad, el importe o pase aplicado y los turnos son inmutables. Cambiar cancha, fecha u horario requiere anular y registrar otra reserva. Las modificaciones de invitados admitidas por PP sólo se realizan mientras el evento siga Programado y actualizan también `eventos.actualizado_en`.
 
 Relaciones:
 
 - Una reserva pertenece exactamente a un evento de tipo reserva.
 - Una reserva pertenece exactamente a un organizador.
-- Una reserva normal utiliza exactamente un precio histórico.
-- Una reserva con pase utiliza exactamente una membresía de pase del organizador.
+- Una reserva normal conserva el precio por turno aplicado como importe.
+- Una reserva con pase referencia exactamente una contratación en `pases_usuarios` del organizador.
 - Una reserva tiene cero, uno o varios invitados identificados.
 - Una reserva puede reemplazar una reserva anulada y ser reemplazada por otra, como máximo una en cada caso.
 - Una reserva puede recibir cero, uno o varios ingresos.
@@ -643,11 +674,11 @@ Representa a un invitado de una reserva con pase que ya existe como usuario.
 |---|---|---|---|---|---|
 | PK, FK | `reserva_id` | `bigint` | | | `1200` |
 | PK, FK | `usuario_id` | `bigint` | | | `9` |
-| FK | `membresia_pase_id` | `bigint` | Sí | | `340` |
+| FK | `pase_usuario_id` | `bigint` | Sí | | `340` |
 | | `creado_en` | `timestamptz` | | | `2026-03-02 17:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-03-02 17:00:00-03` |
 
-Solo admite reservas con pase. El organizador no puede repetirse como invitado. `membresia_pase_id` vacío indica que el invitado no tiene pase aplicable ese día. La cantidad de filas no supera `reservas.cantidad_invitados`.
+Solo admite reservas con pase. El organizador no puede repetirse como invitado. `pase_usuario_id` vacío indica que el invitado no tiene pase aplicable ese día. La cantidad de filas no supera `reservas.cantidad_invitados`.
 
 Relaciones:
 
@@ -655,38 +686,42 @@ Relaciones:
 - Una reserva puede tener cero, uno o varios invitados identificados.
 - Un invitado identificado es exactamente un usuario.
 - Un usuario puede ser invitado en cero, una o varias reservas.
-- Un invitado identificado puede tener, como máximo, una membresía de usuario de tipo pase.
-- Una membresía de usuario de tipo pase puede estar aplicada a cero, uno o varios invitados de reserva.
+- Un invitado identificado puede tener, como máximo, una contratación de pase.
+- Una contratación de pase puede estar aplicada a cero, uno o varios invitados de reserva.
 
 ### 4.21 `ingresos`
 
-Representa dinero efectivamente recibido por la academia.
+Representa dinero efectivamente recibido, con un único origen.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `5000` |
-| | `pagado_en` | `timestamptz` | | | `2026-03-02 17:10:00-03` |
-| | `monto` | `numeric(12,2)` | | | `8000.00` |
+| | `pagado_en` | `timestamptz` | | | `2026-10-02 17:10:00-03` |
+| | `monto` | `numeric(12,2)` | | | `35000.00` |
 | | `medio_pago` | `varchar(20)` | | | `efectivo` (o `transferencia`, `debito`, `credito`, `qr`, `mercadopago`) |
 | FK | `registrado_por_id` | `bigint` | Sí | | `4` |
-| FK | `membresia_usuario_id` | `bigint` | Sí | | `301` |
+| FK | `plan_usuario_id` | `bigint` | Sí | | `301` |
+| FK | `pase_usuario_id` | `bigint` | Sí | | `340` |
 | FK | `reserva_id` | `bigint` | Sí | | `1200` |
 | | `concepto_otro` | `text` | Sí | | `Venta de pelotas` |
-| | `observaciones` | `text` | Sí | | `Pagó en dos partes` |
+| | `observaciones` | `text` | | | `Pago parcial` |
 | | `estado` | `varchar(10)` | | | `cobrado` (o `anulado`) |
 | FK | `anulado_por_id` | `bigint` | Sí | | `4` |
-| | `anulado_en` | `timestamptz` | Sí | | `2026-03-03 09:00:00-03` |
-| | `motivo_anulacion` | `text` | Sí | | `Cargado dos veces por error` |
-| | `creado_en` | `timestamptz` | | | `2026-03-02 17:10:00-03` |
+| | `anulado_en` | `timestamptz` | Sí | | `2026-10-03 09:00:00-03` |
+| | `motivo_anulacion` | `text` | | | `Ingreso duplicado por error` |
+| | `creado_en` | `timestamptz` | | | `2026-10-02 17:10:00-03` |
 
-Exactamente una de `membresia_usuario_id`, `reserva_id` y `concepto_otro` está informada. `registrado_por_id` y `anulado_por_id` son siempre un usuario administrador, salvo cuando la fila la generó automáticamente la confirmación de pago de MercadoPago (quedan nulos); son referencias de auditoría, no relaciones de negocio. Este módulo, incluida la anulación, es exclusivo del rol Administrador. Los ingresos registrados no se editan ni se eliminan, solo se anulan.
+Exactamente uno de `plan_usuario_id`, `pase_usuario_id`, `reserva_id` y `concepto_otro` está informado. El texto de otro concepto debe ser no vacío. Los ingresos referencian la contratación concreta y no el producto del catálogo.
+
+Monto debe ser positivo. La administración registra y anula ingresos; `registrado_por_id` queda vacío sólo para un cobro creado automáticamente por MercadoPago. Anular siempre exige administrador, momento y motivo; esos campos permanecen vacíos mientras el ingreso esté Cobrado.
+
+Una contratación o reserva puede recibir pagos parciales mediante varios ingresos. El total cobrado se obtiene sumando los Cobrado; los Anulado no suman. Los ingresos no se editan ni eliminan y su anulación no anula el origen comercial. Un cobro que supera el importe acordado exige confirmar el excedente y conservar su motivo.
 
 Relaciones:
 
-- Un ingreso tiene como origen, como máximo, una membresía de usuario.
-- Una membresía de usuario puede recibir cero, uno o varios ingresos.
-- Un ingreso tiene como origen, como máximo, una reserva.
-- Una reserva puede recibir cero, uno o varios ingresos.
+- Un ingreso pertenece a una contratación de plan, una contratación de pase, una reserva o un concepto libre, exclusivamente.
+- Cada contratación o reserva puede tener cero, uno o varios ingresos.
+- Un ingreso automático puede estar vinculado con el intento de pago que lo originó.
 
 ### 4.22 `sedes_horarios`
 
@@ -712,36 +747,42 @@ Relaciones:
 
 ### 4.23 `pagos_mercadopago`
 
-Representa un intento de pago online a través de MercadoPago, independiente de `ingresos`. `estado` cubre los tres resultados que este sistema procesa para decidir si activa la membresía —**pendiente**, **aprobado** y **rechazado**— y se protege con la misma restricción `CHECK` que el resto de los estados del sistema (ver 2.3). Ancla además la idempotencia real del webhook (ver `4_flujos_del_sistema.md`, FL-22 y 4.4). La moneda no se almacena por fila: el sistema opera en un único mercado y valida siempre contra ARS, igual que el resto de los importes del modelo, ninguno de los cuales guarda moneda propia.
-
-Un usuario no puede tener dos intentos en estado `pendiente` para la misma `membresia_id` y `mes_cubierto`: una restricción de unicidad parcial sobre `(usuario_id, membresia_id, mes_cubierto) WHERE estado = 'pendiente'` lo impide. Esto evita que un doble clic, dos pestañas o dos dispositivos generen dos preferencias de pago simultáneas y pagables para la misma membresía y mes (ver `4_flujos_del_sistema.md`, FL-22).
+Representa un intento de pago online de un plan o pase para un usuario y mes determinados.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `501` |
 | FK | `usuario_id` | `bigint` | | | `1` |
-| FK | `membresia_id` | `bigint` | | | `12` |
-| | `mes_cubierto` | `date` | | | `2026-03-01` |
+| FK | `plan_id` | `bigint` | Sí | | `12` |
+| FK | `pase_id` | `bigint` | Sí | | `18` |
+| | `mes_cubierto` | `date` | | | `2026-10-01` |
 | | `precio_aplicado` | `numeric(12,2)` | | | `42750.00` |
 | | `referencia_externa` | `uuid` | | Sí | `b3f1...` |
 | | `preference_id` | `varchar(120)` | | Sí | `123456789-abcd...` |
 | | `payment_id` | `varchar(120)` | Sí | Sí | `987654321` |
 | | `estado` | `varchar(20)` | | | `pendiente` (o `aprobado`, `rechazado`) |
-| FK | `membresia_usuario_id` | `bigint` | Sí | | `301` |
+| FK | `plan_usuario_id` | `bigint` | Sí | | `301` |
+| FK | `pase_usuario_id` | `bigint` | Sí | | `340` |
 | FK | `ingreso_id` | `bigint` | Sí | | `5000` |
-| | `creado_en` | `timestamptz` | | | `2026-03-01 10:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-03-01 10:05:00-03` |
+| | `creado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
+| | `actualizado_en` | `timestamptz` | | | `2026-10-01 10:05:00-03` |
 
-`referencia_externa` se genera en la aplicación antes de crear la preferencia en MercadoPago y se envía como `external_reference`: es la clave de correlación disponible desde el primer momento, antes de que exista un `payment_id`. La fila solo se crea después de que MercadoPago confirma la preferencia, por eso `preference_id` nunca queda vacío y es único (una preferencia no se comparte entre intentos); si esa llamada falla, no se persiste ningún intento. `payment_id` se completa recién al recibir el webhook y es único cuando está presente: ancla el descarte de notificaciones repetidas. `mes_cubierto` es siempre el primer día del mes que se está pagando, igual que `membresias_usuarios.fecha_inicio` (ver 4.8). `membresia_usuario_id` e `ingreso_id` están siempre ambos presentes o ambos ausentes, y solo pueden estar presentes cuando `estado = 'aprobado'`: un intento `aprobado` sin estas referencias señala que quedó pendiente de resolución manual (ver 7.10), localizable mediante `4_flujos_del_sistema.md`, FL-62.
+Exactamente uno de `plan_id` y `pase_id` está informado. `mes_cubierto` es el primer día del mes y `precio_aplicado` conserva el importe congelado al iniciar el pago. El precio no se recalcula con el catálogo cuando se aprueba.
+
+Dos restricciones únicas parciales impiden repetir un intento Pendiente del mismo usuario, producto y mes: una sobre usuario, plan y mes cuando `plan_id` está informado, y otra sobre usuario, pase y mes cuando `pase_id` está informado. La creación se coordina para reutilizar un intento existente.
+
+La referencia externa se genera antes de solicitar el checkout. El intento se registra cuando la preferencia se creó correctamente; si falla esa solicitud, no se persiste el intento. El identificador de pago se completa al procesar la confirmación.
+
+Una aprobación aplicada tiene exactamente una referencia de contratación, coherente con el producto, usuario y mes del intento, y una referencia de ingreso. Se crean ambas en una transacción. Antes de aplicar el efecto, las tres referencias quedan vacías. Un intento Aprobado sin referencias señala una activación pendiente de resolución administrativa; Pendiente o Rechazado no tiene contratación ni ingreso resultantes.
+
+Repetir una notificación no duplica contrataciones ni ingresos. Un intento terminal no vuelve a Pendiente. La operación utiliza el importe congelado, valida el pago confirmado y vuelve a comprobar la exclusividad del mes.
 
 Relaciones:
 
-- Un intento de pago con MercadoPago pertenece a exactamente un usuario.
-- Un usuario puede tener cero, uno o varios intentos de pago con MercadoPago.
-- Un intento de pago con MercadoPago referencia exactamente una membresía del catálogo.
-- Una membresía puede estar asociada a cero, uno o varios intentos de pago con MercadoPago.
-- Un intento de pago con MercadoPago genera, como máximo, una membresía de usuario.
-- Un intento de pago con MercadoPago genera, como máximo, un ingreso.
+- Un usuario puede tener cero, uno o varios intentos.
+- Cada intento referencia exactamente un producto: plan o pase.
+- Un intento aprobado puede generar una contratación de ese producto y un ingreso.
+- Las reservas no se cobran online mediante este circuito.
 
 ### 4.24 Bloqueos y trazabilidad
 
@@ -792,16 +833,15 @@ Al completar la recuperación cambia el hash de la contraseña, por lo que el en
 
 ## 5. Claves foráneas y eliminación
 
-- Usuarios, sedes, canchas, membresías, precios y orígenes comerciales con historia utilizarán `ON DELETE RESTRICT`.
-- Los subtipos de membresías (`planes`, `pases`) utilizarán `ON DELETE CASCADE` desde su fila base en `membresias`.
+- Usuarios, sedes, canchas, planes, pases y contrataciones con historia se protegen contra la eliminación física. Las contrataciones referencian obligatoriamente a su usuario y producto.
 - `usuarios_roles` utilizará cascada desde `usuarios`.
 - `usuarios_roles.rol_id` referencia `roles.id`; la integridad referencial impide borrar un rol que tenga asignaciones.
 - Las asignaciones de un turno de planilla (`turnos_planilla_profesores`, `turnos_planilla_usuarios`) utilizarán cascada desde `turnos_planilla`.
 - `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
 - `clases.turno_planilla_id` utilizará `ON DELETE SET NULL`: eliminar un turno de la planilla no elimina las clases que ya generó, solo desvincula su origen.
 - Turnos y eventos históricos se conservan. Sólo pueden eliminarse eventos de clases generadas sin actividad efectiva mediante las operaciones autorizadas; se eliminan sus vínculos y datos de clase en la misma transacción, sin borrar los turnos ni otras actividades (ver 7.3).
-- Clases, reservas, membresías de usuarios e ingresos con historia no se eliminarán como mecanismo operativo habitual.
-- `pagos_mercadopago` utilizará `ON DELETE RESTRICT` desde `usuarios` y `membresias`: es historia de intentos de pago y no se elimina como mecanismo operativo habitual.
+- Clases, reservas, contrataciones de planes o pases e ingresos con historia no se eliminan como mecanismo operativo habitual.
+- Los intentos de MercadoPago protegen al usuario, producto y resultados relacionados, y se conservan como historia de pagos.
 - `eventos_turnos` protege sus turnos; `reservas`, `clases` y `bloqueos` protegen su evento. Las referencias de `bloqueos_origenes` se conservan y protegen los eventos de origen mientras exista trazabilidad.
 
 ---
@@ -811,20 +851,20 @@ Al completar la recuperación cambia el hash de la contraseña, por lo que el en
 El sistema aplica, como mínimo:
 
 1. Actualización automática de `actualizado_en`.
-2. Exactamente un subtipo por `membresias` (plan o pase) y exclusión entre ambos.
-3. Inmutabilidad estructural de membresías y precios ya utilizados.
-4. Validación del mes calendario y estados de `membresias_usuarios`, incluida la exclusividad por titular y mes: no más de un plan vigente, ni más de un pase vigente (cualquiera sea su variante); sí puede combinar un plan con un pase.
-5. Vencimiento idempotente de membresías de usuarios.
+2. Catálogos independientes de planes y pases, con referencia obligatoria a su producto en cada tabla de contrataciones.
+3. Inmutabilidad de la configuración estructural de planes y pases con historia; los importes aplicados se conservan en cada contratación o reserva.
+4. Mes calendario y estados válidos en `planes_usuarios` y `pases_usuarios`, con unicidad por usuario y mes entre Activos o Vencidos en cada tabla. Un usuario puede combinar un plan y un pase.
+5. Vencimiento idempotente de las contrataciones Activas de planes y pases cuyo mes terminó.
 6. Unicidad de `turnos_planilla` por cancha, día de la semana y hora.
 7. Exactamente un subtipo por `eventos` y coherencia con `eventos.tipo`.
 8. Turnos de una hora con inicio en punto y fin calculado. Unicidad por cancha, fecha y hora; una clase tiene exactamente un turno y una reserva tiene turnos consecutivos de una misma cancha, fecha y franja.
 9. Sede y cancha activas al crear o mover eventos.
 10. Al menos un profesor activo por clase.
 11. Protección de clases y reservas con evento Anulado o Finalizado y autorización para finalizarlas.
-12. Exclusividad entre precio normal y membresía de pase en reservas.
-13. El precio de `precios_reservas_cancha` aplicado a una reserva normal pertenece a la sede de la cancha y es el único activo al confirmar. El total se calcula multiplicando su importe por la duración en horas. La sede y el importe de cada precio son inmutables.
+12. Exclusividad entre precio por turno aplicado y contratación de pase en reservas.
+13. Una reserva normal copia el precio positivo vigente de su sede al confirmar y conserva `precio_por_turno_aplicado`. El total es ese importe por cantidad de turnos. Cambiar la tarifa de la sede no altera reservas existentes.
 14. Vigencia, titularidad, día habilitado según el tipo de pase (`pases.tipo`) y horas diarias disponibles del pase del organizador al crear o modificar una reserva con pase; el día se valida antes que las horas.
-15. Coherencia de invitados, cantidad declarada, membresías de pase aplicadas, día habilitado y horas diarias disponibles de cada invitado identificado con pase.
+15. Coherencia de invitados, cantidad declarada, contrataciones de pase aplicadas, día habilitado y horas diarias disponibles de cada invitado identificado con pase.
 16. Congelamiento de reservas, sus vínculos horarios e invitados cuando el evento queda Anulado o Finalizado.
 17. Exactamente un origen por ingreso.
 18. Registro obligatorio de motivo al cancelar una reserva.
@@ -833,13 +873,13 @@ El sistema aplica, como mínimo:
 21. Bloqueo de superposición horaria de un mismo profesor entre actividades no canceladas, sin importar la cancha.
 22. Un usuario activo autorizado (administrador, o el propio organizador en una reserva de autoservicio) registrará usuario y momento al cancelar un evento. La finalización de reservas registra únicamente el momento de procesamiento; las clases conservan responsable cuando la finalización es manual.
 23. Alta automática de Público y Reservas en `usuarios_roles` para todo usuario nuevo, en la misma transacción que lo crea. Público no puede retirarse; Reservas solo puede retirarse si el usuario no tiene reservas programadas. Cada asignación referencia una fila del catálogo `roles`.
-24. Alta automática del rol `alumno` en `usuarios_roles` para el usuario titular al registrarse su primer plan (subtipo `planes`) en estado `activa`, si aún no lo posee; un pase no lo otorga (además de la asignación manual por un administrador, ver FL-07).
+24. Alta automática de Alumno cuando se activa una contratación en `planes_usuarios`, si el titular no lo tiene. Una contratación de pase no lo otorga; se conserva también la asignación administrativa.
 25. Finalización idempotente de eventos de clase o reserva Programados cuyo último turno terminó; su fin se obtiene de los vínculos horarios y la duración fija del turno.
-26. Aviso idempotente de vencimiento próximo de membresías, con marca de envío para no repetirlo.
+26. Aviso idempotente de vencimiento próximo de contrataciones de planes y pases, con marca de envío para no repetirlo.
 27. Recordatorio idempotente de la próxima clase asignada, con marca de envío por asignación alumno–clase para no repetirlo, reseteada al reactivar la asignación.
 28. Al regenerar clases, eliminar y recrear sólo las generadas por planilla cuyo evento esté `programado` y sin actividad efectiva. Las clases con evento `finalizado` o `anulado`, o con `es_generada = false`, se conservan.
-29. En `pagos_mercadopago`: `mes_cubierto` es siempre el primer día de un mes; `membresia_usuario_id` e `ingreso_id` están ambos presentes o ambos ausentes, y solo pueden estar presentes cuando `estado = 'aprobado'`; a lo sumo un intento `pendiente` por `usuario_id`, `membresia_id` y `mes_cubierto` (unicidad parcial).
-30. Retiro condicionado de roles: no se permite retirar Alumno mientras el usuario tenga una membresía activa, ni Profesor mientras tenga una asignación activa como profesor en una clase programada. Junto con el ítem 23, estas restricciones se verifican en la misma operación que elimina la asignación (ver 4.2 y FL-07).
+29. En pagos online, exactamente un producto de origen y, al aplicar una aprobación, exactamente una contratación resultante junto con el ingreso. No se repiten intentos Pendientes del mismo usuario, producto y mes ni efectos de una confirmación.
+30. Retiro condicionado de roles: no se permite retirar Alumno mientras el usuario tenga un plan contratado Activo, ni Profesor mientras tenga una asignación activa como profesor en una clase programada. Junto con el ítem 23, estas restricciones se verifican en la misma operación que elimina la asignación (ver 4.2 y FL-07).
 31. Contraseña provisoria obligatoria: el alta administrativa realizada desde la aplicación, la creación mediante `crear_administrador` y el restablecimiento administrativo de una contraseña activan `usuarios.debe_cambiar_contrasena`; mientras permanezca activa, el usuario solo puede cambiar o recuperar su contraseña o cerrar sesión. El nuevo hash y la desactivación de la marca se guardan en la misma transacción (ver FL-68 y FL-69).
 32. Estado y fecha de baja coherentes: una cuenta inactiva registra el momento de su baja y una cuenta activa conserva `fecha_baja = NULL` (ver FL-05).
 33. Edición de usuarios limitada al correo por el Administrador y a la contraseña propia por su titular. El restablecimiento administrativo sólo se aplica a otra cuenta; nombre, apellido, nombre de usuario, celular, fecha de nacimiento y observaciones no se editan desde la aplicación (ver FL-04, FL-59 y FL-69).
@@ -856,15 +896,19 @@ El horario de funcionamiento se comprueba en el backend porque depende de datos 
 
 Una reserva nueva debe comenzar en un horario futuro y su fecha debe estar entre hoy y catorce días después, inclusive. El backend vuelve a validar ese límite al confirmar, tanto para el Administrador como para el portal.
 
-El límite diario de horas de un pase (ítem 14) depende de una suma agregada sobre reservas existentes, no de una condición evaluable con un `CHECK`. La transacción que crea o modifica una reserva con pase deberá bloquear, con `SELECT ... FOR UPDATE` sobre `membresias_usuarios`, la fila de cada membresía de pase involucrada antes de calcular las horas ya usadas ese día: la del organizador y la de cada invitado identificado cuyo propio pase se esté evaluando para cubrirlo. Esto serializa intentos concurrentes sobre un mismo pase, sea como organizador o como invitado, y evita que dos reservas simultáneas lo superen sin verse entre sí. Cuando una misma transacción deba bloquear más de una membresía de pase, lo hará en un orden estable (por `id` ascendente) para evitar interbloqueos con otra transacción que bloquee las mismas filas en orden distinto.
+El límite diario de horas de un pase depende de una suma sobre turnos de reservas existentes. La transacción bloquea las filas de `pases_usuarios` del organizador y de los invitados cuya cobertura se evalúa antes de contar el uso diario. El bloqueo se realiza en orden de identificador para coordinar reservas concurrentes y evitar que dos operaciones superen el mismo límite sin verse entre sí.
 
 ---
 
 ## 7. Operaciones transaccionales críticas
 
-### 7.1 Alta de una membresía
+### 7.1 Registro de productos y contrataciones
 
-Creará la fila base y exactamente un subtipo en una transacción.
+Registrar un plan o pase guarda una fila completa en su catálogo. Actualizar modifica datos comerciales y precios vigentes, protegiendo la configuración estructural usada en contrataciones.
+
+Contratar guarda una fila en `planes_usuarios` o `pases_usuarios`, con usuario, producto, mes e importe acordado. El alta bloquea al usuario y comprueba la exclusividad del mes en la tabla correspondiente. La contratación de un mes pasado nace Vencida; una Activa de plan otorga Alumno en la misma transacción cuando falta ese rol. El ingreso manual se registra mediante su operación específica.
+
+Anular una contratación bloquea su fila, valida estado Activo y registra actor, momento y motivo. Conserva ingresos y relaciones históricas; una anulación de pase no modifica reservas ni coberturas ya registradas.
 
 ### 7.2 Generación de clases para un período
 
@@ -880,15 +924,15 @@ En una transacción, elimina únicamente los eventos de clases generadas por pla
 
 Exige un organizador activo con rol Reservas o Administrador y un actor con acceso vigente. El portal sólo puede reservar para sí mismo. Comprueba sede y cancha activas, fecha entre hoy y catorce días después, inicio futuro y uno o varios turnos consecutivos de una misma cancha y fecha, dentro de una franja de la sede. El Administrador aplica las mismas condiciones.
 
-Obtiene el precio activo de la sede y calcula el total multiplicando su importe por la cantidad de turnos. Si el precio cambió desde la confirmación preparada, presenta el nuevo total y exige confirmar nuevamente.
+Bloquea la sede y obtiene `precio_reserva_vigente`, que debe estar informado y ser positivo. Calcula el total por cantidad de turnos. Si el valor cambió desde la confirmación preparada, presenta el nuevo total y exige confirmar nuevamente.
 
-Bloquea los turnos en orden de identificador y vuelve a comprobar que ningún evento Programado o Finalizado los ocupe. Registra un evento Programado, la reserva y todos los vínculos horarios, junto con el ingreso opcional autorizado. Guarda el precio histórico como referencia, sin copiar otro total en la reserva. Un error revierte toda la operación.
+Bloquea los turnos en orden de identificador y vuelve a comprobar que ningún evento Programado o Finalizado los ocupe. Registra un evento Programado, la reserva y todos los vínculos horarios, junto con el ingreso opcional autorizado. Guarda el importe unitario aplicado como copia, sin almacenar otro total en la reserva. Un error revierte toda la operación.
 
 ### 7.5 Reserva con pase
 
 Aplica las mismas reglas de turnos, acceso y calendario de 7.4. Valida vigencia, titularidad, día habilitado y horas disponibles del pase del organizador, así como la cobertura de los invitados identificados.
 
-Bloquea las membresías de pase involucradas y los turnos en un orden estable. El consumo diario se obtiene contando los turnos de eventos de reservas no Anulados, tanto como organizador como invitado cubierto. Crea evento, vínculos horarios, reserva, invitados e ingreso opcional en una transacción. Conserva el precio adicional unitario aplicado y calcula el total según los invitados sin cobertura.
+Bloquea las contrataciones de pase involucradas y los turnos en un orden estable. El consumo diario se obtiene contando los turnos de eventos de reservas no Anulados, tanto como organizador como invitado cubierto. Crea evento, vínculos horarios, reserva, invitados e ingreso opcional en una transacción. Conserva el precio adicional unitario aplicado y calcula el total según los invitados sin cobertura.
 
 ### 7.6 Cancelación de una reserva
 
@@ -910,12 +954,15 @@ Creará una sola fila de `ingresos` con exactamente una columna de origen inform
 
 La operación centralizada de creación guardará la fila de `usuarios` con sus credenciales y, en la misma transacción, dos filas de `usuarios_roles`, con referencias a Público y Reservas. Si cualquiera de las tres escrituras falla, el alta completa se revierte. Aplica tanto si la propia persona se registra desde el portal como si la administración crea la cuenta.
 
-### 7.10 Confirmación de pago de MercadoPago (webhook)
+### 7.10 Confirmación de pago de MercadoPago
 
-Al recibir el webhook, validará primero su firma (`x-signature`, `x-request-id`, `data.id` y la clave secreta configurada); si no coincide, descarta sin consultar nada. Consultará el pago en la API de MercadoPago (no confía en el payload recibido) y localizará el intento en `pagos_mercadopago` por `external_reference`; si no encuentra ninguno (evento ajeno a Academia TM en la misma cuenta, o referencia inexistente), descarta la notificación sin crear ni modificar nada y responde igualmente `200`. Guardará `payment_id` y actualizará `estado` según lo consultado, aplicando el efecto correspondiente solo si todavía no fue aplicado (la idempotencia se ancla al efecto ya aplicado, no a si el `payment_id` ya es conocido: un mismo pago puede notificarse primero pendiente y luego, con el mismo `payment_id`, aprobado o rechazado):
-- **Pendiente** (o cualquier estado que MercadoPago reporte fuera de los tres que este sistema procesa, por ejemplo `in_process` o `authorized`): solo si el intento todavía no llegó a un estado terminal (`aprobado` o `rechazado`), lo actualiza a `pendiente`; no activa nada, a la espera de una notificación posterior con un estado final. Si el intento ya es terminal, esta notificación se ignora sin modificarlo — un pago ya aprobado nunca retrocede a pendiente.
-- **Rechazado:** si el intento no está ya en un estado terminal, lo marca `rechazado`; no activa nada.
-- **Aprobado:** si el intento ya tiene `membresia_usuario_id` o `ingreso_id`, no repite la activación. Si no, valida monto y moneda contra `precio_aplicado`. Si el usuario sigue sin tener una membresía vigente incompatible para ese mes, en una única transacción crea la fila de `membresias_usuarios` (o la renueva) con el `precio_aplicado` ya calculado en `pagos_mercadopago` — no lo recalcula —, registra el ingreso con `medio_pago = 'mercadopago'` vinculado a esa membresía, otorga el rol `alumno` al usuario si todavía no lo tiene, y guarda en el intento sus referencias a la membresía de usuario y al ingreso creados. `membresias_usuarios.registrada_por_id` e `ingresos.registrado_por_id` quedarán nulos. Si el conflicto de exclusividad se detecta recién en este paso, el intento queda `aprobado` sin esas referencias: el dinero fue cobrado pero la activación queda pendiente de resolución manual. Si la operación falla, no quedará ninguna membresía activada a medias. Responderá `200`/`201` dentro de los 22 segundos que MercadoPago espera antes de reintentar.
+Valida la notificación y consulta el pago confirmado en la plataforma. Localiza el intento por su referencia externa y valida moneda e importe contra `precio_aplicado`. Una referencia ajena al sistema se descarta sin crear datos.
+
+En una aprobación, bloquea el intento y al usuario, y comprueba si su efecto ya fue aplicado. Si no existe una contratación incompatible para ese mes, crea una fila en `planes_usuarios` o `pases_usuarios` según el producto y copia el importe congelado. Registra un ingreso con medio MercadoPago que referencia esa contratación. Guarda en el intento la contratación resultante y el ingreso, y asigna Alumno sólo para un plan que queda Activo.
+
+Todo el efecto se confirma en una transacción. Si aparece un conflicto de exclusividad, el intento queda Aprobado sin resultados y se identifica para resolución administrativa. Una repetición no duplica datos. Pendiente y Rechazado no crean contrataciones ni ingresos; un estado terminal no vuelve a Pendiente.
+
+El procesamiento conserva las condiciones de validación, reintento y notificación descriptas en el proceso 4.4 de `4_flujos_del_sistema.md`.
 
 ### 7.11 Finalización de clases y reservas vencidas
 
@@ -927,9 +974,11 @@ El Administrador puede finalizar una reserva vencida mediante la acción de emer
 
 Cada ejecución procesa todas las vencidas pendientes, incluidas las que terminaron durante una interrupción de los servicios. La concurrencia entre finalización manual, tarea automática y anulación se coordina mediante los mismos turnos y evento; una segunda operación no sobrescribe el momento registrado.
 
-### 7.12 Aviso de vencimiento próximo de una membresía
+### 7.12 Vencimiento y aviso de contrataciones
 
-Tarea diaria idempotente. Localizará `membresias_usuarios` en estado `activa` con `fecha_fin` dentro de los próximos 3 días y `aviso_vencimiento_enviado = false`. Enviará el email y marcará `aviso_vencimiento_enviado = true` en la misma operación por fila.
+La tarea diaria consulta por separado `planes_usuarios` y `pases_usuarios`. Cambia a Vencido los Activos cuyo mes terminó y actualiza su fecha de modificación, sin alterar Anulados ni relaciones históricas. La vigencia para cada uso se comprueba también con el mes, aunque la tarea no haya procesado todavía la fila.
+
+El aviso de vencimiento consulta contrataciones Activas cuyo fin calculado está dentro de los próximos tres días y cuya marca de envío es falsa. Envía el email y conserva la marca para no repetirlo.
 
 ### 7.13 Recordatorio de la próxima clase asignada
 

@@ -21,13 +21,12 @@ Los números escritos sobre las flechas identifican los datos descriptos debajo 
 - **D4: Sesiones** (almacén técnico de autenticación)
 - **D5: Sedes**
 - **D6: Canchas**
-- **D7: Precios de reservas**
 - **D8: Horarios de sedes**
 - **D9: Turnos**
 - **D10: Reservas**
 - **D11: Eventos_Turnos**
 - **D12: Eventos**
-- **D13: Membresías de usuarios**
+- **D13: Pases_Usuarios**
 - **D14: Pases**
 - **D15: Invitados de reservas**
 - **D16: Ingresos**
@@ -35,6 +34,7 @@ Los números escritos sobre las flechas identifican los datos descriptos debajo 
 - **D18: Orígenes de bloqueos**
 - **D19: Clases**
 - **D20: Profesores de clases**
+- **D21: Planes_Usuarios**
 
 ---
 
@@ -550,9 +550,9 @@ flowchart LR
     D3[(D3: Usuarios_Roles)]
     D10[(D10: Reservas)]
     D12[(D12: Eventos)]
-    D13[(D13: Membresías de usuarios)]
     D19[(D19: Clases)]
     D20[(D20: Profesores de clases)]
+    D21[(D21: Planes_Usuarios)]
 
     A -->|1| P
     P -->|2| D1
@@ -563,8 +563,8 @@ flowchart LR
     D3 -->|7| P
     P -->|8| D10
     D10 -->|9| P
-    P -->|10| D13
-    D13 -->|11| P
+    P -->|10| D21
+    D21 -->|11| P
     P -->|12| D20
     D20 -->|13| P
     P -->|14| D19
@@ -586,8 +586,8 @@ flowchart LR
 7. Asignación vigente, si existe.
 8. Organizador para consultar sus reservas.
 9. Reservas del usuario y eventos asociados.
-10. Titular para consultar sus membresías.
-11. Membresías activas que impiden retirar Alumno.
+10. Titular para consultar sus planes contratados.
+11. Contrataciones de planes Activas que impiden retirar Alumno.
 12. Profesor para consultar sus asignaciones activas.
 13. Clases con asignaciones activas del profesor.
 14. Clases que deben consultar sus eventos.
@@ -597,7 +597,7 @@ flowchart LR
 18. Asignación que debe retirarse cuando está permitido.
 19. Resultado del retiro o motivo del rechazo.
 
-Público y Administrador no se retiran desde la aplicación. Reservas se conserva mientras el usuario tenga reservas propias Programadas; Alumno, mientras tenga una membresía activa; Profesor, mientras tenga asignaciones activas en clases Programadas.
+Público y Administrador no se retiran desde la aplicación. Reservas se conserva mientras el usuario tenga reservas propias Programadas; Alumno, mientras tenga un plan contratado Activo; Profesor, mientras tenga asignaciones activas en clases Programadas.
 
 ### DFD 19: restablecer la contraseña de otro usuario
 
@@ -755,91 +755,76 @@ flowchart LR
 
 ---
 
-## 6. Precios de reservas por sede
+## 6. Precio vigente de reservas por sede
 
-### DFD 25: consultar precios de reservas de una sede
-
-```mermaid
-flowchart LR
-    A[Administrador]
-    P((25. Consultar precios de reservas de una sede))
-    D5[(D5: Sedes)]
-    D7[(D7: Precios de reservas)]
-
-    A -->|1| P
-    P -->|2| D5
-    D5 -->|3| P
-    P -->|4| D7
-    D7 -->|5| P
-    P -->|6| A
-```
-
-**Datos que circulan**
-
-1. Sede seleccionada y filtro de estado.
-2. Identificador de la sede consultada.
-3. Datos de la sede.
-4. Criterios de consulta de precios de esa sede.
-5. Precio activo y precios históricos encontrados.
-6. Tabla de precios por turno de la sede, con importes, estados y fechas de creación y desactivación.
-
-### DFD 26: registrar un precio por turno en una sede
+### DFD 25: consultar el precio de reservas de una sede
 
 ```mermaid
 flowchart LR
     A[Administrador]
-    P((26. Registrar un precio por turno en una sede))
+    P((25. Consultar el precio de reservas de una sede))
     D5[(D5: Sedes)]
-    D7[(D7: Precios de reservas)]
 
     A -->|1| P
     P -->|2| D5
     D5 -->|3| P
-    P -->|4| D7
-    D7 -->|5| P
-    P -->|6| D7
-    P -->|7| A
+    P -->|4| A
 ```
 
 **Datos que circulan**
 
-1. Sede seleccionada, importe por turno y confirmación del alta.
-2. Identificador de la sede seleccionada.
-3. Datos de la sede.
-4. Sede para consultar su precio activo.
-5. Precio activo existente para esa sede, si lo hay.
-6. Nuevo precio de la sede, con importe por turno, estado Activo y fechas de registración.
-7. Resultado del alta o errores de validación.
+1. Sede seleccionada.
+2. Identificador de la sede.
+3. Datos de la sede y tarifa vigente por turno, si está configurada.
+4. Importe vigente o falta de configuración.
 
-### DFD 27: actualizar el precio por turno de una sede
+### DFD 26: establecer el precio de reservas de una sede
 
 ```mermaid
 flowchart LR
     A[Administrador]
-    P((27. Actualizar el precio por turno de una sede))
+    P((26. Establecer el precio de reservas de una sede))
     D5[(D5: Sedes)]
-    D7[(D7: Precios de reservas)]
 
     A -->|1| P
     P -->|2| D5
     D5 -->|3| P
-    P -->|4| D7
-    D7 -->|5| P
-    P -->|6| D7
-    P -->|7| D7
-    P -->|8| A
+    P -->|4| D5
+    P -->|5| A
 ```
 
 **Datos que circulan**
 
-1. Sede y precio seleccionados, nuevo importe por turno y confirmación.
-2. Identificador de la sede consultada.
-3. Datos de la sede.
-4. Identificadores de la sede y precio consultados.
-5. Importe y estado del precio seleccionado.
-6. Estado Inactivo y fecha de desactivación del precio sustituido.
-7. Nuevo precio por turno de la sede, con estado Activo y fechas de registración.
-8. Resultado de la actualización o errores de validación.
+1. Sede, importe positivo por turno y confirmación.
+2. Identificador de la sede.
+3. Estado y tarifa actual de la sede.
+4. Tarifa vigente por turno y fecha de modificación, cuando el valor estaba vacío.
+5. Resultado de la configuración o impedimento.
+
+### DFD 27: actualizar el precio de reservas de una sede
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((27. Actualizar el precio de reservas de una sede))
+    D5[(D5: Sedes)]
+
+    A -->|1| P
+    P -->|2| D5
+    D5 -->|3| P
+    P -->|4| D5
+    P -->|5| A
+```
+
+**Datos que circulan**
+
+1. Sede, importe mostrado, nuevo importe positivo y confirmación.
+2. Identificador de la sede.
+3. Tarifa vigente para comprobar que coincide con la revisada.
+4. Nuevo precio vigente y fecha de modificación.
+5. Resultado de la actualización o solicitud de revisar la tarifa actual.
+
+La operación modifica la tarifa de la sede. Las reservas existentes conservan su importe unitario aplicado.
 
 ---
 
@@ -855,13 +840,12 @@ flowchart LR
     D3[(D3: Usuarios_Roles)]
     D5[(D5: Sedes)]
     D6[(D6: Canchas)]
-    D7[(D7: Precios de reservas)]
     D8[(D8: Horarios de sedes)]
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
     D11[(D11: Eventos_Turnos)]
     D12[(D12: Eventos)]
-    D13[(D13: Membresías de usuarios)]
+    D13[(D13: Pases_Usuarios)]
     D14[(D14: Pases)]
     D15[(D15: Invitados de reservas)]
     D16[(D16: Ingresos)]
@@ -892,14 +876,12 @@ flowchart LR
     D14 -->|24| P
     P -->|25| D15
     D15 -->|26| P
-    P -->|27| D7
-    D7 -->|28| P
-    P -->|29| D12
-    P -->|30| D10
-    P -->|31| D11
-    P -->|32| D15
-    P -->|33| D16
-    P -->|34| A
+    P -->|27| D12
+    P -->|28| D10
+    P -->|29| D11
+    P -->|30| D15
+    P -->|31| D16
+    P -->|32| A
 ```
 
 **Datos que circulan**
@@ -910,7 +892,7 @@ flowchart LR
 4. Actor y organizador cuyos roles deben comprobarse.
 5. Roles asignados.
 6. Sede seleccionada.
-7. Datos y estado de la sede.
+7. Datos y estado de la sede, incluida su tarifa vigente por turno.
 8. Cancha seleccionada.
 9. Datos, sede y estado de la cancha.
 10. Sede y día de la fecha elegida.
@@ -922,22 +904,20 @@ flowchart LR
 16. Vínculos existentes con eventos.
 17. Eventos relacionados con los turnos y reservas consultadas.
 18. Estados que determinan ocupación y consumo de pase.
-19. Reservas de los titulares cuyos pases se evalúan.
+19. Reservas de los titulares cuyos pases se evalúan, para consultar su consumo diario.
 20. Organizadores, pases aplicados y eventos de las reservas.
-21. Titulares y fecha para consultar sus pases vigentes.
-22. Membresías de pase y vigencia.
+21. Titulares y fecha para consultar sus pases contratados.
+22. Contrataciones de pase, titular, producto y mes cubierto.
 23. Pases para consultar día habilitado, límite diario y adicional vigente.
 24. Configuración de los pases.
 25. Invitados cubiertos para consultar el consumo de sus pases.
 26. Cobertura aplicada en otras reservas.
-27. Sede para consultar el precio normal vigente.
-28. Precio activo e importe por turno.
-29. Nuevo evento de reserva Programado, con responsable, observaciones y fecha de registro.
-30. Nueva reserva con organizador y precio histórico o pase aplicado; datos de invitados cuando correspondan.
-31. Vínculos del evento nuevo con todos los turnos seleccionados.
-32. Invitados identificados y cobertura aplicada, sólo para una reserva con pase.
-33. Ingreso opcional autorizado por el Administrador, con la reserva como origen.
-34. Selección y cálculos para confirmar; número y resultado del registro, o errores de validación.
+27. Nuevo evento de reserva Programado, con responsable, observaciones y fecha de registro.
+28. Nueva reserva con organizador y copia de la tarifa por turno aplicada, o contratación de pase; datos de invitados y adicional unitario cuando correspondan.
+29. Vínculos del evento nuevo con todos los turnos seleccionados.
+30. Invitados identificados y cobertura aplicada, sólo para una reserva con pase.
+31. Ingreso opcional autorizado por el Administrador, con la reserva como origen.
+32. Selección y cálculos para confirmar; número y resultado del registro, o errores de validación.
 
 Todos los turnos deben ser futuros, libres y consecutivos, de una misma cancha, fecha y franja. La confirmación registra una reserva y un evento con todos sus vínculos dentro de una transacción; el portal no registra ingresos.
 
@@ -951,12 +931,12 @@ flowchart LR
     D3[(D3: Usuarios_Roles)]
     D5[(D5: Sedes)]
     D6[(D6: Canchas)]
-    D7[(D7: Precios de reservas)]
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
     D11[(D11: Eventos_Turnos)]
     D12[(D12: Eventos)]
-    D13[(D13: Membresías de usuarios)]
+    D13[(D13: Pases_Usuarios)]
+    D14[(D14: Pases)]
     D15[(D15: Invitados de reservas)]
     D16[(D16: Ingresos)]
 
@@ -977,10 +957,10 @@ flowchart LR
     D6 -->|15| P
     P -->|16| D5
     D5 -->|17| P
-    P -->|18| D7
-    D7 -->|19| P
-    P -->|20| D13
-    D13 -->|21| P
+    P -->|18| D13
+    D13 -->|19| P
+    P -->|20| D14
+    D14 -->|21| P
     P -->|22| D15
     D15 -->|23| P
     P -->|24| D16
@@ -996,7 +976,7 @@ flowchart LR
 4. Actor cuyos roles deben consultarse.
 5. Roles asignados.
 6. Reserva seleccionada y acceso a todas o sólo a las propias.
-7. Organizador, evento, precio o pase aplicado y datos comerciales.
+7. Organizador, evento, importe unitario aplicado o contratación de pase y datos comerciales.
 8. Evento asociado a la reserva.
 9. Estado, observaciones, responsables y fechas de registro, anulación o finalización.
 10. Evento cuyos vínculos deben consultarse.
@@ -1007,10 +987,10 @@ flowchart LR
 15. Datos de la cancha y su sede.
 16. Sede relacionada.
 17. Datos de la sede.
-18. Precio histórico de la reserva normal.
-19. Importe histórico por turno.
-20. Membresía de pase aplicada cuando corresponda.
-21. Titular y vigencia del pase aplicado.
+18. Contrataciones de pase aplicadas para consultar sus datos y período.
+19. Contrataciones de pase, titular, producto y mes cubierto.
+20. Productos de las contrataciones de pase aplicadas.
+21. Nombre y configuración de los pases, sin recalcular importes históricos.
 22. Reserva cuyos invitados se consultan.
 23. Invitados identificados y su cobertura.
 24. Reserva cuyos ingresos deben consultarse.
@@ -1027,7 +1007,6 @@ flowchart LR
     D3[(D3: Usuarios_Roles)]
     D5[(D5: Sedes)]
     D6[(D6: Canchas)]
-    D7[(D7: Precios de reservas)]
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
     D11[(D11: Eventos_Turnos)]
@@ -1051,11 +1030,9 @@ flowchart LR
     D12 -->|15| P
     P -->|16| D10
     D10 -->|17| P
-    P -->|18| D7
-    D7 -->|19| P
-    P -->|20| D15
-    D15 -->|21| P
-    P -->|22| A
+    P -->|18| D15
+    D15 -->|19| P
+    P -->|20| A
 ```
 
 **Datos que circulan**
@@ -1076,12 +1053,10 @@ flowchart LR
 14. Eventos asociados y filtro de estado.
 15. Estados y fechas de registro de los eventos.
 16. Criterios de número y organizador, con acceso a todas o sólo a las propias.
-17. Reservas, evento asociado y datos del precio o pase aplicado.
-18. Precios históricos de las reservas normales.
-19. Importes históricos por turno.
-20. Invitados de reservas con pase para calcular adicionales.
-21. Coberturas de los invitados identificados.
-22. Filtros y listado con número, organizador cuando corresponde, cancha, fecha, horario, total, estado y acceso al detalle, o errores.
+17. Reservas, evento asociado, importe unitario aplicado o contratación de pase y adicional de invitados.
+18. Invitados de reservas con pase para calcular adicionales.
+19. Coberturas de los invitados identificados.
+20. Filtros y listado con número, organizador cuando corresponde, cancha, fecha, horario, total, estado y acceso al detalle, o errores.
 
 ### DFD 31: anular una reserva de cancha
 
@@ -1209,12 +1184,12 @@ flowchart LR
     D3[(D3: Usuarios_Roles)]
     D5[(D5: Sedes)]
     D6[(D6: Canchas)]
-    D7[(D7: Precios de reservas)]
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
     D11[(D11: Eventos_Turnos)]
     D12[(D12: Eventos)]
-    D13[(D13: Membresías de usuarios)]
+    D13[(D13: Pases_Usuarios)]
+    D14[(D14: Pases)]
     D15[(D15: Invitados de reservas)]
 
     A -->|1| P
@@ -1234,10 +1209,10 @@ flowchart LR
     D6 -->|15| P
     P -->|16| D5
     D5 -->|17| P
-    P -->|18| D7
-    D7 -->|19| P
-    P -->|20| D13
-    D13 -->|21| P
+    P -->|18| D13
+    D13 -->|19| P
+    P -->|20| D14
+    D14 -->|21| P
     P -->|22| D15
     D15 -->|23| P
     P -->|24| A
@@ -1251,7 +1226,7 @@ flowchart LR
 4. Actor cuyos roles deben consultarse.
 5. Roles asignados.
 6. Reserva y criterio de acceso a todas o sólo a las propias.
-7. Número, organizador, evento y datos comerciales del precio o pase.
+7. Número, organizador, evento e importes aplicados o contratación de pase.
 8. Evento asociado a la reserva.
 9. Estado, observaciones y auditoría.
 10. Evento cuyos vínculos se consultan.
@@ -1262,10 +1237,10 @@ flowchart LR
 15. Datos de la cancha y sede.
 16. Sede relacionada.
 17. Nombre y datos de la sede.
-18. Precio histórico de la reserva normal.
-19. Importe histórico por turno.
-20. Pase aplicado al organizador cuando corresponda.
-21. Identificación y vigencia de la membresía aplicada.
+18. Contrataciones de pase aplicadas para consultar sus datos y período.
+19. Contrataciones de pase, titular, producto y mes cubierto.
+20. Productos de las contrataciones de pase aplicadas.
+21. Nombre y configuración de los pases, sin recalcular importes históricos.
 22. Invitados de la reserva con pase.
 23. Identificación y cobertura de invitados.
 24. Comprobante imprimible con número, estado, usuarios, fechas, sede, cancha, turnos, duración, importes y auditoría, o rechazo del acceso.

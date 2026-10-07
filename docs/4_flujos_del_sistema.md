@@ -16,7 +16,7 @@ Lo que el sistema hace por sí solo, sin que ningún actor lo pida en el momento
 
 ## Criterio temporal común
 
-Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; las clases y bloqueos llegan como máximo hasta un año después de la fecha local actual; las reservas nuevas o reprogramadas exigen inicio futuro y fecha entre hoy y catorce días después, inclusive; la generación de clases abarca hasta 62 días; las consultas por período, hasta 366 días; las membresías pueden cubrir hasta el mes siguiente; los ingresos no pueden tener fecha futura; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
+Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; las clases y bloqueos llegan como máximo hasta un año después de la fecha local actual; las reservas nuevas o reprogramadas exigen inicio futuro y fecha entre hoy y catorce días después, inclusive; la generación de clases abarca hasta 62 días; las consultas por período, hasta 366 días; las contrataciones pueden cubrir hasta el mes siguiente; los ingresos no pueden tener fecha futura; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
 
 ---
 
@@ -41,14 +41,14 @@ Todos los flujos de este documento aplican los límites temporales definidos en 
 | Sedes y canchas | FL-14 | Cambiar el estado de una cancha |
 | Sedes y canchas | FL-57 | Consultar el horario de funcionamiento de una sede |
 | Sedes y canchas | FL-58 | Configurar el horario de funcionamiento de una sede |
-| Membresías | FL-15 | Consultar membresías |
-| Membresías | FL-16 | Registrar una membresía |
-| Membresías | FL-17 | Actualizar una membresía |
-| Membresías | FL-18 | Cambiar el estado de una membresía |
-| Membresías de usuarios | FL-19 | Consultar una membresía de usuario |
-| Membresías de usuarios | FL-20 | Registrar una membresía para un usuario |
-| Membresías de usuarios | FL-21 | Cancelar una membresía de usuario |
-| Membresías de usuarios | FL-22 | Suscribirse a una membresía o pase |
+| Planes y pases | FL-15 | Consultar planes y pases |
+| Planes y pases | FL-16 | Registrar un plan o un pase |
+| Planes y pases | FL-17 | Actualizar un plan o un pase |
+| Planes y pases | FL-18 | Cambiar el estado de un plan o un pase |
+| Contrataciones | FL-19 | Consultar un plan o pase contratado |
+| Contrataciones | FL-20 | Registrar un plan o pase para un usuario |
+| Contrataciones | FL-21 | Anular un plan o pase contratado |
+| Contrataciones | FL-22 | Contratar un plan o un pase online |
 | Planilla y generación de clases | FL-23 | Consultar la planilla de una cancha |
 | Planilla y generación de clases | FL-24 | Crear un turno de planilla |
 | Planilla y generación de clases | FL-25 | Modificar un turno de planilla |
@@ -74,9 +74,9 @@ Todos los flujos de este documento aplican los límites temporales definidos en 
 | Acceso | FL-46 | Recuperar contraseña |
 | Acceso | FL-59 | Cambiar contraseña |
 | Acceso | FL-68 | Iniciar sesión con cambio obligatorio de contraseña |
-| Precios | FL-47 | Consultar precios de reservas |
-| Precios | FL-48 | Registrar un precio de reserva |
-| Precios | FL-49 | Actualizar un precio de reserva |
+| Precios de reservas | FL-47 | Consultar el precio de reservas de una sede |
+| Precios de reservas | FL-48 | Establecer el precio de reservas de una sede |
+| Precios de reservas | FL-49 | Actualizar el precio de reservas de una sede |
 | Reservas | FL-51 | Crear una reserva para un usuario |
 | Reservas | FL-52 | Modificar invitados identificados de una reserva con pase |
 | Consultas | FL-53 | Consultar el uso de un pase |
@@ -85,14 +85,14 @@ Todos los flujos de este documento aplican los límites temporales definidos en 
 | Ingresos | FL-56 | Consultar ingresos |
 | Reservas | FL-60 | Cancelar una reserva propia |
 | Reservas | FL-61 | Cancelar una reserva (administrador) |
-| Membresías de usuarios | FL-62 | Consultar intentos de pago de MercadoPago |
+| Contrataciones | FL-62 | Consultar intentos de pago de MercadoPago |
 | Bloqueos | FL-63 | Bloquear un turno |
 | Bloqueos | FL-64 | Bloquear varios turnos en lote |
 | Bloqueos | FL-65 | Liberar un bloqueo |
 | Bloqueos | FL-66 | Liberar varios bloqueos en lote |
 | Bloqueos | FL-67 | Consultar bloqueos |
 
-Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de membresías, 4.2 Notificaciones por email, 4.3 Finalización automática de clases y reservas vencidas, 4.4 Confirmación de pago de MercadoPago, 4.5 Aviso de vencimiento próximo de una membresía, 4.6 Recordatorio de la próxima clase asignada.
+Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de planes y pases contratados, 4.2 Notificaciones por email, 4.3 Finalización automática de clases y reservas vencidas, 4.4 Confirmación de pago de MercadoPago, 4.5 Aviso de vencimiento próximo de una contratación, 4.6 Recordatorio de la próxima clase asignada.
 
 ---
 
@@ -163,7 +163,7 @@ Alternativas:
 - Administrador, Público y Reservas no pueden elegirse en este paso: Administrador se crea mediante el comando de gestión `crear_administrador`; Público y Reservas se asignan automáticamente.
 - No marcar ningún rol adicional no impide asignarlo después mediante **FL-07**.
 - Si se cancela antes de confirmar, no se crea el usuario.
-- Este flujo es siempre un paso previo e independiente: ninguna otra operación (como crear una reserva o dar de alta una membresía) lo invoca ni registra un usuario nuevo dentro de su propio trámite. El usuario debe existir antes.
+- Este flujo es siempre un paso previo e independiente: ninguna otra operación (como crear una reserva o registrar un plan o pase contratado) lo invoca ni registra un usuario nuevo dentro de su propio trámite. El usuario debe existir antes.
 
 - **Resultado:** nuevo usuario activo con contraseña provisoria pendiente de reemplazo, Público, Reservas y los roles adicionales seleccionados.
 - **Datos:** usuarios, usuarios_roles.
@@ -260,7 +260,7 @@ Recorrido:
 
 Alternativas:
 
-- La inactivación no elimina clases, reservas, asistencias, membresías de usuarios, ingresos ni roles asignados.
+- La inactivación no elimina clases, reservas, asistencias, contrataciones de planes y pases, ingresos ni roles asignados.
 - Reactivar la cuenta limpia `fecha_baja`; el campo representa la baja vigente, no un historial de cambios de estado.
 - Un usuario inactivo no podrá iniciar sesión ni ser asignado como profesor activo, aunque conserve credenciales cargadas.
 - Ningún usuario con permiso para cambiar estados puede desactivar su propia cuenta.
@@ -352,7 +352,7 @@ flowchart TD
 
 #### FL-07. Asignar o quitar un rol a un usuario
 
-- **Objetivo:** otorgar o retirar Reservas, Profesor o Alumno a un usuario, conservando la coherencia con sus actividades y membresías.
+- **Objetivo:** otorgar o retirar Reservas, Profesor o Alumno a un usuario, conservando la coherencia con sus actividades y contrataciones.
 - **Actor:** administrador.
 - **Precondición:** usuario localizado mediante **FL-03**.
 - **Entrada:** rol (Reservas, Profesor o Alumno) y acción (asignar o quitar).
@@ -362,21 +362,21 @@ Recorrido:
 1. El administrador localiza al usuario.
 2. El sistema muestra los roles vigentes del usuario.
 3. El administrador elige Reservas, Profesor o Alumno y confirma asignarlo o quitarlo.
-4. Si solicita quitarlo, el sistema comprueba que no existan relaciones que bloqueen el retiro: reservas propias programadas para Reservas, cualquier membresía activa para Alumno, o asignaciones activas como profesor en clases programadas para Profesor.
+4. Si solicita quitarlo, comprueba que no existan relaciones que bloqueen el retiro: reservas propias Programadas para Reservas, contrataciones de planes Activas para Alumno o asignaciones activas como profesor en clases Programadas para Profesor.
 5. Si la operación está permitida, actualiza `usuarios_roles`. La comprobación y el retiro se realizan en una misma operación transaccional, coordinada con la creación o reactivación de las relaciones involucradas.
 
 Alternativas:
 
 - **Público no se puede quitar.** Se asigna automáticamente en el alta. Administrador se gestiona exclusivamente mediante comandos ejecutados por el desarrollador. Este flujo tampoco permite crear, renombrar ni eliminar registros del catálogo `roles`.
 - Reservas sigue asignándose automáticamente en el alta (**FL-02**, **FL-06**), pero puede retirarse si no hay reservas propias programadas y otorgarse nuevamente mediante este flujo.
-- Si el usuario tiene reservas programadas, se rechaza el retiro de Reservas. Si tiene una membresía activa, sea plan o pase, se rechaza el retiro de Alumno. Si tiene clases programadas con una asignación activa como profesor, se rechaza el retiro de Profesor.
+- Si el usuario tiene reservas programadas, se rechaza el retiro de Reservas. Si tiene un plan contratado Activo, se rechaza el retiro de Alumno; un pase contratado no impide retirar ese rol. Si tiene clases programadas con una asignación activa como profesor, se rechaza el retiro de Profesor.
 - Ante un rechazo, se informa la causa, se conserva el rol y no se cancelan ni modifican las relaciones que lo bloquean. Los estados registrados determinan el bloqueo; una fecha pasada por sí sola no lo libera.
 - El rol Alumno también puede otorgarse automáticamente mediante **FL-20** o 4.4, además de por este flujo; ambas vías conviven sin conflicto.
-- Quitar Reservas, Profesor o Alumno no elimina el historial de reservas, membresías, clases ni asistencia. Las reservas y clases canceladas o completadas y las membresías vencidas o canceladas no bloquean por sí solas el retiro.
+- Quitar Reservas, Profesor o Alumno no elimina el historial de reservas, contrataciones, clases ni asistencia. Las reservas y clases canceladas o completadas y las contrataciones Vencidas o Anuladas no bloquean por sí solas el retiro.
 - Asignar un rol ya vigente, o quitar uno que el usuario no tiene, no genera cambios.
 
 - **Resultado:** asignación actualizada, o retiro rechazado conservando el rol y sus relaciones.
-- **Datos:** usuarios_roles, roles, reservas, membresias_usuarios, clases_profesores, clases y eventos, eventos_turnos, turnos.
+- **Datos:** usuarios_roles, roles, reservas, planes_usuarios, pases_usuarios, clases_profesores, clases y eventos, eventos_turnos, turnos.
 
 ```mermaid
 flowchart TD
@@ -664,244 +664,264 @@ flowchart TD
     F -->|Sí| G[Guardar horario del día]
 ```
 
-### 3.4 Membresías
+### 3.4 Catálogos de planes y pases
 
-#### FL-15. Consultar membresías
+#### FL-15. Consultar planes y pases
 
-- **Objetivo:** visualizar membresías de planes y pases.
-- **Actores:** administrador, sin restricción de estado; usuario autenticado con rol Público, desde el catálogo del portal y limitado a membresías **Activas**.
-- **Entradas:** filtros opcionales por nombre, subtipo, modalidad o estado.
+- **Objetivo:** consultar productos del catálogo.
+- **Actores:** Administrador, con acceso a activos e inactivos; usuario autenticado con rol Público, limitado a activos.
+- **Entradas:** catálogo de planes o pases y filtros por nombre, configuración o estado cuando el actor lo permite.
 
 Recorrido:
 
-1. El sistema aplica los filtros.
-2. Muestra datos comunes, configuración específica y precio vigente.
-3. El actor puede abrir el detalle.
+1. El actor elige el catálogo y los filtros.
+2. El sistema consulta `planes` o `pases`, según lo seleccionado.
+3. Muestra nombre, descripción, configuración y precio vigente, con acceso al detalle.
 
 Alternativas:
 
-- Desde el catálogo del portal, solo se listan membresías **Activas** y no se ofrece filtro de estado.
-- Un pase libre y un pase de fin de semana se listan como membresías distintas, cada una con su propio precio.
+- El portal sólo ofrece productos Activos.
+- El pase Libre y el de Fin de semana son productos distintos.
+- Los nombres se validan dentro de cada catálogo, no entre ambas tablas.
 
-- **Resultado:** membresías consultadas sin modificaciones.
-- **Datos:** membresías, planes y pases.
+- **Resultado:** listado y detalle de productos, sin modificar datos.
+- **Datos:** planes o pases.
 
 ```mermaid
 flowchart TD
-    A[Ingresar filtros] --> B[Consultar membresías]
-    B --> C[Mostrar lista y detalle]
+    A[Elegir catálogo y filtros] --> B[Consultar la tabla del producto]
+    B --> C[Mostrar productos y detalle]
 ```
 
-#### FL-16. Registrar una membresía
+#### FL-16. Registrar un plan o un pase
 
-- **Objetivo:** crear una membresía activa con exactamente un subtipo.
-- **Actor:** administrador.
-- **Entradas:** nombre, descripción, precio vigente y configuración de plan o pase.
+- **Objetivo:** registrar un producto completo en su catálogo.
+- **Actor:** Administrador.
+- **Entradas:** nombre, descripción y precio; configuración específica del plan o pase.
 
 Recorrido:
 
-1. El administrador elige plan o pase y completa los datos.
-2. El sistema valida nombre y configuración.
-3. En una transacción crea la membresía y su subtipo.
+1. Selecciona el catálogo y completa los datos.
+2. Para un plan, indica modalidad, frecuencia semanal y cantidad de clases por encuentro. Para un pase, indica variante, límite diario y adicional por invitado.
+3. Valida nombre disponible entre productos Activos del mismo catálogo, importes y configuración.
+4. Registra una fila Activa en `planes` o `pases`.
 
 Alternativas:
 
-- Un plan exige modalidad, frecuencia entre uno y siete y una o dos clases por encuentro.
-- Un pase exige su tipo (libre o fin de semana), límite diario positivo y precio por invitado no negativo. El tipo fija qué días habilita: no es un dato configurable aparte.
+- Frecuencia de plan entre uno y siete, con una o dos clases de una hora por encuentro.
+- Límite diario de pase positivo; Libre habilita todos los días y Fin de semana sólo sábado y domingo.
+- Los precios no pueden ser negativos.
 
-- **Resultado:** membresía activa con un único subtipo.
-- **Datos:** membresías, planes o pases.
+- **Resultado:** producto Activo en el catálogo correspondiente.
+- **Datos:** planes o pases.
 
 ```mermaid
 flowchart TD
-    A[Elegir subtipo y completar datos] --> B{Datos válidos}
+    A[Elegir catálogo y completar datos] --> B{Datos válidos}
     B -->|No| A
-    B -->|Sí| C[Crear membresía y subtipo]
+    B -->|Sí| C[Registrar producto completo]
 ```
 
-#### FL-17. Actualizar una membresía
+#### FL-17. Actualizar un plan o un pase
 
-- **Objetivo:** modificar información comercial permitida.
-- **Actor:** administrador.
-- **Precondición:** membresía localizada mediante **FL-15**.
+- **Objetivo:** modificar los datos comerciales de un producto.
+- **Actor:** Administrador.
+- **Precondición:** producto localizado mediante **FL-15**.
 
 Recorrido:
 
-1. El sistema informa si existe uso histórico.
-2. El administrador modifica nombre, descripción o precio.
-3. Sin uso histórico también puede modificar la configuración estructural.
-4. El sistema valida y guarda.
+1. El sistema informa si tiene contrataciones históricas.
+2. El Administrador modifica nombre, descripción y precios vigentes.
+3. Si no tiene contrataciones históricas, puede modificar también su configuración estructural.
+4. Valida y guarda los cambios en su tabla, actualizando la fecha de modificación.
 
 Alternativas:
 
-- Con uso histórico no se cambia subtipo ni estructura.
-- Cambiar el precio no modifica membresías de usuarios existentes.
+- Con contrataciones históricas no se cambia modalidad, frecuencia o duración del plan, ni variante o límite diario del pase.
+- Una configuración estructural distinta se registra como otro producto.
+- Cambiar el precio vigente no modifica importes acordados ni intentos de pago ya iniciados.
+- El adicional de invitados se conserva en cada reserva que lo aplica.
 
-- **Resultado:** membresía actualizada.
-- **Datos:** membresías, subtipos y membresías de usuarios.
-
-```mermaid
-flowchart TD
-    A[Modificar membresía] --> B{Cambia estructura usada}
-    B -->|Sí| C[Rechazar cambio]
-    B -->|No| D[Guardar]
-```
-
-#### FL-18. Cambiar el estado de una membresía
-
-- **Objetivo:** activar o inactivar una membresía sin alterar su historia.
-- **Actor:** administrador.
-- **Precondición:** membresía localizada mediante **FL-15**.
-
-Recorrido:
-
-1. El administrador utiliza la acción **Activar** o **Desactivar** de la membresía, separada de la edición de sus datos comerciales.
-2. El sistema muestra el impacto.
-3. Al confirmar, actualiza el estado.
-
-- Inactivar no cancela membresías de usuarios existentes.
-- Una membresía inactiva no admite nuevas altas.
-
-- **Resultado:** estado actualizado.
-- **Datos:** membresías.
+- **Resultado:** producto actualizado, conservando los datos aplicados a operaciones existentes.
+- **Datos:** planes y planes_usuarios, o pases y pases_usuarios.
 
 ```mermaid
 flowchart TD
-    A[Solicitar cambio] --> B{Confirmar}
-    B -->|No| C[Conservar]
-    B -->|Sí| D[Actualizar estado]
+    A[Modificar producto] --> B{Cambia una configuración con historia}
+    B -->|Sí| C[Rechazar cambio estructural]
+    B -->|No| D[Guardar datos y precios vigentes]
 ```
 
-### 3.5 Membresías de usuarios
+#### FL-18. Cambiar el estado de un plan o un pase
 
-#### FL-19. Consultar una membresía de usuario
-
-- **Objetivo:** visualizar período, precio, estado, ingresos y usos de una membresía.
-- **Actores:** administrador; usuario con rol alumno, limitado a sus propias membresías, desde el portal.
-- **Entradas:** usuario, membresía, período o estado; un alumno no ingresa criterios, ve directamente las suyas.
+- **Objetivo:** activar o desactivar un producto sin alterar sus contrataciones.
+- **Actor:** Administrador.
+- **Precondición:** producto localizado mediante **FL-15**.
+- **Entrada:** estado solicitado y confirmación.
 
 Recorrido:
 
-1. El sistema busca coincidencias, o directamente las membresías del usuario autenticado si el actor es un alumno.
-2. El actor selecciona una.
-3. Muestra detalle, ingresos y, para pases, reservas donde fue aplicado.
+1. Solicita activar o desactivar el producto.
+2. Confirma el efecto sobre nuevas contrataciones.
+3. El sistema establece el estado y actualiza la marca de modificación en la tabla correspondiente.
 
 Alternativas:
 
-- Un alumno solo ve sus propias membresías, en modo de solo lectura.
+- Desactivar no anula contrataciones existentes.
+- Un producto Inactivo no admite nuevas contrataciones.
+- Repetir el estado aplicado no invierte la operación.
+- Activar un producto del catálogo no asigna roles a usuarios.
 
-- **Resultado:** detalle consultado.
-- **Datos:** usuarios, membresías de usuarios, ingresos y reservas.
+- **Resultado:** producto con el estado solicitado.
+- **Datos:** planes o pases.
 
 ```mermaid
 flowchart TD
-    A[Ingresar criterios] --> B[Buscar membresías de usuarios]
-    B --> C[Mostrar detalle]
+    A[Solicitar estado del producto] --> B{Confirmar}
+    B -->|No| C[Conservar estado]
+    B -->|Sí| D[Establecer estado solicitado]
 ```
 
-#### FL-20. Registrar una membresía para un usuario
+### 3.5 Contrataciones de planes y pases
 
-- **Objetivo:** dar de alta una membresía mensual para un usuario.
-- **Actor:** administrador.
-- **Entradas:** usuario, membresía activa, mes cubierto, fecha de alta y observaciones.
+#### FL-19. Consultar un plan o pase contratado
+
+- **Objetivo:** consultar una contratación mensual y sus cobros o usos.
+- **Actores:** Administrador, sobre todas; titular autenticado, sólo sobre las propias.
+- **Entradas:** tipo de contratación y filtros por usuario, producto, mes o estado.
 
 Recorrido:
 
-1. El administrador selecciona usuario, membresía y mes.
-2. El sistema propone el primer y último día del mes.
-3. Copia el precio vigente como precio aplicado.
-4. El administrador confirma y, en una transacción que serializa las altas del mismo usuario, el sistema crea la membresía **Activa**, salvo que el mes ya haya finalizado, en cuyo caso nace **Vencida**; si se trata de un plan y el usuario todavía no tiene el rol Alumno, se lo otorga automáticamente.
+1. El sistema consulta `planes_usuarios` o `pases_usuarios` y limita el alcance según el actor.
+2. El actor selecciona una contratación.
+3. Muestra producto, mes, período calculado, importe acordado, estado, auditoría e ingresos.
+4. Para pases, muestra también las reservas donde se aplicó como organizador o invitado.
 
 Alternativas:
 
-- Un usuario no puede tener más de un plan mensual vigente en el mismo período, ni más de un pase vigente (cualquiera sea su variante); sí puede combinar un plan con un pase (ver `1_organizacion.md`, 4).
-- El mes debe estar comprendido entre agosto de 2026 y el mes calendario siguiente al actual.
-- El ingreso se registra por separado mediante **FL-43**.
+- Consultar un pase propio no exige Alumno.
+- El titular consulta sus contrataciones en modo de sólo lectura.
+- Cobrado, pendiente y excedente se calculan con los ingresos no Anulados.
+- La consulta histórica utiliza la contratación concreta.
 
-- **Resultado:** membresía de usuario activa y rol Alumno otorgado si el usuario todavía no lo tenía.
-- **Datos:** usuarios, membresías, membresías de usuarios y usuarios_roles.
+- **Resultado:** detalle autorizado, sin modificar datos.
+- **Datos:** usuarios, planes, pases, planes_usuarios, pases_usuarios, ingresos, reservas e invitados.
 
 ```mermaid
 flowchart TD
-    A[Seleccionar usuario membresía y mes] --> B[Proponer período y precio]
+    A[Elegir tipo y filtros] --> B[Consultar contrataciones autorizadas]
+    B --> C[Mostrar período importes auditoría y usos]
+```
+
+#### FL-20. Registrar un plan o pase para un usuario
+
+- **Objetivo:** registrar una contratación mensual desde la administración.
+- **Actor:** Administrador.
+- **Entradas:** usuario, producto Activo, mes cubierto, fecha efectiva de alta, importe acordado y observaciones.
+
+Recorrido:
+
+1. Selecciona al usuario, un plan o pase y el mes.
+2. Muestra el período calculado y propone el precio vigente.
+3. El Administrador establece el importe final cuando corresponde un ajuste y confirma.
+4. En una transacción, bloquea al usuario y verifica que no exista otra contratación no Anulada del mismo tipo para ese mes.
+5. Registra una fila en `planes_usuarios` o `pases_usuarios`, con su producto obligatorio, mes, importe aplicado y responsable. Si el mes terminó nace Vencida; en otro caso, Activa.
+6. Si registra un plan Activo y falta Alumno, asigna el rol en la misma transacción.
+
+Alternativas:
+
+- Puede combinar un plan y un pase, pero no duplicar el mismo tipo en un mes, incluidos registros Vencidos.
+- El mes se encuentra entre agosto de 2026 y el mes siguiente al actual.
+- Renovar para otro mes crea una contratación nueva.
+- Un pase no otorga Alumno y su vigencia se verifica para cada fecha de uso.
+- El ingreso se registra por separado mediante **FL-43**; el importe aplicado no representa lo abonado.
+
+- **Resultado:** contratación registrada con precio acordado e historia conservada.
+- **Datos:** usuarios, planes o pases, planes_usuarios o pases_usuarios y usuarios_roles cuando corresponde.
+
+```mermaid
+flowchart TD
+    A[Elegir usuario producto y mes] --> B[Revisar período e importe acordado]
     B --> C{Confirmar}
-    C -->|Sí| D[Crear membresía de usuario]
-    D --> E{Ya tiene rol alumno}
-    E -->|No| F[Otorgar rol alumno]
-    E -->|Sí| G[Finalizar]
-    F --> G
-```
-
-#### FL-21. Cancelar una membresía de usuario
-
-- **Objetivo:** impedir nuevos usos sin eliminar la historia.
-- **Actor:** administrador.
-- **Precondición:** membresía activa localizada mediante **FL-19**.
-
-Recorrido:
-
-1. El sistema muestra usos e ingresos asociados.
-2. El administrador confirma la cancelación.
-3. Cambia el estado a **Cancelada**.
-
-Alternativas:
-
-- No se anulan ingresos ni reservas existentes.
-- Una membresía cancelada no cubre nuevos usos.
-
-- **Resultado:** membresía de usuario cancelada.
-- **Datos:** membresías de usuarios, ingresos y reservas.
-
-```mermaid
-flowchart TD
-    A[Solicitar cancelación] --> B[Mostrar impacto]
-    B --> C{Confirmar}
-    C -->|No| D[Conservar activa]
-    C -->|Sí| E[Marcar cancelada]
-```
-
-#### FL-22. Suscribirse a una membresía o pase
-
-- **Objetivo:** iniciar, desde el portal, el pago online de una membresía a través de MercadoPago, para uno mismo.
-- **Actor:** usuario autenticado con rol Público.
-- **Entradas:** membresía activa elegida, mes a cubrir.
-
-Recorrido:
-
-1. El usuario elige una membresía del catálogo (**FL-15**) y el mes a cubrir.
-2. El sistema valida que el usuario no tenga ya una membresía vigente incompatible para ese mes: no más de un plan, ni más de un pase (cualquiera sea su variante), mismo criterio que **FL-20**.
-3. Calcula el precio: si la membresía elegida es un plan, aplica el descuento o recargo vigente por fecha de pago (`1_organizacion.md`, 3.1); si es un pase, usa directamente su `precio_vigente`, sin ajuste.
-4. Busca si el usuario ya tiene un intento propio en estado **Pendiente** para esa misma membresía y mes.
-   - Si existe, redirige directamente a su Checkout ya creado (mismo `preference_id`, mismo precio ya congelado en su momento), sin generar una preferencia nueva.
-   - Si no existe, genera una referencia propia (`referencia_externa`) y llama a la API de MercadoPago para crear la preferencia de pago, enviándola como `external_reference`.
-     - Si la llamada falla, no persiste nada e informa el error; el usuario puede reintentar.
-     - Si tiene éxito, crea el intento en `pagos_mercadopago` en estado **Pendiente**, con el precio ya calculado y el `preference_id` recibido, y redirige al usuario al Checkout de MercadoPago.
-5. El usuario completa el pago en la plataforma de MercadoPago.
-6. El sistema queda a la espera de la confirmación del pago (ver 4.4); no activa nada hasta recibirla.
-
-Alternativas:
-
-- Si el usuario abandona el checkout sin pagar, el intento queda **Pendiente** sin confirmar; no se crea membresía de usuario ni ingreso.
-- Este flujo no admite pago parcial: el monto a cobrar es el precio calculado completo.
-- A diferencia de **FL-20**, este flujo no crea la membresía de forma inmediata: solo la confirmación del pago (4.4) la activa.
-- El intento en `pagos_mercadopago` solo se crea después de que MercadoPago confirma la preferencia: no queda ningún registro de intentos que ni siquiera llegaron a generar una preferencia.
-- Un usuario no puede tener dos intentos **Pendientes** simultáneos para la misma membresía y mes (`3_modelo_relacional.md`, 4.23): esto evita que un doble clic, dos pestañas o dos dispositivos generen dos preferencias pagables para el mismo cobro.
-
-- **Resultado:** pago iniciado en MercadoPago, pendiente de confirmación.
-- **Datos:** pagos_mercadopago.
-
-```mermaid
-flowchart TD
-    A[Elegir membresía y mes] --> B{Membresía vigente incompatible}
-    B -->|Sí| Z[Rechazar]
-    B -->|No| C[Calcular precio según plan o pase]
-    C --> E{Ya existe un intento propio Pendiente para esa membresía y mes}
-    E -->|Sí| H[Redirigir al Checkout ya creado]
-    E -->|No| D{Preferencia creada en MercadoPago}
-    D -->|No| F[Informar error, no persiste nada]
-    D -->|Sí| G[Crear intento pendiente con precio y preference_id]
+    C -->|Sí| D[Bloquear usuario y validar exclusividad]
+    D --> E[Registrar contratación en su tabla]
+    E --> F{Es un plan Activo}
+    F -->|Sí| G[Asignar Alumno si falta]
+    F -->|No| H[Terminar]
     G --> H
-    H --> I[Esperar confirmación del pago]
+```
+
+#### FL-21. Anular un plan o pase contratado
+
+- **Objetivo:** impedir nuevas aplicaciones de una contratación, conservando su historia.
+- **Actor:** Administrador.
+- **Precondición:** contratación Activa localizada mediante **FL-19**.
+- **Entrada:** motivo obligatorio y confirmación.
+
+Recorrido:
+
+1. Consulta usos e ingresos de la contratación.
+2. Ingresa el motivo y confirma.
+3. En una transacción, bloquea la fila en su tabla, verifica estado Activo y establece Anulado.
+4. Registra administrador, momento y motivo de anulación, actualizando la fecha de modificación.
+
+Alternativas:
+
+- Conserva producto, titular, mes, precio aplicado e ingresos.
+- No anula automáticamente clases, reservas o coberturas de pase ya registradas.
+- Un pase Anulado no cubre aplicaciones nuevas.
+- No se retira Alumno automáticamente.
+- El registro Anulado permite contratar un reemplazo para ese mes, conservando ambos.
+- Repetir una anulación no sobrescribe su auditoría.
+
+- **Resultado:** contratación Anulada.
+- **Datos:** planes_usuarios o pases_usuarios, ingresos y reservas relacionadas.
+
+```mermaid
+flowchart TD
+    A[Solicitar anulación de contratación] --> B[Revisar impacto e ingresar motivo]
+    B --> C{Confirmar}
+    C -->|Sí| D[Bloquear y comprobar estado]
+    D --> E[Anular y registrar auditoría]
+```
+
+#### FL-22. Contratar un plan o un pase online
+
+- **Objetivo:** iniciar el pago online de una contratación mensual propia.
+- **Actor:** usuario autenticado con rol Público.
+- **Entradas:** plan o pase Activo y mes cubierto.
+
+Recorrido:
+
+1. El usuario elige un producto de su catálogo y el mes.
+2. Valida que no exista una contratación no Anulada del mismo tipo para ese usuario y mes.
+3. Calcula el importe: un plan aplica el descuento o recargo por fecha previsto en la política comercial; un pase utiliza su precio vigente.
+4. Busca un intento Pendiente propio del mismo producto y mes. Si existe, reutiliza su checkout y su importe congelado.
+5. Si no existe, genera una referencia externa y solicita el checkout. Cuando la preferencia se crea correctamente, guarda el intento con exactamente uno de `plan_id` o `pase_id`, mes e importe aplicado.
+6. El usuario realiza el pago en MercadoPago. La contratación y el ingreso se crean sólo al procesar la aprobación confirmada, mediante 4.4.
+
+Alternativas:
+
+- Si falla la creación del checkout, no se persiste el intento.
+- Un abandono conserva el intento Pendiente, sin contratación ni ingreso.
+- No admite pagos parciales.
+- La creación de intentos se coordina para no duplicar un Pendiente del mismo usuario, producto y mes.
+- El importe del intento no se recalcula cuando cambia el catálogo.
+- La aprobación crea `planes_usuarios` o `pases_usuarios` según el producto; Alumno sólo corresponde al plan Activo.
+
+- **Resultado:** intento de pago Pendiente de confirmación.
+- **Datos:** usuarios, planes o pases, planes_usuarios o pases_usuarios y pagos_mercadopago.
+
+```mermaid
+flowchart TD
+    A[Elegir producto y mes] --> B{Existe contratación incompatible}
+    B -->|Sí| C[Rechazar]
+    B -->|No| D[Calcular importe]
+    D --> E{Existe intento Pendiente}
+    E -->|Sí| F[Reutilizar checkout e importe]
+    E -->|No| G[Crear checkout y registrar intento]
+    F --> H[Esperar confirmación del pago]
+    G --> H
 ```
 
 ### 3.6 Planilla y generación de clases
@@ -1466,17 +1486,17 @@ Recorrido:
 2. El sistema exige fecha entre hoy y catorce días después y prepara los turnos futuros y libres dentro de las franjas de funcionamiento.
 3. Busca un pase vigente que cubra la fecha y habilite ese día. Si lo hay, permite decidir si utilizarlo; de lo contrario, continúa como reserva normal.
 4. Selecciona uno o varios turnos consecutivos de la misma cancha, fecha y franja. La duración se obtiene de su cantidad.
-5. En el camino normal, calcula el total con el único precio activo de la sede. En el camino con pase, verifica las horas disponibles considerando los turnos de reservas no Anuladas como organizador o invitado cubierto; la selección no puede superar el límite diario.
+5. En el camino normal, calcula el total con la tarifa vigente de la sede. En el camino con pase, verifica las horas disponibles considerando los turnos de reservas no Anuladas como organizador o invitado cubierto; la selección no puede superar el límite diario.
 6. Si utiliza pase, informa la cantidad total de invitados e identifica opcionalmente usuarios existentes. El sistema evalúa sus pases y calcula los adicionales de quienes no tienen cobertura suficiente, incluidos los no identificados.
 7. Muestra la selección, el precio o pase aplicado y el total, y solicita confirmación mediante el modal compartido.
 8. Dentro de una transacción, vuelve a validar acceso, turnos, precio o pase, instalaciones y calendario. Bloquea los turnos y comprueba su ocupación compartida en Eventos.
-9. Registra la reserva, un evento Programado, todos los vínculos horarios y los invitados cuando corresponda.
+9. Registra la reserva, un evento Programado, todos los vínculos horarios y los invitados cuando corresponda. En una reserva normal copia la tarifa validada en `precio_por_turno_aplicado`; con pase conserva la contratación y el adicional unitario por invitados.
 10. Envía la confirmación al organizador y las invitaciones informativas a los invitados identificados.
 
 Alternativas:
 
 - No permite elegir otro organizador.
-- Sin precio activo no se confirma una reserva normal. Un cambio de sede obliga a recalcular; un cambio de precio desde la selección exige revisar el nuevo total y confirmar nuevamente.
+- Sin tarifa configurada no se confirma una reserva normal. Un cambio de sede obliga a recalcular; un cambio de precio desde la selección exige revisar el nuevo total y confirmar nuevamente.
 - Las instalaciones deben estar activas y todos los turnos deben ser futuros, libres y estar dentro de una misma franja. No hay excepciones de fecha ni horario.
 - Sin horas disponibles de pase puede continuar como reserva normal; si conserva algunas, limita la selección a ellas.
 - La superposición de participación personal produce la advertencia definida en los criterios del sistema; la ocupación de cancha rechaza la selección.
@@ -1488,7 +1508,7 @@ Alternativas:
 - No se crean reservas recurrentes.
 
 - **Resultado:** una reserva propia, un evento Programado y un vínculo por turno, con invitados sólo cuando utiliza pase.
-- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, eventos_turnos, reservas, precios, pases, membresías de usuarios e invitados.
+- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, eventos_turnos, reservas, tarifa de sede, pases, contrataciones de planes y pases e invitados.
 
 ```mermaid
 flowchart TD
@@ -1582,25 +1602,25 @@ La finalización automática se describe en el proceso interno 4.3 y utiliza las
 - **Objetivo:** registrar dinero cobrado por la academia.
 - **Actor:** administrador.
 - **Entradas:** origen, fecha y hora, monto positivo, medio de pago y observaciones opcionales.
-- **Orígenes posibles:** una membresía de usuario, una reserva o un concepto libre de tipo **Otro**.
+- **Orígenes posibles:** un plan contratado, un pase contratado, una reserva o un concepto libre de tipo **Otro**.
 - **Origen guiado posible:** **FL-20** o **FL-51**.
 
 Recorrido:
 
-1. El administrador elige exactamente uno de los tres tipos de origen.
-2. Selecciona la membresía de usuario o reserva correspondiente (localizando al usuario mediante **FL-03** y su membresía mediante **FL-19**, o la reserva directamente en el listado); para **Otro**, describe obligatoriamente el concepto. El listado excluye reservas y membresías de usuario en estado cancelado.
+1. El Administrador elige exactamente uno de los cuatro tipos de origen.
+2. Selecciona la contratación concreta en `planes_usuarios` o `pases_usuarios`, o la reserva. Para Otro ingresa una descripción obligatoria. No se aceptan nuevos cobros sobre contrataciones Anuladas ni reservas con evento Anulado.
 3. Indica fecha, monto y medio de pago.
 4. El sistema valida y muestra el resumen.
 5. El administrador confirma y el sistema registra el ingreso **Cobrado** con su origen exacto.
 
 Alternativas:
 
-- La fecha y hora del cobro debe estar comprendida entre el 01/08/2026 a las 00:00 y el momento local actual. Puede ser anterior al inicio de la membresía o reserva si se trata de un pago anticipado.
-- Una membresía de usuario o una reserva puede recibir varios pagos parciales; no se exige que su suma coincida automáticamente con el precio aplicado.
-- Para membresías y reservas, el formulario muestra total aplicado, cobrado (sin ingresos anulados), pendiente y excedente. Si la suma de lo cobrado y el nuevo monto supera el total aplicado, se pide aceptar expresamente el sobrepago y explicar el motivo; este se conserva en las observaciones. La confirmación se vincula al origen y a los importes mostrados y vence a los 30 minutos: otro cobro, una anulación o un cambio de monto o total obliga a revisar nuevamente el excedente. La validación y el guardado se serializan por operación, también al registrar el primer ingreso durante el alta de una reserva.
+- La fecha y hora del cobro debe estar comprendida entre el 01/08/2026 a las 00:00 y el momento local actual. Puede ser anterior al inicio del período contratado o de la reserva si se trata de un pago anticipado.
+- Una contratación de plan o pase o una reserva puede recibir varios pagos parciales; no se exige que su suma coincida automáticamente con el precio aplicado.
+- Para contrataciones y reservas, el formulario muestra total aplicado, cobrado (sin ingresos anulados), pendiente y excedente. Si la suma de lo cobrado y el nuevo monto supera el total aplicado, se pide aceptar expresamente el sobrepago y explicar el motivo; este se conserva en las observaciones. La confirmación se vincula al origen y a los importes mostrados y vence a los 30 minutos: otro cobro, una anulación o un cambio de monto o total obliga a revisar nuevamente el excedente. La validación y el guardado se serializan por operación, también al registrar el primer ingreso durante el alta de una reserva.
 - En este flujo manual, el medio debe ser efectivo, transferencia, débito, crédito o QR.
 - Los ingresos con medio MercadoPago se originan únicamente en la confirmación automática del webhook (ver 4.4).
-- Una reserva cancelada no puede recibir nuevos ingresos (ver `2_criterios_del_sistema.md`, 2.2); una membresía de usuario cancelada tampoco (ver **FL-21**).
+- Una reserva con evento Anulado y una contratación Anulada no admiten nuevos ingresos.
 - El ingreso no puede editarse ni eliminarse después de guardar.
 - En un recorrido guiado, el origen llega preseleccionado y el ingreso se persiste únicamente con la confirmación final de la operación principal.
 - Este módulo es exclusivo del rol Administrador.
@@ -1633,7 +1653,7 @@ Recorrido:
 Alternativas:
 
 - No se modifican monto, fecha, medio, origen ni observaciones originales.
-- La anulación no cancela una membresía de usuario ni una reserva.
+- La anulación de un ingreso no anula una contratación de plan o pase ni una reserva.
 - El ingreso anulado deja de sumar al cobrado del origen; su resumen y estado de pago se recalculan, sin borrar el movimiento histórico.
 - Un ingreso anulado no puede volver a modificarse.
 
@@ -1801,98 +1821,91 @@ flowchart TD
 
 ### 3.13 Precios de reservas
 
-#### FL-47. Consultar precios de reservas
+#### FL-47. Consultar el precio de reservas de una sede
 
-- **Objetivo:** consultar el precio activo y los precios históricos de una sede.
-- **Actor:** administrador.
-- **Entradas:** sede y estado opcional.
+- **Objetivo:** consultar la tarifa vigente por turno de una sede.
+- **Actor:** Administrador.
+- **Entradas:** sede seleccionada.
 
 Recorrido:
 
-1. El administrador abre la pestaña Precios de reservas del detalle de una sede.
-2. El sistema muestra el precio activo, si existe, y un listado de precios filtrable por estado.
-3. La fila del precio activo permite actualizarlo mediante **FL-49**. Si no existe uno activo, puede registrar uno mediante **FL-48** desde la cabecera de la tabla.
+1. Abre el detalle de la sede.
+2. El sistema muestra `precio_reserva_vigente`, o informa que no está configurado.
+3. Ofrece establecerlo mediante **FL-48** si está vacío, o actualizarlo mediante **FL-49**.
 
 Alternativas:
 
-- Los precios inactivos se conservan para consulta. No se editan ni se reactivan.
-- Cada fila muestra importe por turno de una hora, estado, fecha de creación y fecha de desactivación cuando corresponda.
-- La consulta no muestra membresías porque poseen su propio precio y se gestionan mediante **FL-15**.
+- El valor se aplica a todas las canchas de la sede.
+- Una sede inactiva conserva su configuración.
+- Los precios aplicados a reservas existentes se consultan en esas reservas.
 
-- **Resultado:** precio activo e historia consultados sin modificar datos.
-- **Datos:** sede y sus precios de reservas.
+- **Resultado:** tarifa vigente o falta de configuración.
+- **Datos:** sedes.
 
 ```mermaid
 flowchart TD
-    A[Abrir precios de reservas de la sede] --> B[Consultar precio activo y filtrar historia por estado]
-    B --> C[Mostrar precios de esa sede]
+    A[Abrir sede] --> B[Consultar tarifa vigente]
+    B --> C[Mostrar importe o falta de configuración]
 ```
 
-#### FL-48. Registrar un precio de reserva
+#### FL-48. Establecer el precio de reservas de una sede
 
-- **Objetivo:** establecer el precio por turno de una sede que no tiene precio activo.
-- **Actor:** administrador.
-- **Entradas:** sede del detalle abierto e importe positivo por turno de una hora.
+- **Objetivo:** configurar una tarifa por turno cuando la sede no tiene una.
+- **Actor:** Administrador.
+- **Entradas:** sede e importe positivo.
 
 Recorrido:
 
-1. El administrador solicita crear el precio desde el detalle de la sede.
-2. Ingresa el importe y confirma.
-3. En una transacción, el sistema bloquea la sede y comprueba que no exista un precio activo.
-4. Crea un precio Activo con la sede y las fechas automáticas de registración.
-5. Vuelve a la pestaña Precios de reservas de la sede, donde se muestra el precio creado en la tabla.
+1. Ingresa el importe por turno de una hora y confirma.
+2. Dentro de una transacción, bloquea la sede y comprueba que su tarifa esté vacía.
+3. Guarda `precio_reserva_vigente` y actualiza la marca de modificación.
 
 Alternativas:
 
-- Si existe un precio activo, se ofrece actualizarlo; no se permite crear otro activo por separado.
-- Un importe vacío, no numérico, no positivo o con más de dos decimales se rechaza.
-- Cada sede puede tener un importe distinto, común a todas sus canchas.
+- Si ya tiene una tarifa, se solicita revisarla y utilizar **FL-49**.
+- El importe debe ser positivo y común a todas las canchas.
+- El registro de una reserva normal exige una tarifa configurada.
 
-- **Resultado:** un precio activo por turno para la sede.
-- **Datos:** sede y sus precios de reservas.
+- **Resultado:** sede con tarifa vigente.
+- **Datos:** sedes.
 
 ```mermaid
 flowchart TD
-    A[Ingresar importe por turno y confirmar] --> B[Bloquear sede y validar importe]
-    B --> C{Existe precio activo}
-    C -->|Sí| D[Informar que corresponde actualizar]
-    C -->|No| E[Crear precio activo y confirmar transacción]
+    A[Ingresar tarifa y confirmar] --> B[Bloquear sede y comprobar configuración]
+    B --> C{Tarifa vacía e importe válido}
+    C -->|No| D[Informar impedimento]
+    C -->|Sí| E[Guardar tarifa en la sede]
 ```
 
-#### FL-49. Actualizar un precio de reserva
+#### FL-49. Actualizar el precio de reservas de una sede
 
-- **Objetivo:** establecer un nuevo precio por turno y conservar el precio aplicado en operaciones registradas.
-- **Actor:** administrador.
-- **Entradas:** precio activo seleccionado y nuevo importe positivo.
+- **Objetivo:** establecer una nueva tarifa para reservas normales futuras.
+- **Actor:** Administrador.
+- **Entradas:** sede, importe vigente mostrado y nuevo importe positivo.
 
 Recorrido:
 
-1. El administrador solicita actualizar el precio desde su fila activa en la tabla de la sede.
-2. El sistema muestra el importe actual y permite ingresar el nuevo.
-3. El administrador confirma.
-4. En una transacción, el sistema bloquea la sede y comprueba que el precio seleccionado siga activo y que el nuevo importe sea válido y diferente.
-5. Desactiva el precio seleccionado, registra su fecha de desactivación y crea un nuevo precio Activo.
-6. Confirma la transacción y vuelve a la pestaña Precios de reservas de la sede, donde se muestra el nuevo precio en la tabla.
+1. Consulta la tarifa actual, ingresa el nuevo importe y confirma.
+2. En una transacción, bloquea la sede y comprueba que el importe mostrado siga vigente.
+3. Valida el nuevo importe y modifica `precio_reserva_vigente`, actualizando la marca de modificación.
 
 Alternativas:
 
-- Si el importe es igual al vigente, se rechaza sin guardar cambios.
-- Si otra operación actualizó el precio seleccionado, se solicita consultar el precio activo antes de continuar.
-- Los precios inactivos no admiten actualización ni reactivación.
-- Si falla la creación, se revierte también la desactivación.
-- Las reservas registradas conservan su referencia al precio histórico aplicado; su importe y cantidad de turnos permiten calcular el mismo total.
+- Un importe igual al vigente no genera cambios.
+- Si otra operación cambió la tarifa desde la consulta, se solicita revisar el valor actual antes de confirmar.
+- Las reservas existentes conservan `precio_por_turno_aplicado`; su total no se modifica.
+- Una reserva en preparación cuyo precio cambió debe mostrar el nuevo total y solicitar confirmación nuevamente.
 
-- **Resultado:** nuevo precio activo y precio sustituido conservado como inactivo.
-- **Datos:** sede y sus precios de reservas.
+- **Resultado:** tarifa actualizada para reservas nuevas.
+- **Datos:** sedes.
 
 ```mermaid
 flowchart TD
-    A[Solicitar actualización desde la fila activa] --> B[Ingresar nuevo importe y confirmar]
-    B --> C[Bloquear sede y validar]
-    C --> D{Precio todavía activo e importe diferente}
-    D -->|No| E[Informar error sin guardar cambios]
-    D -->|Sí| F[Desactivar precio actual y crear el nuevo]
-    F --> G[Confirmar ambos cambios en una transacción]
+    A[Revisar tarifa e ingresar nuevo importe] --> B{Confirmar}
+    B -->|Sí| C[Bloquear sede y validar valor vigente]
+    C --> D{Nuevo importe válido y diferente}
+    D -->|No| E[Informar resultado sin cambios]
+    D -->|Sí| F[Actualizar tarifa de la sede]
 ```
 
 ### 3.14 Reservas creadas por el administrador
@@ -1911,16 +1924,16 @@ Recorrido:
 2. Elige sede, cancha y fecha. El sistema exige inicio futuro, fecha hasta catorce días después y turnos dentro de las franjas, con las mismas condiciones del portal.
 3. Ofrece los turnos libres y la opción de utilizar un pase vigente que cubra la fecha, habilite ese día y tenga horas disponibles.
 4. Selecciona uno o varios turnos consecutivos de la misma cancha, fecha y franja. La cantidad determina la duración.
-5. Calcula el precio normal o valida el consumo diario de pase. Si se utiliza pase, registra cantidad de invitados, evalúa la cobertura de los identificados y calcula adicionales.
+5. Calcula el precio normal con la tarifa de la sede o valida el consumo diario de la contratación de pase. Si se utiliza pase, registra cantidad de invitados, evalúa la cobertura de los identificados y calcula adicionales.
 6. Si recibió un pago, prepara **FL-43** con la reserva como origen, sin persistir todavía el ingreso. La confirmación de excedente y su motivo se exigen cuando corresponden.
 7. Muestra organizador, turnos, precio o pase, invitados y total, junto con el ingreso opcional, y solicita confirmación.
-8. En una transacción, comprueba nuevamente cuentas, roles, calendario, instalaciones, precio o pases y ocupación. Bloquea los turnos y registra evento Programado, reserva, vínculos horarios, invitados e ingreso opcional.
+8. En una transacción, comprueba nuevamente cuentas, roles, calendario, instalaciones, tarifa o pases y ocupación. Para una reserva normal bloquea la sede y copia la tarifa validada en `precio_por_turno_aplicado`; para una con pase conserva la contratación aplicada y el adicional unitario. Bloquea los turnos y registra evento Programado, reserva, vínculos horarios, invitados e ingreso opcional.
 9. Envía la confirmación al organizador y las invitaciones informativas.
 
 Alternativas:
 
 - Registrar una reserva no crea usuarios ni asigna roles. Si el organizador no existe o no tiene acceso habilitado, se resuelve antes mediante **FL-02**, **FL-06** o **FL-07**.
-- Sin precio activo no se confirma una reserva normal. Si cambia el precio antes de guardar, se recalcula y se exige confirmar nuevamente.
+- Sin tarifa configurada no se confirma una reserva normal. Si cambia el precio antes de guardar, se recalcula y se exige confirmar nuevamente.
 - No permite reservas pasadas, fuera de las franjas, ni más allá de catorce días. El Administrador no puede confirmar una excepción a esos límites.
 - Todos los turnos deben estar libres; un evento que ocupe cualquiera de ellos rechaza la selección completa.
 - Las superposiciones personales conservan las advertencias de los criterios del sistema.
@@ -1931,7 +1944,7 @@ Alternativas:
 - No se crean reservas recurrentes.
 
 - **Resultado:** reserva con un evento Programado y todos sus turnos; invitados e ingreso sólo cuando corresponden.
-- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, eventos_turnos, reservas, precios, pases, membresías de usuarios, invitados e ingresos.
+- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, eventos_turnos, reservas, tarifa de sede, pases, contrataciones de planes y pases, invitados e ingresos.
 
 ```mermaid
 flowchart TD
@@ -1973,7 +1986,7 @@ Alternativas:
 - Una reserva cancelada o completada conserva sus invitados como historia y no puede editarse.
 
 - **Resultado:** lista de invitados identificados y precio esperado actualizados de manera consistente; la cantidad total declarada se conserva.
-- **Datos:** reservas, invitados, membresías de pases e ingresos.
+- **Datos:** reservas, invitados, pases contratados e ingresos.
 
 ```mermaid
 flowchart TD
@@ -1988,24 +2001,24 @@ flowchart TD
 
 #### FL-53. Consultar el uso de un pase
 
-- **Objetivo:** conocer cuántas horas utilizó una membresía de pase en un período.
+- **Objetivo:** conocer cuántas horas utilizó una pase contratado en un período.
 - **Actor:** administrador.
-- **Entradas:** membresía de pase y período; agrupación diaria opcional.
+- **Entradas:** pase contratado y período; agrupación diaria opcional.
 
 Recorrido:
 
-1. El sistema busca reservas con pase no canceladas donde la membresía fue usada por el organizador.
+1. El sistema busca reservas con pase no canceladas donde el pase contratado fue aplicado al organizador.
 2. Busca reservas con pase no canceladas donde fue aplicada al usuario como invitado.
-3. Suma una vez la duración completa de cada evento alcanzado.
+3. Cuenta una vez los vínculos horarios de cada evento de reserva no Anulado alcanzado; cada turno equivale a una hora.
 4. Muestra total, detalle por reserva, rol y advertencias por días que superan la referencia.
 
 Alternativas:
 
 - Si una inconsistencia hiciera aparecer el mismo pase en ambos roles dentro de una reserva, esa reserva se cuenta una sola vez y se informa para revisión.
-- La consulta histórica usa la membresía concreta, no cualquier pase posterior del mismo usuario.
+- La consulta histórica usa la contratación concreta, no cualquier pase posterior del mismo usuario.
 
 - **Resultado:** horas organizadas, horas como invitado y total del período.
-- **Datos:** membresías de pases, reservas, invitados y eventos, eventos_turnos, turnos.
+- **Datos:** pases contratados, reservas, invitados y eventos, eventos_turnos, turnos.
 
 ```mermaid
 flowchart TD
@@ -2065,7 +2078,7 @@ Alternativas:
 - Esta consulta es la vía para localizar una reserva y ejecutar **FL-60** o **FL-61**; una reserva ya cancelada por el administrador también puede reprogramarse desde aquí mediante **FL-41**. La finalización se realiza automáticamente mediante 4.3 o por el administrador mediante **FL-42** cuando terminó el último turno.
 
 - **Resultado:** listado y detalle de reservas sin modificaciones.
-- **Datos:** usuarios, reservas, eventos, eventos_turnos, turnos, invitados, precios de reservas, membresías de pases e ingresos.
+- **Datos:** usuarios, reservas, eventos, eventos_turnos, turnos, invitados, tarifa de sede, pases contratados e ingresos.
 
 ```mermaid
 flowchart TD
@@ -2079,7 +2092,7 @@ flowchart TD
 
 - **Objetivo:** localizar y visualizar ingresos registrados, cobrados o anulados.
 - **Actor:** administrador.
-- **Entradas:** filtros opcionales por origen (membresía de usuario, reserva u otro), usuario, período o estado.
+- **Entradas:** filtros opcionales por origen (contratación de plan o pase, reserva u otro), usuario, período o estado.
 
 Recorrido:
 
@@ -2191,32 +2204,30 @@ flowchart TD
 
 #### FL-62. Consultar intentos de pago de MercadoPago
 
-- **Objetivo:** localizar y visualizar los intentos de pago online iniciados en **FL-22**, en particular los que quedaron **Aprobado** sin activar una membresía, para su resolución manual.
-- **Actor:** administrador.
-- **Entradas:** filtros opcionales por usuario, membresía, mes cubierto o estado.
+- **Objetivo:** consultar pagos online y detectar aprobaciones pendientes de activación.
+- **Actor:** Administrador.
+- **Entradas:** filtros por usuario, tipo de producto, plan o pase, mes y estado.
 
 Recorrido:
 
-1. El administrador ingresa filtros.
-2. El sistema busca intentos coincidentes en `pagos_mercadopago`.
-3. Muestra un listado con usuario, membresía, mes cubierto, precio aplicado, estado y, si están vinculados, la membresía de usuario y el ingreso resultantes.
-4. El administrador selecciona un intento para ver el detalle completo, incluidas sus referencias externas (`referencia_externa`, `preference_id`, `payment_id`).
+1. Aplica los filtros sobre `pagos_mercadopago`.
+2. Muestra usuario, producto elegido, mes, importe congelado y estado.
+3. Si se aplicó la aprobación, muestra la contratación resultante en `planes_usuarios` o `pases_usuarios` y el ingreso relacionado.
+4. Permite consultar las referencias externas del intento y señala los Aprobados sin resultados.
 
 Alternativas:
 
-- Un intento **Aprobado** sin membresía ni ingreso vinculados es la señal de un pago cobrado por MercadoPago cuya activación quedó pendiente (ver 4.4): esta consulta es la única vía para encontrarlo.
-- Este módulo es exclusivo del rol Administrador, igual que el resto de la gestión de membresías e ingresos.
-- Esta consulta no modifica ningún intento; resolver un caso pendiente (por ejemplo, dar de alta la membresía por otra vía o gestionar una devolución) queda fuera del sistema (`2_criterios_del_sistema.md`, 2.2).
+- La consulta no modifica pagos ni crea contrataciones.
+- Un Aprobado sin resultados requiere resolución administrativa del dinero recibido y la contratación pendiente, según el alcance de gestión del sistema.
 
-- **Resultado:** listado y detalle de intentos de pago sin modificaciones.
-- **Datos:** pagos_mercadopago.
+- **Resultado:** listado y detalle de intentos.
+- **Datos:** pagos_mercadopago, planes, pases, planes_usuarios, pases_usuarios e ingresos.
 
 ```mermaid
 flowchart TD
-    A[Ingresar filtros] --> B[Buscar intentos]
-    B --> C[Mostrar listado]
-    C --> D{Selecciona intento}
-    D -->|Sí| E[Mostrar detalle]
+    A[Ingresar filtros] --> B[Consultar intentos]
+    B --> C[Mostrar producto mes importe y estado]
+    C --> D[Consultar resultados o identificar activación pendiente]
 ```
 
 ### 3.16 Bloqueos
@@ -2372,37 +2383,35 @@ flowchart TD
 
 Estos procesos no son flujos: no representan la intención de un actor humano que busca completar una tarea, sino comportamiento que el sistema ejecuta por sí solo. Se documentan aparte, con el mismo nivel de detalle que un flujo, y se referencian desde los flujos que los disparan o que compiten con ellos; por ejemplo, **FL-38** para la finalización manual de clases que la 4.3 también puede hacer. Las reservas se finalizan exclusivamente mediante 4.3.
 
-### 4.1 Vencimiento de membresías
+### 4.1 Vencimiento de planes y pases contratados
 
-- **Objetivo:** impedir nuevos usos de planes y pases cuyo período haya finalizado.
-- **Disparador:** tarea periódica de Celery, ejecución diaria posterior al cambio de fecha en `America/Argentina/Buenos_Aires`.
+- **Objetivo:** actualizar el estado de contrataciones cuyo mes terminó.
+- **Disparador:** tarea diaria de Celery en la zona de Buenos Aires.
 
-Recorrido:
+Procedimiento:
 
-1. Celery Beat programa la ejecución diaria.
-2. Un worker invoca la operación idempotente de vencimiento.
-3. El sistema localiza membresías de usuarios **Activas** con fecha de fin anterior a la fecha local actual.
-4. Cambia esas membresías de usuarios a **Vencidas** y actualiza su marca temporal.
-5. Registra la cantidad procesada como resultado de la tarea.
+1. Consulta `planes_usuarios` y `pases_usuarios` por separado.
+2. Selecciona los Activos cuyo fin de mes calculado es anterior a la fecha local actual.
+3. Los marca Vencidos y actualiza su fecha de modificación.
+4. Registra la cantidad procesada.
 
-Alternativas:
+Condiciones:
 
-- Sin membresías de usuarios elegibles, la operación finaliza sin modificaciones.
-- Una repetición procesa solamente las que todavía permanezcan activas.
-- Las membresías canceladas no se modifican.
-- La cobertura de una actividad comprueba igualmente las fechas de la membresía del usuario aunque la tarea todavía no se haya ejecutado.
-- Esta tarea no completa clases ni reservas; para eso existe 4.3, una tarea independiente.
+- No modifica Anulados o Vencidos ni retira roles.
+- Una repetición sólo encuentra los que siguen Activos.
+- Cada uso comprueba también el mes cubierto; no depende exclusivamente de que la tarea haya actualizado el estado.
+- Conserva productos, importes aplicados, ingresos y relaciones históricas.
 
-- **Resultado:** membresías de usuarios fuera de fecha marcadas como vencidas.
-- **Datos:** membresías de usuarios.
+- **Resultado:** contrataciones vencidas actualizadas.
+- **Datos:** planes_usuarios y pases_usuarios.
 
 ```mermaid
 flowchart TD
-    A[Celery inicia tarea diaria] --> B[Buscar membresías activas fuera de fecha]
-    B --> C{Hay coincidencias}
-    C -->|No| D[Finalizar sin cambios]
-    C -->|Sí| E[Marcar como vencidas]
-    E --> F[Informar cantidad procesada]
+    A[Tarea diaria] --> B[Consultar Activos cuyo mes terminó en ambas tablas]
+    B --> C{Hay pendientes}
+    C -->|No| D[Terminar sin cambios]
+    C -->|Sí| E[Marcar Vencidos y actualizar fecha]
+    E --> F[Registrar cantidad]
 ```
 
 ### 4.2 Notificaciones por email
@@ -2420,7 +2429,7 @@ Recorrido:
 
 Alternativas:
 
-- Los tipos de evento contemplados son: confirmación de alta de cuenta (**FL-06**), recuperación de contraseña (**FL-46**), confirmación de suscripción (ver 4.4), confirmación de una reserva propia (**FL-40**, **FL-51**), invitación a una reserva con pase (**FL-40**, **FL-51**), cancelación de una reserva o clase que afecta al usuario (**FL-37**, **FL-60**, **FL-61**), confirmación de una reserva reprogramada tras la cancelación de otra (**FL-41**), vencimiento próximo de una membresía (ver 4.5), recordatorio de la próxima clase asignada (ver 4.6), y asignación de un profesor a una clase o turno de planilla.
+- Los tipos de evento contemplados son: confirmación de alta de cuenta (**FL-06**), recuperación de contraseña (**FL-46**), confirmación de suscripción (ver 4.4), confirmación de una reserva propia (**FL-40**, **FL-51**), invitación a una reserva con pase (**FL-40**, **FL-51**), cancelación de una reserva o clase que afecta al usuario (**FL-37**, **FL-60**, **FL-61**), confirmación de una reserva reprogramada tras la cancelación de otra (**FL-41**), vencimiento próximo de una contratación (ver 4.5), recordatorio de la próxima clase asignada (ver 4.6), y asignación de un profesor a una clase o turno de planilla.
 - Si el envío falla, registra el error y no revierte la operación que lo originó; queda para reintento según la infraestructura de envío.
 - No existe una bandeja de notificaciones dentro del sistema: el email es el único canal.
 
@@ -2474,89 +2483,76 @@ flowchart TD
 
 ### 4.4 Confirmación de pago de MercadoPago
 
-- **Objetivo:** activar automáticamente la membresía y el ingreso correspondientes cuando MercadoPago aprueba un pago iniciado en **FL-22**, y reflejar los otros dos estados que este sistema procesa (pendiente, rechazado) sin activar nada.
-- **Disparador:** webhook de MercadoPago, con cabeceras `x-signature` y `x-request-id`, informando un `payment_id` (`data.id`).
+- **Objetivo:** registrar la contratación y el ingreso de un pago online aprobado.
+- **Disparador:** notificación de MercadoPago.
 
-Recorrido:
+Procedimiento:
 
-1. MercadoPago notifica mediante webhook.
-2. El sistema valida la autenticidad de la notificación reconstruyendo la firma a partir de `x-signature`, `x-request-id`, `data.id` y la clave secreta configurada. Si no coincide, responde con un error, sin consultar nada ni tocar ningún intento.
-3. Consulta a la API de MercadoPago el detalle completo del pago — no confía en el contenido del webhook —: estado, monto, moneda (siempre ARS, la única que maneja el sistema) y `external_reference`. Si la consulta falla de forma transitoria, responde con un error para que MercadoPago reintente más tarde, sin tocar ningún intento.
-4. Localiza el intento en `pagos_mercadopago` mediante `external_reference`. Si no encuentra ninguno, descarta la notificación sin crear ni modificar nada y responde `200`: una referencia sin intento local nunca va a resolverse reintentando, y forzar el reintento solo repetiría el mismo resultado.
-5. Guarda `payment_id` en el intento y actúa según el estado consultado, solo si el intento todavía no llegó a un estado terminal (**aprobado** o **rechazado**) o si el efecto correspondiente todavía no fue aplicado:
-   - **Aprobado:** si el intento ya tiene una membresía de usuario o un ingreso vinculados, no repite la activación (ya se procesó una notificación de aprobación anterior). Si no, valida que el monto y la moneda coincidan con el `precio_aplicado` del intento, y revalida que el usuario no tenga ya una membresía vigente incompatible para ese mes (mismo criterio que **FL-20**/**FL-22**, que puede haber cambiado desde que se inició el checkout). Si sigue siendo válida, en una única transacción crea o renueva la membresía de usuario **Activa** (equivalente a **FL-20**), registra el ingreso con medio **MercadoPago** vinculado a esa membresía (**FL-43**), otorga el rol **Alumno** al usuario si todavía no lo tenía, marca el intento **Aprobado** y guarda sus referencias a la membresía y al ingreso creados. Si ya no es válida, el intento queda **Aprobado** sin esas referencias: el dinero fue cobrado por MercadoPago pero la activación queda pendiente de resolución manual, igual que otros casos de dinero cobrado sin contrapartida automática (`2_criterios_del_sistema.md`, 2.2).
-   - **Rechazado:** si el intento no es ya terminal, lo marca **Rechazado**. No activa nada.
-   - **Pendiente, o cualquier otro estado que MercadoPago reporte** (por ejemplo `in_process` o `authorized`): si el intento no es ya terminal, lo actualiza a **Pendiente**. No activa nada. Si el intento **ya es terminal** (por ejemplo, ya está `aprobado` y activado), esta notificación se ignora sin modificarlo: un pago ya aprobado nunca retrocede a pendiente, ni siquiera si MercadoPago reporta después un reembolso, un contracargo o un vencimiento — esos casos posteriores a la aprobación quedan fuera del alcance de este proceso, igual que otras devoluciones (`2_criterios_del_sistema.md`, 2.2).
-6. Si se activó una membresía en este paso, envía la confirmación por email (ver 4.2). En cualquier otro caso, no se envía nada.
-7. Responde `200` o `201` a MercadoPago. Debe hacerlo dentro de los 22 segundos que MercadoPago espera antes de reintentar la notificación; por eso el procesamiento debe resolverse rápido y la idempotencia del paso 5 es la que hace seguro reintentar sin duplicar nada.
+1. Valida la autenticidad de la notificación con su firma, cabeceras `x-signature` y `x-request-id`, identificador `data.id` y clave secreta configurada. Consulta el pago en la API de la plataforma; no confía sólo en el contenido recibido.
+2. Localiza el intento por `external_reference`, comprueba el pago en ARS y conserva `payment_id`. Una referencia ajena al sistema se descarta sin crear datos y se responde a la plataforma para evitar reintentos sin un intento local.
+3. Valida moneda e importe contra el precio congelado del intento.
+4. En una aprobación, bloquea el intento y al usuario, y comprueba si ya existen los resultados de esa aprobación.
+5. Si no existe una contratación no Anulada del mismo tipo para ese usuario y mes, registra `planes_usuarios` o `pases_usuarios` según el producto. Copia el mes y el importe acordado del intento.
+6. Crea un ingreso con medio MercadoPago que referencia esa contratación, sin administrador responsable del registro.
+7. Guarda la contratación resultante y el ingreso en el intento Aprobado, dentro de la misma transacción. Sólo un plan que queda Activo otorga Alumno si el titular no lo tiene.
+8. Envía la confirmación cuando se aplicó la contratación y responde a la plataforma.
 
-Alternativas:
+Condiciones:
 
-- La idempotencia no se basa en "¿ya vi este `payment_id`?" sino en "¿ya apliqué el efecto de este estado?": un mismo pago puede notificarse primero como pendiente y después, con el mismo `payment_id`, como aprobado o rechazado — eso es una transición real que sí debe procesarse, no una repetición para descartar.
-- Notificaciones verdaderamente repetidas (mismo `payment_id`, mismo estado ya aplicado) no duplican la membresía ni el ingreso.
-- Un intento en estado terminal (`aprobado` o `rechazado`) nunca vuelve a `pendiente` por una notificación posterior, sea cual sea el estado que reporte.
-- Una notificación con firma inválida, o una consulta a MercadoPago que falla de forma transitoria, responden con un error en vez de `200`/`201`, para que MercadoPago reintente cuando corresponda.
-- Si el monto o la moneda no coinciden con lo esperado, no se activa nada y no se informa éxito al usuario.
-- Un evento auténtico cuyo `external_reference` no corresponde a ningún intento local (por ejemplo, otro movimiento de la misma cuenta de MercadoPago ajeno a Academia TM) se descarta sin crear ni modificar ningún registro. Se responde `200` igual, para no generar reintentos indefinidos sobre algo que nunca va a encontrar un intento.
-- Los intentos que quedan **Aprobado** sin membresía ni ingreso vinculados (dinero cobrado, activación pendiente de resolución manual) se localizan mediante **FL-62**.
+- Pendiente y Rechazado no crean contrataciones ni ingresos.
+- Si existe un conflicto de exclusividad, el intento queda Aprobado sin resultados y se señala para resolución administrativa.
+- Una firma inválida, datos de pago incompatibles o un error transitorio no producen una activación válida. Una validación o consulta transitoria fallida se responde como error para permitir el reintento; una referencia ajena se descarta con respuesta exitosa.
+- Repetir una notificación no duplica resultados. La idempotencia depende de si se aplicó el efecto, no sólo de haber recibido el identificador del pago.
+- Un estado terminal no vuelve a Pendiente por una notificación posterior. Los estados posteriores de devolución o contracargo mantienen el alcance de gestión administrativa definido para esos casos.
+- Si falla una escritura, se revierte toda la creación local de contratación e ingreso; el procesamiento puede reintentarse.
+- Una contratación de un mes que ya terminó se registra Vencida. Renovar otro mes crea otra fila.
+- El precio se conserva aunque el catálogo cambie mientras el pago está pendiente.
+- No se envía una confirmación de contratación cuando quedó pendiente de resolución.
+- La respuesta a una notificación válida es `200` o `201`. El procesamiento conserva un presupuesto máximo de 22 segundos por notificación, y puede reintentarse sin duplicar sus efectos.
 
-- **Resultado:** según el estado del pago: membresía de usuario activa, ingreso registrado y rol Alumno otorgado si correspondía; intento marcado rechazado; intento marcado pendiente; o intento aprobado sin activar si el conflicto de exclusividad se detectó tarde.
-- **Datos:** pagos_mercadopago, membresías de usuarios, ingresos, usuarios_roles.
+- **Resultado:** contratación e ingreso registrados, o intento sin activar según su estado o impedimento.
+- **Datos:** pagos_mercadopago, usuarios, planes_usuarios o pases_usuarios, ingresos y usuarios_roles.
 
 ```mermaid
 flowchart TD
-    A[Recibir webhook] --> B{Firma válida}
-    B -->|No| C[Responder error]
-    B -->|Sí| D{Consulta a MercadoPago exitosa}
-    D -->|No| C
-    D -->|Sí| E{Intento encontrado por external_reference}
-    E -->|No| S
-    E -->|Sí| F{Estado consultado}
-    F -->|Aprobado| L{Ya tiene membresía o ingreso vinculados}
-    L -->|Sí| H[Sin cambios]
-    L -->|No| M{Monto y moneda válidos, sin conflicto de exclusividad}
-    M -->|No| N[Marcar aprobado sin activar]
-    M -->|Sí| O[Crear o renovar membresía y registrar ingreso]
-    O --> P{Ya tiene rol alumno}
-    P -->|No| Q[Otorgar rol alumno]
-    P -->|Sí| R[Enviar email de confirmación]
-    Q --> R
-    F -->|Rechazado o pendiente u otro| T{Intento ya terminal}
-    T -->|Sí| H
-    T -->|No| U[Actualizar a rechazado o pendiente según corresponda]
-    R --> S[Responder 200 o 201]
-    H --> S
-    U --> S
-    N --> S
+    A[Recibir y validar notificación] --> B[Consultar pago e intento]
+    B --> C{Pago aprobado}
+    C -->|No| D[Actualizar estado sin crear resultados]
+    C -->|Sí| E[Bloquear intento y usuario]
+    E --> F{Efecto ya aplicado}
+    F -->|Sí| G[Conservar resultados]
+    F -->|No| H{Mes disponible e importe válido}
+    H -->|No| I[Señalar aprobación sin activar]
+    H -->|Sí| J[Crear contratación e ingreso en una transacción]
+    J --> K[Asignar Alumno sólo para plan Activo y notificar]
 ```
 
-### 4.5 Aviso de vencimiento próximo de una membresía
+### 4.5 Aviso de vencimiento próximo de una contratación
 
-- **Objetivo:** avisar a un usuario antes de que su membresía activa venza, para que pueda renovarla a tiempo.
-- **Disparador:** tarea periódica de Celery, mismo horario diario que 4.1.
+- **Objetivo:** avisar al titular que su plan o pase está por vencer.
+- **Disparador:** tarea diaria de Celery.
 
-Recorrido:
+Procedimiento:
 
-1. Celery Beat programa la ejecución diaria.
-2. El sistema localiza membresías de usuarios **Activas** cuya fecha de fin esté dentro de los próximos 3 días y que todavía no recibieron este aviso.
-3. Envía el aviso de vencimiento próximo a cada usuario (ver 4.2).
-4. Marca cada membresía avisada, para no repetir el envío en corridas posteriores.
+1. Consulta por separado las contrataciones Activas de planes y pases.
+2. Calcula el fin de cada mes cubierto y selecciona las que terminan dentro de los próximos tres días.
+3. Si `aviso_vencimiento_enviado` es falso, envía el email y conserva la marca para no repetirlo.
 
-Alternativas:
+Condiciones:
 
-- El aviso se envía una única vez por membresía.
-- Una membresía cancelada o ya vencida queda fuera de esta tarea.
-- Sin membresías elegibles, la operación finaliza sin modificaciones.
+- No avisa contrataciones Anuladas o Vencidas.
+- No renueva, cobra ni cambia el estado de la contratación.
+- El aviso pertenece a la contratación concreta, no al producto del catálogo.
 
-- **Resultado:** usuarios con membresía próxima a vencer notificados.
-- **Datos:** membresías de usuarios.
+- **Resultado:** avisos enviados y registrados.
+- **Datos:** usuarios, planes_usuarios y pases_usuarios.
 
 ```mermaid
 flowchart TD
-    A[Celery inicia tarea diaria] --> B[Buscar membresías activas próximas a vencer sin aviso]
-    B --> C{Hay coincidencias}
-    C -->|No| D[Finalizar sin cambios]
-    C -->|Sí| E[Enviar aviso y marcar como avisada]
+    A[Tarea diaria] --> B[Consultar Activos próximos a vencer en ambas tablas]
+    B --> C{Aviso pendiente}
+    C -->|No| D[Conservar marca]
+    C -->|Sí| E[Enviar email y registrar envío]
 ```
 
 ### 4.6 Recordatorio de la próxima clase asignada

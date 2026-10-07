@@ -22,15 +22,15 @@ Cada sede tendrá su propio horario de funcionamiento, definido por día de la s
 
 ### 2.0 Límites temporales y calendario operativo
 
-La historia operativa administrada por el sistema comienza el **1 de agosto de 2026**. Ninguna clase, reserva, bloqueo, membresía de usuario, fecha de alta, feriado ni ingreso puede registrarse antes de esa fecha. Esta fecha mínima es absoluta: no avanza con el tiempo, para permitir cargas y correcciones históricas desde el inicio de operaciones. Una eventual importación de historia anterior deberá resolverse mediante un proceso específico, no relajando las validaciones de la operación cotidiana.
+La historia operativa administrada por el sistema comienza el **1 de agosto de 2026**. Ninguna clase, reserva, bloqueo, contratación de plan o pase, fecha de alta, feriado ni ingreso puede registrarse antes de esa fecha. Esta fecha mínima es absoluta: no avanza con el tiempo, para permitir cargas y correcciones históricas desde el inicio de operaciones. Una eventual importación de historia anterior deberá resolverse mediante un proceso específico, no relajando las validaciones de la operación cotidiana.
 
 Las clases y bloqueos pueden ubicarse desde el inicio de operaciones hasta un año calendario después de la fecha local actual. La agenda diaria y semanal usa ese intervalo. La administración puede registrar clases y bloqueos históricos para reconstruir la actividad. Una reserva nueva o reprogramada debe comenzar en un horario futuro y su fecha debe estar entre hoy y catorce días después, inclusive; no hay excepciones administrativas. Las consultas conservan el acceso a la historia.
 
 La generación o regeneración de clases acepta rangos dentro de ese mismo intervalo y de **hasta 62 días corridos inclusive** por ejecución. Las consultas de actividad de clases y uso de pases aceptan rangos de **hasta 366 días corridos inclusive**. Un período mayor se consulta por tramos.
 
-Las membresías de usuarios pueden registrarse desde agosto de 2026 hasta el mes calendario siguiente al actual. Siempre cubren meses completos. Si se registra históricamente una membresía cuyo mes ya finalizó, nace en estado **Vencida**; no queda transitoriamente Activa a la espera de la tarea periódica.
+Las contrataciones de planes y pases pueden registrarse desde agosto de 2026 hasta el mes calendario siguiente al actual. Guardan el mes cubierto como una fecha del primer día; inicio y fin se calculan y siempre cubren meses completos. Una contratación histórica cuyo mes terminó nace Vencida. Una contratación de un mes futuro puede estar Activa, pero su cobertura corresponde a ese mes.
 
-La fecha y hora de un ingreso representa el momento real en que se recibió el dinero: puede abarcar desde el 1 de agosto de 2026 a las 00:00 hasta el momento local actual, pero nunca ser futura. Puede ser anterior al inicio de la membresía o de la reserva asociada porque se admiten pagos anticipados.
+La fecha y hora de un ingreso representa el momento real en que se recibió el dinero: puede abarcar desde el 1 de agosto de 2026 a las 00:00 hasta el momento local actual, pero nunca ser futura. Puede ser anterior al inicio del período contratado o de la reserva asociada porque se admiten pagos anticipados.
 
 Los feriados pueden registrarse desde el inicio de operaciones hasta cinco años calendario después de la fecha local actual. Registrar o quitar un feriado pasado no modifica retroactivamente las clases que ya fueron generadas.
 
@@ -83,7 +83,7 @@ Toda reserva utiliza turnos consecutivos de una misma cancha y fecha, dentro de 
 
 La fecha elegida debe estar entre hoy y catorce días después y el inicio del primer turno debe ser futuro. Estas condiciones se aplican al portal, a la administración y a las reprogramaciones, y se vuelven a comprobar al confirmar.
 
-Una reserva se registra con un único evento y uno o varios vínculos en `eventos_turnos`. Se confirma, anula o finaliza completa. Podrá ser normal, con precio determinado por su sede y cantidad de turnos, o utilizar una membresía de pase vigente del organizador.
+Una reserva se registra con un único evento y uno o varios vínculos en `eventos_turnos`. Se confirma, anula o finaliza completa. Podrá ser normal, con precio determinado por su sede y cantidad de turnos, o utilizar una contratación de pase vigente del organizador.
 
 Toda cancelación de reserva exigirá un motivo de al menos 25 caracteres, sin contar los espacios al principio y al final. Este mínimo se informa en el formulario y se valida en el servidor al confirmar. Un administrador solo puede cancelar la reserva de un usuario por una causa ajena al organizador —clima adverso, torneo, mantenimiento u otro imprevisto—: si el organizador quiere cancelar su propia reserva, debe hacerlo él mismo desde el portal (autoservicio). Para este sistema, que cada usuario tenga y use su propia cuenta para gestionar sus reservas no es una comodidad opcional: es un requisito, precisamente para que esta distinción tenga sentido.
 
@@ -99,7 +99,7 @@ Los ingresos originales de una reserva cancelada permanecerán cobrados, para co
 
 En una reserva normal no se registrarán invitados. En una reserva con pase se registrará la cantidad total de invitados y se identificarán aquellos que ya existan como usuarios. Los pases vigentes aplicados a invitados identificados quedarán registrados y cada invitado sin pase generará el precio adicional vigente copiado al crear la reserva.
 
-Al crear cualquier reserva, el sistema buscará automáticamente si el organizador tiene una membresía de pase vigente que cubra la fecha elegida —es decir, una membresía cuyo mes calendario incluya esa fecha— y, de existir, preguntará si desea utilizarla; si el organizador no quiere usarla, o no tiene ninguna vigente para esa fecha, la reserva sigue por el camino normal. Como el pase es válido solo para su mes calendario y una reserva puede crearse con hasta dos semanas de anticipación, es posible reservar para el mes siguiente sin que el pase del mes actual lo cubra: en ese caso la reserva cae en el camino normal, no es un error.
+Al crear cualquier reserva, el sistema buscará automáticamente si el organizador tiene una contratación de pase vigente que cubra la fecha elegida —es decir, una contratación cuyo mes cubierto incluya esa fecha— y, de existir, preguntará si desea utilizarla; si el organizador no quiere usarla, o no tiene ninguna vigente para esa fecha, la reserva sigue por el camino normal. Como el pase es válido solo para su mes calendario y una reserva puede crearse con hasta dos semanas de anticipación, es posible reservar para el mes siguiente sin que el pase del mes actual lo cubra: en ese caso la reserva cae en el camino normal, no es un error.
 
 Cada pase (libre o de fin de semana, ver `1_organizacion.md` 3.2) se considerará ilimitado en cantidad de reservas durante su vigencia, pero limitado a una cantidad de horas por día calendario configurada en cada pase (inicialmente dos), sin importar si el uso proviene de reservas como organizador o como invitado; el pase de fin de semana además solo podrá usarse sábados y domingos. Al elegir usar el pase, el sistema validará primero si el día está habilitado para ese pase y luego calculará las horas ya usadas ese día; si el día no está habilitado, se rechaza sin llegar a revisar las horas; si el día está habilitado pero no queda ninguna hora disponible, también se impide continuar con pase. Si le queda alguna hora, la duración de la reserva no podrá superar las horas disponibles. Cualquier usuario existente puede identificarse como invitado, tenga o no pase: el sistema revisa si su propio pase tiene el día habilitado y horas disponibles suficientes para la duración elegida; si no, se lo cuenta como invitado sin pase y genera el adicional correspondiente, sin impedir el resto de la reserva.
 
@@ -119,7 +119,7 @@ Los roles serán:
 - **Profesor**: gestiona sus propias clases asignadas. Lo asigna un administrador, al crear el usuario o mediante la gestión de roles. Solo puede quitarse si el usuario no tiene clases programadas como profesor.
 - **Público**: permite consultar el catálogo de la academia, suscribirse a planes o pases y consultar el perfil propio. Corresponde a una cuenta registrada y autenticada, no a un visitante anónimo. Se asigna automáticamente al crear la cuenta y no puede quitarse desde la aplicación.
 - **Reservas**: permite crear, cancelar y consultar reservas propias. Todo usuario lo recibe automáticamente desde su alta, se autoregistre o lo registre la administración. Un administrador puede quitarlo únicamente si el usuario no tiene reservas programadas. El catálogo, la suscripción y el perfil corresponden al rol Público.
-- **Alumno**: permite ver historial y membresía e historial de clases. Se obtiene por cualquiera de estas vías: automáticamente al activarse el primer plan del usuario, presencial o mediante el portal, con independencia de si el ingreso ya fue registrado (un pase de cancha no otorga este rol: es solo acceso a cancha, no inscripción a clases); o asignado directamente por un administrador, al crear el usuario o mediante la gestión de roles, igual que el rol Profesor. No se pierde automáticamente cuando la membresía vence ni por ninguna otra causa: no existe un proceso que retire roles, salvo que un administrador lo quite explícitamente.
+- **Alumno**: permite consultar sus clases asignadas y su historial de asistencia. Se obtiene al registrar una contratación Activa de plan, presencial o mediante el portal, si el usuario no lo tiene; el alta administrativa no exige que se haya registrado un ingreso. Un pase no otorga este rol. También puede asignarlo un administrador al crear la cuenta o mediante la gestión de roles. No se retira automáticamente al vencer una contratación; sólo un administrador puede quitarlo respetando las condiciones del retiro.
 
 Todo usuario recibe Público y Reservas en la misma transacción del alta y puede acumular, además, varios de los demás roles a la vez; por ejemplo, Alumno.
 
@@ -148,10 +148,10 @@ El retiro de roles debe respetar las siguientes condiciones:
 |---|---|
 | Público | No se puede quitar. |
 | Reservas | El usuario no tiene reservas propias en estado Programado. |
-| Alumno | El usuario no tiene ninguna membresía en estado Activa, sea un plan o un pase. |
+| Alumno | El usuario no tiene contrataciones de planes en estado Activo. Un pase no impide retirar Alumno. |
 | Profesor | El usuario no tiene asignaciones activas como profesor en clases cuyo evento esté Programado. |
 
-Si existe una relación que impide el retiro, se rechaza la operación y se conserva el rol. No se cancelan reservas, membresías ni clases automáticamente para permitir quitarlo. Los registros históricos se conservan; las reservas y clases canceladas o completadas y las membresías vencidas o canceladas no bloquean por sí solas el retiro. Las comprobaciones se basan en el estado registrado, no solo en que una fecha haya pasado.
+Si existe una relación que impide el retiro, se rechaza la operación y se conserva el rol. No se cancelan reservas, contrataciones ni clases automáticamente para permitir quitarlo. Los registros históricos se conservan; las reservas y clases canceladas o completadas y las contrataciones Vencidas o Anuladas no bloquean por sí solas el retiro. Las comprobaciones se basan en el estado registrado, no solo en que una fecha haya pasado.
 
 La condición funcional de Administrador depende de una asignación del rol `administrador` en `usuarios_roles`. El comando de gestión `crear_administrador` es la única vía de alta y mantiene `is_superuser = true` como representación técnica de sus permisos; esa marca no constituye otro rol ni se gestiona por separado. El rol no se otorga ni se retira desde las pantallas. El estado activo o inactivo de esas cuentas se gestiona con las mismas reglas de cambio de estado que el resto de los usuarios.
 
@@ -161,38 +161,53 @@ La inactivación registra automáticamente la fecha y hora de baja de la cuenta.
 
 La aplicación no expone la interfaz administrativa técnica de Django; toda operación cotidiana se realiza desde las pantallas de Academia TM.
 
-### 2.4 Membresías, reservas y precios
+### 2.4 Planes, pases, contrataciones y precios
 
-El sistema distinguirá entre membresías mensuales y reservas de cancha.
+Los catálogos de planes y pases son independientes. Cada producto guarda nombre, descripción, precio vigente, estado y su configuración específica.
 
-Las membresías contemplarán:
+- `planes` define modalidad individual o grupal, frecuencia de uno a siete encuentros semanales y una o dos clases consecutivas de una hora por encuentro.
+- `pases` define variante Libre o Fin de semana, límite diario de horas y adicional vigente por invitado sin cobertura. Libre habilita todos los días; Fin de semana sólo sábados y domingos.
 
-- Planes grupales e individuales de entre uno y siete encuentros por semana, con encuentros de una o dos clases consecutivas de una hora.
-- Pases de cancha mensuales: **pase libre** y **pase de fin de semana** (ver `1_organizacion.md`, 3.2). Cada variante es una membresía propia y distinta en el catálogo, con su propio precio — igual que cada combinación de plan es una membresía distinta. No hay una única entidad "pase" con un campo que module el día habilitado: el día habilitado (todos los días, o solo sábado y domingo) es una propiedad fija de cada membresía de pase.
+Cada combinación de plan y cada variante de pase es un producto completo de su catálogo. Nombre, descripción y precios pueden actualizarse; la configuración estructural se conserva cuando tiene contrataciones históricas. Un producto inactivo no admite contrataciones nuevas y no altera las existentes.
 
-`membresias_usuarios` vinculará un usuario con una membresía durante un mes calendario y conservará el precio aplicado en ese momento. Las clases no serán originadas por planes; la asignación y la asistencia serán las relaciones del usuario con cada clase.
+`planes_usuarios` y `pases_usuarios` registran las contrataciones por separado. Cada fila referencia obligatoriamente al usuario y a su producto, conserva el mes cubierto, fecha efectiva de alta, precio aplicado, responsable del registro, observaciones y estado Activo, Anulado o Vencido. Un alta automática por MercadoPago no tiene administrador responsable.
 
-Las reservas de cancha normales se pagarán por turno de una hora, mediante una configuración de precio (`precios_reservas_cancha`) independiente de las membresías. Cada precio pertenecerá a una sede y habrá como máximo uno activo por sede, común a todas sus canchas. El total de una reserva normal será el importe por turno multiplicado por su duración en horas.
+Un usuario puede tener un plan y un pase para el mismo mes, pero no dos contrataciones no Anuladas del mismo tipo. Los Vencidos también protegen la exclusividad histórica de su mes. Anular conserva la fila y permite registrar un reemplazo. Renovar para otro mes crea una contratación nueva; usuario, producto, mes e importe aplicado no se editan en un registro existente.
 
-El Administrador configurará el precio desde el detalle de cada sede. Si no existe un precio activo, podrá crearlo con un importe positivo. Si existe, podrá actualizarlo: en una transacción se desactiva el precio actual y se crea uno nuevo. Un importe igual al actual se rechaza sin generar otro registro. Los precios inactivos quedan disponibles para consulta y no pueden editarse ni reactivarse. Una reserva normal no puede confirmarse sin precio activo; el servidor comprueba que el precio pertenezca a la sede de la cancha y siga activo al confirmar. Una sede inactiva conserva su configuración, pero no admite nuevas reservas.
+Una anulación administrativa exige motivo y conserva administrador y momento. No modifica automáticamente ingresos, clases, reservas ni coberturas aplicadas. El vencimiento periódico procesa por separado las contrataciones Activas de ambas tablas cuyo mes terminó. El aviso por email conserva su marca de envío en cada contratación.
 
-Cada reserva normal referencia el precio histórico aplicado y calcula su total con el importe inmutable y la cantidad de turnos. No almacena un segundo importe ni un total. La sede y el importe de cada precio son inmutables; las actualizaciones crean registros nuevos y conservan los anteriores. Así, actualizar el precio de la sede no altera las reservas registradas. La creación y actualización se coordinan mediante un bloqueo de la sede y la base de datos garantiza un solo precio activo por sede. El dinero efectivamente cobrado se registra por separado como ingreso.
+Registrar una contratación Activa de plan otorga Alumno si falta ese rol; un pase no lo otorga. El titular puede consultar sus propias contrataciones de ambos tipos y el acceso a un pase no exige Alumno. Las clases se organizan mediante asignaciones y asistencia; contratar un plan no genera clases ni asigna horarios automáticamente. La frecuencia contratada se administra según la organización de la academia, sin un control automático de cumplimiento del plan.
 
-El sistema no controlará automáticamente la cantidad de clases, frecuencia ni cumplimiento de un plan mensual. Las reservas cubiertas por un pase seguirán registrándose como reservas concretas.
+Los precios siguen el mismo criterio en los tres productos:
 
-Las reservas normales se vincularán con su configuración de precio y las reservas con pase con la membresía vigente utilizada por su organizador.
+| Valor vigente | Importe conservado |
+|---|---|
+| Precio mensual en `planes` | `planes_usuarios.precio_aplicado` |
+| Precio mensual en `pases` | `pases_usuarios.precio_aplicado` |
+| Tarifa por turno en `sedes.precio_reserva_vigente` | `reservas.precio_por_turno_aplicado` |
+| Adicional de invitado en `pases` | `reservas.precio_invitado_aplicado` |
 
-Una tarea periódica de Celery vence las membresías activas al terminar su período. Otra tarea finaliza cada hora en punto los eventos de clases y reservas Programados cuyo último turno terminó antes o en el momento actual. Registra `eventos.finalizado_en` con el momento de procesamiento y conserva la ocupación histórica. Las reservas también disponen de finalización administrativa de emergencia, sin responsable de finalización y sin depender de Redis ni Celery. Las clases registran `clases.finalizado_por_id` cuando las finaliza manualmente un administrador o profesor autorizado; la tarea automática lo deja vacío. Los bloqueos quedan fuera de esa tarea y se liberan mediante anulación. Las ejecuciones repetidas no modifican eventos Anulados o Finalizados ni sobrescriben su fecha; cada ejecución procesa todas las vencidas pendientes.
+Actualizar modifica el valor vigente para operaciones nuevas. Los registros existentes conservan su importe acordado. El sistema consulta esos importes para su historia comercial; no conserva un historial independiente de cambios de precio del catálogo o de la sede.
 
-El sistema calculará automáticamente el descuento o recargo por fecha de pago (ver `1_organizacion.md`, 3.1) únicamente al procesar un cobro online de un **plan** a través del portal (ver 2.7), ya que en ese flujo no hay un administrador interviniendo para decidirlo. Un pase se cobra siempre a su `precio_vigente` de catálogo, sin ese ajuste: la regla es propia de los planes. Para los pagos registrados manualmente en sede, la aplicación de esa regla sigue a cargo de la administración; el sistema no la calcula por sí solo en ese caso.
+El Administrador configura un único precio positivo por turno de una hora en cada sede, común a todas sus canchas. El valor puede estar vacío mientras no se configure; sin tarifa no se confirma una reserva normal. La configuración y el registro se coordinan bloqueando la sede dentro de la transacción. Un importe igual al vigente no genera cambios.
 
-Los estados y la auditoría de registro, modificación, anulación y finalización de clases, reservas y bloqueos se conservan exclusivamente en `eventos`. Las especializaciones contienen los datos de negocio específicos. Las observaciones de participantes, asistencias o ingresos pertenecen a sus propias relaciones.
+Al registrar una reserva normal, el servidor valida y copia el precio vigente de la sede. Si cambió mientras se seleccionaban los turnos, muestra el nuevo total y exige confirmar nuevamente. El total se calcula con cantidad de turnos por precio unitario aplicado, sin almacenar otra copia del total.
+
+La contratación mensual guarda el importe acordado, separado del dinero cobrado. En el alta administrativa se propone el precio vigente y puede establecerse el importe final correspondiente a un ajuste. En el portal, el precio queda congelado en el intento de pago: la aprobación copia ese importe en la contratación, sin recalcular con el catálogo.
+
+El descuento o recargo por fecha de pago de los planes sigue la política de `1_organizacion.md`, sección 3.1. El portal lo calcula al iniciar el pago; un pase utiliza su precio vigente sin ese ajuste. La administración resuelve los ajustes de los cobros presenciales y conserva el importe acordado en la contratación.
+
+Una reserva con pase referencia la contratación concreta del organizador en `pases_usuarios`; los invitados cubiertos referencian sus propias contrataciones. Se valida titularidad, mes, estado Activo, día habilitado y horas disponibles. El consumo diario cuenta los turnos de reservas no Anuladas, como organizador o invitado, sin almacenar un saldo.
+
+Celery finaliza cada hora los eventos de clases y reservas Programados cuyo último turno terminó, conservando `eventos.finalizado_en`. Las reservas mantienen la acción administrativa de emergencia, sin responsable de finalización. Las clases registran responsable sólo si se finalizan manualmente. Los bloqueos se liberan mediante anulación y quedan fuera de la tarea.
+
+Estado, observaciones y auditoría de clases, reservas y bloqueos pertenecen a `eventos`. Los datos de participantes, asistencia, contrataciones e ingresos conservan su auditoría específica.
 
 ### 2.5 Ingresos
 
-El sistema registrará el dinero recibido por la academia. Cada ingreso tendrá exactamente uno de estos orígenes: membresía de usuario, reserva u otro concepto. Las membresías y reservas podrán recibir pagos parciales mediante varios ingresos. La administración podrá consultar y buscar los ingresos registrados, filtrando por origen, usuario, período o estado.
+El sistema registrará el dinero recibido por la academia. Cada ingreso tiene exactamente uno de estos orígenes: plan contratado, pase contratado, reserva u otro concepto. Referencia la contratación concreta en `planes_usuarios` o `pases_usuarios`, no el producto del catálogo. Las contrataciones y reservas pueden recibir pagos parciales mediante varios ingresos. La administración podrá consultar y buscar los ingresos registrados, filtrando por origen, usuario, período o estado.
 
-Cada membresía de usuario y reserva mostrará un resumen de cobro calculado: total aplicado, suma de ingresos en estado `cobrado`, pendiente y excedente. Se usarán los precios históricos de la operación; en reservas con pase se agregarán los adicionales por invitados sin cobertura, incluidos los no identificados. Los ingresos anulados no sumarán y el resumen se actualizará al anular un ingreso o cambiar la cobertura de invitados. El estado de pago (sin pagos, pago parcial, completo, con excedente o sin cargo) será independiente del estado operativo de la membresía o reserva. En operaciones canceladas se mostrarán diferencias históricas, sin convertirlas automáticamente en deuda, devolución o crédito transferible a una reprogramación.
+Cada contratación y reserva muestra un resumen de cobro calculado: total aplicado, suma de ingresos en estado `cobrado`, pendiente y excedente. Se usarán los precios históricos de la operación; en reservas con pase se agregarán los adicionales por invitados sin cobertura, incluidos los no identificados. Los ingresos anulados no sumarán y el resumen se actualizará al anular un ingreso o cambiar la cobertura de invitados. El estado de pago (sin pagos, pago parcial, completo, con excedente o sin cargo) será independiente del estado operativo de la contratación o reserva. En operaciones canceladas se mostrarán diferencias históricas, sin convertirlas automáticamente en deuda, devolución o crédito transferible a una reprogramación.
 
 Si un ingreso manual, incluido el primero o el registrado al crear una reserva, lleva el cobro acumulado por encima del total aplicado, el sistema mostrará los importes y exigirá confirmación explícita y un motivo, conservado en las observaciones del ingreso. No se guardará el ingreso —ni la reserva nueva asociada— hasta confirmar. La confirmación será válida durante 30 minutos para el origen, monto, total y cobrado revisados; si cambian, se pedirá nuevamente. Registro y anulación de ingresos se serializarán por operación para que cobros simultáneos se validen sobre el saldo actualizado. Los ingresos de otros conceptos no tendrán esta comparación porque no poseen un total pactado asociado.
 
@@ -202,7 +217,7 @@ El sistema no incluirá, en esta etapa, un módulo de egresos generales de la ac
 
 ### 2.6 Notificaciones
 
-El sistema enviará notificaciones automáticas por email en los siguientes casos: confirmación de alta de cuenta, recuperación de contraseña, confirmación de suscripción a una membresía o pase (pago aprobado por MercadoPago), confirmación de una reserva propia, invitación a una reserva con pase, cancelación de una reserva o clase que afecta al usuario, reprogramación de una reserva cancelada por un motivo ajeno al cliente, vencimiento próximo de una membresía, recordatorio de la próxima clase asignada y asignación de un profesor a una clase o turno programado.
+El sistema enviará notificaciones automáticas por email en los siguientes casos: confirmación de alta de cuenta, recuperación de contraseña, confirmación de contratación de un plan o pase (pago aprobado por MercadoPago), confirmación de una reserva propia, invitación a una reserva con pase, cancelación de una reserva o clase que afecta al usuario, reprogramación de una reserva cancelada por un motivo ajeno al cliente, vencimiento próximo de una contratación, recordatorio de la próxima clase asignada y asignación de un profesor a una clase o turno programado.
 
 Las notificaciones se enviarán únicamente por email; no habrá una bandeja de notificaciones dentro del sistema. Las comunicaciones no cubiertas por estos casos seguirán realizándose por fuera del sistema.
 
@@ -210,11 +225,11 @@ Las notificaciones se enviarán únicamente por email; no habrá una bandeja de 
 
 El sistema tendrá un único portal de acceso externo, para cualquier persona que se registre como usuario, separado de la interfaz de gestión interna (ver intro de la sección 2).
 
-El catálogo de planes, pases y precios vigentes solo podrá consultarse estando registrado y autenticado con el rol Público: es el equivalente, dentro del sistema, a tener que preguntar en la sede antes de conocer los precios.
+El catálogo de planes, pases y tarifas vigentes sólo puede consultarse estando registrado y autenticado con el rol Público: es el equivalente, dentro del sistema, a tener que preguntar en la sede antes de conocer los precios.
 
 Un usuario con rol Reservas podrá consultar, crear y cancelar sus propias reservas de cancha desde el portal, normales o con pase, con las mismas reglas que la gestión interna (ver 2.2); se asigna automáticamente junto con Público. En una reserva con pase, podrá elegir como invitados a otros usuarios ya registrados, sin que se les exija tener pase; cada invitado identificado recibe una notificación de la invitación.
 
-Un usuario autenticado con rol Público podrá suscribirse a un plan o a un pase pagando online a través de MercadoPago; activar el primer plan le otorga el rol Alumno, pero contratar un pase no lo otorga. Un usuario con rol Alumno podrá consultar, en modo de solo lectura, su membresía vigente, su historial de membresías, su historial de clases con asistencia y sus próximas clases asignadas.
+Un usuario autenticado con rol Público podrá suscribirse a un plan o a un pase pagando online a través de MercadoPago; activar el primer plan le otorga el rol Alumno, pero contratar un pase no lo otorga. Un usuario con rol Alumno podrá consultar, en modo de solo lectura, su historial de clases con asistencia y sus próximas clases asignadas. Cualquier titular autenticado puede consultar sus propios planes y pases contratados, incluidos sus importes, período, cobros y usos, sin exigir Alumno para un pase.
 
 El perfil propio permite consultar los datos personales y de la cuenta, los roles y el estado, y cambiar únicamente la contraseña propia mediante **Cambiar mi contraseña**. La modificación del correo se realiza exclusivamente por el Administrador mediante la gestión de usuarios; el resto de los datos personales no tiene edición desde la aplicación. La obligación de reemplazar una contraseña provisoria se cumple antes de acceder al perfil o a cualquier otra función del portal. El catálogo y las suscripciones forman parte de las funcionalidades del portal descriptas en esta sección.
 
