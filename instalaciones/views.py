@@ -226,6 +226,7 @@ def sede_crear(request):
 @require_http_methods(["GET", "POST"])
 def sede_editar(request, pk):
     sede = get_object_or_404(Sede, pk=pk)
+    titulo = f"Editar {sede.nombre}"
     breadcrumbs = _breadcrumbs_sede(request.user, sede) + [("Editar sede", None)]
     formulario = SedeForm(
         request.POST if request.method == "POST" else None,
@@ -253,7 +254,7 @@ def sede_editar(request, pk):
         "instalaciones/sede_formulario.html",
         {
             "formulario": formulario,
-            "titulo": f"Editar {sede.nombre}",
+            "titulo": titulo,
             "texto_boton": "Guardar cambios",
             "sede": sede,
             "breadcrumbs": breadcrumbs,
@@ -337,6 +338,7 @@ def cancha_crear(request, sede_pk):
 def cancha_editar(request, sede_pk, pk):
     sede = get_object_or_404(Sede, pk=sede_pk)
     cancha = get_object_or_404(Cancha, pk=pk, sede=sede)
+    titulo = f"Editar {cancha.nombre}"
     breadcrumbs = _breadcrumbs_sede(request.user, sede, "canchas") + [
         (cancha.nombre, None),
         ("Editar cancha", None),
@@ -370,7 +372,7 @@ def cancha_editar(request, sede_pk, pk):
             "formulario": formulario,
             "sede": sede,
             "cancha": cancha,
-            "titulo": f"Editar {cancha.nombre}",
+            "titulo": titulo,
             "texto_boton": "Guardar cambios",
             "breadcrumbs": breadcrumbs,
         },
