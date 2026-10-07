@@ -1,4 +1,4 @@
-from datetime import time, timedelta
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 
 from django.conf import settings
@@ -15,7 +15,6 @@ class Turno(models.Model):
     )
     fecha = models.DateField()
     hora_inicio = models.TimeField()
-    hora_fin = models.TimeField()
     creado_en = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -29,15 +28,20 @@ class Turno(models.Model):
                 violation_error_message="Ya existe un turno para esa cancha, fecha y hora.",
             ),
             models.CheckConstraint(
-                condition=models.Q(hora_inicio__in=tuple(time(hora) for hora in range(23)),hora_fin=models.F("hora_inicio") + timedelta(hours=1),),
+                condition=models.Q(hora_inicio__in=tuple(time(hora) for hora in range(23))),
                 name="turno_horario_valido",
-                violation_error_message=("El turno debe durar una hora, comenzar en punto y terminar dentro de la misma fecha."),),
+                violation_error_message="El turno debe comenzar en punto entre las 00:00 y las 22:00.",
+            ),
         ]
         verbose_name = "turno"
         verbose_name_plural = "turnos"
 
     def __str__(self):
         return f"{self.cancha} - {self.fecha:%d/%m/%Y} {self.hora_inicio:%H:%M}"
+
+    @property
+    def hora_fin(self):
+        return (datetime.combine(self.fecha, self.hora_inicio) + timedelta(hours=1)).time()
 
 
 class Reserva(models.Model):

@@ -166,7 +166,7 @@ def finalizar_reserva(reserva_id, usuario=None):
         .order_by("pk")
     )
     reserva = Reserva.objects.select_for_update().get(pk=reserva_id)
-    ultimo_turno = max(turnos, key=lambda turno: (turno.fecha, turno.hora_fin)) if turnos else None
+    ultimo_turno = max(turnos, key=lambda turno: (turno.fecha, turno.hora_inicio)) if turnos else None
     ahora = timezone.localtime()
     validar_finalizacion_reserva(reserva, ultimo_turno, ahora)
 
@@ -177,14 +177,14 @@ def finalizar_reserva(reserva_id, usuario=None):
 
 
 def finalizar_reservas_vencidas():
-    ahora = timezone.localtime()
+    limite_inicio = timezone.localtime() - timedelta(hours=1)
     # Todos los turnos de una reserva pertenecen a la misma fecha.
     pendientes = Reserva.objects.filter(estado=Reserva.Estado.PROGRAMADA).annotate(
-        fecha_fin=Max("detalles__turno__fecha"),
-        hora_fin=Max("detalles__turno__hora_fin"),
+        fecha_ultimo_turno=Max("detalles__turno__fecha"),
+        hora_ultimo_turno=Max("detalles__turno__hora_inicio"),
     ).filter(
-        Q(fecha_fin__lt=ahora.date())
-        | Q(fecha_fin=ahora.date(), hora_fin__lte=ahora.time())
+        Q(fecha_ultimo_turno__lt=limite_inicio.date())
+        | Q(fecha_ultimo_turno=limite_inicio.date(), hora_ultimo_turno__lte=limite_inicio.time())
     ).order_by("pk").values_list("pk", flat=True)
 
     finalizadas = 0

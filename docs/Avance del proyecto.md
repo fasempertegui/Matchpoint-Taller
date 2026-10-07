@@ -34,9 +34,9 @@ Cada sede guarda una tarifa vigente, positiva y común a todas sus canchas, por 
 
 ### Cabecera y detalles
 
-El proceso utiliza las tablas Turno, Reserva y ReservaTurno, relacionadas con usuarios y canchas. Cada Turno representa una hora de una cancha en una fecha. Reserva es la cabecera y guarda organizador, responsable del registro, importe por turno aplicado, observaciones y estado. Cada ReservaTurno es un detalle que vincula la cabecera con un turno.
+El proceso utiliza las tablas Turno, Reserva y ReservaTurno, relacionadas con usuarios y canchas. Cada Turno representa una hora de una cancha en una fecha y guarda su inicio; el fin se calcula sumando una hora. Reserva es la cabecera y guarda organizador, responsable del registro, importe por turno aplicado, observaciones y estado. Cada ReservaTurno es un detalle que vincula la cabecera con un turno.
 
-La base de datos impide duplicar turnos para una cancha, fecha y hora, o repetir un turno dentro de una reserva. Exige horas de inicio en punto, duración de una hora y finalización dentro de la misma fecha. Las relaciones protegen los registros vinculados contra la eliminación física.
+La base de datos impide duplicar turnos para una cancha, fecha y hora, o repetir un turno dentro de una reserva. Exige inicios en punto entre las 00:00 y las 22:00; la duración fija de una hora determina el fin dentro de la misma fecha. Las relaciones protegen los registros vinculados contra la eliminación física.
 
 Los estados son Programada, Anulada y Finalizada. Se exigen los datos de auditoría correspondientes a cada estado.
 

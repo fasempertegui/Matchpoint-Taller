@@ -48,7 +48,6 @@ def consultar_disponibilidad(cancha, fecha):
             cancha=cancha,
             fecha=fecha,
             hora_inicio=inicio,
-            hora_fin=time(inicio.hour + 1),
         )
         for inicio in inicios_habilitados
         if inicio not in inicios_existentes
