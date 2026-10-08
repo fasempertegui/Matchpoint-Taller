@@ -425,7 +425,7 @@ Relaciones:
 - Una previsión de profesor es exactamente un usuario.
 - Un usuario puede estar previsto en cero, uno o varios turnos de planilla como profesor.
 
-### 4.13 `turnos_planilla_usuarios`
+### 4.13 `turnos_planilla_alumnos`
 
 Representa qué alumnos están previstos para un turno de la planilla.
 
@@ -437,9 +437,9 @@ Representa qué alumnos están previstos para un turno de la planilla.
 
 Relaciones:
 
-- Una previsión de usuario pertenece a exactamente un turno de planilla.
-- Un turno de planilla puede tener cero, uno o varios usuarios previstos.
-- Una previsión de usuario es exactamente un usuario.
+- Una previsión de alumno pertenece a exactamente un turno de planilla.
+- Un turno de planilla puede tener cero, uno o varios alumnos previstos.
+- Una previsión de alumno referencia exactamente a un usuario.
 - Un usuario puede estar previsto en cero, uno o varios turnos de planilla como alumno.
 
 ### 4.14 Turnos y eventos
@@ -573,7 +573,7 @@ Relaciones:
 - Una asignación de profesor es exactamente un usuario.
 - Un usuario puede estar asignado a cero, una o varias clases como profesor.
 
-### 4.17 `clases_usuarios`
+### 4.17 `clases_alumnos`
 
 Representa la asignación prevista de un usuario a una clase concreta, como alumno.
 
@@ -592,7 +592,7 @@ Representa asignación prevista, no asistencia efectiva. `recordatorio_enviado` 
 Relaciones:
 
 - Una asignación de alumno pertenece a exactamente una clase.
-- Una clase puede tener cero, uno o varios usuarios asignados.
+- Una clase puede tener cero, uno o varios alumnos asignados.
 - Una asignación de alumno es exactamente un usuario.
 - Un usuario puede estar asignado a cero, una o varias clases como alumno.
 
@@ -826,7 +826,7 @@ Al completar la recuperación cambia el hash de la contraseña, por lo que el en
 - Usuarios, sedes, canchas, planes, pases y contrataciones con historia se protegen contra la eliminación física. Las contrataciones referencian obligatoriamente a su usuario y producto.
 - `usuarios_roles` utilizará cascada desde `usuarios`.
 - `usuarios_roles.rol_id` referencia `roles.id`; la integridad referencial impide borrar un rol que tenga asignaciones.
-- Las asignaciones de un turno de planilla (`turnos_planilla_profesores`, `turnos_planilla_usuarios`) utilizarán cascada desde `turnos_planilla`.
+- Las asignaciones de un turno de planilla (`turnos_planilla_profesores`, `turnos_planilla_alumnos`) utilizarán cascada desde `turnos_planilla`.
 - `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
 - `clases.turno_planilla_id` utilizará `ON DELETE SET NULL`: eliminar un turno de la planilla no elimina las clases que ya generó, solo desvincula su origen.
 - Turnos y eventos históricos se conservan. Sólo pueden eliminarse eventos de clases generadas sin actividad efectiva mediante las operaciones autorizadas; se eliminan sus vínculos y datos de clase en la misma transacción, sin borrar los turnos ni otras actividades (ver 7.3).
@@ -972,7 +972,7 @@ El aviso de vencimiento consulta contrataciones Activas cuyo fin calculado está
 
 ### 7.13 Recordatorio de la próxima clase asignada
 
-Tarea diaria idempotente. Localizará asignaciones `clases_usuarios` en estado `activo` de clases cuyo evento esté `programado` y cuyo turno tenga `fecha` igual a la de mañana y `recordatorio_enviado = false`. Enviará el email a cada alumno por su propia asignación y marcará `recordatorio_enviado = true` en la misma operación por fila, de forma independiente por alumno.
+Tarea diaria idempotente. Localizará asignaciones `clases_alumnos` en estado `activo` de clases cuyo evento esté `programado` y cuyo turno tenga `fecha` igual a la de mañana y `recordatorio_enviado = false`. Enviará el email a cada alumno por su propia asignación y marcará `recordatorio_enviado = true` en la misma operación por fila, de forma independiente por alumno.
 
 ### 7.14 Registro y liberación de bloqueos
 
