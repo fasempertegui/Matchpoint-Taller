@@ -92,11 +92,11 @@ Ambas variantes comparten el resto de las características:
 
 ### 3.3 Reservas de cancha
 
-Cualquier persona puede reservar una cancha, siempre que haya disponibilidad. La reserva representa un intervalo continuo de una o más horas y se administra como una única actividad indivisible.
+Cualquier persona puede reservar una cancha, siempre que haya disponibilidad. Cada reserva ocupa un único turno de una hora. Para jugar más de una hora se registran reservas independientes, una por turno, con confirmación, comprobante y cobros propios.
 
-Cada reserva se paga por separado. Cada sede define un precio por turno de una hora, común a todas sus canchas. El importe de una reserva se calcula multiplicando ese precio por la cantidad de horas reservadas. No se trabaja con reservas recurrentes o fijas.
+Cada reserva se paga por separado. Cada sede define un precio por turno de una hora, común a todas sus canchas. El importe de una reserva normal es el precio de un turno. No se trabaja con reservas recurrentes o fijas.
 
-En una **reserva normal**, el organizador paga el precio correspondiente a su sede y duración. La cantidad e identidad de los invitados no modifica el precio y no necesita registrarse.
+En una **reserva normal**, el organizador paga el precio correspondiente a un turno de su sede. La cantidad e identidad de los invitados no modifica el precio y no necesita registrarse.
 
 En una **reserva con pase**, el organizador utiliza una membresía de pase vigente. Se conoce la cantidad total de invitados y se identifica a quienes ya existen como clientes. Si un invitado identificado posee un pase vigente con horas disponibles ese día, se registra cuál de sus membresías lo cubre; los demás invitados generan el precio adicional correspondiente. El límite diario del pase (ver 3.2) se aplica igual para el organizador y para cada invitado cubierto.
 
@@ -117,7 +117,7 @@ Las membresías y las reservas descritas no son excluyentes entre sí. Un mismo 
 
 ## 5. Funcionamiento operativo
 
-Toda clase concreta dura exactamente una hora. Una reserva, en cambio, puede abarcar un intervalo continuo de una o más horas y permanece indivisible.
+Cada clase, reserva o bloqueo ocupa exactamente un turno de una hora y se administra de manera independiente. Una operación administrativa puede actuar sobre varios eventos, sin agrupar sus estados ni su auditoría.
 
 La administración respeta lo que ya se encuentra ocupando un turno. Una clase o reserva previamente agendada conserva la cancha, fecha y horario asignados y no debe cancelarse para dar lugar a una nueva actividad. En consecuencia, una reserva existente impide programar una clase en el mismo turno y una clase existente impide registrar una reserva en ese turno.
 
@@ -129,7 +129,7 @@ Cuando una reserva se cancela se indica si la cancelación fue solicitada por el
 
 Si la cancelación fue solicitada por el cliente, no corresponde devolución. Si se produjo por otro motivo (condiciones climáticas, fuerza mayor, mantenimiento u otro imprevisto operativo), el administrador generalmente ofrece reprogramar la reserva para otro momento. No existe hoy una práctica establecida de devolver en efectivo el dinero cobrado en estos casos.
 
-Tanto las clases como las reservas de cancha pueden cancelarse por estos motivos. Una reserva se cancela completa; no se cancelan horas intermedias por separado.
+Tanto las clases como las reservas de cancha pueden cancelarse por estos motivos. Anular una reserva libera su único turno.
 
 Pueden recuperar clases los alumnos que hayan faltado a una clase o que estaban asignados a una clase cancelada. Los alumnos no eligen libremente cuándo recuperar; la recuperación se coordina con la administración.
 

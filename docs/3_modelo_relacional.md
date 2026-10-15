@@ -41,9 +41,9 @@ En las tablas de la sección 4, ambas columnas solo muestran `Sí` cuando aplica
 
 ## 3. Estructura de ocupación
 
-Un turno representa una hora de una cancha en una fecha. Un evento representa la actividad que utiliza uno o varios turnos y concentra su estado. Cada evento corresponde exactamente a una reserva, una clase o un bloqueo; las tres especializaciones son excluyentes.
+Un turno representa una hora de una cancha en una fecha. Cada evento referencia exactamente un turno y concentra el estado y la auditoría de una reserva, clase o bloqueo; las tres especializaciones son excluyentes y tienen identificadores propios.
 
-Las restricciones únicas identifican cada turno y evitan repetir vínculos. Para confirmar una actividad, se bloquean sus turnos y se comprueba que ningún evento Programado o Finalizado los ocupe. La consulta de disponibilidad utiliza `eventos_turnos` y `eventos.estado`, sin consultar por separado reservas, clases y bloqueos. El esquema no necesita una exclusión de intervalos mediante `btree_gist`: la ocupación se coordina por identificadores de turnos dentro de las operaciones transaccionales.
+La disponibilidad consulta `eventos.turno_id` y `eventos.estado`. Una restricción única parcial sobre `turno_id` para eventos cuyo estado no sea `anulado` impide dos ocupaciones del mismo turno y permite conservar varios eventos Anulados históricos. Las operaciones también bloquean el turno y comprueban la ocupación dentro de la transacción antes de escribir.
 
 ## 4. Tablas
 
@@ -201,7 +201,7 @@ Representa una cancha disponible dentro de una sede.
 | | `creado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-01-05 09:00:00-03` |
 
-PostgreSQL garantiza la unicidad de la combinación `sede_id, LOWER(nombre)`, por lo que no admite nombres equivalentes sin distinguir mayúsculas de minúsculas dentro de una misma sede. El formulario aplica la misma comparación para informar el conflicto antes de guardar. Dos sedes diferentes sí pueden tener canchas con el mismo nombre. La sede de una actividad se obtiene mediante sus turnos y la cancha de cada turno; no se duplica en el evento ni en sus especializaciones.
+PostgreSQL garantiza la unicidad de la combinación `sede_id, LOWER(nombre)`, por lo que no admite nombres equivalentes sin distinguir mayúsculas de minúsculas dentro de una misma sede. El formulario aplica la misma comparación para informar el conflicto antes de guardar. Dos sedes diferentes sí pueden tener canchas con el mismo nombre. La sede de una actividad se obtiene mediante su turno y la cancha de ese turno; no se duplica en el evento ni en sus especializaciones.
 
 Relaciones:
 
@@ -353,7 +353,7 @@ El precio vigente es el valor actual del catálogo o de la sede para una operaci
 
 Actualizar modifica el valor vigente y la marca de modificación de su registro. El historial comercial se obtiene de los importes conservados en contrataciones y reservas, sin un historial independiente de cambios del catálogo.
 
-Una reserva normal calcula su total con cantidad de turnos por precio unitario aplicado. Una contratación mensual conserva el importe acordado, con los descuentos o recargos que correspondan. Los cobros efectivos se registran en Ingresos.
+El total de una reserva normal es el precio por turno aplicado. Una contratación mensual conserva el importe acordado, con los descuentos o recargos que correspondan. Los cobros efectivos se registran en Ingresos.
 
 ```mermaid
 erDiagram
@@ -464,16 +464,17 @@ Relaciones:
 
 - Una cancha tiene cero, uno o varios turnos.
 - Un turno pertenece exactamente a una cancha.
-- Un turno puede participar en cero, uno o varios eventos históricos mediante `eventos_turnos`.
+- Un turno puede ser referenciado por cero, uno o varios eventos históricos mediante `eventos.turno_id`.
 - Sólo un evento Programado o Finalizado puede conservar la ocupación de ese turno.
 
 #### 4.14.2 `eventos`
 
-Representa una reserva, una clase o un bloqueo y concentra su estado, observaciones y auditoría. La cancha, fechas, horas y duración se obtienen de sus turnos; no se almacenan en esta tabla ni en sus especializaciones.
+Representa una reserva, una clase o un bloqueo y concentra su estado, observaciones y auditoría. La cancha, fecha y horario se obtienen de su único turno; la duración fija es una hora. Estos datos no se duplican en el evento ni en sus especializaciones.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `1200` |
+| FK | `turno_id` | `bigint` | | | `900` |
 | | `tipo` | `varchar(10)` | | | `reserva` (o `clase`, `bloqueo`) |
 | | `estado` | `varchar(10)` | | | `programado` (o `anulado`, `finalizado`) |
 | FK | `registrado_por_id` | `bigint` | | | `4` |
@@ -487,45 +488,28 @@ Representa una reserva, una clase o un bloqueo y concentra su estado, observacio
 
 `observaciones` y `motivo_anulacion` admiten una cadena vacía, sin `NULL`. Las referencias a usuarios identifican quién registra o anula la actividad. La responsabilidad de finalización manual se registra únicamente en `clases.finalizado_por_id`; una reserva no tiene ese campo, tampoco cuando se finaliza mediante la acción de emergencia.
 
-El estado rige sobre todos los turnos vinculados:
+El estado rige sobre el único turno referenciado:
 
-- **Programado:** ocupa sus turnos. No tiene datos de anulación ni de finalización.
-- **Anulado:** deja de ocuparlos, conservando usuario, momento y motivo. Una liberación de bloqueo utiliza este estado.
+- **Programado:** ocupa su turno. No tiene datos de anulación ni de finalización.
+- **Anulado:** deja de ocupar su turno, conservando usuario, momento y motivo. Una liberación de bloqueo utiliza este estado.
 - **Finalizado:** conserva la ocupación histórica y el momento de procesamiento, sin datos de anulación. Sólo corresponde a clases y reservas.
 
-Las únicas transiciones son Programado a Anulado y Programado a Finalizado. Una operación repetida no sobrescribe su auditoría. La finalización exige que el último turno termine antes o en el momento actual. Un bloqueo no se finaliza automáticamente: se libera mediante su anulación.
+Las únicas transiciones son Programado a Anulado y Programado a Finalizado. Una operación repetida no sobrescribe su auditoría. La finalización exige que el turno termine antes o en el momento actual. Un bloqueo no pasa a Finalizado: puede anularse antes del inicio de su turno y después sólo admite consulta por su condición horaria.
 
-Cada evento tiene exactamente una fila en `reservas`, `clases` o `bloqueos`, coherente con `tipo`. Una clase tiene exactamente un turno. Una reserva tiene uno o varios turnos consecutivos de la misma cancha y fecha, dentro de una misma franja. Un bloqueo tiene uno o varios turnos y un único motivo.
+Cada evento tiene exactamente una fila en `reservas`, `clases` o `bloqueos`, coherente con `tipo`. Toda actividad ocupa un único turno. Crear una reserva permite seleccionar sólo uno; las operaciones administrativas masivas crean o anulan eventos independientes, uno por turno.
+
+`turno_id` es obligatorio y tiene un índice para consultar la historia del turno. Una restricción única parcial sobre `turno_id`, con condición `estado <> 'anulado'`, garantiza que sólo un evento Programado o Finalizado conserve su ocupación. La referencia no es única entre todos los eventos: una reserva anulada y un bloqueo posterior conservan identificadores distintos y el mismo turno. Fecha, cancha y horario no se modifican en `turnos`; el cambio autorizado de cancha de una clase cambia únicamente `eventos.turno_id`.
 
 Relaciones:
 
-- Un evento contiene uno o varios vínculos en `eventos_turnos`.
+- Un evento referencia exactamente un turno.
+- Un turno puede tener cero, uno o varios eventos históricos, con un máximo de uno no Anulado.
 - Un evento corresponde exactamente a una reserva, una clase o un bloqueo.
 - Cada reserva, clase o bloqueo pertenece exactamente a un evento.
 
-#### 4.14.3 `eventos_turnos`
-
-Relaciona cada evento con los turnos que utiliza.
-
-| Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
-|---|---|---|---|---|---|
-| PK | `id` | `bigint` identity | | | `1800` |
-| FK | `evento_id` | `bigint` | | | `1200` |
-| FK | `turno_id` | `bigint` | | | `900` |
-
-El par `evento_id, turno_id` es único. Las consultas de disponibilidad utilizan un índice sobre `turno_id`; el índice único del par permite consultar los turnos de cada evento. `turno_id` no es único por sí solo: una reserva anulada y otra que utiliza el mismo turno conservan ambos vínculos históricos. La unicidad del par no garantiza la exclusividad de ocupación; esa condición se comprueba después de bloquear los turnos dentro de la transacción.
-
-Para una reserva, estos vínculos son sus detalles horarios. Reservar tres horas registra una reserva, un evento y tres vínculos; no crea tres reservas ni tres eventos. La cantidad de vínculos determina la duración y, en una reserva normal, cada detalle tiene como subtotal el importe conservado en `precio_por_turno_aplicado`.
-
-Relaciones:
-
-- Cada vínculo pertenece exactamente a un evento y a un turno.
-- Un evento tiene uno o varios vínculos.
-- Un turno tiene cero, uno o varios vínculos históricos.
-
 ### 4.15 `clases`
 
-Representa los datos específicos de una clase de una hora. Su evento tiene exactamente un turno.
+Representa los datos específicos de una clase de una hora. Su evento referencia exactamente un turno.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
@@ -542,7 +526,7 @@ Representa los datos específicos de una clase de una hora. Su evento tiene exac
 
 `finalizado_por_id` sólo se informa al finalizar manualmente y el evento debe quedar Finalizado en la misma transacción. La finalización automática lo deja vacío. Antes de finalizar y en una clase Anulada permanece vacío.
 
-Cambiar la cancha de una clase Programada sustituye su vínculo horario por el turno de la nueva cancha en la misma fecha y hora. No modifica el turno original ni los eventos de otras actividades. La operación bloquea los turnos involucrados y valida la disponibilidad del destino. Fecha y hora no pueden cambiarse mediante esta edición.
+Cambiar la cancha de una clase Programada actualiza `eventos.turno_id` al turno de la nueva cancha en la misma fecha y hora. No modifica el turno original ni los eventos de otras actividades. La operación bloquea los turnos involucrados y valida la disponibilidad del destino. Fecha y hora no pueden cambiarse mediante esta edición.
 
 Relaciones:
 
@@ -621,7 +605,7 @@ Relaciones:
 
 ### 4.19 `reservas`
 
-Representa los datos comerciales de una reserva normal o con pase. Su evento contiene todos los turnos consecutivos reservados.
+Representa los datos comerciales de una reserva normal o con pase. Su evento referencia un único turno de una hora.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
@@ -639,12 +623,12 @@ Representa los datos comerciales de una reserva normal o con pase. Su evento con
 
 Exactamente uno de `precio_por_turno_aplicado` y `pase_usuario_id` está informado:
 
-- **Reserva normal:** guarda una copia positiva del precio vigente validado de la sede en `precio_por_turno_aplicado`. Invitados y precio adicional quedan vacíos. El total se calcula multiplicando ese importe por la cantidad de turnos; no se almacena un total adicional.
+- **Reserva normal:** guarda una copia positiva del precio vigente validado de la sede en `precio_por_turno_aplicado`. Invitados y precio adicional quedan vacíos. El total es ese importe aplicado; no se almacena un total adicional.
 - **Reserva con pase:** referencia la contratación en `pases_usuarios` aplicada al organizador. Conserva la cantidad total de invitados y el precio adicional unitario aplicado, porque el catálogo de pases puede modificar ese importe. El total es ese precio unitario por la cantidad de invitados sin cobertura, incluidos los no identificados. Los invitados identificados y sus contrataciones de pase aplicadas se guardan en `reservas_invitados`.
 
 `anulada_por_organizador` permanece vacío mientras el evento no esté Anulado. Vale verdadero para la anulación del organizador desde el portal y falso para la administrativa. Es una condición de negocio para la reprogramación; usuario, motivo y momento de la operación se conservan en el evento.
 
-`reprogramada_desde_id` referencia una reserva anulada administrativamente y no puede repetirse. El organizador, la modalidad, el importe o pase aplicado y los turnos son inmutables. Cambiar cancha, fecha u horario requiere anular y registrar otra reserva. Las modificaciones de invitados admitidas por PP sólo se realizan mientras el evento siga Programado y actualizan también `eventos.actualizado_en`.
+`reprogramada_desde_id` referencia una reserva anulada administrativamente y no puede repetirse. El organizador, la modalidad, el importe o pase aplicado y el turno son inmutables. Cambiar cancha, fecha u horario requiere anular y registrar otra reserva. Las modificaciones de invitados admitidas por PP sólo se realizan mientras el evento siga Programado y actualizan también `eventos.actualizado_en`.
 
 Relaciones:
 
@@ -778,7 +762,7 @@ Relaciones:
 
 #### 4.24.1 `bloqueos`
 
-Representa una restricción de uso que ocupa uno o varios turnos por un mismo motivo. Puede crearse sobre turnos libres o al anular actividades por una causa que impide utilizar la cancha.
+Representa una restricción de uso sobre un único turno. Se crea por una acción administrativa explícita, directamente si el turno está libre o después de anular la reserva o clase que lo ocupa. Una operación masiva crea un bloqueo independiente por turno.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
@@ -786,30 +770,25 @@ Representa una restricción de uso que ocupa uno o varios turnos por un mismo mo
 | FK | `evento_id` | `bigint` | | Sí | `1400` |
 | | `motivo` | `varchar(20)` | | | `clima_adverso` (o `torneo`, `mantenimiento`) |
 
-`evento_id` es único y referencia un evento de tipo `bloqueo`. Sus turnos se vinculan mediante `eventos_turnos`. Estado, observaciones y auditoría se guardan en el evento.
+`evento_id` es único y referencia un evento de tipo `bloqueo`; su turno se obtiene de `eventos.turno_id`. Estado, observaciones y auditoría se guardan en el evento. `motivo` admite `clima_adverso`, `torneo` o `mantenimiento`.
 
-`motivo` no admite `otro`: una anulación administrativa por otro imprevisto libera los turnos sin crear un bloqueo. Liberar un bloqueo cambia su evento a Anulado y guarda usuario, momento y motivo de liberación. La operación actúa sobre todos sus turnos y conserva los vínculos históricos.
-
-La liberación parcial de los turnos de un mismo bloqueo es una decisión funcional pendiente. No se representa un estado independiente por vínculo ni se modifica la historia para simular una liberación parcial.
+Liberar un bloqueo antes del inicio del turno cambia su evento a Anulado y registra actor, momento y motivo, conservando la referencia al turno. Un bloqueo iniciado o terminado no admite anulación. Los bloqueos no utilizan el estado Finalizado; cuando termina su turno se consultan como terminados por horario, conservando el estado y la ocupación histórica. No existe liberación parcial: cada bloqueo ocupa una sola hora.
 
 Relaciones:
 
-- Un bloqueo pertenece exactamente a un evento de tipo bloqueo.
-- Su evento tiene uno o varios turnos.
-- Un bloqueo puede registrar cero, uno o varios eventos de origen mediante `bloqueos_origenes`.
+- Un bloqueo pertenece exactamente a un evento de tipo bloqueo, que referencia un turno.
+- Un bloqueo puede tener cero o un evento de origen mediante `bloqueos_origenes`.
 
 #### 4.24.2 `bloqueos_origenes`
 
-Relaciona un bloqueo con las actividades anuladas que dieron origen a su creación.
+Relaciona un bloqueo con la reserva o clase anulada para liberar su turno durante la misma operación.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK, FK | `bloqueo_id` | `bigint` | | | `40` |
-| PK, FK | `evento_origen_id` | `bigint` | | Sí | `1300` |
+| FK | `evento_origen_id` | `bigint` | | Sí | `1300` |
 
-El par forma la clave primaria y `evento_origen_id` es único: una actividad anulada puede originar como máximo un bloqueo. Un bloqueo directo sobre turnos libres no tiene filas de origen. Si reemplaza varias reservas o clases, registra una fila por cada evento Anulado. Los orígenes deben ser de tipo reserva o clase, estar anulados y compartir turnos con el bloqueo. Registrar la anulación, el bloqueo y sus orígenes forma una única operación transaccional.
-
-Estas referencias se conservan para consultar la historia; liberar el bloqueo no elimina sus orígenes.
+`bloqueo_id` es la clave primaria: cada bloqueo tiene como máximo un origen. `evento_origen_id` es único: una actividad anulada puede originar como máximo un bloqueo. El origen debe ser de tipo reserva o clase, estar Anulado y referenciar el mismo turno que el bloqueo. Un bloqueo creado sobre un turno libre no tiene fila de origen. La anulación, la creación del bloqueo y su origen se registran en una única transacción. Estas referencias protegen la historia y se conservan al liberar el bloqueo.
 
 ### 4.25 Recuperación de contraseña con Django
 
@@ -829,10 +808,10 @@ Al completar la recuperación cambia el hash de la contraseña, por lo que el en
 - Las asignaciones de un turno de planilla (`turnos_planilla_profesores`, `turnos_planilla_alumnos`) utilizarán cascada desde `turnos_planilla`.
 - `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
 - `clases.turno_planilla_id` utilizará `ON DELETE SET NULL`: eliminar un turno de la planilla no elimina las clases que ya generó, solo desvincula su origen.
-- Turnos y eventos históricos se conservan. Sólo pueden eliminarse eventos de clases generadas sin actividad efectiva mediante las operaciones autorizadas; se eliminan sus vínculos y datos de clase en la misma transacción, sin borrar los turnos ni otras actividades (ver 7.3).
+- Turnos y eventos históricos se conservan. Sólo pueden eliminarse eventos de clases generadas sin actividad efectiva mediante las operaciones autorizadas; se eliminan los eventos y datos de clase en la misma transacción, sin borrar los turnos ni otras actividades (ver 7.3).
 - Clases, reservas, contrataciones de planes o pases e ingresos con historia no se eliminan como mecanismo operativo habitual.
 - Los intentos de MercadoPago protegen al usuario, producto y resultados relacionados, y se conservan como historia de pagos.
-- `eventos_turnos` protege sus turnos; `reservas`, `clases` y `bloqueos` protegen su evento. Las referencias de `bloqueos_origenes` se conservan y protegen los eventos de origen mientras exista trazabilidad.
+- `eventos.turno_id` protege su turno; `reservas`, `clases` y `bloqueos` protegen su evento. Las referencias de `bloqueos_origenes` se conservan y protegen los eventos de origen mientras exista trazabilidad.
 
 ---
 
@@ -847,24 +826,24 @@ El sistema aplica, como mínimo:
 5. Vencimiento idempotente de las contrataciones Activas de planes y pases cuyo mes terminó.
 6. Unicidad de `turnos_planilla` por cancha, día de la semana y hora.
 7. Exactamente un subtipo por `eventos` y coherencia con `eventos.tipo`.
-8. Turnos de una hora con inicio en punto y fin calculado. Unicidad por cancha, fecha y hora; una clase tiene exactamente un turno y una reserva tiene turnos consecutivos de una misma cancha, fecha y franja.
+8. Turnos de una hora con inicio en punto y fin calculado. Unicidad por cancha, fecha y hora; cada reserva, clase o bloqueo referencia exactamente un turno. Una reserva debe quedar dentro de una franja de la sede.
 9. Sede y cancha activas al crear o mover eventos.
 10. Al menos un profesor activo por clase.
 11. Protección de clases y reservas con evento Anulado o Finalizado y autorización para finalizarlas.
 12. Exclusividad entre precio por turno aplicado y contratación de pase en reservas.
-13. Una reserva normal copia el precio positivo vigente de su sede al confirmar y conserva `precio_por_turno_aplicado`. El total es ese importe por cantidad de turnos. Cambiar la tarifa de la sede no altera reservas existentes.
+13. Una reserva normal copia el precio positivo vigente de su sede al confirmar y conserva `precio_por_turno_aplicado`. El total es ese importe aplicado. Cambiar la tarifa de la sede no altera reservas existentes.
 14. Vigencia, titularidad, día habilitado según el tipo de pase (`pases.tipo`) y horas diarias disponibles del pase del organizador al crear o modificar una reserva con pase; el día se valida antes que las horas.
 15. Coherencia de invitados, cantidad declarada, contrataciones de pase aplicadas, día habilitado y horas diarias disponibles de cada invitado identificado con pase.
-16. Congelamiento de reservas, sus vínculos horarios e invitados cuando el evento queda Anulado o Finalizado.
+16. Congelamiento de reservas, su referencia al turno e invitados cuando el evento queda Anulado o Finalizado.
 17. Exactamente un origen por ingreso.
-18. Registro obligatorio de motivo al cancelar una reserva.
+18. Registro obligatorio de motivo al cancelar una reserva. Toda anulación de reserva, clase o bloqueo exige inicio futuro del turno.
 19. Inmutabilidad de ingresos salvo su anulación.
 20. Bloqueo de registro o modificación de una asistencia en estado `presente` o `ausente` mientras el evento de la clase no esté `finalizado`.
 21. Bloqueo de superposición horaria de un mismo profesor entre actividades no canceladas, sin importar la cancha.
 22. Un usuario activo autorizado (administrador, o el propio organizador en una reserva de autoservicio) registrará usuario y momento al cancelar un evento. La finalización de reservas registra únicamente el momento de procesamiento; las clases conservan responsable cuando la finalización es manual.
 23. Alta automática de Público y Reservas en `usuarios_roles` para todo usuario nuevo, en la misma transacción que lo crea. Público no puede retirarse; Reservas solo puede retirarse si el usuario no tiene reservas programadas. Cada asignación referencia una fila del catálogo `roles`.
 24. Alta automática de Alumno cuando se activa una contratación en `planes_usuarios`, si el titular no lo tiene. Una contratación de pase no lo otorga; se conserva también la asignación administrativa.
-25. Finalización idempotente de eventos de clase o reserva Programados cuyo último turno terminó; su fin se obtiene de los vínculos horarios y la duración fija del turno.
+25. Finalización idempotente de eventos de clase o reserva Programados cuyo turno terminó; su fin se obtiene del turno referenciado, sumando una hora a su inicio.
 26. Aviso idempotente de vencimiento próximo de contrataciones de planes y pases, con marca de envío para no repetirlo.
 27. Recordatorio idempotente de la próxima clase asignada, con marca de envío por asignación alumno–clase para no repetirlo, reseteada al reactivar la asignación.
 28. Al regenerar clases, eliminar y recrear sólo las generadas por planilla cuyo evento esté `programado` y sin actividad efectiva. Las clases con evento `finalizado` o `anulado`, o con `es_generada = false`, se conservan.
@@ -875,18 +854,18 @@ El sistema aplica, como mínimo:
 33. Edición de usuarios limitada al correo por el Administrador y a la contraseña propia por su titular. El restablecimiento administrativo sólo se aplica a otra cuenta; nombre, apellido, nombre de usuario, celular, fecha de nacimiento y observaciones no se editan desde la aplicación (ver FL-04, FL-59 y FL-69).
 34. En el cambio voluntario u obligatorio de contraseña se verifica la vigente y se exige una nueva distinta, confirmada y validada por Django. El autorregistro no activa el cambio obligatorio, mientras que el alta administrativa y el restablecimiento sí lo hacen.
 35. Estado y auditoría únicos en `eventos`; sus especializaciones no repiten esos campos. El estado sólo admite `programado`, `anulado` o `finalizado`, con los datos coherentes para cada caso; un bloqueo no admite Finalizado.
-36. Vínculos únicos por evento y turno, al menos uno por evento y sólo un evento no Anulado que conserve la ocupación de cada turno. Las operaciones bloquean los turnos y consultan su ocupación antes de escribir.
-37. Trazabilidad de bloqueos mediante `bloqueos_origenes`, conservando todas las actividades anuladas que originaron un bloqueo.
+36. Referencia obligatoria de cada evento a un turno y restricción única parcial que permite sólo un evento no Anulado por turno. Las operaciones bloquean los turnos y consultan su ocupación antes de escribir.
+37. Trazabilidad mediante `bloqueos_origenes`: como máximo un origen de reserva o clase Anulado por bloqueo, sobre el mismo turno.
 
 Las reglas que deben observar varias filas se ejecutan dentro de operaciones transaccionales. Cuando existe riesgo de concurrencia, el backend bloquea las filas involucradas antes de validar y guardar.
 
-La superposición horaria de una persona se comprueba en el backend sobre todos sus modos de participación: profesor o alumno de una clase, organizador o invitado identificado de una reserva. Las operaciones que crean clases o reservas y la generación desde la planilla bloquean las filas de los usuarios involucrados en orden de identificador antes de consultar y escribir. Para un profesor la superposición rechaza la operación; para los demás participantes produce una advertencia confirmable. La garantía supone que las escrituras operativas pasan por estos servicios; se complementa con el bloqueo de los turnos concretos y la comprobación de ocupación compartida en `eventos_turnos` y `eventos`.
+La superposición horaria de una persona se comprueba en el backend sobre todos sus modos de participación: profesor o alumno de una clase, organizador o invitado identificado de una reserva. Las operaciones que crean clases o reservas y la generación desde la planilla bloquean las filas de los usuarios involucrados en orden de identificador antes de consultar y escribir. Para un profesor la superposición rechaza la operación; para los demás participantes produce una advertencia confirmable. La garantía supone que las escrituras operativas pasan por estos servicios; se complementa con el bloqueo de los turnos concretos y la comprobación de ocupación compartida en `eventos`.
 
 El horario de funcionamiento se comprueba en el backend porque depende de datos de otra tabla. Toda reserva debe permanecer dentro de una misma franja de `sedes_horarios`, también cuando la crea el Administrador. Las clases mantienen su advertencia administrativa confirmable fuera de horario. Crear un turno fuera de una franja no autoriza por sí solo a reservarlo.
 
 Una reserva nueva debe comenzar en un horario futuro y su fecha debe estar entre hoy y catorce días después, inclusive. El backend vuelve a validar ese límite al confirmar, tanto para el Administrador como para el portal.
 
-El límite diario de horas de un pase depende de una suma sobre turnos de reservas existentes. La transacción bloquea las filas de `pases_usuarios` del organizador y de los invitados cuya cobertura se evalúa antes de contar el uso diario. El bloqueo se realiza en orden de identificador para coordinar reservas concurrentes y evitar que dos operaciones superen el mismo límite sin verse entre sí.
+El uso de un pase suma una hora por reserva cubierta no Anulada, contando cada reserva una sola vez por contratación, como organizador o invitado. El límite diario depende de esas reservas existentes. La transacción bloquea las filas de `pases_usuarios` del organizador y de los invitados cuya cobertura se evalúa antes de contar el uso diario. El bloqueo se realiza en orden de identificador para coordinar reservas concurrentes y evitar que dos operaciones superen el mismo límite sin verse entre sí.
 
 ---
 
@@ -902,35 +881,35 @@ Anular una contratación bloquea su fila, valida estado Activo y registra actor,
 
 ### 7.2 Generación de clases para un período
 
-Para cada fecha que corresponde a un turno de planilla y no es feriado, obtiene o crea el turno concreto de la cancha. Bloquea los turnos involucrados en orden de identificador y comprueba su ocupación mediante eventos no Anulados. Crea un evento Programado, un vínculo horario, una clase con `es_generada = true` y sus asignaciones.
+Para cada fecha que corresponde a un turno de planilla y no es feriado, obtiene o crea el turno concreto de la cancha. Bloquea los turnos involucrados en orden de identificador y comprueba su ocupación mediante eventos no Anulados. Crea un evento Programado que referencia el turno, una clase con `es_generada = true` y sus asignaciones.
 
 Las fechas ocupadas se omiten y se informan. Las fechas fuera del horario de la sede se incluyen como advertencia confirmable en la vista previa. La generación conserva las confirmaciones y límites de período descriptos en los criterios del sistema.
 
 ### 7.3 Regeneración de clases para un período
 
-En una transacción, elimina únicamente los eventos de clases generadas por planilla que siguen Programados y no tienen actividad efectiva, con sus vínculos y datos de clase. Conserva los turnos concretos. Vuelve a generar sobre esos turnos aplicando 7.2, sin modificar reservas, bloqueos, clases Anuladas o Finalizadas ni clases manuales.
+En una transacción, elimina únicamente los eventos de clases generadas por planilla que siguen Programados y no tienen actividad efectiva, con sus datos de clase. Conserva los turnos concretos. Vuelve a generar sobre esos turnos aplicando 7.2, sin modificar reservas, bloqueos, clases Anuladas o Finalizadas ni clases manuales.
 
 ### 7.4 Reserva normal
 
-Exige un organizador activo con rol Reservas o Administrador y un actor con acceso vigente. El portal sólo puede reservar para sí mismo. Comprueba sede y cancha activas, fecha entre hoy y catorce días después, inicio futuro y uno o varios turnos consecutivos de una misma cancha y fecha, dentro de una franja de la sede. El Administrador aplica las mismas condiciones.
+Exige un organizador activo con rol Reservas o Administrador y un actor con acceso vigente. El portal sólo puede reservar para sí mismo. Comprueba sede y cancha activas, fecha entre hoy y catorce días después, inicio futuro y un único turno de una hora dentro de una franja de la sede. El Administrador aplica las mismas condiciones.
 
-Bloquea la sede y obtiene `precio_reserva_vigente`, que debe estar informado y ser positivo. Calcula el total por cantidad de turnos. Si el valor cambió desde la confirmación preparada, presenta el nuevo total y exige confirmar nuevamente.
+Bloquea la sede y obtiene `precio_reserva_vigente`, que debe estar informado y ser positivo. El total es la tarifa validada para ese turno. Si el valor cambió desde la confirmación preparada, presenta el nuevo total y exige confirmar nuevamente.
 
-Bloquea los turnos en orden de identificador y vuelve a comprobar que ningún evento Programado o Finalizado los ocupe. Registra un evento Programado, la reserva y todos los vínculos horarios, junto con el ingreso opcional autorizado. Guarda el importe unitario aplicado como copia, sin almacenar otro total en la reserva. Un error revierte toda la operación.
+Bloquea el turno y vuelve a comprobar que ningún evento Programado o Finalizado lo ocupe. Registra un evento Programado que referencia el turno y la reserva, junto con el ingreso opcional autorizado. Guarda el importe unitario aplicado como copia, sin almacenar otro total en la reserva. Un error revierte toda la operación.
 
 ### 7.5 Reserva con pase
 
 Aplica las mismas reglas de turnos, acceso y calendario de 7.4. Valida vigencia, titularidad, día habilitado y horas disponibles del pase del organizador, así como la cobertura de los invitados identificados.
 
-Bloquea las contrataciones de pase involucradas y los turnos en un orden estable. El consumo diario se obtiene contando los turnos de eventos de reservas no Anulados, tanto como organizador como invitado cubierto. Crea evento, vínculos horarios, reserva, invitados e ingreso opcional en una transacción. Conserva el precio adicional unitario aplicado y calcula el total según los invitados sin cobertura.
+Bloquea las contrataciones de pase involucradas y el turno en un orden estable. El consumo diario se obtiene contando los turnos de eventos de reservas no Anulados, tanto como organizador como invitado cubierto. Crea evento con referencia al turno, reserva, invitados e ingreso opcional en una transacción. Conserva el precio adicional unitario aplicado y calcula el total según los invitados sin cobertura.
 
 ### 7.6 Cancelación de una reserva
 
-Bloquea los turnos y el evento de la reserva. Valida estado Programado, permiso, motivo de al menos 25 caracteres y plazo: antes del primer turno para el Administrador y con al menos una hora de antelación para el organizador del portal.
+Bloquea el turno y el evento de la reserva. Valida estado Programado, permiso, motivo de al menos 25 caracteres y plazo: antes del inicio del turno para el Administrador y con al menos una hora de antelación para el organizador del portal.
 
-Cambia el evento a Anulado y registra actor, momento y motivo. En `reservas.anulada_por_organizador` registra el origen de la anulación. Conserva los vínculos horarios, el precio o pase aplicado y los ingresos.
+Cambia el evento a Anulado y registra actor, momento y motivo. En `reservas.anulada_por_organizador` registra el origen de la anulación. Conserva la referencia al turno, el precio o pase aplicado y los ingresos.
 
-Una anulación administrativa por clima adverso, torneo o mantenimiento crea un bloqueo sobre todos los turnos afectados y vincula su evento de origen mediante `bloqueos_origenes`, en la misma transacción. Por otro imprevisto, los turnos quedan libres. La reprogramación sigue las condiciones de 7.7.
+La anulación libera el turno de la reserva y no crea un bloqueo. El motivo se registra en texto libre, sin clasificación. La reprogramación sigue las condiciones de 7.7.
 
 ### 7.7 Reprogramación de una reserva
 
@@ -956,7 +935,7 @@ El procesamiento conserva las condiciones de validación, reintento y notificaci
 
 ### 7.11 Finalización de clases y reservas vencidas
 
-Celery Beat ejecuta la tarea cada hora en punto de Buenos Aires. Consulta eventos de tipo clase o reserva que siguen Programados y cuyo último turno terminó antes o en el momento actual. Para cada uno, bloquea los turnos y luego el evento, y vuelve a comprobar las condiciones.
+Celery Beat ejecuta la tarea cada hora en punto de Buenos Aires. Consulta eventos de tipo clase o reserva que siguen Programados y cuyo turno terminó antes o en el momento actual. Para cada uno, bloquea el turno y luego el evento, y vuelve a comprobar las condiciones.
 
 Cambia el evento a Finalizado y guarda `finalizado_en` con el momento real de procesamiento. No modifica asistencias ni sobrescribe eventos Anulados o Finalizados. En clases, la finalización automática deja `clases.finalizado_por_id` vacío. Los bloqueos quedan fuera de esta tarea.
 
@@ -976,6 +955,8 @@ Tarea diaria idempotente. Localizará asignaciones `clases_alumnos` en estado `a
 
 ### 7.14 Registro y liberación de bloqueos
 
-El registro obtiene los turnos seleccionados, los bloquea en orden estable y comprueba su ocupación. Si reemplaza reservas o clases, sólo permite anular actividades completas y aplica sus condiciones de anulación. Registra el evento de bloqueo, sus vínculos horarios y todos los orígenes anulados en una misma transacción.
+Las operaciones de bloqueo identifican cada turno y el evento que lo ocupa. Sólo crean o anulan actividades antes del inicio del turno. La acción individual sobre un bloqueo vigente se rechaza; en un cierre masivo los bloqueos existentes se conservan como ya cubiertos. Las reservas o clases excluidas mantienen su ocupación. Los turnos iniciados y eventos Finalizados quedan para consulta y se muestran como conservados.
 
-Liberar un bloqueo cambia su evento Programado a Anulado y registra actor, momento y motivo. Conserva vínculos y orígenes, y libera todos los turnos del evento. La operación en lote actúa sobre bloqueos completos. La liberación parcial permanece pendiente de definición funcional.
+La vista previa detalla las acciones y los eventos conservados según fecha, hora de corte, canchas y tipos excluidos. Dentro de una única transacción, bloquea los turnos afectados y los eventos consultados en orden estable, comprueba permisos y alcance y vuelve a validar el inicio de cada turno. Primero anula los eventos confirmados para liberar sus turnos; después comprueba la disponibilidad y registra un evento de bloqueo y su especialización por cada turno a bloquear. Cada bloqueo registra su único origen si la misma operación anuló una reserva o clase. No hay evento agrupador. Si cambia el alcance, la ocupación o la elegibilidad, revierte todo el lote y exige revisar la vista previa. No convierte silenciosamente un evento en conservado después de confirmarlo como acción.
+
+La anulación para liberar cambia cada evento Programado a Anulado y registra actor, momento y motivo. Conserva su referencia al turno, importes y orígenes. La operación masiva permite excluir tipos y actúa sobre eventos individuales no iniciados. Todo el lote se guarda o se revierte junto. No se crean cobros, devoluciones ni transferencias de ingresos por estas operaciones.

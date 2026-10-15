@@ -16,7 +16,7 @@ Lo que el sistema hace por sí solo, sin que ningún actor lo pida en el momento
 
 ## Criterio temporal común
 
-Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; las clases y bloqueos llegan como máximo hasta un año después de la fecha local actual; las reservas nuevas o reprogramadas exigen inicio futuro y fecha entre hoy y catorce días después, inclusive; la generación de clases abarca hasta 62 días; las consultas por período, hasta 366 días; las contrataciones pueden cubrir hasta el mes siguiente; los ingresos no pueden tener fecha futura; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
+Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; las clases y bloqueos llegan como máximo hasta un año después de la fecha local actual; las clases admiten carga histórica, los bloqueos exigen inicio futuro y ninguna anulación puede afectar un turno iniciado; las reservas nuevas o reprogramadas exigen inicio futuro y fecha entre hoy y catorce días después, inclusive; la generación de clases abarca hasta 62 días; las consultas por período, hasta 366 días; las contrataciones pueden cubrir hasta el mes siguiente; los ingresos no pueden tener fecha futura; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
 
 ---
 
@@ -89,7 +89,7 @@ Todos los flujos de este documento aplican los límites temporales definidos en 
 | Bloqueos | FL-63 | Bloquear un turno |
 | Bloqueos | FL-64 | Bloquear varios turnos en lote |
 | Bloqueos | FL-65 | Liberar un bloqueo |
-| Bloqueos | FL-66 | Liberar varios bloqueos en lote |
+| Bloqueos | FL-66 | Anular y liberar eventos en lote |
 | Bloqueos | FL-67 | Consultar bloqueos |
 
 Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de planes y pases contratados, 4.2 Notificaciones por email, 4.3 Finalización automática de clases y reservas vencidas, 4.4 Confirmación de pago de MercadoPago, 4.5 Aviso de vencimiento próximo de una contratación, 4.6 Recordatorio de la próxima clase asignada.
@@ -98,7 +98,7 @@ Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de planes
 
 ## 3. Flujos
 
-Las actividades utilizan turnos concretos de una hora. `eventos_turnos` vincula cada actividad con sus turnos y `eventos` guarda su estado, observaciones y auditoría. Una clase tiene exactamente un turno; reservas y bloqueos pueden tener varios. La fecha, cancha, inicio, fin calculado y duración se obtienen de esos vínculos. Cancelar una actividad o liberar un bloqueo deja su evento Anulado; completar una clase o finalizar una reserva lo deja Finalizado.
+Las actividades utilizan turnos concretos de una hora. `eventos.turno_id` referencia el único turno de cada reserva, clase o bloqueo; `eventos` guarda su estado, observaciones y auditoría. La fecha, cancha, inicio y fin se obtienen del turno y la duración es siempre una hora. Cada registro tiene identidad y estado independientes, incluso si se crea o anula junto con otros mediante una operación administrativa masiva. Cancelar una actividad o liberar un bloqueo deja su evento Anulado; completar una clase o finalizar una reserva lo deja Finalizado.
 
 ### 3.1 Disponibilidad
 
@@ -112,9 +112,9 @@ Recorrido:
 
 1. El actor selecciona sede, cancha y fecha.
 2. El sistema consulta las franjas de funcionamiento y obtiene o prepara los turnos de una hora que corresponden a esa cancha y fecha, sin duplicarlos.
-3. Consulta los vínculos de esos turnos con eventos Programados o Finalizados y muestra su ocupación. Los eventos Anulados se conservan en la historia, sin impedir reutilizar el turno.
+3. Consulta los eventos que referencian esos turnos Programados o Finalizados y muestra su ocupación. Los eventos Anulados se conservan en la historia, sin impedir reutilizar el turno.
 4. Para reservar, ofrece sólo turnos futuros y libres de instalaciones activas, dentro de las franjas y del límite de catorce días.
-5. El actor selecciona turnos como parte del registro de la actividad; consultar no confirma ni ocupa una reserva.
+5. En turnos futuros, la administración puede crear una reserva, crear una clase o bloquear si están libres; si los ocupa una reserva o clase, puede anular la actividad para liberar o iniciar el bloqueo con anulación completa; si los ocupa un bloqueo, puede anularlo para liberar su turno. Cada acción aplica sus permisos y condiciones. El portal ofrece únicamente las acciones autorizadas sobre reservas propias. Consultar no registra ni modifica actividades.
 
 Alternativas:
 
@@ -124,7 +124,7 @@ Alternativas:
 - La confirmación vuelve a comprobar la ocupación dentro de la transacción.
 
 - **Resultado:** turnos disponibles u ocupados, o impedimento de consulta. Preparar turnos no registra una actividad.
-- **Datos:** sedes, canchas, horarios, turnos, eventos y eventos_turnos.
+- **Datos:** sedes, canchas, horarios, turnos, eventos.
 
 ```mermaid
 flowchart TD
@@ -376,7 +376,7 @@ Alternativas:
 - Asignar un rol ya vigente, o quitar uno que el usuario no tiene, no genera cambios.
 
 - **Resultado:** asignación actualizada, o retiro rechazado conservando el rol y sus relaciones.
-- **Datos:** usuarios_roles, roles, reservas, planes_usuarios, pases_usuarios, clases_profesores, clases y eventos, eventos_turnos, turnos.
+- **Datos:** usuarios_roles, roles, reservas, planes_usuarios, pases_usuarios, clases_profesores, clases y eventos, turnos.
 
 ```mermaid
 flowchart TD
@@ -493,7 +493,7 @@ Alternativas:
 
 - La operación no elimina ni cambia automáticamente el estado de sus canchas.
 - Una sede inactiva no se ofrece para nuevas actividades.
-- Una reserva en curso o vencida que siga Programada también impide inactivar. Las futuras pueden cancelarse según sus reglas; las demás sólo pueden finalizarse después del último turno, automáticamente o mediante **FL-42**. Las canceladas y completadas no impiden inactivar.
+- Una reserva en curso o vencida que siga Programada también impide inactivar. Las futuras pueden cancelarse según sus reglas; las demás sólo pueden finalizarse después del turno, automáticamente o mediante **FL-42**. Las canceladas y completadas no impiden inactivar.
 - La reactivación se permite aunque haya reservas Programadas. Editar los datos de la sede no modifica su estado.
 
 - **Resultado:** sede activa o inactiva.
@@ -1087,7 +1087,7 @@ Recorrido:
 3. Muestra una vista previa: cuántas clases se crearán, qué fechas se omiten y por qué (feriado, conflicto de cancha, conflicto de profesor, sede o cancha inactiva), qué alumnos previstos quedan con advertencia de superposición, y cuáles de las clases a crear caen fuera del horario de funcionamiento de la sede (**FL-57**) para ese día.
 4. El sistema advierte, en dos confirmaciones explícitas y sucesivas, que la generación no puede deshacerse, que para quitar clases generadas hace falta eliminarlas manualmente (**FL-30**) o regenerar el período (**FL-29**), y que las clases fuera de horario y con alumnos superpuestos listadas en la vista previa se crearán igual.
 5. El administrador confirma ambas veces.
-6. En una transacción, obtiene o crea los turnos concretos de las fechas válidas, los bloquea y comprueba nuevamente su ocupación. Por cada clase registra un evento Programado, un vínculo horario, la clase con indicador de generada y sus asignaciones. Las observaciones de la actividad se guardan en el evento.
+6. En una transacción, obtiene o crea los turnos concretos de las fechas válidas, los bloquea y comprueba nuevamente su ocupación. Por cada clase registra un evento Programado que referencia el turno, la clase con indicador de generada y sus asignaciones. Las observaciones de la actividad se guardan en el evento.
 7. Envía una notificación por email a cada profesor con turnos incluidos en la generación, resumiendo sus clases del período (ver 4.2).
 
 Alternativas:
@@ -1100,7 +1100,7 @@ Alternativas:
 - La operación no admite deshacer automático.
 
 - **Resultado:** clases concretas creadas para el período, con las fechas omitidas y las advertencias informadas.
-- **Datos:** turnos de planilla, feriados, horarios de sede, eventos, eventos_turnos, turnos y clases.
+- **Datos:** turnos de planilla, feriados, horarios de sede, eventos, turnos y clases.
 
 ```mermaid
 flowchart TD
@@ -1128,7 +1128,7 @@ Recorrido:
 2. El sistema identifica las clases de ese período en estado **Programada** generadas por la planilla.
 3. Muestra cuántas eliminará y recreará, y advierte que las clases **Finalizadas**, **Anuladas** o creadas manualmente no se tocan.
 4. El administrador confirma.
-5. En una transacción, elimina esas clases, sus eventos y vínculos horarios, conservando los turnos concretos. Repite el procedimiento de **FL-28** con la planilla actual.
+5. En una transacción, elimina esas clases y sus eventos, conservando los turnos concretos. Repite el procedimiento de **FL-28** con la planilla actual.
 
 Alternativas:
 
@@ -1137,7 +1137,7 @@ Alternativas:
 - Un turno cuya clase generada anteriormente fue cancelada se trata como libre: la generación puede crear ahí una clase nueva, ya que un evento Anulado no ocupa el turno. La clase cancelada no se toca ni se elimina; ambas coexisten como historia independiente.
 
 - **Resultado:** clases programadas del período actualizadas según la planilla vigente, historia preservada.
-- **Datos:** turnos de planilla, feriados, eventos, eventos_turnos, turnos y clases.
+- **Datos:** turnos de planilla, feriados, eventos, turnos y clases.
 
 ```mermaid
 flowchart TD
@@ -1168,7 +1168,7 @@ Alternativas:
 - Una clase creada manualmente (`es_generada = false`) tampoco puede eliminarse por este flujo: solo puede cancelarse (**FL-37**), para conservar el registro de que un administrador la creó a propósito.
 
 - **Resultado:** clase eliminada, turno liberado.
-- **Datos:** clases y eventos, eventos_turnos, turnos.
+- **Datos:** clases y eventos, turnos.
 
 ```mermaid
 flowchart TD
@@ -1199,7 +1199,7 @@ Alternativas:
 - Sin clases, se muestra la grilla vacía.
 
 - **Resultado:** agenda diaria consultada sin modificaciones.
-- **Datos:** sedes, canchas, eventos, eventos_turnos, turnos, clases y profesores asignados.
+- **Datos:** sedes, canchas, eventos, turnos, clases y profesores asignados.
 
 ```mermaid
 flowchart TD
@@ -1230,7 +1230,7 @@ Alternativas:
 - Un profesor sólo ve sus clases.
 
 - **Resultado:** agenda semanal consultada sin modificaciones.
-- **Datos:** sedes, canchas, eventos, eventos_turnos, turnos, clases y profesores asignados.
+- **Datos:** sedes, canchas, eventos, turnos, clases y profesores asignados.
 
 ```mermaid
 flowchart TD
@@ -1261,7 +1261,7 @@ Alternativas:
 - Las acciones de modificación y cancelación son exclusivas del administrador. Un profesor activo asignado también puede completar la clase y registrar su asistencia.
 
 - **Resultado:** detalle consultado sin modificaciones.
-- **Datos:** eventos, eventos_turnos, turnos, clases, turnos de origen, profesores, usuarios y asistencias.
+- **Datos:** eventos, turnos, clases, turnos de origen, profesores, usuarios y asistencias.
 
 ```mermaid
 flowchart TD
@@ -1284,7 +1284,7 @@ Recorrido:
 1. El administrador completa el turno y los participantes.
 2. El sistema calcula la hora de fin exactamente una hora después del inicio.
 3. Valida profesores, sede, cancha, participantes y ausencia de eventos superpuestos. Si el turno cae fuera del horario de funcionamiento de la sede (**FL-57**) para ese día, advierte y exige una confirmación explícita para continuar.
-4. Obtiene o crea el turno concreto, lo bloquea y comprueba su ocupación. En una transacción crea evento Programado, un vínculo horario, clase y asignaciones; las observaciones se guardan en el evento.
+4. Obtiene o crea el turno concreto, lo bloquea y comprueba su ocupación. En una transacción crea un evento Programado que referencia el turno, clase y asignaciones; las observaciones se guardan en el evento.
 5. Envía una notificación por email a cada profesor asignado (ver 4.2).
 
 Alternativas:
@@ -1298,7 +1298,7 @@ Alternativas:
 - Las clases generadas desde la planilla se crean mediante **FL-28**, no mediante este flujo; esa generación notifica una sola vez por profesor y por corrida, no clase por clase. Una clase creada por este flujo queda marcada como no generada por planilla.
 
 - **Resultado:** una clase concreta de una hora en estado **Programada**.
-- **Datos:** eventos, eventos_turnos, turnos, clases, horarios de sede, profesores y usuarios asignados.
+- **Datos:** eventos, turnos, clases, horarios de sede, profesores y usuarios asignados.
 
 ```mermaid
 flowchart TD
@@ -1326,7 +1326,7 @@ Recorrido:
 2. El administrador realiza cambios.
 3. El sistema valida al menos un profesor activo y las asignaciones. Para cada profesor agregado que no estaba asignado antes, comprueba que no tenga otra actividad no cancelada superpuesta con el turno de la clase (bloqueante, sin importar la cancha). Para cada alumno agregado que no estaba asignado antes, si tiene otra actividad no cancelada superpuesta, genera una advertencia, sin bloquear.
 4. Si se indicó una nueva sede o cancha, comprueba que estén activas y que ese turno (mismo día y horario, cancha nueva) esté disponible, excluyendo el evento actual de esa comprobación. Si cae fuera del horario de funcionamiento de la sede (**FL-57**) para ese día, advierte y exige una confirmación explícita para continuar.
-5. Guarda modalidad y asignaciones en sus relaciones específicas y observaciones en el evento. Si cambió la cancha, sustituye el vínculo por el turno de la nueva cancha en la misma fecha y hora; bloquea origen y destino, valida la disponibilidad y conserva el turno original. Actualiza la fecha de modificación del evento. Día y hora no cambian.
+5. Guarda modalidad y asignaciones en sus relaciones específicas y observaciones en el evento. Si cambió la cancha, actualiza `eventos.turno_id` al turno de la nueva cancha en la misma fecha y hora; bloquea origen y destino, valida la disponibilidad y conserva el turno original. Actualiza la fecha de modificación del evento. Día y hora no cambian.
 6. Si se agregó un profesor que no estaba asignado antes, le envía una notificación por email (ver 4.2).
 
 Alternativas:
@@ -1340,7 +1340,7 @@ Alternativas:
 - Reactivar la asignación de un alumno que estaba inactiva resetea a `false` su marca de recordatorio enviado (ver 4.6), para que vuelva a recibirlo si la clase sigue programada para el día siguiente en una corrida posterior.
 
 - **Resultado:** datos, participantes y, si correspondía, cancha actualizados, con el mismo día y horario.
-- **Datos:** clases, eventos, eventos_turnos, turnos, profesores y usuarios asignados, y horarios de sede.
+- **Datos:** clases, eventos, turnos, profesores y usuarios asignados, y horarios de sede.
 
 ```mermaid
 flowchart TD
@@ -1366,36 +1366,34 @@ flowchart TD
 
 - **Objetivo:** registrar que una clase programada no se dictará.
 - **Actor:** administrador.
-- **Precondición:** clase en estado **Programada**.
-- **Entrada:** motivo en texto libre, obligatorio, y su clasificación en uno de cuatro tipos: clima adverso, torneo, mantenimiento u otro.
+- **Precondición:** clase en estado **Programada** cuyo turno no haya comenzado.
+- **Entrada:** motivo obligatorio en texto libre.
 
 Recorrido:
 
 1. El administrador solicita cancelar la clase.
-2. Ingresa el motivo y lo clasifica, y confirma.
-3. Bloquea el turno y el evento, comprueba que siga Programado y registra estado Anulado, administrador, momento y motivo de cancelación en el evento.
-4. Si la clasificación es clima adverso, torneo o mantenimiento, crea un evento de bloqueo sobre el mismo turno y registra la clase anulada como origen mediante `bloqueos_origenes`, en la misma transacción. Si es otro, el turno queda libre.
+2. Ingresa el motivo y confirma.
+3. Bloquea el turno y el evento, comprueba acceso, estado Programado e inicio futuro y registra estado Anulado, administrador, momento y motivo de cancelación en el evento.
+4. La cancelación libera el turno de la clase, conserva su referencia histórica al turno y no crea un bloqueo.
 5. Envía la notificación de cancelación a los alumnos asignados (ver 4.2).
 
 Alternativas:
 
-- Cancelar no elimina la clase ni crea otra actividad, más allá del bloqueo automático cuando corresponde.
+- Una clase iniciada o pasada no se anula, aunque siga Programada.
+- Cancelar no elimina la clase ni crea otra actividad o bloqueo.
 - Una clase completada no puede cancelarse: solo puede cancelarse una clase **Programada**, y una clase programada nunca tiene asistencia efectiva registrada (ver **FL-39**), así que la cancelación nunca compite con asistencia ya cargada.
 
-- **Resultado:** clase cancelada con motivo e historia preservada; turno bloqueado o liberado según la clasificación del motivo.
-- **Datos:** eventos, eventos_turnos, turnos, clases y, cuando corresponde, bloqueos.
+- **Resultado:** clase cancelada con motivo e historia preservada y turno liberado.
+- **Datos:** eventos, turnos y clases.
 
 ```mermaid
 flowchart TD
-    A[Solicitar cancelación] --> B[Ingresar motivo y clasificarlo]
+    A[Solicitar cancelación] --> B[Ingresar motivo]
     B --> C{Confirmar}
     C -->|No| D[Conservar programada]
     C -->|Sí| E[Cancelar evento]
-    E --> G{Motivo bloqueante}
-    G -->|Sí| H[Bloquear el turno con el mismo motivo]
-    G -->|No| I[Turno queda disponible]
-    H --> F[Notificar a los alumnos asignados]
-    I --> F
+    E --> I[Liberar turno]
+    I --> F[Notificar a los alumnos asignados]
 ```
 
 #### FL-38. Completar una clase
@@ -1421,7 +1419,7 @@ Alternativas:
 - La finalización indica que terminó el horario; la asistencia se acredita mediante sus registros específicos.
 
 - **Resultado:** evento de clase Finalizado, con responsable manual y momento de procesamiento.
-- **Datos:** usuarios, clases, profesores asignados, eventos, eventos_turnos y turnos.
+- **Datos:** usuarios, clases, profesores asignados, eventos y turnos.
 
 ```mermaid
 flowchart TD
@@ -1477,9 +1475,9 @@ flowchart TD
 
 #### FL-40. Crear una reserva propia
 
-- **Objetivo:** registrar una reserva propia con uno o varios turnos consecutivos, normal o con pase.
+- **Objetivo:** registrar una reserva propia de un turno de una hora, normal o con pase.
 - **Actor:** usuario con rol Reservas.
-- **Entradas:** sede, cancha, fecha, turnos y observaciones opcionales; decisión de usar pase cuando corresponda, cantidad de invitados e invitados identificados.
+- **Entradas:** sede, cancha, fecha, turno y observaciones opcionales; decisión de usar pase cuando corresponda, cantidad de invitados e invitados identificados.
 - **Precondición:** cuenta activa, acceso vigente y sin cambio obligatorio de contraseña pendiente.
 
 Recorrido:
@@ -1487,20 +1485,20 @@ Recorrido:
 1. El usuario elige sede, cancha y fecha; el organizador es el usuario autenticado.
 2. El sistema exige fecha entre hoy y catorce días después y prepara los turnos futuros y libres dentro de las franjas de funcionamiento.
 3. Busca un pase vigente que cubra la fecha y habilite ese día. Si lo hay, permite decidir si utilizarlo; de lo contrario, continúa como reserva normal.
-4. Selecciona uno o varios turnos consecutivos de la misma cancha, fecha y franja. La duración se obtiene de su cantidad.
-5. En el camino normal, calcula el total con la tarifa vigente de la sede. En el camino con pase, verifica las horas disponibles considerando los turnos de reservas no Anuladas como organizador o invitado cubierto; la selección no puede superar el límite diario.
+4. Selecciona un único turno de una hora dentro de una franja de funcionamiento de la sede.
+5. En el camino normal, calcula el total con la tarifa vigente de la sede. En el camino con pase, verifica las horas disponibles considerando los turnos de reservas no Anuladas como organizador o invitado cubierto; debe quedar al menos una hora disponible para cubrir la reserva.
 6. Si utiliza pase, informa la cantidad total de invitados e identifica opcionalmente usuarios existentes. El sistema evalúa sus pases y calcula los adicionales de quienes no tienen cobertura suficiente, incluidos los no identificados.
 7. Muestra la selección, el precio o pase aplicado y el total, y solicita confirmación mediante el modal compartido.
-8. Dentro de una transacción, vuelve a validar acceso, turnos, precio o pase, instalaciones y calendario. Bloquea los turnos y comprueba su ocupación compartida en Eventos.
-9. Registra la reserva, un evento Programado, todos los vínculos horarios y los invitados cuando corresponda. En una reserva normal copia la tarifa validada en `precio_por_turno_aplicado`; con pase conserva la contratación y el adicional unitario por invitados.
+8. Dentro de una transacción, vuelve a validar acceso, turno, precio o pase, instalaciones y calendario. Bloquea el turno y comprueba su ocupación compartida en Eventos.
+9. Registra la reserva, un evento Programado que referencia el turno y los invitados cuando corresponda. En una reserva normal copia la tarifa validada en `precio_por_turno_aplicado`; con pase conserva la contratación y el adicional unitario por invitados.
 10. Envía la confirmación al organizador y las invitaciones informativas a los invitados identificados.
 
 Alternativas:
 
 - No permite elegir otro organizador.
 - Sin tarifa configurada no se confirma una reserva normal. Un cambio de sede obliga a recalcular; un cambio de precio desde la selección exige revisar el nuevo total y confirmar nuevamente.
-- Las instalaciones deben estar activas y todos los turnos deben ser futuros, libres y estar dentro de una misma franja. No hay excepciones de fecha ni horario.
-- Sin horas disponibles de pase puede continuar como reserva normal; si conserva algunas, limita la selección a ellas.
+- Las instalaciones deben estar activas y el turno debe ser futuro, libre y quedar contenido en una franja de funcionamiento. No hay excepciones de fecha ni horario.
+- Sin al menos una hora disponible de pase puede continuar como reserva normal.
 - La superposición de participación personal produce la advertencia definida en los criterios del sistema; la ocupación de cancha rechaza la selección.
 - En reservas normales no se registran invitados. En reservas con pase, el organizador no puede repetirse como invitado.
 - Los invitados identificados no necesitan tener pase; la cobertura depende de vigencia, día habilitado y horas suficientes.
@@ -1509,21 +1507,21 @@ Alternativas:
 - Cancelar el modal o presionar Escape no registra la reserva. Si cambia la disponibilidad al confirmar, se rechaza toda la operación.
 - No se crean reservas recurrentes.
 
-- **Resultado:** una reserva propia, un evento Programado y un vínculo por turno, con invitados sólo cuando utiliza pase.
-- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, eventos_turnos, reservas, tarifa de sede, pases, contrataciones de planes y pases e invitados.
+- **Resultado:** una reserva propia y un evento Programado que referencia su único turno, con invitados sólo cuando utiliza pase.
+- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, tarifa de sede, pases, contrataciones de planes y pases e invitados.
 
 ```mermaid
 flowchart TD
     A[Elegir sede cancha y fecha] --> B{Calendario válido}
     B -->|No| C[Solicitar corrección]
     B -->|Sí| D[Ofrecer turnos y opción de pase]
-    D --> E[Seleccionar turnos consecutivos]
+    D --> E[Seleccionar un turno]
     E --> F[Calcular precio o cobertura e invitados]
     F --> G{Confirmar}
     G -->|Sí| H[Bloquear y validar selección completa]
     H --> I{Selección válida}
     I -->|No| C
-    I -->|Sí| J[Registrar evento reserva vínculos e invitados]
+    I -->|Sí| J[Registrar evento con turno reserva e invitados]
     J --> K[Notificar confirmación e invitaciones]
 ```
 
@@ -1550,7 +1548,7 @@ Alternativas:
 - Este flujo no envía notificaciones propias: la confirmación de la nueva reserva ya la envía **FL-51** en el paso 2. Evita un segundo email idéntico.
 
 - **Resultado:** reserva cancelada vinculada a una nueva reserva programada para el turno acordado.
-- **Datos:** reservas (la cancelada y la nueva), eventos, eventos_turnos, turnos.
+- **Datos:** reservas (la cancelada y la nueva), eventos, turnos.
 
 ```mermaid
 flowchart TD
@@ -1565,31 +1563,31 @@ flowchart TD
 
 - **Objetivo:** finalizar una reserva vencida cuando se necesita operar sin la tarea automática.
 - **Actor:** administrador.
-- **Precondición:** reserva Programada cuyo último turno terminó.
+- **Precondición:** reserva Programada cuyo turno terminó.
 - **Entrada:** reserva seleccionada y confirmación.
 
 Recorrido:
 
 1. El administrador abre el detalle de la reserva y solicita finalizarla.
 2. Confirma la operación en el modal.
-3. En una transacción, el sistema comprueba el acceso vigente del administrador, bloquea los turnos y el evento de la reserva y valida nuevamente el estado y el fin del último turno.
+3. En una transacción, el sistema comprueba el acceso vigente del administrador, bloquea el turno y el evento de la reserva y valida nuevamente el estado y el fin del turno.
 4. Cambia el evento de la reserva a Finalizado y guarda `finalizado_en` con el momento de procesamiento, sin responsable de finalización.
 
 Alternativas:
 
-- Una reserva con evento Anulado o Finalizado, o cuyo último turno no terminó, no se modifica.
+- Una reserva con evento Anulado o Finalizado, o cuyo turno no terminó, no se modifica.
 - Si coincide con la tarea automática, sólo la primera operación registra la finalización; la otra no sobrescribe su fecha.
 - Funciona directamente sobre la base de datos, sin depender de Celery ni Redis.
-- Conserva los turnos, el precio y la ocupación histórica. No acredita asistencia ni pago.
+- Conserva la referencia al turno, el precio y la ocupación histórica. No acredita asistencia ni pago.
 
 - **Resultado:** evento de reserva Finalizado o rechazo de la operación.
-- **Datos:** usuarios, usuarios_roles, reservas, eventos, eventos_turnos y turnos.
+- **Datos:** usuarios, usuarios_roles, reservas, eventos y turnos.
 
 ```mermaid
 flowchart TD
     A[Solicitar finalizar una reserva] --> B{Confirmar}
     B -->|No| C[Conservar la reserva]
-    B -->|Sí| D[Bloquear y validar acceso estado y fin del último turno]
+    B -->|Sí| D[Bloquear y validar acceso estado y fin del turno]
     D --> E{Condiciones válidas}
     E -->|No| F[Rechazar sin modificar]
     E -->|Sí| G[Registrar estado Finalizado y momento]
@@ -1916,7 +1914,7 @@ flowchart TD
 
 - **Objetivo:** registrar una reserva para un organizador existente y, opcionalmente, el ingreso recibido.
 - **Actor:** Administrador.
-- **Entradas:** organizador, sede, cancha, fecha, turnos y observaciones; pase e invitados cuando correspondan; ingreso opcional con monto, medio, fecha y observaciones.
+- **Entradas:** organizador, sede, cancha, fecha, turno y observaciones; pase e invitados cuando correspondan; ingreso opcional con monto, medio, fecha y observaciones.
 - **Precondición:** organizador activo con rol Reservas o Administrador. Los invitados identificados ya existen como usuarios.
 - **Proceso integrado posible:** **FL-43** para un ingreso opcional.
 
@@ -1925,11 +1923,11 @@ Recorrido:
 1. El Administrador selecciona al organizador entre las cuentas activas habilitadas.
 2. Elige sede, cancha y fecha. El sistema exige inicio futuro, fecha hasta catorce días después y turnos dentro de las franjas, con las mismas condiciones del portal.
 3. Ofrece los turnos libres y la opción de utilizar un pase vigente que cubra la fecha, habilite ese día y tenga horas disponibles.
-4. Selecciona uno o varios turnos consecutivos de la misma cancha, fecha y franja. La cantidad determina la duración.
+4. Selecciona un único turno de una hora dentro de una franja de funcionamiento de la sede.
 5. Calcula el precio normal con la tarifa de la sede o valida el consumo diario de la contratación de pase. Si se utiliza pase, registra cantidad de invitados, evalúa la cobertura de los identificados y calcula adicionales.
 6. Si recibió un pago, prepara **FL-43** con la reserva como origen, sin persistir todavía el ingreso. La confirmación de excedente y su motivo se exigen cuando corresponden.
-7. Muestra organizador, turnos, precio o pase, invitados y total, junto con el ingreso opcional, y solicita confirmación.
-8. En una transacción, comprueba nuevamente cuentas, roles, calendario, instalaciones, tarifa o pases y ocupación. Para una reserva normal bloquea la sede y copia la tarifa validada en `precio_por_turno_aplicado`; para una con pase conserva la contratación aplicada y el adicional unitario. Bloquea los turnos y registra evento Programado, reserva, vínculos horarios, invitados e ingreso opcional.
+7. Muestra organizador, turno, precio o pase, invitados y total, junto con el ingreso opcional, y solicita confirmación.
+8. En una transacción, comprueba nuevamente cuentas, roles, calendario, instalaciones, tarifa o pases y ocupación. Para una reserva normal bloquea la sede y copia la tarifa validada en `precio_por_turno_aplicado`; para una con pase conserva la contratación aplicada y el adicional unitario. Bloquea el turno y registra evento Programado con referencia al turno, reserva, invitados e ingreso opcional.
 9. Envía la confirmación al organizador y las invitaciones informativas.
 
 Alternativas:
@@ -1937,29 +1935,29 @@ Alternativas:
 - Registrar una reserva no crea usuarios ni asigna roles. Si el organizador no existe o no tiene acceso habilitado, se resuelve antes mediante **FL-02**, **FL-06** o **FL-07**.
 - Sin tarifa configurada no se confirma una reserva normal. Si cambia el precio antes de guardar, se recalcula y se exige confirmar nuevamente.
 - No permite reservas pasadas, fuera de las franjas, ni más allá de catorce días. El Administrador no puede confirmar una excepción a esos límites.
-- Todos los turnos deben estar libres; un evento que ocupe cualquiera de ellos rechaza la selección completa.
+- El turno debe estar libre; un evento que lo ocupe rechaza la operación.
 - Las superposiciones personales conservan las advertencias de los criterios del sistema.
 - En reservas normales no se registran invitados. En reservas con pase, los no identificados y los identificados sin cobertura suficiente generan el adicional histórico aplicado.
-- El organizador no puede repetirse como invitado. El pase del organizador debe cubrir toda la selección.
+- El organizador no puede repetirse como invitado. El pase del organizador debe cubrir la hora del turno seleccionado.
 - El ingreso requiere autorización explícita, no se genera si no hubo pago y puede registrarse más tarde mediante **FL-43**.
 - Ante un error se revierte toda la operación, incluido el ingreso preparado. No se modifican registros preexistentes.
 - No se crean reservas recurrentes.
 
-- **Resultado:** reserva con un evento Programado y todos sus turnos; invitados e ingreso sólo cuando corresponden.
-- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, eventos_turnos, reservas, tarifa de sede, pases, contrataciones de planes y pases, invitados e ingresos.
+- **Resultado:** reserva con un evento Programado que referencia un único turno; invitados e ingreso sólo cuando corresponden.
+- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, tarifa de sede, pases, contrataciones de planes y pases, invitados e ingresos.
 
 ```mermaid
 flowchart TD
     A[Seleccionar organizador habilitado] --> B[Elegir sede cancha y fecha]
     B --> C{Calendario válido}
     C -->|No| B
-    C -->|Sí| D[Elegir turnos consecutivos y resolver precio o pase]
+    C -->|Sí| D[Elegir un turno y resolver precio o pase]
     D --> E[Resolver invitados e ingreso opcional]
     E --> F{Confirmar}
     F -->|Sí| G[Bloquear y validar toda la operación]
     G --> H{Datos válidos}
     H -->|No| E
-    H -->|Sí| I[Registrar evento reserva vínculos y datos opcionales]
+    H -->|Sí| I[Registrar evento con turno reserva y datos opcionales]
     I --> J[Notificar organizador e invitados]
 ```
 
@@ -1974,7 +1972,7 @@ Recorrido:
 
 1. El sistema muestra la cantidad total declarada, los invitados identificados, el precio esperado y los ingresos actuales.
 2. El administrador agrega un usuario existente o quita uno de los invitados identificados.
-3. Al agregarlo, el sistema resuelve si posee un pase con el día habilitado y horas suficientes para la duración de la reserva; si no cumple, lo conserva como invitado sin pase.
+3. Al agregarlo, el sistema resuelve si posee un pase con el día habilitado y al menos una hora disponible para cubrir el turno; si no cumple, lo conserva como invitado sin pase.
 4. El sistema guarda el cambio en una transacción y el detalle vuelve a mostrar el precio esperado, los pagos existentes y el saldo resultante.
 
 Alternativas:
@@ -2011,7 +2009,7 @@ Recorrido:
 
 1. El sistema busca reservas con pase no canceladas donde el pase contratado fue aplicado al organizador.
 2. Busca reservas con pase no canceladas donde fue aplicada al usuario como invitado.
-3. Cuenta una vez los vínculos horarios de cada evento de reserva no Anulado alcanzado; cada turno equivale a una hora.
+3. Cuenta una hora por cada reserva no Anulada cubierta por esa contratación. Cada reserva se cuenta una sola vez, aunque aparezca en ambos roles.
 4. Muestra total, detalle por reserva, rol y advertencias por días que superan la referencia.
 
 Alternativas:
@@ -2020,13 +2018,13 @@ Alternativas:
 - La consulta histórica usa la contratación concreta, no cualquier pase posterior del mismo usuario.
 
 - **Resultado:** horas organizadas, horas como invitado y total del período.
-- **Datos:** pases contratados, reservas, invitados y eventos, eventos_turnos, turnos.
+- **Datos:** pases contratados, reservas, invitados y eventos, turnos.
 
 ```mermaid
 flowchart TD
     A[Elegir pase y período] --> B[Buscar uso como organizador]
     B --> C[Buscar uso como invitado cubierto]
-    C --> D[Unificar reservas y sumar duraciones]
+    C --> D[Unificar reservas y contar una hora por reserva]
     D --> E[Mostrar detalle totales y advertencias]
 ```
 
@@ -2051,7 +2049,7 @@ Alternativas:
 - Un alumno ve esta información en modo de solo lectura.
 
 - **Resultado:** actividad de clases del usuario resumida y detallada.
-- **Datos:** usuarios, clases, eventos, eventos_turnos, turnos, asignaciones y asistencias.
+- **Datos:** usuarios, clases, eventos, turnos, asignaciones y asistencias.
 
 ```mermaid
 flowchart TD
@@ -2077,10 +2075,10 @@ Recorrido:
 Alternativas:
 
 - Un usuario con rol Reservas solo ve las reservas donde es organizador, en modo de solo lectura.
-- Esta consulta es la vía para localizar una reserva y ejecutar **FL-60** o **FL-61**; una reserva ya cancelada por el administrador también puede reprogramarse desde aquí mediante **FL-41**. La finalización se realiza automáticamente mediante 4.3 o por el administrador mediante **FL-42** cuando terminó el último turno.
+- Esta consulta es la vía para localizar una reserva y ejecutar **FL-60** o **FL-61**; una reserva ya cancelada por el administrador también puede reprogramarse desde aquí mediante **FL-41**. La finalización se realiza automáticamente mediante 4.3 o por el administrador mediante **FL-42** cuando terminó el turno.
 
 - **Resultado:** listado y detalle de reservas sin modificaciones.
-- **Datos:** usuarios, reservas, eventos, eventos_turnos, turnos, invitados, tarifa de sede, pases contratados e ingresos.
+- **Datos:** usuarios, reservas, eventos, turnos, invitados, tarifa de sede, pases contratados e ingresos.
 
 ```mermaid
 flowchart TD
@@ -2124,29 +2122,29 @@ flowchart TD
 
 - **Objetivo:** cancelar una reserva propia, sin ofrecer reprogramación.
 - **Actor:** usuario con rol Reservas, sobre su propia reserva.
-- **Precondición:** reserva propia en estado **Programada**, localizada mediante **FL-55**, con al menos una hora de antelación al inicio del primer turno.
+- **Precondición:** reserva propia en estado **Programada**, localizada mediante **FL-55**, con al menos una hora de antelación al inicio del turno.
 - **Entrada:** motivo obligatorio en texto libre de al menos 25 caracteres, sin contar los espacios al principio y al final. El formulario y el servidor validan ese mínimo.
 
 Recorrido:
 
 1. El usuario localiza su reserva, solo entre las propias, y solicita cancelarla.
 2. Ingresa el motivo.
-3. Bloquea los turnos y el evento, valida nuevamente el plazo y el acceso, cambia el evento a Anulado y registra usuario, momento y motivo. En la reserva guarda `anulada_por_organizador = true`.
+3. Bloquea el turno y el evento, valida nuevamente el plazo y el acceso, cambia el evento a Anulado y registra usuario, momento y motivo. En la reserva guarda `anulada_por_organizador = true`.
 4. Envía al organizador el aviso de cancelación (ver 4.2).
 
 Alternativas:
 
 - Un usuario con rol Reservas no puede cancelar una reserva ajena.
-- El plazo se verifica nuevamente dentro de la transacción al confirmar. Exactamente una hora antes del primer turno se permite cancelar; con menos tiempo, o cuando la reserva ya comenzó, se rechaza sin modificar el registro ni su ocupación.
+- El plazo se verifica nuevamente dentro de la transacción al confirmar. Exactamente una hora antes del turno se permite cancelar; con menos tiempo, o cuando la reserva ya comenzó, se rechaza sin modificar el registro ni su ocupación.
 - Este flujo nunca ofrece reprogramación, sin importar el motivo ni la anticipación: reprogramar una reserva cancelada es exclusivo del administrador (ver **FL-61**, **FL-41**).
 - Una cancelación por este flujo nunca genera devolución (ver `2_criterios_del_sistema.md`, 2.2).
 - Los ingresos originales no se anulan ni se modifican. Una reserva cancelada no podrá recibir nuevos ingresos.
 - La reserva original no se elimina ni cambia de fecha, horario, duración o cancha.
-- La cancelación actúa sobre el evento completo; una reserva no se divide en horas independientes.
+- La cancelación actúa sobre el evento completo; cada reserva corresponde a un único turno de una hora.
 - Una reserva cancelada o completada no puede cancelarse nuevamente.
 
 - **Resultado:** reserva propia cancelada, turno liberado.
-- **Datos:** reservas, eventos, eventos_turnos, turnos.
+- **Datos:** reservas, eventos, turnos.
 
 ```mermaid
 flowchart TD
@@ -2161,44 +2159,41 @@ flowchart TD
 
 - **Objetivo:** cancelar la reserva de cualquier usuario por una causa ajena al organizador, y ofrecer reprogramarla en el momento.
 - **Actor:** administrador.
-- **Precondición:** reserva en estado **Programada**, localizada mediante **FL-55**, cuyo primer turno todavía no comenzó.
-- **Entrada:** motivo obligatorio en texto libre de al menos 25 caracteres, sin contar los espacios al principio y al final, siempre una causa ajena al organizador, y su clasificación en uno de cuatro tipos: clima adverso, torneo, mantenimiento u otro imprevisto. El formulario y el servidor validan ese mínimo.
+- **Precondición:** reserva en estado **Programada**, localizada mediante **FL-55**, cuyo turno todavía no comenzó.
+- **Entrada:** motivo obligatorio en texto libre de al menos 25 caracteres, sin contar los espacios al principio y al final, siempre una causa ajena al organizador. El formulario y el servidor validan ese mínimo.
 
 Recorrido:
 
 1. El administrador localiza la reserva y solicita cancelarla.
-2. Ingresa el motivo y lo clasifica.
-3. Bloquea los turnos y el evento, valida nuevamente el plazo y el acceso, cambia el evento a Anulado y registra usuario, momento y motivo. En la reserva guarda `anulada_por_organizador = false`.
-4. Si la clasificación es clima adverso, torneo o mantenimiento, registra un bloqueo sobre todos los turnos de la reserva, con su vínculo de origen, en la misma transacción. Si es otro imprevisto, todos los turnos quedan libres para consultar una nueva disponibilidad.
+2. Ingresa el motivo.
+3. Bloquea el turno y el evento, valida nuevamente el plazo y el acceso, cambia el evento a Anulado y registra usuario, momento y motivo. En la reserva guarda `anulada_por_organizador = false`.
+4. La cancelación libera el turno de la actividad, conserva su referencia histórica y no crea un bloqueo.
 5. Ofrece reprogramar en el mismo momento (ver **FL-41**).
 6. Envía al organizador el aviso de cancelación (ver 4.2). Si se reprogramó, la confirmación de la nueva reserva ya la envió **FL-41** (a través de **FL-51**): este flujo no la repite.
 
 Alternativas:
 
 - Este flujo no es el camino para que un organizador cancele su propia reserva por su propio deseo: si el organizador quiere cancelar, lo hace él mismo mediante **FL-60**, que siempre libera el turno sin importar el motivo. Tener cuenta y gestionar la propia reserva es, en este sistema, un requisito, no una comodidad opcional.
-- A diferencia de la cancelación propia (**FL-60**), este flujo siempre ofrece reprogramar, y su motivo se clasifica para decidir si el turno original queda bloqueado.
-- El administrador puede cancelar aunque falte menos de una hora, pero nunca desde el inicio del primer turno. El límite se verifica nuevamente dentro de la transacción al confirmar.
+- Este flujo siempre ofrece reprogramar mediante **FL-41**. La cancelación libera el turno original.
+- El administrador puede cancelar aunque falte menos de una hora, pero nunca desde el inicio del turno. El límite se verifica nuevamente dentro de la transacción al confirmar.
 - Si el administrador no reprograma en el momento, no se crea ningún registro adicional: resolver el dinero ya cobrado queda fuera del sistema (ver `1_organizacion.md`, 5.2).
 - Ninguna cancelación genera devolución dentro del sistema, se reprograme o no.
 - Los ingresos originales no se anulan ni se modifican. Una reserva cancelada no podrá recibir nuevos ingresos.
 - La reserva original no se elimina ni cambia de fecha, horario, duración o cancha.
-- La cancelación actúa sobre el evento completo; una reserva no se divide en horas independientes.
+- La cancelación actúa sobre el evento completo; cada reserva corresponde a un único turno de una hora.
 - Una reserva cancelada o completada no puede cancelarse nuevamente.
 
-- **Resultado:** reserva cancelada; turno bloqueado o liberado según la clasificación del motivo, y, cuando se decide en el momento, una nueva reserva vinculada como reprogramación mediante **FL-41**.
-- **Datos:** reservas, eventos, eventos_turnos, turnos y, cuando corresponde, bloqueos.
+- **Resultado:** reserva cancelada y su turno liberado, y, cuando se decide en el momento, una nueva reserva vinculada como reprogramación mediante **FL-41**.
+- **Datos:** reservas, eventos y turnos.
 
 ```mermaid
 flowchart TD
-    A[Localizar reserva] --> B[Ingresar motivo y clasificarlo]
+    A[Localizar reserva] --> B[Ingresar motivo]
     B --> C{Confirmar}
     C -->|No| D[Conservar reserva]
     C -->|Sí| E[Cancelar evento]
-    E --> J{Motivo bloqueante}
-    J -->|Sí| K[Bloquear el turno con el mismo motivo]
-    J -->|No| L[Turno queda disponible]
-    K --> F{Reprogramar ahora}
-    L --> F
+    E --> L[Liberar turno]
+    L --> F{Reprogramar ahora}
     F -->|Sí| G[Ejecutar FL-41]
     F -->|No| H[Notificar cancelación al organizador]
     G --> H
@@ -2232,138 +2227,151 @@ flowchart TD
     C --> D[Consultar resultados o identificar activación pendiente]
 ```
 
-### 3.16 Bloqueos
+### 3.16 Bloqueos y operaciones masivas
 
 #### FL-63. Bloquear un turno
 
-- **Objetivo:** ocupar un turno hoy libre para que nadie pueda reservarlo ni dar de alta una clase, por una causa administrativa ajena a cualquier organizador (clima adverso, torneo o mantenimiento).
+- **Objetivo:** impedir el uso de un turno por clima adverso, torneo o mantenimiento.
 - **Actor:** administrador.
-- **Precondición:** turno libre (sin reserva, clase ni otro bloqueo vigente) dentro de una cancha activa, localizado mediante **FL-01**.
-- **Entradas:** cancha, fecha, horario y su clasificación en uno de tres motivos (clima adverso, torneo, mantenimiento); observaciones opcionales.
+- **Precondición:** turno no iniciado de una cancha activa, libre u ocupado por una reserva o clase Programada que admita anulación.
+- **Entradas:** cancha, fecha, hora y motivo del bloqueo; observaciones opcionales y motivo de anulación de la actividad cuando corresponda.
 
 Recorrido:
 
-1. El administrador selecciona en la vista de disponibilidad (**FL-01**) un bloque libre, o indica directamente cancha, fecha y horario.
-2. Elige el motivo entre los tres disponibles y, opcionalmente, agrega observaciones.
-3. Obtiene o prepara el turno de una hora y lo bloquea dentro de la transacción. Comprueba que ningún evento no Anulado lo ocupe y registra evento Programado, bloqueo y vínculo horario. Una creación directa sobre un turno libre no registra orígenes.
+1. Selecciona el turno y el motivo. La vista previa muestra su ocupación y las acciones propuestas.
+2. Si lo ocupa una reserva o clase, confirma su anulación y la creación del bloqueo. Se respetan los requisitos del motivo de anulación, incluido el mínimo de 25 caracteres para reservas.
+3. Dentro de una transacción, bloquea el turno y el evento existente, valida permisos, instalaciones, calendario, inicio futuro y alcance confirmado. Si corresponde, anula la actividad y libera el turno conservando su referencia histórica.
+4. Comprueba que el turno esté libre y crea un evento Programado de tipo bloqueo que lo referencia, su fila en `bloqueos` y su único origen si se anuló una actividad. Un fallo revierte también la anulación.
+5. Envía la notificación de cancelación de la reserva o clase después de confirmar la transacción.
 
 Alternativas:
 
-- "Otro" no es un motivo válido para este flujo: bloquear un turno libre siempre requiere una de las tres causas que justifican impedir su uso. Un imprevisto sin esa causa no bloquea nada porque no hay nada que bloquear (ver 2.2).
-- Si el turno ya no está libre al confirmar (una reserva o clase se creó mientras tanto), la operación se rechaza como conflicto, igual que al crear cualquier evento sobre un horario ya ocupado.
-- Un bloqueo no respeta el horario de funcionamiento de la sede como límite: como toda gestión administrativa, quedar fuera de ese horario no tiene sentido impedirlo (no hay nada que reservar ahí de todas formas), así que este flujo no aplica esa validación.
+- Un turno con bloqueo vigente rechaza la acción individual; puede liberarse mediante **FL-65** antes de su inicio.
+- Un turno iniciado o pasado o un evento Finalizado no admite esta operación. Un evento Anulado no ocupa el turno.
+- Un bloqueo no exige que el turno esté dentro de una franja de funcionamiento.
+- Si cambia la ocupación o la elegibilidad desde la vista previa, se exige revisarla nuevamente; no se anulan actividades sin confirmar.
 
-- **Resultado:** turno ocupado por un bloqueo, con motivo, quién lo creó y cuándo.
-- **Datos:** eventos, eventos_turnos, turnos, bloqueos.
+- **Resultado:** un bloqueo de una hora y, si corresponde, la actividad previa anulada con su historia conservada.
+- **Datos:** usuarios, eventos, turnos, reservas, clases, bloqueos y bloqueos_origenes.
 
 ```mermaid
 flowchart TD
-    A[Elegir cancha, fecha y horario libres] --> B[Elegir motivo]
-    B --> C{Turno sigue libre}
-    C -->|No| D[Rechazar como conflicto]
-    C -->|Sí| E[Crear bloqueo]
+    A[Seleccionar turno y motivo] --> B[Revisar ocupación y acciones]
+    B --> C{Confirmar}
+    C -->|Sí| D[Validar y anular actividad si corresponde]
+    D --> E[Comprobar turno libre y registrar bloqueo con su origen]
+    E --> F[Confirmar transacción y notificar]
 ```
 
 #### FL-64. Bloquear varios turnos en lote
 
-- **Objetivo:** registrar un bloqueo sobre varios turnos que comparten una causa.
-- **Actor:** Administrador.
-- **Entradas:** turnos concretos y motivo común: clima adverso, torneo o mantenimiento; observaciones opcionales.
+- **Objetivo:** impedir el uso de varios turnos por una causa común.
+- **Actor:** administrador.
+- **Entradas:** una o varias canchas de una sede, fecha y turnos seleccionados o fecha completa o intervalo desde una hora de corte inclusiva; motivo común de clima adverso, torneo o mantenimiento; exclusión opcional de clases, reservas o ambas; observaciones y motivos de anulación cuando correspondan.
 
 Recorrido:
 
-1. Selecciona los turnos y el motivo.
-2. La vista previa informa los libres, los ocupados por actividades Programadas que pueden anularse completas y los conflictos.
-3. Confirma las anulaciones y el bloqueo propuestos.
-4. En una transacción, bloquea los turnos, vuelve a validar la ocupación y las condiciones de anulación, y anula las reservas o clases aceptadas.
-5. Registra un evento Programado de tipo bloqueo, un vínculo por turno aceptado y una fila en `bloqueos_origenes` por cada actividad anulada que lo originó.
+1. Selecciona el alcance y el motivo. Para una fecha completa o desde una hora, se incluyen los turnos de las franjas de funcionamiento y los turnos existentes fuera de ellas. Una hora de corte que no sea en punto incluye los turnos cuyo inicio sea igual o posterior al corte.
+2. La vista previa muestra cada turno a bloquear, cada reserva o clase a anular, los bloqueos existentes que permanecen y los eventos excluidos o iniciados que se conservan. La operación sólo actúa sobre turnos no iniciados; a las 18:30 admite los de las 19:00 en adelante.
+3. Confirma las acciones efectivas y sus motivos, respetando los requisitos de anulación de cada tipo. Cada evento corresponde a un turno y se procesa una sola vez.
+4. Dentro de una única transacción, bloquea los turnos y eventos afectados en orden estable, valida permisos, instalaciones, calendario, ocupación, hora actual y coincidencia con el alcance confirmado.
+5. Anula cada reserva o clase confirmada, registra su auditoría y libera su turno. Después comprueba los turnos a bloquear y crea un evento Programado y un bloqueo independiente por cada uno, con un único origen cuando la operación anuló una actividad sobre ese turno.
+6. Confirma toda la transacción y envía las notificaciones de cancelación correspondientes.
 
 Alternativas:
 
-- Si la selección contiene sólo parte de los turnos de una reserva, no puede anularla parcialmente. Los turnos afectados se reportan como conflicto; el Administrador debe resolver el alcance completo antes de confirmar.
-- Las reservas que ya comenzaron y las actividades Finalizadas no se anulan mediante esta operación.
-- Un turno ya bloqueado es un conflicto y no se vincula a otro bloqueo.
-- La vista previa no escribe datos. Si cambian las condiciones después de revisarla, la operación se rechaza y requiere otra revisión.
-- Las actividades reemplazadas conservan sus vínculos y datos comerciales. Esta operación no ofrece reprogramación ni modifica ingresos.
-- Los turnos libres no tienen un evento de origen.
-- El bloqueo reúne todos los turnos aceptados bajo un estado común. La liberación parcial de sus turnos queda pendiente de definición funcional.
+- Los bloqueos existentes se conservan como ya cubiertos: no se anulan ni se superponen con otros.
+- Excluir clases o reservas conserva esas actividades y sus turnos ocupados; los turnos libres se bloquean. Los eventos Anulados son historia y no impiden un nuevo bloqueo.
+- Los días pasados no admiten la operación. Los turnos iniciados y los eventos Finalizados se muestran como conservados y no impiden actuar sobre los demás.
+- No se exige que todos los turnos estén en una misma franja. Cada bloqueo referencia un único turno, con estado y auditoría independientes.
+- La vista previa no escribe datos. Si cambian la ocupación, el alcance o la elegibilidad, se revierte toda la operación y se exige revisarla nuevamente. Un error no deja anulaciones o bloqueos parciales.
+- Las actividades anuladas conservan sus datos comerciales. La operación no ofrece reprogramación ni modifica ingresos.
 
-- **Resultado:** evento de bloqueo sobre los turnos aceptados, con trazabilidad de todas las actividades anuladas.
-- **Datos:** usuarios, turnos, eventos, eventos_turnos, reservas, clases, bloqueos y bloqueos_origenes.
+- **Resultado:** un bloqueo independiente por turno efectivo, con las reservas o clases correspondientes anuladas y los eventos conservados informados.
+- **Datos:** usuarios, sedes, canchas, horarios de sedes, turnos, eventos, reservas, clases, bloqueos y bloqueos_origenes.
 
 ```mermaid
 flowchart TD
-    A[Seleccionar turnos y motivo] --> B[Revisar ocupación y actividades completas]
-    B --> C[Mostrar libres anulaciones posibles y conflictos]
-    C --> D{Confirmar}
-    D -->|Sí| E[Bloquear turnos y validar nuevamente]
-    E --> F[Anular actividades aceptadas]
-    F --> G[Registrar evento de bloqueo vínculos y orígenes]
+    A[Seleccionar alcance motivo y exclusiones] --> B[Mostrar acciones eventos conservados y bloqueos existentes]
+    B --> C{Confirmar acciones}
+    C -->|Sí| D[Validar alcance y hora dentro de una transacción]
+    D --> E[Anular actividades confirmadas y liberar sus turnos]
+    E --> F[Crear un bloqueo por turno libre efectivo]
+    F --> G[Confirmar lote y notificar cancelaciones]
 ```
 
 #### FL-65. Liberar un bloqueo
 
-- **Objetivo:** dejar nuevamente disponible un turno bloqueado, cuando la causa que lo motivó ya no aplica.
+- **Objetivo:** liberar el turno de un bloqueo que no haya comenzado.
 - **Actor:** administrador.
-- **Precondición:** bloqueo vigente, localizado mediante **FL-67**.
+- **Precondición:** evento de bloqueo Programado con inicio futuro, localizado mediante **FL-67**.
 - **Entrada:** motivo obligatorio en texto libre.
 
 Recorrido:
 
-1. El administrador localiza el bloqueo y solicita liberarlo.
-2. Ingresa el motivo de la liberación y confirma.
-3. Bloquea todos los turnos del bloqueo y su evento, comprueba estado Programado y cambia el evento a Anulado, registrando usuario, momento y motivo. Todos los turnos quedan disponibles de inmediato y sus vínculos históricos se conservan.
+1. Selecciona el bloqueo, ingresa el motivo y confirma.
+2. Dentro de una transacción, bloquea el turno y el evento y comprueba nuevamente estado, acceso e inicio futuro.
+3. Cambia el evento a Anulado, registra actor, momento y motivo y libera el turno. Conserva la referencia al turno y el origen del bloqueo.
 
 Alternativas:
 
-- Un bloqueo ya liberado no puede liberarse nuevamente.
-- La operación libera el bloqueo completo, aunque abarque varios turnos. La liberación parcial permanece pendiente de definición funcional.
-- Liberar un bloqueo no notifica a ningún usuario: a diferencia de cancelar una reserva o una clase, un bloqueo no tiene un organizador ni alumnos asignados.
+- Un bloqueo Anulado, iniciado o terminado por horario no puede liberarse.
+- Los bloqueos no pasan a Finalizado; terminar su hora sólo los deja para consulta.
+- Liberar un bloqueo no envía notificaciones a usuarios.
 
-- **Resultado:** bloqueo liberado, turno disponible.
-- **Datos:** eventos, eventos_turnos, turnos, bloqueos.
+- **Resultado:** bloqueo Anulado y su único turno libre.
+- **Datos:** usuarios, eventos, turnos y bloqueos.
 
 ```mermaid
 flowchart TD
-    A[Localizar bloqueo] --> B[Ingresar motivo]
-    B --> C{Confirmar}
-    C -->|Sí| D[Cancelar bloqueo y liberar turno]
+    A[Seleccionar bloqueo y motivo] --> B{Confirmar y validar inicio futuro}
+    B -->|Sí| C[Anular evento y liberar turno]
 ```
 
-#### FL-66. Liberar varios bloqueos en lote
+#### FL-66. Anular y liberar eventos en lote
 
-- **Objetivo:** liberar de una sola vez varios bloqueos relacionados (por ejemplo, todos los que dejó una previsión de lluvia que finalmente no se cumplió), sin repetir **FL-65** uno por uno.
+- **Objetivo:** liberar varios turnos anulando sus eventos no iniciados.
 - **Actor:** administrador.
-- **Entradas:** la lista de bloqueos a liberar y un motivo de liberación común.
+- **Entradas:** una o varias canchas de una sede, fecha y selección de eventos o fecha completa o intervalo desde una hora de corte inclusiva; exclusión opcional de clases, reservas, bloqueos o cualquier combinación; motivo de anulación.
 
 Recorrido:
 
-1. El administrador selecciona los bloqueos a liberar, localizados mediante **FL-67**, e ingresa el motivo común.
-2. El sistema libera cada uno, con el mismo criterio que **FL-65**.
+1. Elige alcance, exclusiones y motivo. Un corte a las 18:30 selecciona desde las 19:00; a la hora exacta de inicio el turno ya se considera iniciado.
+2. La vista previa muestra las reservas, clases y bloqueos a anular y los eventos excluidos, iniciados o Finalizados que se conservan. Los turnos libres y los eventos Anulados no requieren acción.
+3. Confirma las acciones. Se exigen los motivos y condiciones de cada tipo, incluido el mínimo de 25 caracteres para reservas. Para seleccionar sólo bloqueos se excluyen clases y reservas.
+4. En una transacción, bloquea los turnos y eventos afectados en orden estable y vuelve a validar acceso, estado, inicio futuro y alcance confirmado. Anula cada evento efectivo y registra su auditoría, conservando referencias, orígenes, importes e ingresos.
+5. Confirma todo el lote y envía las notificaciones de cancelación de reservas y clases. Los bloqueos no generan avisos.
 
 Alternativas:
 
-- Un bloqueo ya liberado dentro de la lista se rechaza igual que en **FL-65**: no se ignora en silencio.
+- No admite días pasados. En el día en curso actúa únicamente sobre turnos no iniciados, aunque un evento iniciado conserve estado Programado.
+- Una selección de fecha completa o desde una hora incluye las actividades existentes fuera del horario habitual de la sede.
+- Los tipos excluidos y eventos no elegibles se informan antes de confirmar. Si cambian el alcance, la ocupación o la elegibilidad, se exige revisar nuevamente y no se guarda ningún cambio.
+- La operación no crea bloqueos, cobros, devoluciones ni transferencias de ingresos. Un fallo revierte todo el lote.
 
-- **Resultado:** todos los bloqueos solicitados quedan liberados, turnos disponibles.
-- **Datos:** eventos, eventos_turnos, turnos, bloqueos.
+- **Resultado:** eventos confirmados Anulados y sus turnos libres, con los eventos conservados informados.
+- **Datos:** usuarios, sedes, canchas, turnos, eventos, reservas, clases y bloqueos.
 
 ```mermaid
 flowchart TD
-    A[Seleccionar bloqueos y motivo] --> B[Liberar cada uno]
+    A[Elegir alcance exclusiones y motivo] --> B[Mostrar acciones y eventos conservados]
+    B --> C{Confirmar}
+    C -->|Sí| D[Validar inicio futuro y alcance en una transacción]
+    D --> E[Anular eventos confirmados y liberar sus turnos]
+    E --> F[Confirmar lote y notificar cancelaciones]
 ```
 
 #### FL-67. Consultar bloqueos
 
-- **Objetivo:** localizar y visualizar bloqueos, vigentes o liberados, para gestionarlos o para entender por qué un turno no está disponible.
+- **Objetivo:** localizar y visualizar bloqueos no iniciados, en curso, terminados por horario o Anulados, para gestionarlos o para entender por qué un turno no está disponible.
 - **Actor:** administrador.
-- **Entradas:** filtros opcionales por cancha, fecha o estado.
+- **Entradas:** filtros opcionales por cancha, fecha, estado registrado o condición horaria.
 
 Recorrido:
 
 1. El administrador ingresa filtros.
 2. El sistema busca bloqueos coincidentes.
-3. Muestra un listado con cancha, fecha, horario, motivo y estado; si el bloqueo nació de cancelar una reserva o una clase, referencia ese evento de origen.
+3. Muestra un listado con cancha, fecha, horario, motivo, estado registrado y condición horaria; si el bloqueo nació de cancelar una reserva o una clase, referencia ese evento de origen.
 
 Alternativas:
 
@@ -2371,7 +2379,7 @@ Alternativas:
 - Un bloqueo también aparece, sin distinguirse de una clase o una reserva salvo por su tipo, en la vista unificada de ocupación de **FL-01**.
 
 - **Resultado:** listado y detalle de bloqueos sin modificaciones.
-- **Datos:** eventos, eventos_turnos, turnos, bloqueos.
+- **Datos:** eventos, turnos, bloqueos.
 
 ```mermaid
 flowchart TD
@@ -2446,16 +2454,16 @@ flowchart TD
 
 ### 4.3 Finalización automática de clases y reservas vencidas
 
-- **Objetivo:** finalizar eventos de clases y reservas cuyo último turno terminó.
+- **Objetivo:** finalizar eventos de clases y reservas cuyo turno terminó.
 - **Disparador:** Celery Beat cada hora en punto de Buenos Aires; Redis transporta la tarea y el worker la ejecuta.
 
 Procedimiento:
 
-1. Consulta los eventos de clase o reserva Programados y calcula el fin de su último turno mediante `eventos_turnos` y `turnos`.
+1. Consulta los eventos de clase o reserva Programados y calcula el fin de su turno mediante `eventos.turno_id` y `turnos`.
 2. Selecciona los que terminaron antes o en el momento actual.
-3. Para cada actividad, bloquea sus turnos y su evento dentro de una transacción, y comprueba nuevamente estado y horario.
+3. Para cada actividad, bloquea su turno y su evento dentro de una transacción, y comprueba nuevamente estado y horario.
 4. Cambia el evento a Finalizado y registra `finalizado_en` con el momento real de procesamiento. No registra responsable de reserva; el responsable manual de clase queda vacío si la tarea la finaliza.
-5. Conserva vínculos horarios, ocupación histórica, precios y participantes, sin modificar asistencias.
+5. Conserva la referencia al turno, ocupación histórica, precios y participantes, sin modificar asistencias.
 
 Condiciones:
 
@@ -2469,11 +2477,11 @@ Condiciones:
 - La finalización habilita el registro de asistencia de clase mediante **FL-39**, sin acreditar asistencia por sí misma.
 
 - **Resultado:** eventos vencidos Finalizados con fecha de procesamiento.
-- **Datos:** eventos, eventos_turnos, turnos y clases.
+- **Datos:** eventos, turnos y clases.
 
 ```mermaid
 flowchart TD
-    A[Hora en punto] --> B[Consultar eventos Programados cuyo último turno terminó]
+    A[Hora en punto] --> B[Consultar eventos Programados cuyo turno terminó]
     B --> C{Hay pendientes}
     C -->|No| D[Terminar sin cambios]
     C -->|Sí| E[Bloquear turnos y evento]
