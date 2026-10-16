@@ -2269,9 +2269,9 @@ flowchart TD
 
 Recorrido:
 
-1. Selecciona el alcance y el motivo. Para una fecha completa o desde una hora, se incluyen únicamente los turnos contenidos en las franjas de funcionamiento. Las actividades existentes fuera de las franjas actuales se conservan y se informan. Una hora de corte que no sea en punto incluye los turnos cuyo inicio sea igual o posterior al corte.
+1. Desde Acciones del día de Agenda, abre el panel lateral conservando la grilla, sede y fecha; elige una o varias canchas y selecciona el alcance y el motivo. Para una fecha completa o desde una hora, se incluyen únicamente los turnos contenidos en las franjas de funcionamiento. Las actividades existentes fuera de las franjas actuales se conservan y se informan. Una hora de corte que no sea en punto incluye los turnos cuyo inicio sea igual o posterior al corte. Puede indicarse además un fin opcional, posterior al inicio y hasta el cierre del día; sólo incluye turnos completos que terminen a esa hora o antes. Sin fin indicado se abarca el resto del día.
 2. La vista previa muestra cada turno a bloquear, cada reserva o clase a anular, los bloqueos existentes que permanecen y los eventos excluidos o iniciados que se conservan. La operación sólo actúa sobre turnos no iniciados; a las 18:30 admite los de las 19:00 en adelante.
-3. Confirma las acciones efectivas y sus motivos, respetando los requisitos de anulación de cada tipo. Cada evento corresponde a un turno y se procesa una sola vez.
+3. Revisa las cantidades y los listados desplegables dentro del panel. Puede volver a editar sin recargar la grilla o confirmar las acciones efectivas y sus motivos, respetando los requisitos de anulación de cada tipo. Cada evento corresponde a un turno y se procesa una sola vez.
 4. Dentro de una única transacción, bloquea los turnos y eventos afectados en orden estable, valida permisos, instalaciones, calendario, ocupación, hora actual y coincidencia con el alcance confirmado.
 5. Anula cada reserva o clase confirmada, registra su auditoría y libera su turno. Después comprueba los turnos a bloquear y crea un evento Programado y un bloqueo independiente por cada uno, con un único origen cuando la operación anuló una actividad sobre ese turno.
 6. Confirma toda la transacción y envía las notificaciones de cancelación correspondientes.
@@ -2282,6 +2282,7 @@ Alternativas:
 - Excluir clases o reservas conserva esas actividades y sus turnos ocupados; los turnos libres se bloquean. Los eventos Anulados son historia y no impiden un nuevo bloqueo.
 - Los días pasados no admiten la operación. Los turnos iniciados y los eventos Finalizados se muestran como conservados y no impiden actuar sobre los demás.
 - Cada turno debe quedar íntegramente dentro de una franja, aunque los distintos turnos del lote pertenezcan a franjas diferentes. Cada bloqueo referencia un único turno, con estado y auditoría independientes.
+- La confirmación identifica al actor y los parámetros revisados, con una validez de quince minutos. Una confirmación vencida o de otra selección exige preparar nuevamente la vista previa.
 - La vista previa no escribe datos. Si cambian la ocupación, el alcance o la elegibilidad, se revierte toda la operación y se exige revisarla nuevamente. Un error no deja anulaciones o bloqueos parciales.
 - Las actividades anuladas conservan sus datos comerciales. La operación no ofrece reprogramación ni modifica ingresos.
 
@@ -2330,7 +2331,7 @@ flowchart TD
 
 - **Objetivo:** liberar varios turnos anulando sus eventos no iniciados.
 - **Actor:** administrador.
-- **Entradas:** una o varias canchas de una sede, fecha y selección de eventos o fecha completa o intervalo desde una hora de corte inclusiva; exclusión opcional de clases, reservas, bloqueos o cualquier combinación; motivo de anulación.
+- **Entradas:** una o varias canchas de una sede, fecha y selección de eventos o fecha completa o intervalo desde una hora de corte inclusiva, con fin opcional exclusivo; exclusión opcional de clases, reservas, bloqueos o cualquier combinación; motivo de anulación.
 
 Recorrido:
 
@@ -2345,6 +2346,7 @@ Alternativas:
 - No admite días pasados. En el día en curso actúa únicamente sobre turnos no iniciados, aunque un evento iniciado conserve estado Programado.
 - Una selección de fecha completa o desde una hora incluye las actividades existentes fuera del horario habitual de la sede.
 - Los tipos excluidos y eventos no elegibles se informan antes de confirmar. Si cambian el alcance, la ocupación o la elegibilidad, se exige revisar nuevamente y no se guarda ningún cambio.
+- La selección, vista previa, edición y confirmación utilizan el mismo recorrido de **FL-64**, con confirmación vinculada al actor y validez de quince minutos.
 - La operación no crea bloqueos, cobros, devoluciones ni transferencias de ingresos. Un fallo revierte todo el lote.
 
 - **Resultado:** eventos confirmados Anulados y sus turnos libres, con los eventos conservados informados.

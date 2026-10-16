@@ -5,12 +5,15 @@
 
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'css/agenda.css' %}">
+<link rel="stylesheet" href="{% static 'css/agenda_operaciones.css' %}">
 {% endblock %}
 
 {% block contenido %}
 <header class="tarjeta encabezado-pagina">
     <h1>Agenda</h1>
-    <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_lista' %}">Consultar reservas</a>
+    {% if agenda.fecha >= agenda.hoy and agenda.columnas %}
+        <a class="boton boton-primario" data-agenda-acciones href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones|yesno:'true,false' }}">Acciones del día</a>
+    {% endif %}
 </header>
 
 {% if hay_sedes %}
@@ -110,9 +113,9 @@
                 {% endif %}
                 <div class="agenda-leyenda"><span><i aria-hidden="true"></i>Reserva</span><span><i class="agenda-leyenda-bloqueo" aria-hidden="true"></i>Bloqueo</span></div>
             </section>
-            <aside class="agenda-detalle" id="turno-seleccionado" aria-label="Detalle del turno" data-agenda-detalle>
+            <aside class="agenda-detalle" id="turno-seleccionado" aria-label="Panel de agenda" data-agenda-detalle>
                 <p class="agenda-aviso" data-agenda-aviso role="status" aria-live="polite" hidden></p>
-                <div data-agenda-contenido>{% include "agenda/_detalle_turno.html" %}</div>
+                <div data-agenda-contenido>{% if panel_acciones %}{% include "agenda/_acciones_dia.html" %}{% else %}{% include "agenda/_detalle_turno.html" %}{% endif %}</div>
             </aside>
         </div>
     {% endif %}

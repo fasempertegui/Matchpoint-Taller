@@ -1,7 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, QueryDict
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -16,8 +17,9 @@ from reservas.disponibilidad import consultar_disponibilidad
 from reservas.forms import ReservaAnulacionForm
 from reservas.servicios import anular_reserva, exigir_acceso_reservas, finalizar_reserva, registrar_reserva
 
-from .forms import AgendaFiltroForm, AgendaReservaForm
-from .servicios import construir_agenda
+from .forms import AgendaFiltroForm, AgendaOperacionForm, AgendaReservaForm
+from .operaciones import ejecutar_operacion, preparar_operacion
+from .servicios import construir_agenda, enlace_agenda
 
 
 @login_required
@@ -34,6 +36,8 @@ def agenda(request):
     if sede_inicial is not None:
         parametros.setdefault("sede", str(sede_inicial.pk))
     formulario = AgendaFiltroForm(parametros)
+    panel_acciones = request.GET.get("panel") == "acciones"
+    contexto_acciones = {}
     accion = request.POST.get("accion") if request.method == "POST" else None
     formulario_reserva = AgendaReservaForm(request.POST if accion == "reservar" else None)
     formulario_anulacion = ReservaAnulacionForm(request.POST if accion == "anular" else None)
@@ -44,7 +48,7 @@ def agenda(request):
         filtros = formulario.cleaned_data
         argumentos = {
             "sede": filtros["sede"], "cancha": filtros["cancha"], "fecha": filtros["fecha"],
-            "hora_seleccionada": filtros["hora"],
+            "hora_seleccionada": None if panel_acciones else filtros["hora"],
             "fecha_maxima": formulario.fecha_maxima,
         }
         datos = construir_agenda(**argumentos)
@@ -61,7 +65,13 @@ def agenda(request):
                 prefix="liberacion",
                 initial={"bloqueo": detalle["bloqueo"].pk if detalle["bloqueo"] else None},
             )
-        if request.method == "POST":
+        if panel_acciones:
+            contexto_acciones = _preparar_acciones_dia(request, filtros["sede"], filtros["fecha"])
+            if isinstance(contexto_acciones, HttpResponseRedirect):
+                return contexto_acciones
+            if request.method == "POST" and request.POST.get("paso") == "confirmar":
+                datos = construir_agenda(**argumentos)
+        elif request.method == "POST":
             try:
                 detalle = datos["detalle"]
                 if detalle is None:
@@ -139,13 +149,99 @@ def agenda(request):
         "formulario_liberacion": formulario_liberacion,
         "hay_sedes": sede_inicial is not None,
         "agenda": datos,
+        "panel_acciones": panel_acciones,
+        **contexto_acciones,
         "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", None)],
         "zona_horaria": timezone.get_current_timezone_name(),
     }
-    if request.method == "GET" and request.headers.get("X-Agenda-Detalle") == "1":
+    if request.headers.get("X-Agenda-Detalle") == "1":
         if not datos:
             return JsonResponse({"error": "Revisá la sede, fecha y cancha seleccionadas."}, status=400)
-        respuesta = render(request, "agenda/_detalle_turno.html", contexto)
-        respuesta["X-Agenda-Seleccion"] = datos["url_seleccion"] if datos["detalle"] else datos["url_cerrar"]
+        plantilla = "agenda/_acciones_dia.html" if panel_acciones else "agenda/_detalle_turno.html"
+        respuesta = render(request, plantilla, contexto)
+        respuesta["X-Agenda-Seleccion"] = (
+            datos["url_acciones"] if panel_acciones else
+            datos["url_seleccion"] if datos["detalle"] else datos["url_cerrar"]
+        )
         return respuesta
     return render(request, "agenda/agenda.html", contexto)
+
+
+def _preparar_acciones_dia(request, sede, fecha):
+    avisos = []
+    url_agenda = enlace_agenda(sede, fecha)
+    paso = request.POST.get("paso") if request.method == "POST" else None
+    datos = request.POST if request.method == "POST" else None
+    confirmacion = None
+    if paso in ("editar", "confirmar"):
+        try:
+            confirmacion = signing.loads(
+                request.POST.get("confirmacion", ""), salt="agenda.acciones-dia", max_age=900,
+            )
+            if (confirmacion["usuario"], confirmacion["sede"], confirmacion["fecha"]) != (
+                request.user.pk, sede.pk, fecha.isoformat(),
+            ):
+                raise signing.BadSignature
+            datos = QueryDict(mutable=True)
+            for nombre, valor in confirmacion["parametros"].items():
+                if isinstance(valor, list):
+                    datos.setlist(nombre, [str(item) for item in valor])
+                elif isinstance(valor, bool):
+                    if valor:
+                        datos[nombre] = "on"
+                else:
+                    datos[nombre] = valor
+            canchas = confirmacion["parametros"]["canchas"]
+            if set(canchas) == set(sede.canchas.values_list("pk", flat=True)):
+                datos["seleccion_canchas"] = "todas"
+            else:
+                datos["seleccion_canchas"] = "seleccionar"
+            datos["horario"] = confirmacion["parametros"]["hora_desde"] or "dia"
+        except signing.BadSignature:
+            avisos.append("La vista previa venció o no corresponde a esta selección. Preparala nuevamente.")
+            datos = None
+            paso = None
+
+    formulario = AgendaOperacionForm(datos, sede=sede, fecha=fecha)
+    previa = None
+    token = None
+    parametros = None
+    if paso not in (None, "editar", "previsualizar", "confirmar"):
+        formulario.is_valid()
+        formulario.add_error(None, "La acción solicitada no es válida.")
+    elif paso is not None and formulario.is_valid():
+        parametros = formulario.parametros()
+        try:
+            if paso == "confirmar":
+                try:
+                    resultado = ejecutar_operacion(request.user, sede.pk, fecha, parametros, confirmacion["huella"])
+                except ValidationError as error:
+                    for mensaje in error.messages:
+                        avisos.append(mensaje)
+                    sede.refresh_from_db()
+                else:
+                    messages.success(
+                        request,
+                        f'La operación fue completada: {resultado["anulaciones"]} eventos anulados '
+                        f'y {resultado["bloqueos_a_crear"]} bloqueos creados.',
+                    )
+                    return redirect(url_agenda)
+            if paso != "editar":
+                previa = preparar_operacion(sede, fecha, parametros)
+                if not formulario.validar_motivos(previa):
+                    previa = None
+        except ValidationError as error:
+            for mensaje in error.messages:
+                formulario.add_error(None, mensaje)
+    if previa is not None:
+        token = signing.dumps({
+            "usuario": request.user.pk, "sede": sede.pk, "fecha": fecha.isoformat(),
+            "parametros": parametros, "huella": previa["huella"],
+        }, salt="agenda.acciones-dia", compress=True)
+    return {
+        "sede": sede, "fecha": fecha,
+        "formulario_operacion": formulario, "previa": previa, "confirmacion": token, "parametros_operacion": parametros,
+        "avisos_operacion": avisos,
+        "motivo_bloqueo": dict(formulario.fields["motivo_bloqueo"].choices).get(parametros["motivo_bloqueo"], "")
+            if parametros else "",
+    }

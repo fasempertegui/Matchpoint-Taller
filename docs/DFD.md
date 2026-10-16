@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización, emisión del comprobante consulta de la agenda diaria y semanal, registro y anulación de bloqueos individuales. Los demás procesos del sistema están pendientes de representación. La ocupación y auditoría pertenecen a Eventos (D12); cada evento referencia directamente un único turno de Turnos (D9), y las reservas guardan sus datos específicos. Reserva, clase y bloqueo duran una hora y tienen identificadores propios. El fin se obtiene sumando una hora al inicio del turno. Un turno admite varios eventos Anulados históricos y como máximo un evento no Anulado.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización, emisión del comprobante consulta de la agenda diaria y semanal, registro y anulación de bloqueos individuales y operaciones administrativas masivas. Los demás procesos del sistema están pendientes de representación. La ocupación y auditoría pertenecen a Eventos (D12); cada evento referencia directamente un único turno de Turnos (D9), y las reservas guardan sus datos específicos. Reserva, clase y bloqueo duran una hora y tienen identificadores propios. El fin se obtiene sumando una hora al inicio del turno. Un turno admite varios eventos Anulados históricos y como máximo un evento no Anulado.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -1478,3 +1478,225 @@ flowchart LR
 13. Confirmación del turno liberado o errores de acceso, selección, estado u horario.
 
 La anulación conserva el bloqueo, el turno y su origen. No restaura la actividad anulada que dio origen al bloqueo y no modifica la auditoría ante solicitudes repetidas. Los bloqueos iniciados o terminados permanecen sólo para consulta.
+
+
+## 10. Operaciones administrativas masivas
+
+### DFD 38: previsualizar acciones del día
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((38. Previsualizar acciones del día))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D8[(D8: Horarios de sedes)]
+    D9[(D9: Turnos)]
+    D12[(D12: Eventos)]
+    D10[(D10: Reservas)]
+    D17[(D17: Bloqueos)]
+    D19[(D19: Clases)]
+
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D5
+    D5 -->|7| P
+    P -->|8| D6
+    D6 -->|9| P
+    P -->|10| D8
+    D8 -->|11| P
+    P -->|12| D9
+    D9 -->|13| P
+    P -->|14| D12
+    D12 -->|15| P
+    P -->|16| D10
+    D10 -->|17| P
+    P -->|18| D17
+    D17 -->|19| P
+    P -->|20| D19
+    D19 -->|21| P
+    P -->|22| A
+```
+
+**Datos que circulan**
+
+1. Actor, sede, fecha, canchas, acción, día completo u hora de corte con fin opcional, exclusiones, motivos y observaciones.
+2. Usuario responsable de la operación.
+3. Estado de acceso del usuario.
+4. Usuario cuyos roles se consultan.
+5. Roles que autorizan la operación administrativa.
+6. Sede seleccionada.
+7. Datos y estado de la sede.
+8. Canchas seleccionadas y sede a la que deben pertenecer.
+9. Datos y estados de las canchas.
+10. Sede y día de la semana consultados.
+11. Franjas de funcionamiento que delimitan los nuevos bloqueos.
+12. Canchas, fecha, hora de corte y fin opcional del alcance.
+13. Turnos existentes con cancha, fecha y hora.
+14. Turnos y actividades comprendidos en el alcance.
+15. Ocupación, tipos, estados y auditoría de los eventos no Anulados.
+16. Eventos de reservas comprendidos en el alcance.
+17. Identidad y organizador de cada reserva.
+18. Eventos de bloqueo comprendidos en el alcance.
+19. Identidad y motivo de cada bloqueo.
+20. Eventos de clase comprendidos en el alcance.
+21. Identidad y datos de cada clase.
+22. Panel lateral con acciones propuestas, cantidades, listados desplegables, eventos conservados con sus motivos y datos de confirmación, o errores de acceso y selección.
+
+La consulta no escribe turnos ni eventos. El alcance distingue las acciones efectivas de los eventos conservados. La confirmación queda vinculada al actor y a los datos revisados y tiene una validez de quince minutos.
+
+### DFD 39: anular y bloquear turnos
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((39. Anular y bloquear turnos))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D8[(D8: Horarios de sedes)]
+    D9[(D9: Turnos)]
+    D12[(D12: Eventos)]
+    D10[(D10: Reservas)]
+    D17[(D17: Bloqueos)]
+    D19[(D19: Clases)]
+    D18[(D18: Orígenes de bloqueos)]
+
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D5
+    D5 -->|7| P
+    P -->|8| D6
+    D6 -->|9| P
+    P -->|10| D8
+    D8 -->|11| P
+    P -->|12| D9
+    D9 -->|13| P
+    P -->|14| D12
+    D12 -->|15| P
+    P -->|16| D10
+    D10 -->|17| P
+    P -->|18| D17
+    D17 -->|19| P
+    P -->|20| D19
+    D19 -->|21| P
+    P -->|22| D9
+    P -->|23| D12
+    P -->|24| D10
+    P -->|25| D17
+    P -->|26| D18
+    P -->|27| A
+```
+
+**Datos que circulan**
+
+1. Actor y confirmación de la vista previa con sede, fecha, canchas, alcance, exclusiones, motivos y ocupación revisada.
+2. Usuario responsable de la operación.
+3. Estado de acceso del usuario.
+4. Usuario cuyos roles se consultan.
+5. Roles que autorizan la operación administrativa.
+6. Sede seleccionada.
+7. Datos y estado de la sede.
+8. Canchas seleccionadas y sede a la que deben pertenecer.
+9. Datos y estados de las canchas.
+10. Sede y día de la semana consultados.
+11. Franjas de funcionamiento que delimitan los nuevos bloqueos.
+12. Canchas, fecha, hora de corte y fin opcional del alcance.
+13. Turnos existentes con cancha, fecha y hora.
+14. Turnos y actividades comprendidos en el alcance.
+15. Ocupación, tipos, estados y auditoría de los eventos no Anulados.
+16. Eventos de reservas comprendidos en el alcance.
+17. Identidad y organizador de cada reserva.
+18. Eventos de bloqueo comprendidos en el alcance.
+19. Identidad y motivo de cada bloqueo.
+20. Eventos de clase comprendidos en el alcance.
+21. Identidad y datos de cada clase.
+22. Turnos nuevos necesarios para los bloqueos confirmados.
+23. Anulación y auditoría de actividades confirmadas; eventos Programados de bloqueo con su turno, responsable y observaciones.
+24. Origen administrativo de la anulación de cada reserva.
+25. Bloqueos independientes con su evento y motivo común.
+26. Origen de cada bloqueo creado después de anular una reserva o clase.
+27. Confirmación de las actividades anuladas y bloqueos creados, o rechazo de todo el lote con la causa para revisar la vista previa.
+
+La operación conserva bloqueos existentes, tipos excluidos y eventos iniciados o Finalizados. Los nuevos bloqueos quedan íntegramente dentro de las franjas de funcionamiento. Se valida la confirmación y se vuelve a comprobar el alcance dentro de una única transacción. Cualquier cambio o fallo revierte todas las acciones.
+
+### DFD 40: anular y liberar eventos en lote
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((40. Anular y liberar eventos en lote))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D8[(D8: Horarios de sedes)]
+    D9[(D9: Turnos)]
+    D12[(D12: Eventos)]
+    D10[(D10: Reservas)]
+    D17[(D17: Bloqueos)]
+    D19[(D19: Clases)]
+
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D5
+    D5 -->|7| P
+    P -->|8| D6
+    D6 -->|9| P
+    P -->|10| D8
+    D8 -->|11| P
+    P -->|12| D9
+    D9 -->|13| P
+    P -->|14| D12
+    D12 -->|15| P
+    P -->|16| D10
+    D10 -->|17| P
+    P -->|18| D17
+    D17 -->|19| P
+    P -->|20| D19
+    D19 -->|21| P
+    P -->|22| D12
+    P -->|23| D10
+    P -->|24| A
+```
+
+**Datos que circulan**
+
+1. Actor y confirmación de la vista previa con sede, fecha, canchas, alcance, exclusiones, motivo y ocupación revisada.
+2. Usuario responsable de la operación.
+3. Estado de acceso del usuario.
+4. Usuario cuyos roles se consultan.
+5. Roles que autorizan la operación administrativa.
+6. Sede seleccionada.
+7. Datos y estado de la sede.
+8. Canchas seleccionadas y sede a la que deben pertenecer.
+9. Datos y estados de las canchas.
+10. Sede y día de la semana consultados.
+11. Franjas de funcionamiento que delimitan los nuevos bloqueos.
+12. Canchas, fecha, hora de corte y fin opcional del alcance.
+13. Turnos existentes con cancha, fecha y hora.
+14. Turnos y actividades comprendidos en el alcance.
+15. Ocupación, tipos, estados y auditoría de los eventos no Anulados.
+16. Eventos de reservas comprendidos en el alcance.
+17. Identidad y organizador de cada reserva.
+18. Eventos de bloqueo comprendidos en el alcance.
+19. Identidad y motivo de cada bloqueo.
+20. Eventos de clase comprendidos en el alcance.
+21. Identidad y datos de cada clase.
+22. Estado Anulado, actor, momento y motivo de las actividades confirmadas.
+23. Origen administrativo de la anulación de cada reserva.
+24. Confirmación de las actividades anuladas y turnos liberados, o rechazo de todo el lote con la causa para revisar la vista previa.
+
+La operación no crea bloqueos ni reactiva actividades de origen. Conserva los registros, los orígenes de bloqueos y los eventos excluidos, iniciados o Finalizados. Se vuelve a comprobar el alcance dentro de una única transacción; cualquier cambio o fallo revierte todo el lote.

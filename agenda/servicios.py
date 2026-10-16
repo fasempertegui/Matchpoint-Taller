@@ -12,12 +12,14 @@ from reservas.models import Evento
 from reservas.servicios import validar_anulacion_reserva, validar_finalizacion_reserva
 
 
-def enlace_agenda(sede, fecha, cancha=None, hora=None):
+def enlace_agenda(sede, fecha, cancha=None, hora=None, acciones=False):
     datos = {"sede": sede.pk, "fecha": fecha.isoformat()}
     if cancha is not None:
         datos["cancha"] = cancha.pk
     if hora is not None:
         datos["hora"] = hora
+    if acciones:
+        datos["panel"] = "acciones"
     return reverse("agenda:agenda") + "?" + urlencode(datos)
 
 
@@ -161,5 +163,6 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
             if fecha + salto <= fecha_maxima else None,
         "url_hoy": enlace_agenda(sede, ahora.date(), cancha),
         "url_cerrar": enlace_agenda(sede, fecha, cancha),
+        "url_acciones": enlace_agenda(sede, fecha, acciones=True),
         "url_seleccion": enlace_agenda(sede, fecha, cancha, hora_seleccionada),
     }

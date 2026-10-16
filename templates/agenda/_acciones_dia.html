@@ -1,0 +1,93 @@
+<section class="agenda-operaciones" data-agenda-panel-acciones>
+    <header class="agenda-detalle-cabecera">
+        <div><h2>Acciones del día</h2><p>{{ fecha|date:"l d/m/Y"|capfirst }}</p></div>
+        <a class="agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar acciones del día">×</a>
+    </header>
+    {% for aviso in avisos_operacion %}<p class="error-campo" role="alert">{{ aviso }}</p>{% endfor %}
+    {% if previa != None %}
+        <div class="operacion-previa">
+            <p>{% if parametros_operacion.operacion == 'bloquear' %}Anular y bloquear{% else %}Anular y liberar{% endif %} · {% if parametros_operacion.alcance == 'dia' %}Día completo{% else %}Desde las {{ parametros_operacion.hora_desde }}{% if parametros_operacion.hora_hasta %} hasta las {{ parametros_operacion.hora_hasta }}{% endif %}{% endif %}</p>
+            <p class="agenda-impedimento">{% for cancha in previa.canchas %}{{ cancha.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+            <div class="operacion-totales" aria-live="polite">
+                <span>{{ previa.anulaciones }} evento{{ previa.anulaciones|pluralize }} a anular</span>
+                {% if parametros_operacion.operacion == 'bloquear' %}<span>{{ previa.bloqueos_a_crear }} bloqueo{{ previa.bloqueos_a_crear|pluralize }} a crear</span>{% endif %}
+                <span>{{ previa.conservados|length }} evento{{ previa.conservados|length|pluralize }} sin cambios</span>
+            </div>
+            {% if previa.acciones %}
+                <details class="operacion-desglose">
+                    <summary>Ver acciones ({{ previa.acciones|length }})</summary>
+                    <ul class="operacion-lista">{% include "agenda/_items_operacion.html" with filas=previa.acciones %}</ul>
+                </details>
+            {% else %}<p class="agenda-impedimento">No hay acciones para aplicar con esta selección.</p>{% endif %}
+            {% if previa.conservados %}
+                <details class="operacion-desglose">
+                    <summary>Ver eventos sin cambios ({{ previa.conservados|length }})</summary>
+                    <ul class="operacion-lista">{% include "agenda/_items_operacion.html" with filas=previa.conservados %}</ul>
+                </details>
+            {% endif %}
+            <details class="operacion-desglose">
+                <summary>Ver motivos</summary>
+                <dl class="operacion-motivos">
+                    {% if parametros_operacion.operacion == 'bloquear' %}<div><dt>Motivo del bloqueo</dt><dd>{{ motivo_bloqueo }}</dd></div>{% endif %}
+                    {% if previa.anulaciones %}<div><dt>Motivo de anulación</dt><dd>{{ parametros_operacion.motivo_anulacion|linebreaksbr }}</dd></div>{% endif %}
+                    {% if parametros_operacion.observaciones %}<div><dt>Observaciones</dt><dd>{{ parametros_operacion.observaciones|linebreaksbr }}</dd></div>{% endif %}
+                </dl>
+            </details>
+            <div class="operacion-confirmacion">
+                {% if previa.acciones %}
+                    <form method="post" action="{{ agenda.url_acciones }}" data-confirmar="¿Confirmar la operación sobre {{ previa.canchas|length }} cancha{{ previa.canchas|length|pluralize }} de {{ sede.nombre }}, el {{ fecha|date:'d/m/Y' }}? Se anularán {{ previa.anulaciones }} eventos{% if parametros_operacion.operacion == 'bloquear' %} y se crearán {{ previa.bloqueos_a_crear }} bloqueos{% endif %}, según la vista previa." data-confirmar-titulo="Confirmar acciones del día" data-confirmar-boton="Confirmar operación">
+                        {% csrf_token %}<input type="hidden" name="paso" value="confirmar"><input type="hidden" name="confirmacion" value="{{ confirmacion }}">
+                        <button class="boton boton-primario boton-chico" type="submit">{% if parametros_operacion.operacion == 'bloquear' %}Confirmar y bloquear{% else %}Confirmar y liberar{% endif %}</button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{{ agenda.url_acciones }}" data-agenda-operacion-envio>
+                    {% csrf_token %}<input type="hidden" name="paso" value="editar"><input type="hidden" name="confirmacion" value="{{ confirmacion }}">
+                    <button class="boton boton-secundario boton-chico" type="submit">Editar selección</button>
+                </form>
+            </div>
+            {% if previa.acciones %}<p class="agenda-impedimento">Si cambian la agenda o los horarios, se pide revisar nuevamente. No se aplican cambios parciales.</p>{% endif %}
+        </div>
+    {% else %}
+        <form class="agenda-formulario operacion-formulario" method="post" action="{{ agenda.url_acciones }}" data-agenda-operacion data-agenda-operacion-envio>
+            {% csrf_token %}<input type="hidden" name="paso" value="previsualizar">
+            {{ formulario_operacion.non_field_errors }}
+            <div class="grupo-campo">
+                <label for="{{ formulario_operacion.operacion.id_for_label }}">{{ formulario_operacion.operacion.label }}</label>{{ formulario_operacion.operacion }}
+                {% for error in formulario_operacion.operacion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="grupo-campo">
+                <label for="{{ formulario_operacion.seleccion_canchas.id_for_label }}">{{ formulario_operacion.seleccion_canchas.label }}</label>{{ formulario_operacion.seleccion_canchas }}
+                {% for error in formulario_operacion.seleccion_canchas.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <fieldset class="operacion-canchas" data-operacion-varias-canchas>
+                <legend>{{ formulario_operacion.canchas.label }}</legend>{{ formulario_operacion.canchas }}
+                {% for error in formulario_operacion.canchas.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </fieldset>
+            <div class="grupo-campo">
+                <label for="{{ formulario_operacion.horario.id_for_label }}">{{ formulario_operacion.horario.label }}</label>{{ formulario_operacion.horario }}
+                {% for error in formulario_operacion.horario.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="grupo-campo" data-operacion-hasta>
+                <label for="{{ formulario_operacion.hora_hasta.id_for_label }}">{{ formulario_operacion.hora_hasta.label }}</label>{{ formulario_operacion.hora_hasta }}
+                {% for error in formulario_operacion.hora_hasta.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <fieldset class="operacion-exclusiones">
+                <legend>Conservar actividades</legend>
+                <label>{{ formulario_operacion.excluir_reservas }} {{ formulario_operacion.excluir_reservas.label }}</label>
+                <label data-operacion-excluir-bloqueos>{{ formulario_operacion.excluir_bloqueos }} {{ formulario_operacion.excluir_bloqueos.label }}</label>
+            </fieldset>
+            <div class="grupo-campo" data-operacion-motivo-bloqueo>
+                <label for="{{ formulario_operacion.motivo_bloqueo.id_for_label }}">{{ formulario_operacion.motivo_bloqueo.label }}</label>{{ formulario_operacion.motivo_bloqueo }}
+                {% for error in formulario_operacion.motivo_bloqueo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="grupo-campo">
+                <label for="{{ formulario_operacion.motivo_anulacion.id_for_label }}">{{ formulario_operacion.motivo_anulacion.label }}</label>{{ formulario_operacion.motivo_anulacion }}
+                <small class="nota-campo">{{ formulario_operacion.motivo_anulacion.help_text }}</small>
+                {% for error in formulario_operacion.motivo_anulacion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <div data-operacion-observaciones>{% include "componentes/observaciones_opcionales.html" with campo=formulario_operacion.observaciones %}</div>
+            <button class="boton boton-primario boton-chico" type="submit">Revisar acciones</button>
+            <small class="nota-campo">Sólo se actúa sobre turnos que no empezaron. Primero vas a revisar los cambios.</small>
+        </form>
+    {% endif %}
+</section>

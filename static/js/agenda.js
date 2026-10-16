@@ -33,9 +33,46 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    async function cargarDetalle(enlace) {
+    function prepararCamposOperacion() {
+        var formulario = document.querySelector("[data-agenda-operacion]");
+        if (!formulario) return;
+
+        function actualizarCampos() {
+            var bloquear = formulario.elements.operacion.value === "bloquear";
+            var variasCanchas = formulario.elements.seleccion_canchas.value === "seleccionar";
+            formulario.querySelector("[data-operacion-varias-canchas]").hidden = !variasCanchas;
+            formulario.querySelectorAll('input[name="canchas"]').forEach(function (cancha) {
+                cancha.disabled = !variasCanchas;
+            });
+            var desde = formulario.elements.horario.value;
+            var hasta = formulario.elements.hora_hasta;
+            var finElegido = hasta.value;
+            var opciones = [new Option("Fin del día", "")];
+            if (desde !== "dia") {
+                hasta.dataset.finalesHabilitados.split(",").forEach(function (valor) {
+                    if (valor && valor > desde) opciones.push(new Option(valor, valor, false, valor === finElegido));
+                });
+            }
+            hasta.replaceChildren(...opciones);
+            hasta.disabled = desde === "dia";
+            formulario.querySelector("[data-operacion-hasta]").hidden = desde === "dia";
+            formulario.querySelector("[data-operacion-motivo-bloqueo]").hidden = !bloquear;
+            formulario.elements.motivo_bloqueo.disabled = !bloquear;
+            formulario.elements.motivo_bloqueo.required = bloquear;
+            formulario.querySelector("[data-operacion-observaciones]").hidden = !bloquear;
+            formulario.elements.observaciones.disabled = !bloquear;
+            formulario.querySelector("[data-operacion-excluir-bloqueos]").hidden = bloquear;
+            formulario.elements.excluir_bloqueos.disabled = bloquear;
+
+        }
+
+        formulario.addEventListener("change", actualizarCampos);
+        actualizarCampos();
+    }
+
+    async function cargarDetalle(enlace, datosFormulario) {
         if (solicitudActual) solicitudActual.abort();
-        var seleccionadoAnterior = document.querySelector(".agenda-turno-seleccionado");
+        var seleccionadoAnterior = document.querySelector(".agenda-turno-seleccionado") || document.querySelector("[data-agenda-acciones]");
         var cerrarDetalle = enlace.matches("[data-agenda-cerrar]");
         var solicitud = new AbortController();
         solicitudActual = solicitud;
@@ -46,12 +83,14 @@ document.addEventListener("DOMContentLoaded", function () {
         var demoraAviso = window.setTimeout(function () {
             if (solicitud !== solicitudActual) return;
             aviso.setAttribute("role", "status");
-            aviso.textContent = "Cargando turno…";
+            aviso.textContent = "Cargando…";
             aviso.hidden = false;
         }, 300);
-        var mensajeError = "No se pudo cargar el turno. Intentá seleccionarlo nuevamente.";
+        var mensajeError = "No se pudo cargar el panel. Intentá nuevamente.";
         try {
-            var respuesta = await fetch(enlace.href, {
+            var respuesta = await fetch(enlace.href || enlace.action, {
+                method: datosFormulario ? "POST" : "GET",
+                body: datosFormulario,
                 headers: {"X-Agenda-Detalle": "1"},
                 credentials: "same-origin",
                 cache: "no-store",
@@ -62,7 +101,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 throw new Error();
             }
             if (!respuesta.ok) {
-                if (respuesta.status === 403) mensajeError = "No tenés acceso al detalle de este turno.";
+                if (respuesta.status === 403) mensajeError = "No se pudo autorizar la consulta. Recargá la página para continuar.";
                 if (respuesta.status === 400) mensajeError = (await respuesta.json()).error;
                 throw new Error();
             }
@@ -73,6 +112,9 @@ document.addEventListener("DOMContentLoaded", function () {
             contenido.innerHTML = html;
             prepararConfirmacionReserva();
             prepararConfirmacionBloqueo();
+            prepararCamposOperacion();
+            var botonAcciones = document.querySelector("[data-agenda-acciones]");
+            if (botonAcciones) botonAcciones.setAttribute("aria-expanded", String(Boolean(contenido.querySelector("[data-agenda-panel-acciones]"))));
             var destino = new URL(seleccion, window.location.href);
             document.querySelectorAll("[data-agenda-turno]").forEach(function (turno) {
                 var activo = turno.pathname === destino.pathname && turno.search === destino.search;
@@ -99,10 +141,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     document.addEventListener("click", function (evento) {
-        var enlace = evento.target.closest("[data-agenda-turno], [data-agenda-cerrar]");
+        var enlace = evento.target.closest("[data-agenda-turno], [data-agenda-cerrar], [data-agenda-acciones]");
         if (!enlace || !panel || evento.defaultPrevented || evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
         evento.preventDefault();
         cargarDetalle(enlace);
+    });
+
+    document.addEventListener("submit", function (evento) {
+        var formulario = evento.target;
+        if (!formulario.matches("[data-agenda-operacion-envio]") || evento.defaultPrevented || !panel) return;
+        evento.preventDefault();
+        cargarDetalle(formulario, new FormData(formulario));
     });
 
     var tabla = document.querySelector("[data-agenda-tabla]");
@@ -133,4 +182,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
     prepararConfirmacionReserva();
     prepararConfirmacionBloqueo();
+    prepararCamposOperacion();
 });

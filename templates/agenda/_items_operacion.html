@@ -1,0 +1,7 @@
+{% for fila in filas %}
+    <li>
+        <strong>{{ fila.cancha.nombre }} · {{ fila.hora|time:"H:i" }}–{{ fila.fin|time:"H:i" }}</strong>
+        <p>{% if fila.reserva %}<a href="{% url 'reservas:reserva_detalle' fila.reserva.pk %}">{{ fila.identificador }}</a> · {{ fila.reserva.organizador }}{% elif fila.bloqueo %}{{ fila.identificador }} · {{ fila.bloqueo.get_motivo_display }}{% else %}{{ fila.actividad }}{% endif %}</p>
+        <span>{{ fila.accion|default:fila.conservado }}</span>
+    </li>
+{% endfor %}

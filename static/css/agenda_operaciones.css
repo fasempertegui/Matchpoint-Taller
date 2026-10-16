@@ -1,0 +1,92 @@
+.agenda-operaciones {
+    font-size: .85rem;
+}
+
+.operacion-canchas,
+.operacion-exclusiones {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+.operacion-canchas legend,
+.operacion-exclusiones legend {
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.operacion-canchas label,
+.operacion-exclusiones label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+}
+
+.agenda-operaciones input[type="checkbox"] {
+    accent-color: var(--primario);
+    flex-shrink: 0;
+}
+
+.operacion-totales {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    margin: 16px 0;
+    background: var(--primario-suave);
+    border-radius: 4px;
+}
+
+.operacion-desglose {
+    margin-top: 14px;
+}
+
+.operacion-desglose summary {
+    color: var(--primario);
+    cursor: pointer;
+}
+
+.operacion-lista {
+    padding: 0;
+    margin: 8px 0;
+    list-style: none;
+}
+
+.operacion-lista li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--borde);
+    overflow-wrap: anywhere;
+}
+
+.operacion-lista p {
+    margin: 4px 0;
+}
+
+.operacion-lista span,
+.operacion-motivos dt {
+    color: var(--texto-suave);
+}
+
+.operacion-motivos div {
+    margin-top: 10px;
+}
+
+.operacion-motivos dd {
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+}
+
+.operacion-confirmacion {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.operacion-confirmacion .boton {
+    width: 100%;
+}
+
+.agenda-operaciones [hidden] {
+    display: none;
+}
