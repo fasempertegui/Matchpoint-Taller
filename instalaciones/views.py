@@ -278,7 +278,7 @@ def sede_cambiar_estado(request, pk):
         if nuevo_estado == Sede.Estado.INACTIVA and Evento.objects.filter(
             tipo=Evento.Tipo.RESERVA,
             estado=Evento.Estado.PROGRAMADO,
-            turnos__cancha__sede=sede,
+            turno__cancha__sede=sede,
         ).exists():
             messages.error(
                 request,
@@ -397,7 +397,7 @@ def cancha_cambiar_estado(request, sede_pk, pk):
         if nuevo_estado == Cancha.Estado.INACTIVA and Evento.objects.filter(
             tipo=Evento.Tipo.RESERVA,
             estado=Evento.Estado.PROGRAMADO,
-            turnos__cancha=cancha,
+            turno__cancha=cancha,
         ).exists():
             messages.error(
                 request,

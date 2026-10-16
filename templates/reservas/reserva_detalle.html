@@ -41,43 +41,21 @@
                     </div>
                     <div class="perfil-fila">
                         <dt>Sede</dt>
-                        <dd>{{ turnos.0.cancha.sede.nombre }}</dd>
+                        <dd>{{ turno.cancha.sede.nombre }}</dd>
                     </div>
                     <div class="perfil-fila">
                         <dt>Cancha</dt>
-                        <dd>{{ turnos.0.cancha.nombre }}</dd>
+                        <dd>{{ turno.cancha.nombre }}</dd>
                     </div>
                     <div class="perfil-fila">
                         <dt>Fecha de uso</dt>
-                        <dd>{{ turnos.0.fecha|date:"d/m/Y" }}</dd>
+                        <dd>{{ turno.fecha|date:"d/m/Y" }}</dd>
                     </div>
                     <div class="perfil-fila">
                         <dt>Horario</dt>
-                        <dd>{{ hora_inicio|time:"H:i" }} a {{ hora_fin|time:"H:i" }}</dd>
+                        <dd>{{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</dd>
                     </div>
                 </dl>
-            </section>
-
-            <section class="perfil-seccion" aria-labelledby="reserva-turnos-titulo">
-                <h2 id="reserva-turnos-titulo">Turnos reservados</h2>
-                <div class="tabla-contenedor">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th scope="col">Horario</th>
-                                <th scope="col" class="tabla-importe">Subtotal (ARS)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for turno in turnos %}
-                                <tr>
-                                    <td>{{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</td>
-                                    <td class="tabla-importe">$ {{ reserva.precio_por_turno_aplicado|floatformat:"2g" }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
             </section>
 
             {% if reserva.evento.observaciones %}
@@ -131,7 +109,7 @@
                     <a class="perfil-enlace" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
                     {% if puede_finalizar %}
                         <form class="formulario-en-linea" method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}"
-                              data-confirmar="¿Finalizar la reserva {{ reserva.numero }}? Se conservarán sus turnos y su ocupación histórica."
+                              data-confirmar="¿Finalizar la reserva {{ reserva.numero }}? Se conservará su turno y su ocupación histórica."
                               data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">
                             {% csrf_token %}
                             <button class="perfil-enlace perfil-accion" type="submit">Finalizar reserva</button>
@@ -143,11 +121,11 @@
                     <details class="perfil-desplegable" id="anulacion"{% if formulario_anulacion.is_bound %} open{% endif %}>
                         <summary class="perfil-accion-desactivar">Anular reserva</summary>
                         <form class="perfil-formulario" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}"
-                              data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? Se liberarán todos sus turnos."
+                              data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? Se liberará su turno."
                               data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular reserva">
                             {% csrf_token %}
                             {% if not es_administrador %}
-                                <p class="perfil-descripcion">Podés anular tu reserva con al menos una hora de antelación al inicio del primer turno.</p>
+                                <p class="perfil-descripcion">Podés anular tu reserva con al menos una hora de antelación al inicio del turno.</p>
                             {% endif %}
                             <div class="grupo-campo">
                                 <label for="{{ formulario_anulacion.motivo.id_for_label }}">{{ formulario_anulacion.motivo.label }} <span aria-hidden="true">*</span></label>

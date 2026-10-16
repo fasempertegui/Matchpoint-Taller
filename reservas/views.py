@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Prefetch, Q
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.formats import number_format
@@ -9,8 +9,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from .disponibilidad import consultar_disponibilidad
-from .forms import ReservaAnulacionForm, ReservaDatosForm, ReservaFiltroForm, ReservaTurnosForm
-from .models import Reserva, Turno
+from .forms import ReservaAnulacionForm, ReservaDatosForm, ReservaFiltroForm, ReservaTurnoForm
+from .models import Reserva
 from .servicios import (
     anular_reserva,
     exigir_acceso_reservas,
@@ -36,9 +36,7 @@ def _breadcrumbs_reserva(es_administrador, reserva=None):
 def reserva_lista(request):
     es_administrador = exigir_acceso_reservas(request.user)
     formulario = ReservaFiltroForm(request.GET, es_administrador=es_administrador)
-    reservas = Reserva.objects.select_related("organizador", "evento").prefetch_related(
-        Prefetch("evento__turnos", queryset=Turno.objects.select_related("cancha__sede"))
-    )
+    reservas = Reserva.objects.select_related("organizador", "evento__turno__cancha__sede")
     if not es_administrador:
         reservas = reservas.filter(organizador=request.user)
     filtros_validos = formulario.is_valid()
@@ -46,15 +44,15 @@ def reserva_lista(request):
         datos = formulario.cleaned_data
         filtros_turnos = {}
         if datos["sede"]:
-            filtros_turnos["evento__turnos__cancha__sede"] = datos["sede"]
+            filtros_turnos["evento__turno__cancha__sede"] = datos["sede"]
         if datos["cancha"]:
-            filtros_turnos["evento__turnos__cancha"] = datos["cancha"]
+            filtros_turnos["evento__turno__cancha"] = datos["cancha"]
         if datos["fecha_desde"]:
-            filtros_turnos["evento__turnos__fecha__gte"] = datos["fecha_desde"]
+            filtros_turnos["evento__turno__fecha__gte"] = datos["fecha_desde"]
         if datos["fecha_hasta"]:
-            filtros_turnos["evento__turnos__fecha__lte"] = datos["fecha_hasta"]
+            filtros_turnos["evento__turno__fecha__lte"] = datos["fecha_hasta"]
         if filtros_turnos:
-            reservas = reservas.filter(**filtros_turnos).distinct()
+            reservas = reservas.filter(**filtros_turnos)
         if datos["estado"]:
             reservas = reservas.filter(evento__estado=datos["estado"])
         if datos["numero"] is not None:
@@ -69,16 +67,14 @@ def reserva_lista(request):
 
     filas = []
     for reserva in reservas:
-        turnos = list(reserva.evento.turnos.all())
-        primer_turno = turnos[0]
-        ultimo_turno = turnos[-1]
+        turno = reserva.evento.turno
         filas.append({
             "reserva": reserva,
-            "cancha": primer_turno.cancha,
-            "fecha": primer_turno.fecha,
-            "hora_inicio": primer_turno.hora_inicio,
-            "hora_fin": ultimo_turno.hora_fin,
-            "total": reserva.precio_por_turno_aplicado * len(turnos),
+            "cancha": turno.cancha,
+            "fecha": turno.fecha,
+            "hora_inicio": turno.hora_inicio,
+            "hora_fin": turno.hora_fin,
+            "total": reserva.precio_por_turno_aplicado,
         })
     return render(request, "reservas/reserva_lista.html", {
         "formulario": formulario,
@@ -98,7 +94,7 @@ def reserva_crear(request):
         es_administrador=es_administrador,
     )
     resultado = None
-    formulario_turnos = None
+    formulario_turno = None
     if request.method == "POST" and formulario.is_valid():
         accion = request.POST.get("accion")
         try:
@@ -108,54 +104,42 @@ def reserva_crear(request):
                 formulario.cleaned_data["cancha"],
                 formulario.cleaned_data["fecha"],
             )
-            formulario_turnos = ReservaTurnosForm(
+            formulario_turno = ReservaTurnoForm(
                 request.POST if accion == "registrar" else None,
                 turnos=resultado["turnos"],
             )
-            if accion == "registrar" and formulario_turnos.is_valid():
+            if accion == "registrar" and formulario_turno.is_valid():
                 try:
-                    reserva, total = registrar_reserva(
+                    reserva = registrar_reserva(
                         request.user,
                         formulario.cleaned_data.get("organizador", request.user),
                         formulario.cleaned_data["cancha"],
                         formulario.cleaned_data["fecha"],
-                        formulario_turnos.cleaned_data["turnos"],
-                        formulario_turnos.cleaned_data["precio_mostrado"],
-                        formulario_turnos.cleaned_data["observaciones"],
+                        formulario_turno.cleaned_data["turno"],
+                        formulario_turno.cleaned_data["precio_mostrado"],
+                        formulario_turno.cleaned_data["observaciones"],
                     )
                 except ValidationError as error:
                     resultado = consultar_disponibilidad(
                         formulario.cleaned_data["cancha"],
                         formulario.cleaned_data["fecha"],
                     )
-                    formulario_turnos = ReservaTurnosForm(request.POST, turnos=resultado["turnos"])
-                    formulario_turnos.add_error(None, error)
+                    formulario_turno = ReservaTurnoForm(request.POST, turnos=resultado["turnos"])
+                    formulario_turno.add_error(None, error)
                 else:
-                    messages.success(request, f"La reserva {reserva.numero} fue registrada. Total: $ {number_format(total, decimal_pos=2)}.")
+                    total = number_format(reserva.precio_por_turno_aplicado, decimal_pos=2)
+                    messages.success(request, f"La reserva {reserva.numero} fue registrada. Total: $ {total}.")
                     return redirect("reservas:reserva_detalle", pk=reserva.pk)
         except ValidationError as error:
             formulario.add_error(None, error)
             resultado = None
-            formulario_turnos = None
+            formulario_turno = None
 
-    filas_turnos = []
-    if resultado is not None:
-        filas_turnos = [
-            {
-                "turno": turno,
-                "franja": next(
-                    numero for numero, (inicio, fin) in enumerate(resultado["franjas"])
-                    if turno.hora_inicio >= inicio and turno.hora_fin <= fin
-                ),
-            }
-            for turno in resultado["turnos"]
-        ]
     return render(request, "reservas/reserva_formulario.html", {
         "formulario": formulario,
-        "formulario_turnos": formulario_turnos,
+        "formulario_turno": formulario_turno,
         "resultado": resultado,
-        "filas_turnos": filas_turnos,
-        "turnos_seleccionados": request.POST.getlist("turnos"),
+        "turno_seleccionado": request.POST.get("turno", ""),
         "precio_centavos": int(resultado["precio_por_turno"] * 100) if resultado else None,
         "es_administrador": es_administrador,
         "hay_sedes": formulario.fields["sede"].queryset.exists(),
@@ -174,14 +158,10 @@ def reserva_detalle(request, pk):
 @require_http_methods(["GET"])
 def reserva_comprobante(request, pk):
     reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk)
-    turnos = list(reserva.evento.turnos.select_related("cancha__sede").all())
     return render(request, "reservas/reserva_comprobante.html", {
         "reserva": reserva,
-        "turnos": turnos,
-        "cantidad_horas": len(turnos),
-        "total": reserva.precio_por_turno_aplicado * len(turnos),
-        "hora_inicio": turnos[0].hora_inicio if turnos else None,
-        "hora_fin": turnos[-1].hora_fin if turnos else None,
+        "turno": reserva.evento.turno,
+        "total": reserva.precio_por_turno_aplicado,
         "breadcrumbs": _breadcrumbs_reserva(es_administrador, reserva) + [("Comprobante", None)],
     })
 
@@ -189,7 +169,7 @@ def reserva_comprobante(request, pk):
 def _obtener_reserva_para_consulta(usuario, pk):
     es_administrador = exigir_acceso_reservas(usuario)
     reservas = Reserva.objects.select_related(
-        "organizador", "evento__registrado_por", "evento__anulado_por",
+        "organizador", "evento__registrado_por", "evento__anulado_por", "evento__turno__cancha__sede",
     )
     if not es_administrador:
         reservas = reservas.filter(organizador=usuario)
@@ -197,12 +177,9 @@ def _obtener_reserva_para_consulta(usuario, pk):
 
 
 def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=None):
-    turnos = list(reserva.evento.turnos.select_related("cancha__sede").all())
     ahora = timezone.localtime()
-    primer_turno = turnos[0] if turnos else None
-    ultimo_turno = turnos[-1] if turnos else None
     try:
-        validar_anulacion_reserva(reserva, primer_turno, es_administrador, ahora)
+        validar_anulacion_reserva(reserva, es_administrador, ahora)
     except ValidationError as error:
         puede_anular = False
         impedimento_anulacion = error.messages[0]
@@ -212,20 +189,17 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
     puede_finalizar = False
     if es_administrador:
         try:
-            validar_finalizacion_reserva(reserva, ultimo_turno, ahora)
+            validar_finalizacion_reserva(reserva, ahora)
         except ValidationError:
             pass
         else:
             puede_finalizar = True
     return {
         "reserva": reserva,
-        "turnos": turnos,
-        "cantidad_horas": len(turnos),
-        "total": reserva.precio_por_turno_aplicado * len(turnos),
+        "turno": reserva.evento.turno,
+        "total": reserva.precio_por_turno_aplicado,
         "puede_anular": puede_anular,
         "puede_finalizar": puede_finalizar,
-        "hora_inicio": primer_turno.hora_inicio if primer_turno else None,
-        "hora_fin": ultimo_turno.hora_fin if ultimo_turno else None,
         "es_administrador": es_administrador,
         "impedimento_anulacion": impedimento_anulacion,
         "breadcrumbs": _breadcrumbs_reserva(es_administrador, reserva),
@@ -245,7 +219,7 @@ def reserva_anular(request, pk):
             formulario.add_error(None, error)
             reserva.refresh_from_db()
         else:
-            messages.success(request, f"La reserva {reserva.numero} fue anulada. Sus turnos quedaron liberados.")
+            messages.success(request, f"La reserva {reserva.numero} fue anulada. Su turno quedó liberado.")
             return redirect("reservas:reserva_detalle", pk=reserva.pk)
     return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador, formulario))
 

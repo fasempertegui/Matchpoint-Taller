@@ -184,13 +184,14 @@ class ReservaAnulacionForm(forms.Form):
     )
 
 
-class ReservaTurnosForm(forms.Form):
-    turnos = forms.TypedMultipleChoiceField(
-        label="Turnos",
+class ReservaTurnoForm(forms.Form):
+    turno = forms.TypedChoiceField(
+        label="Turno",
         coerce=int,
+        widget=forms.RadioSelect(),
         error_messages={
-            "required": "Seleccioná al menos un turno.",
-            "invalid_choice": "Uno o más turnos ya no están disponibles. Elegí nuevamente.",
+            "required": "Seleccioná un turno.",
+            "invalid_choice": "El turno ya no está disponible. Elegí nuevamente.",
         },
     )
     precio_mostrado = forms.DecimalField(
@@ -206,13 +207,12 @@ class ReservaTurnosForm(forms.Form):
 
     def __init__(self, *args, turnos, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["turnos"].choices = [
+        self.fields["turno"].choices = [
             (str(turno.pk), f"{turno.hora_inicio:%H:%M} a {turno.hora_fin:%H:%M}")
             for turno in turnos
         ]
 
-    def clean_turnos(self):
-        turnos = self.cleaned_data["turnos"]
-        if len(turnos) != len(set(turnos)):
-            raise forms.ValidationError("No se puede seleccionar un mismo turno más de una vez.")
-        return turnos
+    def clean_turno(self):
+        if len(self.data.getlist("turno")) != 1:
+            raise forms.ValidationError("Seleccioná un único turno.")
+        return self.cleaned_data["turno"]

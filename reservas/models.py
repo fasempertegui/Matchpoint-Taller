@@ -76,13 +76,19 @@ class Evento(models.Model):
     anulado_en = models.DateTimeField(blank=True, null=True)
     motivo_anulacion = models.TextField(blank=True)
     finalizado_en = models.DateTimeField(blank=True, null=True)
-    turnos = models.ManyToManyField(Turno, through="EventoTurno", related_name="eventos")
+    turno = models.ForeignKey(Turno, on_delete=models.PROTECT, related_name="eventos")
 
     class Meta:
         db_table = "eventos"
         ordering = ("-creado_en", "-pk")
         default_permissions = ()
         constraints = [
+            models.UniqueConstraint(
+                fields=("turno",),
+                condition=~models.Q(estado="anulado"),
+                name="evento_turno_ocupado_unico",
+                violation_error_message="El turno ya está ocupado por otra actividad.",
+            ),
             models.CheckConstraint(
                 condition=models.Q(tipo__in=("reserva", "clase", "bloqueo")),
                 name="evento_tipo_valido",
@@ -124,29 +130,6 @@ class Evento(models.Model):
 
     def __str__(self):
         return f"Evento {self.pk}"
-
-
-class EventoTurno(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    evento = models.ForeignKey(Evento, on_delete=models.PROTECT, related_name="detalles")
-    turno = models.ForeignKey(Turno, on_delete=models.PROTECT, related_name="vinculos_eventos")
-
-    class Meta:
-        db_table = "eventos_turnos"
-        ordering = ("turno__fecha", "turno__hora_inicio", "pk")
-        default_permissions = ()
-        constraints = [
-            models.UniqueConstraint(
-                fields=("evento", "turno"),
-                name="evento_turno_unico",
-                violation_error_message="El turno ya está incluido en este evento.",
-            ),
-        ]
-        verbose_name = "turno de evento"
-        verbose_name_plural = "turnos de eventos"
-
-    def __str__(self):
-        return f"{self.evento} - {self.turno}"
 
 
 class Reserva(models.Model):

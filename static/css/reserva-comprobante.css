@@ -77,15 +77,6 @@
     margin-bottom: 16px;
 }
 
-.comprobante th,
-.comprobante td {
-    padding: 16px;
-}
-
-.comprobante-importe {
-    text-align: right;
-}
-
 .comprobante-total {
     display: flex;
     align-items: center;
@@ -193,14 +184,8 @@
         grid-column: 1 / -1;
     }
 
-    .comprobante th,
     .comprobante-pie {
         color: #000000;
-    }
-
-    .comprobante th,
-    .comprobante td {
-        padding: 12px 16px;
     }
 
     .comprobante h2 {
@@ -211,14 +196,9 @@
     .comprobante-uso,
     .comprobante-datos > div,
     .comprobante-registro,
-    .comprobante tr,
     .comprobante-total,
     .comprobante-pie {
         break-inside: avoid;
-    }
-
-    .comprobante thead {
-        display: table-header-group;
     }
 
     .comprobante-anulacion {

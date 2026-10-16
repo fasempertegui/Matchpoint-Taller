@@ -25,32 +25,20 @@
 
     <section class="comprobante-uso" aria-label="Datos de uso de la cancha">
         <div class="detalle-grid">
-            <div><span class="etiqueta">Fecha de uso</span><p>{{ turnos.0.fecha|date:"d/m/Y" }}</p></div>
-            <div><span class="etiqueta">Horario</span><p>{{ hora_inicio|time:"H:i" }} a {{ hora_fin|time:"H:i" }}</p></div>
-            <div><span class="etiqueta">Sede</span><p>{{ turnos.0.cancha.sede.nombre }}</p></div>
-            <div><span class="etiqueta">Cancha</span><p>{{ turnos.0.cancha.nombre }}</p></div>
+            <div><span class="etiqueta">Fecha de uso</span><p>{{ turno.fecha|date:"d/m/Y" }}</p></div>
+            <div><span class="etiqueta">Horario</span><p>{{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</p></div>
+            <div><span class="etiqueta">Sede</span><p>{{ turno.cancha.sede.nombre }}</p></div>
+            <div><span class="etiqueta">Cancha</span><p>{{ turno.cancha.nombre }}</p></div>
         </div>
     </section>
 
     <div class="detalle-grid comprobante-datos">
         <div><span class="etiqueta">Organizador</span><p>{{ reserva.organizador }}</p></div>
-        <div><span class="etiqueta">Duración</span><p>{{ cantidad_horas }} hora{{ cantidad_horas|pluralize:"s" }}</p></div>
+        <div><span class="etiqueta">Duración</span><p>1 hora</p></div>
         <div><span class="etiqueta">Precio por turno (ARS)</span><p>$ {{ reserva.precio_por_turno_aplicado|floatformat:"2g" }}</p></div>
     </div>
 
-    <section class="comprobante-seccion" aria-labelledby="turnos-titulo">
-        <h2 id="turnos-titulo">Turnos reservados</h2>
-        <table>
-            <thead><tr><th scope="col">Horario</th><th scope="col" class="comprobante-importe">Subtotal (ARS)</th></tr></thead>
-            <tbody>
-                {% for turno in turnos %}
-                    <tr>
-                        <td>{{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</td>
-                        <td class="comprobante-importe">$ {{ reserva.precio_por_turno_aplicado|floatformat:"2g" }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <section class="comprobante-seccion" aria-label="Importe de la reserva">
         <div class="comprobante-total">
             <span class="etiqueta">Total (ARS)</span>
             <strong>$ {{ total|floatformat:"2g" }}</strong>

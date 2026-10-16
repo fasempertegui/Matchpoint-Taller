@@ -83,33 +83,22 @@ document.addEventListener("DOMContentLoaded", function () {
     fecha.hidden = true;
     calendario.hidden = false;
 
-    var formulario = document.querySelector("[data-reserva-turnos]");
+    var formulario = document.querySelector("[data-reserva-turno]");
     var boton = formulario && formulario.querySelector("[data-registrar-reserva]");
     if (!boton) return;
     var total = formulario.querySelector("[data-reserva-total]");
-    var error = formulario.querySelector("[data-error-seleccion]");
     var precio = Number(formulario.dataset.precioCentavos);
     var moneda = new Intl.NumberFormat("es-AR", {style: "currency", currency: "ARS"});
 
     function actualizarSeleccion() {
-        var turnos = Array.from(formulario.querySelectorAll("[name='turnos']:checked"));
-        var consecutivos = turnos.every(function (turno, indice) {
-            return indice === 0 || (
-                turnos[indice - 1].dataset.fin === turno.dataset.inicio &&
-                turnos[indice - 1].dataset.franja === turno.dataset.franja
-            );
-        });
-        var importe = moneda.format(precio * turnos.length / 100);
-        total.textContent = turnos.length + (turnos.length === 1 ? " turno" : " turnos") + " · Total: " + importe;
-        error.hidden = consecutivos;
-        error.textContent = "Seleccioná turnos consecutivos dentro de una misma franja de funcionamiento.";
-        boton.disabled = !turnos.length || !consecutivos;
-        var horarios = turnos.map(function (turno) {
-            return turno.dataset.inicio.padStart(2, "0") + ":00 a " + turno.dataset.fin.padStart(2, "0") + ":00";
-        }).join("\n");
+        var turno = formulario.querySelector("[name='turno']:checked");
+        var importe = moneda.format(turno ? precio / 100 : 0);
+        total.textContent = "Total: " + importe;
+        boton.disabled = !turno;
+        var horario = turno ? turno.dataset.horario : "";
         formulario.dataset.confirmar = "¿Confirmar esta reserva?\n\nOrganizador: " + formulario.dataset.organizador +
             "\nCancha: " + formulario.dataset.cancha + "\nFecha: " + formulario.dataset.fecha +
-            "\n\n" + horarios + "\n\nTotal: " + importe;
+            "\n\n" + horario + "\n\nTotal: " + importe;
     }
     formulario.addEventListener("change", actualizarSeleccion);
     actualizarSeleccion();
