@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización, emisión del comprobante y consulta de la agenda diaria y semanal. Los demás procesos del sistema están pendientes de representación. La ocupación y auditoría pertenecen a Eventos (D12); cada evento referencia directamente un único turno de Turnos (D9), y las reservas guardan sus datos específicos. Reserva, clase y bloqueo duran una hora y tienen identificadores propios. El fin se obtiene sumando una hora al inicio del turno. Un turno admite varios eventos Anulados históricos y como máximo un evento no Anulado.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización, emisión del comprobante consulta de la agenda diaria y semanal, registro y anulación de bloqueos individuales. Los demás procesos del sistema están pendientes de representación. La ocupación y auditoría pertenecen a Eventos (D12); cada evento referencia directamente un único turno de Turnos (D9), y las reservas guardan sus datos específicos. Reserva, clase y bloqueo duran una hora y tienen identificadores propios. El fin se obtiene sumando una hora al inicio del turno. Un turno admite varios eventos Anulados históricos y como máximo un evento no Anulado.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -1217,6 +1217,7 @@ flowchart LR
     D19[(D19: Clases)]
     D20[(D20: Profesores de clases)]
     D17[(D17: Bloqueos)]
+    D18[(D18: Orígenes de bloqueos)]
 
     A -->|1| P
     P -->|2| D1
@@ -1241,7 +1242,9 @@ flowchart LR
     D20 -->|21| P
     P -->|22| D17
     D17 -->|23| P
-    P -->|24| A
+    P -->|24| D18
+    D18 -->|25| P
+    P -->|26| A
 ```
 
 **Datos que circulan**
@@ -1269,7 +1272,9 @@ flowchart LR
 21. Asignaciones activas que delimitan las clases visibles para el profesor.
 22. Eventos de bloqueo que puede consultar el administrador.
 23. Motivo y datos específicos de cada bloqueo.
-24. Agenda diaria por cancha y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
+24. Bloqueos cuyo origen se consulta.
+25. Actividad anulada vinculada a cada bloqueo y referencia para consultar su detalle.
+26. Agenda diaria por cancha y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
 
 La consulta no escribe eventos ni turnos. El administrador ve toda la ocupación; el profesor sólo sus clases asignadas, sin datos de reservas ajenas ni acciones administrativas. Los almacenes de cada tipo se consultan únicamente dentro del alcance autorizado.
 
@@ -1290,6 +1295,7 @@ flowchart LR
     D19[(D19: Clases)]
     D20[(D20: Profesores de clases)]
     D17[(D17: Bloqueos)]
+    D18[(D18: Orígenes de bloqueos)]
 
     A -->|1| P
     P -->|2| D1
@@ -1314,7 +1320,9 @@ flowchart LR
     D20 -->|21| P
     P -->|22| D17
     D17 -->|23| P
-    P -->|24| A
+    P -->|24| D18
+    D18 -->|25| P
+    P -->|26| A
 ```
 
 **Datos que circulan**
@@ -1342,6 +1350,131 @@ flowchart LR
 21. Asignaciones activas que delimitan las clases visibles para el profesor.
 22. Eventos de bloqueo que puede consultar el administrador.
 23. Motivo y datos específicos de cada bloqueo.
-24. Agenda semanal de la cancha por día y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
+24. Bloqueos cuyo origen se consulta.
+25. Actividad anulada vinculada a cada bloqueo y referencia para consultar su detalle.
+26. Agenda semanal de la cancha por día y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
 
 La consulta no escribe eventos ni turnos. El administrador ve toda la ocupación; el profesor sólo sus clases asignadas, sin datos de reservas ajenas ni acciones administrativas. Los almacenes de cada tipo se consultan únicamente dentro del alcance autorizado.
+
+
+## 9. Bloqueos individuales
+
+### DFD 36: bloquear un turno
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((36. Bloquear un turno))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D8[(D8: Horarios de sedes)]
+    D9[(D9: Turnos)]
+    D12[(D12: Eventos)]
+    D10[(D10: Reservas)]
+    D19[(D19: Clases)]
+    D17[(D17: Bloqueos)]
+    D18[(D18: Orígenes de bloqueos)]
+
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D5
+    D5 -->|7| P
+    P -->|8| D6
+    D6 -->|9| P
+    P -->|10| D9
+    D9 -->|11| P
+    P -->|12| D12
+    D12 -->|13| P
+    P -->|14| D12
+    P -->|15| D9
+    P -->|16| D10
+    D10 -->|17| P
+    P -->|18| D10
+    P -->|19| D19
+    D19 -->|20| P
+    P -->|21| D17
+    P -->|22| D18
+    P -->|23| D8
+    D8 -->|24| P
+    P -->|25| A
+```
+
+**Datos que circulan**
+
+1. Actor, cancha, fecha, hora, ocupación confirmada, motivo del bloqueo, observaciones y motivo de anulación cuando corresponde.
+2. Usuario responsable de la operación.
+3. Estado de acceso del usuario.
+4. Usuario cuyos roles se consultan.
+5. Roles que autorizan la operación administrativa.
+6. Sede de la cancha seleccionada.
+7. Estado de la sede.
+8. Cancha seleccionada y sede a la que debe pertenecer.
+9. Datos y estado de la cancha.
+10. Cancha, fecha y hora del turno a bloquear.
+11. Identidad y horario del turno existente.
+12. Turno y actividad confirmada cuya ocupación se verifica.
+13. Evento que ocupa el turno, con tipo y estado.
+14. Anulación y auditoría de la actividad de origen cuando corresponde; nuevo evento de bloqueo con turno, responsable y observaciones.
+15. Datos del turno cuando debe registrarse.
+16. Evento de reserva a anular cuando corresponde.
+17. Identidad de la reserva y organizador.
+18. Origen administrativo de la anulación de la reserva.
+19. Evento de clase a anular cuando corresponde.
+20. Identidad y datos de la clase.
+21. Nuevo bloqueo con evento y motivo.
+22. Relación entre el bloqueo y la reserva o clase anulada en la operación.
+23. Sede y día de la semana cuyo horario se comprueba.
+24. Franjas de funcionamiento que deben contener íntegramente el turno.
+25. Confirmación del bloqueo y actividad anulada, o errores que exigen revisar la selección.
+
+La operación comprueba pertenencia íntegra a una franja de funcionamiento, inicio futuro y ocupación confirmada dentro de una única transacción. Un turno libre no tiene actividad de origen. Anular la actividad, registrar el bloqueo y vincular su origen forman una sola operación; un fallo no deja cambios parciales.
+
+### DFD 37: anular un bloqueo
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((37. Anular un bloqueo))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D9[(D9: Turnos)]
+    D12[(D12: Eventos)]
+    D17[(D17: Bloqueos)]
+
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D17
+    D17 -->|7| P
+    P -->|8| D9
+    D9 -->|9| P
+    P -->|10| D12
+    D12 -->|11| P
+    P -->|12| D12
+    P -->|13| A
+```
+
+**Datos que circulan**
+
+1. Actor, bloqueo confirmado, turno seleccionado y motivo de anulación.
+2. Usuario responsable de la anulación.
+3. Estado de acceso del usuario.
+4. Usuario cuyos roles se consultan.
+5. Roles que autorizan la operación administrativa.
+6. Bloqueo seleccionado.
+7. Identidad del bloqueo y su evento.
+8. Turno del bloqueo.
+9. Cancha, fecha y hora para comprobar pertenencia e inicio futuro.
+10. Evento del bloqueo seleccionado.
+11. Tipo, estado y auditoría del evento.
+12. Estado Anulado, responsable, momento y motivo de anulación.
+13. Confirmación del turno liberado o errores de acceso, selección, estado u horario.
+
+La anulación conserva el bloqueo, el turno y su origen. No restaura la actividad anulada que dio origen al bloqueo y no modifica la auditoría ante solicitudes repetidas. Los bloqueos iniciados o terminados permanecen sólo para consulta.

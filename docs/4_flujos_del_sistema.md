@@ -119,7 +119,7 @@ Recorrido:
 Alternativas:
 
 - Un día sin franjas no ofrece disponibilidad para reservas.
-- El Administrador aplica los mismos límites de reservas que el portal. Las clases mantienen su advertencia confirmable fuera de horario; los bloqueos aplican sus reglas específicas.
+- El Administrador aplica los mismos límites de reservas que el portal. Las reservas, clases y bloqueos deben quedar íntegramente dentro de una franja de funcionamiento, sin excepciones administrativas.
 - La existencia de un turno no significa que esté ocupado.
 - La confirmación vuelve a comprobar la ocupación dentro de la transacción.
 
@@ -641,29 +641,29 @@ Recorrido:
 1. El administrador selecciona la sede mediante **FL-57** y marca los días que quiere modificar. Puede seleccionar lunes a viernes, fin de semana o toda la semana mediante accesos rápidos. Si abre la edición de un día, se precargan ese día y sus franjas.
 2. Ingresa las horas de inicio y fin de la primera franja mediante campos numéricos de 0 a 23. Los minutos permanecen fijos en cero. Puede habilitar una segunda franja.
 3. El sistema valida que todos los horarios sean en punto, que cada franja tenga el fin posterior al inicio y que, si hay dos, exista al menos una hora sin funcionamiento entre el fin de la primera y el inicio de la segunda. Se rechazan horarios con minutos o segundos distintos de cero y franjas contiguas o superpuestas.
-4. El administrador aplica el horario y el sistema guarda la misma configuración en todos los días seleccionados, reemplazando sus franjas anteriores en una única transacción. Los días no seleccionados conservan su configuración.
+4. El sistema comprueba que las actividades Programadas cuyo turno no terminó permanezcan dentro de las franjas propuestas. Si se cumple, el administrador aplica el horario y el sistema guarda la misma configuración en todos los días seleccionados, reemplazando sus franjas anteriores en una única transacción. Los días no seleccionados conservan su configuración.
 
 Alternativas:
 
-- La acción «Marcar como sin funcionamiento» elimina las franjas de los días seleccionados sin exigir horas de inicio ni fin, tanto para reservas como para clases.
-- Este horario es independiente de la planilla (ver **FL-23** a **FL-26**): configurarlo no crea, modifica ni elimina turnos de planilla. Sí afecta la generación de clases (**FL-28**, **FL-29**) y la creación o el cambio de cancha de clases, y la creación o reprogramación de reservas, que lo validan en el momento (ver **FL-34**, **FL-35**, **FL-40**, **FL-51**).
-- Cambiar el horario no afecta clases ni reservas ya creadas; solo rige para actividades nuevas a partir de ese momento.
+- La acción «Marcar como sin funcionamiento» elimina las franjas de los días seleccionados sin exigir horas de inicio ni fin, para reservas, clases y bloqueos, siempre que no deje fuera actividades Programadas cuyo turno no terminó.
+- Este horario es independiente de la planilla (ver **FL-23** a **FL-26**): configurarlo no crea, modifica ni elimina turnos de planilla. Sí afecta la generación de clases (**FL-28**, **FL-29**) y la creación o el cambio de cancha de clases, la creación o reprogramación de reservas y el registro de bloqueos, que lo validan en el momento (ver **FL-34**, **FL-35**, **FL-40**, **FL-51**).
+- Antes de guardar, comprueba las reservas, clases y bloqueos Programados de los días seleccionados cuyo turno no terminó. Rechaza tanto la modificación como la eliminación de franjas si deja alguna actividad fuera del horario propuesto. La comprobación y el guardado bloquean la sede en una única transacción. Los eventos Anulados, Finalizados o con turno terminado no impiden el cambio y conservan su historia.
 
 - **Resultado:** horario de funcionamiento de la sede actualizado para los días seleccionados.
-- **Datos:** sedes y horarios de sede.
+- **Datos:** sedes, horarios de sede, canchas, turnos y eventos.
 
 ```mermaid
 flowchart TD
     A[Seleccionar sede y días] --> H{Acción}
-    H -->|Sin funcionamiento| I[Eliminar franjas de los días seleccionados]
-    H -->|Aplicar horarios| B[Ingresar primera franja]
-    B --> C{Agregar segunda franja}
-    C -->|Sí| D[Ingresar segunda franja]
-    C -->|No| E{Franjas válidas y sin superposición}
-    D --> E
+    H -->|Sin funcionamiento| I[Proponer días sin franjas]
+    H -->|Aplicar horarios| B[Ingresar una o dos franjas]
+    B --> E{Franjas válidas y sin superposición}
     E -->|No| B
     E -->|Sí| F{Confirmar}
-    F -->|Sí| G[Guardar horarios de los días seleccionados]
+    I --> F
+    F -->|Sí| J{Actividades pendientes dentro de las franjas propuestas}
+    J -->|No| K[Informar actividad afectada y rechazar]
+    J -->|Sí| G[Guardar o quitar franjas en una transacción]
 ```
 
 ### 3.4 Catálogos de planes y pases
@@ -1084,8 +1084,8 @@ Recorrido:
 
 1. El administrador selecciona sede y período.
 2. El sistema recorre los turnos de planilla de las canchas de esa sede y calcula, para cada uno, las fechas del período que coinciden con su día de la semana, obteniendo así la lista completa de turnos candidatos del período. Para cada fecha candidata, la omite y la lista en la vista previa cuando: es feriado (**FL-27**); ya hay un evento **no cancelado** en esa cancha y horario (un evento Anulado no ocupa el turno: se trata como libre y se genera la clase igual); algún profesor previsto tiene otra actividad no cancelada superpuesta con ese horario, sin importar la cancha, **ya sea contra un evento ya existente o contra otro turno candidato de esta misma corrida** (comparando los candidatos entre sí en un orden estable, por cancha y horario, y omitiendo el que aparezca después cuando dos candidatos del mismo profesor se superponen); o la sede o la cancha están inactivas. Si algún alumno previsto tiene otra actividad no cancelada superpuesta, la fecha **no** se omite: se genera igual y queda como advertencia.
-3. Muestra una vista previa: cuántas clases se crearán, qué fechas se omiten y por qué (feriado, conflicto de cancha, conflicto de profesor, sede o cancha inactiva), qué alumnos previstos quedan con advertencia de superposición, y cuáles de las clases a crear caen fuera del horario de funcionamiento de la sede (**FL-57**) para ese día.
-4. El sistema advierte, en dos confirmaciones explícitas y sucesivas, que la generación no puede deshacerse, que para quitar clases generadas hace falta eliminarlas manualmente (**FL-30**) o regenerar el período (**FL-29**), y que las clases fuera de horario y con alumnos superpuestos listadas en la vista previa se crearán igual.
+3. Muestra una vista previa: cuántas clases se crearán, qué fechas se omiten y por qué (feriado, conflicto de cancha, conflicto de profesor, sede o cancha inactiva, turno fuera del horario de funcionamiento), y qué alumnos previstos quedan con advertencia de superposición.
+4. El sistema advierte, en dos confirmaciones explícitas y sucesivas, que la generación no puede deshacerse, que para quitar clases generadas hace falta eliminarlas manualmente (**FL-30**) o regenerar el período (**FL-29**), y que las clases con alumnos superpuestos listadas en la vista previa se crearán igual. Las fechas fuera del horario de funcionamiento se omiten.
 5. El administrador confirma ambas veces.
 6. En una transacción, obtiene o crea los turnos concretos de las fechas válidas, los bloquea y comprueba nuevamente su ocupación. Por cada clase registra un evento Programado que referencia el turno, la clase con indicador de generada y sus asignaciones. Las observaciones de la actividad se guardan en el evento.
 7. Envía una notificación por email a cada profesor con turnos incluidos en la generación, resumiendo sus clases del período (ver 4.2).
@@ -1095,7 +1095,7 @@ Alternativas:
 - El rango debe estar dentro del calendario operativo y abarcar como máximo 62 días corridos inclusive; para generar un período mayor se ejecuta el proceso por tramos.
 - Un turno sin profesor previsto se omite e informa, igual que un conflicto de cancha, un conflicto de profesor, una sede o cancha inactiva, o un feriado.
 - Un conflicto de profesor entre dos turnos candidatos de la misma corrida (por ejemplo, el mismo profesor previsto a la misma hora en dos canchas distintas de la planilla) se resuelve igual que contra datos ya existentes: se detecta antes de crear nada, no se delega en la restricción de la base de datos, que de otro modo abortaría toda la transacción del paso 6 en lugar de omitir solo ese turno.
-- Un turno fuera del horario de funcionamiento de la sede no se omite: solo se lista en la vista previa. Las dos confirmaciones del paso 4 ya cubren esa advertencia, porque toda la generación es responsabilidad del administrador.
+- Un turno fuera del horario de funcionamiento de la sede se omite y se informa en la vista previa; las confirmaciones no autorizan excepciones.
 - Correr esta operación dos veces sobre el mismo rango no duplica nada: las fechas ya cubiertas por un evento no Anulado se omiten en la segunda corrida.
 - La operación no admite deshacer automático.
 
@@ -1285,7 +1285,7 @@ Recorrido:
 
 1. El administrador completa el turno y los participantes.
 2. El sistema calcula la hora de fin exactamente una hora después del inicio.
-3. Valida profesores, sede, cancha, participantes y ausencia de eventos superpuestos. Si el turno cae fuera del horario de funcionamiento de la sede (**FL-57**) para ese día, advierte y exige una confirmación explícita para continuar.
+3. Valida profesores, sede, cancha, participantes y ausencia de eventos superpuestos. Exige que el turno quede íntegramente dentro de una franja de funcionamiento de la sede (**FL-57**) para ese día; si no se cumple, rechaza la operación.
 4. Obtiene o crea el turno concreto, lo bloquea y comprueba su ocupación. En una transacción crea un evento Programado que referencia el turno, clase y asignaciones; las observaciones se guardan en el evento.
 5. Envía una notificación por email a cada profesor asignado (ver 4.2).
 
@@ -1296,7 +1296,7 @@ Alternativas:
 - Superar seis alumnos en modalidad grupal genera advertencia, no bloqueo.
 - Un profesor con otra actividad no cancelada superpuesta en el horario impide confirmar la clase, sin importar la cancha.
 - Un alumno asignado con otra actividad no cancelada superpuesta en el horario genera una advertencia, no un bloqueo.
-- Un turno fuera del horario de funcionamiento de la sede no impide crear la clase: como esta operación es siempre del administrador, solo genera advertencia.
+- Un turno fuera del horario de funcionamiento de la sede impide crear la clase, sin excepciones administrativas.
 - Las clases generadas desde la planilla se crean mediante **FL-28**, no mediante este flujo; esa generación notifica una sola vez por profesor y por corrida, no clase por clase. Una clase creada por este flujo queda marcada como no generada por planilla.
 
 - **Resultado:** una clase concreta de una hora en estado **Programada**.
@@ -1309,9 +1309,7 @@ flowchart TD
     C -->|No| A
     C -->|Sí| F{Dentro del horario de funcionamiento}
     F -->|Sí| D[Crear evento clase y asignaciones]
-    F -->|No| G{Confirmar fuera de horario}
-    G -->|No| A
-    G -->|Sí| D
+    F -->|No| A
     D --> E[Notificar a los profesores asignados]
 ```
 
@@ -1327,7 +1325,7 @@ Recorrido:
 1. El sistema muestra datos, participantes y turno actuales.
 2. El administrador realiza cambios.
 3. El sistema valida al menos un profesor activo y las asignaciones. Para cada profesor agregado que no estaba asignado antes, comprueba que no tenga otra actividad no cancelada superpuesta con el turno de la clase (bloqueante, sin importar la cancha). Para cada alumno agregado que no estaba asignado antes, si tiene otra actividad no cancelada superpuesta, genera una advertencia, sin bloquear.
-4. Si se indicó una nueva sede o cancha, comprueba que estén activas y que ese turno (mismo día y horario, cancha nueva) esté disponible, excluyendo el evento actual de esa comprobación. Si cae fuera del horario de funcionamiento de la sede (**FL-57**) para ese día, advierte y exige una confirmación explícita para continuar.
+4. Si se indicó una nueva sede o cancha, comprueba que estén activas y que ese turno (mismo día y horario, cancha nueva) esté disponible, excluyendo el evento actual de esa comprobación. Exige que el turno quede íntegramente dentro de una franja de funcionamiento de la sede (**FL-57**) para ese día; si no se cumple, rechaza la operación.
 5. Guarda modalidad y asignaciones en sus relaciones específicas y observaciones en el evento. Si cambió la cancha, actualiza `eventos.turno_id` al turno de la nueva cancha en la misma fecha y hora; bloquea origen y destino, valida la disponibilidad y conserva el turno original. Actualiza la fecha de modificación del evento. Día y hora no cambian.
 6. Si se agregó un profesor que no estaba asignado antes, le envía una notificación por email (ver 4.2).
 
@@ -1336,7 +1334,7 @@ Alternativas:
 - Una clase grupal con más de seis alumnos genera una advertencia.
 - Este flujo no permite cambiar el día ni el horario de la clase: para eso se cancela (**FL-37**) y se crea una nueva (**FL-34**), sin ninguna vinculación entre ambas — a diferencia de las reservas, donde reprogramar sí vincula la nueva con la cancelada. No existe una "reprogramación de clases" como operación propia; es una decisión deliberada.
 - Un conflicto de cancha, una sede o cancha inactiva, o un profesor ya asignado con otra actividad superpuesta obligan a elegir otra cancha; la actividad existente no se desplaza.
-- Un turno fuera del horario de funcionamiento de la sede no impide guardar, solo genera advertencia, igual que en **FL-34**.
+- Un cambio de cancha que ubique el turno fuera del horario de funcionamiento de la sede impide guardar, igual que en **FL-34**.
 - Una clase cancelada o completada conserva su historia y no se edita mediante este flujo.
 - Quitar un profesor o un alumno no genera notificación.
 - Reactivar la asignación de un alumno que estaba inactiva resetea a `false` su marca de recordatorio enviado (ver 4.6), para que vuelva a recibirlo si la clase sigue programada para el día siguiente en una corrida posterior.
@@ -1358,9 +1356,7 @@ flowchart TD
     G -->|No| D
     G -->|Sí| H{Dentro del horario de funcionamiento}
     H -->|Sí| J
-    H -->|No| I{Confirmar fuera de horario}
-    I -->|No| D
-    I -->|Sí| J
+    H -->|No| D
     J --> K[Notificar a profesores agregados]
 ```
 
@@ -2250,7 +2246,7 @@ Alternativas:
 
 - Un turno con bloqueo vigente rechaza la acción individual; puede liberarse mediante **FL-65** antes de su inicio.
 - Un turno iniciado o pasado o un evento Finalizado no admite esta operación. Un evento Anulado no ocupa el turno.
-- Un bloqueo no exige que el turno esté dentro de una franja de funcionamiento.
+- Un bloqueo exige que el turno quede íntegramente dentro de una franja de funcionamiento de la sede; fuera de ella se rechaza, incluso si existe una actividad para anular.
 - Si cambia la ocupación o la elegibilidad desde la vista previa, se exige revisarla nuevamente; no se anulan actividades sin confirmar.
 
 - **Resultado:** un bloqueo de una hora y, si corresponde, la actividad previa anulada con su historia conservada.
@@ -2273,7 +2269,7 @@ flowchart TD
 
 Recorrido:
 
-1. Selecciona el alcance y el motivo. Para una fecha completa o desde una hora, se incluyen los turnos de las franjas de funcionamiento y los turnos existentes fuera de ellas. Una hora de corte que no sea en punto incluye los turnos cuyo inicio sea igual o posterior al corte.
+1. Selecciona el alcance y el motivo. Para una fecha completa o desde una hora, se incluyen únicamente los turnos contenidos en las franjas de funcionamiento. Las actividades existentes fuera de las franjas actuales se conservan y se informan. Una hora de corte que no sea en punto incluye los turnos cuyo inicio sea igual o posterior al corte.
 2. La vista previa muestra cada turno a bloquear, cada reserva o clase a anular, los bloqueos existentes que permanecen y los eventos excluidos o iniciados que se conservan. La operación sólo actúa sobre turnos no iniciados; a las 18:30 admite los de las 19:00 en adelante.
 3. Confirma las acciones efectivas y sus motivos, respetando los requisitos de anulación de cada tipo. Cada evento corresponde a un turno y se procesa una sola vez.
 4. Dentro de una única transacción, bloquea los turnos y eventos afectados en orden estable, valida permisos, instalaciones, calendario, ocupación, hora actual y coincidencia con el alcance confirmado.
@@ -2285,7 +2281,7 @@ Alternativas:
 - Los bloqueos existentes se conservan como ya cubiertos: no se anulan ni se superponen con otros.
 - Excluir clases o reservas conserva esas actividades y sus turnos ocupados; los turnos libres se bloquean. Los eventos Anulados son historia y no impiden un nuevo bloqueo.
 - Los días pasados no admiten la operación. Los turnos iniciados y los eventos Finalizados se muestran como conservados y no impiden actuar sobre los demás.
-- No se exige que todos los turnos estén en una misma franja. Cada bloqueo referencia un único turno, con estado y auditoría independientes.
+- Cada turno debe quedar íntegramente dentro de una franja, aunque los distintos turnos del lote pertenezcan a franjas diferentes. Cada bloqueo referencia un único turno, con estado y auditoría independientes.
 - La vista previa no escribe datos. Si cambian la ocupación, el alcance o la elegibilidad, se revierte toda la operación y se exige revisarla nuevamente. Un error no deja anulaciones o bloqueos parciales.
 - Las actividades anuladas conservan sus datos comerciales. La operación no ofrece reprogramación ni modifica ingresos.
 

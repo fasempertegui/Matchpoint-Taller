@@ -23,6 +23,16 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function prepararConfirmacionBloqueo() {
+        var formulario = document.querySelector("[data-agenda-bloqueo]");
+        if (!formulario) return;
+        var mensaje = formulario.dataset.confirmar;
+        formulario.addEventListener("submit", function () {
+            var motivo = formulario.elements["bloqueo-motivo"];
+            formulario.dataset.confirmar = mensaje + "\n\nMotivo: " + motivo.selectedOptions[0].textContent;
+        });
+    }
+
     async function cargarDetalle(enlace) {
         if (solicitudActual) solicitudActual.abort();
         var seleccionadoAnterior = document.querySelector(".agenda-turno-seleccionado");
@@ -62,6 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (solicitud !== solicitudActual) return;
             contenido.innerHTML = html;
             prepararConfirmacionReserva();
+            prepararConfirmacionBloqueo();
             var destino = new URL(seleccion, window.location.href);
             document.querySelectorAll("[data-agenda-turno]").forEach(function (turno) {
                 var activo = turno.pathname === destino.pathname && turno.search === destino.search;
@@ -121,4 +132,5 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     prepararConfirmacionReserva();
+    prepararConfirmacionBloqueo();
 });

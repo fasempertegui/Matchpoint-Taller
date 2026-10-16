@@ -458,7 +458,7 @@ Representa una unidad indivisible de una hora de una cancha en una fecha. Su exi
 
 La combinación `cancha_id, fecha, hora_inicio` es única. El inicio es una hora en punto; el fin se calcula sumando una hora. El turno comienza y termina dentro de la misma fecha, por lo que su inicio se encuentra entre 00:00 y 22:00 inclusive. Cancha, fecha y hora son inmutables. La sede se obtiene mediante la cancha.
 
-La agenda representa los espacios libres a partir de los horarios sin crear filas de Turno. Los turnos se preparan al consultar disponibilidad para reservar o registrar una actividad, sin duplicar los existentes. La preparación no registra un evento ni ocupa la cancha. Los turnos de reservas se ofrecen dentro de las franjas de funcionamiento; las clases y bloqueos aplican sus reglas de calendario específicas. Cambiar un horario de sede no modifica los turnos ni eventos históricos.
+La agenda representa los espacios libres a partir de los horarios sin crear filas de Turno. Los turnos se preparan al consultar disponibilidad para reservar o registrar una actividad, sin duplicar los existentes. La preparación no registra un evento ni ocupa la cancha. Los turnos de reservas, clases y bloqueos deben quedar íntegramente dentro de una franja de funcionamiento; cada tipo aplica además sus límites de calendario. Cambiar un horario de sede no modifica los turnos ni eventos históricos. La modificación se rechaza si deja fuera una reserva, clase o bloqueo Programado cuyo turno no terminó. La sede se bloquea dentro de la transacción para coordinar esta validación con el registro de actividades.
 
 Relaciones:
 
@@ -699,7 +699,7 @@ Relaciones:
 
 ### 4.22 `sedes_horarios`
 
-Representa el horario de funcionamiento de una sede: por día de la semana, hasta dos franjas horarias en las que la sede opera. Rige para todas las reservas, tanto del portal como administrativas. Las clases mantienen su advertencia administrativa confirmable fuera de horario (ver `2_criterios_del_sistema.md`, 2).
+Representa el horario de funcionamiento de una sede: por día de la semana, hasta dos franjas horarias en las que la sede opera. Rige para todas las reservas, clases y bloqueos, incluidas la creación administrativa, la planilla, la generación y las operaciones masivas. Cada turno debe quedar íntegramente dentro de una única franja, sin excepciones confirmables.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
@@ -826,7 +826,7 @@ El sistema aplica, como mínimo:
 5. Vencimiento idempotente de las contrataciones Activas de planes y pases cuyo mes terminó.
 6. Unicidad de `turnos_planilla` por cancha, día de la semana y hora.
 7. Exactamente un subtipo por `eventos` y coherencia con `eventos.tipo`.
-8. Turnos de una hora con inicio en punto y fin calculado. Unicidad por cancha, fecha y hora; cada reserva, clase o bloqueo referencia exactamente un turno. Una reserva debe quedar dentro de una franja de la sede.
+8. Turnos de una hora con inicio en punto y fin calculado. Unicidad por cancha, fecha y hora; cada reserva, clase o bloqueo referencia exactamente un turno. Cada reserva, clase y bloqueo debe quedar dentro de una franja de la sede.
 9. Sede y cancha activas al crear o mover eventos.
 10. Al menos un profesor activo por clase.
 11. Protección de clases y reservas con evento Anulado o Finalizado y autorización para finalizarlas.
@@ -861,7 +861,7 @@ Las reglas que deben observar varias filas se ejecutan dentro de operaciones tra
 
 La superposición horaria de una persona se comprueba en el backend sobre todos sus modos de participación: profesor o alumno de una clase, organizador o invitado identificado de una reserva. Las operaciones que crean clases o reservas y la generación desde la planilla bloquean las filas de los usuarios involucrados en orden de identificador antes de consultar y escribir. Para un profesor la superposición rechaza la operación; para los demás participantes produce una advertencia confirmable. La garantía supone que las escrituras operativas pasan por estos servicios; se complementa con el bloqueo de los turnos concretos y la comprobación de ocupación compartida en `eventos`.
 
-El horario de funcionamiento se comprueba en el backend porque depende de datos de otra tabla. Toda reserva debe permanecer dentro de una misma franja de `sedes_horarios`, también cuando la crea el Administrador. Las clases mantienen su advertencia administrativa confirmable fuera de horario. Crear un turno fuera de una franja no autoriza por sí solo a reservarlo.
+El horario de funcionamiento se comprueba en el backend porque depende de datos de otra tabla. Toda reserva, clase o bloqueo debe quedar íntegramente dentro de una misma franja de `sedes_horarios`, también cuando lo registra el Administrador. La generación omite e informa las fechas fuera de horario. Crear un turno fuera de una franja no autoriza por sí solo a registrar una actividad sobre él.
 
 Una reserva nueva debe comenzar en un horario futuro y su fecha debe estar entre hoy y catorce días después, inclusive. El backend vuelve a validar ese límite al confirmar, tanto para el Administrador como para el portal.
 
@@ -883,7 +883,7 @@ Anular una contratación bloquea su fila, valida estado Activo y registra actor,
 
 Para cada fecha que corresponde a un turno de planilla y no es feriado, obtiene o crea el turno concreto de la cancha. Bloquea los turnos involucrados en orden de identificador y comprueba su ocupación mediante eventos no Anulados. Crea un evento Programado que referencia el turno, una clase con `es_generada = true` y sus asignaciones.
 
-Las fechas ocupadas se omiten y se informan. Las fechas fuera del horario de la sede se incluyen como advertencia confirmable en la vista previa. La generación conserva las confirmaciones y límites de período descriptos en los criterios del sistema.
+Las fechas ocupadas se omiten y se informan. Las fechas fuera del horario de la sede se omiten y se informan en la vista previa. La generación conserva las confirmaciones y límites de período descriptos en los criterios del sistema.
 
 ### 7.3 Regeneración de clases para un período
 
@@ -955,7 +955,7 @@ Tarea diaria idempotente. Localizará asignaciones `clases_alumnos` en estado `a
 
 ### 7.14 Registro y liberación de bloqueos
 
-Las operaciones de bloqueo identifican cada turno y el evento que lo ocupa. Sólo crean o anulan actividades antes del inicio del turno. La acción individual sobre un bloqueo vigente se rechaza; en un cierre masivo los bloqueos existentes se conservan como ya cubiertos. Las reservas o clases excluidas mantienen su ocupación. Los turnos iniciados y eventos Finalizados quedan para consulta y se muestran como conservados.
+Las operaciones de bloqueo identifican cada turno y el evento que lo ocupa. Sólo crean o anulan actividades antes del inicio del turno. Todo nuevo bloqueo debe quedar íntegramente dentro de una franja de funcionamiento. Un cierre conserva e informa las actividades fuera de las franjas actuales; anular y liberar sí puede incluirlas. La acción individual sobre un bloqueo vigente se rechaza; en un cierre masivo los bloqueos existentes se conservan como ya cubiertos. Las reservas o clases excluidas mantienen su ocupación. Los turnos iniciados y eventos Finalizados quedan para consulta y se muestran como conservados.
 
 La vista previa detalla las acciones y los eventos conservados según fecha, hora de corte, canchas y tipos excluidos. Dentro de una única transacción, bloquea los turnos afectados y los eventos consultados en orden estable, comprueba permisos y alcance y vuelve a validar el inicio de cada turno. Primero anula los eventos confirmados para liberar sus turnos; después comprueba la disponibilidad y registra un evento de bloqueo y su especialización por cada turno a bloquear. Cada bloqueo registra su único origen si la misma operación anuló una reserva o clase. No hay evento agrupador. Si cambia el alcance, la ocupación o la elegibilidad, revierte todo el lote y exige revisar la vista previa. No convierte silenciosamente un evento en conservado después de confirmarlo como acción.
 

@@ -158,6 +158,15 @@ a.agenda-turno:hover {
     background: #e0e9f7;
 }
 
+.agenda-turno-bloqueo {
+    background: #f5ece6;
+    border-left-color: #ad764c;
+}
+
+.agenda-turno-bloqueo:hover {
+    background: #efdfd3;
+}
+
 .agenda-tipo {
     font-size: .75rem;
 }
@@ -342,7 +351,6 @@ a.agenda-turno:hover {
 
 .agenda-leyenda {
     display: flex;
-    justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
     margin-top: 12px;
@@ -361,6 +369,10 @@ a.agenda-turno:hover {
     height: 8px;
     border-radius: 50%;
     background: #5575a8;
+}
+
+.agenda-leyenda .agenda-leyenda-bloqueo {
+    background: #ad764c;
 }
 
 @media (max-width: 900px) {

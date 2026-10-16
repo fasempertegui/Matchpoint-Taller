@@ -9,6 +9,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.vary import vary_on_headers
 
+from bloqueos.forms import BloqueoAnulacionForm, BloqueoForm
+from bloqueos.servicios import anular_bloqueo, registrar_bloqueo
 from instalaciones.models import Sede
 from reservas.disponibilidad import consultar_disponibilidad
 from reservas.forms import ReservaAnulacionForm
@@ -35,6 +37,8 @@ def agenda(request):
     accion = request.POST.get("accion") if request.method == "POST" else None
     formulario_reserva = AgendaReservaForm(request.POST if accion == "reservar" else None)
     formulario_anulacion = ReservaAnulacionForm(request.POST if accion == "anular" else None)
+    formulario_bloqueo = None
+    formulario_liberacion = None
     datos = {}
     if sede_inicial is not None and formulario.is_valid():
         filtros = formulario.cleaned_data
@@ -44,6 +48,19 @@ def agenda(request):
             "fecha_maxima": formulario.fecha_maxima,
         }
         datos = construir_agenda(**argumentos)
+        detalle = datos["detalle"]
+        if detalle is not None:
+            formulario_bloqueo = BloqueoForm(
+                request.POST if accion == "bloquear" else None,
+                prefix="bloqueo",
+                anula_reserva=detalle["reserva"] is not None,
+                initial={"evento_esperado": detalle["evento"].pk if detalle["evento"] else 0},
+            )
+            formulario_liberacion = BloqueoAnulacionForm(
+                request.POST if accion == "liberar_bloqueo" else None,
+                prefix="liberacion",
+                initial={"bloqueo": detalle["bloqueo"].pk if detalle["bloqueo"] else None},
+            )
         if request.method == "POST":
             try:
                 detalle = datos["detalle"]
@@ -66,6 +83,31 @@ def agenda(request):
                             formulario_reserva.cleaned_data["observaciones"],
                         )
                         messages.success(request, f"La reserva {reserva.numero} fue registrada.")
+                        return redirect(datos["url_seleccion"])
+                elif accion == "bloquear":
+                    if not detalle["puede_bloquear"]:
+                        raise ValidationError("El turno seleccionado no admite un nuevo bloqueo. Revisá la agenda.")
+                    if formulario_bloqueo.is_valid():
+                        valores = formulario_bloqueo.cleaned_data
+                        bloqueo = registrar_bloqueo(
+                            request.user, detalle["cancha"], detalle["fecha"], detalle["hora"],
+                            valores["motivo"], valores["observaciones"], valores["evento_esperado"],
+                            valores.get("motivo_anulacion", ""),
+                        )
+                        messages.success(request, f"El bloqueo {bloqueo.numero} fue registrado.")
+                        return redirect(datos["url_seleccion"])
+                elif accion == "liberar_bloqueo":
+                    if not detalle["puede_liberar_bloqueo"]:
+                        raise ValidationError("El turno seleccionado no tiene un bloqueo que pueda anularse.")
+                    if formulario_liberacion.is_valid():
+                        valores = formulario_liberacion.cleaned_data
+                        if valores["bloqueo"] != detalle["bloqueo"].pk:
+                            raise ValidationError("La actividad del turno cambió. Revisá la agenda antes de confirmar.")
+                        bloqueo = anular_bloqueo(
+                            request.user, valores["bloqueo"], valores["motivo"],
+                            detalle["cancha"], detalle["fecha"], detalle["hora"],
+                        )
+                        messages.success(request, f"El bloqueo {bloqueo.numero} fue anulado. Su turno quedó liberado.")
                         return redirect(datos["url_seleccion"])
                 elif accion in ("anular", "finalizar"):
                     reserva = detalle["reserva"]
@@ -93,6 +135,8 @@ def agenda(request):
         "formulario": formulario,
         "formulario_reserva": formulario_reserva,
         "formulario_anulacion": formulario_anulacion,
+        "formulario_bloqueo": formulario_bloqueo,
+        "formulario_liberacion": formulario_liberacion,
         "hay_sedes": sede_inicial is not None,
         "agenda": datos,
         "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", None)],

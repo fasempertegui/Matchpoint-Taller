@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import timezone
 
+from bloqueos.servicios import validar_anulacion_bloqueo
 from common.fechas import FECHA_INICIO_OPERACIONES
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento
@@ -47,6 +48,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
             turno__fecha__range=(max(min(fechas), FECHA_INICIO_OPERACIONES), min(max(fechas), fecha_maxima)),
         ).exclude(estado=Evento.Estado.ANULADO).select_related(
             "turno__cancha__sede", "reserva__organizador", "registrado_por", "anulado_por",
+            "bloqueo__origen__evento_origen__reserva",
         )
     eventos_por_turno = {
         (evento.turno.cancha_id, evento.turno.fecha, evento.turno.hora_inicio.hour): evento
@@ -60,6 +62,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
         fin = inicio + timedelta(hours=1)
         evento = eventos_por_turno.get((cancha.pk, dia, hora))
         reserva = getattr(evento, "reserva", None) if evento and evento.tipo == Evento.Tipo.RESERVA else None
+        bloqueo = getattr(evento, "bloqueo", None) if evento and evento.tipo == Evento.Tipo.BLOQUEO else None
         habilitado = hora in inicios_habilitados.get(dia, set())
         en_rango = FECHA_INICIO_OPERACIONES <= dia <= fecha_maxima
         impedimento = ""
@@ -80,13 +83,21 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
             if evento.estado == Evento.Estado.FINALIZADO:
                 temporal = "Finalizada"
             elif fin <= ahora:
-                temporal = "Terminada · pendiente de finalización"
+                temporal = "Terminado" if bloqueo else "Terminada · pendiente de finalización"
             elif inicio <= ahora:
                 temporal = "En curso"
             else:
                 temporal = "Programada"
         puede_anular = False
         puede_finalizar = False
+        puede_liberar_bloqueo = False
+        if bloqueo:
+            try:
+                validar_anulacion_bloqueo(bloqueo, ahora)
+            except ValidationError:
+                pass
+            else:
+                puede_liberar_bloqueo = True
         if reserva:
             try:
                 validar_anulacion_reserva(reserva, True, ahora)
@@ -102,11 +113,16 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
                 puede_finalizar = True
         return {
             "cancha": cancha, "fecha": dia, "hora": time(hora), "fin": fin.time(),
-            "evento": evento, "reserva": reserva, "habilitado": habilitado, "en_rango": en_rango,
+            "evento": evento, "reserva": reserva, "bloqueo": bloqueo,
+            "habilitado": habilitado, "en_rango": en_rango,
             "consultable": evento is not None or fin > ahora,
             "iniciado": inicio <= ahora, "impedimento": impedimento, "estado_temporal": temporal,
             "puede_reservar": evento is None and not impedimento,
             "puede_anular": puede_anular, "puede_finalizar": puede_finalizar,
+            "puede_bloquear": en_rango and habilitado and inicio > ahora
+                and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
+                and (evento is None or puede_anular),
+            "puede_liberar_bloqueo": puede_liberar_bloqueo,
             "seleccionada": cancha.pk == (cancha_seleccionada.pk if cancha_seleccionada else None)
                 and dia == fecha and hora == hora_seleccionada,
             "url": enlace_agenda(sede, dia, cancha, hora),

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
@@ -5,6 +7,7 @@ from django.db import IntegrityError, transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from psycopg.errors import UniqueViolation
 
@@ -157,21 +160,48 @@ def sede_horario_configurar(request, pk, dia=None):
 
         if request.method == "POST" and formulario.is_valid():
             dias = sorted(set(formulario.cleaned_data["dias"]))
-            if formulario.cleaned_data["accion"] == "cerrar":
-                sede.horarios.filter(dia_semana__in=dias).delete()
-            else:
-                for dia_seleccionado in dias:
-                    sede.horarios.update_or_create(
-                        dia_semana=dia_seleccionado,
-                        defaults=formulario.cleaned_data["horas"],
+            horas = formulario.cleaned_data.get("horas", {})
+            franjas = []
+            if formulario.cleaned_data["accion"] != "cerrar":
+                franjas.append((horas["hora_inicio_1"], horas["hora_fin_1"]))
+                if horas["hora_inicio_2"] is not None:
+                    franjas.append((horas["hora_inicio_2"], horas["hora_fin_2"]))
+            ahora = timezone.localtime()
+            actividades = Evento.objects.filter(
+                estado=Evento.Estado.PROGRAMADO,
+                turno__cancha__sede=sede,
+                turno__fecha__gte=ahora.date(),
+            ).select_related("turno__cancha").order_by("turno__fecha", "turno__hora_inicio", "pk")
+            for evento in actividades:
+                turno = evento.turno
+                fin = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_fin))
+                if turno.fecha.isoweekday() not in dias or fin <= ahora:
+                    continue
+                if not any(turno.hora_inicio >= inicio and turno.hora_fin <= limite for inicio, limite in franjas):
+                    formulario.add_error(
+                        None,
+                        f"El horario deja fuera una actividad de {turno.cancha.nombre} "
+                        f"del {turno.fecha:%d/%m/%Y}, de {turno.hora_inicio:%H:%M} a {turno.hora_fin:%H:%M}. "
+                        "Anulá las actividades futuras afectadas antes de modificar el horario; "
+                        "una actividad en curso debe terminar.",
                     )
-            sede.save(update_fields=["actualizado_en"])
-            messages.success(
-                request,
-                f'Los horarios de la sede "{sede.nombre}" fueron actualizados '
-                f'para {len(dias)} {"día" if len(dias) == 1 else "días"}.',
-            )
-            return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#horarios")
+                    break
+            if not formulario.errors:
+                if formulario.cleaned_data["accion"] == "cerrar":
+                    sede.horarios.filter(dia_semana__in=dias).delete()
+                else:
+                    for dia_seleccionado in dias:
+                        sede.horarios.update_or_create(
+                            dia_semana=dia_seleccionado,
+                            defaults=formulario.cleaned_data["horas"],
+                        )
+                sede.save(update_fields=["actualizado_en"])
+                messages.success(
+                    request,
+                    f'Los horarios de la sede "{sede.nombre}" fueron actualizados '
+                    f'para {len(dias)} {"día" if len(dias) == 1 else "días"}.',
+                )
+                return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#horarios")
 
     return render(
         request,
