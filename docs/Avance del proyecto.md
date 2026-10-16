@@ -83,3 +83,17 @@ Cada reserva se procesa en una transacción, comprobando nuevamente el estado y 
 Se dispone de un comprobante imprimible o guardable como PDF con número, estado, organizador, responsable, fecha de registro, sede, cancha, fecha de uso, duración fija de una hora, precio aplicado y total. Incluye observaciones y datos de anulación o finalización cuando corresponden.
 
 El Administrador puede emitir cualquier comprobante y el usuario con rol Reservas sólo los propios. Emitirlo no modifica la reserva ni crea registros adicionales. Acredita el registro de la reserva, no un pago.
+
+## 4. Agenda administrativa
+
+La sección Agenda permite consultar una sede por día, con una columna por cancha. Se seleccionan sede y fecha, y se navega al día anterior, siguiente o a Hoy. El selector muestra Día activo y Semana deshabilitado. El acceso está limitado a cuentas administrativas activas con acceso vigente.
+
+La consulta incluye instalaciones inactivas para acceder a su historia, representa los espacios libres desde los horarios de la sede y conserva los eventos existentes fuera de las franjas actuales. No registra turnos ni eventos por consultar. Sin canchas, horarios o actividades muestra los estados vacíos correspondientes. Las fechas inválidas y las canchas de otra sede se rechazan. Los límites de consulta son el inicio de operaciones y un año calendario después del día actual.
+
+Seleccionar una celda muestra su fecha, cancha, horario y duración. El detalle acompaña a la grilla diaria en un panel lateral y se ubica debajo en pantallas pequeñas. Seleccionar un turno o cerrar su panel no recarga la grilla ni cambia el desplazamiento: el servidor entrega el detalle autorizado y se actualizan el panel, el resaltado y la URL de selección. Ante errores se conserva el detalle anterior con un aviso; las selecciones rápidas sólo muestran la última respuesta. El registro, la anulación y la finalización mantienen sus envíos y redirecciones completos. Para reservas incluye organizador, importe aplicado, estado temporal, observaciones y acceso al detalle completo y al comprobante. Las reservas Anuladas conservan su historia en la consulta de reservas y no ocupan celdas. Los turnos iniciados se atenúan; Ahora destaca únicamente la hora en el margen y se actualiza con la zona horaria del sistema.
+
+Un turno libre permite registrar una reserva para un organizador habilitado desde el panel, con confirmación de participante, horario e importe. Se respetan precio, franjas, instalaciones activas y anticipación de catorce días. Una reserva futura permite anular y liberar con motivo; una vencida pendiente de finalización ofrece la acción administrativa de emergencia. Estas acciones reutilizan los servicios transaccionales de reservas. Si cambia el precio se exige revisar el importe; si cambia la reserva que ocupa el turno, la confirmación no se aplica a la actividad nueva.
+
+La agenda funciona con las reservas implementadas. Las acciones de clases, bloqueos y operaciones masivas pertenecen a sus etapas de implementación.
+
+Los turnos vacíos cuyo horario ya terminó se muestran sin enlace ni interacción. Los eventos finalizados conservan acceso a su detalle histórico.

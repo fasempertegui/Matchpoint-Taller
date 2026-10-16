@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "usuarios.apps.UsuariosConfig",
     "instalaciones.apps.InstalacionesConfig",
     "reservas.apps.ReservasConfig",
+    "agenda.apps.AgendaConfig",
 ]
 
 MIDDLEWARE = [

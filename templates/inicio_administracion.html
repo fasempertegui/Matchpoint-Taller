@@ -12,6 +12,12 @@
     <h2 id="inicio-modulos-titulo">Módulos del sistema</h2>
     <div class="inicio-modulos">
         <article class="tarjeta inicio-modulo">
+            <h3>Agenda</h3>
+            <p>Vista diaria de las canchas, con registro y consulta de reservas.</p>
+            <a class="boton boton-secundario" href="{% url 'agenda:agenda' %}">Ver agenda</a>
+        </article>
+
+        <article class="tarjeta inicio-modulo">
             <h3>Usuarios</h3>
             <p>Alta, consulta y gestión de usuarios, roles y acceso al sistema.</p>
             {% if perms.usuarios.view_usuario %}

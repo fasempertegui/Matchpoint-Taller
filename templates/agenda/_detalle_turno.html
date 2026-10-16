@@ -1,0 +1,65 @@
+{% load l10n %}
+{% with detalle=agenda.detalle %}
+    {% if detalle %}
+        <header class="agenda-detalle-cabecera">
+            <div>
+                <div class="agenda-detalle-titulo">
+                    <h2>{% if detalle.reserva %}{{ detalle.reserva.numero }}{% elif detalle.evento %}{{ detalle.evento.get_tipo_display }}{% else %}Turno libre{% endif %}</h2>
+                    {% if detalle.evento %}{% include "componentes/badge_estado.html" with estado=detalle.evento.estado texto=detalle.evento.get_estado_display only %}{% endif %}
+                </div>
+                <p>{{ detalle.fecha|date:"l d/m/Y"|capfirst }}</p>
+            </div>
+            <a class="agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar detalle">×</a>
+        </header>
+        <dl class="agenda-datos">
+            <div><dt>Cancha</dt><dd>{{ detalle.cancha.nombre }}</dd></div>
+            <div><dt>Horario</dt><dd>{{ detalle.hora|time:"H:i" }}–{{ detalle.fin|time:"H:i" }}</dd></div>
+            {% if detalle.reserva %}
+                <div><dt>Organizador</dt><dd>{{ detalle.reserva.organizador }}</dd></div>
+            {% endif %}
+        </dl>
+        {% if detalle.evento %}
+            {% if detalle.evento.observaciones %}<p class="agenda-observaciones">{{ detalle.evento.observaciones|linebreaksbr }}</p>{% endif %}
+        {% endif %}
+        {% if detalle.reserva %}
+            <div class="agenda-acciones">
+                <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_detalle' detalle.reserva.pk %}">Ver detalle completo</a>
+            </div>
+            {% if detalle.puede_anular %}
+                <details class="agenda-desplegable"{% if formulario_anulacion.is_bound %} open{% endif %}>
+                    <summary class="agenda-anular">Anular y liberar</summary>
+                    <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Anular la reserva {{ detalle.reserva.numero }} y liberar su turno?" data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular y liberar">
+                        {% csrf_token %}<input type="hidden" name="accion" value="anular"><input type="hidden" name="reserva" value="{{ detalle.reserva.pk }}">
+                        {{ formulario_anulacion.non_field_errors }}
+                        <div class="grupo-campo"><label for="{{ formulario_anulacion.motivo.id_for_label }}">Motivo</label>{{ formulario_anulacion.motivo }}<small class="nota-campo">{{ formulario_anulacion.motivo.help_text }}</small>{% for error in formulario_anulacion.motivo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
+                        <button class="boton boton-secundario boton-chico" type="submit">Anular y liberar</button>
+                    </form>
+                </details>
+            {% endif %}
+            {% if detalle.puede_finalizar %}
+                <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Finalizar la reserva {{ detalle.reserva.numero }}? Su turno y ocupación histórica se conservan." data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">
+                    {% csrf_token %}<input type="hidden" name="accion" value="finalizar"><input type="hidden" name="reserva" value="{{ detalle.reserva.pk }}">
+                    <button class="boton boton-secundario boton-chico" type="submit">Finalizar reserva</button>
+                </form>
+            {% endif %}
+        {% elif detalle.puede_reservar %}
+            <details class="agenda-desplegable"{% if formulario_reserva.is_bound %} open{% endif %}>
+                <summary class="boton boton-primario boton-chico">Crear reserva</summary>
+                <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Registrar una reserva para {{ detalle.cancha.nombre }}, el {{ detalle.fecha|date:'d/m/Y' }} de {{ detalle.hora|time:'H:i' }} a {{ detalle.fin|time:'H:i' }} por $ {{ agenda.sede.precio_reserva_vigente|floatformat:'2g' }}?" data-confirmar-titulo="Confirmar reserva" data-confirmar-boton="Crear reserva" data-agenda-reserva>
+                    {% csrf_token %}<input type="hidden" name="accion" value="reservar">
+                    <input type="hidden" name="precio_mostrado" value="{{ agenda.sede.precio_reserva_vigente|unlocalize }}">
+                    {{ formulario_reserva.non_field_errors }}
+                    <div class="grupo-campo"><label for="{{ formulario_reserva.organizador.id_for_label }}">Organizador</label>{{ formulario_reserva.organizador }}{% for error in formulario_reserva.organizador.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
+                    {% for error in formulario_reserva.precio_mostrado.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+                    <p class="agenda-precio">Total: $ {{ agenda.sede.precio_reserva_vigente|floatformat:"2g" }}</p>
+                    {% include "componentes/observaciones_opcionales.html" with campo=formulario_reserva.observaciones %}
+                    <button class="boton boton-primario boton-chico" type="submit">Confirmar reserva</button>
+                </form>
+            </details>
+        {% elif not detalle.evento %}
+            <p class="agenda-impedimento">{{ detalle.impedimento }}</p>
+        {% endif %}
+    {% else %}
+        <h2>Elegí un turno</h2><p class="agenda-impedimento">Seleccioná una celda para consultar su detalle y las acciones disponibles.</p>
+    {% endif %}
+{% endwith %}

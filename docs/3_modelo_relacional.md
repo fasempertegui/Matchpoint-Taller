@@ -458,7 +458,7 @@ Representa una unidad indivisible de una hora de una cancha en una fecha. Su exi
 
 La combinación `cancha_id, fecha, hora_inicio` es única. El inicio es una hora en punto; el fin se calcula sumando una hora. El turno comienza y termina dentro de la misma fecha, por lo que su inicio se encuentra entre 00:00 y 22:00 inclusive. Cancha, fecha y hora son inmutables. La sede se obtiene mediante la cancha.
 
-Los turnos se preparan al consultar disponibilidad o registrar una actividad, sin duplicar los existentes. La preparación no registra un evento ni ocupa la cancha. Los turnos de reservas se ofrecen dentro de las franjas de funcionamiento; las clases y bloqueos aplican sus reglas de calendario específicas. Cambiar un horario de sede no modifica los turnos ni eventos históricos.
+La agenda representa los espacios libres a partir de los horarios sin crear filas de Turno. Los turnos se preparan al consultar disponibilidad para reservar o registrar una actividad, sin duplicar los existentes. La preparación no registra un evento ni ocupa la cancha. Los turnos de reservas se ofrecen dentro de las franjas de funcionamiento; las clases y bloqueos aplican sus reglas de calendario específicas. Cambiar un horario de sede no modifica los turnos ni eventos históricos.
 
 Relaciones:
 

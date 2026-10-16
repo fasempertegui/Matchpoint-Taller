@@ -4,12 +4,19 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 
+FECHA_INICIO_OPERACIONES = dt.date(2026, 8, 1)
+
+
 def _sumar_anios(fecha, cantidad):
     try:
         return fecha.replace(year=fecha.year + cantidad)
     except ValueError:
         # 29 de febrero en un año no bisiesto.
         return fecha.replace(year=fecha.year + cantidad, day=28)
+
+
+def fecha_maxima_agenda():
+    return _sumar_anios(timezone.localdate(), 1)
 
 
 def fecha_minima_nacimiento():

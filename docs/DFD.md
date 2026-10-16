@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización y emisión del comprobante. Los demás procesos del sistema están pendientes de representación. La ocupación y auditoría pertenecen a Eventos (D12); cada evento referencia directamente un único turno de Turnos (D9), y las reservas guardan sus datos específicos. Reserva, clase y bloqueo duran una hora y tienen identificadores propios. El fin se obtiene sumando una hora al inicio del turno. Un turno admite varios eventos Anulados históricos y como máximo un evento no Anulado.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización, emisión del comprobante y consulta de la agenda diaria y semanal. Los demás procesos del sistema están pendientes de representación. La ocupación y auditoría pertenecen a Eventos (D12); cada evento referencia directamente un único turno de Turnos (D9), y las reservas guardan sus datos específicos. Reserva, clase y bloqueo duran una hora y tienen identificadores propios. El fin se obtiene sumando una hora al inicio del turno. Un turno admite varios eventos Anulados históricos y como máximo un evento no Anulado.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -1195,3 +1195,153 @@ flowchart LR
 22. Comprobante imprimible con número, estado, usuarios, fechas, sede, cancha, turno de una hora, importes y auditoría, o rechazo del acceso.
 
 El comprobante se obtiene de los datos de la reserva, su evento y sus relaciones. Emitirlo no modifica datos ni registra un cobro.
+
+---
+
+## 8. Agenda unificada
+
+### DFD 34: consultar la agenda diaria
+
+```mermaid
+flowchart LR
+    A[Administrador o profesor]
+    P((34. Consultar la agenda diaria))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D8[(D8: Horarios de sedes)]
+    D9[(D9: Turnos)]
+    D12[(D12: Eventos)]
+    D10[(D10: Reservas)]
+    D19[(D19: Clases)]
+    D20[(D20: Profesores de clases)]
+    D17[(D17: Bloqueos)]
+
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D5
+    D5 -->|7| P
+    P -->|8| D6
+    D6 -->|9| P
+    P -->|10| D8
+    D8 -->|11| P
+    P -->|12| D9
+    D9 -->|13| P
+    P -->|14| D12
+    D12 -->|15| P
+    P -->|16| D10
+    D10 -->|17| P
+    P -->|18| D19
+    D19 -->|19| P
+    P -->|20| D20
+    D20 -->|21| P
+    P -->|22| D17
+    D17 -->|23| P
+    P -->|24| A
+```
+
+**Datos que circulan**
+
+1. Identidad del actor, sede, fecha y selección opcional de cancha y hora; filtros de clases cuando correspondan.
+2. Actor y participantes de las actividades autorizadas.
+3. Estado de acceso y nombres de los participantes autorizados.
+4. Actor cuyos roles se consultan.
+5. Roles que determinan el alcance de consulta.
+6. Sede seleccionada y criterios de consulta.
+7. Datos de las sedes, incluido su estado y tarifa vigente.
+8. Sede y cancha seleccionadas, con pertenencia que debe comprobarse.
+9. Canchas de la sede, incluidas las inactivas.
+10. Sede y días de la fecha o semana consultada.
+11. Franjas de funcionamiento para representar espacios libres y pausas.
+12. Canchas y fechas de la consulta.
+13. Turnos existentes con cancha, fecha y hora de inicio.
+14. Turnos y fechas consultados, con criterio de evento no Anulado.
+15. Eventos con turno, tipo, estado, observaciones y auditoría.
+16. Eventos de reservas cuya información está autorizada.
+17. Reservas con número, organizador e importe aplicado.
+18. Eventos de clase comprendidos en la consulta autorizada.
+19. Clases y datos de su modalidad.
+20. Actor profesor y clases para comprobar sus asignaciones.
+21. Asignaciones activas que delimitan las clases visibles para el profesor.
+22. Eventos de bloqueo que puede consultar el administrador.
+23. Motivo y datos específicos de cada bloqueo.
+24. Agenda diaria por cancha y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
+
+La consulta no escribe eventos ni turnos. El administrador ve toda la ocupación; el profesor sólo sus clases asignadas, sin datos de reservas ajenas ni acciones administrativas. Los almacenes de cada tipo se consultan únicamente dentro del alcance autorizado.
+
+### DFD 35: consultar la agenda semanal
+
+```mermaid
+flowchart LR
+    A[Administrador o profesor]
+    P((35. Consultar la agenda semanal))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D5[(D5: Sedes)]
+    D6[(D6: Canchas)]
+    D8[(D8: Horarios de sedes)]
+    D9[(D9: Turnos)]
+    D12[(D12: Eventos)]
+    D10[(D10: Reservas)]
+    D19[(D19: Clases)]
+    D20[(D20: Profesores de clases)]
+    D17[(D17: Bloqueos)]
+
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D5
+    D5 -->|7| P
+    P -->|8| D6
+    D6 -->|9| P
+    P -->|10| D8
+    D8 -->|11| P
+    P -->|12| D9
+    D9 -->|13| P
+    P -->|14| D12
+    D12 -->|15| P
+    P -->|16| D10
+    D10 -->|17| P
+    P -->|18| D19
+    D19 -->|19| P
+    P -->|20| D20
+    D20 -->|21| P
+    P -->|22| D17
+    D17 -->|23| P
+    P -->|24| A
+```
+
+**Datos que circulan**
+
+1. Identidad del actor, sede, cancha, fecha de referencia y selección opcional de turno; filtros de clases cuando correspondan.
+2. Actor y participantes de las actividades autorizadas.
+3. Estado de acceso y nombres de los participantes autorizados.
+4. Actor cuyos roles se consultan.
+5. Roles que determinan el alcance de consulta.
+6. Sede seleccionada y criterios de consulta.
+7. Datos de las sedes, incluido su estado y tarifa vigente.
+8. Sede y cancha seleccionadas, con pertenencia que debe comprobarse.
+9. Canchas de la sede, incluidas las inactivas.
+10. Sede y días de la fecha o semana consultada.
+11. Franjas de funcionamiento para representar espacios libres y pausas.
+12. Canchas y fechas de la consulta.
+13. Turnos existentes con cancha, fecha y hora de inicio.
+14. Turnos y fechas consultados, con criterio de evento no Anulado.
+15. Eventos con turno, tipo, estado, observaciones y auditoría.
+16. Eventos de reservas cuya información está autorizada.
+17. Reservas con número, organizador e importe aplicado.
+18. Eventos de clase comprendidos en la consulta autorizada.
+19. Clases y datos de su modalidad.
+20. Actor profesor y clases para comprobar sus asignaciones.
+21. Asignaciones activas que delimitan las clases visibles para el profesor.
+22. Eventos de bloqueo que puede consultar el administrador.
+23. Motivo y datos específicos de cada bloqueo.
+24. Agenda semanal de la cancha por día y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
+
+La consulta no escribe eventos ni turnos. El administrador ve toda la ocupación; el profesor sólo sus clases asignadas, sin datos de reservas ajenas ni acciones administrativas. Los almacenes de cada tipo se consultan únicamente dentro del alcance autorizado.

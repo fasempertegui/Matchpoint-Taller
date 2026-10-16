@@ -57,8 +57,8 @@ Todos los flujos de este documento aplican los límites temporales definidos en 
 | Planilla y generación de clases | FL-28 | Generar clases para un período |
 | Planilla y generación de clases | FL-29 | Regenerar clases para un período |
 | Planilla y generación de clases | FL-30 | Eliminar manualmente una clase generada |
-| Agenda | FL-31 | Consultar la agenda diaria de clases |
-| Agenda | FL-32 | Consultar la agenda semanal de clases |
+| Agenda | FL-31 | Consultar la agenda diaria |
+| Agenda | FL-32 | Consultar la agenda semanal |
 | Agenda | FL-33 | Consultar el detalle de una clase |
 | Clases | FL-34 | Crear una clase concreta |
 | Clases | FL-35 | Actualizar los datos, participantes y cancha de una clase |
@@ -1178,68 +1178,70 @@ flowchart TD
     D -->|Sí| E[Eliminar clase y evento]
 ```
 
-### 3.7 Agenda de clases
+### 3.7 Agenda unificada
 
-#### FL-31. Consultar la agenda diaria de clases
+#### FL-31. Consultar la agenda diaria
 
-- **Objetivo:** visualizar las clases de todas las canchas de una sede durante una fecha.
-- **Actores:** administrador; profesor limitado a sus clases.
-- **Entradas:** sede y fecha; filtros opcionales por profesor o estado.
+- **Objetivo:** visualizar la ocupación de todas las canchas de una sede durante una fecha.
+- **Actores:** administrador; profesor limitado a sus clases asignadas y activas.
+- **Entradas:** sede y fecha; selección opcional de cancha y hora para consultar un turno. Para clases, filtros opcionales por profesor o estado.
 
 Recorrido:
 
-1. El usuario selecciona sede y fecha.
-2. El sistema aplica permisos y filtros.
-3. Muestra en paralelo las canchas de la sede y sus horarios.
-4. El usuario puede seleccionar una clase para ejecutar **FL-33**.
+1. Selecciona sede y fecha. La agenda permite avanzar o retroceder un día y volver a Hoy, dentro del calendario operativo.
+2. El sistema valida el acceso y los criterios, consulta horarios, canchas y eventos no Anulados de la fecha y aplica los permisos.
+3. Muestra columnas por cancha y filas por hora, distinguiendo libres, reservas, clases y bloqueos. Conserva actividades fuera del horario vigente y agrupa pausas comunes sin actividad. Destaca la hora actual sólo en el margen con Ahora.
+4. Seleccionar una celda carga el panel y actualiza el resaltado sin recargar la página ni cambiar la posición de la grilla. Cerrar el detalle utiliza el mismo mecanismo. La consulta mantiene las validaciones de acceso y selección; un fallo conserva el contenido anterior y se informa, y una respuesta desactualizada no reemplaza la última selección. El panel muestra los datos y las acciones autorizadas. Permite registrar mediante **FL-51**, **FL-34** o **FL-63**, consultar una actividad o anularla para liberar o bloquear. Las operaciones no admitidas no se ofrecen.
+5. Puede pasar a **FL-32** conservando fecha y cancha seleccionada. Consultar no escribe eventos ni prepara turnos persistidos.
 
 Alternativas:
 
-- Un profesor sólo ve clases donde está asignado y activo.
-- Sin clases, se muestra la grilla vacía.
+- Un profesor sólo ve sus clases; no accede a los datos de reservas ajenas ni a operaciones administrativas.
+- Sin canchas se muestra un estado vacío. Sin horarios ni actividades no se inventan espacios reservables.
+- Las instalaciones inactivas conservan su historia y no admiten nuevas actividades. La ausencia de precio no impide consultar; impide registrar reservas normales.
+- Las fechas, canchas o selecciones inválidas se rechazan sin ejecutar acciones.
+- La selección de turno y toda acción posterior vuelven a validar permisos, ocupación y límites temporales. La anulación confirma el identificador de la reserva; no actúa sobre una reserva distinta que ocupe ese turno.
 
-- **Resultado:** agenda diaria consultada sin modificaciones.
-- **Datos:** sedes, canchas, eventos, turnos, clases y profesores asignados.
+- **Resultado:** agenda diaria y detalle del turno seleccionado, sin modificar actividades.
+- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, clases, profesores asignados y bloqueos.
 
 ```mermaid
 flowchart TD
-    A[Seleccionar sede y fecha] --> B[Aplicar permisos y filtros]
-    B --> C[Organizar canchas y horarios]
-    C --> D[Mostrar agenda diaria]
-    D --> E{Selecciona clase}
-    E -->|Sí| F[Ejecutar FL-33]
+    A[Seleccionar sede y fecha] --> B[Validar acceso y calendario]
+    B --> C[Consultar horarios y ocupación autorizada]
+    C --> D[Mostrar canchas y horas]
+    D --> E[Seleccionar turno y mostrar detalle y acciones]
 ```
 
-#### FL-32. Consultar la agenda semanal de clases
+#### FL-32. Consultar la agenda semanal
 
-- **Objetivo:** visualizar las clases de una cancha durante una semana.
+- **Objetivo:** visualizar la ocupación de una cancha durante una semana.
 - **Actores:** administrador; profesor limitado a sus clases.
-- **Entradas:** sede, cancha de esa sede y semana; filtros opcionales por profesor o estado.
+- **Entradas:** sede, cancha, fecha de referencia y selección opcional de hora; para clases, filtros opcionales por profesor o estado.
 
 Recorrido:
 
-1. El usuario selecciona una sede.
-2. El sistema habilita sus canchas y el usuario selecciona una.
-3. El usuario selecciona la semana.
-4. El sistema aplica permisos y filtros y muestra días y horarios.
-5. El usuario puede seleccionar una clase para ejecutar **FL-33**.
+1. Selecciona sede y cancha; cambiar de sede limpia cancha y turno. Se propone la primera cancha disponible de la sede cuando no se indicó una.
+2. Selecciona una fecha de referencia. El sistema obtiene su semana de lunes a domingo y permite navegar por semanas o volver a Hoy.
+3. Valida el calendario y consulta la ocupación y horarios de cada día, con las mismas reglas de acceso y representación de **FL-31**.
+4. Muestra días en columnas y horas en filas. Las fechas fuera de los límites del calendario permanecen sin acciones; conserva las actividades fuera del horario actual de la sede.
+5. Permite consultar la actividad seleccionada y pasar a la vista diaria de esa fecha manteniendo la cancha. La presentación y la interacción de la vista semanal están pendientes de definición.
 
 Alternativas:
 
-- Cambiar o quitar la sede limpia la cancha seleccionada.
-- Un profesor sólo ve sus clases.
+- Un profesor sólo ve sus clases asignadas, sin datos de actividades ajenas ni acciones administrativas.
+- Una cancha que no pertenece a la sede o una fecha inválida rechaza la consulta.
+- La consulta no requiere una tarifa ni crea eventos o turnos persistidos; las operaciones de reserva conservan el límite de catorce días.
 
-- **Resultado:** agenda semanal consultada sin modificaciones.
-- **Datos:** sedes, canchas, eventos, turnos, clases y profesores asignados.
+- **Resultado:** agenda semanal y detalle del turno seleccionado, sin modificaciones.
+- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, clases, profesores asignados y bloqueos.
 
 ```mermaid
 flowchart TD
-    A[Seleccionar sede] --> B[Seleccionar cancha]
-    B --> C[Seleccionar semana]
-    C --> D[Aplicar permisos y filtros]
-    D --> E[Mostrar agenda semanal]
-    E --> F{Selecciona clase}
-    F -->|Sí| G[Ejecutar FL-33]
+    A[Seleccionar sede cancha y fecha] --> B[Validar acceso y calendario]
+    B --> C[Obtener semana y ocupación autorizada]
+    C --> D[Mostrar días y horas]
+    D --> E[Seleccionar turno y mostrar detalle y acciones]
 ```
 
 #### FL-33. Consultar el detalle de una clase
@@ -2365,17 +2367,17 @@ flowchart TD
 
 - **Objetivo:** localizar y visualizar bloqueos no iniciados, en curso, terminados por horario o Anulados, para gestionarlos o para entender por qué un turno no está disponible.
 - **Actor:** administrador.
-- **Entradas:** filtros opcionales por cancha, fecha, estado registrado o condición horaria.
+- **Entradas:** sede, cancha y fecha seleccionadas en la agenda; filtros opcionales por estado registrado o condición horaria.
 
 Recorrido:
 
-1. El administrador ingresa filtros.
-2. El sistema busca bloqueos coincidentes.
-3. Muestra un listado con cancha, fecha, horario, motivo, estado registrado y condición horaria; si el bloqueo nació de cancelar una reserva o una clase, referencia ese evento de origen.
+1. El administrador selecciona un bloqueo desde la agenda o consulta su historia con los filtros disponibles.
+2. El sistema busca los bloqueos coincidentes y valida el acceso.
+3. Muestra su detalle o historia con cancha, fecha, horario, motivo, estado registrado y condición horaria; si el bloqueo nació de cancelar una reserva o una clase, referencia ese evento de origen.
 
 Alternativas:
 
-- Esta consulta es la vía para localizar un bloqueo y ejecutar **FL-65** o **FL-66**.
+- Esta consulta se integra en la agenda, sin una sección independiente de navegación, y permite ejecutar **FL-65** o **FL-66**.
 - Un bloqueo también aparece, sin distinguirse de una clase o una reserva salvo por su tipo, en la vista unificada de ocupación de **FL-01**.
 
 - **Resultado:** listado y detalle de bloqueos sin modificaciones.

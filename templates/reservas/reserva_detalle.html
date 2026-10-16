@@ -106,6 +106,9 @@
             <section class="perfil-seccion" aria-labelledby="reserva-acciones-titulo">
                 <h2 id="reserva-acciones-titulo">Acciones</h2>
                 <div class="perfil-acciones">
+                    {% if es_administrador %}
+                        <a class="perfil-enlace" href="{% url 'agenda:agenda' %}?sede={{ turno.cancha.sede_id }}&amp;cancha={{ turno.cancha_id }}&amp;fecha={{ turno.fecha|date:'Y-m-d' }}&amp;hora={{ turno.hora_inicio.hour }}">Ver turno en agenda</a>
+                    {% endif %}
                     <a class="perfil-enlace" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
                     {% if puede_finalizar %}
                         <form class="formulario-en-linea" method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}"
