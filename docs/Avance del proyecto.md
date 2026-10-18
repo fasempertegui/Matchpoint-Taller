@@ -121,3 +121,7 @@ El formulario recoge alcance, exclusiones y motivos. Exige un motivo de anulaci�
 La confirmación utiliza una selección firmada, vinculada al actor, sede, fecha, parámetros y ocupación revisada, con validez de quince minutos. El servidor no acepta cambios de parámetros al confirmar. Dentro de una única transacción comprueba el acceso administrativo, bloquea sede, canchas, turnos y eventos en orden estable y vuelve a calcular el alcance. Si cambia la ocupación, las franjas o la elegibilidad, revierte todo y solicita revisar la vista previa. También comprueba al terminar que ningún turno efectivo haya alcanzado su hora de inicio. Cada acción reutiliza los servicios individuales de reservas y bloqueos; un error no deja anulaciones o bloqueos parciales ni sobrescribe auditoría ante una confirmación repetida.
 
 Las clases se conservan mientras su módulo no esté implementado. El recorrido de operaciones masivas contempla su incorporación con las exclusiones y condiciones de la especificación completa.
+
+## 7. Navegación del portal y consulta de reservas
+
+El acceso implementado a Agenda está limitado a la administración. El acceso del portal a la grilla y la creación de reservas centralizada en Agenda están pendientes de implementación. La especificación distingue Agenda para consultar disponibilidad, elegir un turno y operar, y Reservas o Mis reservas para buscar y consultar el historial, con detalle, auditoría y comprobante. La presentación de turnos ocupados por actividades ajenas en el portal está pendiente de definición.

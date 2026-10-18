@@ -73,7 +73,7 @@ En general, las altas a planes mensuales se realizan al inicio del mes. No suele
 
 El plan tiene un precio base. Si el pago se realiza del **1 al 5** de cada mes, se aplica un **5% de descuento** sobre el precio base. Del **6 al 15** se abona el precio base, sin descuento ni recargo. Desde el **16** y hasta fin de mes, se aplica un **10% de recargo** sobre el precio base.
 
-Los feriados no se dictan clases. De todos modos, pueden realizarse reservas de cancha, aunque con horarios posiblemente más acotados según la sede.
+Los feriados no tienen clases de la programación habitual. La administración puede organizar clases puntuales para esas fechas. También pueden realizarse reservas de cancha, aunque con horarios posiblemente más acotados según la sede.
 
 ### 3.2 Pases de cancha
 
@@ -93,6 +93,8 @@ Ambas variantes comparten el resto de las características:
 ### 3.3 Reservas de cancha
 
 Cualquier persona puede reservar una cancha, siempre que haya disponibilidad. Cada reserva ocupa un único turno de una hora. Para jugar más de una hora se registran reservas independientes, una por turno, con confirmación, comprobante y cobros propios.
+
+El organizador es la persona responsable de la reserva, aunque organice el uso de la cancha para otros y no juegue personalmente. Puede organizar varias reservas simultáneas en canchas diferentes. La identificación del organizador o de los invitados no constituye un registro de asistencia.
 
 Cada reserva se paga por separado. Cada sede define un precio por turno de una hora, común a todas sus canchas. El importe de una reserva normal es el precio de un turno. No se trabaja con reservas recurrentes o fijas.
 
@@ -162,6 +164,6 @@ Actualmente, los administradores registran ingresos y egresos de la academia. Lo
 
 ### 5.3 Profesores y permanencia de alumnos
 
-Una clase puede estar a cargo de más de un profesor.
+Una clase puede estar a cargo de más de un profesor. La academia también organiza clases especiales y capacitaciones a las que pueden asistir profesores u otras personas, además de sus alumnos habituales. Dictar una clase y asistir a ella son funciones diferentes.
 
 La academia puede expulsar alumnos cuando corresponda según sus criterios internos o normas de convivencia. En esos casos, la expulsión no genera derecho automático a devolución de importes ya abonados.

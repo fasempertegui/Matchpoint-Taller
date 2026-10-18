@@ -905,6 +905,9 @@ flowchart LR
 
 Se selecciona un único turno futuro, libre y contenido en una franja de funcionamiento. La confirmación registra una reserva y su evento con referencia directa al turno dentro de una transacción; el portal no registra ingresos. Cada reserva tiene comprobante e ingresos propios.
 
+
+La creación se inicia sobre un turno libre seleccionado en Agenda, tanto en la administración como en el portal. El listado de reservas corresponde a consulta e historial.
+
 ### DFD 29: consultar el detalle de una reserva
 
 ```mermaid
@@ -1031,6 +1034,9 @@ flowchart LR
 16. Invitados de reservas con pase para calcular adicionales.
 17. Coberturas de los invitados identificados.
 18. Filtros y listado con número, organizador cuando corresponde, cancha, fecha, horario, total, estado y acceso al detalle, o errores.
+
+
+Reservas y Mis reservas permiten localizar registros, incluidos los Anulados, y acceder a su detalle, auditoría y comprobante según permisos. Las nuevas reservas se inician desde Agenda.
 
 ### DFD 31: anular una reserva de cancha
 
@@ -1204,7 +1210,7 @@ El comprobante se obtiene de los datos de la reserva, su evento y sus relaciones
 
 ```mermaid
 flowchart LR
-    A[Administrador o profesor]
+    A[Administrador, usuario con rol Reservas o profesor]
     P((34. Consultar la agenda diaria))
     D1[(D1: Usuarios)]
     D3[(D3: Usuarios_Roles)]
@@ -1276,13 +1282,13 @@ flowchart LR
 25. Actividad anulada vinculada a cada bloqueo y referencia para consultar su detalle.
 26. Agenda diaria por cancha y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
 
-La consulta no escribe eventos ni turnos. El administrador ve toda la ocupación; el profesor sólo sus clases asignadas, sin datos de reservas ajenas ni acciones administrativas. Los almacenes de cada tipo se consultan únicamente dentro del alcance autorizado.
+La consulta no escribe eventos ni turnos. El administrador ve toda la ocupación; el usuario con rol Reservas consulta disponibilidad y sus reservas; el profesor consulta sus clases asignadas. La presentación de actividades ajenas en el portal está pendiente de definición y no habilita datos personales o comerciales ajenos ni acciones administrativas. Los almacenes de cada tipo se consultan únicamente dentro del alcance autorizado.
 
 ### DFD 35: consultar la agenda semanal
 
 ```mermaid
 flowchart LR
-    A[Administrador o profesor]
+    A[Administrador, usuario con rol Reservas o profesor]
     P((35. Consultar la agenda semanal))
     D1[(D1: Usuarios)]
     D3[(D3: Usuarios_Roles)]
@@ -1354,7 +1360,7 @@ flowchart LR
 25. Actividad anulada vinculada a cada bloqueo y referencia para consultar su detalle.
 26. Agenda semanal de la cancha por día y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
 
-La consulta no escribe eventos ni turnos. El administrador ve toda la ocupación; el profesor sólo sus clases asignadas, sin datos de reservas ajenas ni acciones administrativas. Los almacenes de cada tipo se consultan únicamente dentro del alcance autorizado.
+La consulta no escribe eventos ni turnos. El administrador ve toda la ocupación; el usuario con rol Reservas consulta disponibilidad y sus reservas; el profesor consulta sus clases asignadas. La presentación de actividades ajenas en el portal está pendiente de definición y no habilita datos personales o comerciales ajenos ni acciones administrativas. Los almacenes de cada tipo se consultan únicamente dentro del alcance autorizado.
 
 
 ## 9. Bloqueos individuales
