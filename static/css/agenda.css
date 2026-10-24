@@ -148,6 +148,11 @@ a.agenda-turno:hover {
     background: var(--primario-suave);
 }
 
+.agenda-turno-ocupado {
+    background: var(--fondo);
+    color: var(--texto-suave);
+}
+
 .agenda-turno-reserva {
     background: #edf2fa;
 }
@@ -366,6 +371,10 @@ a.agenda-turno:hover {
     height: 8px;
     border-radius: 50%;
     background: #5575a8;
+}
+
+.agenda-leyenda .agenda-leyenda-ocupado {
+    background: var(--texto-suave);
 }
 
 .agenda-leyenda .agenda-leyenda-bloqueo {

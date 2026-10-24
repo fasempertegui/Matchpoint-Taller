@@ -23,7 +23,7 @@ def enlace_agenda(sede, fecha, cancha=None, hora=None, acciones=False):
     return reverse("agenda:agenda") + "?" + urlencode(datos)
 
 
-def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
+def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuario, es_administrador):
     ahora = timezone.localtime()
     canchas = list(sede.canchas.all())
     columnas = [{"cancha": cancha, "fecha": fecha} for cancha in canchas]
@@ -65,6 +65,8 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
         evento = eventos_por_turno.get((cancha.pk, dia, hora))
         reserva = getattr(evento, "reserva", None) if evento and evento.tipo == Evento.Tipo.RESERVA else None
         bloqueo = getattr(evento, "bloqueo", None) if evento and evento.tipo == Evento.Tipo.BLOQUEO else None
+        puede_ver_evento = es_administrador or (reserva is not None and reserva.organizador_id == usuario.pk)
+        ocupado_por_tercero = evento is not None and not puede_ver_evento
         habilitado = hora in inicios_habilitados.get(dia, set())
         en_rango = FECHA_INICIO_OPERACIONES <= dia <= fecha_maxima
         impedimento = ""
@@ -93,16 +95,16 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
         puede_anular = False
         puede_finalizar = False
         puede_liberar_bloqueo = False
-        if bloqueo:
+        if bloqueo and es_administrador:
             try:
                 validar_anulacion_bloqueo(bloqueo, ahora)
             except ValidationError:
                 pass
             else:
                 puede_liberar_bloqueo = True
-        if reserva:
+        if reserva and puede_ver_evento:
             try:
-                validar_anulacion_reserva(reserva, True, ahora)
+                validar_anulacion_reserva(reserva, es_administrador, ahora)
             except ValidationError:
                 pass
             else:
@@ -112,16 +114,20 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
             except ValidationError:
                 pass
             else:
-                puede_finalizar = True
+                puede_finalizar = es_administrador
         return {
             "cancha": cancha, "fecha": dia, "hora": time(hora), "fin": fin.time(),
-            "evento": evento, "reserva": reserva, "bloqueo": bloqueo,
+            "evento": evento if puede_ver_evento else None,
+            "reserva": reserva if puede_ver_evento else None,
+            "bloqueo": bloqueo if puede_ver_evento else None,
+            "ocupado_por_tercero": ocupado_por_tercero,
             "habilitado": habilitado, "en_rango": en_rango,
             "consultable": evento is not None or fin > ahora,
-            "iniciado": inicio <= ahora, "impedimento": impedimento, "estado_temporal": temporal,
+            "iniciado": inicio <= ahora, "impedimento": impedimento,
+            "estado_temporal": temporal if puede_ver_evento else "",
             "puede_reservar": evento is None and not impedimento,
             "puede_anular": puede_anular, "puede_finalizar": puede_finalizar,
-            "puede_bloquear": en_rango and habilitado and inicio > ahora
+            "puede_bloquear": es_administrador and en_rango and habilitado and inicio > ahora
                 and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
                 and (evento is None or puede_anular),
             "puede_liberar_bloqueo": puede_liberar_bloqueo,
@@ -132,9 +138,17 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
 
     horas_visibles = set().union(*inicios_habilitados.values()) if inicios_habilitados else set()
     horas_visibles.update(clave[2] for clave in eventos_por_turno)
+    horas_propias = {
+        evento.turno.hora_inicio.hour
+        for evento in eventos_por_turno.values()
+        if evento.tipo == Evento.Tipo.RESERVA and evento.reserva.organizador_id == usuario.pk
+    }
     filas = []
     if horas_visibles:
         for hora in range(min(horas_visibles), max(horas_visibles) + 1):
+            inicio = timezone.make_aware(datetime.combine(fecha, time(hora)))
+            if not es_administrador and inicio <= ahora and hora not in horas_propias:
+                continue
             if hora not in horas_visibles:
                 if filas and filas[-1].get("pausa"):
                     filas[-1]["fin"] = time(hora + 1)
@@ -150,6 +164,8 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
         if cancha is not None and hora_seleccionada is not None else None
     )
     if detalle and not detalle["consultable"]:
+        detalle = None
+    if detalle and not es_administrador and detalle["iniciado"] and hora_seleccionada not in horas_propias:
         detalle = None
     for columna in columnas:
         columna["hoy"] = columna["fecha"] == ahora.date()

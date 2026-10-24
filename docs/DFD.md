@@ -969,7 +969,7 @@ flowchart LR
 Se selecciona un único turno futuro, libre y contenido en una franja de funcionamiento. La confirmación registra una reserva y su evento con referencia directa al turno dentro de una transacción; el portal no registra ingresos. Cada reserva tiene comprobante e ingresos propios.
 
 
-La creación se inicia sobre un turno libre seleccionado en Agenda, tanto en la administración como en el portal. El listado de reservas corresponde a consulta e historial.
+La creación se inicia sobre un turno libre seleccionado en Agenda, tanto en la administración como en el portal. El detalle y comprobante de cada reserva se abren desde el panel de Agenda; la búsqueda por criterios está pendiente de implementación.
 
 ### DFD 29: consultar el detalle de una reserva
 
@@ -1099,7 +1099,7 @@ flowchart LR
 18. Filtros y listado con número, organizador cuando corresponde, cancha, fecha, horario, total, estado y acceso al detalle, o errores.
 
 
-Reservas y Mis reservas permiten localizar registros, incluidos los Anulados, y acceder a su detalle, auditoría y comprobante según permisos. Las nuevas reservas se inician desde Agenda.
+Agenda es la entrada única para consultar y crear reservas. El panel permite acceder al detalle y comprobante según permisos. La consulta por criterios de este proceso, incluida la localización de registros Anulados, está prevista dentro de Agenda y permanece pendiente de implementación.
 
 ### DFD 31: anular una reserva de cancha
 

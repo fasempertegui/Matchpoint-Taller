@@ -27,7 +27,12 @@ from .servicios import construir_agenda, enlace_agenda
 @vary_on_headers("X-Agenda-Detalle")
 @require_http_methods(["GET", "POST"])
 def agenda(request):
-    if not exigir_acceso_reservas(request.user):
+    es_administrador = exigir_acceso_reservas(request.user)
+    panel_acciones = request.GET.get("panel") == "acciones"
+    accion = request.POST.get("accion") if request.method == "POST" else None
+    if not es_administrador and (
+        panel_acciones or (request.method == "POST" and accion not in ("reservar", "anular"))
+    ):
         raise PermissionDenied
 
     parametros = request.GET.copy()
@@ -36,10 +41,11 @@ def agenda(request):
     if sede_inicial is not None:
         parametros.setdefault("sede", str(sede_inicial.pk))
     formulario = AgendaFiltroForm(parametros)
-    panel_acciones = request.GET.get("panel") == "acciones"
     contexto_acciones = {}
-    accion = request.POST.get("accion") if request.method == "POST" else None
-    formulario_reserva = AgendaReservaForm(request.POST if accion == "reservar" else None)
+    formulario_reserva = AgendaReservaForm(
+        request.POST if accion == "reservar" else None,
+        es_administrador=es_administrador,
+    )
     formulario_anulacion = ReservaAnulacionForm(request.POST if accion == "anular" else None)
     formulario_bloqueo = None
     formulario_liberacion = None
@@ -50,10 +56,11 @@ def agenda(request):
             "sede": filtros["sede"], "cancha": filtros["cancha"], "fecha": filtros["fecha"],
             "hora_seleccionada": None if panel_acciones else filtros["hora"],
             "fecha_maxima": formulario.fecha_maxima,
+            "usuario": request.user, "es_administrador": es_administrador,
         }
         datos = construir_agenda(**argumentos)
         detalle = datos["detalle"]
-        if detalle is not None:
+        if detalle is not None and es_administrador:
             formulario_bloqueo = BloqueoForm(
                 request.POST if accion == "bloquear" else None,
                 prefix="bloqueo",
@@ -87,7 +94,7 @@ def agenda(request):
                         if turno is None:
                             raise ValidationError("El turno ya no está disponible. Revisá la agenda.")
                         reserva = registrar_reserva(
-                            request.user, formulario_reserva.cleaned_data["organizador"],
+                            request.user, formulario_reserva.cleaned_data.get("organizador", request.user),
                             detalle["cancha"], detalle["fecha"], turno.pk,
                             formulario_reserva.cleaned_data["precio_mostrado"],
                             formulario_reserva.cleaned_data["observaciones"],
@@ -153,6 +160,7 @@ def agenda(request):
         **contexto_acciones,
         "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", None)],
         "zona_horaria": timezone.get_current_timezone_name(),
+        "es_administrador": es_administrador,
     }
     if request.headers.get("X-Agenda-Detalle") == "1":
         if not datos:

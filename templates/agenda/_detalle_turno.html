@@ -4,7 +4,7 @@
         <header class="agenda-detalle-cabecera">
             <div>
                 <div class="agenda-detalle-titulo">
-                    <h2>{% if detalle.reserva %}{{ detalle.reserva.numero }}{% elif detalle.bloqueo %}{{ detalle.bloqueo.numero }}{% elif detalle.evento %}{{ detalle.evento.get_tipo_display }}{% else %}Turno libre{% endif %}</h2>
+                    <h2>{% if detalle.ocupado_por_tercero %}No disponible{% elif detalle.reserva %}{{ detalle.reserva.numero }}{% elif detalle.bloqueo %}{{ detalle.bloqueo.numero }}{% elif detalle.evento %}{{ detalle.evento.get_tipo_display }}{% else %}Turno libre{% endif %}</h2>
                     {% if detalle.evento %}{% include "componentes/badge_estado.html" with estado=detalle.evento.estado texto=detalle.evento.get_estado_display only %}{% endif %}
                 </div>
                 <p>{{ detalle.fecha|date:"l d/m/Y"|capfirst }}</p>
@@ -12,6 +12,7 @@
             <a class="agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar detalle">×</a>
         </header>
         <dl class="agenda-datos">
+            <div><dt>Sede</dt><dd>{{ agenda.sede.nombre }}</dd></div>
             <div><dt>Cancha</dt><dd>{{ detalle.cancha.nombre }}</dd></div>
             <div><dt>Horario</dt><dd>{{ detalle.hora|time:"H:i" }}–{{ detalle.fin|time:"H:i" }}</dd></div>
             {% if detalle.reserva %}
@@ -33,6 +34,7 @@
         {% if detalle.reserva %}
             <div class="agenda-acciones">
                 <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_detalle' detalle.reserva.pk %}">Ver detalle completo</a>
+                <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_comprobante' detalle.reserva.pk %}">Ver comprobante</a>
             </div>
             {% if detalle.puede_anular %}
                 <details class="agenda-desplegable" name="agenda-accion"{% if formulario_anulacion.is_bound %} open{% endif %}>
@@ -51,6 +53,8 @@
                     <button class="boton boton-secundario boton-chico" type="submit">Finalizar reserva</button>
                 </form>
             {% endif %}
+        {% elif detalle.ocupado_por_tercero %}
+            <p class="agenda-impedimento">Este turno no está disponible.</p>
         {% elif detalle.bloqueo %}
             {% if detalle.puede_liberar_bloqueo %}
                 <details class="agenda-desplegable" name="agenda-accion"{% if formulario_liberacion.is_bound %} open{% endif %}>
@@ -72,7 +76,11 @@
                     {% csrf_token %}<input type="hidden" name="accion" value="reservar">
                     <input type="hidden" name="precio_mostrado" value="{{ agenda.sede.precio_reserva_vigente|unlocalize }}">
                     {{ formulario_reserva.non_field_errors }}
-                    <div class="grupo-campo"><label for="{{ formulario_reserva.organizador.id_for_label }}">Organizador</label>{{ formulario_reserva.organizador }}{% for error in formulario_reserva.organizador.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
+                    {% if es_administrador %}
+                        <div class="grupo-campo"><label for="{{ formulario_reserva.organizador.id_for_label }}">Organizador</label>{{ formulario_reserva.organizador }}{% for error in formulario_reserva.organizador.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
+                    {% else %}
+                        <p><strong>Organizador:</strong> {{ request.user }}</p>
+                    {% endif %}
                     {% for error in formulario_reserva.precio_mostrado.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
                     <p class="agenda-precio">Total: $ {{ agenda.sede.precio_reserva_vigente|floatformat:"2g" }}</p>
                     {% include "componentes/observaciones_opcionales.html" with campo=formulario_reserva.observaciones %}

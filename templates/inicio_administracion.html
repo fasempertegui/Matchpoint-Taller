@@ -13,7 +13,7 @@
     <div class="inicio-modulos">
         <article class="tarjeta inicio-modulo">
             <h3>Agenda</h3>
-            <p>Vista diaria de las canchas, con registro y consulta de reservas.</p>
+            <p>Consulta de sedes, canchas y horarios, con registro de reservas y bloqueos.</p>
             <a class="boton boton-secundario" href="{% url 'agenda:agenda' %}">Ver agenda</a>
         </article>
 
@@ -43,14 +43,6 @@
             <h3>Auditoría</h3>
             <p>Historial de operaciones y consulta de sus valores anteriores y actuales.</p>
             <a class="boton boton-secundario" href="{% url 'auditoria:auditoria_lista' %}">Ver auditoría</a>
-        </article>
-
-        <article class="tarjeta inicio-modulo">
-            <h3>Reservas</h3>
-            <p>Consulta de disponibilidad y gestión de reservas de cancha.</p>
-            {% if puede_reservar %}
-                <a class="boton boton-secundario" href="{% url 'reservas:reserva_lista' %}">Ver reservas</a>
-            {% endif %}
         </article>
 
         <article class="tarjeta inicio-modulo">

@@ -324,57 +324,6 @@ h2 {
     gap: 4px;
 }
 
-.tarjeta-busqueda.filtros-reservas {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-areas:
-        "sede fecha_desde organizador estado"
-        "cancha fecha_hasta numero acciones";
-}
-
-.tarjeta-busqueda.filtros-reservas-propias {
-    grid-template-areas:
-        "sede fecha_desde numero estado"
-        "cancha fecha_hasta . acciones";
-}
-
-.filtros-reservas > .grupo-campo {
-    width: auto;
-    min-width: 0;
-}
-
-.filtros-reservas .filtros-campo-sede {
-    grid-area: sede;
-}
-
-.filtros-reservas .filtros-campo-cancha {
-    grid-area: cancha;
-}
-
-.filtros-reservas .filtros-campo-fecha_desde {
-    grid-area: fecha_desde;
-}
-
-.filtros-reservas .filtros-campo-fecha_hasta {
-    grid-area: fecha_hasta;
-}
-
-.filtros-reservas .filtros-campo-organizador {
-    grid-area: organizador;
-}
-
-.filtros-reservas .filtros-campo-numero {
-    grid-area: numero;
-}
-
-.filtros-reservas .filtros-campo-estado {
-    grid-area: estado;
-}
-
-.filtros-reservas .filtros-acciones {
-    grid-area: acciones;
-}
-
 .lista-roles {
     display: flex;
     flex-wrap: wrap;
@@ -891,153 +840,6 @@ textarea.form-control {
     text-decoration: none;
 }
 
-.reserva-distribucion {
-    display: grid;
-    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
-    align-items: start;
-    gap: 20px;
-}
-
-.reserva-configuracion .grupo-campo {
-    margin-bottom: 24px;
-}
-
-.reserva-canchas {
-    display: grid;
-    gap: 10px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-}
-
-.reserva-canchas legend {
-    margin-bottom: 10px;
-    padding: 0;
-    font-weight: 700;
-}
-
-.reserva-opcion {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 46px;
-    padding: 10px 12px;
-    border: 1px solid var(--borde);
-    border-radius: 2px;
-    background: var(--superficie);
-    cursor: pointer;
-}
-
-.reserva-opcion[hidden] {
-    display: none;
-}
-
-.reserva-opcion input {
-    width: 16px;
-    height: 16px;
-    margin: 0;
-    accent-color: var(--primario);
-}
-
-.reserva-opcion:hover {
-    border-color: var(--primario);
-}
-
-.reserva-opcion:has(input:checked) {
-    border-color: var(--primario);
-    background: var(--primario-suave);
-    color: var(--primario);
-    font-weight: 700;
-}
-
-.reserva-opcion:focus-within {
-    outline: 2px solid var(--primario);
-    outline-offset: 2px;
-}
-
-.reserva-calendario-cabecera {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.reserva-semana,
-.reserva-dias {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 6px;
-    text-align: center;
-}
-
-.reserva-semana {
-    margin-bottom: 8px;
-    color: var(--texto-suave);
-    font-size: 0.85rem;
-}
-
-.reserva-dia {
-    min-height: 38px;
-    padding: 6px 0;
-    border: 1px solid transparent;
-    border-radius: 2px;
-    background: transparent;
-    color: var(--texto);
-    font: inherit;
-    cursor: pointer;
-}
-
-.reserva-dia:hover:not(:disabled) {
-    border-color: var(--primario);
-    background: var(--primario-suave);
-}
-
-.reserva-dia[aria-pressed="true"] {
-    background: var(--primario);
-    color: #ffffff;
-    font-weight: 700;
-}
-
-.reserva-dia:disabled,
-.reserva-calendario-cabecera button:disabled {
-    opacity: 0.35;
-    cursor: default;
-}
-
-.reserva-seleccion {
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid var(--borde);
-}
-
-.reserva-turnos-cabecera {
-    margin-bottom: 16px;
-}
-
-.reserva-turnos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
-    gap: 10px;
-}
-
-.reserva-turno {
-    justify-content: center;
-    white-space: nowrap;
-}
-
-.reserva-importes {
-    margin-block: 20px;
-}
-
-.reserva-importes p {
-    margin: 6px 0;
-}
-
-.reserva-total {
-    font-weight: 700;
-}
-
 html.modal-abierto {
     overflow: hidden;
 }
@@ -1102,25 +904,6 @@ html.modal-abierto {
     }
 }
 
-@media (max-width: 900px) {
-    .tarjeta-busqueda.filtros-reservas {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-areas:
-            "sede cancha"
-            "fecha_desde fecha_hasta"
-            "organizador numero"
-            "estado acciones";
-    }
-
-    .tarjeta-busqueda.filtros-reservas-propias {
-        grid-template-areas:
-            "sede cancha"
-            "fecha_desde fecha_hasta"
-            "numero estado"
-            ". acciones";
-    }
-}
-
 @media (max-width: 720px) {
     .filtros-compactos > .grupo-campo {
         width: 100%;
@@ -1132,9 +915,6 @@ html.modal-abierto {
         justify-content: space-between;
     }
 
-    .reserva-distribucion {
-        grid-template-columns: 1fr;
-    }
     .navegacion,
     .navegacion nav,
     .encabezado-pagina,
@@ -1175,31 +955,5 @@ html.modal-abierto {
     .acciones {
         justify-content: flex-start;
         flex-wrap: wrap;
-    }
-}
-
-@media (max-width: 480px) {
-    .tarjeta-busqueda.filtros-reservas {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-            "sede"
-            "cancha"
-            "fecha_desde"
-            "fecha_hasta"
-            "organizador"
-            "numero"
-            "estado"
-            "acciones";
-    }
-
-    .tarjeta-busqueda.filtros-reservas-propias {
-        grid-template-areas:
-            "sede"
-            "cancha"
-            "fecha_desde"
-            "fecha_hasta"
-            "numero"
-            "estado"
-            "acciones";
     }
 }

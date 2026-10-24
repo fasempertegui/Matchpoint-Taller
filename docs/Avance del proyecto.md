@@ -60,9 +60,9 @@ El importe por turno se copia desde la tarifa validada de la sede al registrar y
 
 ### Consulta
 
-El Administrador puede consultar todas las reservas; el usuario con rol Reservas, sólo las propias. Se permite filtrar por sede, cancha, rango inclusivo de fechas de uso y estado. La cancha debe pertenecer a la sede seleccionada y la fecha final no puede ser anterior a la inicial. Los filtros inválidos se rechazan. Se incluyen instalaciones inactivas para consultar registros históricos.
+El Administrador consulta las reservas desde Agenda; el usuario con rol Reservas puede consultar el detalle y comprobante de las propias. El panel del turno ofrece enlaces a ambas pantallas. El detalle incluye organizador, sede, cancha, fecha, horario, precio aplicado, estado, observaciones y los datos de registro, anulación o finalización que corresponden. Las rutas de detalle y comprobante comprueban el acceso al registro en el servidor.
 
-Cada reserva se presenta una sola vez, con número, organizador según el permiso, sede, cancha, fecha de uso, horario, total y estado. El detalle incluye su turno y precio aplicado, datos del registro y datos de anulación o finalización cuando corresponden.
+La búsqueda por criterios y la localización de reservas Anuladas desde Agenda están pendientes. No hay una sección independiente de Reservas ni un formulario de alta separado.
 
 ### Anulación
 
@@ -84,13 +84,13 @@ Se dispone de un comprobante imprimible o guardable como PDF con número, estado
 
 El Administrador puede emitir cualquier comprobante y el usuario con rol Reservas sólo los propios. Emitirlo no modifica la reserva ni crea registros adicionales. Acredita el registro de la reserva, no un pago.
 
-## 4. Agenda administrativa
+## 4. Agenda
 
-La sección Agenda permite consultar una sede por día, con una columna por cancha. Se seleccionan sede y fecha, y se navega al día anterior, siguiente o a Hoy. El selector muestra Día activo y Semana deshabilitado. El acceso está limitado a cuentas administrativas activas con acceso vigente.
+La sección Agenda permite consultar una sede por día, con una columna por cancha. Se seleccionan sede y fecha, y se navega al día anterior, siguiente o a Hoy. El selector muestra Día activo y Semana deshabilitado. El acceso está habilitado para cuentas activas con rol Administrador o Reservas y sin cambio de contraseña pendiente.
 
 La consulta incluye instalaciones inactivas para acceder a su historia, representa los espacios libres desde los horarios de la sede y conserva los eventos existentes fuera de las franjas actuales. No registra turnos ni eventos por consultar. Sin canchas, horarios o actividades muestra los estados vacíos correspondientes. Las fechas inválidas y las canchas de otra sede se rechazan. Los límites de consulta son el inicio de operaciones y un año calendario después del día actual.
 
-Seleccionar una celda muestra su fecha, cancha y horario. El detalle acompaña a la grilla diaria en un panel lateral y se ubica debajo en pantallas pequeñas. Seleccionar un turno o cerrar su panel no recarga la grilla ni cambia el desplazamiento: el servidor entrega el detalle autorizado y se actualizan el panel, el resaltado y la URL de selección. Ante errores se conserva el detalle anterior con un aviso; las selecciones rápidas sólo muestran la última respuesta. El registro, la anulación y la finalización mantienen sus envíos y redirecciones completos. Para reservas incluye organizador, estado junto al identificador, observaciones y acceso al detalle completo. El aviso de carga aparece únicamente cuando la consulta tarda más de 300 ms. Las reservas Anuladas conservan su historia en la consulta de reservas y no ocupan celdas. Los turnos iniciados se atenúan; Ahora destaca únicamente la hora en el margen y se actualiza con la zona horaria del sistema.
+Seleccionar una celda muestra su fecha, cancha y horario. El detalle acompaña a la grilla diaria en un panel lateral y se ubica debajo en pantallas pequeñas. Seleccionar un turno o cerrar su panel no recarga la grilla ni cambia el desplazamiento: el servidor entrega el detalle autorizado y se actualizan el panel, el resaltado y la URL de selección. Ante errores se conserva el detalle anterior con un aviso; las selecciones rápidas sólo muestran la última respuesta. El registro, la anulación y la finalización mantienen sus envíos y redirecciones completos. Para reservas incluye organizador, estado junto al identificador, observaciones y acceso al detalle completo. El aviso de carga aparece únicamente cuando la consulta tarda más de 300 ms. Las reservas Anuladas conservan sus datos y no ocupan celdas; su localización por criterios está pendiente. Los turnos iniciados se atenúan; Ahora destaca únicamente la hora en el margen y se actualiza con la zona horaria del sistema.
 
 Un turno libre permite registrar una reserva para un organizador habilitado desde el panel, con confirmación de participante, horario e importe. Se respetan precio, franjas, instalaciones activas y anticipación de catorce días. Una reserva futura permite anular y liberar con motivo; una vencida pendiente de finalización ofrece la acción administrativa de emergencia. Estas acciones reutilizan los servicios transaccionales de reservas. Si cambia el precio se exige revisar el importe; si cambia la reserva que ocupa el turno, la confirmación no se aplica a la actividad nueva.
 
@@ -124,7 +124,11 @@ Las clases se conservan mientras su módulo no esté implementado. El recorrido 
 
 ## 7. Navegación del portal y consulta de reservas
 
-El acceso implementado a Agenda está limitado a la administración. El acceso del portal a la grilla y la creación de reservas centralizada en Agenda están pendientes de implementación. La especificación distingue Agenda para consultar disponibilidad, elegir un turno y operar, y Reservas o Mis reservas para buscar y consultar el historial, con detalle, auditoría y comprobante. La presentación de turnos ocupados por actividades ajenas en el portal está pendiente de definición.
+Agenda es la entrada única para consultar sedes, canchas y horarios y registrar reservas. La cabecera y los inicios administrativo y del portal enlazan a Agenda. No hay una sección independiente de Reservas o Mis reservas. El panel de las reservas autorizadas ofrece detalle y comprobante; ambas pantallas conservan el acceso por identificador y validan permisos. La búsqueda dentro de Agenda, incluida la localización de eventos Anulados, está pendiente.
+
+En el portal, las reservas propias muestran su detalle y permiten anulación con al menos una hora de antelación. Las actividades ajenas aparecen como No disponible, con sede, cancha, fecha y horario, sin tipo de actividad ni datos de otras personas. El servidor excluye los objetos de las actividades ajenas del contexto de las celdas y del panel. Los bloqueos, la finalización de emergencia y las acciones del día son exclusivos de la administración; los envíos del portal sólo admiten crear y anular reservas propias. El organizador de una reserva del portal es siempre la cuenta autenticada.
+
+La grilla del portal oculta las filas y pausas iniciadas sin reservas propias. Una fila iniciada con una reserva propia se conserva completa, con las demás actividades como No disponible. Las horas futuras mantienen su presentación y la administración conserva todas las filas. Una selección directa de un horario iniciado oculto no abre el panel. Los días pasados sin eventos propios y el día actual sin eventos propios ni turnos pendientes de inicio muestran mensajes específicos.
 
 ## 8. Auditoría con triggers
 

@@ -2065,6 +2065,8 @@ flowchart TD
 
 #### FL-55. Consultar reservas
 
+Agenda es la entrada única para las actividades y permite abrir el detalle y comprobante desde el panel del turno. La búsqueda por criterios descripta en este flujo se contempla dentro de Agenda y está pendiente de implementación.
+
 - **Objetivo:** localizar y visualizar reservas existentes, normales o con pase.
 - **Actores:** administrador, sin restricción; usuario con rol Reservas, limitado a las propias, desde el portal.
 - **Entradas:** para el administrador, filtros opcionales por usuario organizador, sede, cancha, fecha o estado; un usuario con rol Reservas no ingresa criterios, ve directamente las suyas.

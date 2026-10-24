@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var mensaje = formulario.dataset.confirmar;
         formulario.addEventListener("submit", function () {
             var organizador = formulario.elements.organizador;
-            if (organizador.value) {
+            if (organizador && organizador.value) {
                 formulario.dataset.confirmar = mensaje + "\n\nOrganizador: " + organizador.selectedOptions[0].textContent;
             }
         });

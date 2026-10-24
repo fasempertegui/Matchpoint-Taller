@@ -11,7 +11,7 @@
 {% block contenido %}
 <header class="tarjeta encabezado-pagina">
     <h1>Agenda</h1>
-    {% if agenda.fecha >= agenda.hoy and agenda.columnas %}
+    {% if es_administrador and agenda.fecha >= agenda.hoy and agenda.columnas %}
         <a class="boton boton-primario" data-agenda-acciones href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones|yesno:'true,false' }}">Acciones del día</a>
     {% endif %}
 </header>
@@ -78,10 +78,12 @@
                                                     {% if celda.en_rango and not celda.consultable %}
                                                         <span class="agenda-turno agenda-turno-pasado{% if celda.habilitado %} agenda-turno-libre{% else %} agenda-turno-cerrado{% endif %}">{% if celda.habilitado %}Libre{% else %}Fuera de horario{% endif %}</span>
                                                     {% elif celda.en_rango %}
-                                                        <a data-agenda-turno class="agenda-turno{% if celda.evento %} agenda-turno-{{ celda.evento.tipo }}{% elif not celda.habilitado %} agenda-turno-cerrado{% else %} agenda-turno-libre{% endif %}{% if celda.iniciado %} agenda-turno-pasado{% endif %}{% if celda.seleccionada %} agenda-turno-seleccionado{% endif %}"
+                                                        <a data-agenda-turno class="agenda-turno{% if celda.ocupado_por_tercero %} agenda-turno-ocupado{% elif celda.evento %} agenda-turno-{{ celda.evento.tipo }}{% elif not celda.habilitado %} agenda-turno-cerrado{% else %} agenda-turno-libre{% endif %}{% if celda.iniciado %} agenda-turno-pasado{% endif %}{% if celda.seleccionada %} agenda-turno-seleccionado{% endif %}"
                                                            href="{{ celda.url }}"{% if celda.seleccionada %} aria-current="true"{% endif %}
-                                                           aria-label="{{ celda.cancha.nombre }}, {{ celda.fecha|date:'d/m/Y' }}, {{ celda.hora|time:'H:i' }} a {{ celda.fin|time:'H:i' }}. {% if celda.reserva %}Reserva de {{ celda.reserva.organizador }}. {{ celda.estado_temporal }}{% elif celda.evento %}{{ celda.evento.get_tipo_display }}{% elif celda.puede_reservar %}Turno libre{% else %}{{ celda.impedimento }}{% endif %}">
-                                                            {% if celda.reserva %}
+                                                           aria-label="{{ celda.cancha.nombre }}, {{ celda.fecha|date:'d/m/Y' }}, {{ celda.hora|time:'H:i' }} a {{ celda.fin|time:'H:i' }}. {% if celda.ocupado_por_tercero %}No disponible{% elif celda.reserva %}Reserva de {{ celda.reserva.organizador }}. {{ celda.estado_temporal }}{% elif celda.evento %}{{ celda.evento.get_tipo_display }}{% elif celda.puede_reservar %}Turno libre{% else %}{{ celda.impedimento }}{% endif %}">
+                                                            {% if celda.ocupado_por_tercero %}
+                                                                <span>No disponible</span>
+                                                            {% elif celda.reserva %}
                                                                 <span class="agenda-tipo">Reserva</span><span class="agenda-nombre">{{ celda.reserva.organizador }}</span>
                                                             {% elif celda.bloqueo %}
                                                                 <span class="agenda-tipo">Bloqueo</span><span class="agenda-nombre">{{ celda.bloqueo.get_motivo_display }}</span>
@@ -108,10 +110,17 @@
                     </div>
                 {% elif not agenda.columnas %}
                     <p class="tarjeta estado-vacio">Esta sede no tiene canchas registradas.</p>
+                {% elif not es_administrador and agenda.fecha < agenda.hoy %}
+                    <p class="tarjeta estado-vacio">No tenés eventos en esta fecha.</p>
+                {% elif not es_administrador and agenda.fecha == agenda.hoy %}
+                    <p class="tarjeta estado-vacio">No tenés eventos propios ni turnos pendientes de inicio para hoy.</p>
                 {% else %}
                     <p class="tarjeta estado-vacio">No hay horarios de funcionamiento ni actividades para este período.</p>
                 {% endif %}
-                <div class="agenda-leyenda"><span><i aria-hidden="true"></i>Reserva</span><span><i class="agenda-leyenda-bloqueo" aria-hidden="true"></i>Bloqueo</span></div>
+                <div class="agenda-leyenda">
+                    <span><i aria-hidden="true"></i>{% if es_administrador %}Reserva{% else %}Mi reserva{% endif %}</span>
+                    {% if es_administrador %}<span><i class="agenda-leyenda-bloqueo" aria-hidden="true"></i>Bloqueo</span>{% else %}<span><i class="agenda-leyenda-ocupado" aria-hidden="true"></i>No disponible</span>{% endif %}
+                </div>
             </section>
             <aside class="agenda-detalle" id="turno-seleccionado" aria-label="Panel de agenda" data-agenda-detalle>
                 <p class="agenda-aviso" data-agenda-aviso role="status" aria-live="polite" hidden></p>
@@ -120,7 +129,7 @@
         </div>
     {% endif %}
 {% else %}
-    <p class="tarjeta estado-vacio">Registrá una sede y sus canchas para consultar la agenda.</p>
+    <p class="tarjeta estado-vacio">{% if es_administrador %}Registrá una sede y sus canchas para consultar la agenda.{% else %}No hay sedes disponibles para consultar la agenda.{% endif %}</p>
 {% endif %}
 <script src="{% static 'js/agenda.js' %}" defer></script>
 {% endblock %}

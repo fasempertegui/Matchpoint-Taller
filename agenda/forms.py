@@ -7,8 +7,17 @@ from django.utils import timezone
 from bloqueos.models import Bloqueo
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
 from instalaciones.models import Cancha, Sede
-from reservas.forms import CanchaReservaField, OrganizadorReservaField
 from usuarios.models import Rol, Usuario
+
+
+class CanchaAgendaField(forms.ModelChoiceField):
+    def label_from_instance(self, cancha):
+        return cancha.nombre
+
+
+class OrganizadorAgendaField(forms.ModelChoiceField):
+    def label_from_instance(self, usuario):
+        return f"{usuario} ({usuario.username})"
 
 
 class AgendaFiltroForm(forms.Form):
@@ -17,7 +26,7 @@ class AgendaFiltroForm(forms.Form):
         empty_label=None,
         widget=forms.Select(attrs={"class": "form-control"}),
     )
-    cancha = CanchaReservaField(
+    cancha = CanchaAgendaField(
         queryset=Cancha.objects.none(),
         required=False,
         empty_label=None,
@@ -65,7 +74,7 @@ class AgendaFiltroForm(forms.Form):
 
 
 class AgendaReservaForm(forms.Form):
-    organizador = OrganizadorReservaField(
+    organizador = OrganizadorAgendaField(
         queryset=Usuario.objects.filter(
             is_active=True,
             roles__rol__codigo__in=(Rol.RESERVAS, Rol.ADMINISTRADOR),
@@ -83,6 +92,11 @@ class AgendaReservaForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     )
+
+    def __init__(self, *args, es_administrador, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not es_administrador:
+            self.fields.pop("organizador")
 
 
 class CanchasAgendaField(forms.ModelMultipleChoiceField):

@@ -27,15 +27,14 @@
                 <nav>
                     <span class="saludo-usuario">Hola, {{ request.user.first_name|default:request.user.username }}</span>
                     <a href="{% url 'inicio' %}">Inicio</a>
-                    {% if perms.instalaciones.view_sede %}
+                    {% if request.user.puede_reservar %}
                         <a href="{% url 'agenda:agenda' %}">Agenda</a>
+                    {% endif %}
+                    {% if perms.instalaciones.view_sede %}
                         <a href="{% url 'instalaciones:sede_lista' %}">Sedes</a>
                     {% endif %}
                     {% if perms.usuarios.view_usuario %}
                         <a href="{% url 'usuarios:usuario_lista' %}">Usuarios</a>
-                    {% endif %}
-                    {% if request.user.puede_reservar %}
-                        <a href="{% url 'reservas:reserva_lista' %}">Reservas</a>
                     {% endif %}
                     {% if request.user.is_superuser %}
                         <a href="{% url 'auditoria:auditoria_lista' %}">Auditoría</a>
