@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from auditoria.contexto import contexto_auditoria
 from usuarios.models import Rol, Usuario
 
 from .disponibilidad import consultar_disponibilidad
@@ -148,20 +149,21 @@ def validar_finalizacion_reserva(reserva, ahora):
 
 @transaction.atomic
 def finalizar_reserva(reserva_id, usuario=None):
-    if usuario is not None:
-        usuario = Usuario.objects.select_for_update().get(pk=usuario.pk)
-        if not exigir_acceso_reservas(usuario):
-            raise PermissionDenied
+    with contexto_auditoria(usuario, origen="aplicacion" if usuario is not None else "tarea"):
+        if usuario is not None:
+            usuario = Usuario.objects.select_for_update().get(pk=usuario.pk)
+            if not exigir_acceso_reservas(usuario):
+                raise PermissionDenied
 
-    reserva = _bloquear_reserva(reserva_id)
-    ahora = timezone.localtime()
-    validar_finalizacion_reserva(reserva, ahora)
+        reserva = _bloquear_reserva(reserva_id)
+        ahora = timezone.localtime()
+        validar_finalizacion_reserva(reserva, ahora)
 
-    evento = reserva.evento
-    evento.estado = Evento.Estado.FINALIZADO
-    evento.finalizado_en = ahora
-    evento.save(update_fields=["estado", "finalizado_en", "actualizado_en"])
-    return reserva
+        evento = reserva.evento
+        evento.estado = Evento.Estado.FINALIZADO
+        evento.finalizado_en = ahora
+        evento.save(update_fields=["estado", "finalizado_en", "actualizado_en"])
+        return reserva
 
 
 def finalizar_reservas_vencidas():

@@ -21,8 +21,8 @@
                 <div><dt>Motivo</dt><dd>{{ detalle.bloqueo.get_motivo_display }}</dd></div>
                 <div><dt>Registrado por</dt><dd>{{ detalle.evento.registrado_por }}</dd></div>
                 <div><dt>Registro</dt><dd>{{ detalle.evento.creado_en|date:"d/m/Y H:i" }}</dd></div>
-                {% if detalle.bloqueo.origen %}
-                    <div><dt>Origen</dt><dd><a href="{% url 'reservas:reserva_detalle' detalle.bloqueo.origen.evento_origen.reserva.pk %}">{{ detalle.bloqueo.origen.evento_origen.reserva.numero }}</a></dd></div>
+                {% if detalle.bloqueo.evento_origen %}
+                    <div><dt>Origen</dt><dd><a href="{% url 'reservas:reserva_detalle' detalle.bloqueo.evento_origen.reserva.pk %}">{{ detalle.bloqueo.evento_origen.reserva.numero }}</a></dd></div>
                 {% endif %}
             {% endif %}
         </dl>

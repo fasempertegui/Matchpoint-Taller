@@ -40,6 +40,12 @@
         </article>
 
         <article class="tarjeta inicio-modulo">
+            <h3>Auditoría</h3>
+            <p>Historial de operaciones y consulta de sus valores anteriores y actuales.</p>
+            <a class="boton boton-secundario" href="{% url 'auditoria:auditoria_lista' %}">Ver auditoría</a>
+        </article>
+
+        <article class="tarjeta inicio-modulo">
             <h3>Reservas</h3>
             <p>Consulta de disponibilidad y gestión de reservas de cancha.</p>
             {% if puede_reservar %}

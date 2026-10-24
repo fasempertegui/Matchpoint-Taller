@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}Auditoría | Academia TM{% endblock %}
+
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/auditoria.css' %}">
+{% endblock %}
+
+{% block contenido %}
+<header class="tarjeta encabezado-pagina">
+    <div>
+        <h1>Auditoría</h1>
+        <p class="texto-secundario">Cambios registrados, del más reciente al más antiguo.</p>
+    </div>
+</header>
+
+<section class="tarjeta auditoria-lista" aria-label="Registros de auditoría">
+{% for fila in filas %}
+    <details class="auditoria-registro">
+        <summary title="Desplegar o cerrar los cambios">
+            <time datetime="{{ fila.registro.realizado_en|date:'c' }}">{{ fila.registro.realizado_en|date:"d/m/Y H:i:s" }}</time>
+            <strong class="auditoria-usuario">
+                {% if fila.registro.usuario %}
+                    {{ fila.registro.usuario }}
+                {% elif fila.registro.origen == "tarea" %}
+                    Proceso automático
+                {% else %}
+                    PostgreSQL: {{ fila.registro.usuario_bd }}
+                {% endif %}
+            </strong>
+            <span class="auditoria-accion">{{ fila.registro.get_accion_display }}</span>
+            <span class="auditoria-tabla">{{ fila.registro.tabla }}</span>
+            <code class="auditoria-clave">{{ fila.clave }}</code>
+        </summary>
+        <div class="auditoria-detalle">
+            <p><strong>Origen:</strong> {{ fila.registro.get_origen_display }}</p>
+            {% if fila.registro.origen == "aplicacion" %}
+            <p><strong>Usuario de aplicación:</strong> {{ fila.registro.usuario }}</p>
+            {% endif %}
+            <p><strong>Usuario de PostgreSQL:</strong> {{ fila.registro.usuario_bd }}</p>
+            <p><strong>Operación:</strong> <code>{{ fila.registro.operacion_id }}</code></p>
+            {% if fila.registro.accion == "cambio_contrasena" or fila.registro.accion == "restablecimiento_contrasena" or fila.registro.accion == "actualizacion_hash" %}
+            <p class="texto-secundario">Este evento no guarda la contraseña ni su hash.</p>
+            {% endif %}
+            {% if fila.registro.accion != "cambio_contrasena" and fila.registro.accion != "restablecimiento_contrasena" %}
+            <div class="auditoria-valores">
+                <section aria-label="Valores anteriores">
+                    <h2>Valores anteriores</h2>
+                    <pre>{{ fila.anteriores }}</pre>
+                </section>
+                <section aria-label="Valores actuales">
+                    <h2>Valores actuales</h2>
+                    <pre>{{ fila.actuales }}</pre>
+                </section>
+            </div>
+            {% endif %}
+        </div>
+    </details>
+{% empty %}
+    <p class="estado-vacio">No hay registros de auditoría.</p>
+{% endfor %}
+</section>
+
+{% if pagina.paginator.num_pages > 1 %}
+<nav class="tarjeta acciones" aria-label="Páginas del historial">
+    {% if pagina.has_previous %}
+    <a class="boton boton-secundario" href="?pagina={{ pagina.previous_page_number }}">Anterior</a>
+    {% endif %}
+    <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}
+    <a class="boton boton-secundario" href="?pagina={{ pagina.next_page_number }}">Siguiente</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

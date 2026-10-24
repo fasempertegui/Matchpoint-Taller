@@ -20,6 +20,12 @@ Todos los flujos de este documento aplican los límites temporales definidos en 
 
 ---
 
+## Criterio común de auditoría
+
+Las operaciones aplican criterios, 2.14. Los triggers de PostgreSQL registran cada modificación funcional, anulación y eliminación permitida en `log_auditoria`, con clave, valores anteriores y actuales, fecha y hora, actor, cuenta de base de datos y origen. Django comunica únicamente el contexto local de la operación. Sus entradas comparten un UUID y se confirman o revierten junto con los datos de negocio. Las escrituras SQL directas también quedan registradas, sin un usuario web ficticio. Los campos propios de auditoría de las entidades se conservan.
+
+Las altas, las consultas y las vistas previas sin cambios sobre registros existentes no agregan entradas. Preparar nuevos turnos tampoco genera auditoría. Los cambios y restablecimientos de contraseña tienen acciones de auditoría específicas, sin contraseñas, hashes ni indicadores artificiales. Se conservan únicamente diferencias reales no sensibles; los objetos pueden quedar vacíos. La actualización técnica del hash tiene su propia acción. El administrador consulta Auditoría desde la navegación o el inicio administrativo, recorre sus páginas y despliega los valores anteriores y actuales. El servidor valida el acceso y sólo admite GET; no hay operaciones de edición o eliminación del historial.
+
 ## 2. Índice de flujos
 
 | Área | Identificador | Proceso |
@@ -2250,7 +2256,7 @@ Alternativas:
 - Si cambia la ocupación o la elegibilidad desde la vista previa, se exige revisarla nuevamente; no se anulan actividades sin confirmar.
 
 - **Resultado:** un bloqueo de una hora y, si corresponde, la actividad previa anulada con su historia conservada.
-- **Datos:** usuarios, eventos, turnos, reservas, clases, bloqueos y bloqueos_origenes.
+- **Datos:** usuarios, eventos, turnos, reservas, clases y bloqueos con su evento de origen opcional.
 
 ```mermaid
 flowchart TD
@@ -2287,7 +2293,7 @@ Alternativas:
 - Las actividades anuladas conservan sus datos comerciales. La operación no ofrece reprogramación ni modifica ingresos.
 
 - **Resultado:** un bloqueo independiente por turno efectivo, con las reservas o clases correspondientes anuladas y los eventos conservados informados.
-- **Datos:** usuarios, sedes, canchas, horarios de sedes, turnos, eventos, reservas, clases, bloqueos y bloqueos_origenes.
+- **Datos:** usuarios, sedes, canchas, horarios de sedes, turnos, eventos, reservas, clases y bloqueos con su evento de origen opcional.
 
 ```mermaid
 flowchart TD

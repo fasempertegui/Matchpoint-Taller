@@ -50,7 +50,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima):
             turno__fecha__range=(max(min(fechas), FECHA_INICIO_OPERACIONES), min(max(fechas), fecha_maxima)),
         ).exclude(estado=Evento.Estado.ANULADO).select_related(
             "turno__cancha__sede", "reserva__organizador", "registrado_por", "anulado_por",
-            "bloqueo__origen__evento_origen__reserva",
+            "bloqueo__evento_origen__reserva",
         )
     eventos_por_turno = {
         (evento.turno.cancha_id, evento.turno.fecha, evento.turno.hora_inicio.hour): evento

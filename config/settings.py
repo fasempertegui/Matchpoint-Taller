@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "auditoria.apps.AuditoriaConfig",
     "usuarios.apps.UsuariosConfig",
     "instalaciones.apps.InstalacionesConfig",
     "reservas.apps.ReservasConfig",
@@ -59,6 +60,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'usuarios.middleware.CambioContrasenaObligatorioMiddleware',
+    'auditoria.middleware.ContextoAuditoriaMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]

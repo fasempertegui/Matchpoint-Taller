@@ -102,7 +102,7 @@ Los turnos vacíos cuyo horario ya terminó se muestran sin enlace ni interacci�
 
 El Administrador puede crear un bloqueo sobre un turno futuro de una sede y cancha activas, hasta un año calendario después de la fecha actual. El motivo es Clima adverso, Torneo o Mantenimiento y se admiten observaciones opcionales. No exige tarifa, pero el turno debe quedar íntegramente dentro de una franja de funcionamiento de la sede. El servidor comprueba el horario dentro de la transacción y la agenda no ofrece crear bloqueos fuera de las franjas.
 
-Cada bloqueo tiene un identificador B, su evento Programado y un único turno. La grilla lo distingue de las reservas y muestra su motivo. El panel incluye identificador, estado registrado, motivo, responsable y momento del registro, observaciones y reserva de origen cuando corresponde. Los bloqueos iniciados o terminados se consultan sin acciones; su condición horaria no cambia el estado registrado ni finaliza el evento.
+Cada bloqueo tiene un identificador B, su evento Programado y un único turno. El campo opcional y único `evento_origen` guarda la reserva o clase anulada que originó el bloqueo; queda vacío al bloquear un turno libre y conserva la referencia histórica al liberar el bloqueo. La grilla lo distingue de las reservas y muestra su motivo. El panel incluye identificador, estado registrado, motivo, responsable y momento del registro, observaciones y reserva de origen cuando corresponde. Los bloqueos iniciados o terminados se consultan sin acciones; su condición horaria no cambia el estado registrado ni finaliza el evento.
 
 Anular y bloquear sobre una reserva futura exige el motivo de anulación de al menos 25 caracteres y el motivo del bloqueo. La confirmación identifica la reserva, su organizador y el turno. Dentro de una única transacción comprueba el acceso administrativo, las instalaciones activas, el horario de funcionamiento, el inicio futuro y la ocupación confirmada; anula la reserva, comprueba el turno libre y registra el bloqueo con su origen. Un fallo revierte también la anulación. Si la actividad cambió, exige revisar la selección y no anula la actividad nueva.
 
@@ -125,3 +125,40 @@ Las clases se conservan mientras su módulo no esté implementado. El recorrido 
 ## 7. Navegación del portal y consulta de reservas
 
 El acceso implementado a Agenda está limitado a la administración. El acceso del portal a la grilla y la creación de reservas centralizada en Agenda están pendientes de implementación. La especificación distingue Agenda para consultar disponibilidad, elegir un turno y operar, y Reservas o Mis reservas para buscar y consultar el historial, con detalle, auditoría y comprobante. La presentación de turnos ocupados por actividades ajenas en el portal está pendiente de definición.
+
+## 8. Auditoría con triggers
+
+La tabla `log_auditoria` conserva modificaciones funcionales, anulaciones y eliminaciones permitidas de relaciones en las diez tablas de negocio: usuarios, roles, asignaciones de roles, sedes, canchas, horarios, turnos, eventos, reservas y bloqueos. Las tarifas se auditan como cambios de la sede. Una función común de PostgreSQL captura `UPDATE` y `DELETE` mediante un trigger de fila en cada tabla; también cubre escrituras masivas y SQL. Las altas no generan entradas. Retirar roles y quitar horarios conserva registro de los datos eliminados.
+
+Django comunica actor, origen y UUID mediante configuración local a la transacción, con contexto por solicitud y tratamiento de autenticación y finalización. La autenticación identifica al titular al modificar su cuenta. La finalización automática utiliza origen de tarea, sin usuario ficticio; el SQL conserva su origen y cuenta de PostgreSQL. Autorregistro y creación de administradores no requieren contexto especial de auditoría. Los contextos anidados comparten el UUID y restauran su configuración superior al terminar. Las respuestas HTTP de error revierten la transacción de la solicitud.
+
+Las instantáneas excluyen contraseñas y hashes. Cambio de contraseña y Restablecimiento de contraseña se identifican mediante acciones específicas, con una entrada por operación y sin marcas artificiales. Django informa la intención y el trigger comprueba el cambio efectivo. Las diferencias conservan sólo campos reales no sensibles; pueden ser objetos vacíos. La actualización técnica del hash tiene una acción propia y comparte el UUID del contexto de verificación. Se omiten modificaciones sin diferencias funcionales. Se conservan los campos propios de creación, modificación, responsables y transiciones. Las escrituras y su historial se confirman o revierten juntos. La tabla conserva sus entradas y rechaza modificación, eliminación y vaciado.
+
+Auditoría está disponible en la cabecera y el inicio administrativo, sólo para administradores activos con acceso vigente. La consulta excluye las altas, muestra veinticinco entradas por página en filas compactas y despliega origen, usuario de aplicación, usuario de PostgreSQL, UUID y valores anteriores y actuales. El resumen muestra al usuario de aplicación, Proceso automático para tareas o PostgreSQL seguido de la cuenta utilizada para SQL. El detalle incluye Usuario de aplicación sólo para el origen Aplicación. Sólo admite GET.
+
+### Verificación y revisión funcional
+
+La revisión manual en una sesión SQL confirmó que insertar sedes y los registros de una reserva no agrega auditoría, que modificar una dirección conserva sus valores anterior y actual, y que anular una reserva registra sus cambios y los del evento con el mismo UUID y actor. La transacción se revirtió y el historial quedó vacío. Las restricciones de la base admiten sólo las acciones y orígenes definidos en el modelo.
+
+Crear usuarios, instalaciones y reservas y comprobar que esas altas no agregan entradas. Modificar un correo, una tarifa o un horario y revisar sus valores anteriores y actuales. Retirar un rol o quitar un horario debe conservar el registro de la relación eliminada. Anular una reserva debe registrar los cambios de evento y reserva con un UUID común. Anular y bloquear conserva las anulaciones sin auditar el alta del bloqueo. Revisar autenticación, contraseñas y finalización manual y automática. Las operaciones SQL directas deben conservar origen y cuenta de base de datos. Los rollback no dejan auditoría de cambios revertidos y la consulta conserva el acceso administrativo de solo lectura.
+
+No se crean ni ejecutan pruebas automatizadas ni se realiza commit. La estructura cabecera y detalle corresponde a la etapa de clases.
+
+
+### Verificación del origen de bloqueos
+
+La migración `bloqueos.0002_integrar_evento_origen` incorpora la referencia opcional a `bloqueos`, copia los vínculos existentes y conserva su unicidad y la protección del evento. La copia técnica se realiza dentro de la transacción de la migración sin generar entradas de auditoría de negocio. El esquema utiliza el trigger de `bloqueos` para registrar sus cambios. La agenda y las operaciones individuales y masivas utilizan la referencia directa.
+
+Revisión manual: crear un bloqueo sobre un turno libre y comprobar que no tiene origen; anular y bloquear una reserva y consultar su enlace de origen; liberar ese bloqueo y comprobar que la reserva permanece Anulada y el vínculo se conserva. La base local no contiene bloqueos al aplicar la migración. No se crean ni ejecutan pruebas automatizadas ni se realiza commit.
+
+
+### Eventos de contraseña
+
+La acción `cambio_contrasena` corresponde al cambio voluntario u obligatorio de la contraseña propia; `restablecimiento_contrasena` identifica al administrador que restablece la cuenta indicada por la clave del registro. `actualizacion_hash` identifica la actualización técnica al verificar credenciales. El contexto temporal comunica la acción y se restaura al terminar; el log conserva origen, responsable, cuenta afectada, fecha y UUID. Los eventos de contraseña omiten `password` y la marca auxiliar `actualizado_en` de las instantáneas, sin agregar campos artificiales. El resto de los campos modificados, como `debe_cambiar_contrasena`, conserva sus valores anteriores y actuales. La cuenta de usuario mantiene sus atributos habituales.
+
+El cambio propio guarda contraseña y obligación de cambio en una única actualización y conserva la sesión mediante el mecanismo de Django. El restablecimiento también guarda ambos datos juntos; la contraseña provisoria se presenta según su recorrido administrativo y no se incorpora al log. Una escritura SQL de la credencial sin intención explícita se identifica como Cambio de contraseña con su origen SQL.
+
+Revisión manual: cambiar una contraseña provisoria y una propia, restablecer la de otra cuenta y comprobar una entrada por operación, actor y cuenta afectada correctos, estado de la obligación de cambio y ausencia de contraseñas, hashes y marcas artificiales en el historial. Revisar que una verificación que actualiza el hash conserva su acción técnica y que modificar otros datos no se clasifica como evento de contraseña.
+
+
+La migración `auditoria.0003_triggers_auditoria` instala la captura de las diez tablas de negocio y la protección del historial. Su función reconoce las acciones de contraseña según el contexto y el cambio efectivo de la credencial, conserva las diferencias no sensibles y comparte el UUID de la operación. Las dependencias aseguran que las tablas y sus relaciones estén creadas antes de instalar los triggers.

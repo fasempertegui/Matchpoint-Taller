@@ -1,12 +1,15 @@
 from django.contrib import messages
 from django.contrib.auth import views as auth_views
+from django.contrib.auth import update_session_auth_hash
 from django.core.exceptions import ValidationError
-from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic.edit import FormView
 from django.views.decorators.http import require_GET
+
+from auditoria.contexto import contexto_auditoria
+from auditoria.models import LogAuditoria
 
 from .forms import CambioContrasenaForm, InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario
 from .navegacion import breadcrumbs_usuario
@@ -56,6 +59,10 @@ class InicioSesionView(auth_views.LoginView):
     redirect_authenticated_user = True
     extra_context = {"breadcrumbs": [("Acceso", None), ("Iniciar sesión", None)]}
 
+    def post(self, request, *args, **kwargs):
+        with contexto_auditoria(origen="autenticacion", accion=LogAuditoria.Accion.ACTUALIZACION_HASH):
+            return super().post(request, *args, **kwargs)
+
     def get_success_url(self):
         if self.request.user.debe_cambiar_contrasena:
             return reverse("password_change")
@@ -67,6 +74,10 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
     form_class = CambioContrasenaForm
     success_url = reverse_lazy("password_change_done")
 
+    def post(self, request, *args, **kwargs):
+        with contexto_auditoria(request.user, accion=LogAuditoria.Accion.ACTUALIZACION_HASH):
+            return super().post(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
         if self.request.user.debe_cambiar_contrasena:
@@ -75,14 +86,13 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
             contexto["breadcrumbs"] = breadcrumbs_usuario(self.request.user, self.request.user) + [("Cambiar contraseña", None)]
         return contexto
 
-    @transaction.atomic
     def form_valid(self, form):
-        respuesta = super().form_valid(form)
-        self.request.user.debe_cambiar_contrasena = False
-        self.request.user.save(
-            update_fields=("debe_cambiar_contrasena", "actualizado_en")
-        )
-        return respuesta
+        with contexto_auditoria(self.request.user, accion=LogAuditoria.Accion.CAMBIO_CONTRASENA):
+            usuario = form.save(commit=False)
+            usuario.debe_cambiar_contrasena = False
+            usuario.save(update_fields=("password", "debe_cambiar_contrasena", "actualizado_en"))
+            update_session_auth_hash(self.request, usuario)
+        return redirect(self.get_success_url())
 
 
 class CambioContrasenaCompletadoView(auth_views.PasswordChangeDoneView):

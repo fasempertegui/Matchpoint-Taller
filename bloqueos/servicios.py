@@ -10,7 +10,7 @@ from reservas.models import Evento, Turno
 from reservas.servicios import anular_reserva, exigir_acceso_reservas
 from usuarios.models import Usuario
 
-from .models import Bloqueo, BloqueoOrigen
+from .models import Bloqueo
 
 
 def validar_inicio_bloqueo(fecha, hora, ahora):
@@ -74,9 +74,7 @@ def registrar_bloqueo(registrado_por, cancha, fecha, hora, motivo, observaciones
         registrado_por=registrado_por,
         observaciones=observaciones.strip(),
     )
-    bloqueo = Bloqueo.objects.create(evento=evento_bloqueo, motivo=motivo)
-    if evento:
-        BloqueoOrigen.objects.create(bloqueo=bloqueo, evento_origen=evento)
+    bloqueo = Bloqueo.objects.create(evento=evento_bloqueo, motivo=motivo, evento_origen=evento)
     return bloqueo
 
 

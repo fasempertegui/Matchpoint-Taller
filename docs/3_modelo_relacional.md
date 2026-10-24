@@ -49,6 +49,8 @@ La programación semanal se representa con `turnos_planilla` y sus asignaciones.
 
 Planes y pases se modelan como catálogos independientes, con tablas separadas de contrataciones. Los ingresos referencian operaciones concretas y no productos del catálogo. Los precios aplicados se conservan en las contrataciones y reservas; los importes cobrados pertenecen a `ingresos`.
 
+El historial transversal de cambios se conserva en `log_auditoria`, separado de los campos propios de creación, modificación y transición de cada entidad.
+
 ## 4. Tablas y representación de datos
 
 ### 4.1 `usuarios`
@@ -552,38 +554,54 @@ Dos restricciones únicas parciales evitan duplicar intentos Pendientes para el 
 
 Los resultados se representan mediante `plan_usuario_id`, `pase_usuario_id` e `ingreso_id`. Antes de aplicar una aprobación, las tres referencias son nulas. Una aprobación aplicada tiene exactamente una contratación, coherente con producto, usuario y mes del intento, y un ingreso relacionado. Un intento Aprobado sin resultados representa una aplicación pendiente de resolución administrativa; Pendiente o Rechazado no tiene resultados. El procesamiento se define en criterios, 2.4.1.
 
-### 4.24 Bloqueos y trazabilidad
+### 4.24 `bloqueos`
 
-#### 4.24.1 `bloqueos`
-
-Contiene la especialización de un evento de tipo bloqueo.
+Representa un bloqueo de un turno y su vínculo opcional con la actividad anulada que originó su creación.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `40` |
 | FK | `evento_id` | `bigint` | | Sí | `1400` |
 | | `motivo` | `varchar(20)` | | | `clima_adverso` (o `torneo`, `mantenimiento`) |
+| FK | `evento_origen_id` | `bigint` | Sí | Sí | `1300` |
 
 `evento_id` es único y referencia un evento de tipo `bloqueo`. El turno, estado, observaciones y auditoría pertenecen al evento. `motivo` admite `clima_adverso`, `torneo` y `mantenimiento`. La especialización no agrega un estado ni una ubicación propios; su evento admite `programado` y `anulado`, sin `finalizado`.
 
-#### 4.24.2 `bloqueos_origenes`
-
-Representa la trazabilidad entre un bloqueo y la reserva o clase anulada que originó su creación.
-
-| Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
-|---|---|---|---|---|---|
-| PK, FK | `bloqueo_id` | `bigint` | | | `40` |
-| FK | `evento_origen_id` | `bigint` | | Sí | `1300` |
-
-`bloqueo_id` es clave primaria y foránea; `evento_origen_id` es una clave foránea única. Cada bloqueo admite un máximo de un origen y un evento de origen no puede repetirse en otro vínculo.
-
-El origen referencia un evento de reserva o clase Anulado sobre el mismo turno que el bloqueo. Un bloqueo sin actividad de origen no tiene fila en esta tabla. El vínculo queda separado de los atributos del bloqueo y conserva la referencia histórica aunque su evento sea Anulado.
+`evento_origen_id` referencia opcionalmente un evento de reserva o clase Anulado sobre el mismo turno que el bloqueo. Es único cuando está informado: un evento puede originar como máximo un bloqueo. Un bloqueo creado sobre un turno libre guarda `NULL`; varios bloqueos pueden no tener origen. La referencia protege al evento contra la eliminación física y se conserva aunque se anule el bloqueo.
 
 ### 4.25 Representación de la recuperación de contraseña
 
 La recuperación utiliza el mecanismo nativo de Django, sin tabla de solicitudes ni tokens persistidos. El enlace contiene el identificador codificado del usuario y un token autenticado mediante HMAC, derivado de la clave secreta, datos de la cuenta y una marca temporal. Su validez depende de los datos existentes de `usuarios`, no de una fila de recuperación.
 
 La vigencia y las condiciones de uso del enlace se definen en criterios, 2.3.
+
+---
+
+### 4.26 `log_auditoria`
+
+Historial de modificaciones, anulaciones y eliminaciones permitidas capturado por triggers de PostgreSQL.
+
+| Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
+|---|---|---|---|---|---|
+| PK | `id` | `bigint` identity | | | `450` |
+| | `operacion_id` | `uuid` | | | `138adcdf-0ba0-4843-a43c-6e36819848e0` |
+| | `tabla` | `varchar(63)` | | | `eventos` |
+| | `clave_registro` | `jsonb` | | | `{"id": 1200}` |
+| | `accion` | `varchar(32)` | | | `anulacion` |
+| | `valores_anteriores` | `jsonb` | | | `{"estado": "programado"}` |
+| | `valores_actuales` | `jsonb` | | | `{"estado": "anulado"}` |
+| | `realizado_en` | `timestamptz` | | | `2026-10-06 15:00:00-03` |
+| FK | `usuario_id` | `bigint` | Sí | | `4` |
+| | `usuario_bd` | `varchar(63)` | | | `atm` |
+| | `origen` | `varchar(10)` | | | `aplicacion` |
+
+La base valida las acciones `modificacion`, `anulacion`, `eliminacion`, `cambio_contrasena`, `restablecimiento_contrasena` y `actualizacion_hash`. Los orígenes son `aplicacion`, `tarea` y `sql`. El origen de aplicación exige un usuario; los demás exigen una referencia nula. La FK a `usuarios` protege al actor contra la eliminación física. `usuario_bd` contiene `session_user`, sin sustituir la identidad del usuario de la aplicación.
+
+La combinación de tabla y clave identifica al registro sin una FK polimórfica. Las claves compuestas guardan todos sus componentes: por ejemplo `{"sede_id": 2, "dia_semana": 3}`. Los valores anteriores y actuales contienen los campos modificados; en las eliminaciones permitidas se conserva el registro anterior completo y un objeto vacío como valor actual. Los triggers no generan entradas de alta. Los ejemplos de esta tabla muestran sólo un subconjunto ilustrativo de una anulación. Las contraseñas y hashes no se almacenan ni se representan mediante marcas artificiales. Las acciones de contraseña identifican el evento y conservan sólo cambios reales no sensibles; si no existen otras diferencias relevantes, ambos objetos son vacíos. `actualizado_en` no se incluye en las instantáneas de estos eventos; el momento de la operación se conserva en `realizado_en`.
+
+`operacion_id` agrupa las entradas de una misma operación y no es único por fila ni constituye una cabecera de negocio. Existen índices por operación, por tabla y fecha descendente y por usuario y fecha descendente; la FK conserva además su índice propio.
+
+La función `registrar_auditoria` recibe los nombres de los componentes de la PK mediante los argumentos del trigger. Cada tabla de negocio tiene un trigger de fila `AFTER UPDATE OR DELETE`. La función usa `OLD` y `NEW`, descarta cambios sin diferencias funcionales, excluye secretos e inserta el historial dentro de la misma transacción. El actor, origen, UUID y acción específica se leen de configuración local; sin contexto se registra origen SQL y la base genera el UUID de la transacción. Un trigger independiente rechaza modificación, eliminación y vaciado de `log_auditoria`. Las reglas de contexto y consulta se definen en criterios, 2.14.
 
 ---
 
@@ -595,7 +613,8 @@ La vigencia y las condiciones de uso del enlace se definen en criterios, 2.3.
 - `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
 - `clases.turno_planilla_id` utiliza `ON DELETE SET NULL`: la eliminación de una celda de planilla no elimina las clases concretas ni su indicador de origen.
 - `eventos.turno_id` protege al turno. Las especializaciones `reservas`, `clases` y `bloqueos` protegen su evento.
-- `bloqueos_origenes` protege las referencias a los eventos de origen mientras exista el vínculo de trazabilidad.
+- `bloqueos.evento_origen_id` protege al evento de origen mientras exista la referencia de trazabilidad.
+- `log_auditoria.usuario_id` protege la cuenta del actor; el historial no admite modificación ni eliminación.
 - Los intentos de MercadoPago protegen las referencias a usuario, producto, contrataciones e ingreso resultantes.
 
 La eliminación coordinada de los datos de una clase generada y la conservación de historia se definen en criterios, 2.1 y 2.12. Los turnos no dependen de la vida de una única actividad: su identidad puede ser compartida por eventos históricos.

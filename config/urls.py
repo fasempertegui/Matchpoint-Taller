@@ -24,5 +24,6 @@ urlpatterns = [
     path('usuarios/', include('usuarios.urls')),
     path('reservas/', include('reservas.urls')),
     path('agenda/', include('agenda.urls')),
+    path('auditoria/', include('auditoria.urls')),
     path('', views.inicio, name='inicio'),
 ]

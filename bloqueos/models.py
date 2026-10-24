@@ -17,6 +17,14 @@ class Bloqueo(models.Model):
         limit_choices_to={"tipo": Evento.Tipo.BLOQUEO},
     )
     motivo = models.CharField(max_length=20, choices=Motivo.choices)
+    evento_origen = models.OneToOneField(
+        Evento,
+        on_delete=models.PROTECT,
+        related_name="bloqueo_originado",
+        null=True,
+        blank=True,
+        limit_choices_to={"tipo__in": (Evento.Tipo.RESERVA, Evento.Tipo.CLASE), "estado": Evento.Estado.ANULADO},
+    )
 
     class Meta:
         db_table = "bloqueos"
@@ -37,24 +45,3 @@ class Bloqueo(models.Model):
     @property
     def numero(self):
         return f"B-{self.pk:06d}" if self.pk is not None else ""
-
-
-class BloqueoOrigen(models.Model):
-    bloqueo = models.OneToOneField(
-        Bloqueo,
-        primary_key=True,
-        on_delete=models.PROTECT,
-        related_name="origen",
-    )
-    evento_origen = models.OneToOneField(
-        Evento,
-        on_delete=models.PROTECT,
-        related_name="bloqueo_originado",
-        limit_choices_to={"tipo__in": (Evento.Tipo.RESERVA, Evento.Tipo.CLASE), "estado": Evento.Estado.ANULADO},
-    )
-
-    class Meta:
-        db_table = "bloqueos_origenes"
-        default_permissions = ()
-        verbose_name = "origen del bloqueo"
-        verbose_name_plural = "orígenes de bloqueos"

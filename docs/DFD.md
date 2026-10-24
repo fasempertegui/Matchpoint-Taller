@@ -2,7 +2,7 @@
 
 ## 1. Criterio de representación
 
-Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización, emisión del comprobante consulta de la agenda diaria y semanal, registro y anulación de bloqueos individuales y operaciones administrativas masivas. Los demás procesos del sistema están pendientes de representación. La ocupación y auditoría pertenecen a Eventos (D12); cada evento referencia directamente un único turno de Turnos (D9), y las reservas guardan sus datos específicos. Reserva, clase y bloqueo duran una hora y tienen identificadores propios. El fin se obtiene sumando una hora al inicio del turno. Un turno admite varios eventos Anulados históricos y como máximo un evento no Anulado.
+Este documento contiene los DFD de nivel 1 correspondientes a las funciones de usuarios, sedes, canchas, precios de reservas por sede, registro de reservas, consulta del listado, consulta de su detalle, anulación, finalización, emisión del comprobante consulta de la agenda diaria y semanal, registro y anulación de bloqueos individuales y operaciones administrativas masivas. Los demás procesos del sistema están pendientes de representación. La ocupación y los datos de registro y transición pertenecen a Eventos (D12); el historial transversal se conserva en Log de auditoría (D22); cada evento referencia directamente un único turno de Turnos (D9), y las reservas guardan sus datos específicos. Reserva, clase y bloqueo duran una hora y tienen identificadores propios. El fin se obtiene sumando una hora al inicio del turno. Un turno admite varios eventos Anulados históricos y como máximo un evento no Anulado.
 
 Cada diagrama representa una sola intención y contiene:
 
@@ -12,6 +12,8 @@ Cada diagrama representa una sola intención y contiene:
 - los flujos de datos entre esos elementos.
 
 Los números escritos sobre las flechas identifican los datos descriptos debajo de cada diagrama. No expresan orden, tiempo ni una secuencia de ejecución. Dos flujos pueden producirse al mismo tiempo y un DFD no indica que un proceso deba ejecutarse antes o después de otro. La numeración de los diagramas solo permite identificarlos y tampoco establece un orden de ejecución.
+
+Los procesos conservan sus campos propios de auditoría. Las modificaciones, anulaciones y eliminaciones permitidas de relaciones registran sus cambios efectivos en D22; las altas no generan entradas. La captura utiliza triggers dentro de la misma transacción; la aplicación comunica actor, origen e identificador de operación. El SQL conserva su origen y cuenta de base de datos. Las contraseñas y hashes se excluyen del historial. No se representa un proceso externo separado para insertar el log, porque es una actividad interna de la operación.
 
 ### Almacenes
 
@@ -30,10 +32,10 @@ Los números escritos sobre las flechas identifican los datos descriptos debajo 
 - **D15: Invitados de reservas**
 - **D16: Ingresos**
 - **D17: Bloqueos**
-- **D18: Orígenes de bloqueos**
 - **D19: Clases**
 - **D20: Profesores de clases**
 - **D21: Planes_Usuarios**
+- **D22: Log de auditoría**
 
 ---
 
@@ -90,12 +92,14 @@ flowchart LR
     A[Administrador]
     P((3. Modificar una sede))
     D5[(D5: Sedes)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D5
     D5 -->|3| P
     P -->|4| D5
     P -->|5| A
+    P -->|6| D22
 ```
 
 **Datos que circulan**
@@ -105,6 +109,7 @@ flowchart LR
 3. Datos actuales de la sede y coincidencias de nombre.
 4. Nombre, dirección, observaciones y fecha de modificación actualizados.
 5. Resultado de la modificación o errores de validación.
+6. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ### DFD 4: activar una sede
 
@@ -113,12 +118,14 @@ flowchart LR
     A[Administrador]
     P((4. Activar una sede))
     D5[(D5: Sedes)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D5
     D5 -->|3| P
     P -->|4| D5
     P -->|5| A
+    P -->|6| D22
 ```
 
 **Datos que circulan**
@@ -128,6 +135,7 @@ flowchart LR
 3. Datos y estado actual de la sede.
 4. Estado activo y fecha de modificación.
 5. Resultado de la activación.
+6. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ### DFD 5: desactivar una sede
 
@@ -139,6 +147,7 @@ flowchart LR
     D6[(D6: Canchas)]
     D9[(D9: Turnos)]
     D12[(D12: Eventos)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D5
@@ -151,6 +160,7 @@ flowchart LR
     D12 -->|9| P
     P -->|10| D5
     P -->|11| A
+    P -->|12| D22
 ```
 
 **Datos que circulan**
@@ -166,6 +176,7 @@ flowchart LR
 9. Eventos de reservas Programados que impiden desactivar.
 10. Estado inactivo y fecha de modificación, si la operación está permitida.
 11. Resultado de la desactivación o impedimento por reservas Programadas.
+12. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ---
 
@@ -233,6 +244,7 @@ flowchart LR
     P((8. Modificar una cancha))
     D5[(D5: Sedes)]
     D6[(D6: Canchas)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D5
@@ -241,6 +253,7 @@ flowchart LR
     D6 -->|5| P
     P -->|6| D6
     P -->|7| A
+    P -->|8| D22
 ```
 
 **Datos que circulan**
@@ -252,6 +265,7 @@ flowchart LR
 5. Datos actuales de la cancha y coincidencias de nombre.
 6. Nombre, superficie, observaciones y fecha de modificación actualizados.
 7. Resultado de la modificación o errores de validación.
+8. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ### DFD 9: activar una cancha
 
@@ -260,12 +274,14 @@ flowchart LR
     A[Administrador]
     P((9. Activar una cancha))
     D6[(D6: Canchas)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D6
     D6 -->|3| P
     P -->|4| D6
     P -->|5| A
+    P -->|6| D22
 ```
 
 **Datos que circulan**
@@ -275,6 +291,7 @@ flowchart LR
 3. Datos y estado actual de la cancha.
 4. Estado activo y fecha de modificación.
 5. Resultado de la activación.
+6. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ### DFD 10: desactivar una cancha
 
@@ -286,6 +303,7 @@ flowchart LR
     D6[(D6: Canchas)]
     D9[(D9: Turnos)]
     D12[(D12: Eventos)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D5
@@ -298,6 +316,7 @@ flowchart LR
     D12 -->|9| P
     P -->|10| D6
     P -->|11| A
+    P -->|12| D22
 ```
 
 **Datos que circulan**
@@ -313,6 +332,7 @@ flowchart LR
 9. Eventos de reservas Programados que impiden desactivar.
 10. Estado inactivo y fecha de modificación, si la operación está permitida.
 11. Resultado de la desactivación o impedimento por reservas Programadas.
+12. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ---
 
@@ -423,12 +443,14 @@ flowchart LR
     A[Administrador]
     P((14. Modificar el correo de un usuario))
     D1[(D1: Usuarios)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
     D1 -->|3| P
     P -->|4| D1
     P -->|5| A
+    P -->|6| D22
 ```
 
 **Datos que circulan**
@@ -438,6 +460,7 @@ flowchart LR
 3. Datos actuales del usuario y coincidencias de correo.
 4. Nuevo correo y fecha de modificación.
 5. Resultado de la modificación o errores de validación.
+6. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ### DFD 15: activar un usuario
 
@@ -446,12 +469,14 @@ flowchart LR
     A[Administrador]
     P((15. Activar un usuario))
     D1[(D1: Usuarios)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
     D1 -->|3| P
     P -->|4| D1
     P -->|5| A
+    P -->|6| D22
 ```
 
 **Datos que circulan**
@@ -461,6 +486,7 @@ flowchart LR
 3. Datos, estado y fecha de baja actuales.
 4. Estado activo, fecha de baja vacía y fecha de modificación.
 5. Resultado de la activación.
+6. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ### DFD 16: desactivar un usuario
 
@@ -471,6 +497,7 @@ flowchart LR
     D1[(D1: Usuarios)]
     D2[(D2: Roles)]
     D3[(D3: Usuarios_Roles)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
@@ -481,6 +508,7 @@ flowchart LR
     D3 -->|7| P
     P -->|8| D1
     P -->|9| A
+    P -->|10| D22
 ```
 
 **Datos que circulan**
@@ -494,6 +522,7 @@ flowchart LR
 7. Asignaciones del rol Administrador encontradas.
 8. Estado inactivo, fecha de baja y fecha de modificación.
 9. Resultado de la desactivación o motivo del rechazo.
+10. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ### DFD 17: asignar un rol a un usuario
 
@@ -544,6 +573,7 @@ flowchart LR
     D19[(D19: Clases)]
     D20[(D20: Profesores de clases)]
     D21[(D21: Planes_Usuarios)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
@@ -564,6 +594,7 @@ flowchart LR
     D12 -->|17| P
     P -->|18| D3
     P -->|19| A
+    P -->|20| D22
 ```
 
 **Datos que circulan**
@@ -587,6 +618,7 @@ flowchart LR
 17. Estados que determinan si hay relaciones que impiden el retiro.
 18. Asignación que debe retirarse cuando está permitido.
 19. Resultado del retiro o motivo del rechazo.
+20. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 Las asignaciones de roles sólo se modifican para cuentas no administrativas. Público y Administrador no se retiran desde la aplicación. Reservas se conserva mientras el usuario tenga reservas propias Programadas; Alumno, mientras tenga un plan contratado Activo; Profesor, mientras tenga asignaciones activas en clases Programadas.
 
@@ -597,12 +629,14 @@ flowchart LR
     A[Administrador]
     P((19. Restablecer una contraseña))
     D1[(D1: Usuarios)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
     D1 -->|3| P
     P -->|4| D1
     P -->|5| A
+    P -->|6| D22
 ```
 
 **Datos que circulan**
@@ -612,6 +646,9 @@ flowchart LR
 3. Datos de la cuenta y validadores aplicables.
 4. Nuevo hash, cambio obligatorio pendiente y fecha de modificación.
 5. Resultado y contraseña provisoria mostrada una única vez.
+6. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
+
+El log identifica Restablecimiento de contraseña, al administrador responsable y a la cuenta afectada. Guarda sólo diferencias reales no sensibles, sin contraseña, hash ni indicadores artificiales.
 
 ---
 
@@ -625,12 +662,15 @@ flowchart LR
     P((20. Iniciar sesión normalmente))
     D1[(D1: Usuarios)]
     D4[(D4: Sesiones)]
+    D22[(D22: Log de auditoría)]
 
     U -->|1| P
     P -->|2| D1
     D1 -->|3| P
     P -->|4| D4
     P -->|5| U
+    P -->|6| D1
+    P -->|7| D22
 ```
 
 **Datos que circulan**
@@ -640,6 +680,8 @@ flowchart LR
 3. Cuenta activa, hash almacenado y ausencia de cambio obligatorio.
 4. Datos de la sesión autenticada.
 5. Acceso normal o error de autenticación.
+6. Fecha y hora del último acceso del usuario autenticado.
+7. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ### DFD 21: iniciar sesión con una contraseña provisoria
 
@@ -649,12 +691,15 @@ flowchart LR
     P((21. Iniciar sesión con contraseña provisoria))
     D1[(D1: Usuarios)]
     D4[(D4: Sesiones)]
+    D22[(D22: Log de auditoría)]
 
     U -->|1| P
     P -->|2| D1
     D1 -->|3| P
     P -->|4| D4
     P -->|5| U
+    P -->|6| D1
+    P -->|7| D22
 ```
 
 **Datos que circulan**
@@ -664,6 +709,8 @@ flowchart LR
 3. Cuenta activa, hash almacenado y cambio obligatorio pendiente.
 4. Datos de la sesión autenticada.
 5. Acceso restringido al reemplazo obligatorio o error de autenticación.
+6. Fecha y hora del último acceso del usuario autenticado.
+7. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ### DFD 22: reemplazar una contraseña provisoria
 
@@ -673,6 +720,7 @@ flowchart LR
     P((22. Reemplazar contraseña provisoria))
     D1[(D1: Usuarios)]
     D4[(D4: Sesiones)]
+    D22[(D22: Log de auditoría)]
 
     U -->|1| P
     P -->|2| D1
@@ -680,6 +728,7 @@ flowchart LR
     P -->|4| D1
     P -->|5| D4
     P -->|6| U
+    P -->|7| D22
 ```
 
 **Datos que circulan**
@@ -690,8 +739,11 @@ flowchart LR
 4. Nuevo hash, cambio obligatorio desactivado y fecha de modificación.
 5. Datos actualizados de la sesión autenticada.
 6. Acceso normal o errores de validación.
+7. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 La contraseña nueva debe ser distinta de la provisoria, coincidir con su confirmación y superar los validadores de Django. El cambio correcto desactiva la obligación y actualiza la fecha de última modificación en la misma transacción.
+
+El log identifica Cambio de contraseña y conserva sólo diferencias reales no sensibles. La contraseña y la obligación de cambio se guardan juntas, sin contraseña, hash ni indicadores artificiales en el historial.
 
 ### DFD 23: cambiar la contraseña propia
 
@@ -701,6 +753,7 @@ flowchart LR
     P((23. Cambiar la contraseña propia))
     D1[(D1: Usuarios)]
     D4[(D4: Sesiones)]
+    D22[(D22: Log de auditoría)]
 
     U -->|1| P
     P -->|2| D1
@@ -708,6 +761,7 @@ flowchart LR
     P -->|4| D1
     P -->|5| D4
     P -->|6| U
+    P -->|7| D22
 ```
 
 **Datos que circulan**
@@ -718,8 +772,11 @@ flowchart LR
 4. Nuevo hash y fecha de modificación.
 5. Datos actualizados de la sesión autenticada.
 6. Resultado del cambio o errores de validación.
+7. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 Sólo el titular puede cambiar su contraseña. La nueva debe ser distinta de la vigente, coincidir con su confirmación y superar los validadores de Django. El cambio conserva la sesión actual y no modifica los demás datos del perfil.
+
+El log identifica Cambio de contraseña y conserva sólo diferencias reales no sensibles. La contraseña y la obligación de cambio se guardan juntas, sin contraseña, hash ni indicadores artificiales en el historial.
 
 ### DFD 24: cerrar sesión
 
@@ -776,12 +833,14 @@ flowchart LR
     A[Administrador]
     P((26. Establecer el precio de reservas de una sede))
     D5[(D5: Sedes)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D5
     D5 -->|3| P
     P -->|4| D5
     P -->|5| A
+    P -->|6| D22
 ```
 
 **Datos que circulan**
@@ -791,6 +850,7 @@ flowchart LR
 3. Estado y tarifa actual de la sede.
 4. Tarifa vigente por turno y fecha de modificación, cuando el valor estaba vacío.
 5. Resultado de la configuración o impedimento.
+6. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 ### DFD 27: actualizar el precio de reservas de una sede
 
@@ -799,12 +859,14 @@ flowchart LR
     A[Administrador]
     P((27. Actualizar el precio de reservas de una sede))
     D5[(D5: Sedes)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D5
     D5 -->|3| P
     P -->|4| D5
     P -->|5| A
+    P -->|6| D22
 ```
 
 **Datos que circulan**
@@ -814,6 +876,7 @@ flowchart LR
 3. Tarifa vigente para comprobar que coincide con la revisada.
 4. Nuevo precio vigente y fecha de modificación.
 5. Resultado de la actualización o solicitud de revisar la tarifa actual.
+6. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 La operación modifica la tarifa de la sede. Las reservas existentes conservan su importe unitario aplicado.
 
@@ -1049,6 +1112,7 @@ flowchart LR
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
     D12[(D12: Eventos)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
@@ -1064,6 +1128,7 @@ flowchart LR
     P -->|12| D12
     P -->|13| D10
     P -->|14| A
+    P -->|15| D22
 ```
 
 **Datos que circulan**
@@ -1082,6 +1147,7 @@ flowchart LR
 12. Estado Anulado, actor, momento, motivo y fecha de modificación del evento.
 13. Origen de la anulación: organizador o administración.
 14. Resultado de la anulación y condición del turno, o errores de acceso, motivo, estado o plazo.
+15. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 El Administrador puede anular antes del inicio del turno; el organizador del portal necesita al menos una hora de antelación. La referencia histórica al turno se conserva. La anulación libera el turno de la reserva y no crea un bloqueo.
 
@@ -1096,6 +1162,7 @@ flowchart LR
     D9[(D9: Turnos)]
     D10[(D10: Reservas)]
     D12[(D12: Eventos)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
@@ -1110,6 +1177,7 @@ flowchart LR
     D9 -->|11| P
     P -->|12| D12
     P -->|13| A
+    P -->|14| D22
 ```
 
 **Datos que circulan**
@@ -1127,12 +1195,13 @@ flowchart LR
 11. Fecha e inicio del turno para calcular su fin una hora después.
 12. Estado Finalizado, momento de procesamiento y fecha de modificación.
 13. Resultado de la finalización o rechazo por acceso, estado u horario.
+14. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 La acción de emergencia sólo finaliza eventos de reservas Programados cuyo turno terminó. No registra responsable de finalización ni sobrescribe una fecha existente. La finalización manual y la tarea automática coordinan la operación con el mismo turno y evento.
 
 ### Finalización automática de reservas
 
-La tarea horaria es un proceso interno y no tiene un DFD de nivel 1. Consulta Eventos (D12) y Turnos (D9), y actualiza sólo eventos de tipo Reserva Programados cuyo turno terminó. Registra estado Finalizado y momento de procesamiento, sin responsable. Conserva la referencia al turno y la ocupación histórica. Las clases utilizan la misma condición y los bloqueos quedan fuera de la tarea. Su operación se describe en `3_modelo_relacional.md`, sección 7.11, y `4_flujos_del_sistema.md`, sección 4.3.
+La tarea horaria es un proceso interno y no tiene un DFD de nivel 1. Cada finalización agrega en D22 sus valores anteriores y actuales con origen de tarea y sin usuario, dentro de la misma transacción. Consulta Eventos (D12) y Turnos (D9), y actualiza sólo eventos de tipo Reserva Programados cuyo turno terminó. Registra estado Finalizado y momento de procesamiento, sin responsable. Conserva la referencia al turno y la ocupación histórica. Las clases utilizan la misma condición y los bloqueos quedan fuera de la tarea. Su operación se describe en criterios, 2.13 y 2.14, y `4_flujos_del_sistema.md`, sección 4.3.
 
 ### DFD 33: emitir el comprobante de una reserva
 
@@ -1223,7 +1292,6 @@ flowchart LR
     D19[(D19: Clases)]
     D20[(D20: Profesores de clases)]
     D17[(D17: Bloqueos)]
-    D18[(D18: Orígenes de bloqueos)]
 
     A -->|1| P
     P -->|2| D1
@@ -1248,9 +1316,7 @@ flowchart LR
     D20 -->|21| P
     P -->|22| D17
     D17 -->|23| P
-    P -->|24| D18
-    D18 -->|25| P
-    P -->|26| A
+    P -->|24| A
 ```
 
 **Datos que circulan**
@@ -1277,10 +1343,8 @@ flowchart LR
 20. Actor profesor y clases para comprobar sus asignaciones.
 21. Asignaciones activas que delimitan las clases visibles para el profesor.
 22. Eventos de bloqueo que puede consultar el administrador.
-23. Motivo y datos específicos de cada bloqueo.
-24. Bloqueos cuyo origen se consulta.
-25. Actividad anulada vinculada a cada bloqueo y referencia para consultar su detalle.
-26. Agenda diaria por cancha y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
+23. Motivo y datos específicos de cada bloqueo, incluido su evento de origen cuando corresponde.
+24. Agenda diaria por cancha y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
 
 La consulta no escribe eventos ni turnos. El administrador ve toda la ocupación; el usuario con rol Reservas consulta disponibilidad y sus reservas; el profesor consulta sus clases asignadas. La presentación de actividades ajenas en el portal está pendiente de definición y no habilita datos personales o comerciales ajenos ni acciones administrativas. Los almacenes de cada tipo se consultan únicamente dentro del alcance autorizado.
 
@@ -1301,7 +1365,6 @@ flowchart LR
     D19[(D19: Clases)]
     D20[(D20: Profesores de clases)]
     D17[(D17: Bloqueos)]
-    D18[(D18: Orígenes de bloqueos)]
 
     A -->|1| P
     P -->|2| D1
@@ -1326,9 +1389,7 @@ flowchart LR
     D20 -->|21| P
     P -->|22| D17
     D17 -->|23| P
-    P -->|24| D18
-    D18 -->|25| P
-    P -->|26| A
+    P -->|24| A
 ```
 
 **Datos que circulan**
@@ -1355,10 +1416,8 @@ flowchart LR
 20. Actor profesor y clases para comprobar sus asignaciones.
 21. Asignaciones activas que delimitan las clases visibles para el profesor.
 22. Eventos de bloqueo que puede consultar el administrador.
-23. Motivo y datos específicos de cada bloqueo.
-24. Bloqueos cuyo origen se consulta.
-25. Actividad anulada vinculada a cada bloqueo y referencia para consultar su detalle.
-26. Agenda semanal de la cancha por día y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
+23. Motivo y datos específicos de cada bloqueo, incluido su evento de origen cuando corresponde.
+24. Agenda semanal de la cancha por día y hora, con ocupación autorizada, espacios libres, panel de turno y acciones disponibles, o errores de acceso o criterios.
 
 La consulta no escribe eventos ni turnos. El administrador ve toda la ocupación; el usuario con rol Reservas consulta disponibilidad y sus reservas; el profesor consulta sus clases asignadas. La presentación de actividades ajenas en el portal está pendiente de definición y no habilita datos personales o comerciales ajenos ni acciones administrativas. Los almacenes de cada tipo se consultan únicamente dentro del alcance autorizado.
 
@@ -1381,7 +1440,7 @@ flowchart LR
     D10[(D10: Reservas)]
     D19[(D19: Clases)]
     D17[(D17: Bloqueos)]
-    D18[(D18: Orígenes de bloqueos)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
@@ -1404,10 +1463,10 @@ flowchart LR
     P -->|19| D19
     D19 -->|20| P
     P -->|21| D17
-    P -->|22| D18
-    P -->|23| D8
-    D8 -->|24| P
-    P -->|25| A
+    P -->|22| D8
+    D8 -->|23| P
+    P -->|24| A
+    P -->|25| D22
 ```
 
 **Datos que circulan**
@@ -1432,11 +1491,11 @@ flowchart LR
 18. Origen administrativo de la anulación de la reserva.
 19. Evento de clase a anular cuando corresponde.
 20. Identidad y datos de la clase.
-21. Nuevo bloqueo con evento y motivo.
-22. Relación entre el bloqueo y la reserva o clase anulada en la operación.
-23. Sede y día de la semana cuyo horario se comprueba.
-24. Franjas de funcionamiento que deben contener íntegramente el turno.
-25. Confirmación del bloqueo y actividad anulada, o errores que exigen revisar la selección.
+21. Nuevo bloqueo con evento, motivo y referencia opcional a la reserva o clase anulada.
+22. Sede y día de la semana cuyo horario se comprueba.
+23. Franjas de funcionamiento que deben contener íntegramente el turno.
+24. Confirmación del bloqueo y actividad anulada, o errores que exigen revisar la selección.
+25. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 La operación comprueba pertenencia íntegra a una franja de funcionamiento, inicio futuro y ocupación confirmada dentro de una única transacción. Un turno libre no tiene actividad de origen. Anular la actividad, registrar el bloqueo y vincular su origen forman una sola operación; un fallo no deja cambios parciales.
 
@@ -1451,6 +1510,7 @@ flowchart LR
     D9[(D9: Turnos)]
     D12[(D12: Eventos)]
     D17[(D17: Bloqueos)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
@@ -1465,6 +1525,7 @@ flowchart LR
     D12 -->|11| P
     P -->|12| D12
     P -->|13| A
+    P -->|14| D22
 ```
 
 **Datos que circulan**
@@ -1482,6 +1543,7 @@ flowchart LR
 11. Tipo, estado y auditoría del evento.
 12. Estado Anulado, responsable, momento y motivo de anulación.
 13. Confirmación del turno liberado o errores de acceso, selección, estado u horario.
+14. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 La anulación conserva el bloqueo, el turno y su origen. No restaura la actividad anulada que dio origen al bloqueo y no modifica la auditoría ante solicitudes repetidas. Los bloqueos iniciados o terminados permanecen sólo para consulta.
 
@@ -1572,7 +1634,7 @@ flowchart LR
     D10[(D10: Reservas)]
     D17[(D17: Bloqueos)]
     D19[(D19: Clases)]
-    D18[(D18: Orígenes de bloqueos)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
@@ -1599,8 +1661,8 @@ flowchart LR
     P -->|23| D12
     P -->|24| D10
     P -->|25| D17
-    P -->|26| D18
-    P -->|27| A
+    P -->|26| A
+    P -->|27| D22
 ```
 
 **Datos que circulan**
@@ -1629,9 +1691,9 @@ flowchart LR
 22. Turnos nuevos necesarios para los bloqueos confirmados.
 23. Anulación y auditoría de actividades confirmadas; eventos Programados de bloqueo con su turno, responsable y observaciones.
 24. Origen administrativo de la anulación de cada reserva.
-25. Bloqueos independientes con su evento y motivo común.
-26. Origen de cada bloqueo creado después de anular una reserva o clase.
-27. Confirmación de las actividades anuladas y bloqueos creados, o rechazo de todo el lote con la causa para revisar la vista previa.
+25. Bloqueos independientes con su evento, motivo común y evento de origen cuando corresponde.
+26. Confirmación de las actividades anuladas y bloqueos creados, o rechazo de todo el lote con la causa para revisar la vista previa.
+27. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 La operación conserva bloqueos existentes, tipos excluidos y eventos iniciados o Finalizados. Los nuevos bloqueos quedan íntegramente dentro de las franjas de funcionamiento. Se valida la confirmación y se vuelve a comprobar el alcance dentro de una única transacción. Cualquier cambio o fallo revierte todas las acciones.
 
@@ -1651,6 +1713,7 @@ flowchart LR
     D10[(D10: Reservas)]
     D17[(D17: Bloqueos)]
     D19[(D19: Clases)]
+    D22[(D22: Log de auditoría)]
 
     A -->|1| P
     P -->|2| D1
@@ -1676,6 +1739,7 @@ flowchart LR
     P -->|22| D12
     P -->|23| D10
     P -->|24| A
+    P -->|25| D22
 ```
 
 **Datos que circulan**
@@ -1704,5 +1768,42 @@ flowchart LR
 22. Estado Anulado, actor, momento y motivo de las actividades confirmadas.
 23. Origen administrativo de la anulación de cada reserva.
 24. Confirmación de las actividades anuladas y turnos liberados, o rechazo de todo el lote con la causa para revisar la vista previa.
+25. Tabla y clave de cada registro afectado, acción, valores anteriores y actuales permitidos, fecha y hora, actor, cuenta de base de datos, origen e identificador de operación.
 
 La operación no crea bloqueos ni reactiva actividades de origen. Conserva los registros, los orígenes de bloqueos y los eventos excluidos, iniciados o Finalizados. Se vuelve a comprobar el alcance dentro de una única transacción; cualquier cambio o fallo revierte todo el lote.
+
+
+## 11. Consulta de auditoría
+
+### DFD 41: consultar el historial de auditoría
+
+```mermaid
+flowchart LR
+    A[Administrador]
+    P((41. Consultar el historial de auditoría))
+    D1[(D1: Usuarios)]
+    D3[(D3: Usuarios_Roles)]
+    D22[(D22: Log de auditoría)]
+
+    A -->|1| P
+    P -->|2| D1
+    D1 -->|3| P
+    P -->|4| D3
+    D3 -->|5| P
+    P -->|6| D22
+    D22 -->|7| P
+    P -->|8| A
+```
+
+**Datos que circulan**
+
+1. Identidad del administrador y página solicitada.
+2. Identidad del actor y de los responsables de las entradas consultadas.
+3. Estado de acceso del actor y nombres de los responsables.
+4. Usuario cuyos roles se consultan.
+5. Rol que autoriza la consulta administrativa.
+6. Página y orden de consulta del historial.
+7. Entradas con fecha, actor, acción, cuenta de base de datos, origen, tabla, clave, operación y valores anteriores y actuales.
+8. Página del historial con detalle desplegable o rechazo por falta de acceso.
+
+La consulta sólo lee los almacenes, excluye las entradas de alta y no genera entradas ni permite modificar o eliminar el historial.

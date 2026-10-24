@@ -9,6 +9,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods
 
+from auditoria.contexto import contexto_auditoria
+from auditoria.models import LogAuditoria
 from reservas.models import Evento
 
 from .forms import (
@@ -167,12 +169,13 @@ def usuario_restablecer_contrasena(request, pk):
         return redirect("usuarios:usuario_detalle", pk=usuario.pk)
 
     if request.method == "POST":
-        contrasena = generar_contrasena_valida(usuario)
-        usuario.set_password(contrasena)
-        usuario.debe_cambiar_contrasena = True
-        usuario.save(
-            update_fields=["password", "debe_cambiar_contrasena", "actualizado_en"]
-        )
+        with contexto_auditoria(request.user, accion=LogAuditoria.Accion.RESTABLECIMIENTO_CONTRASENA):
+            contrasena = generar_contrasena_valida(usuario)
+            usuario.set_password(contrasena)
+            usuario.debe_cambiar_contrasena = True
+            usuario.save(
+                update_fields=["password", "debe_cambiar_contrasena", "actualizado_en"]
+            )
 
         return render(
             request,
