@@ -87,6 +87,8 @@
                                                                 <span class="agenda-tipo">Reserva</span><span class="agenda-nombre">{{ celda.reserva.organizador }}</span>
                                                             {% elif celda.bloqueo %}
                                                                 <span class="agenda-tipo">Bloqueo</span><span class="agenda-nombre">{{ celda.bloqueo.get_motivo_display }}</span>
+                                                            {% elif celda.clase %}
+                                                                <span class="agenda-tipo">Clase</span><span class="agenda-nombre">{{ celda.clase.get_modalidad_display|default:"Sin especificar" }}</span>
                                                             {% elif celda.evento %}
                                                                 <span class="agenda-tipo">{{ celda.evento.get_tipo_display }}</span>
                                                             {% elif not celda.habilitado %}
@@ -119,6 +121,7 @@
                 {% endif %}
                 <div class="agenda-leyenda">
                     <span><i aria-hidden="true"></i>{% if es_administrador %}Reserva{% else %}Mi reserva{% endif %}</span>
+                    <span><i class="agenda-leyenda-clase" aria-hidden="true"></i>{% if es_administrador %}Clase{% else %}Mi clase{% endif %}</span>
                     {% if es_administrador %}<span><i class="agenda-leyenda-bloqueo" aria-hidden="true"></i>Bloqueo</span>{% else %}<span><i class="agenda-leyenda-ocupado" aria-hidden="true"></i>No disponible</span>{% endif %}
                 </div>
             </section>

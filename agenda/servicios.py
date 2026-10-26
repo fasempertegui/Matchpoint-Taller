@@ -2,10 +2,13 @@ from datetime import datetime, time, timedelta
 from urllib.parse import urlencode
 
 from django.core.exceptions import ValidationError
+from django.db.models import Exists, OuterRef, Q
 from django.urls import reverse
 from django.utils import timezone
 
 from bloqueos.servicios import validar_anulacion_bloqueo
+from clases.consultas import consultar_clase
+from clases.models import Clase
 from common.fechas import FECHA_INICIO_OPERACIONES
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento
@@ -43,14 +46,22 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         }
 
     fechas = [columna["fecha"] for columna in columnas]
+    clases_del_usuario = Clase.objects.filter(evento_id=OuterRef("pk")).filter(
+        Q(profesores__profesor_id=usuario.pk)
+        | Q(alumnos__usuario_id=usuario.pk)
+        | Q(asistencias__usuario_id=usuario.pk)
+    )
+    puede_reservar = usuario.puede_reservar
     eventos = Evento.objects.none()
     if fechas:
         eventos = Evento.objects.filter(
             turno__cancha__in=[columna["cancha"] for columna in columnas],
             turno__fecha__range=(max(min(fechas), FECHA_INICIO_OPERACIONES), min(max(fechas), fecha_maxima)),
-        ).exclude(estado=Evento.Estado.ANULADO).select_related(
+        ).exclude(estado=Evento.Estado.ANULADO).annotate(
+            clase_del_usuario=Exists(clases_del_usuario),
+        ).select_related(
             "turno__cancha__sede", "reserva__organizador", "registrado_por", "anulado_por",
-            "bloqueo__evento_origen__reserva",
+            "clase", "bloqueo__evento_origen__reserva", "bloqueo__evento_origen__clase",
         )
     eventos_por_turno = {
         (evento.turno.cancha_id, evento.turno.fecha, evento.turno.hora_inicio.hour): evento
@@ -65,7 +76,12 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         evento = eventos_por_turno.get((cancha.pk, dia, hora))
         reserva = getattr(evento, "reserva", None) if evento and evento.tipo == Evento.Tipo.RESERVA else None
         bloqueo = getattr(evento, "bloqueo", None) if evento and evento.tipo == Evento.Tipo.BLOQUEO else None
-        puede_ver_evento = es_administrador or (reserva is not None and reserva.organizador_id == usuario.pk)
+        clase = getattr(evento, "clase", None) if evento and evento.tipo == Evento.Tipo.CLASE else None
+        puede_ver_evento = (
+            es_administrador
+            or (reserva is not None and reserva.organizador_id == usuario.pk)
+            or (clase is not None and evento.clase_del_usuario)
+        )
         ocupado_por_tercero = evento is not None and not puede_ver_evento
         habilitado = hora in inicios_habilitados.get(dia, set())
         en_rango = FECHA_INICIO_OPERACIONES <= dia <= fecha_maxima
@@ -80,6 +96,8 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             impedimento = "Este turno está fuera del horario de funcionamiento de la sede."
         elif dia > ahora.date() + timedelta(days=14):
             impedimento = "Las reservas se registran con hasta catorce días de anticipación."
+        elif not puede_reservar:
+            impedimento = "Tu cuenta no tiene habilitada la creación de reservas."
         elif sede.precio_reserva_vigente is None:
             impedimento = "La sede necesita un precio por turno configurado para registrar reservas."
         temporal = ""
@@ -102,7 +120,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
                 pass
             else:
                 puede_liberar_bloqueo = True
-        if reserva and puede_ver_evento:
+        if reserva and puede_ver_evento and puede_reservar:
             try:
                 validar_anulacion_reserva(reserva, es_administrador, ahora)
             except ValidationError:
@@ -120,12 +138,13 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             "evento": evento if puede_ver_evento else None,
             "reserva": reserva if puede_ver_evento else None,
             "bloqueo": bloqueo if puede_ver_evento else None,
+            "clase": clase if puede_ver_evento else None,
             "ocupado_por_tercero": ocupado_por_tercero,
             "habilitado": habilitado, "en_rango": en_rango,
             "consultable": evento is not None or fin > ahora,
             "iniciado": inicio <= ahora, "impedimento": impedimento,
             "estado_temporal": temporal if puede_ver_evento else "",
-            "puede_reservar": evento is None and not impedimento,
+            "puede_reservar": puede_reservar and evento is None and not impedimento,
             "puede_anular": puede_anular, "puede_finalizar": puede_finalizar,
             "puede_bloquear": es_administrador and en_rango and habilitado and inicio > ahora
                 and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
@@ -141,7 +160,8 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
     horas_propias = {
         evento.turno.hora_inicio.hour
         for evento in eventos_por_turno.values()
-        if evento.tipo == Evento.Tipo.RESERVA and evento.reserva.organizador_id == usuario.pk
+        if (evento.tipo == Evento.Tipo.RESERVA and evento.reserva.organizador_id == usuario.pk)
+        or evento.clase_del_usuario
     }
     filas = []
     if horas_visibles:
@@ -167,6 +187,15 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         detalle = None
     if detalle and not es_administrador and detalle["iniciado"] and hora_seleccionada not in horas_propias:
         detalle = None
+    if detalle and detalle["clase"] is not None:
+        datos_clase = consultar_clase(usuario, detalle["clase"].pk)
+        detalle["datos_clase"] = datos_clase
+        detalle["profesores_activos"] = [
+            profesor for profesor in datos_clase["profesores"] if profesor["estado"] == "activo"
+        ]
+        detalle["cantidad_participantes"] = sum(
+            participante["estado"] == "activo" for participante in datos_clase["participantes"]
+        )
     for columna in columnas:
         columna["hoy"] = columna["fecha"] == ahora.date()
     salto = timedelta(days=1)

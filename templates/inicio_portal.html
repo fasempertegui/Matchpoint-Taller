@@ -15,12 +15,10 @@
         <p>Consultá tus datos personales, tus roles y las opciones de seguridad de tu cuenta.</p>
         <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Ver mi perfil</a>
     </section>
-    {% if puede_reservar %}
-        <section class="tarjeta inicio-portal-opcion" aria-labelledby="inicio-agenda-titulo">
-            <h2 id="inicio-agenda-titulo">Agenda</h2>
-            <p>Consultá las sedes, canchas y horarios disponibles, reservá un turno y accedé al detalle de tus reservas.</p>
-            <a class="boton boton-secundario" href="{% url 'agenda:agenda' %}">Ver agenda</a>
-        </section>
-    {% endif %}
+    <section class="tarjeta inicio-portal-opcion" aria-labelledby="inicio-agenda-titulo">
+        <h2 id="inicio-agenda-titulo">Agenda</h2>
+        <p>Consultá tus clases y los horarios de las sedes.{% if puede_reservar %} También podés reservar un turno y consultar tus reservas.{% endif %}</p>
+        <a class="boton boton-secundario" href="{% url 'agenda:agenda' %}">Ver agenda</a>
+    </section>
 </div>
 {% endblock %}

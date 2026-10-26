@@ -12,7 +12,6 @@
             <a class="agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar detalle">×</a>
         </header>
         <dl class="agenda-datos">
-            <div><dt>Sede</dt><dd>{{ agenda.sede.nombre }}</dd></div>
             <div><dt>Cancha</dt><dd>{{ detalle.cancha.nombre }}</dd></div>
             <div><dt>Horario</dt><dd>{{ detalle.hora|time:"H:i" }}–{{ detalle.fin|time:"H:i" }}</dd></div>
             {% if detalle.reserva %}
@@ -23,7 +22,22 @@
                 <div><dt>Registrado por</dt><dd>{{ detalle.evento.registrado_por }}</dd></div>
                 <div><dt>Registro</dt><dd>{{ detalle.evento.creado_en|date:"d/m/Y H:i" }}</dd></div>
                 {% if detalle.bloqueo.evento_origen %}
-                    <div><dt>Origen</dt><dd><a href="{% url 'reservas:reserva_detalle' detalle.bloqueo.evento_origen.reserva.pk %}">{{ detalle.bloqueo.evento_origen.reserva.numero }}</a></dd></div>
+                    <div><dt>Origen</dt><dd>
+                        {% if detalle.bloqueo.evento_origen.tipo == 'clase' %}
+                            <a href="{% url 'clases:clase_detalle' detalle.bloqueo.evento_origen.clase.pk %}">Clase {{ detalle.bloqueo.evento_origen.clase.pk }}</a>
+                        {% elif detalle.bloqueo.evento_origen.tipo == 'reserva' %}
+                            <a href="{% url 'reservas:reserva_detalle' detalle.bloqueo.evento_origen.reserva.pk %}">{{ detalle.bloqueo.evento_origen.reserva.numero }}</a>
+                        {% endif %}
+                    </dd></div>
+                {% endif %}
+            {% endif %}
+            {% if detalle.clase %}
+                <div><dt>Modalidad</dt><dd>{{ detalle.clase.get_modalidad_display|default:"Sin especificar" }}</dd></div>
+                {% if detalle.datos_clase.es_administrador or detalle.datos_clase.es_profesor_asignado %}
+                    <div><dt>Profesores activos</dt><dd>{% for profesor in detalle.profesores_activos|slice:":3" %}{{ profesor.nombre }}{% if not forloop.last %}<br>{% endif %}{% empty %}Sin profesores activos{% endfor %}{% if detalle.profesores_activos|length > 3 %}<br>Y otros {{ detalle.profesores_activos|length|add:"-3" }}{% endif %}</dd></div>
+                    <div><dt>Participantes activos</dt><dd>{{ detalle.cantidad_participantes }}</dd></div>
+                {% else %}
+                    <div><dt>Acceso</dt><dd>Consulta de tu información personal</dd></div>
                 {% endif %}
             {% endif %}
         </dl>
@@ -42,6 +56,10 @@
                     <button class="boton boton-secundario boton-chico" type="submit">Finalizar reserva</button>
                 </form>
             {% endif %}
+        {% elif detalle.clase %}
+            <div class="agenda-acciones">
+                <a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' detalle.clase.pk %}">Ver detalle completo</a>
+            </div>
         {% elif detalle.ocupado_por_tercero %}
             <p class="agenda-impedimento">Este turno no está disponible.</p>
         {% elif detalle.puede_reservar %}

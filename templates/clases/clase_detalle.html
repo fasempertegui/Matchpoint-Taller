@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}Clase {{ clase.id }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
+
+{% block contenido %}
+<article class="tarjeta perfil">
+    <header class="perfil-cabecera">
+        <div>
+            <p class="perfil-contexto">Detalle de clase</p>
+            <div class="perfil-identidad">
+                <h1>Clase {{ clase.id }}</h1>
+                {% include "componentes/badge_estado.html" with estado=clase.estado texto=clase.estado_texto only %}
+            </div>
+        </div>
+        <a class="boton boton-secundario boton-chico" href="{{ url_agenda }}">Ver en agenda</a>
+    </header>
+    <div class="perfil-cuerpo">
+        <div class="perfil-datos">
+            <section class="perfil-seccion" aria-labelledby="clase-datos-titulo">
+                <h2 id="clase-datos-titulo">Datos de la clase</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila"><dt>Sede</dt><dd>{{ clase.sede.nombre }}</dd></div>
+                    <div class="perfil-fila"><dt>Cancha</dt><dd>{{ clase.cancha.nombre }}</dd></div>
+                    <div class="perfil-fila"><dt>Fecha</dt><dd>{{ clase.fecha|date:"l d/m/Y"|capfirst }}</dd></div>
+                    <div class="perfil-fila"><dt>Horario</dt><dd>{{ clase.hora_inicio|time:"H:i" }}–{{ clase.hora_fin|time:"H:i" }}</dd></div>
+                    <div class="perfil-fila"><dt>Modalidad</dt><dd>{{ clase.modalidad_texto }}</dd></div>
+                    <div class="perfil-fila"><dt>Origen</dt><dd>{% if clase.es_generada %}Generada desde la planilla{% else %}Creación manual{% endif %}</dd></div>
+                </dl>
+            </section>
+            {% if puede_consultar_grupo or clase.profesores %}
+            <section class="perfil-seccion" aria-labelledby="clase-profesores-titulo">
+                <h2 id="clase-profesores-titulo">{% if puede_consultar_grupo %}Profesores{% else %}Mi asignación como profesor{% endif %}</h2>
+                {% if clase.profesores %}
+                    <ul class="perfil-roles-opciones">
+                        {% for profesor in clase.profesores %}
+                            <li class="perfil-rol-opcion"><span>{{ profesor.nombre }}</span>{% include "componentes/badge_estado.html" with estado=profesor.estado texto=profesor.estado|capfirst only %}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}<p class="perfil-descripcion">{% if puede_consultar_grupo %}Sin profesores registrados.{% else %}No tenés una asignación como profesor en esta clase.{% endif %}</p>{% endif %}
+            </section>
+            {% endif %}
+            {% if puede_consultar_grupo or clase.participantes or asistencias_adicionales %}
+            <section class="perfil-seccion" aria-labelledby="clase-participantes-titulo">
+                <h2 id="clase-participantes-titulo">{% if puede_consultar_grupo %}Participantes{% else %}Mi participación{% endif %}</h2>
+                {% if not puede_consultar_grupo %}<p class="perfil-descripcion">Sólo se muestra tu información personal.</p>{% endif %}
+                {% if clase.participantes %}
+                    <div class="tabla-contenedor">
+                        <table>
+                            <caption>Asignaciones de participantes{% if clase.estado == 'finalizado' %} y asistencia{% endif %}</caption>
+                            <thead><tr><th scope="col">Nombre</th><th scope="col">Asignación</th>{% if clase.estado == 'finalizado' %}<th scope="col">Asistencia</th>{% endif %}</tr></thead>
+                            <tbody>
+                                {% for participante in clase.participantes %}
+                                    <tr>
+                                        <td>{{ participante.nombre }}{% if participante.observaciones %}<p class="texto-secundario">{{ participante.observaciones|linebreaksbr }}</p>{% endif %}</td>
+                                        <td>{% include "componentes/badge_estado.html" with estado=participante.estado texto=participante.estado|capfirst only %}</td>
+                                        {% if clase.estado == 'finalizado' %}<td>{{ participante.asistencia }}</td>{% endif %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}<p class="perfil-descripcion">{% if puede_consultar_grupo %}Sin participantes asignados.{% else %}No tenés una asignación como participante en esta clase.{% endif %}</p>{% endif %}
+                {% if clase.estado == 'finalizado' and asistencias_adicionales %}
+                    <h3>Asistencia sin asignación previa</h3>
+                    <ul class="perfil-roles-opciones">
+                        {% for asistencia in asistencias_adicionales %}<li class="perfil-rol-opcion"><span>{{ asistencia.nombre }}</span><span>{{ asistencia.estado_texto }}</span></li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </section>
+            {% endif %}
+            {% if clase.observaciones %}
+                <section class="perfil-seccion" aria-labelledby="clase-observaciones-titulo">
+                    <h2 id="clase-observaciones-titulo">Observaciones</h2><p class="perfil-observaciones">{{ clase.observaciones|linebreaksbr }}</p>
+                </section>
+            {% endif %}
+            {% if clase.estado == 'anulado' %}
+                <section class="perfil-seccion" aria-labelledby="clase-anulacion-titulo">
+                    <h2 id="clase-anulacion-titulo">Motivo de anulación</h2><p class="perfil-observaciones">{{ clase.motivo_anulacion|linebreaksbr }}</p>
+                </section>
+            {% endif %}
+        </div>
+        <aside class="perfil-lateral" aria-label="Registro de la clase">
+            <section class="perfil-seccion" aria-labelledby="clase-registro-titulo">
+                <h2 id="clase-registro-titulo">Registro</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila"><dt>Creación</dt><dd>{{ clase.creado_en|date:"d/m/Y H:i" }}</dd></div>
+                    {% if registrado_por %}<div class="perfil-fila"><dt>Registrada por</dt><dd>{{ registrado_por }}</dd></div>{% endif %}
+                    <div class="perfil-fila"><dt>Última modificación</dt><dd>{{ clase.actualizado_en|date:"d/m/Y H:i" }}</dd></div>
+                    {% if clase.estado == 'anulado' %}
+                        <div class="perfil-fila"><dt>Anulación</dt><dd>{{ clase.anulado_en|date:"d/m/Y H:i" }}</dd></div>
+                        {% if anulado_por %}<div class="perfil-fila"><dt>Anulada por</dt><dd>{{ anulado_por }}</dd></div>{% endif %}
+                    {% elif clase.estado == 'finalizado' %}
+                        <div class="perfil-fila"><dt>Finalización</dt><dd>{{ clase.finalizado_en|date:"d/m/Y H:i" }}</dd></div>
+                        {% if puede_consultar_grupo %}<div class="perfil-fila"><dt>Finalizada por</dt><dd>{{ finalizado_por|default:"Finalización automática" }}</dd></div>{% endif %}
+                    {% endif %}
+                </dl>
+            </section>
+        </aside>
+    </div>
+</article>
+{% endblock %}

@@ -12,10 +12,12 @@ from django.views.decorators.vary import vary_on_headers
 
 from bloqueos.forms import BloqueoAnulacionForm, BloqueoForm
 from bloqueos.servicios import anular_bloqueo, registrar_bloqueo
+from clases.permisos import exigir_acceso_clases
 from instalaciones.models import Sede
 from reservas.disponibilidad import consultar_disponibilidad
 from reservas.forms import ReservaAnulacionForm
 from reservas.servicios import anular_reserva, exigir_acceso_reservas, finalizar_reserva, registrar_reserva
+from usuarios.models import Rol
 
 from .forms import AgendaFiltroForm, AgendaOperacionForm, AgendaReservaForm
 from .operaciones import ejecutar_operacion, preparar_operacion
@@ -27,7 +29,10 @@ from .servicios import construir_agenda, enlace_agenda
 @vary_on_headers("X-Agenda-Detalle")
 @require_http_methods(["GET", "POST"])
 def agenda(request):
-    es_administrador = exigir_acceso_reservas(request.user)
+    usuario = exigir_acceso_clases(request.user)
+    es_administrador = usuario.tiene_rol(Rol.ADMINISTRADOR)
+    if request.method == "POST":
+        exigir_acceso_reservas(usuario)
     panel_acciones = request.GET.get("panel") == "acciones"
     accion = request.POST.get("accion") if request.method == "POST" else None
     if not es_administrador and (
@@ -56,7 +61,7 @@ def agenda(request):
             "sede": filtros["sede"], "cancha": filtros["cancha"], "fecha": filtros["fecha"],
             "hora_seleccionada": None if panel_acciones else filtros["hora"],
             "fecha_maxima": formulario.fecha_maxima,
-            "usuario": request.user, "es_administrador": es_administrador,
+            "usuario": usuario, "es_administrador": es_administrador,
         }
         datos = construir_agenda(**argumentos)
         detalle = datos["detalle"]

@@ -161,6 +161,10 @@ a.agenda-turno:hover {
     background: #e0e9f7;
 }
 
+.agenda-turno-clase {
+    background: var(--primario-suave);
+}
+
 .agenda-turno-bloqueo {
     background: #f5ece6;
 }
@@ -401,6 +405,10 @@ a.agenda-turno:hover {
 
 .agenda-leyenda .agenda-leyenda-ocupado {
     background: var(--texto-suave);
+}
+
+.agenda-leyenda .agenda-leyenda-clase {
+    background: var(--primario);
 }
 
 .agenda-leyenda .agenda-leyenda-bloqueo {

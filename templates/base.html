@@ -27,9 +27,7 @@
                 <nav>
                     <span class="saludo-usuario">Hola, {{ request.user.first_name|default:request.user.username }}</span>
                     <a href="{% url 'inicio' %}">Inicio</a>
-                    {% if request.user.puede_reservar %}
-                        <a href="{% url 'agenda:agenda' %}">Agenda</a>
-                    {% endif %}
+                    <a href="{% url 'agenda:agenda' %}">Agenda</a>
                     {% if perms.instalaciones.view_sede %}
                         <a href="{% url 'instalaciones:sede_lista' %}">Sedes</a>
                     {% endif %}
