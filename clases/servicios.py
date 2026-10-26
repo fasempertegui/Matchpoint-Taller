@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
+from django.db import connection, transaction
 from django.db.models import Q
 from django.utils import timezone
 
@@ -41,6 +41,12 @@ def bloquear_usuarios_clase(usuarios_ids):
     }
 
 
+def bloquear_calendario_clases(fecha):
+    # Coordina fechas sin feriado registrado y alcanza todas las sedes.
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pg_advisory_xact_lock(%s, %s)", [734022, fecha.toordinal()])
+
+
 def _bloquear_clase(clase_id):
     inicial = Clase.objects.select_related("evento").get(pk=clase_id)
     turno = Turno.objects.select_for_update().get(pk=inicial.evento.turno_id)
@@ -76,6 +82,7 @@ def registrar_clase(
     registrado_por = exigir_administracion_clases(usuarios.get(registrado_por.pk))
     validar_usuarios_clase(usuarios, profesores_ids, participantes_ids)
     validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, fecha, hora_inicio)
+    bloquear_calendario_clases(fecha)
 
     try:
         sede = Sede.objects.select_for_update().get(pk=cancha.sede_id)

@@ -3,7 +3,7 @@ from datetime import date, datetime, time, timedelta
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
+from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_feriados
 from reservas.models import Evento
 from usuarios.models import Rol
 
@@ -185,3 +185,14 @@ def validar_horario_planilla(sede, dia_semana, hora_inicio):
     hora_fin = time(hora_inicio.hour + 1)
     if not any(hora_inicio >= inicio and hora_fin <= fin for inicio, fin in franjas):
         raise ValidationError("El turno de planilla debe quedar íntegramente dentro de una franja de funcionamiento.")
+
+
+def validar_datos_feriado(fecha, descripcion):
+    if not isinstance(fecha, date) or isinstance(fecha, datetime):
+        raise ValidationError("Indicá una fecha válida para el feriado.")
+    if not FECHA_INICIO_OPERACIONES <= fecha <= fecha_maxima_feriados():
+        raise ValidationError("El feriado debe estar entre el 01/08/2026 y cinco años después de hoy, inclusive.")
+    if not isinstance(descripcion, str) or not descripcion.strip():
+        raise ValidationError("Indicá la descripción del feriado.")
+    if len(descripcion.strip()) > 150:
+        raise ValidationError("La descripción del feriado no puede superar 150 caracteres.")

@@ -19,6 +19,10 @@ def fecha_maxima_agenda():
     return _sumar_anios(timezone.localdate(), 1)
 
 
+def fecha_maxima_feriados():
+    return _sumar_anios(timezone.localdate(), 5)
+
+
 def fecha_minima_nacimiento():
     return _sumar_anios(timezone.localdate(), -120)
 
