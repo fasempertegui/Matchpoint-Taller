@@ -150,3 +150,15 @@ def validar_periodo_actividad_clases(fecha_desde, fecha_hasta):
         raise ValidationError("El período debe estar dentro del calendario operativo de clases.")
     if (fecha_hasta - fecha_desde).days + 1 > 366:
         raise ValidationError("El período de consulta no puede superar 366 días corridos inclusive.")
+
+
+def validar_retiro_rol_profesor(usuario):
+    if ClaseProfesor.objects.filter(
+        profesor_id=usuario.pk,
+        estado=ClaseProfesor.Estado.ACTIVO,
+        clase__evento__estado=Evento.Estado.PROGRAMADO,
+    ).exists():
+        raise ValidationError(
+            "No se puede quitar el rol Profesor mientras el usuario tenga "
+            "asignaciones activas como profesor en clases Programadas."
+        )

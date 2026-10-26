@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
 from django.http import JsonResponse
@@ -11,6 +11,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from auditoria.contexto import contexto_auditoria
 from auditoria.models import LogAuditoria
+from clases.validaciones import validar_retiro_rol_profesor
 from reservas.models import Evento
 
 from .forms import (
@@ -271,6 +272,13 @@ def usuario_rol_toggle(request, pk, rol):
             if rol == Rol.RESERVAS and usuario.reservas.filter(evento__estado=Evento.Estado.PROGRAMADO).exists():
                 messages.error(request, "No se puede quitar el rol Reservas mientras el usuario tenga reservas Programadas.")
                 return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
+            if rol == Rol.PROFESOR:
+                try:
+                    validar_retiro_rol_profesor(usuario)
+                except ValidationError as error:
+                    for mensaje in error.messages:
+                        messages.error(request, mensaje)
+                    return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
             asignacion.delete()
             messages.success(request, f"Se quitó el rol {rol_obj.nombre}.")
         else:
