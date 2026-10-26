@@ -9,13 +9,7 @@ services:
     container_name: atm_web
     restart: unless-stopped
     working_dir: /app
-    command: >-
-      sh -c "if [ -f manage.py ]; then
-      python manage.py runserver 0.0.0.0:8000;
-      else
-      echo 'Contenedor listo. Crea el proyecto Django dentro de /app.';
-      tail -f /dev/null;
-      fi"
+    command: python manage.py runserver 0.0.0.0:8000
     environment: &entorno_aplicacion
       DB_NAME: atm
       DB_USER: atm
@@ -25,6 +19,26 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      inicializar:
+        condition: service_completed_successfully
+
+  inicializar:
+    image: atm-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    command: >-
+      sh -ec 'python manage.py migrate --noinput;
+      if [ "$$CARGAR_DATOS_EJEMPLO" = "1" ]; then
+      python manage.py cargar_datos_ejemplo;
+      fi'
+    environment:
+      <<: *entorno_aplicacion
+      CARGAR_DATOS_EJEMPLO: ${CARGAR_DATOS_EJEMPLO:-1}
     volumes:
       - .:/app
     depends_on:
@@ -54,8 +68,8 @@ services:
     volumes:
       - .:/app
     depends_on:
-      db:
-        condition: service_healthy
+      inicializar:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
 
@@ -70,8 +84,8 @@ services:
       - .:/app
       - celery_schedule:/var/lib/celery
     depends_on:
-      db:
-        condition: service_healthy
+      inicializar:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
 
