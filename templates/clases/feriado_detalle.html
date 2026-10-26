@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Detalle de feriado | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
+{% block contenido %}
+<article class="tarjeta perfil">
+    <header class="perfil-cabecera"><h1>Detalle de feriado</h1></header>
+    <div class="perfil-cuerpo">
+        <div class="perfil-datos">
+            <section class="perfil-seccion">
+                <h2>Datos del feriado</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila"><dt>Fecha</dt><dd>{{ feriado.fecha|date:"d/m/Y" }}</dd></div>
+                    <div class="perfil-fila"><dt>Descripción</dt><dd>{{ feriado.descripcion }}</dd></div>
+                </dl>
+            </section>
+        </div>
+        <aside class="perfil-lateral" aria-labelledby="acciones-titulo">
+            <section class="perfil-seccion">
+                <h2 id="acciones-titulo">Acciones</h2>
+                <div class="perfil-acciones perfil-acciones-botones"><a class="boton boton-secundario boton-chico" href="{% url 'clases:feriado_lista' %}">Volver a feriados</a></div>
+                <div class="acciones-anulacion">
+                    <form class="perfil-acciones perfil-acciones-botones" method="post" data-confirmar="¿Quitar el feriado del {{ feriado.fecha|date:'d/m/Y' }}: {{ feriado.descripcion }}? Las clases Anuladas no se reactivan y no se generan clases nuevas." data-confirmar-titulo="Quitar feriado" data-confirmar-boton="Confirmar" data-confirmar-peligro>
+                        {% csrf_token %}<input type="hidden" name="accion" value="quitar">
+                        <button class="boton boton-peligro boton-chico" type="submit">Quitar feriado</button>
+                    </form>
+                </div>
+            </section>
+        </aside>
+    </div>
+</article>
+{% endblock %}

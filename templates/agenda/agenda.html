@@ -46,7 +46,7 @@
 
     {% if agenda %}
         <div class="agenda-titulo-fecha">
-            <h2>{{ agenda.fecha|date:"l d/m/Y"|capfirst }}</h2>
+            <h2>{{ agenda.fecha|date:"l d/m/Y"|capfirst }}{% if agenda.feriado %}<span class="etiqueta">Feriado: {{ agenda.feriado.descripcion }}</span>{% endif %}</h2>
             {% if agenda.sede.estado == 'inactiva' %}<span class="texto-secundario">Sede inactiva</span>{% endif %}
         </div>
         <div class="agenda-distribucion">

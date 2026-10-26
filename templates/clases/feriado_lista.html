@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Feriados | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}">{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina">
+    <h1>Feriados</h1>
+    <a class="boton boton-primario" href="{% url 'clases:feriado_registrar' %}">Registrar feriado</a>
+</header>
+<section class="tarjeta">
+    {% if pagina %}
+        <div class="tabla-contenedor">
+            <table>
+                <caption class="clase-etiqueta-oculta">Feriados de todas las sedes</caption>
+                <thead><tr><th scope="col">Fecha</th><th scope="col">Descripción</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
+                <tbody>{% for feriado in pagina %}
+                    <tr><td>{{ feriado.fecha|date:"d/m/Y" }}</td><td>{{ feriado.descripcion }}</td><td><div class="acciones"><a class="boton boton-secundario boton-chico" href="{% url 'clases:feriado_detalle' feriado.id %}" aria-label="Ver feriado del {{ feriado.fecha|date:'d/m/Y' }}">Detalles</a></div></td></tr>
+                {% endfor %}</tbody>
+            </table>
+        </div>
+        <nav class="acciones actividad-paginacion" aria-label="Páginas de feriados">
+            {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+            <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+            {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+        </nav>
+    {% else %}<p class="estado-vacio">No hay feriados registrados.</p>{% endif %}
+</section>
+{% endblock %}

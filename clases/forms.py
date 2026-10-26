@@ -2,13 +2,13 @@ from django import forms
 from django.db.models import Q
 
 from bloqueos.models import Bloqueo
-from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
+from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_feriados
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
 from .models import Asistencia, TurnoPlanilla
-from .validaciones import validar_periodo_actividad_clases
+from .validaciones import validar_datos_feriado, validar_periodo_actividad_clases
 
 
 class ClaseTurnoForm(forms.Form):
@@ -201,4 +201,27 @@ class ActividadClasesForm(forms.Form):
         datos = super().clean()
         if datos.get("fecha_desde") and datos.get("fecha_hasta"):
             validar_periodo_actividad_clases(datos["fecha_desde"], datos["fecha_hasta"])
+        return datos
+
+
+class FeriadoForm(forms.Form):
+    fecha = forms.DateField(
+        label="Fecha", input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+    descripcion = forms.CharField(
+        label="Descripción", max_length=150,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["fecha"].widget.attrs.update({
+            "min": FECHA_INICIO_OPERACIONES.isoformat(), "max": fecha_maxima_feriados().isoformat(),
+        })
+
+    def clean(self):
+        datos = super().clean()
+        if datos.get("fecha") and datos.get("descripcion"):
+            validar_datos_feriado(datos["fecha"], datos["descripcion"])
         return datos

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}{% if revision %}Revisar feriado{% else %}Registrar feriado{% endif %} | Academia TM{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
+<link rel="stylesheet" href="{% static 'css/clases.css' %}">
+{% endblock %}
+{% block contenido %}
+<header class="clase-encabezado"><h1>{% if revision %}Revisar feriado{% else %}Registrar feriado{% endif %}</h1></header>
+<section class="tarjeta{% if not revision %} tarjeta-formulario{% endif %}">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+        {% if revision %}
+            <input type="hidden" name="fecha" value="{{ revision.fecha|date:'Y-m-d' }}">
+            <input type="hidden" name="descripcion" value="{{ revision.descripcion }}">
+            <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+            <dl class="perfil-lista">
+                <div class="perfil-fila"><dt>Fecha</dt><dd>{{ revision.fecha|date:"d/m/Y" }}</dd></div>
+                <div class="perfil-fila"><dt>Descripción</dt><dd>{{ revision.descripcion }}</dd></div>
+            </dl>
+            <section class="perfil-seccion" aria-labelledby="clases-titulo">
+                {% if revision.anula_clases %}
+                    <h2 id="clases-titulo">Clases que se anularán ({{ clases|length }})</h2>
+                    {% if clases %}
+                        <p>Se anularán estas clases Programadas, incluidas las creadas manualmente, con el motivo «Clase anulada por registro de feriado». Sus turnos quedarán libres y se conservarán sus asignaciones e historia.</p>
+                        <div class="tabla-contenedor">
+                            <table>
+                                <caption class="clase-etiqueta-oculta">Clases que se anularán el {{ revision.fecha|date:"d/m/Y" }} en todas las sedes</caption>
+                                <thead><tr><th scope="col">Sede y cancha</th><th scope="col">Horario</th><th scope="col">Profesores</th><th scope="col">Participantes</th><th scope="col">Acción</th></tr></thead>
+                                <tbody>{% for clase in clases %}
+                                    <tr>
+                                        <td>{{ clase.sede }} → {{ clase.cancha }}</td>
+                                        <td>{{ clase.hora|time:"H:i" }} a {{ clase.hora_fin|time:"H:i" }}</td>
+                                        <td>{{ clase.profesores|join:", "|default:"—" }}</td>
+                                        <td>{{ clase.participantes|join:", "|default:"—" }}</td>
+                                        <td><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' clase.id %}">Ver clase</a></td>
+                                    </tr>
+                                {% endfor %}</tbody>
+                            </table>
+                        </div>
+                    {% else %}<p class="texto-secundario">No hay clases Programadas para anular en esa fecha.</p>{% endif %}
+                {% else %}
+                    <h2 id="clases-titulo">Clases existentes</h2>
+                    <p>Registrar un feriado de hoy o de una fecha pasada no modifica las clases existentes.</p>
+                {% endif %}
+                <p class="nota-campo">Las reservas y los bloqueos se conservan.</p>
+            </section>
+            <div class="acciones-formulario clase-revision-acciones">
+                <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a editar</button>
+                <button class="boton {% if clases %}boton-confirmar-peligro{% else %}boton-primario{% endif %}" name="paso" value="confirmar" type="submit">Confirmar</button>
+            </div>
+        {% else %}
+            {% for campo in formulario %}
+                <div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
+            {% endfor %}
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{% url 'clases:feriado_lista' %}">Cancelar</a>
+                <button class="boton boton-primario" name="paso" value="revisar" type="submit">Revisar feriado</button>
+            </div>
+        {% endif %}
+    </form>
+</section>
+{% endblock %}

@@ -1,10 +1,13 @@
 from django.urls import path
 
-from . import views, vistas_planilla
+from . import views, vistas_feriados, vistas_planilla
 
 app_name = "clases"
 
 urlpatterns = [
+    path("feriados/", vistas_feriados.feriado_lista, name="feriado_lista"),
+    path("feriados/registrar/", vistas_feriados.feriado_registrar, name="feriado_registrar"),
+    path("feriados/<int:pk>/", vistas_feriados.feriado_detalle, name="feriado_detalle"),
     path("planilla/", vistas_planilla.planilla, name="planilla"),
     path("planilla/agregar/", vistas_planilla.planilla_formulario, name="planilla_crear"),
     path("planilla/<int:pk>/", vistas_planilla.planilla_detalle, name="planilla_detalle"),

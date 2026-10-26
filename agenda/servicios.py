@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from bloqueos.servicios import validar_anulacion_bloqueo
 from clases.consultas import consultar_clase
-from clases.models import Clase
+from clases.models import Clase, Feriado
 from clases.validaciones import validar_anulacion_clase
 from common.fechas import FECHA_INICIO_OPERACIONES
 from instalaciones.models import Cancha, Sede
@@ -222,6 +222,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
     return {
         "columnas": columnas, "filas": filas, "detalle": detalle, "hoy": ahora.date(),
         "sede": sede, "cancha": cancha, "fecha": fecha,
+        "feriado": Feriado.objects.filter(fecha=fecha).first(),
         "url_anterior": enlace_agenda(sede, fecha - salto, cancha)
             if fecha - salto >= FECHA_INICIO_OPERACIONES else None,
         "url_siguiente": enlace_agenda(sede, fecha + salto, cancha)

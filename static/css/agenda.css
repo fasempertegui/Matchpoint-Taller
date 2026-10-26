@@ -66,6 +66,10 @@
 }
 
 .agenda-titulo-fecha h2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
     margin: 0;
     font-size: 1.1rem;
 }
