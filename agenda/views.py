@@ -2,12 +2,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse, QueryDict
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods
 from django.views.decorators.vary import vary_on_headers
 
 from bloqueos.forms import BloqueoAnulacionForm, BloqueoForm
@@ -22,6 +23,31 @@ from usuarios.models import Rol
 from .forms import AgendaFiltroForm, AgendaOperacionForm, AgendaReservaForm
 from .operaciones import ejecutar_operacion, preparar_operacion
 from .servicios import construir_agenda, enlace_agenda
+
+
+@login_required
+@never_cache
+@require_GET
+def buscar_organizadores(request):
+    if not exigir_acceso_reservas(request.user):
+        raise PermissionDenied
+    busqueda = request.GET.get("q", "").strip()[:100]
+    if len(busqueda) < 2:
+        return JsonResponse({"resultados": [], "hay_mas": False})
+    personas = AgendaReservaForm(es_administrador=True).fields["organizador"].queryset
+    for termino in busqueda.split():
+        personas = personas.filter(
+            Q(first_name__icontains=termino) | Q(last_name__icontains=termino)
+            | Q(username__icontains=termino)
+        )
+    filas = list(personas.order_by("first_name", "last_name", "username", "pk")[:11])
+    return JsonResponse({
+        "resultados": [
+            {"id": persona.pk, "nombre": str(persona), "usuario": persona.username}
+            for persona in filas[:10]
+        ],
+        "hay_mas": len(filas) > 10,
+    })
 
 
 @login_required
@@ -153,7 +179,13 @@ def agenda(request):
                     argumentos["cancha"].refresh_from_db()
                 datos = construir_agenda(**argumentos)
 
+    organizador_seleccionado = None
+    if es_administrador:
+        valor = formulario_reserva["organizador"].value()
+        if valor and str(valor).isdecimal() and len(str(valor)) < 19:
+            organizador_seleccionado = formulario_reserva.fields["organizador"].queryset.filter(pk=valor).first()
     contexto = {
+        "organizador_seleccionado": organizador_seleccionado,
         "formulario": formulario,
         "formulario_reserva": formulario_reserva,
         "formulario_anulacion": formulario_anulacion,

@@ -1,0 +1,7 @@
+.clase-observaciones-edicion { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--borde); }
+.clase-agregar-observaciones { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 4px; border: 0; background: transparent; color: var(--texto); font-size: .9rem; font-weight: 400; }
+.clase-agregar-observaciones:hover { background: transparent; color: var(--primario); text-decoration: underline; }
+.clase-agregar-observaciones[hidden] { display: none; }
+.clase-observaciones-edicion .clase-opcional { font-weight: 400; }
+.clase-observaciones-edicion .grupo-campo { margin-bottom: 0; }
+.clase-observaciones-edicion textarea.form-control { min-height: 0; resize: none; }

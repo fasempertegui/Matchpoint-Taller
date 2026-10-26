@@ -15,11 +15,6 @@ class CanchaAgendaField(forms.ModelChoiceField):
         return cancha.nombre
 
 
-class OrganizadorAgendaField(forms.ModelChoiceField):
-    def label_from_instance(self, usuario):
-        return f"{usuario} ({usuario.username})"
-
-
 class AgendaFiltroForm(forms.Form):
     sede = forms.ModelChoiceField(
         queryset=Sede.objects.all(),
@@ -74,13 +69,12 @@ class AgendaFiltroForm(forms.Form):
 
 
 class AgendaReservaForm(forms.Form):
-    organizador = OrganizadorAgendaField(
+    organizador = forms.ModelChoiceField(
         queryset=Usuario.objects.filter(
             is_active=True,
             roles__rol__codigo__in=(Rol.RESERVAS, Rol.ADMINISTRADOR),
         ).distinct().order_by("first_name", "last_name", "username"),
-        empty_label="Elegí un organizador",
-        widget=forms.Select(attrs={"class": "form-control"}),
+        widget=forms.HiddenInput(),
     )
     precio_mostrado = forms.DecimalField(
         max_digits=12,

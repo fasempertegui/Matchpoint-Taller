@@ -134,5 +134,6 @@
 {% else %}
     <p class="tarjeta estado-vacio">{% if es_administrador %}Registrá una sede y sus canchas para consultar la agenda.{% else %}No hay sedes disponibles para consultar la agenda.{% endif %}</p>
 {% endif %}
+<script src="{% static 'js/observaciones.js' %}" defer></script>
 <script src="{% static 'js/agenda.js' %}" defer></script>
 {% endblock %}

@@ -457,3 +457,5 @@ a.agenda-turno:hover {
 .agenda-aviso[hidden] {
     display: none;
 }
+
+.agenda-detalle [hidden] { display: none; }

@@ -11,6 +11,163 @@ document.addEventListener("DOMContentLoaded", function () {
     var aviso = panel && panel.querySelector("[data-agenda-aviso]");
     var solicitudActual = null;
 
+    function prepararOrganizador() {
+        var selector = contenido && contenido.querySelector("[data-organizador-selector]");
+        if (!selector) return;
+        var entrada = selector.querySelector("[data-organizador-busqueda]");
+        var campo = selector.querySelector('input[name="organizador"]');
+        var seleccion = selector.querySelector("[data-organizador-seleccion]");
+        var buscador = selector.querySelector("[data-organizador-buscador]");
+        var nombre = selector.querySelector("[data-organizador-nombre]");
+        var usuario = selector.querySelector("[data-organizador-usuario]");
+        var resultados = selector.querySelector("[data-organizador-resultados]");
+        var estado = selector.querySelector("[data-estado]");
+        var solicitud = null;
+        var demora = null;
+
+        function limpiarBusqueda() {
+            window.clearTimeout(demora);
+            if (solicitud) solicitud.abort();
+            resultados.replaceChildren();
+            resultados.hidden = true;
+            estado.textContent = "";
+        }
+
+        function quitar() {
+            limpiarBusqueda();
+            campo.value = "";
+            nombre.textContent = "";
+            usuario.textContent = "";
+            entrada.value = "";
+            seleccion.hidden = true;
+            buscador.hidden = false;
+        }
+
+        function elegir(persona) {
+            limpiarBusqueda();
+            campo.value = persona.id;
+            nombre.textContent = persona.nombre;
+            usuario.textContent = persona.usuario;
+            entrada.value = "";
+            seleccion.hidden = false;
+            buscador.hidden = true;
+            selector.querySelector("[data-organizador-quitar]").focus();
+        }
+
+        async function buscar() {
+            var texto = entrada.value.trim();
+            if (texto.length < 2 || !selector.isConnected) return;
+            var actual = new AbortController();
+            solicitud = actual;
+            estado.textContent = "Buscando…";
+            var url = new URL(selector.dataset.url, window.location.origin);
+            url.searchParams.set("q", texto);
+            try {
+                var respuesta = await fetch(url, {signal: actual.signal, credentials: "same-origin", cache: "no-store"});
+                if (!respuesta.ok || respuesta.redirected) throw new Error();
+                var datos = await respuesta.json();
+                if (solicitud !== actual || entrada.value.trim() !== texto || !selector.isConnected) return;
+                resultados.replaceChildren();
+                datos.resultados.forEach(function (persona) {
+                    var fila = document.createElement("li");
+                    var boton = document.createElement("button");
+                    boton.type = "button";
+                    boton.textContent = persona.nombre;
+                    var detalle = document.createElement("small");
+                    detalle.textContent = persona.usuario;
+                    boton.append(detalle);
+                    boton.addEventListener("click", function () { elegir(persona); });
+                    fila.append(boton);
+                    resultados.append(fila);
+                });
+                resultados.hidden = datos.resultados.length === 0;
+                estado.textContent = datos.resultados.length ? datos.resultados.length + " coincidencias. Elegí una para agregar." : "Sin coincidencias disponibles.";
+                if (datos.hay_mas) estado.textContent += " Hay más resultados: precisá la búsqueda.";
+            } catch (error) {
+                if (error.name !== "AbortError" && solicitud === actual && selector.isConnected) {
+                    estado.textContent = "No se pudo buscar. Volvé a escribir o recargá la página si tu sesión venció.";
+                }
+            }
+        }
+
+        entrada.addEventListener("input", function () {
+            limpiarBusqueda();
+            if (entrada.value.trim().length >= 2) demora = window.setTimeout(buscar, 250);
+        });
+        selector.querySelector("[data-organizador-quitar]").addEventListener("click", function () {
+            quitar();
+            entrada.focus();
+        });
+        selector.addEventListener("organizador:limpiar", quitar);
+        selector.addEventListener("keydown", function (evento) {
+            var botones = Array.from(resultados.querySelectorAll("button"));
+            var indice = botones.indexOf(document.activeElement);
+            if (evento.key === "ArrowDown" && botones.length) {
+                evento.preventDefault();
+                botones[(indice + 1) % botones.length].focus();
+            } else if (evento.key === "ArrowUp" && indice >= 0) {
+                evento.preventDefault();
+                if (indice === 0) entrada.focus();
+                else botones[indice - 1].focus();
+            } else if (evento.key === "Escape") {
+                limpiarBusqueda();
+                if (!buscador.hidden) entrada.focus();
+            } else if (evento.key === "Enter" && evento.target === entrada) {
+                evento.preventDefault();
+                if (botones.length) botones[0].focus();
+            }
+        });
+    }
+
+    function prepararCreacionTurno() {
+        if (!contenido) return;
+        var opciones = Array.from(contenido.querySelectorAll("[data-agenda-opcion-creacion]"));
+        var formularios = opciones.filter(function (opcion) { return opcion.hasAttribute("data-agenda-creacion"); });
+        if (!formularios.length) return;
+        var titulo = contenido.querySelector("[data-agenda-titulo]");
+
+        function actualizar() {
+            var activa = formularios.find(function (opcion) { return opcion.open; });
+            opciones.forEach(function (opcion) {
+                opcion.hidden = Boolean(activa && opcion !== activa);
+                if (opcion.hasAttribute("data-agenda-creacion")) opcion.querySelector("summary").hidden = opcion === activa;
+            });
+            titulo.textContent = activa ? (activa.dataset.agendaCreacion === "reserva" ? "Nueva reserva" : "Nuevo bloqueo") : "Turno libre";
+        }
+
+        formularios.forEach(function (opcion) {
+            opcion.addEventListener("toggle", function () {
+                actualizar();
+                if (opcion.open) {
+                    var campo = opcion.querySelector("[data-organizador-buscador]:not([hidden]) input")
+                        || opcion.querySelector("select")
+                        || opcion.querySelector("[data-agregar-observaciones]:not([hidden])")
+                        || opcion.querySelector("textarea");
+                    if (campo) campo.focus();
+                }
+            });
+            opcion.querySelector("[data-cancelar-creacion]").addEventListener("click", function () {
+                var formulario = opcion.querySelector("form");
+                formulario.reset();
+                formulario.querySelectorAll("select, textarea, input:not([type=hidden])").forEach(function (campo) {
+                    if (campo.tagName === "SELECT") campo.selectedIndex = 0;
+                    else if (campo.type === "checkbox" || campo.type === "radio") campo.checked = false;
+                    else campo.value = "";
+                });
+                formulario.querySelectorAll(".error-campo, .errorlist").forEach(function (error) { error.remove(); });
+                formulario.querySelectorAll("[data-observaciones]").forEach(function (bloque) {
+                    bloque.dispatchEvent(new Event("observaciones:actualizar"));
+                });
+                var selector = formulario.querySelector("[data-organizador-selector]");
+                if (selector) selector.dispatchEvent(new Event("organizador:limpiar"));
+                opcion.open = false;
+                actualizar();
+                opcion.querySelector("summary").focus();
+            });
+        });
+        actualizar();
+    }
+
     function prepararConfirmacionReserva() {
         var formulario = document.querySelector("[data-agenda-reserva]");
         if (!formulario) return;
@@ -18,7 +175,7 @@ document.addEventListener("DOMContentLoaded", function () {
         formulario.addEventListener("submit", function () {
             var organizador = formulario.elements.organizador;
             if (organizador && organizador.value) {
-                formulario.dataset.confirmar = mensaje + "\n\nOrganizador: " + organizador.selectedOptions[0].textContent;
+                formulario.dataset.confirmar = mensaje + "\n\nOrganizador: " + formulario.querySelector("[data-organizador-nombre]").textContent;
             }
         });
     }
@@ -110,6 +267,9 @@ document.addEventListener("DOMContentLoaded", function () {
             var html = await respuesta.text();
             if (solicitud !== solicitudActual) return;
             contenido.innerHTML = html;
+            contenido.dispatchEvent(new Event("observaciones:inicializar", {bubbles: true}));
+            prepararOrganizador();
+            prepararCreacionTurno();
             prepararConfirmacionReserva();
             prepararConfirmacionBloqueo();
             prepararCamposOperacion();
@@ -180,6 +340,8 @@ document.addEventListener("DOMContentLoaded", function () {
         window.setInterval(marcarHoraActual, 30000);
     }
 
+    prepararOrganizador();
+    prepararCreacionTurno();
     prepararConfirmacionReserva();
     prepararConfirmacionBloqueo();
     prepararCamposOperacion();

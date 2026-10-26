@@ -1,0 +1,19 @@
+<div class="grupo-campo" data-organizador-selector data-url="{% url 'agenda:buscar_organizadores' %}">
+    <label for="buscar-organizador">Organizador</label>
+    {{ formulario_reserva.organizador }}
+    <ul class="clase-seleccionados" data-organizador-seleccion{% if not organizador_seleccionado %} hidden{% endif %}>
+        <li>
+            <span><span data-organizador-nombre>{{ organizador_seleccionado }}</span><small data-organizador-usuario>{{ organizador_seleccionado.username }}</small></span>
+            <button type="button" class="clase-quitar" data-organizador-quitar aria-label="Quitar organizador">×</button>
+        </li>
+    </ul>
+    <div class="clase-buscador" data-organizador-buscador{% if organizador_seleccionado %} hidden{% endif %}>
+        <div class="clase-campo-busqueda">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+            <input class="form-control" id="buscar-organizador" type="search" autocomplete="off" maxlength="100" placeholder="Buscar por nombre, apellido o usuario (mín. 2 letras)" aria-controls="resultados-organizador" data-organizador-busqueda>
+        </div>
+        <ul class="clase-resultados" id="resultados-organizador" aria-label="Coincidencias" data-organizador-resultados hidden></ul>
+        <p class="clase-busqueda-estado" role="status" aria-live="polite" data-estado></p>
+    </div>
+    {% for error in formulario_reserva.organizador.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+</div>
