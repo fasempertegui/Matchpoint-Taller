@@ -68,6 +68,10 @@ class UsuarioRol(models.Model):
                 raise ValidationError("Administrador es un rol exclusivo y no puede combinarse con otros roles.")
         elif self.usuario.is_superuser or otros_roles.filter(rol__codigo=Rol.ADMINISTRADOR).exists():
             raise ValidationError("Los administradores solo pueden tener el rol Administrador.")
+        if self.rol.codigo in (Rol.PROFESOR, Rol.ALUMNO):
+            incompatible = Rol.ALUMNO if self.rol.codigo == Rol.PROFESOR else Rol.PROFESOR
+            if otros_roles.filter(rol__codigo=incompatible).exists():
+                raise ValidationError("Profesor y Alumno son roles incompatibles entre sí.")
 
     def save(self, *args, **kwargs):
         with transaction.atomic():

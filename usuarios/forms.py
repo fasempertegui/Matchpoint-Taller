@@ -341,6 +341,12 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
         validate_password(contrasena, candidato)
         return contrasena
 
+    def clean(self):
+        datos = super().clean()
+        if datos.get("rol_profesor") and datos.get("rol_alumno"):
+            self.add_error("rol_alumno", "Profesor y Alumno son roles incompatibles entre sí.")
+        return datos
+
     def guardar(self, *, exigir_cambio_contrasena=True, es_superusuario=False):
         with transaction.atomic():
             usuario = crear_usuario_con_nombre_generado(

@@ -282,9 +282,14 @@ def usuario_rol_toggle(request, pk, rol):
             asignacion.delete()
             messages.success(request, f"Se quitó el rol {rol_obj.nombre}.")
         else:
-            UsuarioRol.objects.create(
-                usuario=usuario, rol=rol_obj, asignado_por=request.user
-            )
-            messages.success(request, f"Se asignó el rol {rol_obj.nombre}.")
+            try:
+                UsuarioRol.objects.create(
+                    usuario=usuario, rol=rol_obj, asignado_por=request.user
+                )
+            except ValidationError as error:
+                for mensaje in error.messages:
+                    messages.error(request, mensaje)
+            else:
+                messages.success(request, f"Se asignó el rol {rol_obj.nombre}.")
 
     return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
