@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% load static %}
-{% block titulo %}Resultado de generación | Academia TM{% endblock %}
+{% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
 <link rel="stylesheet" href="{% static 'css/clases.css' %}">
 {% endblock %}
 {% block contenido %}
-<header class="clase-encabezado"><h1>Resultado de generación</h1></header>
+<header class="clase-encabezado"><h1>{{ titulo }}</h1></header>
 <section class="tarjeta">
     <p class="mensaje mensaje-success" role="status">Se crearon {{ cantidad_creadas }} clases.</p>
     <dl class="perfil-lista">
         <div class="perfil-fila"><dt>Sede</dt><dd>{{ sede.nombre }}</dd></div>
         <div class="perfil-fila"><dt>Período</dt><dd>{{ desde|date:"d/m/Y" }} – {{ hasta|date:"d/m/Y" }}</dd></div>
+        {% if regenerar %}<div class="perfil-fila"><dt>Clases eliminadas</dt><dd>{{ resultado.reemplazadas }}</dd></div><div class="perfil-fila"><dt>Clases conservadas</dt><dd>{{ resultado.conservadas_ids|length }}</dd></div>{% endif %}
         <div class="perfil-fila"><dt>Clases omitidas</dt><dd>{{ resultado.omitidas }}</dd></div>
     </dl>
     {% if pagina %}
@@ -32,6 +33,7 @@
             {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
         </nav>
     {% endif %}
+    {% if conservadas %}<details class="perfil-desplegable"><summary>Clases conservadas ({{ conservadas|length }})</summary>{% include "clases/_generacion_clases_existentes.html" with filas=conservadas only %}</details>{% endif %}
     {% if omitidas %}
         <details class="perfil-desplegable"><summary>Clases omitidas ({{ omitidas|length }})</summary>
             {% include "clases/_generacion_tabla.html" with filas=omitidas mostrar_motivo=True only %}

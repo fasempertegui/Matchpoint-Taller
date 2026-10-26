@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% load static %}
-{% block titulo %}Generar clases | Academia TM{% endblock %}
+{% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
 <link rel="stylesheet" href="{% static 'css/clases.css' %}">
 {% endblock %}
 {% block contenido %}
-<header class="clase-encabezado"><h1>Generar clases</h1></header>
+<header class="clase-encabezado"><h1>{{ titulo }}</h1></header>
 <section class="tarjeta{% if not revision %} tarjeta-formulario{% endif %}">
     <form method="post" novalidate>
         {% csrf_token %}
@@ -17,15 +17,21 @@
             <input type="hidden" name="fecha_hasta" value="{{ revision.fecha_hasta|date:'Y-m-d' }}">
             <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
             <section class="perfil-seccion">
-                <h2>{% if confirmacion_final %}Confirmación 2 de 2{% else %}Revisar generación{% endif %}</h2>
+                <h2>{% if confirmacion_final %}Confirmación 2 de 2{% else %}{% if regenerar %}Revisar regeneración{% else %}Revisar generación{% endif %}{% endif %}</h2>
                 <dl class="perfil-lista">
                     <div class="perfil-fila"><dt>Sede</dt><dd>{{ sede.nombre }}</dd></div>
                     <div class="perfil-fila"><dt>Período</dt><dd>{{ revision.fecha_desde|date:"d/m/Y" }} – {{ revision.fecha_hasta|date:"d/m/Y" }}</dd></div>
+                    {% if regenerar %}<div class="perfil-fila"><dt>Clases a eliminar</dt><dd>{{ reemplazos|length }}</dd></div><div class="perfil-fila"><dt>Clases conservadas</dt><dd>{{ conservadas|length }}</dd></div>{% endif %}
                     <div class="perfil-fila"><dt>Clases a crear</dt><dd>{{ candidatas|length }}</dd></div>
                     <div class="perfil-fila"><dt>Clases omitidas</dt><dd>{{ omitidas|length }}</dd></div>
                 </dl>
                 <p class="nota-campo">La generación abarca todas las canchas de {{ sede.nombre }} y utiliza la programación habitual actual.</p>
             </section>
+            {% if regenerar %}
+                <p>Se eliminan las clases generadas que siguen Programadas en el período y se crean las que correspondan a la planilla actual. Se conservan las manuales, Anuladas y Finalizadas. Los turnos concretos se conservan.</p>
+                {% if reemplazos %}<details class="perfil-desplegable"><summary>Clases a eliminar ({{ reemplazos|length }})</summary>{% include "clases/_generacion_clases_existentes.html" with filas=reemplazos only %}</details>{% endif %}
+                {% if conservadas %}<details class="perfil-desplegable"><summary>Clases conservadas ({{ conservadas|length }})</summary>{% include "clases/_generacion_clases_existentes.html" with filas=conservadas only %}</details>{% endif %}
+            {% endif %}
             {% if candidatas %}
                 <details class="perfil-desplegable"><summary>Clases a crear ({{ candidatas|length }})</summary>
                     {% include "clases/_generacion_tabla.html" with filas=candidatas mostrar_motivo=False only %}
@@ -37,27 +43,28 @@
                 </details>
             {% endif %}
             {% if hay_advertencias %}<p class="mensaje mensaje-warning" role="alert">Superás el máximo recomendado de 6 participantes para una clase grupal. Podés continuar si está acordado.</p>{% endif %}
-            {% if candidatas %}
+            {% if hay_cambios %}
                 <section class="perfil-seccion actividad-listado" aria-label="Confirmación de generación">
                     {% if not confirmacion_final %}<h2>Confirmación 1 de 2</h2>{% endif %}
-                    <p>Esta operación no se puede deshacer. Para quitar clases generadas, deberás hacerlo manualmente.</p>
-                    {% if confirmacion_final %}<p>Al confirmar se crearán {{ candidatas|length }} clases. Se volverán a validar la programación y la disponibilidad antes de guardar.</p>{% endif %}
+                    <p>Esta operación no se puede deshacer. {% if regenerar %}Se eliminarán las clases y sus asignaciones indicadas en la revisión.{% else %}Para quitar clases generadas, deberás hacerlo manualmente.{% endif %}</p>
+                    {% if confirmacion_final %}<p>Al confirmar {% if regenerar %}se eliminarán {{ reemplazos|length }} clases y {% endif %}se crearán {{ candidatas|length }} clases. Se volverán a validar la programación y la disponibilidad antes de guardar.</p>{% endif %}
                 </section>
             {% endif %}
             <div class="acciones-formulario clase-revision-acciones">
                 <button class="boton boton-secundario" name="paso" value="editar" type="submit">Cambiar período</button>
-                {% if candidatas %}
+                {% if hay_cambios %}
                     {% if confirmacion_final %}
                         <button class="boton boton-secundario" name="paso" value="revisar" type="submit">Volver a revisar</button>
-                        <button class="boton boton-primario" name="paso" value="generar" type="submit">Generar clases</button>
+                        <button class="boton {% if regenerar %}boton-confirmar-peligro{% else %}boton-primario{% endif %}" name="paso" value="generar" type="submit">{{ titulo }}</button>
                     {% else %}<button class="boton boton-primario" name="paso" value="confirmar_revision" type="submit">Confirmar revisión</button>{% endif %}
                 {% endif %}
                 <a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a>
             </div>
         {% else %}
+            {% if regenerar %}<p>Se reemplazarán las clases generadas Programadas del período por las que correspondan a la planilla actual. Las manuales, Anuladas y Finalizadas se conservan.</p>{% endif %}
             <p class="texto-secundario">Elegí la sede y un período de hasta 62 días inclusive. Se utilizará su programación habitual de todas las canchas.</p>
             {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>{% endfor %}
-            <div class="acciones-formulario"><a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a><button class="boton boton-primario" name="paso" value="revisar" type="submit">Revisar generación</button></div>
+            <div class="acciones-formulario"><a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a><button class="boton boton-primario" name="paso" value="revisar" type="submit">{% if regenerar %}Revisar regeneración{% else %}Revisar generación{% endif %}</button></div>
         {% endif %}
     </form>
 </section>

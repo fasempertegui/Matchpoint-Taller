@@ -5,7 +5,10 @@
 {% block contenido %}
 <header class="tarjeta encabezado-pagina">
     <h1>Planilla semanal</h1>
-    {% if cancha %}<a class="boton boton-secundario" href="{% url 'clases:generacion_clases' %}?sede={{ cancha.sede_id }}&amp;cancha={{ cancha.pk }}">Generar clases</a>{% endif %}
+    {% if cancha %}<div class="acciones">
+        <a class="boton boton-secundario" href="{% url 'clases:generacion_clases' %}?sede={{ cancha.sede_id }}&amp;cancha={{ cancha.pk }}">Generar clases</a>
+        <a class="boton boton-peligro" href="{% url 'clases:regeneracion_clases' %}?sede={{ cancha.sede_id }}&amp;cancha={{ cancha.pk }}">Regenerar clases</a>
+    </div>{% endif %}
 </header>
 {% if hay_sedes %}
     <section class="tarjeta">

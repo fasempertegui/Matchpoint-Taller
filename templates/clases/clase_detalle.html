@@ -63,7 +63,7 @@
                     {% if clase.puede_cambiar_cancha %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_cambiar_cancha' clase.id %}">Cambiar de cancha</a>{% endif %}
                     <a class="boton boton-secundario boton-chico" href="{{ url_agenda }}">Ver en agenda</a>
                 </div>
-                {% include "clases/_acciones_anulacion.html" with clase_id=clase.id puede_anular=clase.puede_anular puede_bloquear=clase.puede_anular_bloquear only %}
+                {% include "clases/_acciones_anulacion.html" with clase_id=clase.id puede_anular=clase.puede_anular puede_bloquear=clase.puede_anular_bloquear puede_eliminar=clase.puede_eliminar only %}
             </section>
         </aside>
     </div>
