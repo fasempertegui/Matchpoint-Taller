@@ -476,6 +476,42 @@ def editar_clase(
     return clase
 
 
+def preparar_cambio_cancha(usuario, clase_id, cancha, *, version):
+    usuario = exigir_administracion_clases(usuario)
+    datos = consultar_edicion_clase(usuario, clase_id)
+    clase = datos["clase"]
+    if cancha.pk == clase.evento.turno.cancha_id:
+        raise ValidationError("Elegí una cancha distinta de la actual.")
+    revision = preparar_edicion_clase(
+        usuario, clase_id, datos["profesores_ids"], datos["participantes_ids"],
+        clase.modalidad, clase.evento.observaciones, version=version, cancha=cancha,
+    )
+    return signing.dumps({
+        "usuario": usuario.pk, "clase": clase_id, "cancha": cancha.pk,
+        "edicion": revision["confirmacion"],
+    }, salt="clases.cambio-cancha", compress=True)
+
+
+@transaction.atomic
+def cambiar_cancha_clase(usuario, clase_id, cancha, *, confirmacion):
+    usuario = exigir_administracion_clases(usuario)
+    try:
+        revision = signing.loads(confirmacion, salt="clases.cambio-cancha", max_age=900)
+    except signing.BadSignature:
+        raise ValidationError("La revisión venció o no es válida. Revisá el cambio de cancha nuevamente.") from None
+    if (revision["usuario"], revision["clase"], revision["cancha"]) != (usuario.pk, clase_id, cancha.pk):
+        raise ValidationError("La confirmación no corresponde a este cambio de cancha.")
+    datos = consultar_edicion_clase(usuario, clase_id)
+    clase = datos["clase"]
+    if cancha.pk == clase.evento.turno.cancha_id:
+        raise ValidationError("La clase ya está en esa cancha. Consultá su detalle.")
+    return editar_clase(
+        usuario, clase_id, datos["profesores_ids"], datos["participantes_ids"],
+        clase.modalidad, clase.evento.observaciones, cancha=cancha,
+        confirmacion=revision["edicion"],
+    )
+
+
 @transaction.atomic
 def anular_clase(anulado_por, clase_id, motivo):
     anulado_por = exigir_administracion_clases(anulado_por)

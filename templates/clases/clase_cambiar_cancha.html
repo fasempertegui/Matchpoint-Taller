@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}{% if confirmacion %}Revisar cambio de cancha{% else %}Cambiar de cancha{% endif %} | Academia TM{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
+<link rel="stylesheet" href="{% static 'css/clases.css' %}">
+{% endblock %}
+
+{% block contenido %}
+<header class="clase-encabezado">
+    <div><p class="texto-secundario">Clase {{ clase.pk }}</p><h1>{% if confirmacion %}Revisar cambio de cancha{% else %}Cambiar de cancha{% endif %}</h1></div>
+    <a class="boton boton-secundario boton-chico" href="{{ url_detalle }}">Volver al detalle</a>
+</header>
+<div class="clase-distribucion">
+    <aside class="tarjeta clase-turno" aria-labelledby="clase-turno-titulo">
+        <h2 id="clase-turno-titulo">Ubicación actual</h2>
+        <p class="clase-turno-fecha">{{ turno.fecha|date:"d/m/Y" }}</p>
+        <p class="clase-turno-hora">{{ turno.hora_inicio|time:"H:i" }} – {{ turno.hora_fin|time:"H:i" }}</p>
+        <p>{{ turno.cancha.sede.nombre }}<br><strong>{{ turno.cancha.nombre }}</strong></p>
+    </aside>
+    <section class="tarjeta clase-contenido" aria-labelledby="clase-destino-titulo">
+        <h2 id="clase-destino-titulo">{% if confirmacion %}Nueva ubicación{% else %}Elegir destino{% endif %}</h2>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="version" value="{{ version }}">
+            {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+            {% if confirmacion %}
+                <input type="hidden" name="cancha" value="{{ destino.pk }}">
+                <input type="hidden" name="confirmacion" value="{{ confirmacion }}">
+                <dl class="perfil-lista">
+                    <div class="perfil-fila"><dt>Sede y cancha</dt><dd>{{ destino.sede.nombre }} · {{ destino.nombre }}</dd></div>
+                    <div class="perfil-fila"><dt>Fecha y horario</dt><dd>{{ turno.fecha|date:"d/m/Y" }} · {{ turno.hora_inicio|time:"H:i" }} – {{ turno.hora_fin|time:"H:i" }}</dd></div>
+                </dl>
+                <p class="nota-campo">Al confirmar, la ubicación actual quedará libre para este turno. Se conservan los profesores, participantes, modalidad y observaciones.</p>
+                <div class="acciones-formulario clase-revision-acciones">
+                    <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a elegir</button>
+                    <button class="boton boton-primario" name="paso" value="confirmar" type="submit">Confirmar cambio</button>
+                </div>
+            {% elif hay_destinos %}
+                <p class="texto-secundario">Se muestran las canchas disponibles, de esta sede y de las demás, para el mismo día y horario.</p>
+                <div class="grupo-campo">
+                    <label for="{{ formulario.cancha.id_for_label }}">{{ formulario.cancha.label }}</label>
+                    {{ formulario.cancha }}
+                    {% for error in formulario.cancha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="acciones-formulario">
+                    <a class="boton boton-secundario" href="{{ url_detalle }}">Cancelar</a>
+                    <button class="boton boton-primario" name="paso" value="revisar" type="submit">Revisar cambio</button>
+                </div>
+            {% else %}
+                {% for error in formulario.cancha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                <p class="texto-secundario">No hay otra cancha activa y libre dentro del horario de funcionamiento para este turno.</p>
+                <div class="acciones-formulario"><a class="boton boton-secundario" href="{{ url_detalle }}">Volver al detalle</a></div>
+            {% endif %}
+        </form>
+    </section>
+</div>
+{% endblock %}

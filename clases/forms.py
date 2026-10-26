@@ -2,7 +2,8 @@ from django import forms
 from django.db.models import Q
 
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
-from instalaciones.models import Cancha
+from instalaciones.models import Cancha, Sede
+from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
 from .models import TurnoPlanilla
@@ -68,3 +69,29 @@ class ClaseForm(forms.Form):
             "modalidad": self.cleaned_data["modalidad"] or None,
             "observaciones": self.cleaned_data["observaciones"],
         }
+
+
+class ClaseCanchaForm(forms.Form):
+    cancha = forms.ModelChoiceField(
+        label="Cancha de destino",
+        queryset=Cancha.objects.none(), empty_label="Elegí una cancha",
+        widget=forms.Select(attrs={"class": "form-control"}),
+        error_messages={
+            "required": "Elegí la cancha de destino.",
+            "invalid_choice": "Esa cancha ya no está disponible para este turno. Elegí otra y revisá el cambio.",
+        },
+    )
+
+    def __init__(self, *args, clase, **kwargs):
+        super().__init__(*args, **kwargs)
+        turno = clase.evento.turno
+        ocupadas = Evento.objects.filter(
+            turno__fecha=turno.fecha, turno__hora_inicio=turno.hora_inicio,
+        ).exclude(estado=Evento.Estado.ANULADO).values("turno__cancha_id")
+        self.fields["cancha"].queryset = Cancha.objects.filter(
+            Q(sede__horarios__dia_semana=turno.fecha.isoweekday()) & (
+                Q(sede__horarios__hora_inicio_1__lte=turno.hora_inicio, sede__horarios__hora_fin_1__gte=turno.hora_fin)
+                | Q(sede__horarios__hora_inicio_2__lte=turno.hora_inicio, sede__horarios__hora_fin_2__gte=turno.hora_fin)
+            ),
+            estado=Cancha.Estado.ACTIVA, sede__estado=Sede.Estado.ACTIVA,
+        ).exclude(pk=turno.cancha_id).exclude(pk__in=ocupadas).select_related("sede").order_by("sede__nombre", "nombre", "pk")

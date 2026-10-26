@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
@@ -14,11 +15,12 @@ from reservas.models import Evento
 from usuarios.models import Usuario
 
 from .consultas import consultar_clase, consultar_profesores, consultar_participantes
-from .forms import ClaseForm, ClaseTurnoForm
+from .forms import ClaseCanchaForm, ClaseForm, ClaseTurnoForm
 from .models import Asistencia, Clase, TurnoPlanilla
 from .permisos import exigir_administracion_clases
 from .servicios import (
-    consultar_edicion_clase, editar_clase, preparar_edicion_clase,
+    cambiar_cancha_clase, consultar_edicion_clase, editar_clase,
+    preparar_cambio_cancha, preparar_edicion_clase,
     preparar_registro_clase, registrar_clase, validar_ubicacion_clase,
 )
 
@@ -219,4 +221,53 @@ def clase_editar(request, pk):
         "hora": turno.hora_inicio, "hora_fin": turno.hora_fin,
         "url_cancelar": url_detalle,
         "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Editar", None)],
+    })
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def clase_cambiar_cancha(request, pk):
+    usuario = exigir_administracion_clases(request.user)
+    url_detalle = reverse("clases:clase_detalle", args=[pk])
+    try:
+        datos = consultar_edicion_clase(usuario, pk)
+    except Clase.DoesNotExist:
+        raise Http404("La clase no existe.") from None
+    except ValidationError as error:
+        for mensaje in error.messages:
+            messages.error(request, mensaje)
+        return redirect(url_detalle)
+    clase = datos["clase"]
+    turno = clase.evento.turno
+    inicio = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))
+    if timezone.localtime() >= inicio:
+        messages.error(request, "Sólo se puede cambiar de cancha antes del inicio de la clase.")
+        return redirect(url_detalle)
+    version = request.POST.get("version", "") if request.method == "POST" else datos["version"]
+    formulario = ClaseCanchaForm(request.POST if request.method == "POST" else None, clase=clase)
+    confirmacion = None
+    destino = None
+    if request.method == "POST" and formulario.is_valid():
+        destino = formulario.cleaned_data["cancha"]
+        paso = request.POST.get("paso")
+        try:
+            if paso == "confirmar":
+                cambiar_cancha_clase(usuario, pk, destino, confirmacion=request.POST.get("confirmacion", ""))
+                messages.success(request, "La clase cambió de cancha. La cancha original quedó disponible para ese turno.")
+                return redirect(url_detalle)
+            if paso == "revisar":
+                confirmacion = preparar_cambio_cancha(usuario, pk, destino, version=version)
+            elif paso != "editar":
+                raise ValidationError("La acción solicitada no es válida.")
+        except ValidationError as error:
+            formulario.add_error(None, error)
+        except Clase.DoesNotExist:
+            raise Http404("La clase no existe.") from None
+    return render(request, "clases/clase_cambiar_cancha.html", {
+        "clase": clase, "turno": turno, "formulario": formulario,
+        "version": version, "confirmacion": confirmacion, "destino": destino,
+        "hay_destinos": formulario.fields["cancha"].queryset.exists(),
+        "url_detalle": url_detalle,
+        "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Cambiar de cancha", None)],
     })
