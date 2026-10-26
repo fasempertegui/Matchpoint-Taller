@@ -307,3 +307,8 @@
         gap: 10px;
     }
 }
+
+.perfil-asignaciones { table-layout: fixed; }
+.perfil-asignaciones th:last-child { width: 45%; }
+.perfil-asignaciones td { overflow-wrap: anywhere; }
+.perfil-contador-retirados { font-size: .9rem; font-weight: 400; }

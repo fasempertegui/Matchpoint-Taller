@@ -1,17 +1,23 @@
+from datetime import datetime, time, timedelta
 from urllib.parse import urlencode
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
-from django.shortcuts import render
+from django.core.exceptions import ValidationError
+from django.http import Http404, JsonResponse
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_http_methods
 
 from reservas.models import Evento
 from usuarios.models import Usuario
 
-from .consultas import consultar_clase
+from .consultas import consultar_clase, consultar_profesores, consultar_participantes
+from .forms import ClaseCrearForm, ClaseTurnoForm
 from .models import Asistencia, Clase, TurnoPlanilla
+from .permisos import exigir_administracion_clases
+from .servicios import preparar_registro_clase, registrar_clase, validar_ubicacion_clase
 
 
 @login_required
@@ -43,6 +49,13 @@ def clase_detalle(request, pk):
     for asistencia in asistencias.values():
         asistencia["estado_texto"] = Asistencia.Estado(asistencia["estado"]).label
 
+    for seccion in ("profesores", "participantes"):
+        clase[seccion].sort(key=lambda persona: (
+            persona["estado"] != "activo", persona["nombre"].casefold(), persona["usuario_id"],
+        ))
+        clase[f"{seccion}_vigentes"] = sum(persona["estado"] == "activo" for persona in clase[seccion])
+        clase[f"{seccion}_retirados"] = len(clase[seccion]) - clase[f"{seccion}_vigentes"]
+
     url_agenda = reverse("agenda:agenda") + "?" + urlencode({
         "sede": clase["sede"]["id"],
         "cancha": clase["cancha"]["id"],
@@ -52,6 +65,10 @@ def clase_detalle(request, pk):
     return render(request, "clases/clase_detalle.html", {
         "clase": clase,
         "puede_consultar_grupo": puede_consultar_grupo,
+        "solo_propios": not puede_consultar_grupo,
+        "mostrar_asistencia": clase["estado"] == Evento.Estado.FINALIZADO,
+        "titulo_profesores": "Profesores" if puede_consultar_grupo else "Mi asignación como profesor",
+        "titulo_participantes": "Participantes" if puede_consultar_grupo else "Mi participación",
         "registrado_por": responsables.get(clase["registrado_por_id"]),
         "anulado_por": responsables.get(clase["anulado_por_id"]),
         "finalizado_por": responsables.get(clase["finalizado_por_id"]),
@@ -62,4 +79,89 @@ def clase_detalle(request, pk):
             ("Agenda", url_agenda),
             (f"Clase {clase['id']}", None),
         ],
+    })
+
+
+@login_required
+@never_cache
+@require_GET
+def buscar_personas(request):
+    exigir_administracion_clases(request.user)
+    busqueda = request.GET.get("q", "").strip()[:100]
+    tipo = request.GET.get("tipo")
+    if tipo not in ("profesores", "participantes"):
+        return JsonResponse({"error": "Elegí profesores o participantes."}, status=400)
+    if len(busqueda) < 2:
+        return JsonResponse({"resultados": [], "hay_mas": False})
+    if tipo == "profesores":
+        personas = consultar_profesores(request.user, busqueda)
+    else:
+        personas = consultar_participantes(request.user, busqueda, request.GET.get("todos") == "1")
+    excluidos = [
+        int(valor) for valor in request.GET.getlist("excluir")[:200]
+        if valor.isdecimal() and len(valor) < 19
+    ]
+    filas = list(personas.exclude(pk__in=excluidos)[:11])
+    return JsonResponse({
+        "resultados": [
+            {
+                "id": fila["id"],
+                "nombre": f"{fila['first_name']} {fila['last_name']}".strip() or fila["username"],
+                "usuario": fila["username"],
+            }
+            for fila in filas[:10]
+        ],
+        "hay_mas": len(filas) > 10,
+    })
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def clase_crear(request):
+    usuario = exigir_administracion_clases(request.user)
+    ubicacion = ClaseTurnoForm(request.GET)
+    if not ubicacion.is_valid():
+        messages.error(request, "Elegí una cancha, fecha y hora válidas desde la agenda.")
+        return redirect("agenda:agenda")
+    cancha = ubicacion.cleaned_data["cancha"]
+    fecha = ubicacion.cleaned_data["fecha"]
+    hora = time(ubicacion.cleaned_data["hora"])
+    url_agenda = reverse("agenda:agenda") + "?" + urlencode({
+        "sede": cancha.sede_id, "cancha": cancha.pk, "fecha": fecha.isoformat(), "hora": hora.hour,
+    })
+    formulario = ClaseCrearForm(request.POST if request.method == "POST" else None)
+    revision = None
+    impedimento = None
+    try:
+        validar_ubicacion_clase(cancha, fecha, hora)
+    except ValidationError as error:
+        impedimento = " ".join(error.messages)
+    if request.method == "POST" and formulario.is_valid():
+        paso = request.POST.get("paso")
+        try:
+            if impedimento:
+                raise ValidationError(impedimento)
+            if paso == "confirmar":
+                clase = registrar_clase(
+                    usuario, cancha, fecha, hora, **formulario.parametros(),
+                    confirmacion=request.POST.get("confirmacion", ""),
+                )
+                messages.success(request, "La clase fue creada.")
+                return redirect("clases:clase_detalle", pk=clase.pk)
+            if paso == "revisar":
+                revision = preparar_registro_clase(usuario, cancha, fecha, hora, **formulario.parametros())
+            elif paso != "editar":
+                raise ValidationError("La acción solicitada no es válida.")
+        except ValidationError as error:
+            formulario.add_error(None, error)
+    return render(request, "clases/clase_crear.html", {
+        "formulario": formulario, "revision": revision,
+        "profesores": formulario.seleccionados("profesores"),
+        "participantes": formulario.seleccionados("participantes"),
+        "modalidad_texto": dict(formulario.fields["modalidad"].choices).get(formulario["modalidad"].value(), "Sin especificar"),
+        "cancha": cancha, "fecha": fecha, "hora": hora,
+        "hora_fin": (datetime.combine(fecha, hora) + timedelta(hours=1)).time(),
+        "url_agenda": url_agenda, "impedimento": impedimento,
+        "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", url_agenda), ("Crear clase", None)],
     })

@@ -107,11 +107,11 @@ def consultar_clase(usuario, clase_id):
 
 def _buscar_usuarios(usuarios, busqueda):
     busqueda = busqueda.strip()
-    if busqueda:
+    for termino in busqueda.split():
         usuarios = usuarios.filter(
-            Q(first_name__icontains=busqueda)
-            | Q(last_name__icontains=busqueda)
-            | Q(username__icontains=busqueda)
+            Q(first_name__icontains=termino)
+            | Q(last_name__icontains=termino)
+            | Q(username__icontains=termino)
         )
     return usuarios.order_by("last_name", "first_name", "pk").values(
         "id", "first_name", "last_name", "username",

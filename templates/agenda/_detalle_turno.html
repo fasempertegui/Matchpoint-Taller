@@ -83,6 +83,11 @@
         {% elif not detalle.evento %}
             <p class="agenda-impedimento">{{ detalle.impedimento }}</p>
         {% endif %}
+        {% if detalle.puede_crear_clase %}
+            <div class="agenda-acciones">
+                <a class="boton boton-secundario boton-chico" href="{{ detalle.url_crear_clase }}">Crear clase</a>
+            </div>
+        {% endif %}
         {% if detalle.puede_anular or detalle.puede_liberar_bloqueo or detalle.puede_bloquear %}
             <div{% if detalle.puede_anular or detalle.puede_liberar_bloqueo or detalle.reserva %} class="agenda-acciones-anulacion"{% endif %}>
             {% if detalle.puede_anular %}

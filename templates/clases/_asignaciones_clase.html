@@ -1,0 +1,24 @@
+<section class="perfil-seccion" aria-labelledby="clase-{{ identificador }}-titulo">
+    <h2 id="clase-{{ identificador }}-titulo">{{ titulo }} ({{ vigentes }}){% if retirados %} <span class="texto-secundario perfil-contador-retirados">({{ retirados }} retirado{{ retirados|pluralize:"s" }})</span>{% endif %}</h2>
+    {% if solo_propios %}<p class="perfil-descripcion">Sólo se muestra tu información personal.</p>{% endif %}
+    <div class="tabla-contenedor">
+        <table class="perfil-asignaciones" aria-labelledby="clase-{{ identificador }}-titulo">
+            <thead><tr>
+                <th scope="col">Nombre</th>
+                <th scope="col" title="Indica si la persona sigue asignada a esta clase. No refleja asistencia ni el estado de su cuenta." aria-label="Estado en la clase. Indica si la persona sigue asignada a esta clase. No refleja asistencia ni el estado de su cuenta.">Estado en la clase</th>
+            </tr></thead>
+            <tbody>
+                {% if not vigentes %}<tr><td colspan="2" class="texto-secundario">{{ vacio }}</td></tr>{% endif %}
+                {% for persona in personas %}
+                    <tr{% if persona.estado == 'inactivo' %} class="texto-secundario"{% endif %}>
+                        <td>{{ persona.nombre }}
+                            {% if persona.observaciones %}<p class="texto-secundario">{{ persona.observaciones|linebreaksbr }}</p>{% endif %}
+                            {% if mostrar_asistencia and persona.asistencia %}<p class="texto-secundario">Asistencia: {{ persona.asistencia }}</p>{% endif %}
+                        </td>
+                        <td>{% if persona.estado == 'activo' %}{% include "componentes/badge_estado.html" with estado="activo" texto="Asignado" only %}{% else %}{% include "componentes/badge_estado.html" with estado="inactivo" texto="Retirado" only %}{% endif %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>

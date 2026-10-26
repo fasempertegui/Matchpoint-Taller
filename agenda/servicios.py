@@ -133,7 +133,15 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
                 pass
             else:
                 puede_finalizar = es_administrador
+        puede_crear_clase = (
+            es_administrador and evento is None and en_rango and habilitado
+            and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
+        )
         return {
+            "puede_crear_clase": puede_crear_clase,
+            "url_crear_clase": reverse("clases:clase_crear") + "?" + urlencode({
+                "cancha": cancha.pk, "fecha": dia.isoformat(), "hora": hora,
+            }) if puede_crear_clase else None,
             "cancha": cancha, "fecha": dia, "hora": time(hora), "fin": fin.time(),
             "evento": evento if puede_ver_evento else None,
             "reserva": reserva if puede_ver_evento else None,
@@ -141,7 +149,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             "clase": clase if puede_ver_evento else None,
             "ocupado_por_tercero": ocupado_por_tercero,
             "habilitado": habilitado, "en_rango": en_rango,
-            "consultable": evento is not None or fin > ahora,
+            "consultable": evento is not None or fin > ahora or puede_crear_clase,
             "iniciado": inicio <= ahora, "impedimento": impedimento,
             "estado_temporal": temporal if puede_ver_evento else "",
             "puede_reservar": puede_reservar and evento is None and not impedimento,

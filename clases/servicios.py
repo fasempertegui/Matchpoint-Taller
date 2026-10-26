@@ -8,10 +8,10 @@ from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
 from instalaciones.models import Cancha, Sede
-from reservas.models import Evento, Turno
+from reservas.models import Evento, Reserva, Turno
 from usuarios.models import Rol, Usuario
 
-from .models import Asistencia, Clase, ClaseAlumno, ClaseProfesor
+from .models import Asistencia, Clase, ClaseAlumno, ClaseProfesor, Feriado
 from .permisos import exigir_acceso_clases, exigir_administracion_clases, puede_dictar_clase
 from .validaciones import (
     normalizar_registros_asistencia,
@@ -61,6 +61,82 @@ def _bloquear_clase(clase_id):
     return clase
 
 
+def validar_ubicacion_clase(cancha, fecha, hora_inicio):
+    validar_datos_clase(fecha, hora_inicio, None, "")
+    if cancha.estado != Cancha.Estado.ACTIVA or cancha.sede.estado != Sede.Estado.ACTIVA:
+        raise ValidationError("La sede y la cancha deben estar activas para crear una clase.")
+    validar_horario_clase(cancha.sede, fecha, hora_inicio)
+    if Evento.objects.filter(
+        turno__cancha=cancha, turno__fecha=fecha, turno__hora_inicio=hora_inicio,
+    ).exclude(estado=Evento.Estado.ANULADO).exists():
+        raise ValidationError("El turno ya está ocupado por otra actividad.")
+
+
+def _revision_registro_clase(
+    usuario, cancha, fecha, hora_inicio, usuarios,
+    profesores_ids, participantes_ids, modalidad, observaciones,
+):
+    advertencias = []
+    advertencias_participantes = []
+    feriado = Feriado.objects.filter(fecha=fecha).first()
+    if feriado is not None:
+        advertencias.append(f"La fecha es feriado ({feriado.descripcion}). La clase se creará como una excepción manual.")
+    if modalidad == "grupal" and len(participantes_ids) > 6:
+        advertencias_participantes.append("Superás el máximo recomendado de 6 participantes para una clase grupal.")
+    if modalidad == "individual" and len(participantes_ids) > 1:
+        advertencias_participantes.append(f"La clase individual tiene {len(participantes_ids)} participantes. Podés continuar si está acordado.")
+    reservas = list(Reserva.objects.filter(
+        organizador_id__in=profesores_ids | participantes_ids,
+        evento__turno__fecha=fecha, evento__turno__hora_inicio=hora_inicio,
+    ).exclude(evento__estado=Evento.Estado.ANULADO).select_related(
+        "evento__turno__cancha__sede",
+    ).order_by("pk"))
+    for reserva in reservas:
+        turno = reserva.evento.turno
+        advertencias.append(
+            f"{usuarios[reserva.organizador_id]} organiza la reserva {reserva.numero} en "
+            f"{turno.cancha.sede.nombre}, {turno.cancha.nombre}, en el mismo horario."
+        )
+    datos = {
+        "usuario": usuario.pk, "cancha": cancha.pk, "sede": cancha.sede_id,
+        "fecha": fecha.isoformat(), "hora": hora_inicio.isoformat(),
+        "profesores": sorted(profesores_ids), "participantes": sorted(participantes_ids),
+        "nombres": {str(pk): str(usuarios[pk]) for pk in sorted(profesores_ids | participantes_ids)},
+        "modalidad": modalidad, "observaciones": observaciones.strip(),
+        "advertencias": advertencias,
+        "advertencias_participantes": advertencias_participantes,
+        "reservas": [[reserva.pk, reserva.evento.actualizado_en.isoformat()] for reserva in reservas],
+    }
+    return datos
+
+
+def preparar_registro_clase(
+    usuario, cancha, fecha, hora_inicio, profesores_ids,
+    participantes_ids=(), modalidad=None, observaciones="",
+):
+    usuario = exigir_administracion_clases(usuario)
+    profesores_ids = normalizar_usuarios_clase(profesores_ids)
+    participantes_ids = normalizar_usuarios_clase(participantes_ids)
+    modalidad = modalidad or None
+    validar_datos_clase(fecha, hora_inicio, modalidad, observaciones)
+    usuarios = {
+        persona.pk: persona for persona in Usuario.objects.filter(
+            pk__in=profesores_ids | participantes_ids,
+        ).prefetch_related("roles__rol")
+    }
+    validar_usuarios_clase(usuarios, profesores_ids, participantes_ids)
+    validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, fecha, hora_inicio)
+    validar_ubicacion_clase(cancha, fecha, hora_inicio)
+    datos = _revision_registro_clase(
+        usuario, cancha, fecha, hora_inicio, usuarios, profesores_ids, participantes_ids, modalidad, observaciones,
+    )
+    return {
+        "advertencias": datos["advertencias"],
+        "advertencias_participantes": datos["advertencias_participantes"],
+        "confirmacion": signing.dumps(datos, salt="clases.registro", compress=True),
+    }
+
+
 @transaction.atomic
 def registrar_clase(
     registrado_por,
@@ -71,6 +147,8 @@ def registrar_clase(
     participantes_ids=(),
     modalidad=None,
     observaciones="",
+    *,
+    confirmacion,
 ):
     registrado_por = exigir_administracion_clases(registrado_por)
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
@@ -99,6 +177,17 @@ def registrar_clase(
     turno = Turno.objects.select_for_update().get(pk=turno.pk)
     if Evento.objects.filter(turno=turno).exclude(estado=Evento.Estado.ANULADO).exists():
         raise ValidationError("El turno ya está ocupado por otra actividad.")
+
+    try:
+        revisado = signing.loads(confirmacion, salt="clases.registro", max_age=900)
+    except signing.BadSignature:
+        raise ValidationError("La revisión venció o no es válida. Revisá la clase nuevamente.") from None
+    actual = _revision_registro_clase(
+        registrado_por, cancha, fecha, hora_inicio, usuarios,
+        profesores_ids, participantes_ids, modalidad, observaciones,
+    )
+    if revisado != actual:
+        raise ValidationError("Los datos o las advertencias cambiaron. Revisá la clase antes de confirmar.")
 
     evento = Evento.objects.create(
         turno=turno,

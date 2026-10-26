@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}{% if revision %}Revisar{% else %}Crear{% endif %} clase | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}">{% endblock %}
+
+{% block contenido %}
+<header class="clase-encabezado">
+    <div><p class="texto-secundario">{% if revision %}Último paso{% else %}Clase manual{% endif %}</p><h1>{% if revision %}Revisar clase{% else %}Crear clase{% endif %}</h1></div>
+    <a class="boton boton-secundario boton-chico" href="{{ url_agenda }}">Volver a agenda</a>
+</header>
+<div class="clase-distribucion">
+    <aside class="tarjeta clase-turno" aria-labelledby="clase-turno-titulo">
+        <h2 id="clase-turno-titulo">Turno seleccionado</h2>
+        <p class="clase-turno-fecha">{{ fecha|date:"l d/m/Y"|capfirst }}</p>
+        <p class="clase-turno-hora">{{ hora|time:"H:i" }}–{{ hora_fin|time:"H:i" }}</p>
+        <p>{{ cancha.sede.nombre }}<br><strong>{{ cancha.nombre }}</strong></p>
+        <p class="nota-campo">Para elegir otra fecha, hora o cancha, volvé a la agenda.</p>
+    </aside>
+    <section class="tarjeta clase-contenido{% if revision %} clase-revision{% endif %}" aria-label="{% if revision %}Resumen de la clase{% else %}Datos de la clase{% endif %}">
+        {% if impedimento %}<div class="mensaje mensaje-error" role="alert">{{ impedimento }}</div>{% endif %}
+        {% if not impedimento or formulario.is_bound %}
+        <form method="post" novalidate data-clase-formulario>
+            {% csrf_token %}
+            {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+            {% if revision %}
+                {{ formulario.profesores }}{{ formulario.participantes }}
+                {% if formulario.buscar_todos.value %}<input type="hidden" name="buscar_todos" value="on">{% endif %}
+                <input type="hidden" name="modalidad" value="{{ formulario.modalidad.value|default:'' }}">
+                <textarea name="observaciones" hidden>{{ formulario.observaciones.value|default:'' }}</textarea>
+                <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+                <div class="clase-revision-cabecera">
+                    <h2>Resumen de la clase</h2>
+                    <span class="clase-revision-modalidad">{{ modalidad_texto }}</span>
+                </div>
+                <div class="clase-revision-personas">
+                    <section aria-labelledby="revision-profesores">
+                        <h3 id="revision-profesores">Profesores <span>({{ profesores|length }})</span></h3>
+                        {% if profesores %}
+                            <ul class="clase-revision-nombres">{% for persona in profesores %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% endfor %}</ul>
+                        {% else %}<p class="clase-revision-vacio">Sin profesores asignados.</p>{% endif %}
+                    </section>
+                    <section aria-labelledby="revision-participantes">
+                        <h3 id="revision-participantes"{% if revision.advertencias_participantes %} class="clase-contador-advertencia"{% endif %}>Participantes <span>({{ participantes|length }})</span></h3>
+                        {% if revision.advertencias_participantes %}
+                            <div class="clase-aviso-participantes" role="alert">
+                                <span aria-hidden="true">⚠</span>
+                                <div>{% for advertencia in revision.advertencias_participantes %}<p>{{ advertencia }}</p>{% endfor %}</div>
+                            </div>
+                        {% endif %}
+                        {% if participantes %}
+                            <ul class="clase-revision-nombres{% if participantes|length >= 4 %} clase-revision-nombres-columnas{% endif %}">{% for persona in participantes %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% endfor %}</ul>
+                        {% else %}<p class="clase-revision-vacio">Sin participantes asignados.</p>{% endif %}
+                    </section>
+                </div>
+                {% if formulario.observaciones.value %}
+                    <section class="clase-revision-observaciones"><h3>Observaciones</h3><p class="clase-observaciones">{{ formulario.observaciones.value|linebreaksbr }}</p></section>
+                {% endif %}
+                {% if revision.advertencias %}
+                    <div class="mensaje mensaje-warning" role="alert">
+                        <strong>Revisá antes de crear la clase</strong>
+                        <ul>{% for advertencia in revision.advertencias %}<li>{{ advertencia }}</li>{% endfor %}</ul>
+                        <p>Podés continuar si estas condiciones están acordadas.</p>
+                    </div>
+                {% endif %}
+                <div class="acciones-formulario clase-revision-acciones">
+                    <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a editar</button>
+                    <button class="boton boton-primario" name="paso" value="confirmar" type="submit">Crear clase</button>
+                </div>
+            {% else %}
+                <noscript><p class="mensaje mensaje-info">Para buscar y agregar personas necesitás habilitar JavaScript.</p></noscript>
+                <fieldset class="clase-modalidad">
+                    <legend>Modalidad</legend>
+                    <div class="clase-modalidad-opciones">
+                        {% for opcion in formulario.modalidad %}<label>{{ opcion.tag }}<span>{{ opcion.choice_label }}</span></label>{% endfor %}
+                    </div>
+                    {% for error in formulario.modalidad.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </fieldset>
+                {% include "clases/_selector_personas.html" with campo=formulario.profesores seleccionados=profesores titulo="Profesores" etiqueta="Agregar profesor" vacio="Todavía no agregaste profesores." only %}
+                {% include "clases/_selector_personas.html" with campo=formulario.participantes seleccionados=participantes titulo="Participantes" etiqueta="Agregar participante" vacio="Podés crear la clase sin participantes y agregarlos después." ampliar_busqueda=formulario.buscar_todos.value only %}
+                <section class="clase-observaciones-edicion" data-observaciones>
+                    <button class="boton boton-secundario clase-agregar-observaciones" type="button"
+                            aria-expanded="{{ formulario.observaciones.value|yesno:'true,false' }}" aria-controls="{{ formulario.observaciones.id_for_label }}"
+                            data-agregar-observaciones{% if formulario.observaciones.value %} hidden{% endif %}>
+                        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                        Agregar observaciones
+                    </button>
+                    <div class="grupo-campo" data-campo-observaciones{% if not formulario.observaciones.value %} hidden{% endif %}>
+                        <label for="{{ formulario.observaciones.id_for_label }}">Observaciones <span class="texto-secundario clase-opcional">(opcional)</span></label>
+                        {{ formulario.observaciones }}
+                        {% for error in formulario.observaciones.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </section>
+                {% if not impedimento %}
+                <div class="acciones-formulario">
+                    <a class="boton boton-secundario" href="{{ url_agenda }}">Cancelar</a>
+                    <button class="boton boton-primario" name="paso" value="revisar" type="submit">Revisar clase</button>
+                </div>
+                {% endif %}
+            {% endif %}
+        </form>
+        {% endif %}
+    </section>
+</div>
+<script src="{% static 'js/clase-crear.js' %}" defer></script>
+{% endblock %}

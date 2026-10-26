@@ -21,54 +21,25 @@
             <section class="perfil-seccion" aria-labelledby="clase-datos-titulo">
                 <h2 id="clase-datos-titulo">Datos de la clase</h2>
                 <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Sede</dt><dd>{{ clase.sede.nombre }}</dd></div>
-                    <div class="perfil-fila"><dt>Cancha</dt><dd>{{ clase.cancha.nombre }}</dd></div>
-                    <div class="perfil-fila"><dt>Fecha</dt><dd>{{ clase.fecha|date:"l d/m/Y"|capfirst }}</dd></div>
-                    <div class="perfil-fila"><dt>Horario</dt><dd>{{ clase.hora_inicio|time:"H:i" }}–{{ clase.hora_fin|time:"H:i" }}</dd></div>
+                    <div class="perfil-fila"><dt>Sede y cancha</dt><dd>{{ clase.sede.nombre }} · {{ clase.cancha.nombre }}</dd></div>
+                    <div class="perfil-fila"><dt>Fecha y horario</dt><dd>{{ clase.fecha|date:"d/m/Y" }} · {{ clase.hora_inicio|time:"H:i" }} – {{ clase.hora_fin|time:"H:i" }}</dd></div>
                     <div class="perfil-fila"><dt>Modalidad</dt><dd>{{ clase.modalidad_texto }}</dd></div>
                     <div class="perfil-fila"><dt>Origen</dt><dd>{% if clase.es_generada %}Generada desde la planilla{% else %}Creación manual{% endif %}</dd></div>
                 </dl>
             </section>
             {% if puede_consultar_grupo or clase.profesores %}
-            <section class="perfil-seccion" aria-labelledby="clase-profesores-titulo">
-                <h2 id="clase-profesores-titulo">{% if puede_consultar_grupo %}Profesores{% else %}Mi asignación como profesor{% endif %}</h2>
-                {% if clase.profesores %}
-                    <ul class="perfil-roles-opciones">
-                        {% for profesor in clase.profesores %}
-                            <li class="perfil-rol-opcion"><span>{{ profesor.nombre }}</span>{% include "componentes/badge_estado.html" with estado=profesor.estado texto=profesor.estado|capfirst only %}</li>
-                        {% endfor %}
-                    </ul>
-                {% else %}<p class="perfil-descripcion">{% if puede_consultar_grupo %}Sin profesores registrados.{% else %}No tenés una asignación como profesor en esta clase.{% endif %}</p>{% endif %}
-            </section>
+                {% include "clases/_asignaciones_clase.html" with identificador="profesores" titulo=titulo_profesores personas=clase.profesores vigentes=clase.profesores_vigentes retirados=clase.profesores_retirados vacio="Sin profesores en la clase" solo_propios=False only %}
             {% endif %}
             {% if puede_consultar_grupo or clase.participantes or asistencias_adicionales %}
-            <section class="perfil-seccion" aria-labelledby="clase-participantes-titulo">
-                <h2 id="clase-participantes-titulo">{% if puede_consultar_grupo %}Participantes{% else %}Mi participación{% endif %}</h2>
-                {% if not puede_consultar_grupo %}<p class="perfil-descripcion">Sólo se muestra tu información personal.</p>{% endif %}
-                {% if clase.participantes %}
-                    <div class="tabla-contenedor">
-                        <table>
-                            <caption>Asignaciones de participantes{% if clase.estado == 'finalizado' %} y asistencia{% endif %}</caption>
-                            <thead><tr><th scope="col">Nombre</th><th scope="col">Asignación</th>{% if clase.estado == 'finalizado' %}<th scope="col">Asistencia</th>{% endif %}</tr></thead>
-                            <tbody>
-                                {% for participante in clase.participantes %}
-                                    <tr>
-                                        <td>{{ participante.nombre }}{% if participante.observaciones %}<p class="texto-secundario">{{ participante.observaciones|linebreaksbr }}</p>{% endif %}</td>
-                                        <td>{% include "componentes/badge_estado.html" with estado=participante.estado texto=participante.estado|capfirst only %}</td>
-                                        {% if clase.estado == 'finalizado' %}<td>{{ participante.asistencia }}</td>{% endif %}
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}<p class="perfil-descripcion">{% if puede_consultar_grupo %}Sin participantes asignados.{% else %}No tenés una asignación como participante en esta clase.{% endif %}</p>{% endif %}
+                {% include "clases/_asignaciones_clase.html" with identificador="participantes" titulo=titulo_participantes personas=clase.participantes vigentes=clase.participantes_vigentes retirados=clase.participantes_retirados vacio="Sin participantes en la clase" solo_propios=solo_propios mostrar_asistencia=mostrar_asistencia only %}
                 {% if clase.estado == 'finalizado' and asistencias_adicionales %}
-                    <h3>Asistencia sin asignación previa</h3>
+                <section class="perfil-seccion" aria-labelledby="clase-asistencia-adicional-titulo">
+                    <h2 id="clase-asistencia-adicional-titulo">Asistencia sin asignación previa</h2>
                     <ul class="perfil-roles-opciones">
                         {% for asistencia in asistencias_adicionales %}<li class="perfil-rol-opcion"><span>{{ asistencia.nombre }}</span><span>{{ asistencia.estado_texto }}</span></li>{% endfor %}
                     </ul>
+                </section>
                 {% endif %}
-            </section>
             {% endif %}
             {% if clase.observaciones %}
                 <section class="perfil-seccion" aria-labelledby="clase-observaciones-titulo">

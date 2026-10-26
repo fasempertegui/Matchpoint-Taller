@@ -1,0 +1,35 @@
+<section class="clase-selector" data-selector-personas data-tipo="{{ campo.name }}" data-url="{% url 'clases:buscar_personas' %}">
+    <div class="clase-seccion-titulo">
+        <h2 id="{{ campo.name }}-titulo">{{ titulo }} <span class="clase-cantidad">(<span data-cantidad>{{ seleccionados|length }}</span>)</span>{% if campo.field.required %} <span aria-hidden="true">*</span>{% endif %}</h2>
+    </div>
+    {% if campo.name == 'participantes' %}
+        <div class="clase-aviso-participantes" data-aviso-cantidad role="status" hidden><span aria-hidden="true">⚠</span><p data-mensaje-cantidad></p></div>
+    {% endif %}
+    <ul class="clase-seleccionados" aria-labelledby="{{ campo.name }}-titulo" data-seleccionados>
+        {% for persona in seleccionados %}
+            <li data-persona="{{ persona.pk }}">
+                <span>{{ persona }}<small>{{ persona.username }}</small></span>
+                <input type="hidden" name="{{ campo.name }}" value="{{ persona.pk }}">
+                <button type="button" class="clase-quitar" data-quitar aria-label="Quitar a {{ persona }}">×</button>
+            </li>
+        {% endfor %}
+    </ul>
+    <p class="clase-vacio texto-secundario" data-vacio{% if seleccionados %} hidden{% endif %}>{{ vacio }}</p>
+    <div class="clase-buscador">
+        <label class="clase-etiqueta-oculta" for="buscar-{{ campo.name }}">{{ etiqueta }}</label>
+        <div class="clase-campo-busqueda">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+            <input class="form-control" id="buscar-{{ campo.name }}" type="search" autocomplete="off" maxlength="100"
+                   placeholder="Buscar por nombre, apellido o usuario (mín. 2 letras)" aria-controls="resultados-{{ campo.name }}" data-busqueda>
+        </div>
+        {% if campo.name == 'participantes' %}
+            <div class="campo-opcion clase-ampliar">
+                <input id="participantes-todos" name="buscar_todos" type="checkbox" data-todos{% if ampliar_busqueda %} checked{% endif %}>
+                <label for="participantes-todos">Buscar también fuera de alumnos</label>
+            </div>
+        {% endif %}
+        <ul class="clase-resultados" id="resultados-{{ campo.name }}" aria-label="Coincidencias" data-resultados hidden></ul>
+        <p class="clase-busqueda-estado" role="status" aria-live="polite" data-estado></p>
+    </div>
+    {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+</section>
