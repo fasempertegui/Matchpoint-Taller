@@ -196,3 +196,14 @@ def validar_datos_feriado(fecha, descripcion):
         raise ValidationError("Indicá la descripción del feriado.")
     if len(descripcion.strip()) > 150:
         raise ValidationError("La descripción del feriado no puede superar 150 caracteres.")
+
+
+def validar_periodo_generacion(fecha_desde, fecha_hasta):
+    if any(not isinstance(fecha, date) or isinstance(fecha, datetime) for fecha in (fecha_desde, fecha_hasta)):
+        raise ValidationError("Indicá fechas válidas para generar clases.")
+    if fecha_hasta < fecha_desde:
+        raise ValidationError("La fecha final no puede ser anterior a la inicial.")
+    if fecha_desde < FECHA_INICIO_OPERACIONES or fecha_hasta > fecha_maxima_agenda():
+        raise ValidationError("El período de generación debe estar dentro del calendario operativo de clases.")
+    if (fecha_hasta - fecha_desde).days + 1 > 62:
+        raise ValidationError("La generación no puede superar 62 días corridos inclusive.")
