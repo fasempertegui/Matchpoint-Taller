@@ -2,17 +2,20 @@ import hashlib
 import json
 from datetime import datetime, time, timedelta
 
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from auditoria.contexto import contexto_auditoria
 from bloqueos.models import Bloqueo
 from bloqueos.servicios import anular_bloqueo, registrar_bloqueo, validar_anulacion_bloqueo
+from clases.permisos import exigir_administracion_clases
+from clases.servicios import anular_clase, bloquear_usuarios_clase
+from clases.validaciones import validar_anulacion_clase
 from common.fechas import fecha_maxima_agenda
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Turno
-from reservas.servicios import anular_reserva, exigir_acceso_reservas, validar_anulacion_reserva
-from usuarios.models import Usuario
+from reservas.servicios import anular_reserva, validar_anulacion_reserva
 
 
 def preparar_operacion(sede, fecha, parametros):
@@ -53,7 +56,9 @@ def preparar_operacion(sede, fecha, parametros):
     }
     eventos = Evento.objects.filter(
         turno__cancha__in=canchas, turno__fecha=fecha, turno__hora_inicio__gte=corte,
-    ).exclude(estado=Evento.Estado.ANULADO).select_related("turno", "reserva__organizador", "bloqueo")
+    ).exclude(estado=Evento.Estado.ANULADO).select_related("turno", "reserva__organizador", "bloqueo", "clase").prefetch_related(
+        "clase__profesores", "clase__alumnos",
+    )
     if hasta is not None:
         eventos = eventos.filter(turno__hora_inicio__lt=hasta)
     ocupacion = {(evento.turno.cancha_id, evento.turno.hora_inicio.hour): evento for evento in eventos}
@@ -67,13 +72,16 @@ def preparar_operacion(sede, fecha, parametros):
             fila = {
                 "cancha": cancha, "hora": time(hora), "fin": time(hora + 1),
                 "evento": evento, "accion": "", "conservado": "",
-                "actividad": "Turno libre", "identificador": "", "reserva": None, "bloqueo": None,
+                "actividad": "Turno libre", "identificador": "", "reserva": None, "bloqueo": None, "clase": None,
             }
             if evento:
                 fila["actividad"] = evento.get_tipo_display()
                 if evento.tipo == Evento.Tipo.RESERVA:
                     fila["reserva"] = evento.reserva
                     fila["identificador"] = evento.reserva.numero
+                elif evento.tipo == Evento.Tipo.CLASE:
+                    fila["clase"] = evento.clase
+                    fila["identificador"] = str(evento.clase)
                 elif evento.tipo == Evento.Tipo.BLOQUEO:
                     fila["bloqueo"] = evento.bloqueo
                     fila["identificador"] = evento.bloqueo.numero
@@ -81,8 +89,8 @@ def preparar_operacion(sede, fecha, parametros):
                 fila["conservado"] = "Finalizado"
             elif inicio <= ahora:
                 fila["conservado"] = "En curso" if inicio + timedelta(hours=1) > ahora else "Terminado"
-            elif evento and evento.tipo == Evento.Tipo.CLASE:
-                fila["conservado"] = "Clase conservada"
+            elif evento and evento.tipo == Evento.Tipo.CLASE and parametros["excluir_clases"]:
+                fila["conservado"] = "Clase excluida"
             elif evento and evento.tipo == Evento.Tipo.RESERVA and parametros["excluir_reservas"]:
                 fila["conservado"] = "Reserva excluida"
             elif evento and evento.tipo == Evento.Tipo.BLOQUEO and operacion == "bloquear":
@@ -94,9 +102,14 @@ def preparar_operacion(sede, fecha, parametros):
             elif operacion == "bloquear":
                 if fila["reserva"]:
                     validar_anulacion_reserva(fila["reserva"], True, ahora)
+                elif fila["clase"]:
+                    validar_anulacion_clase(fila["clase"], ahora)
                 fila["accion"] = "Anular y bloquear" if evento else "Crear bloqueo"
             elif fila["reserva"]:
                 validar_anulacion_reserva(fila["reserva"], True, ahora)
+                fila["accion"] = "Anular y liberar"
+            elif fila["clase"]:
+                validar_anulacion_clase(fila["clase"], ahora)
                 fila["accion"] = "Anular y liberar"
             elif fila["bloqueo"]:
                 validar_anulacion_bloqueo(fila["bloqueo"], ahora)
@@ -112,6 +125,21 @@ def preparar_operacion(sede, fecha, parametros):
         "fecha": fecha.isoformat(),
         "canchas": [[cancha.pk, cancha.nombre, cancha.estado] for cancha in canchas],
         "franjas": [[inicio.isoformat(), fin.isoformat()] for inicio, fin in franjas],
+        "clases": [
+            {
+                "id": fila["clase"].pk,
+                "modalidad": fila["clase"].modalidad,
+                "profesores": sorted([
+                    [vinculo.profesor_id, vinculo.estado, vinculo.actualizado_en.isoformat()]
+                    for vinculo in fila["clase"].profesores.all()
+                ]),
+                "participantes": sorted([
+                    [vinculo.usuario_id, vinculo.estado, vinculo.actualizado_en.isoformat()]
+                    for vinculo in fila["clase"].alumnos.all()
+                ]),
+            }
+            for fila in filas if fila["clase"] is not None
+        ],
         "filas": [
             [fila["cancha"].pk, fila["hora"].isoformat(), fila["accion"], fila["conservado"],
              fila["evento"].pk if fila["evento"] else None,
@@ -124,6 +152,7 @@ def preparar_operacion(sede, fecha, parametros):
     return {
         "acciones": acciones, "conservados": conservados, "canchas": canchas,
         "anulaciones": anulaciones, "reservas_a_anular": reservas_a_anular,
+        "clases_a_anular": sum(fila["clase"] is not None for fila in acciones),
         "bloqueos_a_crear": len(acciones) if operacion == "bloquear" else 0,
         "libres_sin_accion": sum(not fila["evento"] and not fila["accion"] for fila in filas),
         "huella": huella,
@@ -132,9 +161,18 @@ def preparar_operacion(sede, fecha, parametros):
 
 @transaction.atomic
 def ejecutar_operacion(usuario, sede_id, fecha, parametros, huella):
-    usuario = Usuario.objects.select_for_update().get(pk=usuario.pk)
-    if not exigir_acceso_reservas(usuario):
-        raise PermissionDenied
+    usuario = exigir_administracion_clases(usuario)
+    sede = Sede.objects.get(pk=sede_id)
+    seleccion = preparar_operacion(sede, fecha, parametros)
+    if seleccion["huella"] != huella:
+        raise ValidationError("La agenda o el horario cambió desde la vista previa. Revisá nuevamente las acciones.")
+    usuarios_ids = {usuario.pk}
+    for fila in seleccion["acciones"]:
+        if fila["clase"] is not None:
+            usuarios_ids.update(vinculo.profesor_id for vinculo in fila["clase"].profesores.all())
+            usuarios_ids.update(vinculo.usuario_id for vinculo in fila["clase"].alumnos.all())
+    usuarios = bloquear_usuarios_clase(usuarios_ids)
+    usuario = exigir_administracion_clases(usuarios.get(usuario.pk))
     sede = Sede.objects.select_for_update().get(pk=sede_id)
     list(Cancha.objects.select_for_update().filter(sede=sede, pk__in=parametros["canchas"]).order_by("pk"))
     # Todos los turnos se bloquean antes de los eventos, igual que en las acciones individuales.
@@ -153,18 +191,21 @@ def ejecutar_operacion(usuario, sede_id, fecha, parametros, huella):
     if previa["reservas_a_anular"] and len(motivo) < 25:
         raise ValidationError("El motivo de anulación debe tener al menos 25 caracteres.")
 
-    for fila in previa["acciones"]:
-        if parametros["operacion"] == "bloquear":
-            registrar_bloqueo(
-                usuario, fila["cancha"], fecha, fila["hora"], parametros["motivo_bloqueo"],
-                parametros["observaciones"], fila["evento"].pk if fila["evento"] else 0, motivo,
-            )
-        elif fila["reserva"]:
-            anular_reserva(usuario, fila["reserva"].pk, motivo)
-        else:
-            anular_bloqueo(usuario, fila["bloqueo"].pk, motivo, fila["cancha"], fecha, fila["hora"])
+    with contexto_auditoria(usuario):
+        for fila in previa["acciones"]:
+            if parametros["operacion"] == "bloquear":
+                registrar_bloqueo(
+                    usuario, fila["cancha"], fecha, fila["hora"], parametros["motivo_bloqueo"],
+                    parametros["observaciones"], fila["evento"].pk if fila["evento"] else 0, motivo,
+                )
+            elif fila["clase"]:
+                anular_clase(usuario, fila["clase"].pk, motivo)
+            elif fila["reserva"]:
+                anular_reserva(usuario, fila["reserva"].pk, motivo)
+            else:
+                anular_bloqueo(usuario, fila["bloqueo"].pk, motivo, fila["cancha"], fecha, fila["hora"])
 
-    ahora = timezone.localtime()
-    if any(timezone.make_aware(datetime.combine(fecha, fila["hora"])) <= ahora for fila in previa["acciones"]):
-        raise ValidationError("Un turno alcanzó su hora de inicio. No se aplicó la operación; revisá la vista previa.")
+        ahora = timezone.localtime()
+        if any(timezone.make_aware(datetime.combine(fecha, fila["hora"])) <= ahora for fila in previa["acciones"]):
+            raise ValidationError("Un turno alcanzó su hora de inicio. No se aplicó la operación; revisá la vista previa.")
     return previa

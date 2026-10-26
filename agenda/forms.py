@@ -135,6 +135,7 @@ class AgendaOperacionForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-control"}),
         error_messages={"invalid_choice": "Elegí una hora de fin posterior al inicio y dentro del horario del día."},
     )
+    excluir_clases = forms.BooleanField(label="Clases", required=False)
     excluir_reservas = forms.BooleanField(label="Reservas", required=False)
     excluir_bloqueos = forms.BooleanField(label="Bloqueos", required=False)
     motivo_bloqueo = forms.ChoiceField(
@@ -213,6 +214,7 @@ class AgendaOperacionForm(forms.Form):
             "alcance": "dia" if datos["horario"] == "dia" else "desde",
             "hora_desde": "" if datos["horario"] == "dia" else datos["horario"],
             "hora_hasta": datos["hora_hasta"],
+            "excluir_clases": datos["excluir_clases"],
             "excluir_reservas": datos["excluir_reservas"],
             "excluir_bloqueos": datos["excluir_bloqueos"],
             "motivo_bloqueo": datos["motivo_bloqueo"],
