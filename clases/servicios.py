@@ -25,7 +25,7 @@ from .validaciones import (
 )
 
 
-def _bloquear_usuarios_clase(usuarios_ids):
+def bloquear_usuarios_clase(usuarios_ids):
     # La inactivación de cuentas también bloquea primero a los administradores activos.
     list(
         Usuario.objects.select_for_update(of=("self",))
@@ -72,7 +72,7 @@ def registrar_clase(
     validar_datos_clase(fecha, hora_inicio, modalidad, observaciones)
     usuarios_ids = profesores_ids | participantes_ids | {registrado_por.pk}
 
-    usuarios = _bloquear_usuarios_clase(usuarios_ids)
+    usuarios = bloquear_usuarios_clase(usuarios_ids)
     registrado_por = exigir_administracion_clases(usuarios.get(registrado_por.pk))
     validar_usuarios_clase(usuarios, profesores_ids, participantes_ids)
     validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, fecha, hora_inicio)
@@ -132,7 +132,7 @@ def editar_clase(
         profesores_ids | participantes_ids | set(profesores_iniciales)
         | set(participantes_iniciales) | {modificado_por.pk}
     )
-    usuarios = _bloquear_usuarios_clase(usuarios_ids)
+    usuarios = bloquear_usuarios_clase(usuarios_ids)
     modificado_por = exigir_administracion_clases(usuarios.get(modificado_por.pk))
 
     sedes = {
@@ -256,7 +256,7 @@ def anular_clase(anulado_por, clase_id, motivo):
     inicial = Clase.objects.select_related("evento__turno__cancha").get(pk=clase_id)
     profesores_ids = set(inicial.profesores.values_list("profesor_id", flat=True))
     participantes_ids = set(inicial.alumnos.values_list("usuario_id", flat=True))
-    usuarios = _bloquear_usuarios_clase(profesores_ids | participantes_ids | {anulado_por.pk})
+    usuarios = bloquear_usuarios_clase(profesores_ids | participantes_ids | {anulado_por.pk})
     anulado_por = exigir_administracion_clases(usuarios.get(anulado_por.pk))
 
     origen = inicial.evento.turno
@@ -296,7 +296,7 @@ def anular_clase(anulado_por, clase_id, motivo):
 def finalizar_clase(clase_id, usuario=None):
     if usuario is not None:
         usuario = exigir_acceso_clases(usuario)
-        usuarios = _bloquear_usuarios_clase({usuario.pk})
+        usuarios = bloquear_usuarios_clase({usuario.pk})
         usuario = exigir_acceso_clases(usuarios.get(usuario.pk))
 
     clase = _bloquear_clase(clase_id)
@@ -346,7 +346,7 @@ def registrar_asistencia(usuario, clase_id, registros, finalizar=False):
     if not isinstance(finalizar, bool):
         raise ValidationError("Indicá si corresponde finalizar la clase junto con la asistencia.")
     registros = normalizar_registros_asistencia(registros)
-    usuarios = _bloquear_usuarios_clase(set(registros) | {usuario.pk})
+    usuarios = bloquear_usuarios_clase(set(registros) | {usuario.pk})
     usuario = exigir_acceso_clases(usuarios.get(usuario.pk))
     if set(registros) - usuarios.keys():
         raise ValidationError("Todos los usuarios de la asistencia deben existir.")
