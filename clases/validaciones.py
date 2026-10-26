@@ -44,12 +44,17 @@ def validar_horario_clase(sede, fecha, hora_inicio):
         raise ValidationError("La clase debe quedar íntegramente dentro de una franja de funcionamiento de la sede.")
 
 
-def validar_usuarios_clase(usuarios, profesores_ids, participantes_ids):
+def validar_usuarios_clase(
+    usuarios, profesores_ids, participantes_ids,
+    profesores_actuales=frozenset(), participantes_actuales=frozenset(),
+):
     if not profesores_ids:
         raise ValidationError("La clase debe tener al menos un profesor.")
     if profesores_ids & participantes_ids:
         raise ValidationError("Una persona no puede dictar y participar en la misma clase.")
-    for usuario_id in sorted(profesores_ids | participantes_ids):
+    nuevos_profesores = profesores_ids - profesores_actuales
+    nuevos_participantes = participantes_ids - participantes_actuales
+    for usuario_id in sorted(nuevos_profesores | nuevos_participantes):
         usuario = usuarios.get(usuario_id)
         if usuario is None or not usuario.is_active:
             raise ValidationError("Todos los profesores y participantes deben tener una cuenta activa.")
@@ -59,21 +64,26 @@ def validar_usuarios_clase(usuarios, profesores_ids, participantes_ids):
             raise ValidationError(f"{usuario} no tiene el rol Profesor.")
 
 
-def validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, fecha, hora_inicio):
+def validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, fecha, hora_inicio, clase_id=None):
     usuarios_ids = profesores_ids | participantes_ids
     profesores_ocupados = ClaseProfesor.objects.filter(
         profesor_id__in=usuarios_ids,
         estado=ClaseProfesor.Estado.ACTIVO,
         clase__evento__turno__fecha=fecha,
         clase__evento__turno__hora_inicio=hora_inicio,
-    ).exclude(clase__evento__estado=Evento.Estado.ANULADO).values_list("profesor_id", flat=True)
+    ).exclude(clase__evento__estado=Evento.Estado.ANULADO)
     participantes_ocupados = ClaseAlumno.objects.filter(
         usuario_id__in=usuarios_ids,
         estado=ClaseAlumno.Estado.ACTIVO,
         clase__evento__turno__fecha=fecha,
         clase__evento__turno__hora_inicio=hora_inicio,
-    ).exclude(clase__evento__estado=Evento.Estado.ANULADO).values_list("usuario_id", flat=True)
-    ocupados = set(profesores_ocupados) | set(participantes_ocupados)
+    ).exclude(clase__evento__estado=Evento.Estado.ANULADO)
+    if clase_id is not None:
+        profesores_ocupados = profesores_ocupados.exclude(clase_id=clase_id)
+        participantes_ocupados = participantes_ocupados.exclude(clase_id=clase_id)
+    ocupados = set(profesores_ocupados.values_list("profesor_id", flat=True)) | set(
+        participantes_ocupados.values_list("usuario_id", flat=True)
+    )
     if ocupados:
         nombres = ", ".join(str(usuarios[usuario_id]) for usuario_id in sorted(ocupados))
         raise ValidationError(f"Ya tienen otra clase asignada en esa fecha y hora: {nombres}.")
