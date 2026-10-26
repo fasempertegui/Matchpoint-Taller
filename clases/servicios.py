@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
@@ -10,12 +11,13 @@ from reservas.models import Evento, Turno
 from usuarios.models import Rol, Usuario
 
 from .models import Clase, ClaseAlumno, ClaseProfesor
-from .permisos import exigir_administracion_clases
+from .permisos import exigir_acceso_clases, exigir_administracion_clases, puede_dictar_clase
 from .validaciones import (
     normalizar_usuarios_clase,
     validar_anulacion_clase,
     validar_conflictos_clase,
     validar_datos_clase,
+    validar_finalizacion_clase,
     validar_horario_clase,
     validar_usuarios_clase,
 )
@@ -274,3 +276,57 @@ def anular_clase(anulado_por, clase_id, motivo):
         if timezone.localtime() >= inicio:
             raise ValidationError("El turno ya comenzó. No se guardó la anulación.")
     return clase
+
+
+@transaction.atomic
+def finalizar_clase(clase_id, usuario=None):
+    if usuario is not None:
+        usuario = exigir_acceso_clases(usuario)
+        usuarios = _bloquear_usuarios_clase({usuario.pk})
+        usuario = exigir_acceso_clases(usuarios.get(usuario.pk))
+
+    inicial = Clase.objects.select_related("evento").get(pk=clase_id)
+    turno = Turno.objects.select_for_update().get(pk=inicial.evento.turno_id)
+    evento = Evento.objects.select_for_update().get(pk=inicial.evento_id)
+    clase = Clase.objects.select_for_update().get(pk=clase_id)
+    if clase.evento_id != inicial.evento_id or evento.turno_id != turno.pk:
+        raise ValidationError("La clase cambió durante la finalización. Revisá sus datos.")
+    evento.turno = turno
+    clase.evento = evento
+    if usuario is not None and not (
+        usuario.tiene_rol(Rol.ADMINISTRADOR) or puede_dictar_clase(usuario, clase)
+    ):
+        raise PermissionDenied
+    ahora = timezone.localtime()
+    validar_finalizacion_clase(clase, ahora)
+
+    with contexto_auditoria(usuario, origen="aplicacion" if usuario is not None else "tarea"):
+        evento.estado = Evento.Estado.FINALIZADO
+        evento.finalizado_en = ahora
+        evento.save(update_fields=["estado", "finalizado_en", "actualizado_en"])
+        responsable_id = usuario.pk if usuario is not None else None
+        if clase.finalizado_por_id != responsable_id:
+            clase.finalizado_por = usuario
+            clase.save(update_fields=["finalizado_por"])
+    return clase
+
+
+def finalizar_clases_vencidas():
+    limite_inicio = timezone.localtime() - timedelta(hours=1)
+    pendientes = Clase.objects.filter(
+        evento__tipo=Evento.Tipo.CLASE,
+        evento__estado=Evento.Estado.PROGRAMADO,
+    ).filter(
+        Q(evento__turno__fecha__lt=limite_inicio.date())
+        | Q(evento__turno__fecha=limite_inicio.date(), evento__turno__hora_inicio__lte=limite_inicio.time())
+    ).order_by("pk").values_list("pk", flat=True)
+
+    finalizadas = 0
+    for clase_id in pendientes.iterator(chunk_size=500):
+        try:
+            finalizar_clase(clase_id)
+        except (ValidationError, Clase.DoesNotExist, Evento.DoesNotExist):
+            continue
+        else:
+            finalizadas += 1
+    return finalizadas

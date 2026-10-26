@@ -98,3 +98,13 @@ def validar_anulacion_clase(clase, ahora):
     inicio = datetime.combine(turno.fecha, turno.hora_inicio)
     if timezone.make_aware(inicio) <= ahora:
         raise ValidationError("Sólo se puede anular una clase antes del inicio de su turno.")
+
+
+def validar_finalizacion_clase(clase, ahora):
+    evento = clase.evento
+    if evento.tipo != Evento.Tipo.CLASE or evento.estado != Evento.Estado.PROGRAMADO:
+        raise ValidationError("Sólo se pueden finalizar clases Programadas.")
+    turno = evento.turno
+    fin = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_fin))
+    if ahora < fin:
+        raise ValidationError("Sólo se puede finalizar una clase cuando terminó su turno.")

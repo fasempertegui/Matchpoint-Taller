@@ -135,6 +135,10 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULE = {
+    "finalizar-clases-cada-hora": {
+        "task": "clases.tasks.finalizar_clases_vencidas",
+        "schedule": crontab(minute=0),
+    },
     "finalizar-reservas-cada-hora": {
         "task": "reservas.tasks.finalizar_reservas_vencidas",
         "schedule": crontab(minute=0),
