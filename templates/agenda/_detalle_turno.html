@@ -58,6 +58,7 @@
             {% endif %}
         {% elif detalle.clase %}
             <div class="agenda-acciones">
+                {% if detalle.datos_clase.puede_finalizar %}{% include "clases/_finalizar_clase.html" with clase_id=detalle.clase.pk %}{% endif %}
                 <a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' detalle.clase.pk %}">Ver detalle completo</a>
             </div>
         {% elif detalle.ocupado_por_tercero %}

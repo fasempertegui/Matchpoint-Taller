@@ -963,3 +963,5 @@ html.modal-abierto {
 .boton-confirmar-peligro { color: #ffffff; border-color: var(--peligro); background: var(--peligro); }
 .boton-confirmar-peligro:hover { color: #ffffff; background: var(--peligro); }
 .acciones-anulacion { display: grid; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--borde); }
+
+.accion-finalizar-clase { display: grid; }

@@ -5,6 +5,7 @@ from . import views
 app_name = "clases"
 
 urlpatterns = [
+    path("<int:pk>/finalizar/", views.clase_finalizar, name="clase_finalizar"),
     path("<int:pk>/anular/", views.clase_anular, name="clase_anular"),
     path("<int:pk>/anular-bloquear/", views.clase_anular, {"bloquear": True}, name="clase_anular_bloquear"),
     path("crear/", views.clase_crear, name="clase_crear"),

@@ -9,7 +9,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from reservas.models import Evento
 from usuarios.models import Usuario
@@ -22,7 +22,7 @@ from .permisos import exigir_administracion_clases
 from .servicios import (
     cambiar_cancha_clase, consultar_edicion_clase, editar_clase,
     preparar_cambio_cancha, preparar_edicion_clase,
-    preparar_registro_clase, registrar_clase, validar_ubicacion_clase,
+    finalizar_clase, preparar_registro_clase, registrar_clase, validar_ubicacion_clase,
 )
 
 
@@ -316,3 +316,26 @@ def clase_anular(request, pk, bloquear=False):
         "url_detalle": url_detalle,
         "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Anular y bloquear" if bloquear else "Anular y liberar", None)],
     })
+
+
+@login_required
+@never_cache
+@require_POST
+def clase_finalizar(request, pk):
+    try:
+        finalizar_clase(pk, usuario=request.user)
+    except (Clase.DoesNotExist, Evento.DoesNotExist):
+        raise Http404("La clase no existe.") from None
+    except ValidationError as error:
+        try:
+            clase = consultar_clase(request.user, pk)
+        except Clase.DoesNotExist:
+            raise Http404("La clase no existe.") from None
+        if clase["estado"] == Evento.Estado.FINALIZADO:
+            messages.info(request, "La clase ya está finalizada.")
+        else:
+            for mensaje in error.messages:
+                messages.error(request, mensaje)
+    else:
+        messages.success(request, "La clase fue finalizada. La asistencia se conserva sin cambios.")
+    return redirect("clases:clase_detalle", pk=pk)

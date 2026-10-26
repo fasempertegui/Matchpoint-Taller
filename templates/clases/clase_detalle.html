@@ -70,6 +70,7 @@
             <section class="perfil-seccion" aria-labelledby="clase-acciones-titulo">
                 <h2 id="clase-acciones-titulo">Acciones</h2>
                 <div class="perfil-acciones perfil-acciones-botones">
+                    {% if clase.puede_finalizar %}{% include "clases/_finalizar_clase.html" with clase_id=clase.id %}{% endif %}
                     {% if clase.puede_editar %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_editar' clase.id %}">Editar clase</a>{% endif %}
                     {% if clase.puede_cambiar_cancha %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_cambiar_cancha' clase.id %}">Cambiar de cancha</a>{% endif %}
                     <a class="boton boton-secundario boton-chico" href="{{ url_agenda }}">Ver en agenda</a>
