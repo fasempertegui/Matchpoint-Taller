@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}{% if revision %}Revisar horario habitual{% else %}{{ titulo }}{% endif %} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}">{% endblock %}
+{% block contenido %}
+<header class="clase-encabezado"><h1>{% if revision %}Revisar horario habitual{% else %}{{ titulo }}{% endif %}</h1></header>
+<div class="clase-distribucion">
+    <aside class="tarjeta clase-turno" aria-labelledby="horario-titulo">
+        <h2 id="horario-titulo">Horario habitual</h2>
+        <ul class="clase-revision-nombres">
+            {% for horario in horarios %}<li class="clase-revision-persona">{{ horario.dia }}<br><strong>{{ horario.hora|time:"H:i" }} a {{ horario.hora_fin|time:"H:i" }}</strong></li>{% endfor %}
+        </ul>
+        <p>{{ cancha.sede.nombre }}<br><strong>{{ cancha.nombre }}</strong></p>
+        <p class="nota-campo">Los cambios de la semana tipo no modifican las clases existentes.</p>
+    </aside>
+    <section class="tarjeta clase-contenido{% if revision %} clase-revision{% endif %}" aria-label="Datos del horario habitual">
+        {% if impedimento %}<p class="mensaje mensaje-error" role="alert">{{ impedimento }}</p>{% endif %}
+        {% if not impedimento or formulario.is_bound %}
+        <form method="post" novalidate data-clase-formulario>
+            {% csrf_token %}<input type="hidden" name="version" value="{{ version }}">
+            {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+            {% if revision %}
+                {{ formulario.profesores }}{{ formulario.participantes }}
+                {% if formulario.buscar_todos.value %}<input type="hidden" name="buscar_todos" value="on">{% endif %}
+                <input type="hidden" name="modalidad" value="{{ formulario.modalidad.value|default:'' }}">
+                <textarea name="observaciones" hidden>{{ formulario.observaciones.value|default:'' }}</textarea>
+                <input type="hidden" name="confirmacion" value="{{ revision }}">
+                <div class="clase-revision-cabecera"><h2>Resumen del horario</h2><span class="clase-revision-modalidad">{{ modalidad_texto }}</span></div>
+                <div class="clase-revision-personas">
+                    <section><h3>Profesores <span>({{ profesores|length }})</span></h3>
+                        {% if profesores %}<ul class="clase-revision-nombres">{% for persona in profesores %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% endfor %}</ul>{% else %}<p class="clase-revision-vacio">Sin profesores asignados.</p><p class="nota-campo">Sin profesor, este horario se omite al generar clases.</p>{% endif %}
+                    </section>
+                    <section><h3{% if advertencias %} class="clase-contador-advertencia"{% endif %}>Participantes <span>({{ participantes|length }})</span></h3>
+                        {% if advertencias %}<div class="clase-aviso-participantes" role="alert"><span aria-hidden="true">⚠</span><div>{% for advertencia in advertencias %}<p>{{ advertencia }}</p>{% endfor %}</div></div>{% endif %}
+                        {% if participantes %}<ul class="clase-revision-nombres{% if participantes|length >= 4 %} clase-revision-nombres-columnas{% endif %}">{% for persona in participantes %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% endfor %}</ul>{% else %}<p class="clase-revision-vacio">Sin participantes asignados.</p>{% endif %}
+                    </section>
+                </div>
+                {% if formulario.observaciones.value %}<section class="clase-revision-observaciones"><h3>Observaciones</h3><p class="clase-observaciones">{{ formulario.observaciones.value|linebreaksbr }}</p></section>{% endif %}
+                <div class="acciones-formulario clase-revision-acciones">
+                    <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a editar</button>
+                    <button class="boton boton-primario" name="paso" value="confirmar" type="submit">{% if editando %}Guardar cambios{% else %}Agregar horario{% endif %}</button>
+                </div>
+            {% else %}
+                <noscript><p class="mensaje mensaje-info">Para buscar y agregar personas necesitás habilitar JavaScript.</p></noscript>
+                <fieldset class="clase-modalidad"><legend>Modalidad</legend><div class="clase-modalidad-opciones">{% for opcion in formulario.modalidad %}<label>{{ opcion.tag }}<span>{{ opcion.choice_label }}</span></label>{% endfor %}</div>{% for error in formulario.modalidad.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</fieldset>
+                {% include "clases/_selector_personas.html" with campo=formulario.profesores seleccionados=profesores titulo="Profesores" etiqueta="Agregar profesor" vacio="Todavía no agregaste profesores." only %}
+                {% include "clases/_selector_personas.html" with campo=formulario.participantes seleccionados=participantes titulo="Participantes" etiqueta="Agregar participante" vacio="Sin participantes asignados." ampliar_busqueda=formulario.buscar_todos.value only %}
+                {% include "clases/_observaciones_formulario.html" with campo=formulario.observaciones only %}
+                <div class="acciones-formulario"><a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>{% if not impedimento %}<button class="boton boton-primario" name="paso" value="revisar" type="submit">Revisar horario</button>{% endif %}</div>
+            {% endif %}
+        </form>
+        {% else %}<a class="boton boton-secundario" href="{{ url_cancelar }}">Volver a la planilla</a>{% endif %}
+    </section>
+</div>
+<script src="{% static 'js/observaciones.js' %}" defer></script>
+<script src="{% static 'js/clase-formulario.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Planilla semanal | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/planilla.css' %}">{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina"><h1>Planilla semanal</h1></header>
+{% if hay_sedes %}
+    <section class="tarjeta">
+        <form class="planilla-filtros" method="get" data-planilla-filtros>
+            {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>{% endfor %}
+            <noscript><button class="boton boton-secundario" type="submit">Aplicar filtros</button></noscript>
+        </form>
+    </section>
+    {% if datos %}
+        <section class="tarjeta planilla-listado" aria-label="Semana tipo">
+            {% if cancha.sede.estado == 'inactiva' or cancha.estado == 'inactiva' %}<p class="texto-secundario">La sede o la cancha está inactiva. La planilla se conserva para consulta.</p>{% endif %}
+            {% if filas %}
+                <div class="tabla-contenedor">
+                    <table class="planilla-tabla">
+                        <caption class="clase-etiqueta-oculta">Programación habitual de {{ cancha.nombre }} por día y horario</caption>
+                        <thead><tr><th scope="col">Hora</th>{% for dia in dias %}<th scope="col">{{ dia }}</th>{% endfor %}</tr></thead>
+                        <tbody>{% for fila in filas %}
+                            {% if fila.pausa %}
+                                <tr class="planilla-pausa"><td colspan="8">{{ fila.inicio|time:"H:i" }}–{{ fila.fin|time:"H:i" }} · Fuera del horario de funcionamiento</td></tr>
+                            {% else %}
+                            <tr><th scope="row">{% if fila.seleccionable %}<button class="planilla-hora" type="button" data-seleccionar-hora="{{ fila.hora.hour }}">{{ fila.hora|time:"H:i" }}</button>{% else %}{{ fila.hora|time:"H:i" }}{% endif %}</th>
+                            {% for celda in fila.celdas %}
+                                <td data-dia="{{ celda.numero_dia }}" data-hora="{{ fila.hora.hour }}">
+                                    {% if celda.turno %}
+                                        <a class="planilla-celda planilla-celda-ocupada" href="{{ celda.url }}" aria-label="Ver horario del {{ celda.dia }} a las {{ fila.hora|time:'H:i' }}">
+                                            <strong>{{ celda.turno.modalidad_texto }}</strong>
+                                            {% for profesor in celda.turno.profesores|slice:':2' %}<span>{{ profesor.nombre }}</span>{% empty %}<span class="texto-secundario">Sin profesores</span>{% endfor %}
+                                            {% if celda.turno.profesores|length > 2 %}<span class="texto-secundario">Profesores ({{ celda.turno.profesores|length }})</span>{% endif %}
+                                            <span class="texto-secundario">Participantes ({{ celda.turno.participantes|length }})</span>
+                                            {% if not celda.habilitada %}<span class="texto-secundario">Fuera de horario</span>{% endif %}
+                                        </a>
+                                    {% elif celda.seleccionable %}
+                                        <button class="planilla-celda" type="button" data-seleccionar-turno="{{ celda.numero_dia }}-{{ fila.hora.hour }}" aria-pressed="false" aria-label="{{ celda.dia }} {{ fila.hora|time:'H:i' }}: Sin programación">Sin programación</button>
+                                    {% else %}
+                                        <span class="planilla-celda planilla-celda-cerrada texto-secundario">{% if celda.habilitada %}Sin programación{% else %}Fuera de horario{% endif %}</span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}</tr>
+                            {% endif %}
+                        {% endfor %}</tbody>
+                    </table>
+                </div>
+            {% else %}<p class="texto-secundario">No hay horarios de funcionamiento configurados para esta sede.</p>{% endif %}
+        </section>
+    {% elif not formulario.cancha.field.queryset.exists %}<p class="tarjeta texto-secundario">No hay canchas para consultar en esta sede.</p>{% endif %}
+{% else %}<p class="tarjeta texto-secundario">No hay sedes registradas.</p>{% endif %}
+{% if cancha %}
+<form class="tarjeta planilla-seleccion" action="{% url 'clases:planilla_crear' %}" method="get" data-planilla-seleccion hidden>
+    <input type="hidden" name="cancha" value="{{ cancha.pk }}">
+    <span role="status" aria-live="polite" data-seleccion-cantidad></span>
+    <div data-seleccion-valores></div>
+    <button class="boton boton-secundario" type="button" data-limpiar-seleccion>Limpiar selección</button>
+    <button class="boton boton-primario" type="submit">Agregar horario habitual</button>
+</form>
+{% endif %}
+<script src="{% static 'js/planilla.js' %}" defer></script>
+{% endblock %}

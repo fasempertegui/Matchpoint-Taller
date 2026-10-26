@@ -73,6 +73,34 @@ class ClaseForm(forms.Form):
         }
 
 
+class CanchaPlanillaField(forms.ModelChoiceField):
+    def label_from_instance(self, cancha):
+        return cancha.nombre
+
+
+class PlanillaFiltroForm(forms.Form):
+    sede = forms.ModelChoiceField(
+        queryset=Sede.objects.order_by("estado", "nombre", "pk"), empty_label=None,
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    cancha = CanchaPlanillaField(
+        queryset=Cancha.objects.none(), empty_label=None,
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        sede = self.data.get("sede", "")
+        if str(sede).isdecimal() and len(str(sede)) < 19:
+            self.fields["cancha"].queryset = Cancha.objects.filter(sede_id=sede).order_by("estado", "nombre", "pk")
+
+
+class PlanillaForm(ClaseForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["profesores"].required = False
+
+
 class ClaseCanchaForm(forms.Form):
     cancha = forms.ModelChoiceField(
         label="Cancha de destino",

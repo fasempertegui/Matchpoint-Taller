@@ -1,5 +1,6 @@
 from datetime import time
 
+from django.core import signing
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count
@@ -53,6 +54,31 @@ def consultar_planilla(usuario, sede_id, cancha_id):
     }
 
 
+def _datos_version_planilla(turno):
+    return {
+        "id": turno.pk,
+        "cancha": turno.cancha_id,
+        "dia": turno.dia_semana,
+        "hora": turno.hora_inicio.isoformat(),
+        "actualizado_en": turno.actualizado_en.isoformat(),
+        "profesores": sorted(turno.profesores.values_list("profesor_id", flat=True)),
+        "participantes": sorted(turno.alumnos.values_list("usuario_id", flat=True)),
+    }
+
+
+def version_turno_planilla(turno):
+    return signing.dumps(_datos_version_planilla(turno), salt="clases.planilla.version", compress=True)
+
+
+def validar_version_turno_planilla(turno, version):
+    try:
+        datos = signing.loads(version, salt="clases.planilla.version", max_age=900)
+    except signing.BadSignature:
+        raise ValidationError("La revisión venció o no es válida. Abrí nuevamente el horario de la planilla.") from None
+    if datos != _datos_version_planilla(turno):
+        raise ValidationError("El horario de la planilla cambió. Abrilo nuevamente antes de continuar.")
+
+
 def _normalizar_datos_planilla(modalidad, observaciones):
     if modalidad == "":
         modalidad = None
@@ -85,46 +111,66 @@ def _bloquear_turno_planilla(usuario, turno_id, usuarios_nuevos=frozenset()):
     return usuario, sede, cancha, turno, usuarios, profesores, participantes
 
 
-@transaction.atomic
 def registrar_turno_planilla(
     registrado_por, cancha, dia_semana, hora_inicio,
     profesores_ids=(), participantes_ids=(), modalidad=None, observaciones=None,
 ):
+    return registrar_turnos_planilla(
+        registrado_por, cancha, [(dia_semana, hora_inicio)],
+        profesores_ids, participantes_ids, modalidad, observaciones,
+    )[0]
+
+
+@transaction.atomic
+def registrar_turnos_planilla(
+    registrado_por, cancha, turnos, profesores_ids=(), participantes_ids=(),
+    modalidad=None, observaciones=None,
+):
     registrado_por = exigir_administracion_clases(registrado_por)
+    turnos = list(turnos)
+    if not turnos or len(turnos) > 161 or len(set(turnos)) != len(turnos):
+        raise ValidationError("Elegí horarios válidos de la planilla.")
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
     participantes_ids = normalizar_usuarios_clase(participantes_ids)
     modalidad, observaciones = _normalizar_datos_planilla(modalidad, observaciones)
-    validar_datos_planilla(dia_semana, hora_inicio, modalidad, observaciones)
+    for dia, hora in turnos:
+        validar_datos_planilla(dia, hora, modalidad, observaciones)
     usuarios = bloquear_usuarios_clase(profesores_ids | participantes_ids | {registrado_por.pk})
     registrado_por = exigir_administracion_clases(usuarios.get(registrado_por.pk))
     validar_usuarios_clase(usuarios, profesores_ids, participantes_ids, requiere_profesor=False)
     sede = Sede.objects.select_for_update().get(pk=cancha.sede_id)
     cancha = Cancha.objects.select_for_update().get(pk=cancha.pk, sede=sede)
     _validar_instalaciones_planilla(sede, cancha)
-    validar_horario_planilla(sede, dia_semana, hora_inicio)
-    if TurnoPlanilla.objects.filter(cancha=cancha, dia_semana=dia_semana, hora_inicio=hora_inicio).exists():
-        raise ValidationError("Ya existe un turno de planilla para esa cancha, día y hora.")
-    turno = TurnoPlanilla.objects.create(
-        cancha=cancha, dia_semana=dia_semana, hora_inicio=hora_inicio,
-        modalidad=modalidad, observaciones=observaciones,
-    )
+    ocupados = set(TurnoPlanilla.objects.filter(cancha=cancha).values_list("dia_semana", "hora_inicio"))
+    for dia, hora in turnos:
+        validar_horario_planilla(sede, dia, hora)
+        if (dia, hora) in ocupados:
+            raise ValidationError("Ya existe un turno de planilla para esa cancha, día y hora.")
+    creados = TurnoPlanilla.objects.bulk_create([
+        TurnoPlanilla(cancha=cancha, dia_semana=dia, hora_inicio=hora, modalidad=modalidad, observaciones=observaciones)
+        for dia, hora in sorted(turnos)
+    ])
     TurnoPlanillaProfesor.objects.bulk_create([
-        TurnoPlanillaProfesor(turno_planilla=turno, profesor_id=pk) for pk in sorted(profesores_ids)
+        TurnoPlanillaProfesor(turno_planilla=turno, profesor_id=pk)
+        for turno in creados for pk in sorted(profesores_ids)
     ])
     TurnoPlanillaAlumno.objects.bulk_create([
-        TurnoPlanillaAlumno(turno_planilla=turno, usuario_id=pk) for pk in sorted(participantes_ids)
+        TurnoPlanillaAlumno(turno_planilla=turno, usuario_id=pk)
+        for turno in creados for pk in sorted(participantes_ids)
     ])
-    return turno
+    return creados
 
 
 @transaction.atomic
-def editar_turno_planilla(usuario, turno_id, profesores_ids, participantes_ids, modalidad, observaciones):
+def editar_turno_planilla(usuario, turno_id, profesores_ids, participantes_ids, modalidad, observaciones, *, version=None):
     usuario = exigir_administracion_clases(usuario)
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
     participantes_ids = normalizar_usuarios_clase(participantes_ids)
     usuario, sede, cancha, turno, usuarios, profesores, participantes = _bloquear_turno_planilla(
         usuario, turno_id, profesores_ids | participantes_ids,
     )
+    if version is not None:
+        validar_version_turno_planilla(turno, version)
     modalidad, observaciones = _normalizar_datos_planilla(modalidad, observaciones)
     validar_datos_planilla(turno.dia_semana, turno.hora_inicio, modalidad, observaciones)
     _validar_instalaciones_planilla(sede, cancha)
@@ -153,9 +199,11 @@ def editar_turno_planilla(usuario, turno_id, profesores_ids, participantes_ids, 
 
 
 @transaction.atomic
-def quitar_turno_planilla(usuario, turno_id):
+def quitar_turno_planilla(usuario, turno_id, *, version=None):
     usuario = exigir_administracion_clases(usuario)
     usuario, sede, cancha, turno, usuarios, profesores, participantes = _bloquear_turno_planilla(usuario, turno_id)
+    if version is not None:
+        validar_version_turno_planilla(turno, version)
     referencias = list(Clase.objects.filter(turno_planilla=turno).values_list("pk", "evento_id", "evento__turno_id"))
     list(Turno.objects.select_for_update().filter(pk__in=[r[2] for r in referencias]).order_by("pk"))
     list(Evento.objects.select_for_update().filter(pk__in=[r[1] for r in referencias]).order_by("pk"))
