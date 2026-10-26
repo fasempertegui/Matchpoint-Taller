@@ -6,6 +6,7 @@ from django.core import signing
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
+from auditoria.contexto import contexto_auditoria
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Turno
 from usuarios.models import Usuario
@@ -20,7 +21,7 @@ def _fechas_del_periodo(fecha_desde, fecha_hasta):
     return [fecha_desde + timedelta(days=numero) for numero in range((fecha_hasta - fecha_desde).days + 1)]
 
 
-def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
+def _revisar_generacion(sede_id, fecha_desde, fecha_hasta, regenerar=False):
     sede = Sede.objects.get(pk=sede_id)
     canchas = list(Cancha.objects.filter(sede=sede).order_by("pk"))
     celdas = list(TurnoPlanilla.objects.filter(cancha__sede=sede).select_related("cancha").prefetch_related(
@@ -30,6 +31,36 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     for celda in celdas:
         usuarios_ids.update(v.profesor_id for v in celda.profesores.all())
         usuarios_ids.update(v.usuario_id for v in celda.alumnos.all())
+    reemplazables = []
+    if regenerar:
+        reemplazables = list(Clase.objects.filter(
+            es_generada=True, evento__tipo=Evento.Tipo.CLASE,
+            evento__estado=Evento.Estado.PROGRAMADO, evento__turno__cancha__sede=sede,
+            evento__turno__fecha__range=(fecha_desde, fecha_hasta),
+        ).select_related("evento__turno").prefetch_related(
+            "profesores", "alumnos", "asistencias",
+        ).order_by("pk"))
+        for clase in reemplazables:
+            usuarios_ids.update(v.profesor_id for v in clase.profesores.all())
+            usuarios_ids.update(v.usuario_id for v in clase.alumnos.all())
+            usuarios_ids.update(v.usuario_id for v in clase.asistencias.all())
+    clases_excluidas = [clase.pk for clase in reemplazables]
+    eventos_excluidos = [clase.evento_id for clase in reemplazables]
+    conservadas = []
+    if regenerar:
+        conservadas = [
+            {
+                "id": clase_id, "estado": estado, "es_generada": es_generada,
+                "fecha": fecha, "hora_inicio": hora, "cancha_id": cancha_id,
+            }
+            for clase_id, estado, es_generada, fecha, hora, cancha_id in Clase.objects.filter(
+                evento__tipo=Evento.Tipo.CLASE, evento__turno__cancha__sede=sede,
+                evento__turno__fecha__range=(fecha_desde, fecha_hasta),
+            ).exclude(pk__in=clases_excluidas).order_by("pk").values_list(
+                "pk", "evento__estado", "es_generada", "evento__turno__fecha",
+                "evento__turno__hora_inicio", "evento__turno__cancha_id",
+            )
+        ]
     usuarios = {
         usuario.pk: usuario
         for usuario in Usuario.objects.filter(pk__in=usuarios_ids).prefetch_related("roles__rol")
@@ -44,7 +75,7 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     feriados = set(Feriado.objects.filter(fecha__range=(fecha_desde, fecha_hasta)).values_list("fecha", flat=True))
     eventos = list(Evento.objects.filter(
         turno__cancha__sede=sede, turno__fecha__range=(fecha_desde, fecha_hasta),
-    ).exclude(estado=Evento.Estado.ANULADO).values_list(
+    ).exclude(estado=Evento.Estado.ANULADO).exclude(pk__in=eventos_excluidos).values_list(
         "pk", "tipo", "estado", "actualizado_en", "turno__cancha_id", "turno__fecha", "turno__hora_inicio",
     ).order_by("pk"))
     ocupados = {(evento[4], evento[5], evento[6]) for evento in eventos}
@@ -54,12 +85,12 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     }
     profesores_ocupados = list(ClaseProfesor.objects.filter(
         profesor_id__in=usuarios_ids, **filtros_asignacion,
-    ).exclude(clase__evento__estado=Evento.Estado.ANULADO).values_list(
+    ).exclude(clase__evento__estado=Evento.Estado.ANULADO).exclude(clase_id__in=clases_excluidas).values_list(
         "clase_id", "profesor_id", "clase__evento__turno__fecha", "clase__evento__turno__hora_inicio",
     ).order_by("clase_id", "profesor_id"))
     participantes_ocupados = list(ClaseAlumno.objects.filter(
         usuario_id__in=usuarios_ids, **filtros_asignacion,
-    ).exclude(clase__evento__estado=Evento.Estado.ANULADO).values_list(
+    ).exclude(clase__evento__estado=Evento.Estado.ANULADO).exclude(clase_id__in=clases_excluidas).values_list(
         "clase_id", "usuario_id", "clase__evento__turno__fecha", "clase__evento__turno__hora_inicio",
     ).order_by("clase_id", "usuario_id"))
     asignaciones_ocupadas = {
@@ -118,7 +149,29 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         else:
             validas.append(candidata)
             asignaciones_ocupadas.update((fecha, hora, usuario_id) for usuario_id in participantes)
+    reemplazos = [
+        {
+            "id": clase.pk, "evento_id": clase.evento_id, "turno_id": clase.evento.turno_id,
+            "cancha_id": clase.evento.turno.cancha_id, "fecha": clase.evento.turno.fecha,
+            "hora_inicio": clase.evento.turno.hora_inicio, "turno_planilla_id": clase.turno_planilla_id,
+            "modalidad": clase.modalidad, "actualizado_en": clase.evento.actualizado_en,
+            "profesores": sorted([
+                [v.profesor_id, v.estado, v.actualizado_en] for v in clase.profesores.all()
+            ]),
+            "participantes": sorted([
+                [v.usuario_id, v.estado, v.observaciones, v.recordatorio_enviado, v.actualizado_en]
+                for v in clase.alumnos.all()
+            ]),
+            "asistencias": sorted([
+                [v.usuario_id, v.estado, v.observaciones, v.registrada_por_id, v.registrada_en, v.actualizado_en]
+                for v in clase.asistencias.all()
+            ]),
+        }
+        for clase in reemplazables
+    ]
     instantanea = {
+        "operacion": "regenerar" if regenerar else "generar",
+        "reemplazos": reemplazos, "conservadas": conservadas,
         "sede": [sede.pk, sede.nombre, sede.estado],
         "canchas": [[cancha.pk, cancha.nombre, cancha.estado] for cancha in canchas],
         "desde": fecha_desde, "hasta": fecha_hasta, "planilla": planilla, "horarios": horarios,
@@ -132,6 +185,8 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     }
     huella = hashlib.sha256(json.dumps(instantanea, sort_keys=True, default=str).encode()).hexdigest()
     return {
+        "operacion": "regenerar" if regenerar else "generar",
+        "reemplazos": reemplazos, "conservadas": conservadas,
         "sede_id": sede.pk, "fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta,
         "candidatas": validas, "omitidas": omitidas, "usuarios_ids": sorted(usuarios_ids), "huella": huella,
         "irreversible": True, "confirmaciones_requeridas": 2,
@@ -142,19 +197,19 @@ def _firmar_revision(usuario, revision, etapa):
     return signing.dumps({
         "usuario": usuario.pk, "sede": revision["sede_id"],
         "desde": revision["fecha_desde"].isoformat(), "hasta": revision["fecha_hasta"].isoformat(),
-        "huella": revision["huella"], "etapa": etapa,
+        "huella": revision["huella"], "etapa": etapa, "operacion": revision["operacion"],
     }, salt="clases.generacion", compress=True)
 
 
-def _leer_revision(usuario, confirmacion, etapa):
+def _leer_revision(usuario, confirmacion, etapa, operacion):
     try:
         datos = signing.loads(confirmacion, salt="clases.generacion")
-        if datos["usuario"] != usuario.pk or datos["etapa"] != etapa:
+        if datos["usuario"] != usuario.pk or datos["etapa"] != etapa or datos["operacion"] != operacion:
             raise signing.BadSignature
         fecha_desde = date.fromisoformat(datos["desde"])
         fecha_hasta = date.fromisoformat(datos["hasta"])
         validar_periodo_generacion(fecha_desde, fecha_hasta)
-        revision = _revisar_generacion(datos["sede"], fecha_desde, fecha_hasta)
+        revision = _revisar_generacion(datos["sede"], fecha_desde, fecha_hasta, regenerar=operacion == "regenerar")
         if revision["huella"] != datos["huella"]:
             raise ValidationError("La programación o la ocupación cambió. Revisá nuevamente la generación.")
     except (signing.BadSignature, KeyError, TypeError, ValueError):
@@ -172,7 +227,7 @@ def preparar_generacion(usuario, sede_id, fecha_desde, fecha_hasta):
 
 def confirmar_generacion(usuario, confirmacion):
     usuario = exigir_administracion_clases(usuario)
-    revision = _leer_revision(usuario, confirmacion, "revision")
+    revision = _leer_revision(usuario, confirmacion, "revision", "generar")
     revision["confirmacion"] = _firmar_revision(usuario, revision, "primera_confirmacion")
     return revision
 
@@ -209,9 +264,9 @@ def _crear_clases_generadas(usuario, candidatas, turnos):
 
 
 @transaction.atomic
-def generar_clases(usuario, confirmacion):
+def _ejecutar_generacion(usuario, confirmacion, operacion):
     usuario = exigir_administracion_clases(usuario)
-    seleccion = _leer_revision(usuario, confirmacion, "primera_confirmacion")
+    seleccion = _leer_revision(usuario, confirmacion, "primera_confirmacion", operacion)
     usuarios = bloquear_usuarios_clase(set(seleccion["usuarios_ids"]) | {usuario.pk})
     usuario = exigir_administracion_clases(usuarios.get(usuario.pk))
     for fecha in _fechas_del_periodo(seleccion["fecha_desde"], seleccion["fecha_hasta"]):
@@ -223,9 +278,48 @@ def generar_clases(usuario, confirmacion):
         cancha__sede=sede, fecha__range=(seleccion["fecha_desde"], seleccion["fecha_hasta"]),
     ).order_by("pk"))
     list(Evento.objects.select_for_update().filter(turno__in=turnos).order_by("pk"))
-    revision = _revisar_generacion(sede.pk, seleccion["fecha_desde"], seleccion["fecha_hasta"])
+    list(Clase.objects.select_for_update().filter(
+        pk__in=[clase["id"] for clase in seleccion["reemplazos"]],
+    ).order_by("pk"))
+    revision = _revisar_generacion(
+        sede.pk, seleccion["fecha_desde"], seleccion["fecha_hasta"], regenerar=operacion == "regenerar",
+    )
     if revision["huella"] != seleccion["huella"]:
         raise ValidationError("La programación o la ocupación cambió. Revisá nuevamente la generación.")
     turnos_por_coordenadas = {(turno.cancha_id, turno.fecha, turno.hora_inicio): turno for turno in turnos}
-    clases = _crear_clases_generadas(usuario, revision["candidatas"], turnos_por_coordenadas)
-    return {"clases_creadas": len(clases), "clases_ids": [clase.pk for clase in clases], "omitidas": revision["omitidas"]}
+    clases_reemplazadas = [clase["id"] for clase in revision["reemplazos"]]
+    with contexto_auditoria(usuario):
+        if clases_reemplazadas:
+            Clase.objects.filter(pk__in=clases_reemplazadas).delete()
+            Evento.objects.filter(pk__in=[clase["evento_id"] for clase in revision["reemplazos"]]).delete()
+        clases = _crear_clases_generadas(usuario, revision["candidatas"], turnos_por_coordenadas)
+    return {
+        "clases_creadas": len(clases), "clases_ids": [clase.pk for clase in clases],
+        "clases_reemplazadas": len(clases_reemplazadas), "clases_reemplazadas_ids": clases_reemplazadas,
+        "clases_conservadas": len(revision["conservadas"]),
+        "clases_conservadas_ids": [clase["id"] for clase in revision["conservadas"]],
+        "omitidas": revision["omitidas"],
+    }
+
+
+def generar_clases(usuario, confirmacion):
+    return _ejecutar_generacion(usuario, confirmacion, "generar")
+
+
+def preparar_regeneracion(usuario, sede_id, fecha_desde, fecha_hasta):
+    usuario = exigir_administracion_clases(usuario)
+    validar_periodo_generacion(fecha_desde, fecha_hasta)
+    revision = _revisar_generacion(sede_id, fecha_desde, fecha_hasta, regenerar=True)
+    revision["confirmacion"] = _firmar_revision(usuario, revision, "revision")
+    return revision
+
+
+def confirmar_regeneracion(usuario, confirmacion):
+    usuario = exigir_administracion_clases(usuario)
+    revision = _leer_revision(usuario, confirmacion, "revision", "regenerar")
+    revision["confirmacion"] = _firmar_revision(usuario, revision, "primera_confirmacion")
+    return revision
+
+
+def regenerar_clases(usuario, confirmacion):
+    return _ejecutar_generacion(usuario, confirmacion, "regenerar")
