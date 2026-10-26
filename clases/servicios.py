@@ -10,11 +10,13 @@ from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Turno
 from usuarios.models import Rol, Usuario
 
-from .models import Clase, ClaseAlumno, ClaseProfesor
+from .models import Asistencia, Clase, ClaseAlumno, ClaseProfesor
 from .permisos import exigir_acceso_clases, exigir_administracion_clases, puede_dictar_clase
 from .validaciones import (
+    normalizar_registros_asistencia,
     normalizar_usuarios_clase,
     validar_anulacion_clase,
+    validar_asistencia_clase,
     validar_conflictos_clase,
     validar_datos_clase,
     validar_finalizacion_clase,
@@ -37,6 +39,18 @@ def _bloquear_usuarios_clase(usuarios_ids):
         .order_by("pk")
         .prefetch_related("roles__rol")
     }
+
+
+def _bloquear_clase(clase_id):
+    inicial = Clase.objects.select_related("evento").get(pk=clase_id)
+    turno = Turno.objects.select_for_update().get(pk=inicial.evento.turno_id)
+    evento = Evento.objects.select_for_update().get(pk=inicial.evento_id)
+    clase = Clase.objects.select_for_update().get(pk=clase_id)
+    if clase.evento_id != inicial.evento_id or evento.turno_id != turno.pk:
+        raise ValidationError("La clase cambió durante la operación. Revisá sus datos.")
+    evento.turno = turno
+    clase.evento = evento
+    return clase
 
 
 @transaction.atomic
@@ -285,14 +299,8 @@ def finalizar_clase(clase_id, usuario=None):
         usuarios = _bloquear_usuarios_clase({usuario.pk})
         usuario = exigir_acceso_clases(usuarios.get(usuario.pk))
 
-    inicial = Clase.objects.select_related("evento").get(pk=clase_id)
-    turno = Turno.objects.select_for_update().get(pk=inicial.evento.turno_id)
-    evento = Evento.objects.select_for_update().get(pk=inicial.evento_id)
-    clase = Clase.objects.select_for_update().get(pk=clase_id)
-    if clase.evento_id != inicial.evento_id or evento.turno_id != turno.pk:
-        raise ValidationError("La clase cambió durante la finalización. Revisá sus datos.")
-    evento.turno = turno
-    clase.evento = evento
+    clase = _bloquear_clase(clase_id)
+    evento = clase.evento
     if usuario is not None and not (
         usuario.tiene_rol(Rol.ADMINISTRADOR) or puede_dictar_clase(usuario, clase)
     ):
@@ -330,3 +338,59 @@ def finalizar_clases_vencidas():
         else:
             finalizadas += 1
     return finalizadas
+
+
+@transaction.atomic
+def registrar_asistencia(usuario, clase_id, registros, finalizar=False):
+    usuario = exigir_acceso_clases(usuario)
+    if not isinstance(finalizar, bool):
+        raise ValidationError("Indicá si corresponde finalizar la clase junto con la asistencia.")
+    registros = normalizar_registros_asistencia(registros)
+    usuarios = _bloquear_usuarios_clase(set(registros) | {usuario.pk})
+    usuario = exigir_acceso_clases(usuarios.get(usuario.pk))
+    if set(registros) - usuarios.keys():
+        raise ValidationError("Todos los usuarios de la asistencia deben existir.")
+    clase = _bloquear_clase(clase_id)
+    if not (usuario.tiene_rol(Rol.ADMINISTRADOR) or puede_dictar_clase(usuario, clase)):
+        raise PermissionDenied
+
+    with contexto_auditoria(usuario):
+        if finalizar and clase.evento.estado == Evento.Estado.PROGRAMADO:
+            clase = finalizar_clase(clase.pk, usuario=usuario)
+        validar_asistencia_clase(clase)
+        asistencias = {
+            asistencia.usuario_id: asistencia
+            for asistencia in clase.asistencias.select_for_update()
+            .filter(usuario_id__in=registros).order_by("usuario_id")
+        }
+        ahora = timezone.localtime()
+        hubo_cambios = False
+        for usuario_id, datos in sorted(registros.items()):
+            asistencia = asistencias.get(usuario_id)
+            if asistencia is not None and (
+                asistencia.estado == datos["estado"]
+                and asistencia.observaciones == datos["observaciones"]
+            ):
+                continue
+            hubo_cambios = True
+            sin_registrar = datos["estado"] == Asistencia.Estado.SIN_REGISTRAR
+            if asistencia is None:
+                Asistencia.objects.create(
+                    clase=clase,
+                    usuario_id=usuario_id,
+                    estado=datos["estado"],
+                    observaciones=datos["observaciones"],
+                    registrada_por=None if sin_registrar else usuario,
+                    registrada_en=None if sin_registrar else ahora,
+                )
+            else:
+                asistencia.estado = datos["estado"]
+                asistencia.observaciones = datos["observaciones"]
+                asistencia.registrada_por = None if sin_registrar else usuario
+                asistencia.registrada_en = None if sin_registrar else ahora
+                asistencia.save(update_fields=[
+                    "estado", "observaciones", "registrada_por", "registrada_en", "actualizado_en",
+                ])
+        if hubo_cambios:
+            clase.evento.save(update_fields=["actualizado_en"])
+    return clase

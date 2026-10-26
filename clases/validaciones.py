@@ -7,7 +7,7 @@ from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
 from reservas.models import Evento
 from usuarios.models import Rol
 
-from .models import ClaseAlumno, ClaseProfesor, TurnoPlanilla
+from .models import Asistencia, ClaseAlumno, ClaseProfesor, TurnoPlanilla
 
 
 def normalizar_usuarios_clase(identificadores):
@@ -108,3 +108,34 @@ def validar_finalizacion_clase(clase, ahora):
     fin = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_fin))
     if ahora < fin:
         raise ValidationError("Sólo se puede finalizar una clase cuando terminó su turno.")
+
+
+def normalizar_registros_asistencia(registros):
+    try:
+        filas = list(registros)
+    except TypeError:
+        raise ValidationError("Indicá una lista de registros de asistencia.") from None
+    normalizados = {}
+    for fila in filas:
+        if not isinstance(fila, dict):
+            raise ValidationError("Cada registro de asistencia debe indicar usuario y estado.")
+        usuario_id = fila.get("usuario_id")
+        if type(usuario_id) is not int or usuario_id <= 0:
+            raise ValidationError("Elegí un usuario válido para cada registro de asistencia.")
+        if usuario_id in normalizados:
+            raise ValidationError("No se puede repetir un usuario en la misma carga de asistencia.")
+        estado = fila.get("estado")
+        if estado not in Asistencia.Estado.values:
+            raise ValidationError("Elegí presente, ausente o sin registrar para cada usuario.")
+        observaciones = fila.get("observaciones")
+        if observaciones is not None and not isinstance(observaciones, str):
+            raise ValidationError("Las observaciones de asistencia deben ser un texto.")
+        if observaciones is not None:
+            observaciones = observaciones.strip() or None
+        normalizados[usuario_id] = {"estado": estado, "observaciones": observaciones}
+    return normalizados
+
+
+def validar_asistencia_clase(clase):
+    if clase.evento.tipo != Evento.Tipo.CLASE or clase.evento.estado != Evento.Estado.FINALIZADO:
+        raise ValidationError("Sólo se puede registrar o corregir asistencia en clases Finalizadas.")
