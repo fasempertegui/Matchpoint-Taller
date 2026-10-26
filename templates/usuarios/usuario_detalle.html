@@ -109,6 +109,14 @@
                 </dl>
             </section>
 
+            {% if puede_consultar_actividad %}
+                <section class="perfil-seccion" aria-labelledby="actividad-clases-titulo">
+                    <h2 id="actividad-clases-titulo">Clases</h2>
+                    <div class="perfil-acciones perfil-acciones-botones">
+                        <a class="boton boton-secundario boton-chico" href="{% url 'clases:actividad_clases' usuario_obj.pk %}">Ver actividad de clases</a>
+                    </div>
+                </section>
+            {% endif %}
             {% if request.user.pk == usuario_obj.pk or perms.usuarios.change_usuario %}
                 <section class="perfil-seccion" aria-labelledby="acceso-titulo">
                     <h2 id="acceso-titulo">Acceso y seguridad</h2>

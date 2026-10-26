@@ -8,6 +8,7 @@ from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
 from .models import Asistencia, TurnoPlanilla
+from .validaciones import validar_periodo_actividad_clases
 
 
 class ClaseTurnoForm(forms.Form):
@@ -145,3 +146,31 @@ class AsistenciaEditorForm(forms.Form):
     observaciones = forms.CharField(
         required=False, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     )
+
+
+class ActividadClasesForm(forms.Form):
+    fecha_desde = forms.DateField(
+        label="Desde", input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+    fecha_hasta = forms.DateField(
+        label="Hasta", input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+    vista = forms.ChoiceField(
+        choices=(("proximas", "Próximas"), ("historial", "Historial"), ("anuladas", "Anuladas")),
+        widget=forms.HiddenInput(),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for campo in ("fecha_desde", "fecha_hasta"):
+            self.fields[campo].widget.attrs.update({
+                "min": FECHA_INICIO_OPERACIONES.isoformat(), "max": fecha_maxima_agenda().isoformat(),
+            })
+
+    def clean(self):
+        datos = super().clean()
+        if datos.get("fecha_desde") and datos.get("fecha_hasta"):
+            validar_periodo_actividad_clases(datos["fecha_desde"], datos["fecha_hasta"])
+        return datos

@@ -101,3 +101,17 @@
 .asistencia-observacion { margin: 4px 0 0; font-size: .9rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 [data-asistencia-editor] .clase-modalidad { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
 [data-asistencia-editor] .clase-observaciones-edicion { margin-top: 20px; }
+
+.actividad-tarjeta-resumen { padding-block: 16px; }
+.actividad-tarjeta-resumen .perfil-seccion + .perfil-seccion { margin-top: 16px; padding-top: 12px; }
+.actividad-filtros { margin-top: 20px; }
+.actividad-resumen { display: flex; flex-wrap: wrap; gap: 20px 40px; margin: 0; }
+.actividad-resumen dt { color: var(--texto-suave); font-size: .9rem; }
+.actividad-resumen dd { margin: 4px 0 0; font-family: var(--fuente-titulos); font-size: 1.4rem; }
+.actividad-listado { margin-top: 20px; }
+.actividad-vistas { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 16px; border-bottom: 1px solid var(--borde); }
+.actividad-vistas a { padding: 10px 0; color: var(--texto-suave); text-decoration: none; border-bottom: 2px solid transparent; }
+.actividad-vistas a[aria-current="page"] { color: var(--primario); border-bottom-color: var(--primario); font-weight: 700; }
+.actividad-secundario { display: block; margin-top: 4px; color: var(--texto-suave); font-size: .9rem; }
+.actividad-nota { margin: 6px 0 0; min-width: 140px; overflow-wrap: anywhere; }
+.actividad-paginacion { margin-top: 20px; }

@@ -20,37 +20,17 @@
             <section class="perfil-seccion" aria-labelledby="clase-datos-titulo">
                 <h2 id="clase-datos-titulo">Datos de la clase</h2>
                 <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Sede y cancha</dt><dd>{{ clase.sede.nombre }} · {{ clase.cancha.nombre }}</dd></div>
-                    <div class="perfil-fila"><dt>Fecha y horario</dt><dd>{{ clase.fecha|date:"d/m/Y" }} · {{ clase.hora_inicio|time:"H:i" }} – {{ clase.hora_fin|time:"H:i" }}</dd></div>
+                    <div class="perfil-fila"><dt>Sede y cancha</dt><dd>{{ clase.sede.nombre }} → {{ clase.cancha.nombre }}</dd></div>
+                    <div class="perfil-fila"><dt>Fecha y horario</dt><dd>{{ clase.fecha|date:"d/m/Y" }} → {{ clase.hora_inicio|time:"H:i" }} a {{ clase.hora_fin|time:"H:i" }}</dd></div>
                     <div class="perfil-fila"><dt>Modalidad</dt><dd>{{ clase.modalidad_texto }}</dd></div>
-                    <div class="perfil-fila"><dt>Origen</dt><dd>{% if clase.es_generada %}Generada desde la planilla{% else %}Creación manual{% endif %}</dd></div>
+                    {% if clase.es_administrador %}<div class="perfil-fila"><dt>Origen</dt><dd>{% if clase.es_generada %}Generada desde la planilla{% else %}Creación manual{% endif %}</dd></div>{% endif %}
                 </dl>
             </section>
             {% if puede_consultar_grupo or clase.profesores %}
                 {% include "clases/_asignaciones_clase.html" with identificador="profesores" titulo=titulo_profesores personas=clase.profesores vigentes=clase.profesores_vigentes retirados=clase.profesores_retirados vacio="Sin profesores en la clase" solo_propios=False only %}
             {% endif %}
             {% if puede_consultar_grupo or clase.participantes %}
-                {% include "clases/_asignaciones_clase.html" with identificador="participantes" titulo=titulo_participantes personas=clase.participantes vigentes=clase.participantes_vigentes retirados=clase.participantes_retirados vacio="Sin participantes en la clase" solo_propios=solo_propios only %}
-            {% endif %}
-            {% if clase.estado == 'finalizado' or clase.puede_finalizar %}
-            <section class="perfil-seccion" aria-labelledby="clase-asistencia-titulo">
-                <h2 id="clase-asistencia-titulo">{% if puede_consultar_grupo %}Asistencia{% else %}Mi asistencia{% endif %}</h2>
-                {% if hay_asistencia %}
-                    <div class="tabla-contenedor">
-                        <table aria-labelledby="clase-asistencia-titulo">
-                            <thead><tr><th scope="col">Nombre</th><th scope="col">Asistencia</th></tr></thead>
-                            <tbody>{% for fila in filas_asistencia %}
-                                <tr>
-                                    <td>{{ fila.nombre }}{% if fila.observaciones %}<p class="texto-secundario perfil-observaciones">{{ fila.observaciones|linebreaksbr }}</p>{% endif %}</td>
-                                    <td>{% include "componentes/badge_estado.html" with estado=fila.badge texto=fila.estado_texto only %}
-                                        {% if fila.registrada_en %}<p class="texto-secundario">{{ fila.registrada_en|date:"d/m/Y H:i" }}{% if fila.registrada_por %} · {{ fila.registrada_por }}{% endif %}</p>{% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}</tbody>
-                        </table>
-                    </div>
-                {% else %}<p class="perfil-descripcion">Todavía no hay asistencia registrada.</p>{% endif %}
-            </section>
+                {% include "clases/_asignaciones_clase.html" with identificador="participantes" titulo=titulo_participantes personas=clase.participantes vigentes=clase.participantes_vigentes retirados=clase.participantes_retirados vacio="Sin participantes en la clase" solo_propios=solo_propios mostrar_asistencia=mostrar_asistencia only %}
             {% endif %}
             {% if clase.observaciones %}
                 <section class="perfil-seccion" aria-labelledby="clase-observaciones-titulo">
@@ -64,25 +44,20 @@
             {% endif %}
         </div>
         <aside class="perfil-lateral" aria-label="Registro y acciones de la clase">
+            {% if registrado_por or clase.estado == 'finalizado' and puede_consultar_grupo %}
             <section class="perfil-seccion" aria-labelledby="clase-registro-titulo">
                 <h2 id="clase-registro-titulo">Registro</h2>
                 <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Creación</dt><dd>{{ clase.creado_en|date:"d/m/Y H:i" }}</dd></div>
-                    {% if registrado_por %}<div class="perfil-fila"><dt>Registrada por</dt><dd>{{ registrado_por }}</dd></div>{% endif %}
+                    {% if registrado_por %}<div class="perfil-fila"><dt>Registrada por</dt><dd>{{ registrado_por }} {% include "componentes/info.html" with texto=clase.creado_en|date:"d/m/Y H:i" only %}</dd></div>{% endif %}
+                    {% if clase.estado == 'finalizado' and puede_consultar_grupo %}<div class="perfil-fila"><dt>Finalizada por</dt><dd>{{ finalizado_por|default:"Finalización automática" }} {% include "componentes/info.html" with texto=clase.finalizado_en|date:"d/m/Y H:i" only %}</dd></div>{% endif %}
                     <div class="perfil-fila"><dt>Última modificación</dt><dd>{{ clase.actualizado_en|date:"d/m/Y H:i" }}</dd></div>
-                    {% if clase.estado == 'anulado' %}
-                        <div class="perfil-fila"><dt>Anulación</dt><dd>{{ clase.anulado_en|date:"d/m/Y H:i" }}</dd></div>
-                        {% if anulado_por %}<div class="perfil-fila"><dt>Anulada por</dt><dd>{{ anulado_por }}</dd></div>{% endif %}
-                    {% elif clase.estado == 'finalizado' %}
-                        <div class="perfil-fila"><dt>Finalización</dt><dd>{{ clase.finalizado_en|date:"d/m/Y H:i" }}</dd></div>
-                        {% if puede_consultar_grupo %}<div class="perfil-fila"><dt>Finalizada por</dt><dd>{{ finalizado_por|default:"Finalización automática" }}</dd></div>{% endif %}
-                    {% endif %}
                 </dl>
             </section>
+            {% endif %}
             <section class="perfil-seccion" aria-labelledby="clase-acciones-titulo">
                 <h2 id="clase-acciones-titulo">Acciones</h2>
                 <div class="perfil-acciones perfil-acciones-botones">
-                    {% if clase.puede_registrar_asistencia or clase.puede_finalizar %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_asistencia' clase.id %}">{% if clase.puede_finalizar %}Finalizar y registrar asistencia{% elif hay_asistencia %}Corregir asistencia{% else %}Registrar asistencia{% endif %}</a>{% endif %}
+                    {% if clase.puede_registrar_asistencia or clase.puede_finalizar %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_asistencia' clase.id %}">{% if clase.puede_finalizar %}Finalizar y registrar asistencia{% elif hay_asistencia %}Revisar asistencia{% else %}Registrar asistencia{% endif %}</a>{% endif %}
                     {% if clase.puede_finalizar %}{% include "clases/_finalizar_clase.html" with clase_id=clase.id %}{% endif %}
                     {% if clase.puede_editar %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_editar' clase.id %}">Editar clase</a>{% endif %}
                     {% if clase.puede_cambiar_cancha %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_cambiar_cancha' clase.id %}">Cambiar de cancha</a>{% endif %}
@@ -93,4 +68,5 @@
         </aside>
     </div>
 </article>
+<script src="{% static 'js/clase-detalle.js' %}" defer></script>
 {% endblock %}

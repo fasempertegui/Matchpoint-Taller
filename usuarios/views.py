@@ -85,6 +85,7 @@ def usuario_detalle(request, pk):
             "usuario_obj": usuario,
             "breadcrumbs": breadcrumbs_usuario(request.user, usuario),
             "roles_asignados": roles_asignados,
+            "puede_consultar_actividad": request.user.pk == usuario.pk or request.user.tiene_rol(Rol.ADMINISTRADOR),
             "roles_gestionables": [
                 {"codigo": codigo, "nombre": nombre, "asignado": codigo in roles_actuales}
                 for codigo, nombre in (

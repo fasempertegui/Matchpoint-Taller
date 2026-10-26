@@ -1,23 +1,39 @@
 <section class="perfil-seccion" aria-labelledby="clase-{{ identificador }}-titulo">
-    <h2 id="clase-{{ identificador }}-titulo">{{ titulo }} ({{ vigentes }}){% if retirados %} <span class="texto-secundario perfil-contador-retirados">({{ retirados }} retirado{{ retirados|pluralize:"s" }})</span>{% endif %}</h2>
+    <h2 id="clase-{{ identificador }}-titulo">{{ titulo }} ({{ vigentes }})</h2>
     {% if solo_propios %}<p class="perfil-descripcion">Sólo se muestra tu información personal.</p>{% endif %}
     <div class="tabla-contenedor">
         <table class="perfil-asignaciones" aria-labelledby="clase-{{ identificador }}-titulo">
-            <thead><tr>
-                <th scope="col">Nombre</th>
-                <th scope="col" title="Indica si la persona sigue asignada a esta clase. No refleja asistencia ni el estado de su cuenta." aria-label="Estado en la clase. Indica si la persona sigue asignada a esta clase. No refleja asistencia ni el estado de su cuenta.">Estado en la clase</th>
-            </tr></thead>
+            <thead><tr><th scope="col">Nombre</th>{% if mostrar_asistencia %}<th scope="col">Asistencia</th>{% endif %}</tr></thead>
             <tbody>
-                {% if not vigentes %}<tr><td colspan="2" class="texto-secundario">{{ vacio }}</td></tr>{% endif %}
+                {% if not vigentes %}<tr><td{% if mostrar_asistencia %} colspan="2"{% endif %} class="texto-secundario">{{ vacio }}</td></tr>{% endif %}
                 {% for persona in personas %}
-                    <tr{% if persona.estado == 'inactivo' %} class="texto-secundario"{% endif %}>
-                        <td>{{ persona.nombre }}
-                            {% if persona.observaciones %}<p class="texto-secundario">{{ persona.observaciones|linebreaksbr }}</p>{% endif %}
-                        </td>
-                        <td>{% if persona.estado == 'activo' %}{% include "componentes/badge_estado.html" with estado="activo" texto="Asignado" only %}{% else %}{% include "componentes/badge_estado.html" with estado="inactivo" texto="Retirado" only %}{% endif %}</td>
-                    </tr>
+                    {% if persona.estado == 'activo' %}
+                        <tr>
+                            <td>{{ persona.nombre }}{% if persona.observaciones %}<p class="texto-secundario">{{ persona.observaciones|linebreaksbr }}</p>{% endif %}</td>
+                            {% if mostrar_asistencia %}<td>{% include "componentes/badge_estado.html" with estado=persona.badge_asistencia texto=persona.asistencia_texto only %}{% if persona.observaciones_asistencia %}<p class="texto-secundario perfil-observaciones">{{ persona.observaciones_asistencia|linebreaksbr }}</p>{% endif %}</td>{% endif %}
+                        </tr>
+                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {% if retirados %}
+        <button class="perfil-enlace perfil-accion perfil-historial-asignaciones" type="button" data-historial-asignaciones aria-controls="historial-{{ identificador }}" aria-haspopup="dialog">Ver {{ retirados }} quitado{{ retirados|pluralize:"s" }}</button>
+        <dialog class="modal-confirmacion" id="historial-{{ identificador }}" aria-labelledby="historial-{{ identificador }}-titulo">
+            <form method="dialog" class="modal-confirmacion-formulario">
+                <header class="modal-confirmacion-cabecera"><h2 id="historial-{{ identificador }}-titulo">{% if identificador == 'profesores' %}Profesores quitados{% else %}Participantes quitados{% endif %}</h2></header>
+                <div class="modal-confirmacion-contenido">
+                    <div class="tabla-contenedor">
+                        <table class="perfil-asignaciones perfil-asignaciones-historial" aria-labelledby="historial-{{ identificador }}-titulo">
+                            <thead><tr><th scope="col">Nombre</th></tr></thead>
+                            <tbody>{% for persona in personas %}{% if persona.estado == 'inactivo' %}
+                                <tr><td>{{ persona.nombre }}{% if persona.observaciones %}<p class="texto-secundario">{{ persona.observaciones|linebreaksbr }}</p>{% endif %}</td></tr>
+                            {% endif %}{% endfor %}</tbody>
+                        </table>
+                    </div>
+                </div>
+                <footer class="modal-confirmacion-acciones"><button class="boton boton-secundario" type="submit" autofocus>Cerrar</button></footer>
+            </form>
+        </dialog>
+    {% endif %}
 </section>

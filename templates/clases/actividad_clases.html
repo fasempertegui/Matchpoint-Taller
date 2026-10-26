@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}Actividad de clases · {{ titular }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/clases.css' %}">{% endblock %}
+
+{% block contenido %}
+<header class="encabezado-pagina">
+    <div>
+        <h1>Actividad de clases</h1>
+    </div>
+</header>
+<section class="tarjeta actividad-tarjeta-resumen" aria-label="Resumen del período">
+    <div class="perfil-seccion">
+    <div class="perfil-valor-accion">
+        <dl class="perfil-lista"><dt>Período</dt>{% if actividad %}<dd>{{ actividad.fecha_desde|date:"d/m/Y" }} – {{ actividad.fecha_hasta|date:"d/m/Y" }}</dd>{% endif %}</dl>
+        <button class="boton boton-secundario boton-chico" type="button" data-cambiar-periodo aria-controls="actividad-periodo-formulario" aria-expanded="{{ formulario.errors|yesno:'true,false' }}">Cambiar período</button>
+    </div>
+        <form class="actividad-filtros" id="actividad-periodo-formulario" method="get"{% if not formulario.errors %} hidden{% endif %}>
+            {{ formulario.vista }}
+            {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+            {% for error in formulario.vista.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            <div class="detalle-grid">
+                <div class="grupo-campo"><label for="{{ formulario.fecha_desde.id_for_label }}">Desde</label>{{ formulario.fecha_desde }}{% for error in formulario.fecha_desde.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
+                <div class="grupo-campo"><label for="{{ formulario.fecha_hasta.id_for_label }}">Hasta</label>{{ formulario.fecha_hasta }}{% for error in formulario.fecha_hasta.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
+            </div>
+            <p class="texto-secundario">Podés consultar hasta 366 días por período.</p>
+            <div class="acciones-formulario"><a class="boton boton-secundario boton-chico" href="{% url 'clases:actividad_clases' titular.pk %}">Este mes</a><button class="boton boton-primario boton-chico" type="submit">Aplicar período</button></div>
+        </form>
+    </div>
+    {% if actividad %}
+    <div class="perfil-seccion">
+    <dl class="actividad-resumen">
+        {% if es_profesor %}
+            <div><dt>Clases dictadas</dt><dd>{{ resumen.dictadas }}</dd></div>
+            <div><dt>Próximas</dt><dd>{{ resumen.proximas }}</dd></div>
+            {% if resumen.sin_cargar %}<div><dt>Asistencia sin cargar</dt><dd>{{ resumen.sin_cargar }}</dd></div>{% endif %}
+        {% else %}
+            <div><dt>Clases</dt><dd>{{ resumen.clases }}</dd></div>
+            {% if es_alumno %}
+                <div><dt>Asistencia {% include "componentes/info.html" with texto="El resumen de asistencia corresponde solo a clases Finalizadas. Sin registrar no equivale a Ausente." only %}</dt><dd>{{ resumen.presentes }} de {{ resumen.finalizadas }}</dd></div>
+                {% if resumen.ausentes %}<div><dt>Ausentes</dt><dd>{{ resumen.ausentes }}</dd></div>{% endif %}
+                {% if resumen.sin_registrar %}<div><dt>Sin registrar</dt><dd>{{ resumen.sin_registrar }}</dd></div>{% endif %}
+            {% endif %}
+        {% endif %}
+    </dl>
+    </div>
+    {% endif %}
+</section>
+{% if actividad %}
+<section class="tarjeta actividad-listado" aria-label="Clases del período">
+    <nav class="actividad-vistas" aria-label="Secciones de actividad">
+        {% for vista in vistas %}<a href="{{ vista.url }}"{% if vista.actual %} aria-current="page"{% endif %}>{{ vista.nombre }}</a>{% endfor %}
+    </nav>
+    {% if pagina %}
+    <div class="tabla-contenedor">
+        <table>
+            <caption class="clase-etiqueta-oculta">Clases de {{ titular }} en el período consultado</caption>
+            <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if formulario.vista.value != 'anuladas' %}<th scope="col">Estado de clase</th>{% endif %}{% if es_alumno %}<th scope="col">Asistencia</th>{% endif %}<th scope="col">Acción</th></tr></thead>
+            <tbody>{% for fila in pagina %}
+                <tr>
+                    <td><strong>{{ fila.fecha|date:"d/m/Y" }}</strong><span class="actividad-secundario">{{ fila.hora_inicio|time:"H:i" }} – {{ fila.hora_fin|time:"H:i" }}</span></td>
+                    <td>{{ fila.sede.nombre }}<span class="actividad-secundario">{{ fila.cancha.nombre }} · {{ fila.modalidad_texto }}</span></td>
+                    {% if formulario.vista.value != 'anuladas' %}<td>{% include "componentes/badge_estado.html" with estado=fila.estado texto=fila.estado_texto only %}</td>{% endif %}
+                    {% if es_alumno %}<td>
+                        {% if fila.asistencia_texto %}
+                            {% include "componentes/badge_estado.html" with estado=fila.badge_asistencia texto=fila.asistencia_texto only %}
+                            {% if fila.observaciones_asistencia %}<p class="actividad-nota texto-secundario">{{ fila.observaciones_asistencia|linebreaksbr }}</p>{% endif %}
+                        {% else %}<span class="texto-secundario">—</span>{% endif %}
+                    </td>{% endif %}
+                    <td><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' fila.id %}" aria-label="Ver clase {{ fila.id }} del {{ fila.fecha|date:'d/m/Y' }}">Ver clase</a></td>
+                </tr>
+            {% endfor %}</tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="estado-vacio">{% if formulario.vista.value == 'proximas' %}No hay próximas clases asignadas en este período.{% elif formulario.vista.value == 'anuladas' %}No hay clases anuladas en este período.{% else %}No hay clases en el historial de este período.{% endif %}</p>
+    {% endif %}
+    {% if pagina %}
+        <nav class="acciones actividad-paginacion" aria-label="Páginas de actividad">
+            {% if url_anterior %}<a class="boton boton-secundario boton-chico" href="{{ url_anterior }}">Anterior</a>{% endif %}
+            <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+            {% if url_siguiente %}<a class="boton boton-secundario boton-chico" href="{{ url_siguiente }}">Siguiente</a>{% endif %}
+        </nav>
+    {% endif %}
+</section>
+{% endif %}
+<script src="{% static 'js/clase-actividad.js' %}" defer></script>
+{% endblock %}

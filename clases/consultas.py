@@ -27,11 +27,11 @@ def consultar_clase(usuario, clase_id):
     asistencias = clase.asistencias.select_related("usuario")
     puede_consultar_grupo = es_administrador or es_profesor
     if not puede_consultar_grupo:
-        profesores = profesores.filter(profesor=usuario)
         participantes = participantes.filter(usuario=usuario)
         asistencias = asistencias.filter(usuario=usuario)
-        if not (profesores.exists() or participantes.exists() or asistencias.exists()):
+        if not (profesores.filter(profesor=usuario).exists() or participantes.exists() or asistencias.exists()):
             raise PermissionDenied
+        profesores = profesores.filter(Q(estado=ClaseProfesor.Estado.ACTIVO) | Q(profesor=usuario))
 
     turno = clase.evento.turno
     ahora = timezone.localtime()
@@ -168,6 +168,9 @@ def consultar_actividad_clases(usuario, fecha_desde, fecha_hasta, usuario_id=Non
         tiene_docencia=Exists(profesores.filter(clase_id=OuterRef("pk"))),
         tiene_participacion=Exists(participantes.filter(clase_id=OuterRef("pk"))),
         tiene_asistencia=Exists(asistencias.filter(clase_id=OuterRef("pk"))),
+        asistencia_cargada=Exists(Asistencia.objects.filter(
+            clase_id=OuterRef("pk"), estado__in=(Asistencia.Estado.PRESENTE, Asistencia.Estado.AUSENTE),
+        )),
     ).filter(
         Q(tiene_docencia=True) | Q(tiene_participacion=True) | Q(tiene_asistencia=True),
     ).select_related("evento__turno__cancha__sede").prefetch_related(
@@ -213,6 +216,7 @@ def consultar_actividad_clases(usuario, fecha_desde, fecha_hasta, usuario_id=Non
             "asignacion_profesor": profesor.estado if profesor is not None else None,
             "asignacion_participante": participante.estado if participante is not None else None,
             "asistencia": estado_asistencia,
+            "asistencia_cargada": clase.asistencia_cargada,
             "observaciones_asistencia": asistencia.observaciones if asistencia is not None else None,
             "asistencia_registrada_en": asistencia.registrada_en if asistencia is not None else None,
             "asistencia_actualizada_en": asistencia.actualizado_en if asistencia is not None else None,

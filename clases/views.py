@@ -1,25 +1,28 @@
+from calendar import monthrange
 from datetime import datetime, time, timedelta
 from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import Http404, JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
+from common.fechas import FECHA_INICIO_OPERACIONES
 from reservas.models import Evento
-from usuarios.models import Usuario
+from usuarios.models import Rol, Usuario
 
 from .anulaciones import confirmar_anulacion_clase, preparar_anulacion_clase, validar_accion_anulacion
-from .consultas import consultar_clase, consultar_profesores, consultar_participantes
-from .forms import AsistenciaEditorForm, AsistenciaFormSet, ClaseAnulacionForm, ClaseCanchaForm, ClaseForm, ClaseTurnoForm
+from .consultas import consultar_actividad_clases, consultar_clase, consultar_profesores, consultar_participantes
+from .forms import ActividadClasesForm, AsistenciaEditorForm, AsistenciaFormSet, ClaseAnulacionForm, ClaseCanchaForm, ClaseForm, ClaseTurnoForm
 from .models import Asistencia, Clase, TurnoPlanilla
-from .permisos import exigir_administracion_clases
+from .permisos import exigir_acceso_clases, exigir_administracion_clases
 from .servicios import (
     cambiar_cancha_clase, consultar_edicion_clase, editar_clase,
     preparar_cambio_cancha, preparar_edicion_clase,
@@ -47,19 +50,14 @@ def clase_detalle(request, pk):
         responsables = Usuario.objects.in_bulk({
             clase[campo] for campo in ("registrado_por_id", "anulado_por_id", "finalizado_por_id")
             if clase[campo] is not None
-        } | {fila["registrada_por_id"] for fila in clase["asistencias"] if fila["registrada_por_id"] is not None})
-    asistencias = {fila["usuario_id"]: dict(fila) for fila in clase["asistencias"]}
+        })
+    asistencias = {fila["usuario_id"]: fila for fila in clase["asistencias"]}
     for participante in clase["participantes"]:
         if participante["estado"] == "activo":
-            asistencias.setdefault(participante["usuario_id"], {
-                "usuario_id": participante["usuario_id"], "nombre": participante["nombre"],
-                "estado": Asistencia.Estado.SIN_REGISTRAR,
-            })
-    filas_asistencia = sorted(asistencias.values(), key=lambda fila: (fila["nombre"].casefold(), fila["usuario_id"]))
-    for fila in filas_asistencia:
-        fila["estado_texto"] = Asistencia.Estado(fila["estado"]).label
-        fila["badge"] = "activo" if fila["estado"] == Asistencia.Estado.PRESENTE else "inactivo"
-        fila["registrada_por"] = responsables.get(fila.get("registrada_por_id"))
+            asistencia = asistencias.get(participante["usuario_id"], {"estado": Asistencia.Estado.SIN_REGISTRAR})
+            participante["asistencia_texto"] = Asistencia.Estado(asistencia["estado"]).label
+            participante["badge_asistencia"] = "activo" if asistencia["estado"] == Asistencia.Estado.PRESENTE else "inactivo"
+            participante["observaciones_asistencia"] = asistencia.get("observaciones")
 
     for seccion in ("profesores", "participantes"):
         clase[seccion].sort(key=lambda persona: (
@@ -78,9 +76,9 @@ def clase_detalle(request, pk):
         "clase": clase,
         "puede_consultar_grupo": puede_consultar_grupo,
         "solo_propios": not puede_consultar_grupo,
-        "filas_asistencia": filas_asistencia,
+        "mostrar_asistencia": clase["estado"] == Evento.Estado.FINALIZADO,
         "hay_asistencia": bool(clase["asistencias"]),
-        "titulo_profesores": "Profesores" if puede_consultar_grupo else "Mi asignación como profesor",
+        "titulo_profesores": "Profesores",
         "titulo_participantes": "Participantes" if puede_consultar_grupo else "Mi participación",
         "registrado_por": responsables.get(clase["registrado_por_id"]),
         "anulado_por": responsables.get(clase["anulado_por_id"]),
@@ -427,4 +425,102 @@ def clase_asistencia(request, pk):
         "finalizar": clase.evento.estado == Evento.Estado.PROGRAMADO,
         "url_detalle": url_detalle,
         "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Asistencia", None)],
+    })
+
+
+@login_required
+@never_cache
+@require_GET
+def actividad_clases(request, usuario_id):
+    usuario = exigir_acceso_clases(request.user)
+    if usuario.pk != usuario_id and not usuario.tiene_rol(Rol.ADMINISTRADOR):
+        raise PermissionDenied
+    titular = get_object_or_404(Usuario, pk=usuario_id)
+    roles = set(titular.roles.values_list("rol__codigo", flat=True))
+    es_profesor = Rol.PROFESOR in roles
+    es_alumno = Rol.ALUMNO in roles
+    hoy = timezone.localdate()
+    parametros = request.GET.copy()
+    parametros.setdefault("fecha_desde", max(hoy.replace(day=1), FECHA_INICIO_OPERACIONES).isoformat())
+    parametros.setdefault("fecha_hasta", hoy.replace(day=monthrange(hoy.year, hoy.month)[1]).isoformat())
+    parametros.setdefault("vista", "proximas")
+    formulario = ActividadClasesForm(parametros)
+    actividad = None
+    resumen = None
+    pagina = None
+    vistas = []
+    url_anterior = None
+    url_siguiente = None
+    if formulario.is_valid():
+        filtros = formulario.cleaned_data
+        actividad = consultar_actividad_clases(
+            usuario, filtros["fecha_desde"], filtros["fecha_hasta"], usuario_id=usuario_id,
+        )
+        if es_profesor:
+            campo_asignacion = "asignacion_profesor"
+        elif es_alumno:
+            campo_asignacion = "asignacion_participante"
+        else:
+            campo_asignacion = None
+        if campo_asignacion:
+            actividad["proximas"] = [
+                fila for fila in actividad["proximas"] if fila[campo_asignacion] == "activo"
+            ]
+            for grupo in ("clases", "anuladas"):
+                actividad[grupo] = [
+                    fila for fila in actividad[grupo]
+                    if fila[campo_asignacion] is not None or (es_alumno and fila["asistencia"] is not None)
+                ]
+        finalizadas = [fila for fila in actividad["clases"] if fila["estado"] == Evento.Estado.FINALIZADO]
+        if es_profesor:
+            dictadas = [fila for fila in finalizadas if fila["asignacion_profesor"] == "activo"]
+            resumen = {
+                "dictadas": len(dictadas), "proximas": len(actividad["proximas"]),
+                "sin_cargar": sum(not fila["asistencia_cargada"] for fila in dictadas),
+            }
+        else:
+            asistencias = [fila["asistencia"] for fila in finalizadas if fila["asistencia"] is not None]
+            resumen = {
+                "clases": sum(fila["asignacion_participante"] == "activo" for fila in actividad["clases"]),
+                "finalizadas": len(asistencias), "presentes": asistencias.count(Asistencia.Estado.PRESENTE),
+                "ausentes": asistencias.count(Asistencia.Estado.AUSENTE),
+                "sin_registrar": asistencias.count(Asistencia.Estado.SIN_REGISTRAR),
+            }
+        ids_proximas = {fila["id"] for fila in actividad["proximas"]}
+        grupos = {
+            "proximas": actividad["proximas"],
+            "historial": [fila for fila in actividad["clases"] if fila["id"] not in ids_proximas],
+            "anuladas": actividad["anuladas"],
+        }
+        grupos["historial"].sort(key=lambda fila: (fila["fecha"], fila["hora_inicio"], fila["id"]), reverse=True)
+        grupos["anuladas"].sort(key=lambda fila: (fila["fecha"], fila["hora_inicio"], fila["id"]), reverse=True)
+        enlaces = {
+            "fecha_desde": filtros["fecha_desde"].isoformat(),
+            "fecha_hasta": filtros["fecha_hasta"].isoformat(),
+        }
+        for codigo, nombre in formulario.fields["vista"].choices:
+            vistas.append({
+                "nombre": nombre, "actual": codigo == filtros["vista"],
+                "url": request.path + "?" + urlencode({**enlaces, "vista": codigo}),
+            })
+        pagina = Paginator(grupos[filtros["vista"]], 10).get_page(request.GET.get("pagina"))
+        for fila in pagina:
+            fila["estado_texto"] = Evento.Estado(fila["estado"]).label
+            fila["modalidad_texto"] = TurnoPlanilla.Modalidad(fila["modalidad"]).label if fila["modalidad"] else "Sin especificar"
+            fila["asistencia_texto"] = None
+            if es_alumno and fila["estado"] == Evento.Estado.FINALIZADO and fila["asistencia"] is not None:
+                fila["asistencia_texto"] = Asistencia.Estado(fila["asistencia"]).label
+                fila["badge_asistencia"] = "activo" if fila["asistencia"] == Asistencia.Estado.PRESENTE else "inactivo"
+        enlaces["vista"] = filtros["vista"]
+        if pagina.has_previous():
+            url_anterior = request.path + "?" + urlencode({**enlaces, "pagina": pagina.previous_page_number()})
+        if pagina.has_next():
+            url_siguiente = request.path + "?" + urlencode({**enlaces, "pagina": pagina.next_page_number()})
+    url_perfil = reverse("usuarios:usuario_detalle", args=[usuario_id])
+    return render(request, "clases/actividad_clases.html", {
+        "titular": titular, "actividad": actividad, "formulario": formulario,
+        "es_profesor": es_profesor, "es_alumno": es_alumno, "resumen": resumen,
+        "vistas": vistas, "pagina": pagina, "url_anterior": url_anterior, "url_siguiente": url_siguiente,
+        "url_perfil": url_perfil,
+        "breadcrumbs": [("Inicio", reverse("inicio")), (str(titular), url_perfil), ("Actividad de clases", None)],
     })
