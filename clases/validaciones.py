@@ -47,9 +47,9 @@ def validar_horario_clase(sede, fecha, hora_inicio):
 
 def validar_usuarios_clase(
     usuarios, profesores_ids, participantes_ids,
-    profesores_actuales=frozenset(), participantes_actuales=frozenset(),
+    profesores_actuales=frozenset(), participantes_actuales=frozenset(), requiere_profesor=True,
 ):
-    if not profesores_ids:
+    if requiere_profesor and not profesores_ids:
         raise ValidationError("La clase debe tener al menos un profesor.")
     if profesores_ids & participantes_ids:
         raise ValidationError("Una persona no puede dictar y participar en la misma clase.")
@@ -162,3 +162,26 @@ def validar_retiro_rol_profesor(usuario):
             "No se puede quitar el rol Profesor mientras el usuario tenga "
             "asignaciones activas como profesor en clases Programadas."
         )
+
+
+def validar_datos_planilla(dia_semana, hora_inicio, modalidad, observaciones):
+    if type(dia_semana) is not int or dia_semana not in TurnoPlanilla.DiaSemana.values:
+        raise ValidationError("Elegí un día de la semana entre lunes y domingo.")
+    if hora_inicio not in tuple(time(hora) for hora in range(23)):
+        raise ValidationError("El turno de planilla debe comenzar en punto entre las 00:00 y las 22:00.")
+    if modalidad is not None and modalidad not in TurnoPlanilla.Modalidad.values:
+        raise ValidationError("Elegí una modalidad válida para el turno de planilla.")
+    if observaciones is not None and not isinstance(observaciones, str):
+        raise ValidationError("Las observaciones deben ser un texto.")
+
+
+def validar_horario_planilla(sede, dia_semana, hora_inicio):
+    horario = sede.horarios.filter(dia_semana=dia_semana).first()
+    franjas = []
+    if horario is not None:
+        franjas.append((horario.hora_inicio_1, horario.hora_fin_1))
+        if horario.hora_inicio_2 is not None:
+            franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
+    hora_fin = time(hora_inicio.hour + 1)
+    if not any(hora_inicio >= inicio and hora_fin <= fin for inicio, fin in franjas):
+        raise ValidationError("El turno de planilla debe quedar íntegramente dentro de una franja de funcionamiento.")
