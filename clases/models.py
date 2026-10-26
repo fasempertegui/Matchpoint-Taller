@@ -135,3 +135,176 @@ class TurnoPlanillaAlumno(models.Model):
 
     def __str__(self):
         return f"{self.turno_planilla} - {self.usuario}"
+
+
+class Clase(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    evento = models.OneToOneField(
+        "reservas.Evento",
+        on_delete=models.PROTECT,
+        related_name="clase",
+        limit_choices_to={"tipo": "clase"},
+    )
+    turno_planilla = models.ForeignKey(
+        TurnoPlanilla,
+        on_delete=models.SET_NULL,
+        related_name="clases",
+        blank=True,
+        null=True,
+    )
+    es_generada = models.BooleanField(default=False)
+    modalidad = models.CharField(
+        max_length=15,
+        choices=TurnoPlanilla.Modalidad.choices,
+        blank=True,
+        null=True,
+    )
+    finalizado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="clases_finalizadas",
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "clases"
+        ordering = ("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
+        default_permissions = ()
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(modalidad__isnull=True)
+                    | models.Q(modalidad__in=("individual", "grupal"))
+                ),
+                name="clase_modalidad_valida",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(es_generada=True) | models.Q(turno_planilla__isnull=True),
+                name="clase_origen_planilla_valido",
+                violation_error_message="Una clase manual no puede tener un turno de planilla de origen.",
+            ),
+        ]
+        verbose_name = "clase"
+        verbose_name_plural = "clases"
+
+    def __str__(self):
+        return f"Clase {self.pk}"
+
+
+class ClaseProfesor(models.Model):
+    class Estado(models.TextChoices):
+        ACTIVO = "activo", "Activo"
+        INACTIVO = "inactivo", "Inactivo"
+
+    pk = models.CompositePrimaryKey("clase_id", "profesor_id")
+    clase = models.ForeignKey(Clase, on_delete=models.CASCADE, related_name="profesores")
+    profesor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="clases_como_profesor",
+    )
+    estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "clases_profesores"
+        ordering = ("clase_id", "profesor_id")
+        default_permissions = ()
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(estado__in=("activo", "inactivo")),
+                name="clase_profesor_estado_valido",
+            ),
+        ]
+        verbose_name = "profesor de clase"
+        verbose_name_plural = "profesores de clases"
+
+    def __str__(self):
+        return f"{self.clase} - {self.profesor}"
+
+
+class ClaseAlumno(models.Model):
+    class Estado(models.TextChoices):
+        ACTIVO = "activo", "Activo"
+        INACTIVO = "inactivo", "Inactivo"
+
+    pk = models.CompositePrimaryKey("clase_id", "usuario_id")
+    clase = models.ForeignKey(Clase, on_delete=models.CASCADE, related_name="alumnos")
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="clases_como_participante",
+    )
+    observaciones = models.TextField(blank=True, null=True)
+    estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
+    recordatorio_enviado = models.BooleanField(default=False)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "clases_alumnos"
+        ordering = ("clase_id", "usuario_id")
+        default_permissions = ()
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(estado__in=("activo", "inactivo")),
+                name="clase_alumno_estado_valido",
+            ),
+        ]
+        verbose_name = "participante de clase"
+        verbose_name_plural = "participantes de clases"
+
+    def __str__(self):
+        return f"{self.clase} - {self.usuario}"
+
+
+class Asistencia(models.Model):
+    class Estado(models.TextChoices):
+        PRESENTE = "presente", "Presente"
+        AUSENTE = "ausente", "Ausente"
+        SIN_REGISTRAR = "sin_registrar", "Sin registrar"
+
+    pk = models.CompositePrimaryKey("clase_id", "usuario_id")
+    clase = models.ForeignKey(Clase, on_delete=models.CASCADE, related_name="asistencias")
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="asistencias",
+    )
+    estado = models.CharField(max_length=15, choices=Estado.choices, default=Estado.SIN_REGISTRAR)
+    registrada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="asistencias_registradas",
+        blank=True,
+        null=True,
+    )
+    observaciones = models.TextField(blank=True, null=True)
+    registrada_en = models.DateTimeField(blank=True, null=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "asistencias"
+        ordering = ("clase_id", "usuario_id")
+        default_permissions = ()
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(estado="sin_registrar")
+                    | models.Q(
+                        estado__in=("presente", "ausente"),
+                        registrada_por__isnull=False,
+                        registrada_en__isnull=False,
+                    )
+                ),
+                name="asistencia_estado_y_registro_validos",
+                violation_error_message="Una asistencia presente o ausente debe tener responsable y momento de registro.",
+            ),
+        ]
+        verbose_name = "asistencia"
+        verbose_name_plural = "asistencias"
+
+    def __str__(self):
+        return f"{self.clase} - {self.usuario}: {self.get_estado_display()}"
