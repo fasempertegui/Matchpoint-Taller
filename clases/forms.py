@@ -8,7 +8,7 @@ from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
 from .models import Asistencia, TurnoPlanilla
-from .validaciones import validar_datos_feriado, validar_periodo_actividad_clases
+from .validaciones import validar_datos_feriado, validar_periodo_actividad_clases, validar_periodo_generacion
 
 
 class ClaseTurnoForm(forms.Form):
@@ -224,4 +224,32 @@ class FeriadoForm(forms.Form):
         datos = super().clean()
         if datos.get("fecha") and datos.get("descripcion"):
             validar_datos_feriado(datos["fecha"], datos["descripcion"])
+        return datos
+
+
+class GeneracionClasesForm(forms.Form):
+    sede = forms.ModelChoiceField(
+        label="Sede", queryset=Sede.objects.order_by("estado", "nombre", "pk"), empty_label="Elegí una sede",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    fecha_desde = forms.DateField(
+        label="Desde", input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+    fecha_hasta = forms.DateField(
+        label="Hasta", input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for nombre in ("fecha_desde", "fecha_hasta"):
+            self.fields[nombre].widget.attrs.update({
+                "min": FECHA_INICIO_OPERACIONES.isoformat(), "max": fecha_maxima_agenda().isoformat(),
+            })
+
+    def clean(self):
+        datos = super().clean()
+        if datos.get("fecha_desde") and datos.get("fecha_hasta"):
+            validar_periodo_generacion(datos["fecha_desde"], datos["fecha_hasta"])
         return datos

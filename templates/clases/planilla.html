@@ -3,7 +3,10 @@
 {% block titulo %}Planilla semanal | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/planilla.css' %}">{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><h1>Planilla semanal</h1></header>
+<header class="tarjeta encabezado-pagina">
+    <h1>Planilla semanal</h1>
+    {% if cancha %}<a class="boton boton-secundario" href="{% url 'clases:generacion_clases' %}?sede={{ cancha.sede_id }}&amp;cancha={{ cancha.pk }}">Generar clases</a>{% endif %}
+</header>
 {% if hay_sedes %}
     <section class="tarjeta">
         <form class="planilla-filtros" method="get" data-planilla-filtros>

@@ -1,0 +1,15 @@
+<div class="tabla-contenedor actividad-listado">
+    <table>
+        <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Cancha</th><th scope="col">Modalidad</th><th scope="col">Profesores</th><th scope="col">Participantes</th>{% if mostrar_motivo %}<th scope="col">Motivo</th>{% endif %}</tr></thead>
+        <tbody>{% for fila in filas %}
+            <tr>
+                <td>{{ fila.fecha|date:"d/m/Y" }}<span class="actividad-secundario">{{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</span></td>
+                <td>{{ fila.cancha.nombre }}</td>
+                <td>{{ fila.modalidad_texto }}{% if fila.observaciones %}<p class="actividad-nota texto-secundario">{{ fila.observaciones|linebreaksbr }}</p>{% endif %}</td>
+                <td>{{ fila.profesores|join:", "|default:"—" }}</td>
+                <td{% if fila.advertencia %} class="clase-contador-advertencia"{% endif %}>{{ fila.participantes|join:", "|default:"—" }}{% if fila.advertencia %}<p class="actividad-nota">Superás el máximo recomendado de 6 participantes para una clase grupal.</p>{% endif %}</td>
+                {% if mostrar_motivo %}<td>{{ fila.motivo }}</td>{% endif %}
+            </tr>
+        {% endfor %}</tbody>
+    </table>
+</div>

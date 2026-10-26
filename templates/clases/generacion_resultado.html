@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Resultado de generación | Academia TM{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
+<link rel="stylesheet" href="{% static 'css/clases.css' %}">
+{% endblock %}
+{% block contenido %}
+<header class="clase-encabezado"><h1>Resultado de generación</h1></header>
+<section class="tarjeta">
+    <p class="mensaje mensaje-success" role="status">Se crearon {{ cantidad_creadas }} clases.</p>
+    <dl class="perfil-lista">
+        <div class="perfil-fila"><dt>Sede</dt><dd>{{ sede.nombre }}</dd></div>
+        <div class="perfil-fila"><dt>Período</dt><dd>{{ desde|date:"d/m/Y" }} – {{ hasta|date:"d/m/Y" }}</dd></div>
+        <div class="perfil-fila"><dt>Clases omitidas</dt><dd>{{ resultado.omitidas }}</dd></div>
+    </dl>
+    {% if pagina %}
+        <div class="tabla-contenedor actividad-listado">
+            <table>
+                <caption class="clase-etiqueta-oculta">Clases creadas</caption>
+                <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Cancha</th><th scope="col">Acción</th></tr></thead>
+                <tbody>{% for clase in pagina %}<tr>
+                    <td>{{ clase.evento.turno.fecha|date:"d/m/Y" }}<span class="actividad-secundario">{{ clase.evento.turno.hora_inicio|time:"H:i" }} a {{ clase.evento.turno.hora_fin|time:"H:i" }}</span></td>
+                    <td>{{ clase.evento.turno.cancha.nombre }}</td>
+                    <td><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' clase.pk %}">Ver clase</a></td>
+                </tr>{% endfor %}</tbody>
+            </table>
+        </div>
+        <nav class="acciones actividad-paginacion" aria-label="Páginas de clases creadas">
+            {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+            <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+            {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+        </nav>
+    {% endif %}
+    {% if omitidas %}
+        <details class="perfil-desplegable"><summary>Clases omitidas ({{ omitidas|length }})</summary>
+            {% include "clases/_generacion_tabla.html" with filas=omitidas mostrar_motivo=True only %}
+        </details>
+    {% endif %}
+    <div class="acciones-formulario"><a class="boton boton-secundario" href="{{ url_planilla }}">Volver a la planilla</a><a class="boton boton-primario" href="{{ url_agenda }}">Ver en agenda</a></div>
+</section>
+{% endblock %}
