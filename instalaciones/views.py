@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -16,6 +16,7 @@ from usuarios.models import Rol
 
 from .forms import CanchaForm, SedeForm, SedeHorarioForm, SedePrecioForm
 from .models import Cancha, Sede, SedeHorario
+from .servicios import cambiar_estado_cancha, cambiar_estado_sede
 
 
 def _breadcrumbs_sede(usuario, sede=None, pestana=None):
@@ -296,31 +297,20 @@ def sede_editar(request, pk):
 @permission_required("instalaciones.change_sede", raise_exception=True)
 @require_http_methods(["POST"])
 def sede_cambiar_estado(request, pk):
-    with transaction.atomic():
-        sede = get_object_or_404(Sede.objects.select_for_update(), pk=pk)
-        nuevo_estado = request.POST.get("estado")
-        if nuevo_estado not in Sede.Estado.values:
-            messages.error(request, "El estado solicitado para la sede no es válido.")
-            return redirect("instalaciones:sede_detalle", pk=sede.pk)
-        if nuevo_estado == sede.estado:
+    sede = get_object_or_404(Sede, pk=pk)
+    estado_actual = sede.estado
+    try:
+        sede = cambiar_estado_sede(
+            request.user, sede.pk, request.POST.get("estado"), request.POST.get("confirmacion"),
+        )
+    except ValidationError as error:
+        for mensaje in error.messages:
+            messages.error(request, mensaje)
+    else:
+        if sede.estado == estado_actual:
             messages.info(request, f'La sede "{sede.nombre}" ya está {sede.get_estado_display().lower()}.')
-            return redirect("instalaciones:sede_detalle", pk=sede.pk)
-        if nuevo_estado == Sede.Estado.INACTIVA and Evento.objects.filter(
-            tipo=Evento.Tipo.RESERVA,
-            estado=Evento.Estado.PROGRAMADO,
-            turno__cancha__sede=sede,
-        ).exists():
-            messages.error(
-                request,
-                "No se puede desactivar la sede mientras tenga reservas Programadas. "
-                "Anulá las futuras o esperá su finalización automática.",
-            )
-            return redirect("instalaciones:sede_detalle", pk=sede.pk)
-        sede.estado = nuevo_estado
-        sede.save(update_fields=["estado", "actualizado_en"])
-    messages.success(
-        request, f'La sede "{sede.nombre}" quedó {sede.get_estado_display().lower()}.'
-    )
+        else:
+            messages.success(request, f'La sede "{sede.nombre}" quedó {sede.get_estado_display().lower()}.')
     return redirect("instalaciones:sede_detalle", pk=sede.pk)
 
 
@@ -413,31 +403,20 @@ def cancha_editar(request, sede_pk, pk):
 @permission_required("instalaciones.change_cancha", raise_exception=True)
 @require_http_methods(["POST"])
 def cancha_cambiar_estado(request, sede_pk, pk):
-    with transaction.atomic():
-        sede = get_object_or_404(Sede.objects.select_for_update(), pk=sede_pk)
-        cancha = get_object_or_404(Cancha.objects.select_for_update(of=("self",)), pk=pk, sede=sede)
-        nuevo_estado = request.POST.get("estado")
-        destino = reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas"
-        if nuevo_estado not in Cancha.Estado.values:
-            messages.error(request, "El estado solicitado para la cancha no es válido.")
-            return redirect(destino)
-        if nuevo_estado == cancha.estado:
+    sede = get_object_or_404(Sede, pk=sede_pk)
+    cancha = get_object_or_404(Cancha, pk=pk, sede=sede)
+    estado_actual = cancha.estado
+    destino = reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas"
+    try:
+        cancha = cambiar_estado_cancha(
+            request.user, sede.pk, cancha.pk, request.POST.get("estado"), request.POST.get("confirmacion"),
+        )
+    except ValidationError as error:
+        for mensaje in error.messages:
+            messages.error(request, mensaje)
+    else:
+        if cancha.estado == estado_actual:
             messages.info(request, f'La cancha "{cancha.nombre}" ya está {cancha.get_estado_display().lower()}.')
-            return redirect(destino)
-        if nuevo_estado == Cancha.Estado.INACTIVA and Evento.objects.filter(
-            tipo=Evento.Tipo.RESERVA,
-            estado=Evento.Estado.PROGRAMADO,
-            turno__cancha=cancha,
-        ).exists():
-            messages.error(
-                request,
-                "No se puede desactivar la cancha mientras tenga reservas Programadas. "
-                "Anulá las futuras o esperá su finalización automática.",
-            )
-            return redirect(destino)
-        cancha.estado = nuevo_estado
-        cancha.save(update_fields=["estado", "actualizado_en"])
-    messages.success(
-        request, f'La cancha "{cancha.nombre}" quedó {cancha.get_estado_display().lower()}.'
-    )
-    return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas")
+        else:
+            messages.success(request, f'La cancha "{cancha.nombre}" quedó {cancha.get_estado_display().lower()}.')
+    return redirect(destino)
