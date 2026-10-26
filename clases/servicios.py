@@ -13,6 +13,7 @@ from .models import Clase, ClaseAlumno, ClaseProfesor
 from .permisos import exigir_administracion_clases
 from .validaciones import (
     normalizar_usuarios_clase,
+    validar_anulacion_clase,
     validar_conflictos_clase,
     validar_datos_clase,
     validar_horario_clase,
@@ -227,4 +228,49 @@ def editar_clase(
         if cambia_cancha and timezone.localtime() >= inicio:
             raise ValidationError("El turno ya comenzó. No se guardó el cambio de cancha.")
     clase.evento = evento
+    return clase
+
+
+@transaction.atomic
+def anular_clase(anulado_por, clase_id, motivo):
+    anulado_por = exigir_administracion_clases(anulado_por)
+    if not isinstance(motivo, str) or not motivo.strip():
+        raise ValidationError("Indicá el motivo de la anulación.")
+    motivo = motivo.strip()
+    inicial = Clase.objects.select_related("evento__turno__cancha").get(pk=clase_id)
+    profesores_ids = set(inicial.profesores.values_list("profesor_id", flat=True))
+    participantes_ids = set(inicial.alumnos.values_list("usuario_id", flat=True))
+    usuarios = _bloquear_usuarios_clase(profesores_ids | participantes_ids | {anulado_por.pk})
+    anulado_por = exigir_administracion_clases(usuarios.get(anulado_por.pk))
+
+    origen = inicial.evento.turno
+    Sede.objects.select_for_update().get(pk=origen.cancha.sede_id)
+    cancha = Cancha.objects.select_for_update().get(pk=origen.cancha_id)
+    turno = Turno.objects.select_for_update().get(pk=origen.pk)
+    evento = Evento.objects.select_for_update().get(pk=inicial.evento_id)
+    clase = Clase.objects.select_for_update().get(pk=clase_id)
+    if (
+        cancha.sede_id != origen.cancha.sede_id
+        or clase.evento_id != inicial.evento_id or evento.turno_id != origen.pk
+        or evento.actualizado_en != inicial.evento.actualizado_en
+        or profesores_ids != set(clase.profesores.values_list("profesor_id", flat=True))
+        or participantes_ids != set(clase.alumnos.values_list("usuario_id", flat=True))
+    ):
+        raise ValidationError("La clase cambió durante la anulación. Revisá sus datos y asignaciones.")
+    evento.turno = turno
+    clase.evento = evento
+    ahora = timezone.localtime()
+    validar_anulacion_clase(clase, ahora)
+
+    with contexto_auditoria(anulado_por):
+        evento.estado = Evento.Estado.ANULADO
+        evento.anulado_por = anulado_por
+        evento.anulado_en = ahora
+        evento.motivo_anulacion = motivo
+        evento.save(update_fields=[
+            "estado", "anulado_por", "anulado_en", "motivo_anulacion", "actualizado_en",
+        ])
+        inicio = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))
+        if timezone.localtime() >= inicio:
+            raise ValidationError("El turno ya comenzó. No se guardó la anulación.")
     return clase

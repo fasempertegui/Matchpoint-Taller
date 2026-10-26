@@ -1,6 +1,7 @@
 from datetime import date, datetime, time, timedelta
 
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
 from reservas.models import Evento
@@ -87,3 +88,13 @@ def validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, fecha,
     if ocupados:
         nombres = ", ".join(str(usuarios[usuario_id]) for usuario_id in sorted(ocupados))
         raise ValidationError(f"Ya tienen otra clase asignada en esa fecha y hora: {nombres}.")
+
+
+def validar_anulacion_clase(clase, ahora):
+    evento = clase.evento
+    if evento.tipo != Evento.Tipo.CLASE or evento.estado != Evento.Estado.PROGRAMADO:
+        raise ValidationError("Sólo se pueden anular clases Programadas.")
+    turno = evento.turno
+    inicio = datetime.combine(turno.fecha, turno.hora_inicio)
+    if timezone.make_aware(inicio) <= ahora:
+        raise ValidationError("Sólo se puede anular una clase antes del inicio de su turno.")
