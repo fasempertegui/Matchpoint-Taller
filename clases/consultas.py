@@ -1,14 +1,15 @@
 from datetime import datetime
 
-from django.core.exceptions import PermissionDenied
-from django.db.models import Q
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import Exists, OuterRef, Prefetch, Q
 from django.utils import timezone
 
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
-from .models import Clase
+from .models import Asistencia, Clase, ClaseAlumno, ClaseProfesor
 from .permisos import exigir_acceso_clases, exigir_administracion_clases, puede_dictar_clase
+from .validaciones import validar_periodo_actividad_clases
 
 
 def consultar_clase(usuario, clase_id):
@@ -120,3 +121,106 @@ def consultar_participantes(usuario, busqueda="", incluir_todos=False):
     if not incluir_todos:
         participantes = participantes.filter(roles__rol__codigo=Rol.ALUMNO)
     return _buscar_usuarios(participantes, busqueda)
+
+
+def consultar_actividad_clases(usuario, fecha_desde, fecha_hasta, usuario_id=None):
+    usuario = exigir_acceso_clases(usuario)
+    if usuario_id is None:
+        usuario_id = usuario.pk
+    if type(usuario_id) is not int or usuario_id <= 0:
+        raise ValidationError("Elegí un usuario válido para consultar su actividad.")
+    if usuario_id != usuario.pk and not usuario.tiene_rol(Rol.ADMINISTRADOR):
+        raise PermissionDenied
+    validar_periodo_actividad_clases(fecha_desde, fecha_hasta)
+    titular = Usuario.objects.get(pk=usuario_id)
+    profesores = ClaseProfesor.objects.filter(profesor_id=titular.pk)
+    participantes = ClaseAlumno.objects.filter(usuario_id=titular.pk)
+    asistencias = Asistencia.objects.filter(usuario_id=titular.pk)
+    clases = Clase.objects.filter(
+        evento__tipo=Evento.Tipo.CLASE,
+        evento__turno__fecha__range=(fecha_desde, fecha_hasta),
+    ).annotate(
+        tiene_docencia=Exists(profesores.filter(clase_id=OuterRef("pk"))),
+        tiene_participacion=Exists(participantes.filter(clase_id=OuterRef("pk"))),
+        tiene_asistencia=Exists(asistencias.filter(clase_id=OuterRef("pk"))),
+    ).filter(
+        Q(tiene_docencia=True) | Q(tiene_participacion=True) | Q(tiene_asistencia=True),
+    ).select_related("evento__turno__cancha__sede").prefetch_related(
+        Prefetch("profesores", queryset=profesores, to_attr="profesores_del_usuario"),
+        Prefetch("alumnos", queryset=participantes, to_attr="participaciones_del_usuario"),
+        Prefetch("asistencias", queryset=asistencias, to_attr="asistencias_del_usuario"),
+    ).order_by("evento__turno__fecha", "evento__turno__hora_inicio", "pk")
+
+    ahora = timezone.localtime()
+    actividad = []
+    proximas = []
+    anuladas = []
+    totales = {
+        "clases_asignadas": 0,
+        "clases_como_profesor": 0,
+        "presentes": 0,
+        "ausentes": 0,
+        "sin_registrar": 0,
+        "anuladas": 0,
+    }
+    for clase in clases:
+        profesor = next(iter(clase.profesores_del_usuario), None)
+        participante = next(iter(clase.participaciones_del_usuario), None)
+        asistencia = next(iter(clase.asistencias_del_usuario), None)
+        profesor_activo = profesor is not None and profesor.estado == ClaseProfesor.Estado.ACTIVO
+        participante_activo = participante is not None and participante.estado == ClaseAlumno.Estado.ACTIVO
+        estado_asistencia = None
+        if asistencia is not None:
+            estado_asistencia = asistencia.estado
+        elif participante_activo:
+            estado_asistencia = Asistencia.Estado.SIN_REGISTRAR
+        turno = clase.evento.turno
+        fila = {
+            "id": clase.pk,
+            "fecha": turno.fecha,
+            "hora_inicio": turno.hora_inicio,
+            "hora_fin": turno.hora_fin,
+            "sede": {"id": turno.cancha.sede_id, "nombre": turno.cancha.sede.nombre},
+            "cancha": {"id": turno.cancha_id, "nombre": turno.cancha.nombre},
+            "estado": clase.evento.estado,
+            "modalidad": clase.modalidad,
+            "es_generada": clase.es_generada,
+            "asignacion_profesor": profesor.estado if profesor is not None else None,
+            "asignacion_participante": participante.estado if participante is not None else None,
+            "asistencia": estado_asistencia,
+            "observaciones_asistencia": asistencia.observaciones if asistencia is not None else None,
+            "asistencia_registrada_en": asistencia.registrada_en if asistencia is not None else None,
+            "asistencia_actualizada_en": asistencia.actualizado_en if asistencia is not None else None,
+        }
+        if clase.evento.estado == Evento.Estado.ANULADO:
+            anuladas.append(fila)
+            totales["anuladas"] += 1
+            continue
+        actividad.append(fila)
+        if participante_activo:
+            totales["clases_asignadas"] += 1
+        if profesor_activo:
+            totales["clases_como_profesor"] += 1
+        # Una clase aún Programada no acredita asistencia ni ausencia efectiva.
+        if clase.evento.estado == Evento.Estado.FINALIZADO:
+            if estado_asistencia == Asistencia.Estado.PRESENTE:
+                totales["presentes"] += 1
+            elif estado_asistencia == Asistencia.Estado.AUSENTE:
+                totales["ausentes"] += 1
+            elif estado_asistencia == Asistencia.Estado.SIN_REGISTRAR:
+                totales["sin_registrar"] += 1
+        inicio = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))
+        if (
+            clase.evento.estado == Evento.Estado.PROGRAMADO and inicio > ahora
+            and (profesor_activo or participante_activo)
+        ):
+            proximas.append(fila)
+    return {
+        "usuario": {"id": titular.pk, "nombre": str(titular)},
+        "fecha_desde": fecha_desde,
+        "fecha_hasta": fecha_hasta,
+        "totales": totales,
+        "clases": actividad,
+        "proximas": proximas,
+        "anuladas": anuladas,
+    }

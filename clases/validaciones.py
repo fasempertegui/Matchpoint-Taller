@@ -139,3 +139,14 @@ def normalizar_registros_asistencia(registros):
 def validar_asistencia_clase(clase):
     if clase.evento.tipo != Evento.Tipo.CLASE or clase.evento.estado != Evento.Estado.FINALIZADO:
         raise ValidationError("Sólo se puede registrar o corregir asistencia en clases Finalizadas.")
+
+
+def validar_periodo_actividad_clases(fecha_desde, fecha_hasta):
+    if any(not isinstance(fecha, date) or isinstance(fecha, datetime) for fecha in (fecha_desde, fecha_hasta)):
+        raise ValidationError("Indicá fechas válidas para consultar la actividad de clases.")
+    if fecha_hasta < fecha_desde:
+        raise ValidationError("La fecha final no puede ser anterior a la inicial.")
+    if fecha_desde < FECHA_INICIO_OPERACIONES or fecha_hasta > fecha_maxima_agenda():
+        raise ValidationError("El período debe estar dentro del calendario operativo de clases.")
+    if (fecha_hasta - fecha_desde).days + 1 > 366:
+        raise ValidationError("El período de consulta no puede superar 366 días corridos inclusive.")
