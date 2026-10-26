@@ -1,0 +1,6 @@
+{% if puede_anular or puede_bloquear %}
+<div class="acciones-anulacion">
+    {% if puede_anular %}<a class="boton boton-peligro boton-chico" href="{% url 'clases:clase_anular' clase_id %}">Anular y liberar</a>{% endif %}
+    {% if puede_bloquear %}<a class="boton boton-peligro boton-chico" href="{% url 'clases:clase_anular_bloquear' clase_id %}">Anular y bloquear</a>{% endif %}
+</div>
+{% endif %}

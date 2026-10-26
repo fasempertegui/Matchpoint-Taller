@@ -4,12 +4,14 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Exists, OuterRef, Prefetch, Q
 from django.utils import timezone
 
+from instalaciones.models import Cancha, Sede
+from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
 from .models import Asistencia, Clase, ClaseAlumno, ClaseProfesor
 from .permisos import exigir_acceso_clases, exigir_administracion_clases, puede_dictar_clase
-from .validaciones import validar_eliminacion_clase_generada, validar_periodo_actividad_clases
+from .validaciones import validar_eliminacion_clase_generada, validar_horario_clase, validar_periodo_actividad_clases
 
 
 def consultar_clase(usuario, clase_id):
@@ -44,6 +46,19 @@ def consultar_clase(usuario, clase_id):
             pass
         else:
             puede_eliminar = True
+    puede_anular_bloquear = False
+    if (
+        es_administrador and programada and ahora < inicio
+        and turno.cancha.estado == Cancha.Estado.ACTIVA
+        and turno.cancha.sede.estado == Sede.Estado.ACTIVA
+        and FECHA_INICIO_OPERACIONES <= turno.fecha <= fecha_maxima_agenda()
+    ):
+        try:
+            validar_horario_clase(turno.cancha.sede, turno.fecha, turno.hora_inicio)
+        except ValidationError:
+            pass
+        else:
+            puede_anular_bloquear = True
     return {
         "id": clase.pk,
         "evento_id": clase.evento_id,
@@ -100,6 +115,7 @@ def consultar_clase(usuario, clase_id):
         "puede_editar": es_administrador and programada,
         "puede_cambiar_cancha": es_administrador and programada and ahora < inicio,
         "puede_anular": es_administrador and programada and ahora < inicio,
+        "puede_anular_bloquear": puede_anular_bloquear,
         "puede_finalizar": puede_consultar_grupo and programada and ahora >= fin,
         "puede_registrar_asistencia": puede_consultar_grupo and clase.evento.estado == Evento.Estado.FINALIZADO,
     }

@@ -369,18 +369,6 @@ a.agenda-turno:hover {
     padding-top: 0;
 }
 
-.agenda-anular {
-    color: var(--peligro);
-    border-color: var(--peligro);
-    background: #ffffff;
-}
-
-.agenda-confirmar-anulacion {
-    color: #ffffff;
-    border-color: var(--peligro);
-    background: var(--peligro);
-}
-
 .agenda-leyenda {
     display: flex;
     gap: 12px;

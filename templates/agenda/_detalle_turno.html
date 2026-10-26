@@ -83,6 +83,9 @@
         {% elif not detalle.evento %}
             <p class="agenda-impedimento">{{ detalle.impedimento }}</p>
         {% endif %}
+        {% if detalle.clase %}
+            {% include "clases/_acciones_anulacion.html" with clase_id=detalle.clase.pk puede_anular=detalle.puede_anular_clase puede_bloquear=detalle.puede_bloquear_clase only %}
+        {% endif %}
         {% if detalle.puede_crear_clase %}
             <div class="agenda-acciones">
                 <a class="boton boton-secundario boton-chico" href="{{ detalle.url_crear_clase }}">Crear clase</a>
@@ -92,31 +95,31 @@
             <div{% if detalle.puede_anular or detalle.puede_liberar_bloqueo or detalle.reserva %} class="agenda-acciones-anulacion"{% endif %}>
             {% if detalle.puede_anular %}
                 <details class="agenda-desplegable" name="agenda-accion"{% if formulario_anulacion.is_bound %} open{% endif %}>
-                    <summary class="boton boton-chico agenda-anular">Anular y liberar</summary>
+                    <summary class="boton boton-chico boton-peligro">Anular y liberar</summary>
                     <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Anular la reserva {{ detalle.reserva.numero }} y liberar su turno?" data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular y liberar">
                         {% csrf_token %}<input type="hidden" name="accion" value="anular"><input type="hidden" name="reserva" value="{{ detalle.reserva.pk }}">
                         {{ formulario_anulacion.non_field_errors }}
                         <div class="grupo-campo"><label for="{{ formulario_anulacion.motivo.id_for_label }}">Motivo</label>{{ formulario_anulacion.motivo }}<small class="nota-campo">{{ formulario_anulacion.motivo.help_text }}</small>{% for error in formulario_anulacion.motivo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
-                        <button class="boton boton-chico agenda-confirmar-anulacion" type="submit">Confirmar</button>
+                        <button class="boton boton-chico boton-confirmar-peligro" type="submit">Confirmar</button>
                     </form>
                 </details>
             {% endif %}
             {% if detalle.puede_liberar_bloqueo %}
                 <details class="agenda-desplegable" name="agenda-accion"{% if formulario_liberacion.is_bound %} open{% endif %}>
-                    <summary class="boton boton-chico agenda-anular">Anular y liberar</summary>
+                    <summary class="boton boton-chico boton-peligro">Anular y liberar</summary>
                     <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Anular el bloqueo {{ detalle.bloqueo.numero }} y liberar el turno de {{ detalle.cancha.nombre }}, el {{ detalle.fecha|date:'d/m/Y' }} de {{ detalle.hora|time:'H:i' }} a {{ detalle.fin|time:'H:i' }}?" data-confirmar-titulo="Anular bloqueo" data-confirmar-boton="Anular y liberar">
                         {% csrf_token %}<input type="hidden" name="accion" value="liberar_bloqueo">
                         {{ formulario_liberacion.bloqueo }}
                         {{ formulario_liberacion.non_field_errors }}
                         {% for error in formulario_liberacion.bloqueo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
                         <div class="grupo-campo"><label for="{{ formulario_liberacion.motivo.id_for_label }}">Motivo de anulación</label>{{ formulario_liberacion.motivo }}{% for error in formulario_liberacion.motivo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
-                        <button class="boton boton-chico agenda-confirmar-anulacion" type="submit">Confirmar</button>
+                        <button class="boton boton-chico boton-confirmar-peligro" type="submit">Confirmar</button>
                     </form>
                 </details>
             {% endif %}
             {% if detalle.puede_bloquear %}
                 <details class="agenda-desplegable" name="agenda-accion"{% if formulario_bloqueo.is_bound %} open{% endif %}>
-                    <summary class="boton boton-chico {% if detalle.reserva %}agenda-anular{% else %}boton-secundario{% endif %}">{% if detalle.reserva %}Anular y bloquear{% else %}Crear bloqueo{% endif %}</summary>
+                    <summary class="boton boton-chico {% if detalle.reserva %}boton-peligro{% else %}boton-secundario{% endif %}">{% if detalle.reserva %}Anular y bloquear{% else %}Crear bloqueo{% endif %}</summary>
                     {% if detalle.reserva %}<p class="agenda-impedimento">Se anulará la reserva {{ detalle.reserva.numero }} de {{ detalle.reserva.organizador }} y se creará un bloqueo para este turno.</p>{% endif %}
                     <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="{% if detalle.reserva %}¿Anular la reserva {{ detalle.reserva.numero }} de {{ detalle.reserva.organizador }} y bloquear{% else %}¿Bloquear{% endif %} el turno de {{ detalle.cancha.nombre }}, el {{ detalle.fecha|date:'d/m/Y' }} de {{ detalle.hora|time:'H:i' }} a {{ detalle.fin|time:'H:i' }}?" data-confirmar-titulo="{% if detalle.reserva %}Anular y bloquear{% else %}Crear bloqueo{% endif %}" data-confirmar-boton="{% if detalle.reserva %}Anular y bloquear{% else %}Crear bloqueo{% endif %}" data-agenda-bloqueo>
                         {% csrf_token %}<input type="hidden" name="accion" value="bloquear">
@@ -129,7 +132,7 @@
                             {% endif %}
                         {% endfor %}
                         {% include "componentes/observaciones_opcionales.html" with campo=formulario_bloqueo.observaciones %}
-                        <button class="boton {% if detalle.reserva %}agenda-confirmar-anulacion{% else %}boton-primario{% endif %} boton-chico" type="submit">{% if detalle.reserva %}Confirmar{% else %}Confirmar bloqueo{% endif %}</button>
+                        <button class="boton {% if detalle.reserva %}boton-confirmar-peligro{% else %}boton-primario{% endif %} boton-chico" type="submit">{% if detalle.reserva %}Confirmar{% else %}Confirmar bloqueo{% endif %}</button>
                     </form>
                 </details>
             {% endif %}

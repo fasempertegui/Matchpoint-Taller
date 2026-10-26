@@ -248,7 +248,7 @@ def consultar_edicion_clase(usuario, clase_id):
     }
 
 
-def _validar_version_edicion(usuario, clase, version):
+def validar_version_clase(usuario, clase, version):
     try:
         anterior = signing.loads(version, salt="clases.edicion-inicial", max_age=3600)
     except signing.BadSignature:
@@ -291,7 +291,7 @@ def preparar_edicion_clase(
 ):
     usuario = exigir_administracion_clases(usuario)
     clase = consultar_edicion_clase(usuario, clase_id)["clase"]
-    _validar_version_edicion(usuario, clase, version)
+    validar_version_clase(usuario, clase, version)
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
     participantes_ids = normalizar_usuarios_clase(participantes_ids)
     modalidad = modalidad or None

@@ -1,0 +1,13 @@
+<section class="clase-observaciones-edicion" data-observaciones>
+    <button class="boton boton-secundario clase-agregar-observaciones" type="button"
+            aria-expanded="{{ campo.value|yesno:'true,false' }}" aria-controls="{{ campo.id_for_label }}"
+            data-agregar-observaciones{% if campo.value %} hidden{% endif %}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Agregar observaciones
+    </button>
+    <div class="grupo-campo" data-campo-observaciones{% if not campo.value %} hidden{% endif %}>
+        <label for="{{ campo.id_for_label }}">{{ campo.label }} <span class="texto-secundario clase-opcional">(opcional)</span></label>
+        {{ campo }}
+        {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+</section>

@@ -25,6 +25,9 @@ document.addEventListener("DOMContentLoaded", function () {
         titulo.textContent = formulario.dataset.confirmarTitulo || "Confirmar acción";
         mensaje.textContent = formulario.dataset.confirmar;
         botonConfirmar.textContent = formulario.dataset.confirmarBoton || "Confirmar";
+        var esPeligrosa = formulario.hasAttribute("data-confirmar-peligro");
+        botonConfirmar.classList.toggle("boton-confirmar-peligro", esPeligrosa);
+        botonConfirmar.classList.toggle("boton-primario", !esPeligrosa);
         modal.returnValue = "cancelar";
         document.documentElement.classList.add("modal-abierto");
         modal.showModal();

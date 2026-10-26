@@ -86,19 +86,7 @@
                 </fieldset>
                 {% include "clases/_selector_personas.html" with campo=formulario.profesores seleccionados=profesores titulo="Profesores" etiqueta="Agregar profesor" vacio="Todavía no agregaste profesores." only %}
                 {% include "clases/_selector_personas.html" with campo=formulario.participantes seleccionados=participantes titulo="Participantes" etiqueta="Agregar participante" vacio="Podés crear la clase sin participantes y agregarlos después." ampliar_busqueda=formulario.buscar_todos.value only %}
-                <section class="clase-observaciones-edicion" data-observaciones>
-                    <button class="boton boton-secundario clase-agregar-observaciones" type="button"
-                            aria-expanded="{{ formulario.observaciones.value|yesno:'true,false' }}" aria-controls="{{ formulario.observaciones.id_for_label }}"
-                            data-agregar-observaciones{% if formulario.observaciones.value %} hidden{% endif %}>
-                        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                        Agregar observaciones
-                    </button>
-                    <div class="grupo-campo" data-campo-observaciones{% if not formulario.observaciones.value %} hidden{% endif %}>
-                        <label for="{{ formulario.observaciones.id_for_label }}">Observaciones <span class="texto-secundario clase-opcional">(opcional)</span></label>
-                        {{ formulario.observaciones }}
-                        {% for error in formulario.observaciones.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-                    </div>
-                </section>
+                {% include "clases/_observaciones_formulario.html" with campo=formulario.observaciones only %}
                 {% if not impedimento %}
                 <div class="acciones-formulario">
                     <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>

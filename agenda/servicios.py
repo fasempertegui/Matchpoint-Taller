@@ -9,6 +9,7 @@ from django.utils import timezone
 from bloqueos.servicios import validar_anulacion_bloqueo
 from clases.consultas import consultar_clase
 from clases.models import Clase
+from clases.validaciones import validar_anulacion_clase
 from common.fechas import FECHA_INICIO_OPERACIONES
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento
@@ -133,12 +134,23 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
                 pass
             else:
                 puede_finalizar = es_administrador
+        puede_anular_clase = False
+        if clase and es_administrador:
+            try:
+                validar_anulacion_clase(clase, ahora)
+            except ValidationError:
+                pass
+            else:
+                puede_anular_clase = True
         puede_crear_clase = (
             es_administrador and evento is None and en_rango and habilitado
             and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
         )
         return {
             "puede_crear_clase": puede_crear_clase,
+            "puede_anular_clase": puede_anular_clase,
+            "puede_bloquear_clase": puede_anular_clase and en_rango and habilitado
+                and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA,
             "url_crear_clase": reverse("clases:clase_crear") + "?" + urlencode({
                 "cancha": cancha.pk, "fecha": dia.isoformat(), "hora": hora,
             }) if puede_crear_clase else None,

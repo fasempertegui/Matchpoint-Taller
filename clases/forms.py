@@ -1,6 +1,7 @@
 from django import forms
 from django.db.models import Q
 
+from bloqueos.models import Bloqueo
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento
@@ -95,3 +96,25 @@ class ClaseCanchaForm(forms.Form):
             ),
             estado=Cancha.Estado.ACTIVA, sede__estado=Sede.Estado.ACTIVA,
         ).exclude(pk=turno.cancha_id).exclude(pk__in=ocupadas).select_related("sede").order_by("sede__nombre", "nombre", "pk")
+
+
+class ClaseAnulacionForm(forms.Form):
+    motivo = forms.CharField(
+        label="Motivo de anulación",
+        error_messages={"required": "Indicá el motivo de la anulación."},
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+    )
+    motivo_bloqueo = forms.ChoiceField(
+        label="Motivo del bloqueo", choices=(("", "Elegí un motivo"), *Bloqueo.Motivo.choices),
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    observaciones = forms.CharField(
+        label="Observaciones del bloqueo", required=False,
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+    )
+
+    def __init__(self, *args, bloquear, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not bloquear:
+            self.fields.pop("motivo_bloqueo")
+            self.fields.pop("observaciones")
