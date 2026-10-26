@@ -207,3 +207,12 @@ def validar_periodo_generacion(fecha_desde, fecha_hasta):
         raise ValidationError("El período de generación debe estar dentro del calendario operativo de clases.")
     if (fecha_hasta - fecha_desde).days + 1 > 62:
         raise ValidationError("La generación no puede superar 62 días corridos inclusive.")
+
+
+def validar_eliminacion_clase_generada(clase):
+    if not clase.es_generada:
+        raise ValidationError("Sólo se pueden eliminar clases generadas desde la planilla.")
+    if clase.evento.tipo != Evento.Tipo.CLASE or clase.evento.estado != Evento.Estado.PROGRAMADO:
+        raise ValidationError("Sólo se pueden eliminar clases generadas que sigan Programadas.")
+    if clase.asistencias.exclude(estado=Asistencia.Estado.SIN_REGISTRAR).exists():
+        raise ValidationError("No se puede eliminar una clase con asistencia registrada.")

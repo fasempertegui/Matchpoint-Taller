@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection, transaction
 from django.db.models import Q
@@ -19,6 +20,7 @@ from .validaciones import (
     validar_asistencia_clase,
     validar_conflictos_clase,
     validar_datos_clase,
+    validar_eliminacion_clase_generada,
     validar_finalizacion_clase,
     validar_horario_clase,
     validar_usuarios_clase,
@@ -401,3 +403,76 @@ def registrar_asistencia(usuario, clase_id, registros, finalizar=False):
         if hubo_cambios:
             clase.evento.save(update_fields=["actualizado_en"])
     return clase
+
+
+def _datos_eliminacion_clase(clase):
+    turno = clase.evento.turno
+    return {
+        "clase_id": clase.pk, "evento_id": clase.evento_id, "turno_id": turno.pk,
+        "cancha_id": turno.cancha_id, "sede_id": turno.cancha.sede_id,
+        "fecha": turno.fecha.isoformat(), "hora_inicio": turno.hora_inicio.isoformat(),
+        "estado": clase.evento.estado, "es_generada": clase.es_generada,
+        "turno_planilla_id": clase.turno_planilla_id, "modalidad": clase.modalidad,
+        "observaciones": clase.evento.observaciones, "actualizado_en": clase.evento.actualizado_en.isoformat(),
+        "profesores": sorted([
+            [v.profesor_id, v.estado, v.actualizado_en.isoformat()] for v in clase.profesores.all()
+        ]),
+        "participantes": sorted([
+            [v.usuario_id, v.estado, v.observaciones, v.recordatorio_enviado, v.actualizado_en.isoformat()]
+            for v in clase.alumnos.all()
+        ]),
+        "asistencias": sorted([
+            [v.usuario_id, v.estado, v.observaciones, v.registrada_por_id,
+             v.registrada_en.isoformat() if v.registrada_en is not None else None,
+             v.actualizado_en.isoformat()]
+            for v in clase.asistencias.all()
+        ]),
+    }
+
+
+def preparar_eliminacion_clase(usuario, clase_id):
+    usuario = exigir_administracion_clases(usuario)
+    clase = Clase.objects.select_related("evento__turno__cancha").prefetch_related(
+        "profesores", "alumnos", "asistencias",
+    ).get(pk=clase_id)
+    validar_eliminacion_clase_generada(clase)
+    datos = _datos_eliminacion_clase(clase)
+    return {
+        **datos,
+        "confirmacion": signing.dumps({"usuario": usuario.pk, "revision": datos}, salt="clases.eliminacion", compress=True),
+    }
+
+
+@transaction.atomic
+def eliminar_clase_generada(usuario, clase_id, confirmacion):
+    usuario = exigir_administracion_clases(usuario)
+    inicial = Clase.objects.select_related("evento__turno__cancha").get(pk=clase_id)
+    usuarios_ids = {usuario.pk}
+    usuarios_ids.update(inicial.profesores.values_list("profesor_id", flat=True))
+    usuarios_ids.update(inicial.alumnos.values_list("usuario_id", flat=True))
+    usuarios_ids.update(inicial.asistencias.values_list("usuario_id", flat=True))
+    usuarios = bloquear_usuarios_clase(usuarios_ids)
+    usuario = exigir_administracion_clases(usuarios.get(usuario.pk))
+    bloquear_calendario_clases(inicial.evento.turno.fecha)
+    Sede.objects.select_for_update().get(pk=inicial.evento.turno.cancha.sede_id)
+    cancha = Cancha.objects.select_for_update().get(
+        pk=inicial.evento.turno.cancha_id, sede_id=inicial.evento.turno.cancha.sede_id,
+    )
+    clase = _bloquear_clase(clase_id)
+    if clase.evento.turno_id != inicial.evento.turno_id:
+        raise ValidationError("La clase cambió de ubicación. Revisá nuevamente la eliminación.")
+    clase.evento.turno.cancha = cancha
+    validar_eliminacion_clase_generada(clase)
+    datos = _datos_eliminacion_clase(clase)
+    try:
+        revisado = signing.loads(confirmacion, salt="clases.eliminacion")
+    except (signing.BadSignature, TypeError):
+        raise ValidationError("La confirmación de eliminación no es válida. Revisá nuevamente la clase.") from None
+    if revisado != {"usuario": usuario.pk, "revision": datos}:
+        raise ValidationError("La clase o la selección cambió. Revisá nuevamente la eliminación.")
+    evento = clase.evento
+    resultado = {"clase_id": clase.pk, "evento_id": evento.pk, "turno_id": evento.turno_id}
+    with contexto_auditoria(usuario):
+        clase.delete()
+        evento.delete()
+    return resultado
