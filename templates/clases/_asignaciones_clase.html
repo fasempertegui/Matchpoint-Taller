@@ -13,7 +13,6 @@
                     <tr{% if persona.estado == 'inactivo' %} class="texto-secundario"{% endif %}>
                         <td>{{ persona.nombre }}
                             {% if persona.observaciones %}<p class="texto-secundario">{{ persona.observaciones|linebreaksbr }}</p>{% endif %}
-                            {% if mostrar_asistencia and persona.asistencia %}<p class="texto-secundario">Asistencia: {{ persona.asistencia }}</p>{% endif %}
                         </td>
                         <td>{% if persona.estado == 'activo' %}{% include "componentes/badge_estado.html" with estado="activo" texto="Asignado" only %}{% else %}{% include "componentes/badge_estado.html" with estado="inactivo" texto="Retirado" only %}{% endif %}</td>
                     </tr>

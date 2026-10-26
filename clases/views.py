@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -16,13 +17,14 @@ from usuarios.models import Usuario
 
 from .anulaciones import confirmar_anulacion_clase, preparar_anulacion_clase, validar_accion_anulacion
 from .consultas import consultar_clase, consultar_profesores, consultar_participantes
-from .forms import ClaseAnulacionForm, ClaseCanchaForm, ClaseForm, ClaseTurnoForm
+from .forms import AsistenciaEditorForm, AsistenciaFormSet, ClaseAnulacionForm, ClaseCanchaForm, ClaseForm, ClaseTurnoForm
 from .models import Asistencia, Clase, TurnoPlanilla
 from .permisos import exigir_administracion_clases
 from .servicios import (
     cambiar_cancha_clase, consultar_edicion_clase, editar_clase,
     preparar_cambio_cancha, preparar_edicion_clase,
-    finalizar_clase, preparar_registro_clase, registrar_clase, validar_ubicacion_clase,
+    consultar_clase_para_asistencia, finalizar_clase, preparar_carga_asistencia,
+    preparar_registro_clase, registrar_asistencia, registrar_clase, validar_ubicacion_clase,
 )
 
 
@@ -45,15 +47,19 @@ def clase_detalle(request, pk):
         responsables = Usuario.objects.in_bulk({
             clase[campo] for campo in ("registrado_por_id", "anulado_por_id", "finalizado_por_id")
             if clase[campo] is not None
-        })
-    asistencias = {fila["usuario_id"]: fila for fila in clase["asistencias"]}
+        } | {fila["registrada_por_id"] for fila in clase["asistencias"] if fila["registrada_por_id"] is not None})
+    asistencias = {fila["usuario_id"]: dict(fila) for fila in clase["asistencias"]}
     for participante in clase["participantes"]:
-        asistencia = asistencias.pop(participante["usuario_id"], None)
-        participante["asistencia"] = (
-            Asistencia.Estado(asistencia["estado"]).label if asistencia else "Sin registrar"
-        )
-    for asistencia in asistencias.values():
-        asistencia["estado_texto"] = Asistencia.Estado(asistencia["estado"]).label
+        if participante["estado"] == "activo":
+            asistencias.setdefault(participante["usuario_id"], {
+                "usuario_id": participante["usuario_id"], "nombre": participante["nombre"],
+                "estado": Asistencia.Estado.SIN_REGISTRAR,
+            })
+    filas_asistencia = sorted(asistencias.values(), key=lambda fila: (fila["nombre"].casefold(), fila["usuario_id"]))
+    for fila in filas_asistencia:
+        fila["estado_texto"] = Asistencia.Estado(fila["estado"]).label
+        fila["badge"] = "activo" if fila["estado"] == Asistencia.Estado.PRESENTE else "inactivo"
+        fila["registrada_por"] = responsables.get(fila.get("registrada_por_id"))
 
     for seccion in ("profesores", "participantes"):
         clase[seccion].sort(key=lambda persona: (
@@ -72,13 +78,13 @@ def clase_detalle(request, pk):
         "clase": clase,
         "puede_consultar_grupo": puede_consultar_grupo,
         "solo_propios": not puede_consultar_grupo,
-        "mostrar_asistencia": clase["estado"] == Evento.Estado.FINALIZADO,
+        "filas_asistencia": filas_asistencia,
+        "hay_asistencia": bool(clase["asistencias"]),
         "titulo_profesores": "Profesores" if puede_consultar_grupo else "Mi asignación como profesor",
         "titulo_participantes": "Participantes" if puede_consultar_grupo else "Mi participación",
         "registrado_por": responsables.get(clase["registrado_por_id"]),
         "anulado_por": responsables.get(clase["anulado_por_id"]),
         "finalizado_por": responsables.get(clase["finalizado_por_id"]),
-        "asistencias_adicionales": list(asistencias.values()),
         "url_agenda": url_agenda,
         "breadcrumbs": [
             ("Inicio", reverse("inicio")),
@@ -339,3 +345,86 @@ def clase_finalizar(request, pk):
     else:
         messages.success(request, "La clase fue finalizada. La asistencia se conserva sin cambios.")
     return redirect("clases:clase_detalle", pk=pk)
+
+
+@login_required
+@never_cache
+@require_GET
+def buscar_personas_asistencia(request, pk):
+    try:
+        consultar_clase_para_asistencia(request.user, pk)
+    except Clase.DoesNotExist:
+        raise Http404("La clase no existe.") from None
+    except ValidationError as error:
+        return JsonResponse({"error": " ".join(error.messages)}, status=400)
+    busqueda = request.GET.get("q", "").strip()[:100]
+    if len(busqueda) < 2:
+        return JsonResponse({"resultados": [], "hay_mas": False})
+    personas = Usuario.objects.all()
+    for termino in busqueda.split():
+        personas = personas.filter(Q(first_name__icontains=termino) | Q(last_name__icontains=termino) | Q(username__icontains=termino))
+    excluidos = [int(valor) for valor in request.GET.getlist("excluir")[:200] if valor.isdecimal() and len(valor) < 19]
+    personas = list(personas.exclude(pk__in=excluidos).order_by("last_name", "first_name", "pk")[:11])
+    return JsonResponse({
+        "resultados": [{"id": persona.pk, "nombre": str(persona), "usuario": persona.username, "activa": persona.is_active} for persona in personas[:10]],
+        "hay_mas": len(personas) > 10,
+    })
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def clase_asistencia(request, pk):
+    url_detalle = reverse("clases:clase_detalle", args=[pk])
+    try:
+        datos = preparar_carga_asistencia(request.user, pk)
+    except Clase.DoesNotExist:
+        raise Http404("La clase no existe.") from None
+    except ValidationError as error:
+        for mensaje in error.messages:
+            messages.error(request, mensaje)
+        return redirect(url_detalle)
+    clase = datos["clase"]
+    version = request.POST.get("version", "") if request.method == "POST" else datos["version"]
+    formularios = AsistenciaFormSet(
+        request.POST if request.method == "POST" else None, initial=datos["registros"], prefix="asistencias",
+    )
+    error_guardado = None
+    if request.method == "POST" and formularios.is_valid():
+        registros = [
+            {"usuario_id": fila.cleaned_data["usuario"], "estado": fila.cleaned_data["estado"], "observaciones": fila.cleaned_data["observaciones"]}
+            for fila in formularios if fila.cleaned_data
+        ]
+        try:
+            if request.POST.get("paso") != "guardar":
+                raise ValidationError("La acción solicitada no es válida.")
+            registrar_asistencia(request.user, pk, registros, finalizar=True, version=version)
+            messages.success(request, "La asistencia fue guardada.")
+            return redirect(url_detalle)
+        except ValidationError as error:
+            error_guardado = " ".join(error.messages)
+        except (Clase.DoesNotExist, Evento.DoesNotExist):
+            raise Http404("La clase no existe.") from None
+    filas = []
+    ids = [int(fila["usuario"].value()) for fila in formularios if str(fila["usuario"].value()).isdecimal() and len(str(fila["usuario"].value())) < 19]
+    personas = Usuario.objects.in_bulk(ids)
+    base = {fila["usuario"] for fila in datos["registros"]}
+    for fila in formularios:
+        valor = str(fila["usuario"].value())
+        persona = personas.get(int(valor)) if valor.isdecimal() and len(valor) < 19 else None
+        estado = fila["estado"].value()
+        filas.append({
+            "formulario": fila, "persona": persona,
+            "estado_texto": dict(Asistencia.Estado.choices).get(estado, "Sin registrar"),
+            "badge": "activo" if estado == Asistencia.Estado.PRESENTE else "inactivo",
+            "quitable": persona is not None and persona.pk not in base,
+        })
+    return render(request, "clases/clase_asistencia.html", {
+        "clase": clase, "turno": clase.evento.turno, "formularios": formularios,
+        "filas": filas, "editor": AsistenciaEditorForm(prefix="editor"),
+        "fila_vacia": {"formulario": formularios.empty_form, "quitable": True, "badge": "inactivo", "estado_texto": "Sin registrar"},
+        "version": version, "error_guardado": error_guardado,
+        "finalizar": clase.evento.estado == Evento.Estado.PROGRAMADO,
+        "url_detalle": url_detalle,
+        "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Asistencia", None)],
+    })

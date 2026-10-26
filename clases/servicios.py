@@ -605,8 +605,69 @@ def finalizar_clases_vencidas():
     return finalizadas
 
 
+def _validar_carga_asistencia(usuario, clase):
+    if not (usuario.tiene_rol(Rol.ADMINISTRADOR) or puede_dictar_clase(usuario, clase)):
+        raise PermissionDenied
+    if clase.evento.estado == Evento.Estado.PROGRAMADO:
+        validar_finalizacion_clase(clase, timezone.localtime())
+    else:
+        validar_asistencia_clase(clase)
+
+
+def consultar_clase_para_asistencia(usuario, clase_id):
+    usuario = exigir_acceso_clases(usuario)
+    clase = Clase.objects.select_related("evento__turno__cancha__sede").get(pk=clase_id)
+    _validar_carga_asistencia(usuario, clase)
+    return clase
+
+
+def _version_asistencia_clase(clase):
+    return {
+        "clase": clase.pk, "evento": clase.evento_id, "turno": clase.evento.turno_id,
+        "estado": clase.evento.estado, "actualizado_en": clase.evento.actualizado_en.isoformat(),
+        "modalidad": clase.modalidad, "observaciones": clase.evento.observaciones,
+        "profesores": [
+            [fila.profesor_id, fila.estado, fila.actualizado_en.isoformat()]
+            for fila in clase.profesores.order_by("profesor_id")
+        ],
+        "participantes": [
+            [fila.usuario_id, fila.estado, fila.actualizado_en.isoformat()]
+            for fila in clase.alumnos.order_by("usuario_id")
+        ],
+        "asistencias": [
+            [fila.usuario_id, fila.estado, fila.observaciones, fila.actualizado_en.isoformat()]
+            for fila in clase.asistencias.order_by("usuario_id")
+        ],
+    }
+
+
+def preparar_carga_asistencia(usuario, clase_id):
+    usuario = exigir_acceso_clases(usuario)
+    clase = consultar_clase_para_asistencia(usuario, clase_id)
+    datos_version = _version_asistencia_clase(clase)
+    registros = {
+        fila.usuario_id: {
+            "usuario": fila.usuario_id, "estado": fila.estado, "observaciones": fila.observaciones or "",
+        }
+        for fila in clase.asistencias.all()
+    }
+    for asignacion in clase.alumnos.filter(estado=ClaseAlumno.Estado.ACTIVO):
+        registros.setdefault(asignacion.usuario_id, {
+            "usuario": asignacion.usuario_id, "estado": Asistencia.Estado.SIN_REGISTRAR, "observaciones": "",
+        })
+    # Las filas y la versión deben corresponder a la misma lectura, sin anticipar bloqueos de escritura.
+    actual = Clase.objects.select_related("evento__turno__cancha__sede").get(pk=clase_id)
+    if datos_version != _version_asistencia_clase(actual):
+        raise ValidationError("La clase o su asistencia cambiaron durante la carga. Volvé a abrirla desde el detalle.")
+    version = signing.dumps({
+        "usuario": usuario.pk, "datos": datos_version,
+    }, salt="clases.asistencia", compress=True)
+    orden = Usuario.objects.filter(pk__in=registros).order_by("last_name", "first_name", "pk").values_list("pk", flat=True)
+    return {"clase": clase, "registros": [registros[pk] for pk in orden], "version": version}
+
+
 @transaction.atomic
-def registrar_asistencia(usuario, clase_id, registros, finalizar=False):
+def registrar_asistencia(usuario, clase_id, registros, finalizar=False, *, version):
     usuario = exigir_acceso_clases(usuario)
     if not isinstance(finalizar, bool):
         raise ValidationError("Indicá si corresponde finalizar la clase junto con la asistencia.")
@@ -618,6 +679,19 @@ def registrar_asistencia(usuario, clase_id, registros, finalizar=False):
     clase = _bloquear_clase(clase_id)
     if not (usuario.tiene_rol(Rol.ADMINISTRADOR) or puede_dictar_clase(usuario, clase)):
         raise PermissionDenied
+
+    try:
+        anterior = signing.loads(version, salt="clases.asistencia", max_age=3600)
+    except signing.BadSignature:
+        raise ValidationError("La carga venció o no es válida. Volvé a abrir la asistencia desde el detalle.") from None
+    actual = _version_asistencia_clase(clase)
+    previo = anterior["datos"]
+    # La finalización simultánea no invalida una carga que conserva asignaciones y asistencia.
+    if finalizar and previo["estado"] == Evento.Estado.PROGRAMADO and actual["estado"] == Evento.Estado.FINALIZADO:
+        actual["estado"] = previo["estado"]
+        actual["actualizado_en"] = previo["actualizado_en"]
+    if anterior["usuario"] != usuario.pk or previo != actual:
+        raise ValidationError("La clase o su asistencia cambiaron. Volvé a abrir la carga desde el detalle para consultar el estado actual.")
 
     with contexto_auditoria(usuario):
         if finalizar and clase.evento.estado == Evento.Estado.PROGRAMADO:

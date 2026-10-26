@@ -7,7 +7,7 @@ from instalaciones.models import Cancha, Sede
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
-from .models import TurnoPlanilla
+from .models import Asistencia, TurnoPlanilla
 
 
 class ClaseTurnoForm(forms.Form):
@@ -118,3 +118,30 @@ class ClaseAnulacionForm(forms.Form):
         if not bloquear:
             self.fields.pop("motivo_bloqueo")
             self.fields.pop("observaciones")
+
+
+class AsistenciaFilaForm(forms.Form):
+    usuario = forms.IntegerField(min_value=1, widget=forms.HiddenInput())
+    estado = forms.ChoiceField(choices=Asistencia.Estado.choices, widget=forms.HiddenInput())
+    observaciones = forms.CharField(required=False, widget=forms.Textarea(attrs={"hidden": True}))
+
+
+class AsistenciaBaseFormSet(forms.BaseFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+        ids = [fila.cleaned_data["usuario"] for fila in self.forms if fila.cleaned_data]
+        if len(ids) != len(set(ids)):
+            raise forms.ValidationError("No se puede repetir una persona en la carga de asistencia.")
+        if Usuario.objects.filter(pk__in=ids).count() != len(ids):
+            raise forms.ValidationError("Alguna persona ya no está disponible. Revisá la carga de asistencia.")
+
+
+AsistenciaFormSet = forms.formset_factory(AsistenciaFilaForm, formset=AsistenciaBaseFormSet, extra=0)
+
+
+class AsistenciaEditorForm(forms.Form):
+    estado = forms.ChoiceField(choices=Asistencia.Estado.choices, widget=forms.RadioSelect())
+    observaciones = forms.CharField(
+        required=False, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+    )

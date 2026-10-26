@@ -5,6 +5,8 @@ from . import views
 app_name = "clases"
 
 urlpatterns = [
+    path("<int:pk>/asistencia/", views.clase_asistencia, name="clase_asistencia"),
+    path("<int:pk>/asistencia/personas/", views.buscar_personas_asistencia, name="buscar_personas_asistencia"),
     path("<int:pk>/finalizar/", views.clase_finalizar, name="clase_finalizar"),
     path("<int:pk>/anular/", views.clase_anular, name="clase_anular"),
     path("<int:pk>/anular-bloquear/", views.clase_anular, {"bloquear": True}, name="clase_anular_bloquear"),

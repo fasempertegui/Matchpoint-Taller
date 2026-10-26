@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Asistencia de clase {{ clase.pk }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}">{% endblock %}
+{% block contenido %}
+<header class="clase-encabezado">
+    <div><p class="texto-secundario">Clase {{ clase.pk }}</p><h1>Asistencia</h1></div>
+    <a class="boton boton-secundario boton-chico" href="{{ url_detalle }}">Volver al detalle</a>
+</header>
+<div class="clase-distribucion">
+    <aside class="tarjeta clase-turno" aria-labelledby="asistencia-turno-titulo">
+        <h2 id="asistencia-turno-titulo">Turno de la clase</h2>
+        <p class="clase-turno-fecha">{{ turno.fecha|date:"d/m/Y" }}</p>
+        <p class="clase-turno-hora">{{ turno.hora_inicio|time:"H:i" }} – {{ turno.hora_fin|time:"H:i" }}</p>
+        <p>{{ turno.cancha.sede.nombre }}<br><strong>{{ turno.cancha.nombre }}</strong></p>
+        {% if finalizar %}<p class="nota-campo">Al guardar se finalizará la clase junto con la asistencia.</p>{% endif %}
+    </aside>
+    <section class="tarjeta clase-contenido" aria-labelledby="asistencia-personas-titulo">
+        <form method="post" novalidate data-asistencia-formulario>
+            {% csrf_token %}{{ formularios.management_form }}
+            <input type="hidden" name="version" value="{{ version }}">
+            <h2 id="asistencia-personas-titulo">Personas <span class="texto-secundario">(<span data-total-personas>{{ filas|length }}</span>)</span></h2>
+            <p class="texto-secundario">Sin registrar no equivale a Ausente. Los cambios se aplican al guardar.</p>
+            {% if error_guardado %}<div class="mensaje mensaje-error" role="alert">{{ error_guardado }}</div>{% endif %}
+            {% if formularios.non_form_errors %}<div class="mensaje mensaje-error" role="alert">{{ formularios.non_form_errors }}</div>{% endif %}
+            <noscript><p class="mensaje mensaje-info">Para editar estados y buscar personas necesitás habilitar JavaScript.</p></noscript>
+            <p class="texto-secundario" data-asistencia-vacio{% if filas %} hidden{% endif %}>No hay participantes ni asistencia registrada. Agregá una persona para comenzar.</p>
+            <div class="tabla-contenedor" data-asistencia-tabla{% if not filas %} hidden{% endif %}>
+                <table>
+                    <thead><tr><th scope="col">Nombre</th><th scope="col">Asistencia</th><th scope="col">Acción</th></tr></thead>
+                    <tbody data-asistencia-filas>{% for fila in filas %}{% include "clases/_asistencia_fila.html" with fila=fila only %}{% endfor %}</tbody>
+                </table>
+            </div>
+            <div class="asistencia-agregar">
+                <button class="boton boton-secundario boton-chico" type="button" data-abrir-busqueda aria-expanded="false" aria-controls="asistencia-busqueda">Agregar persona</button>
+                <div class="clase-buscador" id="asistencia-busqueda" data-asistencia-buscador data-url="{% url 'clases:buscar_personas_asistencia' clase.pk %}" hidden>
+                    <label class="clase-etiqueta-oculta" for="asistencia-buscar">Buscar una persona</label>
+                    <div class="clase-campo-busqueda">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+                        <input class="form-control" id="asistencia-buscar" type="search" maxlength="100" autocomplete="off" placeholder="Buscar por nombre, apellido o usuario (mín. 2 letras)" aria-controls="asistencia-resultados" data-busqueda>
+                    </div>
+                    <p class="texto-secundario">Registrar asistencia no agrega a la persona a las asignaciones de la clase.</p>
+                    <ul class="clase-resultados" id="asistencia-resultados" data-resultados hidden></ul>
+                    <p class="clase-busqueda-estado" role="status" aria-live="polite" data-estado-busqueda></p>
+                </div>
+            </div>
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{{ url_detalle }}">Cancelar</a>
+                <button class="boton boton-primario" name="paso" value="guardar" type="submit" data-guardar-asistencia{% if not filas %} hidden{% endif %}>{% if finalizar %}Finalizar y guardar asistencia{% else %}Guardar asistencia{% endif %}</button>
+            </div>
+        </form>
+    </section>
+</div>
+<template data-asistencia-fila-nueva>
+    {% include "clases/_asistencia_fila.html" with fila=fila_vacia only %}
+</template>
+<dialog class="modal-confirmacion" data-asistencia-editor aria-labelledby="asistencia-editor-titulo">
+    <form method="dialog" class="modal-confirmacion-formulario">
+        <header class="modal-confirmacion-cabecera"><h2 id="asistencia-editor-titulo">Editar asistencia</h2></header>
+        <div class="modal-confirmacion-contenido">
+            <p data-editor-nombre></p>
+            <fieldset class="clase-modalidad">
+                <legend>Asistencia</legend>
+                <div class="clase-modalidad-opciones">{% for opcion in editor.estado %}<label>{{ opcion.tag }}<span>{{ opcion.choice_label }}</span></label>{% endfor %}</div>
+            </fieldset>
+            {% include "clases/_observaciones_formulario.html" with campo=editor.observaciones only %}
+        </div>
+        <footer class="modal-confirmacion-acciones">
+            <button class="boton boton-peligro" type="button" data-quitar-de-carga hidden>Quitar de esta carga</button>
+            <button class="boton boton-secundario" type="submit" value="listo">Listo</button>
+        </footer>
+    </form>
+</dialog>
+<script src="{% static 'js/observaciones.js' %}" defer></script>
+<script src="{% static 'js/clase-asistencia.js' %}" defer></script>
+{% endblock %}

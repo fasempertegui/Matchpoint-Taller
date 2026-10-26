@@ -93,3 +93,11 @@
 .clase-observaciones-edicion .clase-opcional { font-weight: 400; }
 .clase-observaciones-edicion .grupo-campo { margin-bottom: 0; }
 .clase-observaciones-edicion textarea.form-control { min-height: 0; resize: none; }
+
+.asistencia-agregar { margin-top: 24px; }
+.asistencia-agregar [hidden],
+[data-asistencia-editor] [hidden],
+[data-asistencia-formulario] [hidden] { display: none; }
+.asistencia-observacion { margin: 4px 0 0; font-size: .9rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+[data-asistencia-editor] .clase-modalidad { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+[data-asistencia-editor] .clase-observaciones-edicion { margin-top: 20px; }

@@ -1,0 +1,10 @@
+<tr data-asistencia-fila data-usuario="{{ fila.formulario.usuario.value|default:'' }}" data-nombre="{{ fila.persona|default:'Usuario no disponible' }}" data-quitable="{{ fila.quitable|yesno:'true,false' }}">
+    <td>
+        <span data-nombre>{{ fila.persona|default:"Usuario no disponible" }}</span>
+        {{ fila.formulario.usuario }}{{ fila.formulario.estado }}{{ fila.formulario.observaciones }}
+        <p class="texto-secundario asistencia-observacion" data-observacion{% if not fila.formulario.observaciones.value %} hidden{% endif %}>{{ fila.formulario.observaciones.value|default:'' }}</p>
+        {% for campo in fila.formulario %}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
+    </td>
+    <td><span class="badge-estado badge-estado-{{ fila.badge }}" data-badge>{{ fila.estado_texto }}</span></td>
+    <td><button class="boton boton-secundario boton-chico" type="button" data-editar-asistencia aria-label="Editar asistencia de {{ fila.persona }}">Editar</button></td>
+</tr>

@@ -2,45 +2,6 @@ document.addEventListener("DOMContentLoaded", function () {
     var formulario = document.querySelector("[data-clase-formulario]");
     if (!formulario) return;
 
-    var observaciones = formulario.querySelector("[data-observaciones]");
-    if (observaciones) {
-        var agregarObservaciones = observaciones.querySelector("[data-agregar-observaciones]");
-        var campoObservaciones = observaciones.querySelector("[data-campo-observaciones]");
-        var textoObservaciones = campoObservaciones.querySelector("textarea");
-
-        function ajustarObservaciones() {
-            if (campoObservaciones.hidden) return;
-            var estilo = window.getComputedStyle(textoObservaciones);
-            var linea = parseFloat(estilo.lineHeight);
-            var relleno = parseFloat(estilo.paddingTop) + parseFloat(estilo.paddingBottom);
-            var borde = parseFloat(estilo.borderTopWidth) + parseFloat(estilo.borderBottomWidth);
-            var minimo = linea * 3 + relleno + borde;
-            var maximo = linea * 6 + relleno + borde;
-            textoObservaciones.style.height = "auto";
-            var altura = textoObservaciones.scrollHeight + borde;
-            textoObservaciones.style.height = Math.min(maximo, Math.max(minimo, altura)) + "px";
-            textoObservaciones.style.overflowY = altura > maximo ? "auto" : "hidden";
-        }
-
-        agregarObservaciones.addEventListener("click", function () {
-            agregarObservaciones.hidden = true;
-            agregarObservaciones.setAttribute("aria-expanded", "true");
-            campoObservaciones.hidden = false;
-            ajustarObservaciones();
-            textoObservaciones.focus();
-        });
-        textoObservaciones.addEventListener("input", ajustarObservaciones);
-        textoObservaciones.addEventListener("blur", function () {
-            if (textoObservaciones.value.trim()) return;
-            textoObservaciones.value = "";
-            campoObservaciones.hidden = true;
-            agregarObservaciones.hidden = false;
-            agregarObservaciones.setAttribute("aria-expanded", "false");
-        });
-        window.addEventListener("resize", ajustarObservaciones);
-        ajustarObservaciones();
-    }
-
     function actualizarAvisoParticipantes() {
         var seccion = formulario.querySelector('[data-tipo="participantes"]');
         if (!seccion) return;
