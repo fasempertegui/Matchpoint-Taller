@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Q
 
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
 from instalaciones.models import Cancha
@@ -19,7 +20,7 @@ class ClaseTurnoForm(forms.Form):
         return fecha
 
 
-class ClaseCrearForm(forms.Form):
+class ClaseForm(forms.Form):
     profesores = forms.ModelMultipleChoiceField(
         queryset=Usuario.objects.none(), widget=forms.MultipleHiddenInput(),
         error_messages={"required": "Agregá al menos un profesor.", "invalid_choice": "Revisá los profesores seleccionados: alguno ya no está habilitado."},
@@ -37,12 +38,14 @@ class ClaseCrearForm(forms.Form):
         required=False, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, profesores_actuales=(), participantes_actuales=(), **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["profesores"].queryset = Usuario.objects.filter(
-            is_active=True, roles__rol__codigo=Rol.PROFESOR,
+            Q(is_active=True, roles__rol__codigo=Rol.PROFESOR) | Q(pk__in=profesores_actuales),
+        ).distinct()
+        self.fields["participantes"].queryset = Usuario.objects.filter(
+            Q(is_active=True) | Q(pk__in=participantes_actuales),
         )
-        self.fields["participantes"].queryset = Usuario.objects.filter(is_active=True)
 
     def clean(self):
         datos = super().clean()

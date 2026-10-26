@@ -196,6 +196,11 @@
     gap: 16px;
 }
 
+.perfil-acciones-botones {
+    justify-items: stretch;
+    gap: 12px;
+}
+
 .perfil-impedimento {
     margin-top: 16px;
 }

@@ -72,21 +72,17 @@ def validar_ubicacion_clase(cancha, fecha, hora_inicio):
         raise ValidationError("El turno ya está ocupado por otra actividad.")
 
 
-def _revision_registro_clase(
-    usuario, cancha, fecha, hora_inicio, usuarios,
-    profesores_ids, participantes_ids, modalidad, observaciones,
+def _advertencias_asignaciones_clase(
+    usuarios, usuarios_reservas, participantes_ids, modalidad, fecha, hora_inicio,
 ):
     advertencias = []
     advertencias_participantes = []
-    feriado = Feriado.objects.filter(fecha=fecha).first()
-    if feriado is not None:
-        advertencias.append(f"La fecha es feriado ({feriado.descripcion}). La clase se creará como una excepción manual.")
     if modalidad == "grupal" and len(participantes_ids) > 6:
         advertencias_participantes.append("Superás el máximo recomendado de 6 participantes para una clase grupal.")
     if modalidad == "individual" and len(participantes_ids) > 1:
         advertencias_participantes.append(f"La clase individual tiene {len(participantes_ids)} participantes. Podés continuar si está acordado.")
     reservas = list(Reserva.objects.filter(
-        organizador_id__in=profesores_ids | participantes_ids,
+        organizador_id__in=usuarios_reservas,
         evento__turno__fecha=fecha, evento__turno__hora_inicio=hora_inicio,
     ).exclude(evento__estado=Evento.Estado.ANULADO).select_related(
         "evento__turno__cancha__sede",
@@ -97,16 +93,30 @@ def _revision_registro_clase(
             f"{usuarios[reserva.organizador_id]} organiza la reserva {reserva.numero} en "
             f"{turno.cancha.sede.nombre}, {turno.cancha.nombre}, en el mismo horario."
         )
+    return {
+        "advertencias": advertencias,
+        "advertencias_participantes": advertencias_participantes,
+        "reservas": [[reserva.pk, reserva.evento.actualizado_en.isoformat()] for reserva in reservas],
+    }
+
+
+def _revision_registro_clase(
+    usuario, cancha, fecha, hora_inicio, usuarios,
+    profesores_ids, participantes_ids, modalidad, observaciones,
+):
     datos = {
         "usuario": usuario.pk, "cancha": cancha.pk, "sede": cancha.sede_id,
         "fecha": fecha.isoformat(), "hora": hora_inicio.isoformat(),
         "profesores": sorted(profesores_ids), "participantes": sorted(participantes_ids),
         "nombres": {str(pk): str(usuarios[pk]) for pk in sorted(profesores_ids | participantes_ids)},
         "modalidad": modalidad, "observaciones": observaciones.strip(),
-        "advertencias": advertencias,
-        "advertencias_participantes": advertencias_participantes,
-        "reservas": [[reserva.pk, reserva.evento.actualizado_en.isoformat()] for reserva in reservas],
+        **_advertencias_asignaciones_clase(
+            usuarios, profesores_ids | participantes_ids, participantes_ids, modalidad, fecha, hora_inicio,
+        ),
     }
+    feriado = Feriado.objects.filter(fecha=fecha).first()
+    if feriado is not None:
+        datos["advertencias"].insert(0, f"La fecha es feriado ({feriado.descripcion}). La clase se creará como una excepción manual.")
     return datos
 
 
@@ -207,10 +217,119 @@ def registrar_clase(
     return clase
 
 
+def _version_edicion_clase(usuario, clase):
+    return {
+        "usuario": usuario.pk, "clase": clase.pk, "evento": clase.evento_id,
+        "turno": clase.evento.turno_id, "estado": clase.evento.estado,
+        "actualizado_en": clase.evento.actualizado_en.isoformat(),
+        "modalidad": clase.modalidad, "observaciones": clase.evento.observaciones,
+        "profesores": [
+            [fila.profesor_id, fila.estado, fila.actualizado_en.isoformat()]
+            for fila in clase.profesores.order_by("profesor_id")
+        ],
+        "participantes": [
+            [fila.usuario_id, fila.estado, fila.actualizado_en.isoformat()]
+            for fila in clase.alumnos.order_by("usuario_id")
+        ],
+    }
+
+
+def consultar_edicion_clase(usuario, clase_id):
+    usuario = exigir_administracion_clases(usuario)
+    clase = Clase.objects.select_related("evento__turno__cancha__sede").get(pk=clase_id)
+    if clase.evento.tipo != Evento.Tipo.CLASE or clase.evento.estado != Evento.Estado.PROGRAMADO:
+        raise ValidationError("Sólo se pueden editar clases Programadas.")
+    version = _version_edicion_clase(usuario, clase)
+    return {
+        "clase": clase,
+        "profesores_ids": [pk for pk, estado, _ in version["profesores"] if estado == "activo"],
+        "participantes_ids": [pk for pk, estado, _ in version["participantes"] if estado == "activo"],
+        "version": signing.dumps(version, salt="clases.edicion-inicial", compress=True),
+    }
+
+
+def _validar_version_edicion(usuario, clase, version):
+    try:
+        anterior = signing.loads(version, salt="clases.edicion-inicial", max_age=3600)
+    except signing.BadSignature:
+        raise ValidationError("La edición venció o no es válida. Volvé a abrir Editar desde el detalle.") from None
+    if anterior != _version_edicion_clase(usuario, clase):
+        raise ValidationError("La clase cambió. Volvé a abrir Editar desde el detalle para consultar su estado actual.")
+
+
+def _revision_edicion_clase(
+    usuario, clase, destino, usuarios, profesores_ids, participantes_ids, modalidad, observaciones,
+):
+    version = _version_edicion_clase(usuario, clase)
+    profesores_activos = {pk for pk, estado, _ in version["profesores"] if estado == "activo"}
+    participantes_activos = {pk for pk, estado, _ in version["participantes"] if estado == "activo"}
+    nuevos = (profesores_ids - profesores_activos) | (participantes_ids - participantes_activos)
+    cambios = []
+    for funcion, actuales, elegidos, historicos in (
+        ("profesor", profesores_activos, profesores_ids, {pk for pk, _, _ in version["profesores"]}),
+        ("participante", participantes_activos, participantes_ids, {pk for pk, _, _ in version["participantes"]}),
+    ):
+        for pk in sorted(actuales ^ elegidos):
+            accion = "Retirar" if pk in actuales else ("Reincorporar" if pk in historicos else "Agregar")
+            cambios.append({"nombre": str(usuarios[pk]), "funcion": funcion, "accion": accion})
+    return {
+        "cambios": cambios,
+        "version": version, "cancha": destino.pk,
+        "profesores": sorted(profesores_ids), "participantes": sorted(participantes_ids),
+        "nombres": {str(pk): str(usuarios[pk]) for pk in sorted(profesores_ids | participantes_ids)},
+        "modalidad": modalidad, "observaciones": observaciones.strip(),
+        **_advertencias_asignaciones_clase(
+            usuarios, nuevos, participantes_ids, modalidad,
+            clase.evento.turno.fecha, clase.evento.turno.hora_inicio,
+        ),
+    }
+
+
+def preparar_edicion_clase(
+    usuario, clase_id, profesores_ids, participantes_ids, modalidad, observaciones,
+    *, version, cancha=None,
+):
+    usuario = exigir_administracion_clases(usuario)
+    clase = consultar_edicion_clase(usuario, clase_id)["clase"]
+    _validar_version_edicion(usuario, clase, version)
+    profesores_ids = normalizar_usuarios_clase(profesores_ids)
+    participantes_ids = normalizar_usuarios_clase(participantes_ids)
+    modalidad = modalidad or None
+    turno = clase.evento.turno
+    validar_datos_clase(turno.fecha, turno.hora_inicio, modalidad, observaciones)
+    profesores_actuales = set(clase.profesores.filter(estado="activo").values_list("profesor_id", flat=True))
+    participantes_actuales = set(clase.alumnos.filter(estado="activo").values_list("usuario_id", flat=True))
+    usuarios = {
+        persona.pk: persona for persona in Usuario.objects.filter(
+            pk__in=profesores_ids | participantes_ids | profesores_actuales | participantes_actuales,
+        ).prefetch_related("roles__rol")
+    }
+    validar_usuarios_clase(
+        usuarios, profesores_ids, participantes_ids,
+        profesores_actuales=profesores_actuales, participantes_actuales=participantes_actuales,
+    )
+    validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, turno.fecha, turno.hora_inicio, clase_id=clase.pk)
+    destino = cancha if cancha is not None else turno.cancha
+    if destino.pk != turno.cancha_id:
+        inicio = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))
+        if timezone.localtime() >= inicio:
+            raise ValidationError("Sólo se puede cambiar de cancha antes del inicio de la clase.")
+        validar_ubicacion_clase(destino, turno.fecha, turno.hora_inicio)
+    datos = _revision_edicion_clase(
+        usuario, clase, destino, usuarios, profesores_ids, participantes_ids, modalidad, observaciones,
+    )
+    return {
+        "cambios": datos["cambios"],
+        "advertencias": datos["advertencias"],
+        "advertencias_participantes": datos["advertencias_participantes"],
+        "confirmacion": signing.dumps(datos, salt="clases.edicion", compress=True),
+    }
+
+
 @transaction.atomic
 def editar_clase(
     modificado_por, clase_id, profesores_ids, participantes_ids,
-    modalidad, observaciones, cancha=None,
+    modalidad, observaciones, cancha=None, *, confirmacion,
 ):
     modificado_por = exigir_administracion_clases(modificado_por)
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
@@ -298,6 +417,18 @@ def editar_clase(
         usuarios, profesores_ids, participantes_ids, origen.fecha, origen.hora_inicio,
         clase_id=clase.pk,
     )
+    clase.evento = evento
+    try:
+        revisado = signing.loads(confirmacion, salt="clases.edicion", max_age=900)
+    except signing.BadSignature:
+        raise ValidationError("La revisión venció o no es válida. Revisá los cambios nuevamente.") from None
+    actual = _revision_edicion_clase(
+        modificado_por, clase, destino, usuarios,
+        profesores_ids, participantes_ids, modalidad, observaciones,
+    )
+    if revisado != actual:
+        raise ValidationError("La clase, los datos o las advertencias cambiaron. Revisá la edición nuevamente.")
+
     if (
         not cambia_cancha and clase.modalidad == modalidad and evento.observaciones == observaciones
         and profesores_activos == profesores_ids and participantes_activos == participantes_ids

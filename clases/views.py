@@ -14,10 +14,13 @@ from reservas.models import Evento
 from usuarios.models import Usuario
 
 from .consultas import consultar_clase, consultar_profesores, consultar_participantes
-from .forms import ClaseCrearForm, ClaseTurnoForm
+from .forms import ClaseForm, ClaseTurnoForm
 from .models import Asistencia, Clase, TurnoPlanilla
 from .permisos import exigir_administracion_clases
-from .servicios import preparar_registro_clase, registrar_clase, validar_ubicacion_clase
+from .servicios import (
+    consultar_edicion_clase, editar_clase, preparar_edicion_clase,
+    preparar_registro_clase, registrar_clase, validar_ubicacion_clase,
+)
 
 
 @login_required
@@ -130,7 +133,7 @@ def clase_crear(request):
     url_agenda = reverse("agenda:agenda") + "?" + urlencode({
         "sede": cancha.sede_id, "cancha": cancha.pk, "fecha": fecha.isoformat(), "hora": hora.hour,
     })
-    formulario = ClaseCrearForm(request.POST if request.method == "POST" else None)
+    formulario = ClaseForm(request.POST if request.method == "POST" else None)
     revision = None
     impedimento = None
     try:
@@ -155,13 +158,65 @@ def clase_crear(request):
                 raise ValidationError("La acción solicitada no es válida.")
         except ValidationError as error:
             formulario.add_error(None, error)
-    return render(request, "clases/clase_crear.html", {
+    return render(request, "clases/clase_formulario.html", {
         "formulario": formulario, "revision": revision,
         "profesores": formulario.seleccionados("profesores"),
         "participantes": formulario.seleccionados("participantes"),
         "modalidad_texto": dict(formulario.fields["modalidad"].choices).get(formulario["modalidad"].value(), "Sin especificar"),
         "cancha": cancha, "fecha": fecha, "hora": hora,
         "hora_fin": (datetime.combine(fecha, hora) + timedelta(hours=1)).time(),
-        "url_agenda": url_agenda, "impedimento": impedimento,
+        "url_agenda": url_agenda, "url_cancelar": url_agenda, "impedimento": impedimento,
         "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", url_agenda), ("Crear clase", None)],
+    })
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def clase_editar(request, pk):
+    usuario = exigir_administracion_clases(request.user)
+    url_detalle = reverse("clases:clase_detalle", args=[pk])
+    try:
+        datos = consultar_edicion_clase(usuario, pk)
+    except Clase.DoesNotExist:
+        raise Http404("La clase no existe.") from None
+    except ValidationError as error:
+        for mensaje in error.messages:
+            messages.error(request, mensaje)
+        return redirect(url_detalle)
+    clase = datos["clase"]
+    turno = clase.evento.turno
+    version = request.POST.get("version", "") if request.method == "POST" else datos["version"]
+    formulario = ClaseForm(
+        request.POST if request.method == "POST" else None,
+        initial={
+            "profesores": datos["profesores_ids"], "participantes": datos["participantes_ids"],
+            "modalidad": clase.modalidad or "", "observaciones": clase.evento.observaciones,
+        },
+        profesores_actuales=datos["profesores_ids"], participantes_actuales=datos["participantes_ids"],
+    )
+    revision = None
+    if request.method == "POST" and formulario.is_valid():
+        paso = request.POST.get("paso")
+        try:
+            if paso == "confirmar":
+                editar_clase(usuario, pk, **formulario.parametros(), confirmacion=request.POST.get("confirmacion", ""))
+                messages.success(request, "Los cambios de la clase fueron guardados.")
+                return redirect(url_detalle)
+            if paso == "revisar":
+                revision = preparar_edicion_clase(usuario, pk, **formulario.parametros(), version=version)
+            elif paso != "editar":
+                raise ValidationError("La acción solicitada no es válida.")
+        except ValidationError as error:
+            formulario.add_error(None, error)
+    return render(request, "clases/clase_formulario.html", {
+        "editando": True, "clase_id": pk, "version": version,
+        "formulario": formulario, "revision": revision,
+        "profesores": formulario.seleccionados("profesores"),
+        "participantes": formulario.seleccionados("participantes"),
+        "modalidad_texto": dict(formulario.fields["modalidad"].choices).get(formulario["modalidad"].value(), "Sin especificar"),
+        "cancha": turno.cancha, "fecha": turno.fecha,
+        "hora": turno.hora_inicio, "hora_fin": turno.hora_fin,
+        "url_cancelar": url_detalle,
+        "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Editar", None)],
     })

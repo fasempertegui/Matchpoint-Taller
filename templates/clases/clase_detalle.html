@@ -14,7 +14,6 @@
                 {% include "componentes/badge_estado.html" with estado=clase.estado texto=clase.estado_texto only %}
             </div>
         </div>
-        <a class="boton boton-secundario boton-chico" href="{{ url_agenda }}">Ver en agenda</a>
     </header>
     <div class="perfil-cuerpo">
         <div class="perfil-datos">
@@ -52,7 +51,7 @@
                 </section>
             {% endif %}
         </div>
-        <aside class="perfil-lateral" aria-label="Registro de la clase">
+        <aside class="perfil-lateral" aria-label="Registro y acciones de la clase">
             <section class="perfil-seccion" aria-labelledby="clase-registro-titulo">
                 <h2 id="clase-registro-titulo">Registro</h2>
                 <dl class="perfil-lista">
@@ -67,6 +66,13 @@
                         {% if puede_consultar_grupo %}<div class="perfil-fila"><dt>Finalizada por</dt><dd>{{ finalizado_por|default:"Finalización automática" }}</dd></div>{% endif %}
                     {% endif %}
                 </dl>
+            </section>
+            <section class="perfil-seccion" aria-labelledby="clase-acciones-titulo">
+                <h2 id="clase-acciones-titulo">Acciones</h2>
+                <div class="perfil-acciones perfil-acciones-botones">
+                    {% if clase.puede_editar %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_editar' clase.id %}">Editar clase</a>{% endif %}
+                    <a class="boton boton-secundario boton-chico" href="{{ url_agenda }}">Ver en agenda</a>
+                </div>
             </section>
         </aside>
     </div>
