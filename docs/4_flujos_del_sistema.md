@@ -2,7 +2,7 @@
 
 ## 1. Propósito y criterio de separación
 
-Este documento describe cómo circula la información durante los procesos del sistema. Complementa `2_criterios_del_sistema.md` sin redefinir la estructura de los datos (ver `3_modelo_relacional.md`).
+Este documento describe cómo circula la información durante los procesos del sistema. Se rige por `1_organizacion.md`, `2_criterios_del_sistema.md` y `3_modelo_relacional.md`: estos documentos definen el funcionamiento, las reglas y la estructura de los datos.
 
 Cada flujo representa una única intención de un actor humano (administrador, profesor, usuario del portal, etc.) y produce un único resultado principal. Crear, consultar, modificar, reprogramar, cancelar, completar y cambiar estados se documentan como operaciones diferentes, aunque compartan datos o validaciones.
 
@@ -59,7 +59,7 @@ Las altas, las consultas y las vistas previas sin cambios sobre registros existe
 | Planilla y generación de clases | FL-24 | Crear un turno de planilla |
 | Planilla y generación de clases | FL-25 | Modificar un turno de planilla |
 | Planilla y generación de clases | FL-26 | Quitar un turno de planilla |
-| Planilla y generación de clases | FL-27 | Gestionar feriados |
+| Planilla y generación de clases | FL-27 | Registrar o quitar un feriado |
 | Planilla y generación de clases | FL-28 | Generar clases para un período |
 | Planilla y generación de clases | FL-29 | Regenerar clases para un período |
 | Planilla y generación de clases | FL-30 | Eliminar manualmente una clase generada |
@@ -936,6 +936,8 @@ flowchart TD
 
 La planilla semanal de una cancha es única y viva (ver `1_organizacion.md`, 2.1 y `2_criterios_del_sistema.md`, 2.1): no existen versiones por período, ni un estado de "en preparación" o "confirmada". Editar la planilla no crea ni modifica clases por sí solo; generar clases para un período (**FL-28**) es la única operación que lee la planilla y crea clases concretas a partir de ella.
 
+Los profesores previstos deben ser usuarios activos con rol Profesor. Los participantes previstos deben ser usuarios activos; la selección propone Alumno por defecto y permite ampliar a cualquier usuario activo, incluidos profesores. Participar no exige ni otorga Alumno, no requiere un plan y no genera cargos. Una persona no se asigna a una misma celda en ambas funciones. La modalidad es opcional: individual y grupal admiten varios participantes. Más de seis participantes previstos en modalidad grupal genera una advertencia confirmable, sin imponer un cupo rígido.
+
 #### FL-23. Consultar la planilla de una cancha
 
 - **Objetivo:** visualizar los turnos vigentes de la planilla semanal de una cancha.
@@ -974,8 +976,8 @@ Recorrido:
 
 1. El administrador selecciona una celda vacía (día y horario) de la cancha.
 2. Ingresa modalidad, observaciones y profesores y alumnos previstos.
-3. El sistema valida que no exista ya un turno para esa cancha, día y horario.
-4. Guarda el turno y sus asignaciones.
+3. El sistema valida que no exista ya un turno para esa cancha, día y horario, y comprueba las condiciones de profesores y participantes previstas en esta sección.
+4. Presenta las advertencias de cantidad cuando corresponden y guarda el turno y sus asignaciones en una transacción.
 
 Alternativas:
 
@@ -1003,7 +1005,7 @@ Recorrido:
 
 1. El sistema muestra los datos del turno.
 2. El administrador modifica modalidad, observaciones, profesores o alumnos previstos.
-3. El sistema guarda los cambios.
+3. Valida las condiciones de profesores y participantes, presenta las advertencias de cantidad cuando corresponden y guarda los cambios en una transacción.
 
 Alternativas:
 
@@ -1049,77 +1051,89 @@ flowchart TD
     C -->|Sí| E[Eliminar turno de la grilla]
 ```
 
-#### FL-27. Gestionar feriados
+#### FL-27. Registrar o quitar un feriado
 
-- **Objetivo:** registrar o quitar una fecha sin dictado de clases, válida para todas las sedes por igual.
+- **Objetivo:** registrar una fecha del calendario común de feriados o quitar una existente.
 - **Actor:** administrador.
-- **Entradas:** fecha y descripción.
+- **Entradas:** fecha y descripción para registrar; feriado seleccionado para quitar.
 
-Recorrido:
+Recorrido de registro:
 
-1. El administrador ingresa fecha y descripción.
-2. El sistema valida que no exista ya un feriado para esa fecha.
-3. Guarda el feriado.
+1. Valida el acceso, la fecha entre el 01/08/2026 y cinco años calendario después de hoy y la ausencia de otro feriado en esa fecha.
+2. Si la fecha es posterior a hoy, prepara la vista previa de todas las clases Programadas de ese día, incluidas las manuales, en todas las sedes. Informa sus profesores y participantes y el motivo común «Clase anulada por registro de feriado».
+3. El administrador confirma. El sistema coordina la operación con la creación y generación de clases, bloquea los turnos y eventos afectados y vuelve a comprobar el conjunto revisado.
+4. En una única transacción registra el feriado y anula las clases revisadas, conservando asignaciones, actor, momento y motivo. Libera los turnos sin crear bloqueos ni modificar reservas. Si cambian las condiciones, revierte todo y exige revisar nuevamente.
+
+Recorrido de retiro:
+
+1. El administrador selecciona el feriado y confirma quitarlo.
+2. El sistema elimina la fecha del calendario. No reactiva clases Anuladas ni genera clases nuevas.
 
 Alternativas:
 
-- Un feriado no puede registrarse por sede: rige siempre para todas las sedes.
-- Su fecha debe estar comprendida entre el 01/08/2026 y cinco años después de la fecha local actual.
-- Quitar un feriado ya registrado lo elimina sin afectar clases ya generadas.
-- Un feriado no cancela clases ya generadas: solo evita que se generen nuevas ese día (ver **FL-28**).
+- Registrar un feriado de hoy o pasado no anula ni modifica clases existentes.
+- Generar o regenerar omite las fechas feriadas. Se admite crear una clase manual después del registro del feriado, respetando disponibilidad y horarios; esa excepción permanece Programada.
+- El feriado no se limita a una sede. Una fecha duplicada se rechaza sin cambios.
 
-- **Resultado:** feriado registrado o quitado.
-- **Datos:** feriados.
+- **Resultado:** calendario actualizado y, al registrar una fecha futura, clases revisadas Anuladas con historia preservada.
+- **Datos:** feriados, usuarios y roles del actor, clases, profesores, participantes, eventos, turnos y auditoría.
 
 ```mermaid
 flowchart TD
-    A[Ingresar o seleccionar feriado] --> B{Registrar o quitar}
-    B -->|Registrar| C{Fecha libre}
-    C -->|No| D[Rechazar duplicado]
-    C -->|Sí| E[Guardar feriado]
-    B -->|Quitar| F[Eliminar feriado]
+    A[Seleccionar operación y fecha] --> B{Registrar}
+    B -->|Sí| C[Validar fecha y duplicación]
+    C --> D{Fecha posterior a hoy}
+    D -->|Sí| E[Revisar clases programadas y confirmar]
+    E --> F[Revalidar y registrar feriado con anulaciones atómicas]
+    D -->|No| G[Registrar sin modificar clases]
+    B -->|No| H[Confirmar retiro y quitar feriado sin reactivar clases]
 ```
+
 
 #### FL-28. Generar clases para un período
 
-- **Objetivo:** crear las clases concretas de una sede para un rango de fechas, a partir del estado actual de la planilla.
+- **Objetivo:** crear clases concretas de una sede a partir de su planilla vigente.
 - **Actor:** administrador.
-- **Entradas:** sede y rango de fechas.
+- **Entradas:** sede y rango de fechas dentro del calendario de clases, de hasta 62 días corridos inclusive.
 
 Recorrido:
 
-1. El administrador selecciona sede y período.
-2. El sistema recorre los turnos de planilla de las canchas de esa sede y calcula, para cada uno, las fechas del período que coinciden con su día de la semana, obteniendo así la lista completa de turnos candidatos del período. Para cada fecha candidata, la omite y la lista en la vista previa cuando: es feriado (**FL-27**); ya hay un evento **no cancelado** en esa cancha y horario (un evento Anulado no ocupa el turno: se trata como libre y se genera la clase igual); algún profesor previsto tiene otra actividad no cancelada superpuesta con ese horario, sin importar la cancha, **ya sea contra un evento ya existente o contra otro turno candidato de esta misma corrida** (comparando los candidatos entre sí en un orden estable, por cancha y horario, y omitiendo el que aparezca después cuando dos candidatos del mismo profesor se superponen); o la sede o la cancha están inactivas. Si algún alumno previsto tiene otra actividad no cancelada superpuesta, la fecha **no** se omite: se genera igual y queda como advertencia.
-3. Muestra una vista previa: cuántas clases se crearán, qué fechas se omiten y por qué (feriado, conflicto de cancha, conflicto de profesor, sede o cancha inactiva, turno fuera del horario de funcionamiento), y qué alumnos previstos quedan con advertencia de superposición.
-4. El sistema advierte, en dos confirmaciones explícitas y sucesivas, que la generación no puede deshacerse, que para quitar clases generadas hace falta eliminarlas manualmente (**FL-30**) o regenerar el período (**FL-29**), y que las clases con alumnos superpuestos listadas en la vista previa se crearán igual. Las fechas fuera del horario de funcionamiento se omiten.
-5. El administrador confirma ambas veces.
-6. En una transacción, obtiene o crea los turnos concretos de las fechas válidas, los bloquea y comprueba nuevamente su ocupación. Por cada clase registra un evento Programado que referencia el turno, la clase con indicador de generada y sus asignaciones. Las observaciones de la actividad se guardan en el evento.
-7. Envía una notificación por email a cada profesor con turnos incluidos en la generación, resumiendo sus clases del período (ver 4.2).
+1. Valida el acceso, la sede y el rango. Expande las celdas de planilla a las fechas que coinciden con su día de semana y ordena las candidatas por fecha, hora e identificadores de sede y cancha.
+2. Evalúa cada candidata completa: horario íntegro dentro de una franja habilitada, instalaciones activas, al menos un profesor previsto y condiciones de asignación de todos sus usuarios. Omite feriados, turnos ocupados por eventos no Anulados y candidatas cuyos profesores o participantes tienen asignaciones activas a otra clase no Anulada en la misma fecha y hora, sin importar sede, cancha o función.
+3. Compara también las candidatas válidas de esta ejecución. La primera válida conserva sus asignaciones; una posterior en conflicto se omite completa. No elimina usuarios para crear una clase parcial ni aborta las demás candidatas.
+4. Presenta las clases a crear, cada candidata omitida con su motivo y la advertencia por más de seis participantes previstos en modalidad grupal. Las coincidencias con reservas no generan advertencia ni son motivo de omisión.
+5. Solicita dos confirmaciones explícitas y sucesivas: la generación no admite deshacer; para quitar las clases generadas corresponde eliminarlas manualmente cuando sea válido o regenerar el período.
+6. Al confirmar, bloquea usuarios en orden de identificador y coordina sede, canchas y calendario de feriados. Obtiene o crea los turnos concretos, los bloquea y vuelve a evaluar el conjunto revisado. Si cambia, revierte y exige una nueva revisión.
+7. Crea en una transacción los eventos Programados de tipo clase, sus especializaciones con `es_generada = true` y referencia a la celda, y sus asignaciones. Las observaciones se copian al evento.
+8. La notificación por email a profesores se describe en el proceso 4.2.
 
 Alternativas:
 
-- El rango debe estar dentro del calendario operativo y abarcar como máximo 62 días corridos inclusive; para generar un período mayor se ejecuta el proceso por tramos.
-- Un turno sin profesor previsto se omite e informa, igual que un conflicto de cancha, un conflicto de profesor, una sede o cancha inactiva, o un feriado.
-- Un conflicto de profesor entre dos turnos candidatos de la misma corrida (por ejemplo, el mismo profesor previsto a la misma hora en dos canchas distintas de la planilla) se resuelve igual que contra datos ya existentes: se detecta antes de crear nada, no se delega en la restricción de la base de datos, que de otro modo abortaría toda la transacción del paso 6 en lugar de omitir solo ese turno.
-- Un turno fuera del horario de funcionamiento de la sede se omite y se informa en la vista previa; las confirmaciones no autorizan excepciones.
-- Correr esta operación dos veces sobre el mismo rango no duplica nada: las fechas ya cubiertas por un evento no Anulado se omiten en la segunda corrida.
-- La operación no admite deshacer automático.
+- Los usuarios inactivos, profesores sin rol Profesor, celdas sin profesor, asignaciones en ambas funciones, instalaciones inactivas y turnos fuera de horario originan omisiones informadas.
+- Las asignaciones inactivas y clases Anuladas no generan conflictos. Una clase Finalizada conserva la ocupación y las asignaciones que correspondan.
+- Las reservas no Anuladas ocupan su turno e impiden generar en él. Una coincidencia de usuario con una reserva en otra cancha no impide generar.
+- Una clase omitida no ocupa el turno ni reserva sus usuarios para las candidatas posteriores.
+- Volver a generar sin regeneración no duplica clases: los turnos ya ocupados se omiten.
+- La modalidad individual admite varios participantes; no se aplica un máximo bloqueante por modalidad.
 
-- **Resultado:** clases concretas creadas para el período, con las fechas omitidas y las advertencias informadas.
-- **Datos:** turnos de planilla, feriados, horarios de sede, eventos, turnos y clases.
+- **Resultado:** clases generadas y lista de omisiones, sin cambios parciales ante un error de confirmación.
+- **Datos:** usuarios y roles, planilla y vínculos previstos, feriados, sedes, canchas, horarios, turnos, eventos, clases y asignaciones.
 
 ```mermaid
 flowchart TD
-    A[Seleccionar sede y período] --> B[Expandir turnos a fechas]
-    B --> C[Omitir feriados, conflictos de cancha o profesor, y sedes o canchas inactivas]
-    C --> D[Mostrar vista previa con omisiones y advertencias]
+    A[Validar sede y período] --> B[Expandir y ordenar candidatas]
+    B --> C[Evaluar candidatas completas y omitir conflictos]
+    C --> D[Presentar clases válidas, omisiones y advertencias]
     D --> E{Primera confirmación}
-    E -->|No| F[Cancelar]
+    E -->|No| F[Conservar datos]
     E -->|Sí| G{Segunda confirmación}
     G -->|No| F
-    G -->|Sí| H[Crear clases en una transacción]
-    H --> I[Notificar a cada profesor asignado]
+    G -->|Sí| H[Bloquear y revalidar conjunto]
+    H --> I{Coincide con la revisión}
+    I -->|No| D
+    I -->|Sí| J[Crear eventos, clases y asignaciones en una transacción]
 ```
+
 
 #### FL-29. Regenerar clases para un período
 
@@ -1132,13 +1146,13 @@ Recorrido:
 
 1. El administrador selecciona sede y el período a regenerar.
 2. El sistema identifica las clases de ese período en estado **Programada** generadas por la planilla.
-3. Muestra cuántas eliminará y recreará, y advierte que las clases **Finalizadas**, **Anuladas** o creadas manualmente no se tocan.
-4. El administrador confirma.
-5. En una transacción, elimina esas clases y sus eventos, conservando los turnos concretos. Repite el procedimiento de **FL-28** con la planilla actual.
+3. Calcula la vista previa de generación excluyendo de ocupación y asignaciones las clases generadas Programadas que propone eliminar. Las clases conservadas siguen participando en los conflictos. Muestra cuántas eliminará y recreará, las omisiones y las advertencias; las clases Finalizadas, Anuladas o manuales no se tocan.
+4. El administrador confirma las dos advertencias explícitas de irreversibilidad de **FL-28**.
+5. En una transacción, coordina los bloqueos y revalida tanto el conjunto a eliminar como el conjunto a generar. Si cambió lo revisado, revierte y exige nueva vista previa. Elimina las dependencias, clases y eventos permitidos, conserva los turnos concretos y crea las nuevas clases según **FL-28**.
 
 Alternativas:
 
-- Las dos confirmaciones de **FL-28** vuelven a aplicar en la etapa de generación de este flujo, incluidas las mismas categorías de omisión y advertencia (feriado, conflicto de cancha o de profesor, sede o cancha inactiva, alumno superpuesto).
+- Se aplican las mismas omisiones por ocupación, feriados, horario, instalaciones, condiciones de usuarios y conflictos de profesores o participantes entre clases. Más de seis participantes previstos en modalidad grupal genera advertencia; las coincidencias con reservas no generan advertencias ni omisiones por usuario.
 - Una clase **Finalizada**, **Anulada** o creada manualmente nunca se elimina por este flujo.
 - Un turno cuya clase generada anteriormente fue cancelada se trata como libre: la generación puede crear ahí una clase nueva, ya que un evento Anulado no ocupa el turno. La clase cancelada no se toca ni se elimina; ambas coexisten como historia independiente.
 
@@ -1166,7 +1180,7 @@ Recorrido:
 1. El administrador solicita eliminar la clase.
 2. El sistema verifica que esté **Programada**, generada por la planilla (`es_generada = true`) y sin asistencia registrada.
 3. El administrador confirma.
-4. El sistema elimina la clase y su evento.
+4. En una transacción bloquea y revalida la clase y su evento, elimina sus datos dependientes y ambos registros, y conserva el turno concreto. La eliminación queda auditada.
 
 Alternativas:
 
@@ -1189,7 +1203,7 @@ flowchart TD
 #### FL-31. Consultar la agenda diaria
 
 - **Objetivo:** visualizar la ocupación de todas las canchas de una sede durante una fecha.
-- **Actores:** administrador; profesor limitado a sus clases asignadas y activas.
+- **Actores:** administrador; usuario del portal según sus relaciones con cada actividad.
 - **Entradas:** sede y fecha; selección opcional de cancha y hora para consultar un turno. Para clases, filtros opcionales por profesor o estado.
 
 Recorrido:
@@ -1202,7 +1216,7 @@ Recorrido:
 
 Alternativas:
 
-- Un profesor sólo ve sus clases; no accede a los datos de reservas ajenas ni a operaciones administrativas.
+- El portal muestra las actividades ajenas como No disponible, sin tipo, identidad, participantes ni observaciones. Las relaciones propias permiten las consultas autorizadas; dictar una clase y asistir a ella conceden permisos diferentes. Las operaciones administrativas no se ofrecen en el portal.
 - Sin canchas se muestra un estado vacío. Sin horarios ni actividades no se inventan espacios reservables.
 - Las instalaciones inactivas conservan su historia y no admiten nuevas actividades. La ausencia de precio no impide consultar; impide registrar reservas normales.
 - Las fechas, canchas o selecciones inválidas se rechazan sin ejecutar acciones.
@@ -1222,7 +1236,7 @@ flowchart TD
 #### FL-32. Consultar la agenda semanal
 
 - **Objetivo:** visualizar la ocupación de una cancha durante una semana.
-- **Actores:** administrador; profesor limitado a sus clases.
+- **Actores:** administrador; usuario del portal según sus relaciones con cada actividad.
 - **Entradas:** sede, cancha, fecha de referencia y selección opcional de hora; para clases, filtros opcionales por profesor o estado.
 
 Recorrido:
@@ -1235,7 +1249,7 @@ Recorrido:
 
 Alternativas:
 
-- Un profesor sólo ve sus clases asignadas, sin datos de actividades ajenas ni acciones administrativas.
+- Se aplican la privacidad y los permisos de **FL-31**: cualquier titular puede consultar sus clases como participante sin exigir Alumno; sólo un profesor autorizado tiene acciones de docencia y no accede a datos de actividades ajenas.
 - Una cancha que no pertenece a la sede o una fecha inválida rechaza la consulta.
 - La consulta no requiere una tarifa ni crea eventos o turnos persistidos; las operaciones de reserva conservan el límite de catorce días.
 
@@ -1253,8 +1267,8 @@ flowchart TD
 #### FL-33. Consultar el detalle de una clase
 
 - **Objetivo:** visualizar toda la información disponible de una clase concreta.
-- **Actores:** administrador; profesor asignado a la clase.
-- **Entrada:** clase seleccionada desde una agenda.
+- **Actores:** administrador; profesor asignado para dictar; titular autenticado que participa en la clase o tiene asistencia registrada, limitado a su propia información. No se exige rol Alumno para la consulta personal.
+- **Entrada:** clase seleccionada desde una agenda o actividad personal.
 
 Recorrido:
 
@@ -1265,8 +1279,9 @@ Recorrido:
 
 Alternativas:
 
-- Un profesor no asignado no puede abrir el detalle.
-- Las acciones de modificación y cancelación son exclusivas del administrador. Un profesor activo asignado también puede completar la clase y registrar su asistencia.
+- Un usuario sin relación con la clase ni permiso administrativo no accede a su detalle. Un profesor que asiste como participante tiene sólo permisos de consulta personal, sin acciones de docencia.
+- El administrador consulta toda la información. El profesor asignado para dictar consulta los datos necesarios de su clase; el participante consulta la clase, su propia asignación y su asistencia, sin acceder a datos personales ajenos.
+- Modificar y anular son acciones administrativas. Sólo el administrador o un profesor activo con rol Profesor y asignación activa para dictar pueden finalizar y registrar asistencia.
 
 - **Resultado:** detalle consultado sin modificaciones.
 - **Datos:** eventos, turnos, clases, turnos de origen, profesores, usuarios y asistencias.
@@ -1281,6 +1296,14 @@ flowchart TD
 
 ### 3.8 Clases concretas
 
+Las operaciones se rigen por criterios, 2.0, 2.1 y 2.12. Se admiten fechas desde el 01/08/2026 hasta un año calendario después de hoy, en Buenos Aires. Las clases duran una hora y comienzan en punto entre 00:00 y 22:00. La creación histórica conserva el procesamiento de finalización por horario.
+
+Profesores nuevos o reactivados requieren cuenta activa y rol Profesor. Los participantes nuevos o reactivados requieren cuenta activa, sin exigir Alumno, contratación ni cobro. La selección propone Alumno por defecto y permite buscar cualquier usuario activo. Cada clase conserva al menos una asignación activa de profesor. Individual y grupal admiten varios participantes; la cantidad no impone un máximo bloqueante.
+
+Una persona no puede tener asignaciones activas a clases no Anuladas en la misma fecha y hora, aunque cambien sede, cancha o función; tampoco puede dictar y participar en la misma clase. Los conflictos entre clases bloquean el guardado. Las asignaciones inactivas y las clases Anuladas no generan esos conflictos.
+
+La coincidencia con una reserva no Anulada que la persona organiza o en la que figura como invitada identificada genera advertencia confirmable. Más de seis participantes activos en modalidad grupal también genera advertencia confirmable. Las advertencias no convierten en válidos los conflictos bloqueantes. La confirmación se vincula al actor y al conjunto revisado; si cambia, exige revisión.
+
 #### FL-34. Crear una clase concreta
 
 - **Objetivo:** crear una clase concreta de una hora fuera de la planilla.
@@ -1291,8 +1314,8 @@ Recorrido:
 
 1. El administrador completa el turno y los participantes.
 2. El sistema calcula la hora de fin exactamente una hora después del inicio.
-3. Valida profesores, sede, cancha, participantes y ausencia de eventos superpuestos. Exige que el turno quede íntegramente dentro de una franja de funcionamiento de la sede (**FL-57**) para ese día; si no se cumple, rechaza la operación.
-4. Obtiene o crea el turno concreto, lo bloquea y comprueba su ocupación. En una transacción crea un evento Programado que referencia el turno, clase y asignaciones; las observaciones se guardan en el evento.
+3. Valida calendario, profesores, participantes, ausencia de asignaciones simultáneas a otras clases no Anuladas e instalaciones activas. Exige que el turno quede íntegramente dentro de una franja de funcionamiento (**FL-57**); no hay excepciones. Presenta las advertencias confirmables previstas en esta sección.
+4. Al confirmar, bloquea usuarios en orden de identificador, sede y cancha; obtiene o crea el turno concreto, lo bloquea y revalida acceso, asignaciones, advertencias y ocupación. En una transacción crea el evento Programado, clase y asignaciones; las observaciones pertenecen al evento. Una revisión que cambió exige nueva confirmación y no deja cambios parciales.
 5. Envía una notificación por email a cada profesor asignado (ver 4.2).
 
 Alternativas:
@@ -1300,8 +1323,8 @@ Alternativas:
 - Un turno ocupado obliga a elegir otro; el evento existente no se desplaza.
 - La clase puede crearse sin alumnos, pero debe tener al menos un profesor activo.
 - Superar seis alumnos en modalidad grupal genera advertencia, no bloqueo.
-- Un profesor con otra actividad no cancelada superpuesta en el horario impide confirmar la clase, sin importar la cancha.
-- Un alumno asignado con otra actividad no cancelada superpuesta en el horario genera una advertencia, no un bloqueo.
+- Un profesor o participante con asignación activa a otra clase no Anulada en la misma fecha y hora impide confirmar, sin importar sede, cancha o función.
+- Las coincidencias con reservas no Anuladas del organizador o invitado identificado generan advertencia confirmable tanto para profesores como para participantes.
 - Un turno fuera del horario de funcionamiento de la sede impide crear la clase, sin excepciones administrativas.
 - Las clases generadas desde la planilla se crean mediante **FL-28**, no mediante este flujo; esa generación notifica una sola vez por profesor y por corrida, no clase por clase. Una clase creada por este flujo queda marcada como no generada por planilla.
 
@@ -1330,16 +1353,16 @@ Recorrido:
 
 1. El sistema muestra datos, participantes y turno actuales.
 2. El administrador realiza cambios.
-3. El sistema valida al menos un profesor activo y las asignaciones. Para cada profesor agregado que no estaba asignado antes, comprueba que no tenga otra actividad no cancelada superpuesta con el turno de la clase (bloqueante, sin importar la cancha). Para cada alumno agregado que no estaba asignado antes, si tiene otra actividad no cancelada superpuesta, genera una advertencia, sin bloquear.
-4. Si se indicó una nueva sede o cancha, comprueba que estén activas y que ese turno (mismo día y horario, cancha nueva) esté disponible, excluyendo el evento actual de esa comprobación. Exige que el turno quede íntegramente dentro de una franja de funcionamiento de la sede (**FL-57**) para ese día; si no se cumple, rechaza la operación.
-5. Guarda modalidad y asignaciones en sus relaciones específicas y observaciones en el evento. Si cambió la cancha, actualiza `eventos.turno_id` al turno de la nueva cancha en la misma fecha y hora; bloquea origen y destino, valida la disponibilidad y conserva el turno original. Actualiza la fecha de modificación del evento. Día y hora no cambian.
+3. Valida que quede al menos un profesor con asignación activa y comprueba las condiciones de cada alta o reactivación de profesor o participante. Rechaza asignaciones simultáneas a otras clases no Anuladas y personas en ambas funciones. Presenta las advertencias confirmables de coincidencia con reservas y cantidad grupal, según las reglas comunes.
+4. Si se indicó una nueva sede o cancha, exige que el turno original no haya comenzado, que las instalaciones de destino estén activas y que el turno de destino, con el mismo día y horario, esté disponible, excluyendo el evento actual de esa comprobación. Exige que el turno quede íntegramente dentro de una franja de funcionamiento de la sede (**FL-57**) para ese día; si no se cumple, rechaza la operación.
+5. Coordina los bloqueos de usuarios en orden de identificador, instalaciones, turnos y evento, y revalida permisos, estado, asignaciones y advertencias antes de guardar. Guarda modalidad y asignaciones en sus relaciones específicas y observaciones en el evento. Si cambió la cancha, actualiza `eventos.turno_id` al turno de la nueva cancha en la misma fecha y hora; bloquea origen y destino, valida la disponibilidad y conserva el turno original. Actualiza la fecha de modificación del evento. Día y hora no cambian.
 6. Si se agregó un profesor que no estaba asignado antes, le envía una notificación por email (ver 4.2).
 
 Alternativas:
 
 - Una clase grupal con más de seis alumnos genera una advertencia.
 - Este flujo no permite cambiar el día ni el horario de la clase: para eso se cancela (**FL-37**) y se crea una nueva (**FL-34**), sin ninguna vinculación entre ambas — a diferencia de las reservas, donde reprogramar sí vincula la nueva con la cancelada. No existe una "reprogramación de clases" como operación propia; es una decisión deliberada.
-- Un conflicto de cancha, una sede o cancha inactiva, o un profesor ya asignado con otra actividad superpuesta obligan a elegir otra cancha; la actividad existente no se desplaza.
+- Un conflicto de cancha o instalaciones de destino inactivas rechaza el traslado. Un conflicto de asignaciones entre clases exige corregir las asignaciones; cambiar de cancha no lo resuelve. Ninguna actividad existente se desplaza.
 - Un cambio de cancha que ubique el turno fuera del horario de funcionamiento de la sede impide guardar, igual que en **FL-34**.
 - Una clase cancelada o completada conserva su historia y no se edita mediante este flujo.
 - Quitar un profesor o un alumno no genera notificación.
@@ -1351,7 +1374,7 @@ Alternativas:
 ```mermaid
 flowchart TD
     A[Abrir clase programada] --> B[Modificar datos, participantes o cancha]
-    B --> C{Profesor agregado sin superposición}
+    B --> C{Profesores y participantes sin conflictos entre clases}
     C -->|No| D[Solicitar corrección]
     D --> B
     C -->|Sí| E{Asignaciones válidas}
@@ -1403,7 +1426,7 @@ flowchart TD
 #### FL-38. Completar una clase
 
 - **Objetivo:** registrar la finalización de una clase y habilitar el registro de asistencia.
-- **Actores:** Administrador o profesor activo asignado a la clase.
+- **Actores:** administrador o usuario activo con rol Profesor y asignación activa para dictar la clase.
 - **Precondiciones:** evento de clase Programado y turno terminado.
 
 Recorrido:
@@ -1440,16 +1463,16 @@ flowchart TD
 #### FL-39. Registrar la asistencia de una clase
 
 - **Objetivo:** guardar la participación efectiva de usuarios en una clase ya dictada.
-- **Actores:** administrador; profesor activo asignado a la clase.
+- **Actores:** administrador; usuario activo con rol Profesor y asignación activa para dictar la clase.
 - **Precondiciones:** clase en estado **Finalizada** (ver **FL-38**), accesible mediante **FL-33** o desde el propio **FL-38**.
-- **Entradas:** alumno, estado presente, ausente o sin registrar y observaciones opcionales.
+- **Entradas:** usuario, estado presente, ausente o sin registrar y observaciones opcionales.
 
 Recorrido:
 
 1. El sistema muestra los alumnos asignados y sus estados actuales.
 2. El administrador o profesor marca cada alumno como presente, ausente o sin registrar.
-3. Puede buscar y agregar un alumno no asignado habitualmente.
-4. Confirma y el sistema valida todas las filas antes de guardar en una transacción los estados, quién los registró y el momento.
+3. Puede buscar y registrar asistencia de un usuario sin asignación previa, sin exigir rol Alumno ni contratación.
+4. Al confirmar, bloquea y revalida el acceso, la clase Finalizada y todas las filas antes de guardar en una transacción estados, responsable, momento y observaciones. Presente y ausente requieren responsable y momento; Sin registrar no se interpreta como ausencia. La corrección actualiza la marca de modificación y conserva los cambios en auditoría.
 
 Alternativas:
 
@@ -1459,6 +1482,7 @@ Alternativas:
 - El sistema no clasifica la asistencia como recuperación.
 - Los cambios posteriores de asistencia se realizan repitiendo este flujo sobre la misma clase.
 - Si alguna fila contiene un valor inválido, no se guarda ninguna de las filas.
+- Puede finalizar y registrar asistencia en una sola transacción: se validan las condiciones de ambas operaciones y cualquier error revierte todo. La finalización automática no marca presentes ni ausentes.
 
 - **Resultado:** asistencia de la clase actualizada.
 - **Datos:** clases, eventos, profesores asignados, usuarios y asistencias.
@@ -2035,12 +2059,12 @@ flowchart TD
 #### FL-54. Consultar actividad de clases de un usuario
 
 - **Objetivo:** conocer a cuántas clases fue asignado un usuario y a cuántas asistió durante un período.
-- **Actores:** administrador; usuario con rol alumno, limitado a su propia actividad, desde el portal. Un alumno ve además, dentro de este mismo flujo, sus próximas clases asignadas que todavía no ocurrieron.
-- **Entradas:** usuario, fecha inicial y fecha final; un alumno no ingresa criterios, ve directamente su propia actividad.
+- **Actores:** administrador; cualquier titular autenticado, limitado a su propia actividad desde el portal, sin exigir rol Alumno. El titular también consulta sus próximas clases como participante; los profesores consultan las clases que dictan según sus asignaciones.
+- **Entradas:** usuario, fecha inicial y fecha final. Para la consulta personal, el usuario es siempre el titular autenticado. Los rangos admiten hasta 366 días corridos inclusive dentro del calendario operativo; un período mayor se consulta por tramos.
 
 Recorrido:
 
-1. El sistema obtiene las clases del período donde el usuario posee asignación (o el usuario autenticado, si el actor es un alumno).
+1. Valida acceso y período, y obtiene las clases donde el usuario autorizado posee asignación. En el portal no admite sustituir al titular por otro usuario.
 2. Obtiene las asistencias del usuario, incluso cuando no existió asignación previa.
 3. Calcula clases asignadas, presentes, ausentes y sin registro.
 4. Muestra totales y detalle de fecha, hora, cancha y estado de cada clase.
@@ -2050,7 +2074,7 @@ Alternativas:
 - Una asistencia como presente sin asignación previa suma asistencia, pero no suma clase asignada.
 - Las clases canceladas se muestran separadas y no se consideran dictadas.
 - La consulta no intenta atribuir cada clase a un plan: los planes sólo dan derecho a participar.
-- Un alumno ve esta información en modo de solo lectura.
+- El titular consulta su información en modo de sólo lectura, cualquiera sea su rol. Participar no concede permisos de docencia ni acceso a información personal ajena.
 
 - **Resultado:** actividad de clases del usuario resumida y detallada.
 - **Datos:** usuarios, clases, eventos, turnos, asignaciones y asistencias.
@@ -2575,24 +2599,24 @@ flowchart TD
 
 ### 4.6 Recordatorio de la próxima clase asignada
 
-- **Objetivo:** recordarle a cada alumno la clase que tiene programada, para reducir ausencias.
+- **Objetivo:** recordarle a cada participante la clase que tiene programada, para reducir ausencias.
 - **Disparador:** tarea periódica de Celery, ejecución diaria.
 
 Recorrido:
 
 1. Celery Beat programa la ejecución diaria.
-2. El sistema localiza asignaciones activas de alumnos a clases **Programadas** cuya fecha sea la del día siguiente y que todavía no recibieron este recordatorio.
-3. Envía el recordatorio a cada alumno por su propia asignación (ver 4.2).
+2. El sistema localiza asignaciones activas de participantes a clases **Programadas** cuya fecha sea la del día siguiente y que todavía no recibieron este recordatorio.
+3. Envía el recordatorio a cada participante por su propia asignación (ver 4.2).
 4. Marca cada asignación avisada, para no repetir su envío en corridas posteriores.
 
 Alternativas:
 
-- El aviso se envía una vez por asignación alumno–clase, no una vez por clase: si el envío falla para un alumno puntual, o se lo asigna después de una corrida, la siguiente corrida lo alcanza igual, sin depender del resto de la clase.
+- El aviso se envía una vez por asignación participante–clase, no una vez por clase: si el envío falla para un participante puntual, o se lo asigna después de una corrida, la siguiente corrida lo alcanza igual, sin depender del resto de la clase.
 - Una clase cancelada antes del envío queda fuera de esta tarea.
 - Reactivar una asignación inactiva resetea su recordatorio a `false`.
 - Sin asignaciones elegibles, la operación finaliza sin modificaciones.
 
-- **Resultado:** alumnos con clase programada para el día siguiente notificados, cada uno por su propia asignación.
+- **Resultado:** participantes con clase programada para el día siguiente notificados, cada uno por su propia asignación.
 - **Datos:** clases, asignaciones.
 
 ```mermaid

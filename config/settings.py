@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "instalaciones.apps.InstalacionesConfig",
     "reservas.apps.ReservasConfig",
     "bloqueos.apps.BloqueosConfig",
+    "clases.apps.ClasesConfig",
     "agenda.apps.AgendaConfig",
 ]
 
