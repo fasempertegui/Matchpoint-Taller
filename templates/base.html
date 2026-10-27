@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{% static 'css/observaciones.css' %}">
     <link rel="stylesheet" href="{% static 'css/personas.css' %}">
     {% block estilos %}{% endblock %}
+    <script src="{% static 'js/navegacion.js' %}" defer></script>
     <script src="{% static 'js/pestanas.js' %}" defer></script>
     <script src="{% static 'js/mensajes.js' %}" defer></script>
     <script src="{% static 'js/confirmaciones.js' %}" defer></script>
@@ -28,18 +29,15 @@
             {% if request.user.is_authenticated %}
                 <nav>
                     <span class="saludo-usuario">Hola, {{ request.user.first_name|default:request.user.username }}</span>
-                    <a href="{% url 'inicio' %}">Inicio</a>
-                    <a href="{% url 'agenda:agenda' %}">Agenda</a>
-                    {% if perms.instalaciones.view_sede %}
-                        <a href="{% url 'instalaciones:sede_lista' %}">Sedes</a>
+                    <a href="{% url 'inicio' %}"{% if navegacion_app.inicio_activo %} aria-current="page"{% endif %}>Inicio</a>
+                    {% if navegacion_app.agenda %}{% include "componentes/navegacion_enlace.html" with item=navegacion_app.agenda only %}{% endif %}
+                    {% if navegacion_app.clases %}{% include "componentes/navegacion_grupo.html" with titulo="Clases" identificador="clases" items=navegacion_app.clases activo=navegacion_app.clases_activo only %}{% endif %}
+                    {% if navegacion_app.administracion|length == 1 %}
+                        {% for item in navegacion_app.administracion %}{% include "componentes/navegacion_enlace.html" with item=item only %}{% endfor %}
+                    {% elif navegacion_app.administracion %}
+                        {% include "componentes/navegacion_grupo.html" with titulo="Administración" identificador="administracion" items=navegacion_app.administracion activo=navegacion_app.administracion_activo only %}
                     {% endif %}
-                    {% if perms.usuarios.view_usuario %}
-                        <a href="{% url 'usuarios:usuario_lista' %}">Usuarios</a>
-                    {% endif %}
-                    {% if request.user.is_superuser %}
-                        <a href="{% url 'auditoria:auditoria_lista' %}">Auditoría</a>
-                    {% endif %}
-                    <a href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Mi perfil</a>
+                    <a href="{% url 'usuarios:usuario_detalle' request.user.pk %}"{% if navegacion_app.perfil_activo %} class="navegacion-activa"{% endif %}>Mi perfil</a>
                     <form class="formulario-en-linea" method="post" action="{% url 'logout' %}">
                         {% csrf_token %}
                         <button class="enlace-boton" type="submit">Cerrar sesión</button>

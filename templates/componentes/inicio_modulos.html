@@ -1,0 +1,18 @@
+{% if navegacion_app.modulos_inicio %}
+<section class="inicio-seccion" aria-labelledby="inicio-modulos-titulo">
+    <h2 id="inicio-modulos-titulo">Módulos del sistema</h2>
+    <div class="inicio-modulos">
+        {% for modulo in navegacion_app.modulos_inicio %}
+            <article class="tarjeta inicio-modulo">
+                <h3>{{ modulo.nombre }}</h3>
+                <p>{{ modulo.descripcion }}</p>
+                <a class="boton boton-secundario" href="{{ modulo.destino.url }}">{{ modulo.boton|default:modulo.destino.nombre }}</a>
+            </article>
+        {% endfor %}
+        {% if navegacion_app.mostrar_preparacion %}
+            <article class="tarjeta inicio-modulo"><h3>Membresías</h3><p>Administración de planes mensuales y pases de cancha de los usuarios.</p><span class="inicio-modulo-estado">En preparación</span></article>
+            <article class="tarjeta inicio-modulo"><h3>Pagos e ingresos</h3><p>Registro y seguimiento de pagos e ingresos de la academia.</p><span class="inicio-modulo-estado">En preparación</span></article>
+        {% endif %}
+    </div>
+</section>
+{% endif %}

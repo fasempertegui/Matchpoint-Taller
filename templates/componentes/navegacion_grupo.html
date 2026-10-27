@@ -1,0 +1,6 @@
+<details class="navegacion-grupo" data-navegacion-grupo>
+    <summary class="enlace-boton{% if activo %} navegacion-activa{% endif %}" id="navegacion-{{ identificador }}" role="button" aria-expanded="false" aria-haspopup="true" aria-controls="navegacion-{{ identificador }}-items">{{ titulo }} <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></summary>
+    <ul role="menu" id="navegacion-{{ identificador }}-items" aria-labelledby="navegacion-{{ identificador }}">
+        {% for item in items %}<li>{% include "componentes/navegacion_enlace.html" with item=item en_menu=True only %}</li>{% endfor %}
+    </ul>
+</details>

@@ -9,16 +9,5 @@
     <p class="inicio-portal-descripcion">Bienvenido a la Academia de Tenis TM. Accedé a tu información y a las opciones disponibles para tu cuenta.</p>
 </section>
 
-<div class="inicio-portal-opciones">
-    <section class="tarjeta inicio-portal-opcion" aria-labelledby="inicio-perfil-titulo">
-        <h2 id="inicio-perfil-titulo">Mi perfil</h2>
-        <p>Consultá tus datos personales, tus roles y las opciones de seguridad de tu cuenta.</p>
-        <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Ver mi perfil</a>
-    </section>
-    <section class="tarjeta inicio-portal-opcion" aria-labelledby="inicio-agenda-titulo">
-        <h2 id="inicio-agenda-titulo">Agenda</h2>
-        <p>Consultá tus clases y los horarios de las sedes.{% if puede_reservar %} También podés reservar un turno y consultar tus reservas.{% endif %}</p>
-        <a class="boton boton-secundario" href="{% url 'agenda:agenda' %}">Ver agenda</a>
-    </section>
-</div>
+{% include "componentes/inicio_modulos.html" %}
 {% endblock %}
