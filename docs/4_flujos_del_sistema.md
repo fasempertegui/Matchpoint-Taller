@@ -16,13 +16,15 @@ Lo que el sistema hace por sí solo, sin que ningún actor lo pida en el momento
 
 ## Criterio temporal común
 
-Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; las clases y bloqueos llegan como máximo hasta un año después de la fecha local actual; las clases admiten carga histórica, los bloqueos exigen inicio futuro y ninguna anulación puede afectar un turno iniciado; las reservas nuevas o reprogramadas exigen inicio futuro y fecha entre hoy y catorce días después, inclusive; la generación de clases abarca hasta 62 días; las consultas por período, hasta 366 días; las contrataciones pueden cubrir hasta el mes siguiente; los ingresos no pueden tener fecha futura; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
+Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; las clases y bloqueos llegan como máximo hasta un año después de la fecha local actual; las clases admiten carga histórica, los bloqueos exigen inicio futuro y ninguna anulación puede afectar un turno iniciado; las reservas nuevas o reprogramadas exigen inicio futuro y fecha entre hoy y catorce días después, inclusive; la generación de clases abarca hasta 62 días; las consultas de actividad de clases y uso de pases, hasta 366 días; las contrataciones pueden cubrir hasta el mes siguiente; los movimientos de caja usan únicamente fecha de registro del servidor; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
 
 ---
 
 ## Criterio común de auditoría
 
 Las operaciones aplican criterios, 2.14. Los triggers de PostgreSQL registran cada modificación funcional, anulación y eliminación permitida en `log_auditoria`, con clave, valores anteriores y actuales, fecha y hora, actor, cuenta de base de datos y origen. Django comunica únicamente el contexto local de la operación. Sus entradas comparten un UUID y se confirman o revierten junto con los datos de negocio. Las escrituras SQL directas también quedan registradas, sin un usuario web ficticio. Los campos propios de auditoría de las entidades se conservan.
+
+El cierre de `sesiones_caja` y las anulaciones en `movimientos_fondos` participan del mecanismo común. La inmutabilidad de caja se valida en servicios; los triggers de auditoría registran cambios, incluidas escrituras SQL, pero no impiden modificar esas tablas.
 
 Las altas, las consultas y las vistas previas sin cambios sobre registros existentes no agregan entradas. Preparar nuevos turnos tampoco genera auditoría. Los cambios y restablecimientos de contraseña tienen acciones de auditoría específicas, sin contraseñas, hashes ni indicadores artificiales. Se conservan únicamente diferencias reales no sensibles; los objetos pueden quedar vacíos. La actualización técnica del hash tiene su propia acción. El administrador consulta Auditoría desde la navegación o el inicio administrativo, recorre sus páginas y despliega los valores anteriores y actuales. El servidor valida el acceso y sólo admite GET; no hay operaciones de edición o eliminación del historial.
 
@@ -54,7 +56,6 @@ Las altas, las consultas y las vistas previas sin cambios sobre registros existe
 | Contrataciones | FL-19 | Consultar un plan o pase contratado |
 | Contrataciones | FL-20 | Registrar un plan o pase para un usuario |
 | Contrataciones | FL-21 | Anular un plan o pase contratado |
-| Contrataciones | FL-22 | Contratar un plan o un pase online |
 | Planilla y generación de clases | FL-23 | Consultar la planilla de una cancha |
 | Planilla y generación de clases | FL-24 | Crear un turno de planilla |
 | Planilla y generación de clases | FL-25 | Modificar un turno de planilla |
@@ -74,8 +75,10 @@ Las altas, las consultas y las vistas previas sin cambios sobre registros existe
 | Reservas | FL-40 | Crear una reserva propia |
 | Reservas | FL-41 | Reprogramar una reserva |
 | Reservas | FL-42 | Finalizar una reserva de emergencia |
-| Ingresos | FL-43 | Registrar un ingreso |
-| Ingresos | FL-44 | Anular un ingreso |
+| Caja y movimientos | CJ-01 | Abrir caja |
+| Caja y movimientos | FL-43 | Registrar un movimiento |
+| Caja y movimientos | FL-44 | Anular un movimiento |
+| Caja y movimientos | CJ-04 | Cerrar caja |
 | Acceso | FL-45 | Iniciar sesión normalmente |
 | Acceso | FL-46 | Recuperar contraseña |
 | Acceso | FL-59 | Cambiar contraseña |
@@ -88,17 +91,16 @@ Las altas, las consultas y las vistas previas sin cambios sobre registros existe
 | Consultas | FL-53 | Consultar el uso de un pase |
 | Consultas | FL-54 | Consultar actividad de clases de un usuario |
 | Reservas | FL-55 | Consultar reservas |
-| Ingresos | FL-56 | Consultar ingresos |
+| Caja y movimientos | FL-56 | Consultar sesiones y movimientos |
 | Reservas | FL-60 | Cancelar una reserva propia |
 | Reservas | FL-61 | Cancelar una reserva (administrador) |
-| Contrataciones | FL-62 | Consultar intentos de pago de MercadoPago |
 | Bloqueos | FL-63 | Bloquear un turno |
 | Bloqueos | FL-64 | Bloquear varios turnos en lote |
 | Bloqueos | FL-65 | Liberar un bloqueo |
 | Bloqueos | FL-66 | Anular y liberar eventos en lote |
 | Bloqueos | FL-67 | Consultar bloqueos |
 
-Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de planes y pases contratados, 4.2 Notificaciones por email, 4.3 Finalización automática de clases y reservas vencidas, 4.4 Confirmación de pago de MercadoPago, 4.5 Aviso de vencimiento próximo de una contratación, 4.6 Recordatorio de la próxima clase asignada.
+Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de planes y pases contratados, 4.2 Notificaciones por email, 4.3 Finalización automática de clases y reservas vencidas, 4.5 Aviso de vencimiento próximo de una contratación, 4.6 Recordatorio de la próxima clase asignada.
 
 ---
 
@@ -142,7 +144,7 @@ flowchart TD
 
 ### 3.2 Usuarios
 
-No existe un flujo separado de "registrar usuario": las cuentas no administrativas gestionadas por la academia se registran mediante **FL-02**, con credenciales de acceso propias y con Público y Reservas otorgados automáticamente en la misma operación. Los roles Profesor y Alumno pueden asignarse ya en ese mismo alta o en cualquier momento posterior mediante **FL-07**; Alumno, además, puede otorgarse automáticamente (ver **FL-20** y 4.4). Las cuentas administrativas se crean mediante `crear_administrador` y sólo reciben Administrador. Las asignaciones referencian el catálogo fijo `roles`, sin flujos para crear, modificar o eliminar sus cinco registros.
+No existe un flujo separado de "registrar usuario": las cuentas no administrativas gestionadas por la academia se registran mediante **FL-02**, con credenciales de acceso propias y con Público y Reservas otorgados automáticamente en la misma operación. Los roles Profesor y Alumno pueden asignarse ya en ese mismo alta o en cualquier momento posterior mediante **FL-07**; Alumno, además, puede otorgarse automáticamente (ver **FL-20**). Las cuentas administrativas se crean mediante `crear_administrador` y sólo reciben Administrador. Las asignaciones referencian el catálogo fijo `roles`, sin flujos para crear, modificar o eliminar sus cinco registros.
 
 El perfil propio permite consultar la información y cambiar únicamente la contraseña mediante **FL-59**. La edición administrativa de datos personales se limita al correo (**FL-04**); el restablecimiento de la contraseña de otra cuenta se realiza mediante **FL-69**. Nombre, apellido, nombre de usuario, celular, fecha de nacimiento y observaciones se cargan en el alta y no tienen un flujo de edición. El estado y los roles utilizan **FL-05** y **FL-07** por separado.
 
@@ -266,7 +268,7 @@ Recorrido:
 
 Alternativas:
 
-- La inactivación no elimina clases, reservas, asistencias, contrataciones de planes y pases, ingresos ni roles asignados.
+- La inactivación no elimina clases, reservas, asistencias, contrataciones de planes y pases, sesiones de caja, movimientos ni roles asignados.
 - Reactivar la cuenta limpia `fecha_baja`; el campo representa la baja vigente, no un historial de cambios de estado.
 - Un usuario inactivo no podrá iniciar sesión ni ser asignado como profesor activo, aunque conserve credenciales cargadas.
 - Ningún usuario con permiso para cambiar estados puede desactivar su propia cuenta.
@@ -377,7 +379,7 @@ Alternativas:
 - Reservas sigue asignándose automáticamente en el alta (**FL-02**, **FL-06**), pero puede retirarse si no hay reservas propias programadas y otorgarse nuevamente mediante este flujo.
 - Si el usuario tiene reservas programadas, se rechaza el retiro de Reservas. Si tiene un plan contratado Activo, se rechaza el retiro de Alumno; un pase contratado no impide retirar ese rol. Si tiene clases programadas con una asignación activa como profesor, se rechaza el retiro de Profesor.
 - Ante un rechazo, se informa la causa, se conserva el rol y no se cancelan ni modifican las relaciones que lo bloquean. Los estados registrados determinan el bloqueo; una fecha pasada por sí sola no lo libera.
-- El rol Alumno también puede otorgarse automáticamente mediante **FL-20** o 4.4, además de por este flujo; ambas vías conviven sin conflicto.
+- El rol Alumno también puede otorgarse automáticamente mediante **FL-20**, además de por este flujo; ambas vías conviven sin conflicto.
 - Quitar Reservas, Profesor o Alumno no elimina el historial de reservas, contrataciones, clases ni asistencia. Las reservas y clases canceladas o completadas y las contrataciones Vencidas o Anuladas no bloquean por sí solas el retiro.
 - Asignar un rol ya vigente, o quitar uno que el usuario no tiene, no genera cambios.
 
@@ -747,7 +749,7 @@ Alternativas:
 
 - Con contrataciones históricas no se cambia modalidad, frecuencia o duración del plan, ni variante o límite diario del pase.
 - Una configuración estructural distinta se registra como otro producto.
-- Cambiar el precio vigente no modifica importes acordados ni intentos de pago ya iniciados.
+- Cambiar el precio vigente no modifica importes acordados ni movimientos monetarios registrados.
 - El adicional de invitados se conserva en cada reserva que lo aplica.
 
 - **Resultado:** producto actualizado, conservando los datos aplicados a operaciones existentes.
@@ -802,18 +804,18 @@ Recorrido:
 
 1. El sistema consulta `planes_usuarios` o `pases_usuarios` y limita el alcance según el actor.
 2. El actor selecciona una contratación.
-3. Muestra producto, mes, período calculado, importe acordado, estado, auditoría e ingresos.
+3. Muestra producto, mes, período calculado, importe acordado, estado, auditoría y cobros vinculados vigentes desde movimientos.
 4. Para pases, muestra también las reservas donde se aplicó como organizador o invitado.
 
 Alternativas:
 
 - Consultar un pase propio no exige Alumno.
 - El titular consulta sus contrataciones en modo de sólo lectura.
-- Cobrado, pendiente y excedente se calculan con los ingresos no Anulados.
+- La consulta comercial excluye toda anulación, incluso posterior al cierre de caja. No calcula deuda ni indicadores de pago y no utiliza los totales históricos del cierre.
 - La consulta histórica utiliza la contratación concreta.
 
 - **Resultado:** detalle autorizado, sin modificar datos.
-- **Datos:** usuarios, planes, pases, planes_usuarios, pases_usuarios, ingresos, reservas e invitados.
+- **Datos:** usuarios, planes, pases, planes_usuarios, pases_usuarios, movimientos_fondos, reservas e invitados.
 
 ```mermaid
 flowchart TD
@@ -876,14 +878,14 @@ Recorrido:
 Alternativas:
 
 - Conserva producto, titular, mes, precio aplicado e ingresos.
-- No anula automáticamente clases, reservas o coberturas de pase ya registradas.
+- No anula automáticamente clases, reservas, cobros o coberturas de pase registradas ni devuelve dinero. Si corresponde reintegrar, la administración registra un Egreso de categoría devoluciones mediante FL-43.
 - Un pase Anulado no cubre aplicaciones nuevas.
 - No se retira Alumno automáticamente.
 - El registro Anulado permite contratar un reemplazo para ese mes, conservando ambos.
 - Repetir una anulación no sobrescribe su auditoría.
 
 - **Resultado:** contratación Anulada.
-- **Datos:** planes_usuarios o pases_usuarios, ingresos y reservas relacionadas.
+- **Datos:** planes_usuarios o pases_usuarios, movimientos_fondos y reservas relacionadas.
 
 ```mermaid
 flowchart TD
@@ -891,45 +893,6 @@ flowchart TD
     B --> C{Confirmar}
     C -->|Sí| D[Bloquear y comprobar estado]
     D --> E[Anular y registrar auditoría]
-```
-
-#### FL-22. Contratar un plan o un pase online
-
-- **Objetivo:** iniciar el pago online de una contratación mensual propia.
-- **Actor:** usuario autenticado con rol Público.
-- **Entradas:** plan o pase Activo y mes cubierto.
-
-Recorrido:
-
-1. El usuario elige un producto de su catálogo y el mes.
-2. Valida que no exista una contratación no Anulada del mismo tipo para ese usuario y mes.
-3. Calcula el importe: un plan aplica el descuento o recargo por fecha previsto en la política comercial; un pase utiliza su precio vigente.
-4. Busca un intento Pendiente propio del mismo producto y mes. Si existe, reutiliza su checkout y su importe congelado.
-5. Si no existe, genera una referencia externa y solicita el checkout. Cuando la preferencia se crea correctamente, guarda el intento con exactamente uno de `plan_id` o `pase_id`, mes e importe aplicado.
-6. El usuario realiza el pago en MercadoPago. La contratación y el ingreso se crean sólo al procesar la aprobación confirmada, mediante 4.4.
-
-Alternativas:
-
-- Si falla la creación del checkout, no se persiste el intento.
-- Un abandono conserva el intento Pendiente, sin contratación ni ingreso.
-- No admite pagos parciales.
-- La creación de intentos se coordina para no duplicar un Pendiente del mismo usuario, producto y mes.
-- El importe del intento no se recalcula cuando cambia el catálogo.
-- La aprobación crea `planes_usuarios` o `pases_usuarios` según el producto; Alumno sólo corresponde al plan Activo.
-
-- **Resultado:** intento de pago Pendiente de confirmación.
-- **Datos:** usuarios, planes o pases, planes_usuarios o pases_usuarios y pagos_mercadopago.
-
-```mermaid
-flowchart TD
-    A[Elegir producto y mes] --> B{Existe contratación incompatible}
-    B -->|Sí| C[Rechazar]
-    B -->|No| D[Calcular importe]
-    D --> E{Existe intento Pendiente}
-    E -->|Sí| F[Reutilizar checkout e importe]
-    E -->|No| G[Crear checkout y registrar intento]
-    F --> H[Esperar confirmación del pago]
-    G --> H
 ```
 
 ### 3.6 Planilla y generación de clases
@@ -1531,7 +1494,7 @@ Alternativas:
 - En reservas normales no se registran invitados. En reservas con pase, el organizador no puede repetirse como invitado.
 - Los invitados identificados no necesitan tener pase; la cobertura depende de vigencia, día habilitado y horas suficientes.
 - La invitación no requiere aceptación para confirmar la reserva.
-- Los pagos se realizan en sede; el portal no registra ingresos ni cobra reservas online.
+- Los cobros se registran administrativamente con una sesión de caja abierta; el portal no registra movimientos monetarios. Si corresponde reintegrar un pago, la administración registra un Egreso de categoría devoluciones por FL-43. Cancelar o reprogramar no genera reintegros ni anula cobros automáticamente.
 - Cancelar el modal o presionar Escape no registra la reserva. Si cambia la disponibilidad al confirmar, se rechaza toda la operación.
 - No se crean reservas recurrentes.
 
@@ -1571,8 +1534,8 @@ Alternativas:
 - Una reserva cancelada por el propio organizador (autoservicio, ver **FL-60**) nunca puede reprogramarse.
 - Una reserva cancelada no puede reprogramarse dos veces.
 - La reserva original no se modifica: conserva su evento Anulado y el motivo registrado.
-- Si finalmente no se reprograma, no se crea ningún registro adicional: resolver el dinero ya cobrado queda fuera del sistema (ver `1_organizacion.md`, 5.2).
-- Los ingresos de la reserva cancelada no se anulan ni se modifican.
+- Reprogramar o desistir de la reprogramación no devuelve dinero ni anula cobros automáticamente. Si corresponde reintegrar, la administración registra por FL-43 un Egreso de categoría devoluciones, independiente de la reserva y sin modificar sus cobros.
+- Los movimientos vinculados de la reserva cancelada no se anulan ni se modifican automáticamente.
 - Este flujo no envía notificaciones propias: la confirmación de la nueva reserva ya la envía **FL-51** en el paso 2. Evita un segundo email idéntico.
 
 - **Resultado:** reserva cancelada vinculada a una nueva reserva programada para el turno acordado.
@@ -1623,77 +1586,160 @@ flowchart TD
 
 La finalización automática se describe en el proceso interno 4.3 y utiliza las mismas condiciones de estado y horario.
 
-### 3.11 Ingresos
+### 3.11 Caja y movimientos
 
-#### FL-43. Registrar un ingreso
+`movimientos_fondos` es la única fuente monetaria y `sesiones_caja` agrupa sus registros. El acceso exige usuario autenticado, activo, sin cambio obligatorio de contraseña y con rol Administrador; la marca `is_superuser` por sí sola no habilita acceso. Opera el responsable fijo que abrió la sesión. Otros administradores pueden consultar. No hay reasignación de responsable.
 
-- **Objetivo:** registrar dinero cobrado por la academia.
-- **Actor:** administrador.
-- **Entradas:** origen, fecha y hora, monto positivo, medio de pago y observaciones opcionales.
-- **Orígenes posibles:** un plan contratado, un pase contratado, una reserva o un concepto libre de tipo **Otro**.
-- **Origen guiado posible:** **FL-20** o **FL-51**.
+Los medios son efectivo, transferencia, tarjeta y QR. Todos los movimientos usan monto positivo en pesos con dos decimales y Decimal, concepto obligatorio y fecha de registro del servidor en `America/Argentina/Buenos_Aires`, sin fecha real editable. Los estados del movimiento son Vigente y Anulado; los de la sesión, Abierta y Cerrada. Los formularios se revelan bajo demanda, las listas usan filas compactas y un menú por registro, y se ofrecen solo acciones válidas para el estado y el actor. El estado vacío presenta un texto breve y una acción principal.
+
+Se admiten pagos parciales por varios ingresos vinculados al mismo origen. El sistema no calcula deuda, pendiente, excedente ni estado de pago, no compara el acumulado con el precio aplicado y no solicita confirmación ni motivo de sobrepago. Los cobros son manuales; no hay pasarela de pagos.
+
+Apertura, registro, anulación y cierre se confirman dentro de `transaction.atomic`. Registro, anulación y cierre bloquean la sesión con `select_for_update`; una anulación de un movimiento de otra sesión bloquea también esa sesión de origen. Cada servicio vuelve a validar acceso, responsabilidad, estado y condiciones al confirmar. Las escrituras usan POST con protección CSRF, las consultas no modifican datos y un error revierte toda la operación y su auditoría.
+
+#### CJ-01. Abrir caja
+
+- **Objetivo:** iniciar la sesión de la única caja.
+- **Actor:** Administrador con acceso vigente.
+- **Entrada:** efectivo inicial no negativo y motivo de apertura cuando difiere del último contado.
+- **Precondición:** ninguna sesión abierta.
 
 Recorrido:
 
-1. El Administrador elige exactamente uno de los cuatro tipos de origen.
-2. Selecciona la contratación concreta en `planes_usuarios` o `pases_usuarios`, o la reserva. Para Otro ingresa una descripción obligatoria. No se aceptan nuevos cobros sobre contrataciones Anuladas ni reservas con evento Anulado.
-3. Indica fecha, monto y medio de pago.
-4. El sistema valida y muestra el resumen.
-5. El administrador confirma y el sistema registra el ingreso **Cobrado** con su origen exacto.
+1. Solicita Abrir caja y consulta el contado del último cierre como referencia.
+2. Declara efectivo inicial. Si difiere, se muestra un aviso y solicita explicación breve; si coincide o es la primera apertura, el motivo queda vacío.
+3. Al confirmar, el servicio verifica acceso, importe, último cierre y motivo, e intenta crear la sesión en una transacción.
+4. Guarda responsable fijo, momento del servidor, inicial y motivo y muestra la sesión abierta.
 
 Alternativas:
 
-- La fecha y hora del cobro debe estar comprendida entre el 01/08/2026 a las 00:00 y el momento local actual. Puede ser anterior al inicio del período contratado o de la reserva si se trata de un pago anticipado.
-- Una contratación de plan o pase o una reserva puede recibir varios pagos parciales; no se exige que su suma coincida automáticamente con el precio aplicado.
-- Para contrataciones y reservas, el formulario muestra total aplicado, cobrado (sin ingresos anulados), pendiente y excedente. Si la suma de lo cobrado y el nuevo monto supera el total aplicado, se pide aceptar expresamente el sobrepago y explicar el motivo; este se conserva en las observaciones. La confirmación se vincula al origen y a los importes mostrados y vence a los 30 minutos: otro cobro, una anulación o un cambio de monto o total obliga a revisar nuevamente el excedente. La validación y el guardado se serializan por operación, también al registrar el primer ingreso durante el alta de una reserva.
-- En este flujo manual, el medio debe ser efectivo, transferencia, débito, crédito o QR.
-- Los ingresos con medio MercadoPago se originan únicamente en la confirmación automática del webhook (ver 4.4).
-- Una reserva con evento Anulado y una contratación Anulada no admiten nuevos ingresos.
-- El ingreso no puede editarse ni eliminarse después de guardar.
-- En un recorrido guiado, el origen llega preseleccionado y el ingreso se persiste únicamente con la confirmación final de la operación principal.
-- Este módulo es exclusivo del rol Administrador.
+- El índice único parcial impide aperturas simultáneas; si otra solicitud abrió primero, se informa la sesión existente.
+- No se pide saldo bancario ni se crea un ingreso por el fondo inicial.
+- La sesión puede atravesar medianoche y no se cierra automáticamente. Cancelar no crea registros.
 
-- **Resultado:** nuevo ingreso cobrado.
-- **Datos:** ingresos y su origen exacto.
+- **Resultado:** sesión Abierta.
+- **Datos:** usuarios y sesiones_caja.
 
 ```mermaid
 flowchart TD
-    A[Elegir tipo de origen] --> B[Seleccionar origen o describir otro]
-    B --> C[Ingresar monto fecha y medio]
-    C --> D{Datos válidos y un solo origen}
-    D -->|No| B
-    D -->|Sí| E[Registrar ingreso cobrado]
+    A[Solicitar apertura] --> B[Declarar efectivo inicial]
+    B --> C{Difiere del último contado}
+    C -->|Sí| D[Explicar diferencia]
+    C -->|No o primera apertura| E[Confirmar]
+    D --> E
+    E --> F{Datos válidos y sin sesión abierta}
+    F -->|Sí| G[Crear sesión con responsable fijo]
+    F -->|No| H[Informar y conservar formulario]
 ```
 
-#### FL-44. Anular un ingreso
+#### FL-43. Registrar un movimiento
 
-- **Objetivo:** invalidar un ingreso sin alterar sus datos originales.
-- **Actor:** administrador.
-- **Precondición:** ingreso en estado **Cobrado**, localizado mediante **FL-56**.
-- **Entrada:** motivo obligatorio en texto libre.
+- **Objetivo:** registrar un ingreso, egreso, aporte o retiro.
+- **Actor:** responsable de la sesión abierta.
+- **Entradas:** clase, concepto, monto positivo y medio; referencia para no efectivo; categoría y destinatario para Egreso; vínculo comercial opcional para Ingreso.
+- **Precondición:** sesión abierta a cargo del actor y operación efectivamente realizada.
 
 Recorrido:
 
-1. El administrador solicita anular el ingreso.
-2. Ingresa el motivo y confirma.
-3. El sistema lo marca **Anulado** con usuario y momento.
+1. Solicita Registrar movimiento y elige clase.
+2. Completa concepto, monto y medio. Para Ingreso puede seleccionar una reserva o contratación concreta confirmada; como máximo un vínculo comercial por movimiento y concepto obligatorio aun sin vínculo.
+3. Para Egreso completa categoría y destinatario de texto. Para transferencia, tarjeta o QR agrega una referencia y verifica la recepción para un ingreso, el pago realizado para un egreso o la aprobación de la operación con tarjeta. Aporte y Retiro usan efectivo y concepto explicativo. Si registra un reintegro, elige Egreso y categoría devoluciones.
+4. Confirma con el UUID conservado del formulario. El servicio bloquea la sesión, revalida acceso, responsabilidad, estado y datos y registra el movimiento Vigente con fecha del servidor.
+5. Muestra el movimiento y el resumen actualizado.
 
 Alternativas:
 
-- No se modifican monto, fecha, medio, origen ni observaciones originales.
-- La anulación de un ingreso no anula una contratación de plan o pase ni una reserva.
-- El ingreso anulado deja de sumar al cobrado del origen; su resumen y estado de pago se recalculan, sin borrar el movimiento histórico.
-- Un ingreso anulado no puede volver a modificarse.
+- Se admite como máximo un vínculo comercial por Ingreso y varios ingresos para el mismo origen. No se compara el acumulado con el precio ni se calcula deuda.
+- No se cobran contrataciones Anuladas ni reservas con evento Anulado. No se crea ni renueva el origen al registrar un cobro.
+- Egreso usa categorías alquiler, servicios, profesores, insumos, mantenimiento, publicidad, comisiones, otros o devoluciones. Registra pagos realizados, no compromisos futuros. Registrar pagos a profesores no calcula salarios ni honorarios.
+- Una devolución es dinero efectivamente reintegrado a un cliente. Se registra como Egreso de categoría devoluciones por cualquiera de los cuatro medios, con concepto, destinatario y referencia si no es efectivo. No tiene vínculo ni tope contra un ingreso y no modifica automáticamente cobros, contratación ni reserva. En los resúmenes se presenta separada de gastos operativos. Si es efectivo, resta al esperado como cualquier egreso en efectivo.
+- Cancelar o reprogramar una reserva, o anular una contratación, no genera un reintegro ni anula cobros automáticamente. Si corresponde devolver, la administración ejecuta este flujo y registra el egreso efectivo. Anular una carga mediante FL-44 no representa ese reintegro.
+- Una salida de efectivo no supera lo disponible. Un aporte necesario se registra primero como otra operación. Aporte y Retiro no son cobros ni gastos operativos. Retirar efectivo para depositarlo no crea un ingreso por transferencia.
+- No se permite fecha editable, edición de datos originales ni eliminación. El UUID único se conserva al reenviar el formulario: con los mismos datos y actor devuelve el registro existente; con otro contenido o actor se rechaza. No se exige que coincida con el UUID del contexto de auditoría.
+- Reserva o contratación y cobro se confirman por separado. Si falla este registro, el origen permanece confirmado.
+- Los medios digitales no alteran el efectivo esperado. El módulo no verifica saldo bancario ni acreditaciones de tarjetas.
 
-- **Resultado:** ingreso anulado con trazabilidad completa.
-- **Datos:** ingresos y su origen.
+- **Resultado:** movimiento Vigente en la sesión abierta.
+- **Datos:** sesiones_caja, movimientos_fondos, usuarios y origen comercial cuando corresponde.
 
 ```mermaid
 flowchart TD
-    A[Solicitar anulación] --> B[Ingresar motivo]
+    A[Solicitar movimiento] --> B[Completar clase concepto monto y medio]
+    B --> C[Completar datos condicionales]
+    C --> D{Confirmar}
+    D -->|Sí| E[Bloquear sesión y revalidar]
+    E --> F{Datos válidos y efectivo disponible}
+    F -->|No| B
+    F -->|Sí| G[Guardar una vez por UUID y mostrar resumen]
+```
+
+#### FL-44. Anular un movimiento
+
+- **Objetivo:** invalidar una carga errónea de ingreso, egreso, aporte o retiro sin editar sus datos ni borrarla.
+- **Actor:** responsable de la sesión abierta actual.
+- **Entrada:** motivo obligatorio.
+- **Precondición:** movimiento Vigente localizado mediante FL-56 y sesión actual abierta.
+
+Recorrido:
+
+1. Solicita Anular desde el movimiento.
+2. El sistema muestra si pertenece a una sesión cerrada y explica el efecto.
+3. Ingresa motivo y confirma.
+4. El servicio bloquea la sesión actual y la de origen si es distinta; revalida acceso y estado. En sesión abierta comprueba que el esperado no quede negativo.
+5. Guarda estado Anulado, actor, momento y motivo y conserva los datos originales. La anulación participa de la auditoría transversal.
+
+Alternativas:
+
+- La anulación invalida una carga errónea y no entrega dinero ni cancela una reserva o contratación. Se aplica a ingresos y egresos, incluidas devoluciones, y también a aportes y retiros. El reintegro real se registra mediante FL-43 como Egreso de categoría devoluciones.
+- En sesión abierta recalcula el esperado. En sesión cerrada conserva sus resultados y totales históricos, aunque el movimiento deje de contar en la consulta comercial vigente.
+- El hecho correcto se carga por FL-43 como movimiento independiente en la sesión actual. Si es efectivo tiene efecto ordinario; puede generar una diferencia sin movimiento físico actual. En ese caso, el arqueo no representa exclusivamente movimientos físicos de la sesión.
+- No hay reactivación ni segunda anulación del mismo registro. Se conservan concepto, monto, medio, referencia, fecha, destinatario, categoría y vínculos originales; solo se completan estado y metadatos de anulación.
+
+- **Resultado:** movimiento Anulado con motivo y auditoría.
+- **Datos:** sesiones_caja, movimientos_fondos y usuarios.
+
+```mermaid
+flowchart TD
+    A[Solicitar anulación] --> B[Revisar efecto e ingresar motivo]
     B --> C{Confirmar}
-    C -->|No| D[Conservar cobrado]
-    C -->|Sí| E[Marcar anulado]
+    C -->|Sí| D[Bloquear sesiones y revalidar]
+    D --> E{Condiciones válidas}
+    E -->|No| B
+    E -->|Sí| F[Anular sin editar datos originales]
+```
+
+#### CJ-04. Cerrar caja
+
+- **Objetivo:** comparar el efectivo contado con el esperado y cerrar la sesión.
+- **Actor:** responsable de la sesión abierta.
+- **Entradas:** efectivo contado no negativo y motivo si la diferencia no es cero.
+
+Recorrido:
+
+1. Solicita Cerrar caja y revisa el resumen por clase y medio.
+2. Declara contado y explica la diferencia cuando corresponde.
+3. Al confirmar, el servicio bloquea la sesión y recalcula esperado: `efectivo_inicial + ingresos en efectivo + aportes − egresos en efectivo − retiros`, considerando solo movimientos Vigentes. Los egresos por devoluciones en efectivo restan; los medios digitales no intervienen.
+4. Calcula `diferencia = contado − esperado`, positiva para sobrante y negativa para faltante. Valida contado y motivo y guarda esperado, contado, diferencia, motivo y momento del servidor; cambia a Cerrada.
+5. Muestra el cierre confirmado. El cambio participa de la auditoría transversal.
+
+Alternativas:
+
+- Si el cálculo definitivo detecta diferencia sin motivo, solicita revisar y completar; cancelar mantiene Abierta.
+- No genera movimientos por diferencias ni admite reapertura o modificación del cierre desde el servicio.
+- El resumen histórico incluye movimientos con `anulado_en IS NULL OR anulado_en > cerrada_en`. No suma los anulados con `anulado_en <= cerrada_en`. Las anulaciones posteriores se identifican sin cambiar los resultados guardados.
+- El servicio impide modificar, borrar o reabrir una sesión Cerrada y agregarle movimientos. La tabla participa de auditoría; no tiene triggers adicionales de inmutabilidad en PostgreSQL.
+
+- **Resultado:** sesión Cerrada con arqueo registrado.
+- **Datos:** sesiones_caja, movimientos_fondos y usuarios.
+
+```mermaid
+flowchart TD
+    A[Solicitar cierre] --> B[Revisar resumen y declarar contado]
+    B --> C[Bloquear sesión y recalcular esperado]
+    C --> D{Diferencia distinta de cero}
+    D -->|Sí| E[Exigir explicación]
+    D -->|No| F[Validar y cerrar]
+    E --> F
+    F --> G[Guardar resultados y mostrar cierre]
 ```
 
 ---
@@ -1940,11 +1986,11 @@ flowchart TD
 
 #### FL-51. Crear una reserva para un usuario
 
-- **Objetivo:** registrar una reserva para un organizador existente y, opcionalmente, el ingreso recibido.
+- **Objetivo:** registrar una reserva para un organizador existente; el cobro se registra después como otra operación.
 - **Actor:** Administrador.
-- **Entradas:** organizador, sede, cancha, fecha, turno y observaciones; pase e invitados cuando correspondan; ingreso opcional con monto, medio, fecha y observaciones.
+- **Entradas:** organizador, sede, cancha, fecha, turno y observaciones; pase e invitados cuando correspondan.
 - **Precondición:** organizador activo con rol Reservas o Administrador. Los invitados identificados ya existen como usuarios.
-- **Proceso integrado posible:** **FL-43** para un ingreso opcional.
+- **Operación posterior independiente:** **FL-43** para registrar un cobro cuando corresponda, con sesión abierta a cargo del actor.
 
 Recorrido:
 
@@ -1953,10 +1999,9 @@ Recorrido:
 3. Ofrece los turnos libres y la opción de utilizar un pase vigente que cubra la fecha, habilite ese día y tenga horas disponibles.
 4. Selecciona un único turno de una hora dentro de una franja de funcionamiento de la sede.
 5. Calcula el precio normal con la tarifa de la sede o valida el consumo diario de la contratación de pase. Si se utiliza pase, registra cantidad de invitados, evalúa la cobertura de los identificados y calcula adicionales.
-6. Si recibió un pago, prepara **FL-43** con la reserva como origen, sin persistir todavía el ingreso. La confirmación de excedente y su motivo se exigen cuando corresponden.
-7. Muestra organizador, turno, precio o pase, invitados y total, junto con el ingreso opcional, y solicita confirmación.
-8. En una transacción, comprueba nuevamente cuentas, roles, calendario, instalaciones, tarifa o pases y ocupación. Para una reserva normal bloquea la sede y copia la tarifa validada en `precio_por_turno_aplicado`; para una con pase conserva la contratación aplicada y el adicional unitario. Bloquea el turno y registra evento Programado con referencia al turno, reserva, invitados e ingreso opcional.
-9. Envía la confirmación al organizador y las invitaciones informativas.
+6. Muestra organizador, turno, precio o pase, invitados y total y solicita confirmación.
+7. En una transacción, comprueba nuevamente cuentas, roles, calendario, instalaciones, tarifa o pases y ocupación. Para una reserva normal bloquea la sede y copia la tarifa validada en `precio_por_turno_aplicado`; para una con pase conserva la contratación aplicada y el adicional unitario. Bloquea el turno y registra evento Programado con referencia al turno, reserva e invitados cuando correspondan, sin registrar cobros.
+8. Envía la confirmación al organizador y las invitaciones informativas.
 
 Alternativas:
 
@@ -1967,12 +2012,12 @@ Alternativas:
 - Las superposiciones personales conservan las advertencias de los criterios del sistema.
 - En reservas normales no se registran invitados. En reservas con pase, los no identificados y los identificados sin cobertura suficiente generan el adicional histórico aplicado.
 - El organizador no puede repetirse como invitado. El pase del organizador debe cubrir la hora del turno seleccionado.
-- El ingreso requiere autorización explícita, no se genera si no hubo pago y puede registrarse más tarde mediante **FL-43**.
-- Ante un error se revierte toda la operación, incluido el ingreso preparado. No se modifican registros preexistentes.
+- Después de confirmar, el cobro se registra por separado mediante **FL-43**, con referencia a la reserva existente. No hay transacción conjunta ni reversión de la reserva si falla la carga del cobro.
+- Ante un error se revierte el alta de la reserva y sus datos dependientes. No se modifican registros preexistentes.
 - No se crean reservas recurrentes.
 
-- **Resultado:** reserva con un evento Programado que referencia un único turno; invitados e ingreso sólo cuando corresponden.
-- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, tarifa de sede, pases, contrataciones de planes y pases, invitados e ingresos.
+- **Resultado:** reserva con un evento Programado que referencia un único turno; invitados cuando corresponden y sin movimiento monetario de alta.
+- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, tarifa de sede, pases, contrataciones de planes y pases, invitados.
 
 ```mermaid
 flowchart TD
@@ -1980,7 +2025,7 @@ flowchart TD
     B --> C{Calendario válido}
     C -->|No| B
     C -->|Sí| D[Elegir un turno y resolver precio o pase]
-    D --> E[Resolver invitados e ingreso opcional]
+    D --> E[Resolver invitados]
     E --> F{Confirmar}
     F -->|Sí| G[Bloquear y validar toda la operación]
     G --> H{Datos válidos}
@@ -1998,10 +2043,10 @@ flowchart TD
 
 Recorrido:
 
-1. El sistema muestra la cantidad total declarada, los invitados identificados, el precio esperado y los ingresos actuales.
+1. El sistema muestra la cantidad total declarada, los invitados identificados, el precio esperado y los movimientos Ingreso vinculados vigentes.
 2. El administrador agrega un usuario existente o quita uno de los invitados identificados.
 3. Al agregarlo, el sistema resuelve si posee un pase con el día habilitado y al menos una hora disponible para cubrir el turno; si no cumple, lo conserva como invitado sin pase.
-4. El sistema guarda el cambio en una transacción y el detalle vuelve a mostrar el precio esperado, los pagos existentes y el saldo resultante.
+4. El sistema guarda el cambio en una transacción y el detalle vuelve a mostrar el precio esperado y los cobros vigentes, sin calcular deuda ni modificar movimientos.
 
 Alternativas:
 
@@ -2014,7 +2059,7 @@ Alternativas:
 - Una reserva cancelada o completada conserva sus invitados como historia y no puede editarse.
 
 - **Resultado:** lista de invitados identificados y precio esperado actualizados de manera consistente; la cantidad total declarada se conserva.
-- **Datos:** reservas, invitados, pases contratados e ingresos.
+- **Datos:** reservas, invitados, pases contratados y movimientos_fondos.
 
 ```mermaid
 flowchart TD
@@ -2022,7 +2067,7 @@ flowchart TD
     B --> C{Datos consistentes}
     C -->|No| B
     C -->|Sí| D[Resolver pase y guardar en una transacción]
-    D --> E[Mostrar precio pagos y saldo]
+    D --> E[Mostrar precio y cobros vigentes]
 ```
 
 ### 3.15 Consultas operativas
@@ -2100,7 +2145,7 @@ Recorrido:
 1. El actor ingresa filtros, o accede directamente a sus propias reservas si tiene rol Reservas.
 2. El sistema busca reservas coincidentes.
 3. Muestra un listado con organizador, fecha, horario, cancha, precio o pase aplicado y estado.
-4. El actor selecciona una reserva para ver el detalle completo, incluidos invitados si es con pase, ingresos asociados y, si corresponde, la reserva de la que proviene o hacia la que fue reprogramada.
+4. El actor selecciona una reserva para ver el detalle completo, incluidos invitados si es con pase, movimientos Ingreso asociados vigentes y, si corresponde, la reserva de la que proviene o hacia la que fue reprogramada.
 
 Alternativas:
 
@@ -2108,7 +2153,7 @@ Alternativas:
 - Esta consulta es la vía para localizar una reserva y ejecutar **FL-60** o **FL-61**; una reserva ya cancelada por el administrador también puede reprogramarse desde aquí mediante **FL-41**. La finalización se realiza automáticamente mediante 4.3 o por el administrador mediante **FL-42** cuando terminó el turno.
 
 - **Resultado:** listado y detalle de reservas sin modificaciones.
-- **Datos:** usuarios, reservas, eventos, turnos, invitados, tarifa de sede, pases contratados e ingresos.
+- **Datos:** usuarios, reservas, eventos, turnos, invitados, tarifa de sede, pases contratados y movimientos_fondos.
 
 ```mermaid
 flowchart TD
@@ -2118,34 +2163,33 @@ flowchart TD
     D -->|Sí| E[Mostrar detalle]
 ```
 
-#### FL-56. Consultar ingresos
+#### FL-56. Consultar sesiones y movimientos
 
-- **Objetivo:** localizar y visualizar ingresos registrados, cobrados o anulados.
-- **Actor:** administrador.
-- **Entradas:** filtros opcionales por origen (contratación de plan o pase, reserva u otro), usuario, período o estado.
+- **Objetivo:** consultar resumen de sesión, historial de sesiones y listado de movimientos.
+- **Actor:** Administrador con las condiciones de acceso de 3.11; no se exige ser responsable para consultar.
+- **Entradas:** fecha de apertura y estado para sesiones; fecha de registro, sesión, clase, medio y estado para movimientos.
 
 Recorrido:
 
-1. El administrador ingresa filtros.
-2. El sistema busca ingresos coincidentes.
-3. Muestra un listado con origen, monto, medio de pago, fecha y estado.
-4. El administrador selecciona un ingreso para ver el detalle completo, incluido el motivo de anulación si corresponde.
+1. El administrador elige historial, resumen de sesión o movimientos y sus filtros.
+2. El sistema consulta sesiones y movimientos coincidentes y muestra filas compactas.
+3. Al seleccionar una sesión muestra responsable, apertura, cierre, inicial, totales por clase y medio y, si está cerrada, esperado, contado, diferencia y motivo. Los ingresos, aportes y retiros se distinguen de los egresos; las devoluciones se muestran separadas de los gastos operativos. El motivo de apertura se consulta cuando existe.
+4. Al seleccionar un movimiento muestra clase, concepto, monto, medio, referencia, destinatario y categoría cuando corresponden, vínculo comercial, responsable, fecha de registro, estado y datos de anulación si corresponde. La acción FL-44 se revela bajo demanda solo si está vigente y el actor es responsable de la sesión abierta actual.
 
 Alternativas:
 
-- Esta consulta es la vía para localizar un ingreso y ejecutar **FL-44**.
-- Los ingresos anulados se muestran igual que los cobrados, para conservar la trazabilidad.
-- Este módulo es exclusivo del rol Administrador, igual que el resto de la gestión de ingresos.
+- En sesión abierta los totales usan movimientos Vigentes y se muestra el efectivo esperado. En cerrada cuentan los movimientos con `anulado_en IS NULL OR anulado_en > cerrada_en`; se muestran esperado, contado y diferencia guardados. Una anulación posterior no cambia ese resumen histórico.
+- La consulta comercial propia desde una reserva o contratación usa solo ingresos vinculados vigentes y excluye toda anulación. No usa el criterio histórico del cierre ni permite entrar a caja o consultar movimientos de terceros.
+- No hay resúmenes de deuda ni totales por cuenta bancaria. Las consultas no modifican datos y conservan la historia anulada identificada.
 
-- **Resultado:** listado y detalle de ingresos sin modificaciones.
-- **Datos:** ingresos y su origen exacto.
+- **Resultado:** historial, resumen o listado y detalle sin modificaciones.
+- **Datos:** sesiones_caja, movimientos_fondos, usuarios y orígenes comerciales cuando corresponden.
 
 ```mermaid
 flowchart TD
-    A[Ingresar filtros] --> B[Buscar ingresos]
-    B --> C[Mostrar listado]
-    C --> D{Selecciona ingreso}
-    D -->|Sí| E[Mostrar detalle]
+    A[Elegir consulta y filtros] --> B[Consultar sesiones o movimientos]
+    B --> C[Mostrar listado compacto]
+    C --> D[Consultar resumen o detalle]
 ```
 
 #### FL-60. Cancelar una reserva propia
@@ -2167,8 +2211,8 @@ Alternativas:
 - Un usuario con rol Reservas no puede cancelar una reserva ajena.
 - El plazo se verifica nuevamente dentro de la transacción al confirmar. Exactamente una hora antes del turno se permite cancelar; con menos tiempo, o cuando la reserva ya comenzó, se rechaza sin modificar el registro ni su ocupación.
 - Este flujo nunca ofrece reprogramación, sin importar el motivo ni la anticipación: reprogramar una reserva cancelada es exclusivo del administrador (ver **FL-61**, **FL-41**).
-- Una cancelación por este flujo nunca genera devolución (ver `2_criterios_del_sistema.md`, 2.2).
-- Los ingresos originales no se anulan ni se modifican. Una reserva cancelada no podrá recibir nuevos ingresos.
+- La cancelación no devuelve dinero ni anula cobros automáticamente. Si corresponde reintegrar, la administración registra un Egreso de categoría devoluciones mediante FL-43; el usuario del portal no registra ese egreso.
+- Los movimientos vinculados originales no se anulan ni se modifican automáticamente. Una reserva cancelada no podrá recibir nuevos ingresos.
 - La reserva original no se elimina ni cambia de fecha, horario, duración o cancha.
 - La cancelación actúa sobre el evento completo; cada reserva corresponde a un único turno de una hora.
 - Una reserva cancelada o completada no puede cancelarse nuevamente.
@@ -2206,9 +2250,8 @@ Alternativas:
 - Este flujo no es el camino para que un organizador cancele su propia reserva por su propio deseo: si el organizador quiere cancelar, lo hace él mismo mediante **FL-60**, que siempre libera el turno sin importar el motivo. Tener cuenta y gestionar la propia reserva es, en este sistema, un requisito, no una comodidad opcional.
 - Este flujo siempre ofrece reprogramar mediante **FL-41**. La cancelación libera el turno original.
 - El administrador puede cancelar aunque falte menos de una hora, pero nunca desde el inicio del turno. El límite se verifica nuevamente dentro de la transacción al confirmar.
-- Si el administrador no reprograma en el momento, no se crea ningún registro adicional: resolver el dinero ya cobrado queda fuera del sistema (ver `1_organizacion.md`, 5.2).
-- Ninguna cancelación genera devolución dentro del sistema, se reprograme o no.
-- Los ingresos originales no se anulan ni se modifican. Una reserva cancelada no podrá recibir nuevos ingresos.
+- Cancelar o reprogramar no devuelve dinero ni anula cobros automáticamente. Si corresponde reintegrar, la administración registra un Egreso de categoría devoluciones por FL-43, con concepto, destinatario y referencia si no es efectivo. No modifica automáticamente la reserva ni sus cobros.
+- Los movimientos vinculados originales no se anulan ni se modifican automáticamente. Una reserva cancelada no podrá recibir nuevos ingresos.
 - La reserva original no se elimina ni cambia de fecha, horario, duración o cancha.
 - La cancelación actúa sobre el evento completo; cada reserva corresponde a un único turno de una hora.
 - Una reserva cancelada o completada no puede cancelarse nuevamente.
@@ -2227,34 +2270,6 @@ flowchart TD
     F -->|Sí| G[Ejecutar FL-41]
     F -->|No| H[Notificar cancelación al organizador]
     G --> H
-```
-
-#### FL-62. Consultar intentos de pago de MercadoPago
-
-- **Objetivo:** consultar pagos online y detectar aprobaciones pendientes de activación.
-- **Actor:** Administrador.
-- **Entradas:** filtros por usuario, tipo de producto, plan o pase, mes y estado.
-
-Recorrido:
-
-1. Aplica los filtros sobre `pagos_mercadopago`.
-2. Muestra usuario, producto elegido, mes, importe congelado y estado.
-3. Si se aplicó la aprobación, muestra la contratación resultante en `planes_usuarios` o `pases_usuarios` y el ingreso relacionado.
-4. Permite consultar las referencias externas del intento y señala los Aprobados sin resultados.
-
-Alternativas:
-
-- La consulta no modifica pagos ni crea contrataciones.
-- Un Aprobado sin resultados requiere resolución administrativa del dinero recibido y la contratación pendiente, según el alcance de gestión del sistema.
-
-- **Resultado:** listado y detalle de intentos.
-- **Datos:** pagos_mercadopago, planes, pases, planes_usuarios, pases_usuarios e ingresos.
-
-```mermaid
-flowchart TD
-    A[Ingresar filtros] --> B[Consultar intentos]
-    B --> C[Mostrar producto mes importe y estado]
-    C --> D[Consultar resultados o identificar activación pendiente]
 ```
 
 ### 3.16 Bloqueos y operaciones masivas
@@ -2316,7 +2331,7 @@ Alternativas:
 - Cada turno debe quedar íntegramente dentro de una franja, aunque los distintos turnos del lote pertenezcan a franjas diferentes. Cada bloqueo referencia un único turno, con estado y auditoría independientes.
 - La confirmación identifica al actor y los parámetros revisados, con una validez de quince minutos. Una confirmación vencida o de otra selección exige preparar nuevamente la vista previa.
 - La vista previa no escribe datos. Si cambian la ocupación, el alcance o la elegibilidad, se revierte toda la operación y se exige revisarla nuevamente. Un error no deja anulaciones o bloqueos parciales.
-- Las actividades anuladas conservan sus datos comerciales. La operación no ofrece reprogramación ni modifica ingresos.
+- Las actividades anuladas conservan sus datos comerciales. La operación no ofrece reprogramación ni modifica movimientos monetarios.
 
 - **Resultado:** un bloqueo independiente por turno efectivo, con las reservas o clases correspondientes anuladas y los eventos conservados informados.
 - **Datos:** usuarios, sedes, canchas, horarios de sedes, turnos, eventos, reservas, clases y bloqueos con su evento de origen opcional.
@@ -2370,7 +2385,7 @@ Recorrido:
 1. Elige alcance, exclusiones y motivo. Un corte a las 18:30 selecciona desde las 19:00; a la hora exacta de inicio el turno ya se considera iniciado.
 2. La vista previa muestra las reservas, clases y bloqueos a anular y los eventos excluidos, iniciados o Finalizados que se conservan. Los turnos libres y los eventos Anulados no requieren acción.
 3. Confirma las acciones. Se exigen los motivos y condiciones de cada tipo, incluido el mínimo de 25 caracteres para reservas. Para seleccionar sólo bloqueos se excluyen clases y reservas.
-4. En una transacción, bloquea los turnos y eventos afectados en orden estable y vuelve a validar acceso, estado, inicio futuro y alcance confirmado. Anula cada evento efectivo y registra su auditoría, conservando referencias, orígenes, importes e ingresos.
+4. En una transacción, bloquea los turnos y eventos afectados en orden estable y vuelve a validar acceso, estado, inicio futuro y alcance confirmado. Anula cada evento efectivo y registra su auditoría, conservando referencias, orígenes, importes y movimientos monetarios.
 5. Confirma todo el lote y envía las notificaciones de cancelación de reservas y clases. Los bloqueos no generan avisos.
 
 Alternativas:
@@ -2379,7 +2394,7 @@ Alternativas:
 - Una selección de fecha completa o desde una hora incluye las actividades existentes fuera del horario habitual de la sede.
 - Los tipos excluidos y eventos no elegibles se informan antes de confirmar. Si cambian el alcance, la ocupación o la elegibilidad, se exige revisar nuevamente y no se guarda ningún cambio.
 - La selección, vista previa, edición y confirmación utilizan el mismo recorrido de **FL-64**, con confirmación vinculada al actor y validez de quince minutos.
-- La operación no crea bloqueos, cobros, devoluciones ni transferencias de ingresos. Un fallo revierte todo el lote.
+- La operación no crea bloqueos, cobros, devoluciones ni transferencias de movimientos monetarios. Un fallo revierte todo el lote.
 
 - **Resultado:** eventos confirmados Anulados y sus turnos libres, con los eventos conservados informados.
 - **Datos:** usuarios, sedes, canchas, turnos, eventos, reservas, clases y bloqueos.
@@ -2442,7 +2457,7 @@ Condiciones:
 - No modifica Anulados o Vencidos ni retira roles.
 - Una repetición sólo encuentra los que siguen Activos.
 - Cada uso comprueba también el mes cubierto; no depende exclusivamente de que la tarea haya actualizado el estado.
-- Conserva productos, importes aplicados, ingresos y relaciones históricas.
+- Conserva productos, importes aplicados, movimientos y relaciones históricas.
 
 - **Resultado:** contrataciones vencidas actualizadas.
 - **Datos:** planes_usuarios y pases_usuarios.
@@ -2471,7 +2486,7 @@ Recorrido:
 
 Alternativas:
 
-- Los tipos de evento contemplados son: confirmación de alta de cuenta (**FL-06**), recuperación de contraseña (**FL-46**), confirmación de suscripción (ver 4.4), confirmación de una reserva propia (**FL-40**, **FL-51**), invitación a una reserva con pase (**FL-40**, **FL-51**), cancelación de una reserva o clase que afecta al usuario (**FL-37**, **FL-60**, **FL-61**), confirmación de una reserva reprogramada tras la cancelación de otra (**FL-41**), vencimiento próximo de una contratación (ver 4.5), recordatorio de la próxima clase asignada (ver 4.6), y asignación de un profesor a una clase o turno de planilla.
+- Los tipos de evento contemplados son: confirmación de alta de cuenta (**FL-06**), recuperación de contraseña (**FL-46**), confirmación de una reserva propia (**FL-40**, **FL-51**), invitación a una reserva con pase (**FL-40**, **FL-51**), cancelación de una reserva o clase que afecta al usuario (**FL-37**, **FL-60**, **FL-61**), confirmación de una reserva reprogramada tras la cancelación de otra (**FL-41**), vencimiento próximo de una contratación (ver 4.5), recordatorio de la próxima clase asignada (ver 4.6), y asignación de un profesor a una clase o turno de planilla.
 - Si el envío falla, registra el error y no revierte la operación que lo originó; queda para reintento según la infraestructura de envío.
 - No existe una bandeja de notificaciones dentro del sistema: el email es el único canal.
 
@@ -2521,52 +2536,6 @@ flowchart TD
     F -->|No| G[Continuar con otra actividad]
     F -->|Sí| H[Finalizar evento y registrar momento]
     H --> G
-```
-
-### 4.4 Confirmación de pago de MercadoPago
-
-- **Objetivo:** registrar la contratación y el ingreso de un pago online aprobado.
-- **Disparador:** notificación de MercadoPago.
-
-Procedimiento:
-
-1. Valida la autenticidad de la notificación con su firma, cabeceras `x-signature` y `x-request-id`, identificador `data.id` y clave secreta configurada. Consulta el pago en la API de la plataforma; no confía sólo en el contenido recibido.
-2. Localiza el intento por `external_reference`, comprueba el pago en ARS y conserva `payment_id`. Una referencia ajena al sistema se descarta sin crear datos y se responde a la plataforma para evitar reintentos sin un intento local.
-3. Valida moneda e importe contra el precio congelado del intento.
-4. En una aprobación, bloquea el intento y al usuario, y comprueba si ya existen los resultados de esa aprobación.
-5. Si no existe una contratación no Anulada del mismo tipo para ese usuario y mes, registra `planes_usuarios` o `pases_usuarios` según el producto. Copia el mes y el importe acordado del intento.
-6. Crea un ingreso con medio MercadoPago que referencia esa contratación, sin administrador responsable del registro.
-7. Guarda la contratación resultante y el ingreso en el intento Aprobado, dentro de la misma transacción. Sólo un plan que queda Activo otorga Alumno si el titular no lo tiene y no es administrador.
-8. Envía la confirmación cuando se aplicó la contratación y responde a la plataforma.
-
-Condiciones:
-
-- Pendiente y Rechazado no crean contrataciones ni ingresos.
-- Si existe un conflicto de exclusividad, el intento queda Aprobado sin resultados y se señala para resolución administrativa.
-- Una firma inválida, datos de pago incompatibles o un error transitorio no producen una activación válida. Una validación o consulta transitoria fallida se responde como error para permitir el reintento; una referencia ajena se descarta con respuesta exitosa.
-- Repetir una notificación no duplica resultados. La idempotencia depende de si se aplicó el efecto, no sólo de haber recibido el identificador del pago.
-- Un estado terminal no vuelve a Pendiente por una notificación posterior. Los estados posteriores de devolución o contracargo mantienen el alcance de gestión administrativa definido para esos casos.
-- Si falla una escritura, se revierte toda la creación local de contratación e ingreso; el procesamiento puede reintentarse.
-- Una contratación de un mes que ya terminó se registra Vencida. Renovar otro mes crea otra fila.
-- El precio se conserva aunque el catálogo cambie mientras el pago está pendiente.
-- No se envía una confirmación de contratación cuando quedó pendiente de resolución.
-- La respuesta a una notificación válida es `200` o `201`. El procesamiento conserva un presupuesto máximo de 22 segundos por notificación, y puede reintentarse sin duplicar sus efectos.
-
-- **Resultado:** contratación e ingreso registrados, o intento sin activar según su estado o impedimento.
-- **Datos:** pagos_mercadopago, usuarios, planes_usuarios o pases_usuarios, ingresos y usuarios_roles.
-
-```mermaid
-flowchart TD
-    A[Recibir y validar notificación] --> B[Consultar pago e intento]
-    B --> C{Pago aprobado}
-    C -->|No| D[Actualizar estado sin crear resultados]
-    C -->|Sí| E[Bloquear intento y usuario]
-    E --> F{Efecto ya aplicado}
-    F -->|Sí| G[Conservar resultados]
-    F -->|No| H{Mes disponible e importe válido}
-    H -->|No| I[Señalar aprobación sin activar]
-    H -->|Sí| J[Crear contratación e ingreso en una transacción]
-    J --> K[Asignar Alumno si corresponde y notificar]
 ```
 
 ### 4.5 Aviso de vencimiento próximo de una contratación

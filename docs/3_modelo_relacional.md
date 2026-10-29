@@ -47,7 +47,9 @@ La ocupación se representa mediante `turnos`, `eventos` y tres especializacione
 
 La programación semanal se representa con `turnos_planilla` y sus asignaciones. Las clases concretas tienen asignaciones y asistencia propias, por lo que su historia no depende del contenido vigente de la planilla. Los roles de cuenta y las funciones de una persona dentro de una clase son datos distintos.
 
-Planes y pases se modelan como catálogos independientes, con tablas separadas de contrataciones. Los ingresos referencian operaciones concretas y no productos del catálogo. Los precios aplicados se conservan en las contrataciones y reservas; los importes cobrados pertenecen a `ingresos`.
+Planes y pases se modelan como catálogos independientes, con tablas separadas de contrataciones. Los precios aplicados se conservan en las contrataciones y reservas; la única fuente monetaria es `movimientos_fondos`. Sus movimientos Ingreso pueden referenciar una contratación concreta o reserva, o conservar solo el concepto. `sesiones_caja` agrupa movimientos y controla el efectivo. Los medios son efectivo, transferencia, tarjeta y QR y la fecha monetaria es la de registro del servidor.
+
+Se admiten pagos parciales mediante varios movimientos Ingreso por origen. El modelo no contiene indicadores de deuda, pendiente, excedente ni estado de pago y no conserva una confirmación o motivo de sobrepago. Los pagos se registran manualmente.
 
 El historial transversal de cambios se conserva en `log_auditoria`, separado de los campos propios de creación, modificación y transición de cada entidad.
 
@@ -203,7 +205,7 @@ Representa una contratación concreta de un plan por un usuario para un mes cale
 | | `mes_cubierto` | `date` | | | `2026-10-01` |
 | | `fecha_alta` | `date` | | | `2026-10-01` |
 | | `precio_aplicado` | `numeric(12,2)` | | | `42750.00` |
-| FK | `registrado_por_id` | `bigint` | Sí | | `4` |
+| FK | `registrado_por_id` | `bigint` | | | `4` |
 | | `observaciones` | `text` | | | `Importe acordado con descuento` |
 | | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
 | | `aviso_vencimiento_enviado` | `boolean` | | | `false` |
@@ -217,7 +219,7 @@ Representa una contratación concreta de un plan por un usuario para un mes cale
 
 `precio_aplicado` conserva el importe mensual acordado, separado del dinero cobrado. No es una referencia al precio vigente del catálogo. Una restricción única parcial sobre `(usuario_id, mes_cubierto)` para estados `activo` o `vencido` preserva la exclusividad del mes y admite conservar filas Anuladas.
 
-`registrado_por_id` referencia al responsable de una carga manual y queda nulo en altas automáticas por MercadoPago. Los campos de anulación están informados sólo en estado `anulado`: responsable y momento no nulos y motivo no vacío. En los demás estados quedan nulos o vacíos, según su tipo. `observaciones` y `motivo_anulacion` admiten cadena vacía, sin `NULL`.
+`registrado_por_id` referencia obligatoriamente al administrador que registra la contratación. Los campos de anulación están informados sólo en estado `anulado`: responsable y momento no nulos y motivo no vacío. En los demás estados quedan nulos o vacíos, según su tipo. `observaciones` y `motivo_anulacion` admiten cadena vacía, sin `NULL`.
 
 `aviso_vencimiento_enviado` conserva la marca de envío de esa contratación. No se duplican en esta tabla asignaciones, asistencia ni importes cobrados.
 
@@ -233,7 +235,7 @@ Representa una contratación concreta de un pase por un usuario para un mes cale
 | | `mes_cubierto` | `date` | | | `2026-10-01` |
 | | `fecha_alta` | `date` | | | `2026-10-01` |
 | | `precio_aplicado` | `numeric(12,2)` | | | `35000.00` |
-| FK | `registrado_por_id` | `bigint` | Sí | | `4` |
+| FK | `registrado_por_id` | `bigint` | | | `4` |
 | | `observaciones` | `text` | | | `Pase contratado en sede` |
 | | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
 | | `aviso_vencimiento_enviado` | `boolean` | | | `false` |
@@ -258,7 +260,7 @@ Los valores vigentes se almacenan en los catálogos o la sede. Sus copias aplica
 | `sedes.precio_reserva_vigente` | `reservas.precio_por_turno_aplicado` |
 | `pases.precio_invitado_vigente` | `reservas.precio_invitado_aplicado` |
 
-El modelo no tiene una tabla de historial de precios. La historia comercial se representa mediante los importes aplicados, mientras que los movimientos de dinero utilizan `ingresos`.
+El modelo no tiene una tabla de historial de precios. La historia comercial se representa mediante los importes aplicados, mientras que los movimientos de dinero utilizan exclusivamente `movimientos_fondos`. La consulta vigente no calcula deuda y el registro del cobro es separado del alta comercial.
 
 ### 4.10 `feriados`
 
@@ -479,33 +481,33 @@ La clave primaria compuesta `(reserva_id, usuario_id)` impide repetir al invitad
 
 La coherencia del vínculo exige una reserva con pase, un usuario distinto del organizador y una cantidad de filas no superior a la cantidad total declarada. Una contratación aplicada pertenece al usuario de la fila. Las reglas temporales, de coincidencias y cobertura se definen en criterios, 2.2 y 2.4.
 
-### 4.21 `ingresos`
+### 4.21 `sesiones_caja`
 
-Representa un movimiento de dinero recibido con un único origen comercial.
+Representa una sesión de la única caja de la academia. El administrador que abre es su responsable fijo y quien la cierra. No existe una tabla de cajas ni reasignación.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
-| PK | `id` | `bigint` identity | | | `5000` |
-| | `pagado_en` | `timestamptz` | | | `2026-10-02 17:10:00-03` |
-| | `monto` | `numeric(12,2)` | | | `35000.00` |
-| | `medio_pago` | `varchar(20)` | | | `efectivo` (o `transferencia`, `debito`, `credito`, `qr`, `mercadopago`) |
-| FK | `registrado_por_id` | `bigint` | Sí | | `4` |
-| FK | `plan_usuario_id` | `bigint` | Sí | | `301` |
-| FK | `pase_usuario_id` | `bigint` | Sí | | `NULL` |
-| FK | `reserva_id` | `bigint` | Sí | | `NULL` |
-| | `concepto_otro` | `text` | Sí | | `NULL` |
-| | `observaciones` | `text` | | | `Pago parcial` |
-| | `estado` | `varchar(10)` | | | `cobrado` (o `anulado`) |
-| FK | `anulado_por_id` | `bigint` | Sí | | `NULL` |
-| | `anulado_en` | `timestamptz` | Sí | | `NULL` |
-| | `motivo_anulacion` | `text` | | | `''` |
-| | `creado_en` | `timestamptz` | | | `2026-10-02 17:10:00-03` |
+| PK | `id` | `bigint` identity | | | `15` |
+| | `estado` | `varchar(10)` | | | `abierta` (o `cerrada`) |
+| FK | `responsable_id` | `bigint` | | | `4` |
+| | `creado_en` | `timestamptz` | | | `2026-10-29 08:00:00-03` |
+| | `efectivo_inicial` | `numeric(12,2)` | | | `20000.00` |
+| | `motivo_apertura` | `text` | | | `Retiro personal entre sesiones` |
+| | `cerrada_en` | `timestamptz` | Sí | | `NULL` |
+| | `efectivo_esperado` | `numeric(12,2)` | Sí | | `NULL` |
+| | `efectivo_contado` | `numeric(12,2)` | Sí | | `NULL` |
+| | `diferencia` | `numeric(12,2)` | Sí | | `NULL` |
+| | `motivo_diferencia` | `text` | | | `''` |
 
-Exactamente uno de `plan_usuario_id`, `pase_usuario_id`, `reserva_id` y `concepto_otro` está informado. Las referencias apuntan a contrataciones concretas o a una reserva, no a los productos del catálogo. `concepto_otro` informado contiene texto no vacío. `monto` es positivo.
+Un índice único parcial sobre `estado`, con condición `estado = 'abierta'`, permite como máximo una sesión abierta. El número legible `C-000015` se deriva del identificador.
 
-`pagado_en` representa el momento del cobro; `creado_en`, el momento de carga. `registrado_por_id` es nulo para ingresos automáticos por MercadoPago. Los datos de anulación están informados sólo con `estado = 'anulado'`; responsable y momento son no nulos y el motivo no está vacío. En estado `cobrado` esos campos quedan nulos o vacíos según su tipo.
+`efectivo_inicial` y `efectivo_contado` son no negativos. `motivo_apertura` es obligatorio cuando el inicial difiere del último contado; si coincide o es la primera apertura queda vacío. No crea un movimiento automático. Las fechas las fija el servidor. En Abierta los campos de cierre son nulos y el motivo de diferencia está vacío; en Cerrada están informados, `cerrada_en >= creado_en` y la diferencia es contado menos esperado. Si la diferencia no es cero, el motivo es obligatorio.
 
-El total cobrado, pendiente, excedente y estado de pago son valores derivados, no columnas: se obtienen del total aplicado del origen y de sus ingresos Cobrado. `observaciones` conserva las aclaraciones del movimiento, incluido el motivo de excedente cuando corresponde.
+El efectivo esperado de una sesión abierta se calcula con sus movimientos Vigentes: `efectivo_inicial + ingresos en efectivo + aportes − egresos en efectivo − retiros`. Los medios digitales no intervienen. Los egresos en efectivo de categoría devoluciones cuentan como salidas. Al cerrar se guardan esperado, contado y diferencia; una diferencia positiva indica sobrante y una negativa, faltante. Una diferencia no genera un movimiento. Los totales por clase y medio se consultan desde los movimientos; no se almacena una fotografía JSON.
+
+`responsable_id` referencia `usuarios.id`, conserva al administrador que abre y no se modifica. La apertura y las cargas requieren usuario autenticado, activo, con rol Administrador y sin cambio obligatorio de contraseña. Solo el responsable opera y cierra su sesión; otros administradores pueden consultar. El servicio impide modificar, borrar o reabrir una sesión Cerrada y agregarle movimientos. Puede haber varias sesiones sucesivas por día y una sesión puede atravesar medianoche; no existe cierre automático.
+
+La apertura usa transacción y el índice único parcial. Registro, anulación y cierre bloquean la sesión con `select_for_update` dentro de `transaction.atomic`. La anulación de un movimiento de otra sesión bloquea también la sesión de origen. El estado se revalida al confirmar para que una carga concurrente con cierre se incluya o se rechace. La tabla participa de la auditoría transversal de modificaciones y anulaciones. La inmutabilidad se valida en servicios, sin triggers adicionales de protección de esta tabla en PostgreSQL.
 
 ### 4.22 `sedes_horarios`
 
@@ -526,33 +528,51 @@ La clave primaria compuesta `(sede_id, dia_semana)` permite una fila por sede y 
 
 Los cuatro horarios tienen minutos, segundos y fracciones en cero. Cada fin es posterior a su inicio; una segunda franja comienza al menos una hora después del fin de la primera. Las restricciones de base de datos controlan la coherencia de las parejas y su separación. La ausencia de una fila representa un día sin funcionamiento.
 
-### 4.23 `pagos_mercadopago`
+### 4.23 `movimientos_fondos`
 
-Representa un intento de pago online y sus resultados persistidos.
+Representa ingresos, egresos, aportes y retiros registrados manualmente en una sesión abierta. Es la única fuente de cobros comerciales y no tiene un registro monetario paralelo.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
-| PK | `id` | `bigint` identity | | | `501` |
-| FK | `usuario_id` | `bigint` | | | `1` |
-| FK | `plan_id` | `bigint` | Sí | | `12` |
-| FK | `pase_id` | `bigint` | Sí | | `NULL` |
-| | `mes_cubierto` | `date` | | | `2026-10-01` |
-| | `precio_aplicado` | `numeric(12,2)` | | | `42750.00` |
-| | `referencia_externa` | `uuid` | | Sí | `b3f1...` |
-| | `preference_id` | `varchar(120)` | | Sí | `123456789-abcd...` |
-| | `payment_id` | `varchar(120)` | Sí | Sí | `987654321` |
-| | `estado` | `varchar(20)` | | | `aprobado` (o `pendiente`, `rechazado`) |
+| PK | `id` | `bigint` identity | | | `5000` |
+| | `operacion_id` | `uuid` | | Sí | `b3f1…` |
+| FK | `sesion_id` | `bigint` | | | `15` |
+| | `clase` | `varchar(10)` | | | `ingreso` (o `egreso`, `aporte`, `retiro`) |
+| | `concepto` | `text` | | | `Mensualidad de octubre` |
+| | `monto` | `numeric(12,2)` | | | `35000.00` |
+| | `medio_pago` | `varchar(15)` | | | `efectivo` (o `transferencia`, `tarjeta`, `qr`) |
+| | `referencia` | `varchar(150)` | | | `''` |
+| | `categoria_egreso` | `varchar(20)` | | | `''` |
+| | `destinatario` | `varchar(150)` | | | `''` |
 | FK | `plan_usuario_id` | `bigint` | Sí | | `301` |
 | FK | `pase_usuario_id` | `bigint` | Sí | | `NULL` |
-| FK | `ingreso_id` | `bigint` | Sí | | `5000` |
-| | `creado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-10-01 10:05:00-03` |
+| FK | `reserva_id` | `bigint` | Sí | | `NULL` |
+| | `creado_en` | `timestamptz` | | | `2026-10-29 09:10:00-03` |
+| FK | `registrado_por_id` | `bigint` | | | `4` |
+| | `estado` | `varchar(10)` | | | `vigente` (o `anulado`) |
+| | `anulado_en` | `timestamptz` | Sí | | `NULL` |
+| FK | `anulado_por_id` | `bigint` | Sí | | `NULL` |
+| | `motivo_anulacion` | `text` | | | `''` |
 
-Exactamente uno de `plan_id` y `pase_id` está informado. `mes_cubierto` es el primer día del mes y `precio_aplicado` conserva el importe del intento. `referencia_externa` es un UUID propio del sistema; `preference_id` identifica el checkout y `payment_id`, nullable, el pago comunicado por la plataforma. Los tres identificadores tienen unicidad individual.
+`monto` es positivo y se calcula con Decimal, sin floats. `concepto` siempre contiene texto no vacío. Los medios no efectivos requieren `referencia`. Egreso exige destinatario y categoría: `alquiler`, `servicios`, `profesores`, `insumos`, `mantenimiento`, `publicidad`, `comisiones`, `otros` o `devoluciones`. En las demás clases esos campos quedan vacíos. Aporte y Retiro solo admiten efectivo y no se contabilizan como cobros o gastos operativos.
 
-Dos restricciones únicas parciales evitan duplicar intentos Pendientes para el mismo usuario, producto y mes: una sobre `(usuario_id, plan_id, mes_cubierto)` con plan informado y otra sobre `(usuario_id, pase_id, mes_cubierto)` con pase informado.
+Solo Ingreso admite referencias comerciales y como máximo una de las tres está informada; un ingreso sin vínculo se identifica por su concepto obligatorio. `plan_usuario_id` referencia `planes_usuarios.id`, `pase_usuario_id` referencia `pases_usuarios.id` y `reserva_id` referencia `reservas.id`. No apuntan a productos del catálogo. Se admiten varios ingresos por origen, sin comparación automática con el precio aplicado. El origen debe existir y estar confirmado; no admite nuevos ingresos si la contratación está Anulada o el evento de la reserva está Anulado. No se crea ni renueva un origen al registrar el cobro.
 
-Los resultados se representan mediante `plan_usuario_id`, `pase_usuario_id` e `ingreso_id`. Antes de aplicar una aprobación, las tres referencias son nulas. Una aprobación aplicada tiene exactamente una contratación, coherente con producto, usuario y mes del intento, y un ingreso relacionado. Un intento Aprobado sin resultados representa una aplicación pendiente de resolución administrativa; Pendiente o Rechazado no tiene resultados. El procesamiento se define en criterios, 2.4.1.
+`sesion_id` referencia `sesiones_caja.id`; `registrado_por_id` y `anulado_por_id` referencian `usuarios.id`. Estas relaciones y los vínculos comerciales protegen a sus registros referenciados contra la eliminación. La reserva o contratación y su cobro se confirman como operaciones independientes: un error monetario no revierte el origen comercial.
+
+Una devolución usa clase `egreso` y categoría `devoluciones`: representa dinero efectivamente reintegrado a un cliente, en cualquiera de los cuatro medios. Exige concepto, destinatario, monto y referencia para no efectivo. No tiene una FK a un ingreso ni un tope contra cobros. Los resúmenes la separan de los gastos operativos. No modifica automáticamente cobros, contratación ni reserva. Cancelar o reprogramar una operación comercial no genera un reintegro ni anula sus cobros; el reintegro se registra como un egreso independiente.
+
+Las FK opcionales y fechas no informadas usan NULL; los textos opcionales usan cadena vacía. La creación pertenece a una sesión abierta y usa exclusivamente `creado_en`, asignado por el servidor, y el responsable de esa sesión. La fecha no es editable y no se almacena una fecha real de operación separada. Las fechas se interpretan en `America/Argentina/Buenos_Aires` y los importes son pesos argentinos con dos decimales.
+
+`operacion_id` tiene unicidad individual y se conserva para reintentos del mismo formulario. El servicio devuelve el registro existente si actor y contenido coinciden, y rechaza el UUID con otro actor o contenido. No se exige que coincida con el UUID de contexto de auditoría. Se indexan `(sesion_id, id)` y `creado_en`.
+
+Los servicios validan dominios, importes, referencias y coherencia de campos dentro de la transacción y rechazan una salida de efectivo que supere lo disponible. Impiden editar datos originales o borrar movimientos. Ingresos y egresos, incluidas devoluciones, así como aportes y retiros, admiten anulación con motivo obligatorio: completa `estado = 'anulado'`, `anulado_por_id`, `anulado_en` y `motivo_anulacion`. En Vigente los datos de anulación son nulos o vacíos según su tipo. El actor es el responsable de la sesión abierta actual, aunque el movimiento pertenezca a una cerrada. Un Anulado no se reactiva ni vuelve a anularse.
+
+Anular invalida la carga y no representa un reintegro. En sesión abierta recalcula el esperado y no puede dejarlo negativo; en sesión cerrada no modifica los resultados guardados. Corregir requiere una nueva carga independiente en la sesión actual; si corresponde a efectivo, tiene efecto ordinario y puede producir una diferencia explicada aunque no haya movimiento físico presente. No existe un vínculo entre el movimiento anulado y la nueva carga.
+
+La consulta comercial vigente usa únicamente clase Ingreso y estado Vigente, excluyendo toda anulación. El resumen histórico de una sesión cerrada incluye los movimientos con `anulado_en IS NULL OR anulado_en > cerrada_en`; los anulados antes o al cerrar no suman. Una anulación posterior no modifica los importes guardados del cierre. No se derivan indicadores de deuda.
+
+La protección de datos originales y la inmutabilidad del cierre se validan en servicios; no hay triggers adicionales de inmutabilidad sobre las tablas de caja. El trigger común registra modificaciones y anulaciones dentro de la transacción y las altas conservan sus datos de creación sin agregar entradas al historial. Un error revierte la escritura y su auditoría. El registro de una escritura SQL no impide esa escritura. Las reglas operativas se detallan también en criterios, 2.5 y 2.12.
 
 ### 4.24 `bloqueos`
 
@@ -601,7 +621,7 @@ La combinación de tabla y clave identifica al registro sin una FK polimórfica.
 
 `operacion_id` agrupa las entradas de una misma operación y no es único por fila ni constituye una cabecera de negocio. Existen índices por operación, por tabla y fecha descendente y por usuario y fecha descendente; la FK conserva además su índice propio.
 
-La función `registrar_auditoria` recibe los nombres de los componentes de la PK mediante los argumentos del trigger. Cada tabla de negocio tiene un trigger de fila `AFTER UPDATE OR DELETE`. La función usa `OLD` y `NEW`, descarta cambios sin diferencias funcionales, excluye secretos e inserta el historial dentro de la misma transacción. El actor, origen, UUID y acción específica se leen de configuración local; sin contexto se registra origen SQL y la base genera el UUID de la transacción. Un trigger independiente rechaza modificación, eliminación y vaciado de `log_auditoria`. Las reglas de contexto y consulta se definen en criterios, 2.14.
+La función `registrar_auditoria` recibe los nombres de los componentes de la PK mediante los argumentos del trigger. Cada tabla de negocio tiene un trigger de fila `AFTER UPDATE OR DELETE`, incluidas `sesiones_caja` y `movimientos_fondos`. El cierre es una modificación y la anulación de un movimiento se reconoce por su estado; no se agregan entradas de alta. La función usa `OLD` y `NEW`, descarta cambios sin diferencias funcionales, excluye secretos e inserta el historial dentro de la misma transacción. El actor, origen, UUID y acción específica se leen de configuración local; sin contexto se registra origen SQL y la base genera el UUID de la transacción. Un trigger independiente rechaza modificación, eliminación y vaciado de `log_auditoria`. Las reglas de contexto y consulta se definen en criterios, 2.14.
 
 ---
 
@@ -615,6 +635,6 @@ La función `registrar_auditoria` recibe los nombres de los componentes de la PK
 - `eventos.turno_id` protege al turno. Las especializaciones `reservas`, `clases` y `bloqueos` protegen su evento.
 - `bloqueos.evento_origen_id` protege al evento de origen mientras exista la referencia de trazabilidad.
 - `log_auditoria.usuario_id` protege la cuenta del actor; el historial no admite modificación ni eliminación.
-- Los intentos de MercadoPago protegen las referencias a usuario, producto, contrataciones e ingreso resultantes.
+- Las sesiones de caja protegen al responsable y los movimientos protegen su sesión, responsables y orígenes comerciales. No se ofrecen eliminaciones físicas. Los vínculos comerciales apuntan a las contrataciones concretas o a la reserva. La protección de historia se valida en servicios y ambas tablas participan de la auditoría transversal; no hay triggers adicionales de inmutabilidad sobre caja.
 
 La eliminación coordinada de los datos de una clase generada y la conservación de historia se definen en criterios, 2.1 y 2.12. Los turnos no dependen de la vida de una única actividad: su identidad puede ser compartida por eventos históricos.
