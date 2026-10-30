@@ -24,5 +24,5 @@ urlpatterns = [
         views.usuario_cambiar_estado,
         name="usuario_cambiar_estado",
     ),
-    path("<int:pk>/roles/<str:rol>/", views.usuario_rol_toggle, name="usuario_rol_toggle"),
+    path("<int:pk>/roles/<str:rol>/", views.usuario_gestionar_rol, name="usuario_gestionar_rol"),
 ]

@@ -22,6 +22,8 @@ La autenticación incluye inicio y cierre de sesión y cambio de contraseña. La
 
 Los roles son Administrador, Profesor, Alumno, Reservas y Público. Las cuentas no administrativas reciben Público y Reservas al crearse; la administración puede asignarles y retirarles Profesor, Alumno y Reservas. Las cuentas administrativas tienen únicamente Administrador, asignado mediante el comando de creación, y no admiten roles adicionales.
 
+La gestión de roles envía explícitamente la acción Asignar o Quitar y la valida con el usuario bloqueado dentro de una transacción. Asignar un rol vigente o quitar uno ausente conserva el estado sin generar cambios ni auditoría. Cada retiro efectivo comprueba las relaciones que lo impiden y cada asignación respeta las incompatibilidades de roles.
+
 Desactivar registra fecha y hora de baja; reactivar elimina esa marca. No se permite desactivar la cuenta propia ni al último administrador activo.
 
 ## 3. Hito 3: proceso de reservas

@@ -249,7 +249,7 @@ def usuario_cambiar_estado(request, pk):
 @login_required
 @permission_required("usuarios.change_usuario", raise_exception=True)
 @require_http_methods(["POST"])
-def usuario_rol_toggle(request, pk, rol):
+def usuario_gestionar_rol(request, pk, rol):
     if rol not in ROLES_GESTIONABLES:
         usuario = get_object_or_404(Usuario, pk=pk)
         messages.error(request, "Ese rol no se gestiona desde acá.")
@@ -263,13 +263,25 @@ def usuario_rol_toggle(request, pk, rol):
         if usuario.is_superuser or usuario.tiene_rol(Rol.ADMINISTRADOR):
             messages.error(request, "Los administradores solo pueden tener el rol Administrador.")
             return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
+        acciones = request.POST.getlist("accion")
+        if len(acciones) != 1 or acciones[0] not in ("asignar", "quitar"):
+            messages.error(request, "Elegí asignar o quitar el rol.")
+            return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
+        accion = acciones[0]
         asignacion = (
             UsuarioRol.objects.select_for_update()
             .filter(usuario=usuario, rol=rol_obj)
             .first()
         )
 
-        if asignacion:
+        if accion == "asignar" and asignacion:
+            messages.info(request, f"El usuario ya tiene el rol {rol_obj.nombre}.")
+            return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
+        if accion == "quitar" and asignacion is None:
+            messages.info(request, f"El usuario ya no tiene el rol {rol_obj.nombre}.")
+            return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
+
+        if accion == "quitar":
             if rol == Rol.RESERVAS and usuario.reservas.filter(evento__estado=Evento.Estado.PROGRAMADO).exists():
                 messages.error(request, "No se puede quitar el rol Reservas mientras el usuario tenga reservas Programadas.")
                 return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
