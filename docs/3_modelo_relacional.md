@@ -191,7 +191,7 @@ Representa la definición comercial de un pase mensual de cancha.
 
 `tipo` admite `libre` o `fin_de_semana`; no existe una tabla adicional de días por pase. `limite_horas_diarias` es positivo y los precios son no negativos. `descripcion` admite cadena vacía.
 
-El nombre tiene unicidad parcial entre pases Activos, independiente de los nombres de planes. El saldo de horas no es un atributo almacenado del catálogo ni de sus contrataciones.
+El nombre tiene unicidad parcial entre pases Activos sin distinguir mayúsculas y minúsculas mediante `LOWER(nombre)`, independiente de los nombres de planes. El saldo de horas no es un atributo almacenado del catálogo ni de sus contrataciones.
 
 ### 4.7 `planes_usuarios`
 

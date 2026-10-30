@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Pases | Academia TM{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina">
+    <h1>Pases</h1>
+    <a class="boton boton-primario" href="{% url 'membresias:pase_crear' %}">Nuevo pase</a>
+</header>
+{% if hay_pases %}
+    <form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos>
+        <div class="grupo-campo">
+            <label for="pase-busqueda">Buscar</label>
+            <input class="form-control" type="search" id="pase-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="Nombre o descripción">
+        </div>
+        <div class="grupo-campo">
+            <label for="pase-estado">Estado</label>
+            <select class="form-control" id="pase-estado" name="estado">
+                <option value="">Todos</option>
+                {% for valor, etiqueta in estados %}<option value="{{ valor }}"{% if estado_actual == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'membresias:pase_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
+        <noscript><button class="boton boton-secundario" type="submit">Buscar</button></noscript>
+    </form>
+    <section class="tarjeta tabla-contenedor" aria-label="Catálogo de pases">
+        <table>
+            <thead><tr><th scope="col">Nombre</th><th scope="col">Variante</th><th scope="col">Límite diario</th><th scope="col">Precio mensual (ARS)</th><th scope="col">Adicional por invitado (ARS)</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
+            <tbody>
+                {% for pase in pagina %}
+                    <tr>
+                        <td><strong>{{ pase.nombre }}</strong></td>
+                        <td>{{ pase.get_tipo_display }}</td>
+                        <td>{{ pase.limite_horas_diarias }} hora{{ pase.limite_horas_diarias|pluralize:"s" }}</td>
+                        <td>$ {{ pase.precio_vigente|floatformat:"2g" }}</td>
+                        <td>$ {{ pase.precio_invitado_vigente|floatformat:"2g" }}</td>
+                        <td>{% include "componentes/badge_estado.html" with estado=pase.estado texto=pase.get_estado_display only %}</td>
+                        <td><a class="boton boton-secundario boton-chico" href="{% url 'membresias:pase_detalle' pase.pk %}" aria-label="Ver detalle de {{ pase.nombre }}">Detalles</a></td>
+                    </tr>
+                {% empty %}<tr><td class="estado-vacio" colspan="7">No hay pases que coincidan con los filtros.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% if pagina.paginator.num_pages > 1 %}
+        <nav class="acciones" aria-label="Páginas de pases">
+            {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+            <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+            {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+        </nav>
+    {% endif %}
+{% else %}<p class="tarjeta estado-vacio">Todavía no hay pases registrados.</p>{% endif %}
+<script src="{% static 'js/filtros.js' %}" defer></script>
+{% endblock %}

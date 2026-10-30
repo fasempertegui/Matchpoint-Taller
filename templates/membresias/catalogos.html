@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Membresías | Academia TM{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina"><h1>Membresías</h1></header>
+<section class="inicio-modulos" aria-label="Catálogos de membresías">
+    <article class="tarjeta inicio-modulo">
+        <h2>Planes</h2>
+        <p>Planes mensuales de clases individuales y grupales.</p>
+        <a class="boton boton-secundario" href="{% url 'membresias:plan_lista' %}">Ver planes</a>
+    </article>
+    <article class="tarjeta inicio-modulo">
+        <h2>Pases de cancha</h2>
+        <p>Pases mensuales libres o de fin de semana, con límite diario y adicional por invitado.</p>
+        <a class="boton boton-secundario" href="{% url 'membresias:pase_lista' %}">Ver pases</a>
+    </article>
+</section>
+{% endblock %}

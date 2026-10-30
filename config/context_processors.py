@@ -50,10 +50,14 @@ def navegacion(request):
     planes = None
     if administrador:
         planes = enlace(
-            "Planes", "membresias:plan_lista", namespace == "membresias",
+            "Planes", "membresias:plan_lista", namespace == "membresias" and ruta.url_name.startswith("plan_"),
             "Catálogo de planes mensuales de clases.",
         )
         administracion.append(planes)
+        administracion.append(enlace(
+            "Pases", "membresias:pase_lista", namespace == "membresias" and ruta.url_name.startswith("pase_"),
+            "Catálogo de pases mensuales de cancha.",
+        ))
         administracion.append(enlace(
             "Feriados", "clases:feriado_lista", feriados_activo,
             "Consulta y gestión de feriados.",
@@ -65,7 +69,7 @@ def navegacion(request):
     modulos_inicio = [{"nombre": "Agenda", "descripcion": agenda["descripcion"], "destino": agenda}]
     modulos_inicio.extend(
         {"nombre": item["nombre"], "descripcion": item["descripcion"], "destino": item}
-        for item in administracion if item["nombre"] not in ("Feriados", "Planes")
+        for item in administracion if item["nombre"] not in ("Feriados", "Planes", "Pases")
     )
     if clases:
         modulos_inicio.append({
@@ -75,8 +79,9 @@ def navegacion(request):
         })
     if planes:
         modulos_inicio.append({
-            "nombre": "Membresías", "descripcion": planes["descripcion"],
-            "destino": planes, "boton": "Ver planes",
+            "nombre": "Membresías", "descripcion": "Catálogos de planes mensuales y pases de cancha.",
+            "destino": enlace("Membresías", "membresias:catalogos", namespace == "membresias", ""),
+            "boton": "Ver catálogos",
         })
     if auditoria:
         modulos_inicio.append({"nombre": "Auditoría", "descripcion": auditoria["descripcion"], "destino": auditoria})
@@ -85,7 +90,7 @@ def navegacion(request):
         "inicio_activo": nombre_vista == "inicio", "agenda": agenda,
         "clases": clases, "clases_activo": clases_activo,
         "administracion": administracion,
-        "administracion_activo": any(item["activo"] for item in administracion),
+        "administracion_activo": namespace == "membresias" or any(item["activo"] for item in administracion),
         "perfil_activo": perfil_activo,
         "modulos_inicio": modulos_inicio, "mostrar_preparacion": administrador,
     }}

@@ -178,9 +178,9 @@ La migración `auditoria.0003_triggers_auditoria` instala la captura de las diez
 
 El navbar ofrece Inicio, Agenda, Clases y las herramientas administrativas disponibles según los roles y permisos vigentes. Clases mantiene un desplegable incluso con un solo destino: Planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Mi actividad enlaza a la consulta de Actividad de clases del titular.
 
-Administración agrupa Usuarios, Sedes y canchas, Planes, Feriados y Auditoría en ese orden. Sedes y canchas enlaza al listado de Sedes. Si sólo hay un destino administrativo autorizado, se presenta directamente. Mi perfil y Cerrar sesión permanecen disponibles en la navegación.
+Administración agrupa Usuarios, Sedes y canchas, Planes, Pases, Feriados y Auditoría en ese orden. Sedes y canchas enlaza al listado de Sedes. Si sólo hay un destino administrativo autorizado, se presenta directamente. Mi perfil y Cerrar sesión permanecen disponibles en la navegación.
 
-Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver planes para acceder al catálogo administrativo de planes. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
+Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver catálogos para elegir entre Planes y Pases de cancha. Ambos catálogos tienen acceso administrativo y su propia entrada en Administración. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
 
 La ruta actual resalta el destino o su grupo. Los desplegables abren con clic, Enter o Espacio; las flechas recorren sus enlaces y Escape cierra devolviendo el foco al disparador. En móvil se expanden dentro de la navegación vertical. Las rutas mantienen las autorizaciones del servidor.
 
@@ -196,3 +196,18 @@ El acceso exige una cuenta activa con rol Administrador y sin cambio de contrase
 Las restricciones de PostgreSQL protegen configuración, importes, estado y nombres activos. Los identificadores se generan en la base. El trigger de planes registra modificaciones, cambios de estado y eliminaciones SQL mediante la auditoría transversal, con actor y UUID del contexto; las altas no agregan entradas al historial. El catálogo conserva sus filas y no expone eliminación desde la aplicación.
 
 Revisión manual: crear y editar un plan, revisar nombres Activos repetidos incluso con mayúsculas distintas, precio cero y negativo, límites de frecuencia y duración, búsqueda y filtros, activación/desactivación y solicitudes repetidas. Revisar también una edición abierta en dos pestañas, el rechazo de acceso a cuentas no administrativas y las diferencias registradas en Auditoría.
+
+
+## Catálogo de pases
+
+La administración dispone de alta, listado, búsqueda por nombre o descripción, filtro por estado, detalle, edición y activación/desactivación de pases mensuales de cancha. El listado presenta veinticinco productos por página y un único acceso al detalle por fila. La ficha muestra las características y los precios; la edición se abre desde su acción y los cambios de estado exigen confirmación.
+
+Cada pase tiene nombre, descripción opcional, variante Libre o Fin de semana, límite diario de horas, precio mensual y adicional por invitado sin cobertura para un turno de una hora. Libre habilita todos los días y Fin de semana, sábados y domingos. El límite diario es positivo y se propone en dos horas al crear. Ambos importes admiten cero y no pueden ser negativos. Los nombres son únicos entre pases Activos sin distinguir mayúsculas y minúsculas; la comparación es independiente del catálogo de planes y se repite al activar un producto.
+
+El acceso exige una cuenta activa con rol Administrador y sin cambio de contraseña pendiente. Los servicios revalidan acceso y datos dentro de la transacción, con bloqueo del actor y del producto. La selección firmada distingue plan y pase, usuario, registro y última modificación. Si el producto cambió, se exige revisar antes de confirmar. La edición conserva el estado; repetir el estado vigente o guardar datos iguales no actualiza la fecha ni genera auditoría.
+
+El catálogo define la oferta comercial. Las contrataciones, las coberturas aplicadas a reservas y los consumos diarios tienen sus propios registros y recorridos. PostgreSQL protege los dominios, importes y nombres activos, genera los identificadores y audita las modificaciones mediante el trigger de pases. Las altas no generan entradas de auditoría y las pantallas no ofrecen eliminación física.
+
+Planes y pases comparten el formulario de catálogo, la protección de la selección y el guardado auditado, conservando campos y recorridos específicos. La entrada Membresías permite elegir entre los dos catálogos y los breadcrumbs conservan ese acceso.
+
+Revisión manual: crear un pase Libre y uno de Fin de semana; revisar nombres repetidos, importes cero y negativos, límite diario cero y positivo, filtro por estado, edición y activación/desactivación. Comprobar también reenvíos, dos pestañas editando el mismo producto, rechazo de acceso no administrativo y las diferencias en Auditoría.
