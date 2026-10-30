@@ -56,6 +56,8 @@ Cada reserva ocupa un único turno de una hora, contenido en una franja de funci
 
 El servidor valida permisos, selección, estados, horarios, precio y disponibilidad dentro de una transacción, con bloqueos para coordinar solicitudes simultáneas. Registra la reserva y su evento Programado con referencia al turno, número, fecha y usuario responsable automáticos. Ante un error, no queda una reserva parcial. Si cambia el precio antes del registro, se exige revisar el importe y confirmar nuevamente.
 
+Cada organizador puede tener como máximo cinco reservas en estado Programado, sumando todas las sedes y fechas. El límite se comprueba al confirmar, con el organizador bloqueado dentro de la transacción, tanto en el portal como en los registros administrativos, incluidas las reservas de cuentas administrativas. Los turnos terminados siguen contando mientras su evento permanezca Programado; las reservas Anuladas y Finalizadas no consumen cupo.
+
 El importe por turno se copia desde la tarifa validada de la sede al registrar y se conserva en la reserva. El total es ese importe aplicado; actualizar la tarifa no modifica reservas existentes. No se permite retirar el rol Reservas a un usuario con reservas propias Programadas.
 
 ### Consulta

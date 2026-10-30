@@ -57,6 +57,12 @@ def registrar_reserva(registrado_por, organizador, cancha, fecha, turno_id, prec
         raise ValidationError("El organizador debe estar activo para registrar la reserva.")
     if not organizador.puede_reservar:
         raise ValidationError("El organizador debe tener el rol Reservas o Administrador para registrar la reserva.")
+    reservas_programadas = Reserva.objects.filter(
+        organizador=organizador,
+        evento__estado=Evento.Estado.PROGRAMADO,
+    ).count()
+    if reservas_programadas >= 5:
+        raise ValidationError("El organizador ya tiene el máximo de cinco reservas Programadas.")
 
     disponibilidad = consultar_disponibilidad(cancha, fecha)
     turno = validar_turno_seleccionado(disponibilidad, turno_id)
