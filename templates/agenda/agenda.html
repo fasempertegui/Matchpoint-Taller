@@ -74,23 +74,17 @@
                                                 {{ fila.hora|time:"H:i" }}<span class="agenda-ahora"{% if not fila.ahora %} hidden{% endif %}>Ahora</span>
                                             </th>
                                             {% for celda in fila.celdas %}
-                                                <td>
+                                                <td class="{% if celda.anulados %}agenda-celda-con-historial{% endif %}">
                                                     {% if celda.en_rango and not celda.consultable %}
                                                         <span class="agenda-turno agenda-turno-pasado{% if celda.habilitado %} agenda-turno-libre{% else %} agenda-turno-cerrado{% endif %}">{% if celda.habilitado %}Libre{% else %}Fuera de horario{% endif %}</span>
                                                     {% elif celda.en_rango %}
-                                                        <a data-agenda-turno class="agenda-turno{% if celda.ocupado_por_tercero %} agenda-turno-ocupado{% elif celda.evento %} agenda-turno-{{ celda.evento.tipo }}{% elif not celda.habilitado %} agenda-turno-cerrado{% else %} agenda-turno-libre{% endif %}{% if celda.iniciado %} agenda-turno-pasado{% endif %}{% if celda.seleccionada %} agenda-turno-seleccionado{% endif %}"
-                                                           href="{{ celda.url }}"{% if celda.seleccionada %} aria-current="true"{% endif %}
+                                                        <a data-agenda-turno class="agenda-turno{% if celda.ocupado_por_tercero %} agenda-turno-ocupado{% elif celda.evento %} agenda-turno-{{ celda.evento.tipo }}{% elif not celda.habilitado %} agenda-turno-cerrado{% else %} agenda-turno-libre{% endif %}{% if celda.iniciado %} agenda-turno-pasado{% endif %}{% if celda.seleccionada and not panel_historial %} agenda-turno-seleccionado{% endif %}"
+                                                           href="{{ celda.url }}"{% if celda.seleccionada and not panel_historial %} aria-current="true"{% endif %}
                                                            aria-label="{{ celda.cancha.nombre }}, {{ celda.fecha|date:'d/m/Y' }}, {{ celda.hora|time:'H:i' }} a {{ celda.fin|time:'H:i' }}. {% if celda.ocupado_por_tercero %}No disponible{% elif celda.reserva %}Reserva de {{ celda.reserva.organizador }}. {{ celda.estado_temporal }}{% elif celda.evento %}{{ celda.evento.get_tipo_display }}{% elif celda.puede_reservar %}Turno libre{% else %}{{ celda.impedimento }}{% endif %}">
                                                             {% if celda.ocupado_por_tercero %}
                                                                 <span>No disponible</span>
-                                                            {% elif celda.reserva %}
-                                                                <span class="agenda-tipo">Reserva</span><span class="agenda-nombre">{{ celda.reserva.organizador }}</span>
-                                                            {% elif celda.bloqueo %}
-                                                                <span class="agenda-tipo">Bloqueo</span><span class="agenda-nombre">{{ celda.bloqueo.get_motivo_display }}</span>
-                                                            {% elif celda.clase %}
-                                                                <span class="agenda-tipo">Clase</span><span class="agenda-nombre">{{ celda.clase.get_modalidad_display|default:"Sin especificar" }}</span>
                                                             {% elif celda.evento %}
-                                                                <span class="agenda-tipo">{{ celda.evento.get_tipo_display }}</span>
+                                                                {% include "agenda/_contenido_evento.html" with evento=celda.evento only %}
                                                             {% elif not celda.habilitado %}
                                                                 <span>Fuera de horario</span>
                                                             {% elif celda.cancha.estado == 'inactiva' or agenda.sede.estado == 'inactiva' %}
@@ -101,6 +95,12 @@
                                                         </a>
                                                     {% else %}
                                                         <span class="agenda-fuera-rango">Fuera del calendario</span>
+                                                    {% endif %}
+                                                    {% if celda.anulados %}
+                                                        <button class="agenda-historial" type="button" data-agenda-historial data-url="{{ celda.url_historial }}" aria-haspopup="dialog" aria-expanded="false" aria-controls="agenda-historial" title="{{ celda.anulados|length }} evento{{ celda.anulados|length|pluralize:'s' }} anulado{{ celda.anulados|length|pluralize:'s' }}" aria-label="Ver {{ celda.anulados|length }} evento{{ celda.anulados|length|pluralize:'s' }} anulado{{ celda.anulados|length|pluralize:'s' }} de las {{ celda.hora|time:'H:i' }}, {{ celda.cancha.nombre }}">
+                                                            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="m4.7 15.3 10.6-10.6"/></svg>
+                                                            <span>{{ celda.anulados|length }}</span>
+                                                        </button>
                                                     {% endif %}
                                                 </td>
                                             {% endfor %}
@@ -127,9 +127,12 @@
             </section>
             <aside class="agenda-detalle" id="turno-seleccionado" aria-label="Panel de agenda" data-agenda-detalle>
                 <p class="agenda-aviso" data-agenda-aviso role="status" aria-live="polite" hidden></p>
-                <div data-agenda-contenido>{% if panel_acciones %}{% include "agenda/_acciones_dia.html" %}{% else %}{% include "agenda/_detalle_turno.html" %}{% endif %}</div>
+                <div data-agenda-contenido>{% if panel_acciones %}{% include "agenda/_acciones_dia.html" %}{% elif panel_historial %}<p class="texto-secundario">Seleccioná un turno para consultar su estado.</p>{% else %}{% include "agenda/_detalle_turno.html" %}{% endif %}</div>
             </aside>
         </div>
+        <dialog class="agenda-historial-popover" id="agenda-historial" aria-label="Eventos anulados" data-agenda-historial-dialogo{% if panel_historial %} data-url-inicial="{{ agenda.url_historial }}"{% endif %}>
+            <div data-agenda-historial-contenido>{% if panel_historial %}{% include "agenda/_historial_turno.html" %}{% endif %}</div>
+        </dialog>
     {% endif %}
 {% else %}
     <p class="tarjeta estado-vacio">{% if es_administrador %}Registrá una sede y sus canchas para consultar la agenda.{% else %}No hay sedes disponibles para consultar la agenda.{% endif %}</p>

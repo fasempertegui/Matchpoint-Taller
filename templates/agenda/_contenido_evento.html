@@ -1,0 +1,9 @@
+{% if evento.tipo == 'reserva' %}
+    <span class="agenda-tipo">Reserva</span><span class="agenda-nombre">{{ evento.reserva.organizador }}</span>
+{% elif evento.tipo == 'bloqueo' %}
+    <span class="agenda-tipo">Bloqueo</span><span class="agenda-nombre">{{ evento.bloqueo.get_motivo_display }}</span>
+{% elif evento.tipo == 'clase' %}
+    <span class="agenda-tipo">Clase</span><span class="agenda-nombre">{{ evento.clase.get_modalidad_display|default:"Sin especificar" }}</span>
+{% else %}
+    <span class="agenda-tipo">{{ evento.get_tipo_display }}</span>
+{% endif %}

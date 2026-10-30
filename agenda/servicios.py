@@ -16,7 +16,7 @@ from reservas.models import Evento
 from reservas.servicios import validar_anulacion_reserva, validar_finalizacion_reserva
 
 
-def enlace_agenda(sede, fecha, cancha=None, hora=None, acciones=False):
+def enlace_agenda(sede, fecha, cancha=None, hora=None, acciones=False, historial=False):
     datos = {"sede": sede.pk, "fecha": fecha.isoformat()}
     if cancha is not None:
         datos["cancha"] = cancha.pk
@@ -24,10 +24,12 @@ def enlace_agenda(sede, fecha, cancha=None, hora=None, acciones=False):
         datos["hora"] = hora
     if acciones:
         datos["panel"] = "acciones"
+    elif historial:
+        datos["panel"] = "historial"
     return reverse("agenda:agenda") + "?" + urlencode(datos)
 
 
-def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuario, es_administrador):
+def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuario, es_administrador, historial=False):
     ahora = timezone.localtime()
     canchas = list(sede.canchas.all())
     columnas = [{"cancha": cancha, "fecha": fecha} for cancha in canchas]
@@ -68,6 +70,19 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         (evento.turno.cancha_id, evento.turno.fecha, evento.turno.hora_inicio.hour): evento
         for evento in eventos
     }
+    anulados_por_turno = {}
+    anulados = Evento.objects.filter(
+        turno__cancha__in=canchas, turno__fecha=fecha, estado=Evento.Estado.ANULADO,
+    ).annotate(clase_del_usuario=Exists(clases_del_usuario))
+    if not es_administrador:
+        anulados = anulados.filter(Q(reserva__organizador_id=usuario.pk) | Q(clase_del_usuario=True))
+    anulados = anulados.select_related(
+        "turno", "reserva__organizador", "clase", "bloqueo__evento_origen__reserva",
+        "bloqueo__evento_origen__clase", "anulado_por", "registrado_por",
+    ).order_by("-anulado_en", "-pk")
+    for evento in anulados:
+        clave = (evento.turno.cancha_id, evento.turno.fecha, evento.turno.hora_inicio.hour)
+        anulados_por_turno.setdefault(clave, []).append(evento)
 
     cancha_seleccionada = cancha
 
@@ -173,16 +188,20 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             "seleccionada": cancha.pk == (cancha_seleccionada.pk if cancha_seleccionada else None)
                 and dia == fecha and hora == hora_seleccionada,
             "url": enlace_agenda(sede, dia, cancha, hora),
+            "anulados": anulados_por_turno.get((cancha.pk, dia, hora), []),
+            "url_historial": enlace_agenda(sede, dia, cancha, hora, historial=True),
         }
 
     horas_visibles = set().union(*inicios_habilitados.values()) if inicios_habilitados else set()
     horas_visibles.update(clave[2] for clave in eventos_por_turno)
+    horas_visibles.update(clave[2] for clave in anulados_por_turno)
     horas_propias = {
         evento.turno.hora_inicio.hour
         for evento in eventos_por_turno.values()
         if (evento.tipo == Evento.Tipo.RESERVA and evento.reserva.organizador_id == usuario.pk)
         or evento.clase_del_usuario
     }
+    horas_propias.update(clave[2] for clave in anulados_por_turno)
     filas = []
     if horas_visibles:
         for hora in range(min(horas_visibles), max(horas_visibles) + 1):
@@ -203,11 +222,11 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         celda_para(cancha, fecha, hora_seleccionada)
         if cancha is not None and hora_seleccionada is not None else None
     )
-    if detalle and not detalle["consultable"]:
+    if detalle and not detalle["consultable"] and not (historial and detalle["anulados"]):
         detalle = None
     if detalle and not es_administrador and detalle["iniciado"] and hora_seleccionada not in horas_propias:
         detalle = None
-    if detalle and detalle["clase"] is not None:
+    if detalle and detalle["clase"] is not None and not historial:
         datos_clase = consultar_clase(usuario, detalle["clase"].pk)
         detalle["datos_clase"] = datos_clase
         detalle["profesores_activos"] = [
@@ -231,4 +250,5 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         "url_cerrar": enlace_agenda(sede, fecha, cancha),
         "url_acciones": enlace_agenda(sede, fecha, acciones=True),
         "url_seleccion": enlace_agenda(sede, fecha, cancha, hora_seleccionada),
+        "url_historial": enlace_agenda(sede, fecha, cancha, hora_seleccionada, historial=True),
     }

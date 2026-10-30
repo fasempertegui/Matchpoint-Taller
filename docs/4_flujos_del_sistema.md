@@ -2134,7 +2134,7 @@ flowchart TD
 
 #### FL-55. Consultar reservas
 
-Agenda es la entrada única para las actividades y permite abrir el detalle y comprobante desde el panel del turno. La búsqueda por criterios descripta en este flujo se contempla dentro de Agenda y está pendiente de implementación.
+Agenda es la entrada única para las actividades y permite abrir el detalle y comprobante desde el panel del turno. El chip de anulados de una celda abre una consulta emergente anclada en escritorio y un panel inferior en móvil, incluso en turnos pasados o actualmente ocupados por otra actividad. Cada tarjeta reutiliza el fondo de su tipo de evento en Agenda y muestra una flecha hacia su detalle. Toda la tarjeta funciona como enlace: reservas y clases utilizan sus pantallas de detalle y los bloqueos tienen un detalle de sólo lectura exclusivo de administración. Destaca el tipo sobre el organizador, modalidad o motivo clasificado del bloqueo, que se presenta como información secundaria. No incluye motivo de anulación, separadores, barra lateral, íconos ni tachado. No muestra cabecera, identificadores internos ni datos de responsable o momento de anulación. Se cierra con Escape o con clic fuera y devuelve el foco al chip. El chip y los datos se limitan a los eventos autorizados. La búsqueda por criterios descripta en este flujo se contempla dentro de Agenda y está pendiente de implementación.
 
 - **Objetivo:** localizar y visualizar reservas existentes, normales o con pase.
 - **Actores:** administrador, sin restricción; usuario con rol Reservas, limitado a las propias, desde el portal.

@@ -1,0 +1,12 @@
+<ul class="agenda-historial-lista">
+    {% for evento in agenda.detalle.anulados %}
+        <li>
+            <a class="agenda-turno agenda-turno-{{ evento.tipo }} agenda-turno-anulado" href="{% if evento.tipo == 'reserva' %}{% url 'reservas:reserva_detalle' evento.reserva.pk %}{% elif evento.tipo == 'clase' %}{% url 'clases:clase_detalle' evento.clase.pk %}{% else %}{% url 'agenda:bloqueo_detalle' evento.bloqueo.pk %}{% endif %}" aria-label="Ver detalle de {{ evento.get_tipo_display|lower }} {% if evento.tipo == 'reserva' %}{{ evento.reserva.numero }}{% elif evento.tipo == 'clase' %}{{ evento.clase.pk }}{% else %}{{ evento.bloqueo.numero }}{% endif %}">
+                {% include "agenda/_contenido_evento.html" with evento=evento only %}
+                <span class="agenda-anulado-flecha" aria-hidden="true">›</span>
+            </a>
+        </li>
+    {% empty %}
+        <li class="texto-secundario">No hay anulaciones disponibles para este turno.</li>
+    {% endfor %}
+</ul>

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}{{ bloqueo.numero }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
+{% block contenido %}
+<article class="tarjeta perfil">
+    <header class="perfil-cabecera">
+        <div>
+            <p class="perfil-contexto">Detalle de bloqueo</p>
+            <div class="perfil-identidad">
+                <h1>{{ bloqueo.numero }}</h1>
+                {% include "componentes/badge_estado.html" with estado=bloqueo.evento.estado texto=bloqueo.evento.get_estado_display only %}
+            </div>
+        </div>
+    </header>
+    <section class="perfil-datos" aria-label="Datos del bloqueo">
+        <dl class="perfil-lista">
+            <div class="perfil-fila"><dt>Sede</dt><dd>{{ bloqueo.evento.turno.cancha.sede.nombre }}</dd></div>
+            <div class="perfil-fila"><dt>Cancha</dt><dd>{{ bloqueo.evento.turno.cancha.nombre }}</dd></div>
+            <div class="perfil-fila"><dt>Fecha</dt><dd>{{ bloqueo.evento.turno.fecha|date:"d/m/Y" }}</dd></div>
+            <div class="perfil-fila"><dt>Horario</dt><dd>{{ bloqueo.evento.turno.hora_inicio|time:"H:i" }}–{{ bloqueo.evento.turno.hora_fin|time:"H:i" }}</dd></div>
+            <div class="perfil-fila"><dt>Motivo</dt><dd>{{ bloqueo.get_motivo_display }}</dd></div>
+            <div class="perfil-fila"><dt>Registrado por</dt><dd>{{ bloqueo.evento.registrado_por }}</dd></div>
+            <div class="perfil-fila"><dt>Registro</dt><dd>{{ bloqueo.evento.creado_en|date:"d/m/Y H:i" }}</dd></div>
+            {% if bloqueo.evento.observaciones %}<div class="perfil-fila"><dt>Observaciones</dt><dd>{{ bloqueo.evento.observaciones|linebreaksbr }}</dd></div>{% endif %}
+            {% if bloqueo.evento_origen %}
+                <div class="perfil-fila"><dt>Origen</dt><dd>
+                    {% if bloqueo.evento_origen.tipo == 'reserva' %}
+                        <a href="{% url 'reservas:reserva_detalle' bloqueo.evento_origen.reserva.pk %}">{{ bloqueo.evento_origen.reserva.numero }}</a>
+                    {% else %}
+                        <a href="{% url 'clases:clase_detalle' bloqueo.evento_origen.clase.pk %}">Clase {{ bloqueo.evento_origen.clase.pk }}</a>
+                    {% endif %}
+                </dd></div>
+            {% endif %}
+            {% if bloqueo.evento.estado == 'anulado' %}
+                <div class="perfil-fila"><dt>Motivo de anulación</dt><dd>{{ bloqueo.evento.motivo_anulacion|linebreaksbr }}</dd></div>
+                <div class="perfil-fila"><dt>Anulado por</dt><dd>{{ bloqueo.evento.anulado_por }}</dd></div>
+                <div class="perfil-fila"><dt>Anulación</dt><dd>{{ bloqueo.evento.anulado_en|date:"d/m/Y H:i" }}</dd></div>
+            {% endif %}
+        </dl>
+    </section>
+</article>
+{% endblock %}

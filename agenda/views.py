@@ -4,7 +4,7 @@ from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse, QueryDict
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
@@ -12,8 +12,9 @@ from django.views.decorators.http import require_GET, require_http_methods
 from django.views.decorators.vary import vary_on_headers
 
 from bloqueos.forms import BloqueoAnulacionForm, BloqueoForm
+from bloqueos.models import Bloqueo
 from bloqueos.servicios import anular_bloqueo, registrar_bloqueo
-from clases.permisos import exigir_acceso_clases
+from clases.permisos import exigir_acceso_clases, exigir_administracion_clases
 from instalaciones.models import Sede
 from reservas.disponibilidad import consultar_disponibilidad
 from reservas.forms import ReservaAnulacionForm
@@ -60,6 +61,7 @@ def agenda(request):
     if request.method == "POST":
         exigir_acceso_reservas(usuario)
     panel_acciones = request.GET.get("panel") == "acciones"
+    panel_historial = request.GET.get("panel") == "historial" and request.method == "GET"
     accion = request.POST.get("accion") if request.method == "POST" else None
     if not es_administrador and (
         panel_acciones or (request.method == "POST" and accion not in ("reservar", "anular"))
@@ -88,6 +90,7 @@ def agenda(request):
             "hora_seleccionada": None if panel_acciones else filtros["hora"],
             "fecha_maxima": formulario.fecha_maxima,
             "usuario": usuario, "es_administrador": es_administrador,
+            "historial": panel_historial,
         }
         datos = construir_agenda(**argumentos)
         detalle = datos["detalle"]
@@ -194,6 +197,7 @@ def agenda(request):
         "hay_sedes": sede_inicial is not None,
         "agenda": datos,
         "panel_acciones": panel_acciones,
+        "panel_historial": panel_historial,
         **contexto_acciones,
         "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", None)],
         "zona_horaria": timezone.get_current_timezone_name(),
@@ -202,10 +206,14 @@ def agenda(request):
     if request.headers.get("X-Agenda-Detalle") == "1":
         if not datos:
             return JsonResponse({"error": "Revisá la sede, fecha y cancha seleccionadas."}, status=400)
-        plantilla = "agenda/_acciones_dia.html" if panel_acciones else "agenda/_detalle_turno.html"
+        plantilla = (
+            "agenda/_acciones_dia.html" if panel_acciones else
+            "agenda/_historial_turno.html" if panel_historial else "agenda/_detalle_turno.html"
+        )
         respuesta = render(request, plantilla, contexto)
         respuesta["X-Agenda-Seleccion"] = (
             datos["url_acciones"] if panel_acciones else
+            datos["url_historial"] if panel_historial and datos["detalle"] else
             datos["url_seleccion"] if datos["detalle"] else datos["url_cerrar"]
         )
         return respuesta
@@ -290,3 +298,23 @@ def _preparar_acciones_dia(request, sede, fecha):
         "motivo_bloqueo": dict(formulario.fields["motivo_bloqueo"].choices).get(parametros["motivo_bloqueo"], "")
             if parametros else "",
     }
+
+
+@login_required
+@never_cache
+@require_GET
+def bloqueo_detalle(request, pk):
+    exigir_administracion_clases(request.user)
+    bloqueo = get_object_or_404(
+        Bloqueo.objects.select_related(
+            "evento__turno__cancha__sede", "evento__registrado_por", "evento__anulado_por",
+            "evento_origen__reserva", "evento_origen__clase",
+        ),
+        pk=pk, evento__tipo="bloqueo",
+    )
+    turno = bloqueo.evento.turno
+    url_agenda = enlace_agenda(turno.cancha.sede, turno.fecha, turno.cancha, turno.hora_inicio.hour)
+    return render(request, "agenda/bloqueo_detalle.html", {
+        "bloqueo": bloqueo,
+        "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", url_agenda), (bloqueo.numero, None)],
+    })
