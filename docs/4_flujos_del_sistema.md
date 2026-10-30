@@ -152,16 +152,16 @@ El perfil propio permite consultar la información y cambiar únicamente la cont
 
 - **Objetivo:** crear un usuario activo con credenciales de acceso, Público y Reservas, y opcionalmente Profesor o Alumno.
 - **Actor:** administrador.
-- **Entradas:** nombre, apellido, celular, email y fecha de nacimiento obligatorios; contraseña ingresada o sugerida por el sistema; observaciones opcionales; roles adicionales opcionales (Profesor, Alumno o ambos). El nombre de usuario se genera automáticamente y no es editable.
+- **Entradas:** nombre, apellido, celular, email y fecha de nacimiento obligatorios; contraseña ingresada o sugerida por el sistema; observaciones opcionales; rol adicional opcional (Profesor o Alumno, incompatibles entre sí). El nombre de usuario se genera automáticamente y no es editable.
 
 Recorrido:
 
 1. El administrador completa nombre, apellido, celular, email y fecha de nacimiento.
 2. Al escribir nombre y apellido, el sistema muestra el nombre de usuario formado por el apellido normalizado y la inicial del nombre. Consulta si ya existe y, si hace falta, agrega el primer número disponible desde `1`. El campo no se puede editar. El administrador puede pedir una contraseña alfanumérica aleatoria o ingresar una propia; en ambos casos se aplican los validadores de contraseña configurados en Django.
-3. El administrador puede marcar, opcionalmente, los roles Profesor o Alumno para otorgar junto con el alta.
+3. El administrador puede marcar, opcionalmente, Profesor o Alumno para otorgar junto con el alta. Seleccionar ambos se rechaza por incompatibilidad.
 4. Al confirmar, el sistema valida los campos obligatorios, que la fecha de nacimiento esté dentro del rango permitido y que nombre y apellido no contengan números. Genera nuevamente el nombre de usuario disponible y comprueba la unicidad del email sin distinguir mayúsculas de minúsculas.
 5. Django genera el hash PBKDF2-SHA256 de la contraseña; la base nunca recibe la contraseña en texto plano.
-6. En una transacción, el sistema crea el usuario con estado **Activo** y `debe_cambiar_contrasena = true`, le asigna automáticamente **Público** y **Reservas** y, si se marcaron, los roles Profesor o Alumno seleccionados. Cada asignación guarda una clave foránea al catálogo `roles`.
+6. En una transacción, el sistema crea el usuario con estado **Activo** y `debe_cambiar_contrasena = true`, le asigna automáticamente **Público** y **Reservas** y, si se seleccionó, el rol Profesor o Alumno autorizado. Cada asignación guarda una clave foránea al catálogo `roles`.
 7. Muestra el nombre de usuario definitivo y la contraseña provisoria en texto plano una única vez, para que el administrador se los comunique a la persona.
 
 Alternativas:
@@ -492,30 +492,35 @@ flowchart TD
 Recorrido:
 
 1. El administrador solicita el nuevo estado.
-2. El sistema muestra las canchas asociadas y el impacto operativo.
-3. El administrador confirma.
-4. El sistema bloquea la sede dentro de una transacción. Si se solicita inactivarla, comprueba que ninguna de sus canchas tenga reservas Programadas; si las hay, conserva el estado e informa el impedimento.
-5. Si la operación está permitida, establece el estado solicitado. Repetir la solicitud no invierte la acción.
+2. Para inactivar, el sistema comprueba las actividades de todas sus canchas. Rechaza la operación si existe una reserva, clase o bloqueo no Anulado cuyo turno esté en curso. Presenta una vista previa de todos los eventos Programados con inicio futuro.
+3. El administrador revisa el impacto y confirma.
+4. Dentro de una única transacción, el sistema bloquea los usuarios involucrados, la sede, las canchas del alcance, los turnos y los eventos en orden estable. Revalida permisos, estado, selección y límites horarios. Si la selección cambió, exige revisarla nuevamente.
+5. Al inactivar, anula las reservas, clases y bloqueos futuros revisados con el motivo común «Actividad anulada por desactivación de la sede» y establece el estado solicitado. Antes de terminar comprueba que ninguno de esos turnos haya comenzado. Un error revierte toda la operación.
 
 Alternativas:
 
-- La operación no elimina ni cambia automáticamente el estado de sus canchas.
-- Una sede inactiva no se ofrece para nuevas actividades.
-- Una reserva en curso o vencida que siga Programada también impide inactivar. Las futuras pueden cancelarse según sus reglas; las demás sólo pueden finalizarse después del turno, automáticamente o mediante **FL-42**. Las canceladas y completadas no impiden inactivar.
-- La reactivación se permite aunque haya reservas Programadas. Editar los datos de la sede no modifica su estado.
+- Los eventos Anulados y los turnos terminados no impiden inactivar. Las reservas y clases terminadas pendientes de finalización conservan su procesamiento habitual; los bloqueos terminados conservan su estado y ocupación histórica.
+- Las anulaciones conservan participantes, importes y relaciones históricas. No crean bloqueos ni modifican cobros, devoluciones o contrataciones.
+- Una sede inactiva no admite nuevas actividades.
+- Reactivar no restaura eventos Anulados. No modifica el estado individual de las canchas. Reactivar la sede no reactiva sus canchas.
+- Repetir una solicitud que establece el estado vigente no genera cambios ni sobrescribe auditoría. Editar los datos no modifica el estado.
 
-- **Resultado:** sede activa o inactiva.
-- **Datos:** sedes, canchas, turnos y reservas con sus detalles para informar impacto y validar la desactivación.
+- **Resultado:** sede activa o inactiva, con las anulaciones confirmadas conjuntamente cuando corresponde.
+- **Datos:** usuarios, sedes, canchas, turnos, eventos, reservas, clases, asignaciones y bloqueos.
 
 ```mermaid
 flowchart TD
-    A[Solicitar cambio] --> B[Mostrar canchas e impacto]
-    B --> C{Confirmar}
-    C -->|No| D[Conservar estado]
-    C -->|Sí| E[Bloquear sede y comprobar reservas]
-    E --> F{Activar o sin reservas Programadas}
-    F -->|Sí| G[Establecer estado solicitado]
-    F -->|No| H[Conservar estado e informar impedimento]
+    A[Solicitar estado] --> B{Inactivar}
+    B -->|No| C[Revalidar acceso y activar]
+    B -->|Sí| D{Hay actividades en curso}
+    D -->|Sí| E[Conservar estado e informar impedimento]
+    D -->|No| F[Revisar eventos Programados futuros]
+    F --> G{Confirmar}
+    G -->|No| H[Conservar estado]
+    G -->|Sí| I[Bloquear y revalidar selección y horarios]
+    I --> J{Selección vigente y turnos futuros}
+    J -->|No| K[Revertir y solicitar nueva revisión]
+    J -->|Sí| L[Anular eventos revisados e inactivar en una transacción]
 ```
 
 #### FL-12. Registrar una cancha
@@ -585,30 +590,35 @@ flowchart TD
 Recorrido:
 
 1. El administrador solicita el nuevo estado.
-2. El sistema muestra el impacto sobre nuevas actividades.
-3. El administrador confirma.
-4. El sistema bloquea primero la sede y después la cancha dentro de una transacción. Si se solicita inactivarla, comprueba que no tenga reservas Programadas; si las hay, conserva el estado e informa el impedimento.
-5. Si la operación está permitida, establece el estado solicitado. Repetir la solicitud no invierte la acción.
+2. Para inactivar, el sistema comprueba las actividades de la cancha seleccionada. Rechaza la operación si existe una reserva, clase o bloqueo no Anulado cuyo turno esté en curso. Presenta una vista previa de todos los eventos Programados con inicio futuro.
+3. El administrador revisa el impacto y confirma.
+4. Dentro de una única transacción, el sistema bloquea los usuarios involucrados, la sede, las canchas del alcance, los turnos y los eventos en orden estable. Revalida permisos, estado, selección y límites horarios. Si la selección cambió, exige revisarla nuevamente.
+5. Al inactivar, anula las reservas, clases y bloqueos futuros revisados con el motivo común «Actividad anulada por desactivación de la cancha» y establece el estado solicitado. Antes de terminar comprueba que ninguno de esos turnos haya comenzado. Un error revierte toda la operación.
 
 Alternativas:
 
-- Una cancha inactiva no se ofrece para nuevas clases, reservas o turnos de planilla.
-- Las actividades históricas conservan la referencia.
-- Las reservas en curso o vencidas que sigan Programadas también impiden inactivar. Las canceladas y completadas no lo impiden.
-- La reactivación está permitida aunque haya reservas Programadas. No activa la sede ni habilita nuevas reservas si la sede sigue inactiva. Editar los datos de la cancha no modifica su estado.
+- Los eventos Anulados y los turnos terminados no impiden inactivar. Las reservas y clases terminadas pendientes de finalización conservan su procesamiento habitual; los bloqueos terminados conservan su estado y ocupación histórica.
+- Las anulaciones conservan participantes, importes y relaciones históricas. No crean bloqueos ni modifican cobros, devoluciones o contrataciones.
+- Una cancha inactiva no admite nuevas actividades.
+- Reactivar no restaura eventos Anulados. Reactivar la cancha no activa su sede ni habilita nuevas actividades si la sede sigue inactiva.
+- Repetir una solicitud que establece el estado vigente no genera cambios ni sobrescribe auditoría. Editar los datos no modifica el estado.
 
-- **Resultado:** cancha activa o inactiva.
-- **Datos:** sede, cancha, turnos y reservas con sus detalles para validar la desactivación.
+- **Resultado:** cancha activa o inactiva, con las anulaciones confirmadas conjuntamente cuando corresponde.
+- **Datos:** usuarios, sedes, canchas, turnos, eventos, reservas, clases, asignaciones y bloqueos.
 
 ```mermaid
 flowchart TD
-    A[Solicitar cambio] --> B[Mostrar impacto]
-    B --> C{Confirmar}
-    C -->|No| D[Conservar estado]
-    C -->|Sí| E[Bloquear sede y cancha y comprobar reservas]
-    E --> F{Activar o sin reservas Programadas}
-    F -->|Sí| G[Establecer estado solicitado]
-    F -->|No| H[Conservar estado e informar impedimento]
+    A[Solicitar estado] --> B{Inactivar}
+    B -->|No| C[Revalidar acceso y activar]
+    B -->|Sí| D{Hay actividades en curso}
+    D -->|Sí| E[Conservar estado e informar impedimento]
+    D -->|No| F[Revisar eventos Programados futuros]
+    F --> G{Confirmar}
+    G -->|No| H[Conservar estado]
+    G -->|Sí| I[Bloquear y revalidar selección y horarios]
+    I --> J{Selección vigente y turnos futuros}
+    J -->|No| K[Revertir y solicitar nueva revisión]
+    J -->|Sí| L[Anular eventos revisados e inactivar en una transacción]
 ```
 
 #### FL-57. Consultar el horario de funcionamiento de una sede
