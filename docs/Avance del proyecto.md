@@ -176,18 +176,18 @@ La migración `auditoria.0003_triggers_auditoria` instala la captura de las diez
 
 ## Navegación e inicio
 
-El navbar ofrece Inicio, Agenda, Clases y las herramientas administrativas disponibles según los roles y permisos vigentes. Clases mantiene un desplegable incluso con un solo destino: Planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Mi actividad enlaza a la consulta de Actividad de clases del titular.
+El navbar ofrece Inicio, Agenda, Clases, Oferta para cuentas con rol Público y las herramientas administrativas disponibles según los roles y permisos vigentes. Clases mantiene un desplegable incluso con un solo destino: Planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Mi actividad enlaza a la consulta de Actividad de clases del titular.
 
 Administración agrupa Usuarios, Sedes y canchas, Planes, Pases, Feriados y Auditoría en ese orden. Sedes y canchas enlaza al listado de Sedes. Si sólo hay un destino administrativo autorizado, se presenta directamente. Mi perfil y Cerrar sesión permanecen disponibles en la navegación.
 
-Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver catálogos para elegir entre Planes y Pases de cancha. Ambos catálogos tienen acceso administrativo y su propia entrada en Administración. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
+Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver catálogos para elegir entre Planes y Pases de cancha. La gestión de ambos catálogos tiene acceso administrativo y su propia entrada en Administración. En el portal, Oferta de la academia permite consultar productos Activos y tarifas vigentes en modo de lectura. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
 
 La ruta actual resalta el destino o su grupo. Los desplegables abren con clic, Enter o Espacio; las flechas recorren sus enlaces y Escape cierra devolviendo el foco al disparador. En móvil se expanden dentro de la navegación vertical. Las rutas mantienen las autorizaciones del servidor.
 
 
 ## Catálogo de planes
 
-La administración dispone de alta, listado, búsqueda por nombre o descripción, filtro por estado, detalle y edición de planes mensuales. El listado muestra veinticinco planes por página y cada fila ofrece un único acceso al detalle. La ficha presenta características, descripción cuando existe, precio y datos de registro; la edición se abre desde su acción y los cambios de estado requieren confirmación.
+La administración dispone de alta, listado, búsqueda por nombre o descripción, filtro por estado, detalle y edición de planes mensuales. Los planes se ordenan por modalidad, duración del encuentro y frecuencia semanal, en orden ascendente; nombre e identificador resuelven los empates. Este orden se aplica a la administración y al portal. El listado administrativo muestra veinticinco planes por página y cada fila ofrece un único acceso al detalle. La ficha presenta características, descripción cuando existe, precio y datos de registro; la edición se abre desde su acción y los cambios de estado requieren confirmación.
 
 Cada plan define nombre, modalidad Individual o Grupal, entre uno y siete encuentros semanales, encuentros de una o dos horas y precio mensual no negativo. La descripción es opcional. El nombre es único entre planes Activos sin distinguir mayúsculas y minúsculas; activar un plan comprueba nuevamente esa condición. Las características comerciales se mantienen separadas de las clases y de los cobros.
 
@@ -211,3 +211,16 @@ El catálogo define la oferta comercial. Las contrataciones, las coberturas apli
 Planes y pases comparten el formulario de catálogo, la protección de la selección y el guardado auditado, conservando campos y recorridos específicos. La entrada Membresías permite elegir entre los dos catálogos y los breadcrumbs conservan ese acceso.
 
 Revisión manual: crear un pase Libre y uno de Fin de semana; revisar nombres repetidos, importes cero y negativos, límite diario cero y positivo, filtro por estado, edición y activación/desactivación. Comprobar también reenvíos, dos pestañas editando el mismo producto, rechazo de acceso no administrativo y las diferencias en Auditoría.
+
+
+## Oferta de la academia en el portal
+
+Las cuentas activas con rol Público y sin cambio de contraseña pendiente acceden a Oferta desde el navbar y desde el inicio del portal. La entrada presenta Planes de clases, Pases de cancha y Tarifas de reservas. Los administradores conservan su acceso de gestión y pueden consultar las pantallas de oferta por sus rutas.
+
+Los catálogos del portal muestran únicamente productos Activos, con búsqueda por nombre o descripción y veinticinco resultados por página. Las tarjetas presentan nombre, categoría, precio mensual y características comerciales: frecuencia y cantidad de clases por encuentro para planes; variante, límite diario y adicional por invitado sin cobertura para pases. La descripción, si existe, ocupa hasta dos líneas y habilita Leer descripción. Esa acción abre un modal en la misma página con el nombre y el texto completo, conservando los párrafos y escapando HTML. El modal se cierra con ×, Escape o clic fuera y devuelve el foco al botón. Una tarjeta sin descripción no ofrece acción y las tarjetas del catálogo no son enlaces completos. El portal no tiene pantallas separadas de detalle de productos; la administración conserva las suyas.
+
+La consulta de tarifas muestra las sedes Activas con precio de reserva configurado, en pesos por turno de una hora, común a sus canchas. Cada sede ofrece un acceso a Agenda para consultar disponibilidad. Las sedes Inactivas y las tarifas sin configurar no se incluyen en esta oferta.
+
+Las pantallas de oferta son de lectura: no incluyen edición, cambios de estado, altas comerciales, datos internos de registro ni formularios de contratación. Las escrituras conservan las rutas y controles administrativos. Las consultas sólo admiten GET y comprueban en el servidor que la cuenta esté habilitada y tenga Público o Administrador; consultar no crea turnos, contrataciones ni auditoría.
+
+Revisión manual: acceder con Público, Profesor y Alumno que conserven Público; consultar ambos catálogos y sus descripciones, buscar y navegar páginas; revisar importes cero, productos Inactivos por enlace directo, sedes Inactivas y tarifas ausentes. Comprobar la navegación hacia Agenda, el rechazo de acceso sin rol habilitado y que las rutas administrativas sigan rechazando a cuentas no administrativas.

@@ -1,10 +1,14 @@
 from django.urls import path
 
-from . import views
+from . import views, vistas_oferta
 
 app_name = "membresias"
 
 urlpatterns = [
+    path("oferta/", vistas_oferta.oferta, name="oferta"),
+    path("oferta/planes/", vistas_oferta.oferta_planes, name="oferta_planes"),
+    path("oferta/pases/", vistas_oferta.oferta_pases, name="oferta_pases"),
+    path("oferta/tarifas/", vistas_oferta.oferta_tarifas, name="oferta_tarifas"),
     path("", views.catalogos, name="catalogos"),
     path("pases/", views.pase_lista, name="pase_lista"),
     path("pases/nuevo/", views.pase_formulario, name="pase_crear"),

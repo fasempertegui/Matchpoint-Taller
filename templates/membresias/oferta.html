@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Oferta de la academia | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/oferta.css' %}">{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina">
+    <div><h1>Oferta de la academia</h1><p class="texto-secundario">Elegí cómo querés entrenar y jugar.</p></div>
+</header>
+<section class="inicio-modulos oferta-opciones" aria-label="Oferta de la academia">
+    <article class="tarjeta inicio-modulo oferta-tarjeta">
+        <h2>Planes de clases</h2>
+        <p>Conocé los planes mensuales de clases individuales y grupales.</p>
+        <a class="boton boton-secundario oferta-enlace" href="{% url 'membresias:oferta_planes' %}">Ver planes</a>
+    </article>
+    <article class="tarjeta inicio-modulo oferta-tarjeta">
+        <h2>Pases de cancha</h2>
+        <p>Explorá los pases mensuales libres y de fin de semana.</p>
+        <a class="boton boton-secundario oferta-enlace" href="{% url 'membresias:oferta_pases' %}">Ver pases</a>
+    </article>
+    <article class="tarjeta inicio-modulo oferta-tarjeta">
+        <h2>Reservas de cancha</h2>
+        <p>Consultá las tarifas por turno de una hora de nuestras sedes.</p>
+        <a class="boton boton-secundario oferta-enlace" href="{% url 'membresias:oferta_tarifas' %}">Ver tarifas</a>
+    </article>
+</section>
+{% endblock %}

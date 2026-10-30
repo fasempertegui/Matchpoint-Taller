@@ -34,7 +34,7 @@ class Plan(models.Model):
 
     class Meta:
         db_table = "planes"
-        ordering = ("nombre", "pk")
+        ordering = ("modalidad", "cantidad_clases_por_encuentro", "frecuencia_semanal", "nombre", "pk")
         default_permissions = ()
         verbose_name = "plan"
         verbose_name_plural = "planes"

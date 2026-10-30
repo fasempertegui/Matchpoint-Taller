@@ -28,6 +28,10 @@ def navegacion(request):
         "Consultá tus clases y los horarios de las sedes." if not administrador
         else "Consulta de clases, reservas, bloqueos y disponibilidad de las canchas.",
     )
+    oferta = enlace(
+        "Oferta", "membresias:oferta", namespace == "membresias" and ruta.url_name.startswith("oferta"),
+        "Planes de clases, pases de cancha y tarifas de reservas.",
+    ) if Rol.PUBLICO in roles else None
     clases = []
     if administrador:
         clases.append(enlace("Planilla semanal", "clases:planilla", clases_activo, "Programación habitual de clases."))
@@ -83,11 +87,16 @@ def navegacion(request):
             "destino": enlace("Membresías", "membresias:catalogos", namespace == "membresias", ""),
             "boton": "Ver catálogos",
         })
+    if oferta:
+        modulos_inicio.append({
+            "nombre": "Oferta de la academia", "descripcion": oferta["descripcion"],
+            "destino": oferta, "boton": "Ver oferta",
+        })
     if auditoria:
         modulos_inicio.append({"nombre": "Auditoría", "descripcion": auditoria["descripcion"], "destino": auditoria})
         administracion.append(auditoria)
     return {"navegacion_app": {
-        "inicio_activo": nombre_vista == "inicio", "agenda": agenda,
+        "inicio_activo": nombre_vista == "inicio", "agenda": agenda, "oferta": oferta,
         "clases": clases, "clases_activo": clases_activo,
         "administracion": administracion,
         "administracion_activo": namespace == "membresias" or any(item["activo"] for item in administracion),

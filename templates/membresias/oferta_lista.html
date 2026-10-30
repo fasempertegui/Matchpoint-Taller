@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}{{ titulo }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/oferta.css' %}">{% endblock %}
+{% block contenido %}
+{% if tipo == 'plan' %}{% url 'membresias:oferta_planes' as url_catalogo %}{% else %}{% url 'membresias:oferta_pases' as url_catalogo %}{% endif %}
+<header class="oferta-catalogo-encabezado">
+    <h1>{{ titulo }}</h1>
+    {% if pagina or busqueda %}
+        <form class="oferta-buscador" method="get" role="search" aria-label="Buscar en el catálogo" data-filtros-automaticos>
+            <div class="oferta-buscador-campo">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg>
+                <input class="form-control" type="search" id="oferta-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="Buscar en el catálogo" aria-label="Buscar por nombre o descripción">
+            </div>
+            {% if busqueda %}<a class="oferta-limpiar" href="{{ url_catalogo }}" data-limpiar-filtros>Limpiar búsqueda</a>{% endif %}
+            <noscript><button class="boton boton-secundario boton-chico" type="submit">Buscar</button></noscript>
+        </form>
+    {% endif %}
+</header>
+{% if pagina or busqueda %}
+    {% if pagina %}
+        <section class="inicio-modulos oferta-catalogo" aria-label="{{ titulo }} disponibles">
+            {% for producto in pagina %}{% include "membresias/_oferta_producto.html" with producto=producto tipo=tipo only %}{% endfor %}
+        </section>
+    {% else %}
+        <section class="tarjeta estado-vacio" aria-label="Sin resultados">
+            <p>No encontramos opciones para tu búsqueda. Probá con otro nombre o explorá el catálogo completo.</p>
+            <a class="boton boton-secundario" href="{{ url_catalogo }}">Limpiar búsqueda</a>
+        </section>
+    {% endif %}
+    {% if pagina.paginator.num_pages > 1 %}
+        <nav class="acciones" aria-label="Páginas del catálogo">
+            {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+            <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+            {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+        </nav>
+    {% endif %}
+{% else %}<p class="tarjeta estado-vacio">No hay {{ titulo|lower }} disponibles en este momento.</p>{% endif %}
+<dialog class="modal-confirmacion oferta-descripcion-modal" id="oferta-descripcion" aria-labelledby="oferta-descripcion-titulo" data-oferta-descripcion-modal>
+    <div class="oferta-descripcion-cuerpo">
+        <header class="modal-confirmacion-cabecera oferta-descripcion-cabecera">
+            <h2 id="oferta-descripcion-titulo" data-oferta-descripcion-titulo></h2>
+            <button class="oferta-descripcion-cerrar" type="button" data-oferta-descripcion-cerrar aria-label="Cerrar descripción" autofocus>×</button>
+        </header>
+        <div class="modal-confirmacion-contenido" tabindex="0" role="region" aria-label="Descripción completa"><p data-oferta-descripcion-texto></p></div>
+    </div>
+</dialog>
+<script src="{% static 'js/filtros.js' %}" defer></script>
+<script src="{% static 'js/oferta-descripcion.js' %}" defer></script>
+{% endblock %}

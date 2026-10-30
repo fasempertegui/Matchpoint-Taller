@@ -696,7 +696,7 @@ Recorrido:
 
 1. El actor elige el catálogo y los filtros.
 2. El sistema consulta `planes` o `pases`, según lo seleccionado.
-3. Muestra nombre, descripción, configuración y precio vigente, con acceso al detalle.
+3. En administración muestra nombre, descripción, configuración y precio vigente, con acceso al detalle. En el portal presenta tarjetas con los datos comerciales y hasta dos líneas de descripción; si existe texto, Leer descripción abre un modal con el contenido completo, sin navegar a una pantalla de detalle. Las tarjetas sin descripción no ofrecen esa acción.
 
 Alternativas:
 

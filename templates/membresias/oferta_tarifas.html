@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Tarifas de reservas | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/oferta.css' %}">{% endblock %}
+{% block contenido %}
+<header class="oferta-catalogo-encabezado"><h1>Tarifas de reservas</h1></header>
+{% if sedes %}
+    <section class="inicio-modulos oferta-catalogo oferta-tarifas" aria-label="Tarifas vigentes por sede">
+        {% for sede in sedes %}
+            <article class="tarjeta inicio-modulo oferta-tarjeta oferta-producto oferta-producto-reserva">
+                <header class="oferta-producto-identidad">
+                    <h2>{{ sede.nombre }}</h2>
+                </header>
+                <div class="oferta-producto-precio">
+                    <div class="oferta-producto-importe"><strong>$ {{ sede.precio_reserva_vigente|floatformat:"-2g" }}</strong><span>por turno</span></div>
+                </div>
+                <ul class="oferta-producto-beneficios" aria-label="Características">
+                    <li>
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        <span><strong>1 hora</strong> por turno</span>
+                    </li>
+                </ul>
+                <a class="boton boton-secundario oferta-reserva-enlace" href="{% url 'agenda:agenda' %}?sede={{ sede.pk }}" aria-label="Consultar disponibilidad de {{ sede.nombre }}">Ver en Agenda</a>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}<p class="tarjeta estado-vacio">No hay tarifas de reservas disponibles en este momento.</p>{% endif %}
+{% endblock %}
