@@ -178,8 +178,21 @@ La migración `auditoria.0003_triggers_auditoria` instala la captura de las diez
 
 El navbar ofrece Inicio, Agenda, Clases y las herramientas administrativas disponibles según los roles y permisos vigentes. Clases mantiene un desplegable incluso con un solo destino: Planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Mi actividad enlaza a la consulta de Actividad de clases del titular.
 
-Administración agrupa Usuarios, Sedes y canchas, Feriados y Auditoría en ese orden. Sedes y canchas enlaza al listado de Sedes. Si sólo hay un destino administrativo autorizado, se presenta directamente. Mi perfil y Cerrar sesión permanecen disponibles en la navegación.
+Administración agrupa Usuarios, Sedes y canchas, Planes, Feriados y Auditoría en ese orden. Sedes y canchas enlaza al listado de Sedes. Si sólo hay un destino administrativo autorizado, se presenta directamente. Mi perfil y Cerrar sesión permanecen disponibles en la navegación.
 
-Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías y Pagos e ingresos aparecen al final de la home administrativa como En preparación, sin botones ni entradas en el navbar.
+Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver planes para acceder al catálogo administrativo de planes. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
 
 La ruta actual resalta el destino o su grupo. Los desplegables abren con clic, Enter o Espacio; las flechas recorren sus enlaces y Escape cierra devolviendo el foco al disparador. En móvil se expanden dentro de la navegación vertical. Las rutas mantienen las autorizaciones del servidor.
+
+
+## Catálogo de planes
+
+La administración dispone de alta, listado, búsqueda por nombre o descripción, filtro por estado, detalle y edición de planes mensuales. El listado muestra veinticinco planes por página y cada fila ofrece un único acceso al detalle. La ficha presenta características, descripción cuando existe, precio y datos de registro; la edición se abre desde su acción y los cambios de estado requieren confirmación.
+
+Cada plan define nombre, modalidad Individual o Grupal, entre uno y siete encuentros semanales, encuentros de una o dos horas y precio mensual no negativo. La descripción es opcional. El nombre es único entre planes Activos sin distinguir mayúsculas y minúsculas; activar un plan comprueba nuevamente esa condición. Las características comerciales se mantienen separadas de las clases y de los cobros.
+
+El acceso exige una cuenta activa con rol Administrador y sin cambio de contraseña pendiente. Los servicios de escritura vuelven a comprobar el acceso con el usuario bloqueado y guardan los cambios dentro de una transacción. La edición y el cambio de estado utilizan una selección firmada vinculada al administrador, al plan y a su última modificación: si cambió, se exige revisar sus datos. La edición no modifica el estado; activar o desactivar establece un estado explícito y repetir el estado vigente no genera cambios. Guardar datos iguales a los vigentes conserva la fecha de modificación.
+
+Las restricciones de PostgreSQL protegen configuración, importes, estado y nombres activos. Los identificadores se generan en la base. El trigger de planes registra modificaciones, cambios de estado y eliminaciones SQL mediante la auditoría transversal, con actor y UUID del contexto; las altas no agregan entradas al historial. El catálogo conserva sus filas y no expone eliminación desde la aplicación.
+
+Revisión manual: crear y editar un plan, revisar nombres Activos repetidos incluso con mayúsculas distintas, precio cero y negativo, límites de frecuencia y duración, búsqueda y filtros, activación/desactivación y solicitudes repetidas. Revisar también una edición abierta en dos pestañas, el rechazo de acceso a cuentas no administrativas y las diferencias registradas en Auditoría.

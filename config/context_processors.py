@@ -47,7 +47,13 @@ def navegacion(request):
             "Sedes y canchas", "instalaciones:sede_lista", namespace == "instalaciones",
             "Consulta y gestión de sedes, canchas, horarios y precios.",
         ))
+    planes = None
     if administrador:
+        planes = enlace(
+            "Planes", "membresias:plan_lista", namespace == "membresias",
+            "Catálogo de planes mensuales de clases.",
+        )
+        administracion.append(planes)
         administracion.append(enlace(
             "Feriados", "clases:feriado_lista", feriados_activo,
             "Consulta y gestión de feriados.",
@@ -59,13 +65,18 @@ def navegacion(request):
     modulos_inicio = [{"nombre": "Agenda", "descripcion": agenda["descripcion"], "destino": agenda}]
     modulos_inicio.extend(
         {"nombre": item["nombre"], "descripcion": item["descripcion"], "destino": item}
-        for item in administracion if item["nombre"] != "Feriados"
+        for item in administracion if item["nombre"] not in ("Feriados", "Planes")
     )
     if clases:
         modulos_inicio.append({
             "nombre": "Clases",
             "descripcion": "Programación de clases, asignación de profesores y alumnos, y registro de asistencia.",
             "destino": clases[0], "boton": "Ver planilla semanal" if administrador else "Mi actividad",
+        })
+    if planes:
+        modulos_inicio.append({
+            "nombre": "Membresías", "descripcion": planes["descripcion"],
+            "destino": planes, "boton": "Ver planes",
         })
     if auditoria:
         modulos_inicio.append({"nombre": "Auditoría", "descripcion": auditoria["descripcion"], "destino": auditoria})

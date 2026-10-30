@@ -202,7 +202,7 @@ Los catálogos de planes y pases son independientes. Cada producto guarda nombre
 
 Cada combinación de plan y cada variante de pase es un producto completo de su catálogo. Nombre, descripción y precios pueden actualizarse; la configuración estructural se conserva cuando tiene contrataciones históricas. Un producto inactivo no admite contrataciones nuevas y no altera las existentes.
 
-El nombre es único entre productos Activos de cada catálogo; planes y pases no comparten esa comparación. Los precios de catálogo pueden ser cero y no pueden ser negativos; el límite diario de un pase es positivo.
+El nombre es único sin distinguir mayúsculas y minúsculas entre productos Activos de cada catálogo; planes y pases no comparten esa comparación. Los precios de catálogo pueden ser cero y no pueden ser negativos; el límite diario de un pase es positivo.
 
 `planes_usuarios` y `pases_usuarios` registran las contrataciones por separado. Cada contratación identifica al usuario y al producto y conserva el mes cubierto, fecha efectiva de alta, precio aplicado, responsable del registro, observaciones y estado Activo, Anulado o Vencido. Las contrataciones se registran administrativamente con responsable obligatorio y cobro separado.
 

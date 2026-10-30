@@ -170,7 +170,7 @@ Representa la definición comercial de un plan mensual de clases.
 
 `modalidad` admite `individual` o `grupal`; `frecuencia_semanal`, valores de uno a siete; `cantidad_clases_por_encuentro`, uno o dos. Cada clase concreta se representa por separado en `clases`. `precio_vigente` es no negativo y `descripcion` admite cadena vacía, sin `NULL`.
 
-El nombre tiene unicidad parcial entre filas con `estado = 'activo'`. Las contrataciones se almacenan en `planes_usuarios`; esta tabla no contiene alumnos, asignaciones ni cobros.
+El nombre tiene unicidad parcial sin distinguir mayúsculas y minúsculas mediante `LOWER(nombre)` entre filas con `estado = 'activo'`. Las contrataciones se almacenan en `planes_usuarios`; esta tabla no contiene alumnos, asignaciones ni cobros.
 
 ### 4.6 `pases`
 

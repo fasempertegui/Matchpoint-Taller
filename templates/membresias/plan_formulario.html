@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} | Academia TM{% endblock %}
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario">
+    <h1>{{ titulo }}</h1>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% for campo in formulario.hidden_fields %}{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
+        {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+        {% for campo in formulario.visible_fields %}
+            {% if campo.name == 'descripcion' %}
+                <details class="observaciones-opcionales"{% if campo.value or campo.errors %} open{% endif %}>
+                    <summary>Descripción (opcional)</summary>
+                    <div class="grupo-campo">
+                        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}
+                        {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </details>
+            {% else %}
+                <div class="grupo-campo">
+                    <label for="{{ campo.id_for_label }}">{{ campo.label }}{% if campo.field.required %} <span aria-hidden="true">*</span>{% endif %}</label>
+                    {{ campo }}
+                    {% if campo.help_text %}<small>{{ campo.help_text }}</small>{% endif %}
+                    {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+        <div class="acciones-formulario">
+            <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+            <button class="boton boton-primario" type="submit">Guardar plan</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

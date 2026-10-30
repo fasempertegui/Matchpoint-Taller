@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "bloqueos.apps.BloqueosConfig",
     "clases.apps.ClasesConfig",
     "agenda.apps.AgendaConfig",
+    "membresias.apps.MembresiasConfig",
 ]
 
 MIDDLEWARE = [
