@@ -21,8 +21,8 @@
                 <h2 id="contratacion-datos-titulo">Contratación</h2>
                 <dl class="perfil-lista">
                     <div class="perfil-fila"><dt>Número</dt><dd>{{ contratacion.pk }}</dd></div>
-                    <div class="perfil-fila"><dt>Usuario</dt><dd><a href="{% url 'usuarios:usuario_detalle' contratacion.usuario_id %}">{{ contratacion.usuario }}</a></dd></div>
-                    <div class="perfil-fila"><dt>{{ tipo|capfirst }}</dt><dd><a href="{% url ruta_producto contratacion.producto.pk %}">{{ contratacion.producto.nombre }}</a></dd></div>
+                    {% if not propias %}<div class="perfil-fila"><dt>Usuario</dt><dd><a href="{% url 'usuarios:usuario_detalle' contratacion.usuario_id %}">{{ contratacion.usuario }}</a></dd></div>{% endif %}
+                    <div class="perfil-fila"><dt>{{ tipo|capfirst }}</dt><dd>{% if propias %}{{ contratacion.producto.nombre }}{% else %}<a href="{% url ruta_producto contratacion.producto.pk %}">{{ contratacion.producto.nombre }}</a>{% endif %}</dd></div>
                     <div class="perfil-fila"><dt>Período cubierto</dt><dd>{{ contratacion.fecha_inicio|date:"d/m/Y" }} al {{ contratacion.fecha_fin|date:"d/m/Y" }}</dd></div>
                     <div class="perfil-fila"><dt>Fecha efectiva de alta</dt><dd>{{ contratacion.fecha_alta|date:"d/m/Y" }}</dd></div>
                     {% if tipo == 'plan' %}
@@ -37,15 +37,15 @@
                 </dl>
                 <p class="texto-secundario">El importe aplicado se conserva en esta contratación. El cobro se registra por separado.{% if tipo == 'pase' %} La cobertura corresponde únicamente al período cubierto y a los días habilitados.{% endif %}</p>
             </section>
-            {% if contratacion.observaciones %}<section class="perfil-seccion" aria-labelledby="contratacion-observaciones-titulo"><h2 id="contratacion-observaciones-titulo">Observaciones</h2><p class="perfil-observaciones">{{ contratacion.observaciones|linebreaksbr }}</p></section>{% endif %}
+            {% if not propias and contratacion.observaciones %}<section class="perfil-seccion" aria-labelledby="contratacion-observaciones-titulo"><h2 id="contratacion-observaciones-titulo">Observaciones</h2><p class="perfil-observaciones">{{ contratacion.observaciones|linebreaksbr }}</p></section>{% endif %}
             {% if contratacion.estado == 'anulado' %}
                 <section class="perfil-seccion" aria-labelledby="contratacion-anulacion-titulo">
                     <h2 id="contratacion-anulacion-titulo">Anulación</h2>
                     <dl class="perfil-lista">
-                        <div class="perfil-fila"><dt>Responsable</dt><dd>{{ contratacion.anulado_por }}</dd></div>
+                        {% if not propias %}<div class="perfil-fila"><dt>Responsable</dt><dd>{{ contratacion.anulado_por }}</dd></div>{% endif %}
                         <div class="perfil-fila"><dt>Fecha</dt><dd>{{ contratacion.anulado_en|date:"d/m/Y H:i" }}</dd></div>
                     </dl>
-                    <p class="perfil-observaciones">{{ contratacion.motivo_anulacion|linebreaksbr }}</p>
+                    {% if not propias %}<p class="perfil-observaciones">{{ contratacion.motivo_anulacion|linebreaksbr }}</p>{% endif %}
                 </section>
             {% endif %}
         </div>
@@ -53,11 +53,11 @@
             <section class="perfil-seccion" aria-labelledby="contratacion-registro-titulo">
                 <h2 id="contratacion-registro-titulo">Registro</h2>
                 <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Registrada por</dt><dd>{{ contratacion.registrado_por }}</dd></div>
+                    {% if not propias %}<div class="perfil-fila"><dt>Registrada por</dt><dd>{{ contratacion.registrado_por }}</dd></div>{% endif %}
                     <div class="perfil-fila"><dt>Fecha de registro</dt><dd>{{ contratacion.creado_en|date:"d/m/Y H:i" }}</dd></div>
                 </dl>
             </section>
-            {% if contratacion.estado == 'activo' %}
+            {% if not propias and contratacion.estado == 'activo' %}
                 <section class="perfil-seccion" aria-labelledby="contratacion-administracion-titulo">
                     <h2 id="contratacion-administracion-titulo">Administración</h2>
                     <div class="perfil-acciones">

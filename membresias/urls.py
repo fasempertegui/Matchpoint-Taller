@@ -1,10 +1,13 @@
 from django.urls import path
 
-from . import views, vistas_contrataciones, vistas_oferta
+from . import views, vistas_contrataciones, vistas_oferta, vistas_propias
 
 app_name = "membresias"
 
 urlpatterns = [
+    path("mis-contrataciones/", vistas_propias.mis_contrataciones, name="mis_contrataciones"),
+    path("mis-contrataciones/planes/<int:pk>/", vistas_propias.contratacion_propia_detalle, name="mi_plan_contratado"),
+    path("mis-contrataciones/pases/<int:pk>/", vistas_propias.contratacion_propia_detalle, {"tipo": "pase"}, name="mi_pase_contratado"),
     path("oferta/", vistas_oferta.oferta, name="oferta"),
     path("oferta/planes/", vistas_oferta.oferta_planes, name="oferta_planes"),
     path("oferta/pases/", vistas_oferta.oferta_pases, name="oferta_pases"),

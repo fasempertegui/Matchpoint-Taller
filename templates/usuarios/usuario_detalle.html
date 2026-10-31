@@ -110,6 +110,15 @@
                 </dl>
             </section>
 
+            {% if request.user.pk == usuario_obj.pk and request.user.is_active and not request.user.debe_cambiar_contrasena %}
+                <section class="perfil-seccion" aria-labelledby="mis-contrataciones-titulo">
+                    <h2 id="mis-contrataciones-titulo">Mis contrataciones</h2>
+                    <div class="perfil-acciones">
+                        <a class="perfil-enlace" href="{% url 'membresias:mis_contrataciones' %}">Ver mis planes y pases</a>
+                    </div>
+                </section>
+            {% endif %}
+
             {% if puede_consultar_actividad %}
                 <section class="perfil-seccion" aria-labelledby="actividad-clases-titulo">
                     <h2 id="actividad-clases-titulo">Clases</h2>

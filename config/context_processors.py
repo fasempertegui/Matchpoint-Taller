@@ -15,6 +15,9 @@ def navegacion(request):
     feriados_activo = namespace == "clases" and ruta.url_name.startswith("feriado_")
     clases_activo = namespace == "clases" and not feriados_activo
     perfil_activo = namespace == "usuarios" and ruta.kwargs.get("pk") == usuario.pk
+    contrataciones_propias_activo = namespace == "membresias" and ruta.url_name in (
+        "mis_contrataciones", "mi_plan_contratado", "mi_pase_contratado",
+    )
 
     def enlace(nombre, destino, activo, descripcion, kwargs=None):
         url = reverse(destino, kwargs=kwargs)
@@ -32,6 +35,10 @@ def navegacion(request):
         "Oferta", "membresias:oferta", namespace == "membresias" and ruta.url_name.startswith("oferta"),
         "Planes de clases, pases de cancha y tarifas de reservas.",
     ) if Rol.PUBLICO in roles else None
+    mis_contrataciones = enlace(
+        "Mis contrataciones", "membresias:mis_contrataciones", contrataciones_propias_activo,
+        "Consultá tus planes y pases contratados, sus períodos e importes.",
+    ) if not administrador else None
     clases = []
     if administrador:
         clases.append(enlace("Planilla semanal", "clases:planilla", clases_activo, "Programación habitual de clases."))
@@ -55,7 +62,7 @@ def navegacion(request):
     if administrador:
         membresias = enlace(
             "Membresías", "membresias:catalogos",
-            namespace == "membresias" and not ruta.url_name.startswith("oferta"),
+            namespace == "membresias" and not ruta.url_name.startswith("oferta") and not contrataciones_propias_activo,
             "Planes mensuales, pases de cancha y contrataciones.",
         )
         administracion.append(membresias)
@@ -94,6 +101,7 @@ def navegacion(request):
         administracion.append(auditoria)
     return {"navegacion_app": {
         "inicio_activo": nombre_vista == "inicio", "agenda": agenda, "oferta": oferta,
+        "mis_contrataciones": mis_contrataciones,
         "clases": clases, "clases_activo": clases_activo,
         "administracion": administracion,
         "administracion_activo": any(item["activo"] for item in administracion),

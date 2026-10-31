@@ -1,16 +1,25 @@
 {% extends "base.html" %}
 {% load static %}
-{% block titulo %}Contrataciones de {{ plural }} | Academia TM{% endblock %}
+{% block titulo %}{{ titulo_lista }} | Academia TM{% endblock %}
 {% block contenido %}
 <header class="tarjeta encabezado-pagina">
-    <h1>Contrataciones de {{ plural }}</h1>
-    <a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>
+    <h1>{{ titulo_lista }}</h1>
+    {% if not propias %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
 </header>
 {% if hay_contrataciones %}
     <form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos>
+        {% if propias %}
+            <div class="grupo-campo">
+                <label for="contratacion-tipo">Tipo</label>
+                <select class="form-control" id="contratacion-tipo" name="tipo">
+                    <option value="plan"{% if tipo == 'plan' %} selected{% endif %}>Planes</option>
+                    <option value="pase"{% if tipo == 'pase' %} selected{% endif %}>Pases de cancha</option>
+                </select>
+            </div>
+        {% endif %}
         <div class="grupo-campo">
             <label for="contratacion-busqueda">Buscar</label>
-            <input class="form-control" type="search" id="contratacion-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="Usuario o {{ tipo }}">
+            <input class="form-control" type="search" id="contratacion-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="{% if propias %}Nombre del {{ tipo }}{% else %}Usuario o {{ tipo }}{% endif %}">
         </div>
         <div class="grupo-campo">
             <label for="contratacion-mes">Mes cubierto</label>
@@ -31,28 +40,28 @@
     </form>
     <section class="tarjeta tabla-contenedor" aria-label="Contrataciones de {{ plural }}">
         <table>
-            <thead><tr><th scope="col">Usuario</th><th scope="col">{{ tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
+            <thead><tr>{% if not propias %}<th scope="col">Usuario</th>{% endif %}<th scope="col">{{ tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
             <tbody>
                 {% for contratacion in pagina %}
                     <tr>
-                        <td><strong>{{ contratacion.usuario }}</strong></td>
+                        {% if not propias %}<td><strong>{{ contratacion.usuario }}</strong></td>{% endif %}
                         <td>{{ contratacion.producto.nombre }}</td>
                         <td>{{ contratacion.mes_cubierto|date:"F Y" }}</td>
                         <td>$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
                         <td>{% include "componentes/badge_estado.html" with estado=contratacion.estado texto=contratacion.get_estado_display only %}</td>
                         <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url ruta_detalle contratacion.pk %}" aria-label="Ver contratación de {{ contratacion.usuario }} para {{ contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></td>
                     </tr>
-                {% empty %}<tr><td class="estado-vacio" colspan="6">No hay contrataciones que coincidan con los filtros.</td></tr>{% endfor %}
+                {% empty %}<tr><td class="estado-vacio" colspan="{% if propias %}5{% else %}6{% endif %}">No hay contrataciones de {{ plural }} que coincidan con los filtros.</td></tr>{% endfor %}
             </tbody>
         </table>
     </section>
     {% if pagina.paginator.num_pages > 1 %}
         <nav class="acciones" aria-label="Páginas de contrataciones">
-            {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;mes={{ mes_actual|urlencode }}&amp;pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+            {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;mes={{ mes_actual|urlencode }}&amp;pagina={{ pagina.previous_page_number }}{% if propias %}&amp;tipo={{ tipo }}{% endif %}">Anterior</a>{% endif %}
             <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
-            {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;mes={{ mes_actual|urlencode }}&amp;pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+            {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;mes={{ mes_actual|urlencode }}&amp;pagina={{ pagina.next_page_number }}{% if propias %}&amp;tipo={{ tipo }}{% endif %}">Siguiente</a>{% endif %}
         </nav>
     {% endif %}
-{% else %}<p class="tarjeta estado-vacio">Todavía no hay contrataciones de {{ plural }} registradas.</p>{% endif %}
+{% else %}<p class="tarjeta estado-vacio">{% if propias %}Todavía no tenés contrataciones registradas.{% else %}Todavía no hay contrataciones de {{ plural }} registradas.{% endif %}</p>{% endif %}
 <script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

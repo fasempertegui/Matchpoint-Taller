@@ -297,3 +297,18 @@ La consulta de vigencia de planes y pases comprueba el estado y el período cale
 No hay botones de vencimiento ni pantallas nuevas. Los avisos por email tienen su proceso independiente.
 
 Revisión manual: comprobar el cambio al iniciar un mes, la conservación del mes actual y futuro y la recuperación de meses pendientes. Revisar Anulados y Vencidos, ejecución repetida, concurrencia con anulación, importes, roles y auditoría. Comprobar que una contratación fuera de su período no otorgue vigencia aunque su estado almacenado siga Activo.
+
+
+## Contrataciones propias en el portal
+
+Las cuentas autenticadas, activas y sin cambio de contraseña pendiente consultan sus planes y pases desde Mis contrataciones en la navegación del portal y desde su perfil. No se exige Alumno ni Reservas, ni siquiera para la consulta histórica. La navegación administrativa conserva Membresías; un administrador puede consultar sus contrataciones por el acceso de su perfil, con el mismo alcance de titular.
+
+El listado permite seleccionar Planes o Pases de cancha, buscar por nombre del producto, filtrar por mes y estado y navegar de a veinticinco resultados. Muestra producto, mes cubierto, importe aplicado y estado con texto. La paginación y la limpieza de filtros conservan el tipo elegido. Sin contrataciones propias de ninguno de los dos tipos, presenta un estado vacío breve; si sólo existen del otro tipo, mantiene disponible el selector. Sin una selección explícita, abre el tipo del que el titular tenga contrataciones. Se consultan estados Activo, Anulado y Vencido sin excluir productos Inactivos del catálogo.
+
+El detalle muestra producto y configuración comercial, mes y período completo, importe aplicado, estado, fecha efectiva de alta, fecha de registro y fecha de anulación cuando corresponde. No presenta observaciones internas, motivo libre de anulación ni responsables administrativos. No enlaza al catálogo administrativo ni a fichas de otros usuarios y no incluye alta, edición, anulación o cobro. Los ingresos y usos de pases tienen sus bloques funcionales correspondientes.
+
+Las rutas propias sólo admiten GET y comprueban nuevamente la cuenta habilitada en el servidor. Todas las consultas se restringen al identificador de la cuenta autenticada antes de obtener los registros; ningún filtro permite sustituir al titular. Solicitar una contratación ajena por su número devuelve no encontrado, también para un administrador que utiliza una ruta propia. La consulta no registra auditoría ni modifica estados o roles. Las rutas administrativas mantienen sus controles independientes.
+
+Administración y portal comparten las plantillas de listado y detalle y el filtrado/paginación; las vistas propias mantienen explícita su comprobación de titularidad. No se incorpora CSS, JavaScript, iconos ni bibliotecas nuevas. La composición del rediseño conserva su alcance de presentación independiente.
+
+Revisión manual: consultar con y sin Alumno o Reservas, con Profesor y con una cuenta sin contrataciones; revisar planes y pases Activos, Anulados, Vencidos y de productos Inactivos. Navegar desde el menú y el perfil, buscar, filtrar y paginar ambos tipos. Cambiar el número por uno ajeno, agregar parámetros de otro usuario e intentar acceso directo a rutas de escritura administrativas. Comprobar permisos, estado vacío, teclado y móvil.

@@ -1,8 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.core.paginator import Paginator
-from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -13,7 +11,7 @@ from .contrataciones import (
     anular_contratacion_pase, anular_contratacion_plan, registrar_contratacion_pase,
     registrar_contratacion_plan, version_anulacion_contratacion,
 )
-from .fechas import meses_contratables
+from .consultas import listar_contrataciones
 from .forms import (
     AnulacionContratacionForm, ContratacionPaseForm, ContratacionPlanForm,
     SeleccionContratacionPaseForm, SeleccionContratacionPlanForm,
@@ -51,7 +49,8 @@ def _contexto(tipo, titulo=None):
     else:
         breadcrumbs[-1] = (breadcrumbs[-1][0], None)
     return {
-        "tipo": tipo, "plural": plural, "breadcrumbs": breadcrumbs, "url_lista": url_lista,
+        "tipo": tipo, "plural": plural, "titulo_lista": f"Contrataciones de {plural}",
+        "breadcrumbs": breadcrumbs, "url_lista": url_lista,
         "url_crear": reverse(f"membresias:contratacion_{tipo}_crear"),
         "ruta_detalle": f"membresias:contratacion_{tipo}_detalle",
         "ruta_anular": f"membresias:contratacion_{tipo}_anular",
@@ -66,27 +65,8 @@ def contratacion_lista(request, tipo="plan"):
     exigir_administracion_membresias(request.user)
     modelo = CONFIGURACION_CONTRATACIONES[tipo]["modelo"]
     contrataciones = modelo.objects.select_related("usuario", tipo)
-    busqueda = request.GET.get("q", "").strip()[:150]
-    estado = request.GET.get("estado", "")
-    mes = request.GET.get("mes", "")
-    meses = meses_contratables()
-    if busqueda:
-        contrataciones = contrataciones.filter(
-            Q(usuario__first_name__icontains=busqueda) | Q(usuario__last_name__icontains=busqueda)
-            | Q(usuario__username__icontains=busqueda) | Q(**{f"{tipo}__nombre__icontains": busqueda}),
-        )
-    if estado in modelo.Estado.values:
-        contrataciones = contrataciones.filter(estado=estado)
-    else:
-        estado = ""
-    if mes in {fecha.isoformat() for fecha in meses}:
-        contrataciones = contrataciones.filter(mes_cubierto=mes)
-    else:
-        mes = ""
     return render(request, "membresias/contratacion_lista.html", {
-        **_contexto(tipo), "pagina": Paginator(contrataciones, 25).get_page(request.GET.get("pagina")),
-        "busqueda": busqueda, "estado_actual": estado, "mes_actual": mes,
-        "estados": modelo.Estado.choices, "meses": meses, "hay_contrataciones": modelo.objects.exists(),
+        **_contexto(tipo), **listar_contrataciones(contrataciones, request.GET, tipo=tipo),
     })
 
 
