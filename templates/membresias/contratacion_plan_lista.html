@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Contrataciones de planes | Academia TM{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina">
+    <h1>Contrataciones de planes</h1>
+    <a class="boton boton-primario" href="{% url 'membresias:contratacion_plan_crear' %}">Registrar contratación</a>
+</header>
+{% if hay_contrataciones %}
+    <form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos>
+        <div class="grupo-campo">
+            <label for="contratacion-busqueda">Buscar</label>
+            <input class="form-control" type="search" id="contratacion-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="Usuario o plan">
+        </div>
+        <div class="grupo-campo">
+            <label for="contratacion-mes">Mes cubierto</label>
+            <select class="form-control" id="contratacion-mes" name="mes">
+                <option value="">Todos</option>
+                {% for mes in meses %}<option value="{{ mes|date:'Y-m-d' }}"{% if mes_actual == mes|date:'Y-m-d' %} selected{% endif %}>{{ mes|date:"F Y" }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="grupo-campo">
+            <label for="contratacion-estado">Estado</label>
+            <select class="form-control" id="contratacion-estado" name="estado">
+                <option value="">Todos</option>
+                {% for valor, etiqueta in estados %}<option value="{{ valor }}"{% if estado_actual == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'membresias:contratacion_plan_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
+        <noscript><button class="boton boton-secundario" type="submit">Buscar</button></noscript>
+    </form>
+    <section class="tarjeta tabla-contenedor" aria-label="Contrataciones de planes">
+        <table>
+            <thead><tr><th scope="col">Usuario</th><th scope="col">Plan</th><th scope="col">Mes cubierto</th><th scope="col">Importe acordado (ARS)</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
+            <tbody>
+                {% for contratacion in pagina %}
+                    <tr>
+                        <td><strong>{{ contratacion.usuario }}</strong></td>
+                        <td>{{ contratacion.plan.nombre }}</td>
+                        <td>{{ contratacion.mes_cubierto|date:"F Y" }}</td>
+                        <td>$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
+                        <td>{% include "componentes/badge_estado.html" with estado=contratacion.estado texto=contratacion.get_estado_display only %}</td>
+                        <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url 'membresias:contratacion_plan_detalle' contratacion.pk %}" aria-label="Ver contratación de {{ contratacion.usuario }} para {{ contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></td>
+                    </tr>
+                {% empty %}<tr><td class="estado-vacio" colspan="6">No hay contrataciones que coincidan con los filtros.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% if pagina.paginator.num_pages > 1 %}
+        <nav class="acciones" aria-label="Páginas de contrataciones">
+            {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;mes={{ mes_actual|urlencode }}&amp;pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+            <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+            {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?q={{ busqueda|urlencode }}&amp;estado={{ estado_actual|urlencode }}&amp;mes={{ mes_actual|urlencode }}&amp;pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+        </nav>
+    {% endif %}
+{% else %}<p class="tarjeta estado-vacio">Todavía no hay contrataciones de planes registradas.</p>{% endif %}
+<script src="{% static 'js/filtros.js' %}" defer></script>
+{% endblock %}

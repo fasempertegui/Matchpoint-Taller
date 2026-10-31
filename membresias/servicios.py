@@ -66,6 +66,9 @@ def guardar_plan(
         "cantidad_clases_por_encuentro": cantidad_clases_por_encuentro, "precio_vigente": precio_vigente,
     }
     cambios = [campo for campo, valor in datos.items() if getattr(plan, campo) != valor]
+    estructura = {"modalidad", "frecuencia_semanal", "cantidad_clases_por_encuentro"}
+    if plan_id is not None and estructura.intersection(cambios) and plan.contrataciones.exists():
+        raise ValidationError("La modalidad, frecuencia y duración no se pueden cambiar en un plan con contrataciones.")
     for campo, valor in datos.items():
         setattr(plan, campo, valor)
     if plan_id is not None and not cambios:

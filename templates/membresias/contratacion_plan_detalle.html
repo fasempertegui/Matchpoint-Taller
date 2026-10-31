@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Contratación #{{ contratacion.pk }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
+{% block contenido %}
+<article class="tarjeta perfil">
+    <header class="perfil-cabecera">
+        <div>
+            <p class="perfil-contexto">Contratación mensual de plan</p>
+            <div class="perfil-identidad">
+                <h1>{{ contratacion.plan.nombre }}</h1>
+                {% include "componentes/badge_estado.html" with estado=contratacion.estado texto=contratacion.get_estado_display only %}
+            </div>
+            <p>{{ contratacion.usuario }} · {{ contratacion.mes_cubierto|date:"F Y" }}</p>
+        </div>
+        <div class="perfil-total"><span>Importe acordado (ARS)</span><strong>$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</strong></div>
+    </header>
+    <div class="perfil-cuerpo">
+        <div class="perfil-datos">
+            <section class="perfil-seccion" aria-labelledby="contratacion-datos-titulo">
+                <h2 id="contratacion-datos-titulo">Contratación</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila"><dt>Número</dt><dd>{{ contratacion.pk }}</dd></div>
+                    <div class="perfil-fila"><dt>Usuario</dt><dd><a href="{% url 'usuarios:usuario_detalle' contratacion.usuario_id %}">{{ contratacion.usuario }}</a></dd></div>
+                    <div class="perfil-fila"><dt>Plan</dt><dd><a href="{% url 'membresias:plan_detalle' contratacion.plan_id %}">{{ contratacion.plan.nombre }}</a></dd></div>
+                    <div class="perfil-fila"><dt>Período cubierto</dt><dd>{{ contratacion.fecha_inicio|date:"d/m/Y" }} al {{ contratacion.fecha_fin|date:"d/m/Y" }}</dd></div>
+                    <div class="perfil-fila"><dt>Fecha efectiva de alta</dt><dd>{{ contratacion.fecha_alta|date:"d/m/Y" }}</dd></div>
+                    <div class="perfil-fila"><dt>Modalidad</dt><dd>{{ contratacion.plan.get_modalidad_display }}</dd></div>
+                    <div class="perfil-fila"><dt>Encuentros por semana</dt><dd>{{ contratacion.plan.frecuencia_semanal }}</dd></div>
+                    <div class="perfil-fila"><dt>Duración de cada encuentro</dt><dd>{{ contratacion.plan.get_cantidad_clases_por_encuentro_display }}</dd></div>
+                </dl>
+                <p class="texto-secundario">El importe acordado se conserva en esta contratación. El cobro se registra por separado.</p>
+            </section>
+            {% if contratacion.observaciones %}<section class="perfil-seccion" aria-labelledby="contratacion-observaciones-titulo"><h2 id="contratacion-observaciones-titulo">Observaciones</h2><p class="perfil-observaciones">{{ contratacion.observaciones|linebreaksbr }}</p></section>{% endif %}
+            {% if contratacion.estado == 'anulado' %}
+                <section class="perfil-seccion" aria-labelledby="contratacion-anulacion-titulo">
+                    <h2 id="contratacion-anulacion-titulo">Anulación</h2>
+                    <dl class="perfil-lista">
+                        <div class="perfil-fila"><dt>Responsable</dt><dd>{{ contratacion.anulado_por }}</dd></div>
+                        <div class="perfil-fila"><dt>Fecha</dt><dd>{{ contratacion.anulado_en|date:"d/m/Y H:i" }}</dd></div>
+                    </dl>
+                    <p class="perfil-observaciones">{{ contratacion.motivo_anulacion|linebreaksbr }}</p>
+                </section>
+            {% endif %}
+        </div>
+        <aside class="perfil-lateral" aria-label="Registro de la contratación">
+            <section class="perfil-seccion" aria-labelledby="contratacion-registro-titulo">
+                <h2 id="contratacion-registro-titulo">Registro</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila"><dt>Registrada por</dt><dd>{{ contratacion.registrado_por }}</dd></div>
+                    <div class="perfil-fila"><dt>Fecha de registro</dt><dd>{{ contratacion.creado_en|date:"d/m/Y H:i" }}</dd></div>
+                </dl>
+            </section>
+        </aside>
+    </div>
+</article>
+{% endblock %}

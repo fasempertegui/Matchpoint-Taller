@@ -3,14 +3,16 @@
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario">
     <h1>{{ titulo }}</h1>
-    <form method="post" novalidate>
-        {% csrf_token %}
+    {% block formulario_contexto %}{% endblock %}
+    <form method="{{ metodo_formulario|default:'post' }}" novalidate>
+        {% if metodo_formulario != 'get' %}{% csrf_token %}{% endif %}
+        {% block formulario_seleccion %}{% endblock %}
         {% for campo in formulario.hidden_fields %}{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
         {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
         {% for campo in formulario.visible_fields %}
-            {% if campo.name == 'descripcion' %}
+            {% if campo.name == 'descripcion' or campo.name == 'observaciones' %}
                 <details class="observaciones-opcionales"{% if campo.value or campo.errors %} open{% endif %}>
-                    <summary>Descripción (opcional)</summary>
+                    <summary>{{ campo.label }} (opcional)</summary>
                     <div class="grupo-campo">
                         <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}
                         {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}

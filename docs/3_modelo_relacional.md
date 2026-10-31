@@ -215,7 +215,7 @@ Representa una contratación concreta de un plan por un usuario para un mes cale
 | | `creado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
 
-`usuario_id` y `plan_id` son referencias obligatorias. `mes_cubierto` contiene el primer día del mes; el inicio y fin de cobertura se derivan de ese valor. `fecha_alta` representa la fecha efectiva y `creado_en` el momento de carga, que pueden ser distintos.
+`usuario_id` y `plan_id` son referencias obligatorias. `mes_cubierto` contiene el primer día del mes; el inicio y fin de cobertura se derivan de ese valor. `fecha_alta` representa la fecha efectiva, entre el inicio de operaciones y hoy, independiente del mes cubierto. `creado_en` conserva el momento de carga; ambas fechas pueden ser distintas.
 
 `precio_aplicado` conserva el importe mensual acordado, separado del dinero cobrado. No es una referencia al precio vigente del catálogo. Una restricción única parcial sobre `(usuario_id, mes_cubierto)` para estados `activo` o `vencido` preserva la exclusividad del mes y admite conservar filas Anuladas.
 

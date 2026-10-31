@@ -30,7 +30,7 @@ Las clases pueden ubicarse desde el inicio de operaciones hasta un año calendar
 
 La generación o regeneración de clases acepta rangos dentro de ese mismo intervalo y de **hasta 62 días corridos inclusive** por ejecución. Las consultas de actividad de clases y uso de pases aceptan rangos de **hasta 366 días corridos inclusive**. Un período mayor se consulta por tramos.
 
-Las contrataciones de planes y pases pueden registrarse desde agosto de 2026 hasta el mes calendario siguiente al actual. Guardan el mes cubierto como una fecha del primer día; inicio y fin se calculan y siempre cubren meses completos. Una contratación histórica cuyo mes terminó nace Vencida. Una contratación de un mes futuro puede estar Activa, pero su cobertura corresponde a ese mes.
+Las contrataciones de planes y pases pueden registrarse desde agosto de 2026 hasta el mes calendario siguiente al actual. Guardan el mes cubierto como una fecha del primer día; inicio y fin se calculan y siempre cubren meses completos. Una contratación histórica cuyo mes terminó nace Vencida. Una contratación de un mes futuro puede estar Activa, pero su cobertura corresponde a ese mes. La fecha efectiva de alta es independiente del mes cubierto y debe estar entre el inicio de operaciones y la fecha local actual, inclusive.
 
 Los movimientos de caja utilizan únicamente `creado_en`, asignado por el servidor al registrar. No se carga una fecha real histórica ni una fecha futura. Cada movimiento pertenece a la sesión abierta al momento de su registro; apertura, anulación y cierre también utilizan el momento del servidor.
 

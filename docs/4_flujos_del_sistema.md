@@ -851,7 +851,7 @@ Recorrido:
 Alternativas:
 
 - Puede combinar un plan y un pase, pero no duplicar el mismo tipo en un mes, incluidos registros Vencidos.
-- El mes se encuentra entre agosto de 2026 y el mes siguiente al actual.
+- El mes se encuentra entre agosto de 2026 y el mes siguiente al actual. La fecha efectiva de alta es independiente del mes cubierto y admite desde el inicio de operaciones hasta hoy, inclusive.
 - Renovar para otro mes crea una contratación nueva.
 - Un pase no otorga Alumno y su vigencia se verifica para cada fecha de uso.
 - El ingreso se registra por separado mediante **FL-43**; el importe aplicado no representa lo abonado.

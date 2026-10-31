@@ -51,17 +51,14 @@ def navegacion(request):
             "Sedes y canchas", "instalaciones:sede_lista", namespace == "instalaciones",
             "Consulta y gestión de sedes, canchas, horarios y precios.",
         ))
-    planes = None
+    membresias = None
     if administrador:
-        planes = enlace(
-            "Planes", "membresias:plan_lista", namespace == "membresias" and ruta.url_name.startswith("plan_"),
-            "Catálogo de planes mensuales de clases.",
+        membresias = enlace(
+            "Membresías", "membresias:catalogos",
+            namespace == "membresias" and not ruta.url_name.startswith("oferta"),
+            "Planes mensuales, pases de cancha y contrataciones.",
         )
-        administracion.append(planes)
-        administracion.append(enlace(
-            "Pases", "membresias:pase_lista", namespace == "membresias" and ruta.url_name.startswith("pase_"),
-            "Catálogo de pases mensuales de cancha.",
-        ))
+        administracion.append(membresias)
         administracion.append(enlace(
             "Feriados", "clases:feriado_lista", feriados_activo,
             "Consulta y gestión de feriados.",
@@ -73,7 +70,7 @@ def navegacion(request):
     modulos_inicio = [{"nombre": "Agenda", "descripcion": agenda["descripcion"], "destino": agenda}]
     modulos_inicio.extend(
         {"nombre": item["nombre"], "descripcion": item["descripcion"], "destino": item}
-        for item in administracion if item["nombre"] not in ("Feriados", "Planes", "Pases")
+        for item in administracion if item["nombre"] not in ("Feriados", "Membresías")
     )
     if clases:
         modulos_inicio.append({
@@ -81,11 +78,11 @@ def navegacion(request):
             "descripcion": "Programación de clases, asignación de profesores y alumnos, y registro de asistencia.",
             "destino": clases[0], "boton": "Ver planilla semanal" if administrador else "Mi actividad",
         })
-    if planes:
+    if membresias:
         modulos_inicio.append({
-            "nombre": "Membresías", "descripcion": "Catálogos de planes mensuales y pases de cancha.",
-            "destino": enlace("Membresías", "membresias:catalogos", namespace == "membresias", ""),
-            "boton": "Ver catálogos",
+            "nombre": membresias["nombre"], "descripcion": membresias["descripcion"],
+            "destino": membresias,
+            "boton": "Ver membresías",
         })
     if oferta:
         modulos_inicio.append({
@@ -99,7 +96,7 @@ def navegacion(request):
         "inicio_activo": nombre_vista == "inicio", "agenda": agenda, "oferta": oferta,
         "clases": clases, "clases_activo": clases_activo,
         "administracion": administracion,
-        "administracion_activo": namespace == "membresias" or any(item["activo"] for item in administracion),
+        "administracion_activo": any(item["activo"] for item in administracion),
         "perfil_activo": perfil_activo,
         "modulos_inicio": modulos_inicio, "mostrar_preparacion": administrador,
     }}

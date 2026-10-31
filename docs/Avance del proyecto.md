@@ -180,7 +180,7 @@ El navbar ofrece Inicio, Agenda, Clases, Oferta para cuentas con rol Público y 
 
 Administración agrupa Usuarios, Sedes y canchas, Planes, Pases, Feriados y Auditoría en ese orden. Sedes y canchas enlaza al listado de Sedes. Si sólo hay un destino administrativo autorizado, se presenta directamente. Mi perfil y Cerrar sesión permanecen disponibles en la navegación.
 
-Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver catálogos para elegir entre Planes y Pases de cancha. La gestión de ambos catálogos tiene acceso administrativo y su propia entrada en Administración. En el portal, Oferta de la academia permite consultar productos Activos y tarifas vigentes en modo de lectura. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
+Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver membresías para elegir entre Planes, Pases de cancha y Contrataciones de planes. La gestión de catálogos y contrataciones tiene acceso administrativo y una única entrada Membresías en el desplegable Administración. En el portal, Oferta de la academia permite consultar productos Activos y tarifas vigentes en modo de lectura. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
 
 La ruta actual resalta el destino o su grupo. Los desplegables abren con clic, Enter o Espacio; las flechas recorren sus enlaces y Escape cierra devolviendo el foco al disparador. En móvil se expanden dentro de la navegación vertical. Las rutas mantienen las autorizaciones del servidor.
 
@@ -208,7 +208,7 @@ El acceso exige una cuenta activa con rol Administrador y sin cambio de contrase
 
 El catálogo define la oferta comercial. Las contrataciones, las coberturas aplicadas a reservas y los consumos diarios tienen sus propios registros y recorridos. PostgreSQL protege los dominios, importes y nombres activos, genera los identificadores y audita las modificaciones mediante el trigger de pases. Las altas no generan entradas de auditoría y las pantallas no ofrecen eliminación física.
 
-Planes y pases comparten el formulario de catálogo, la protección de la selección y el guardado auditado, conservando campos y recorridos específicos. La entrada Membresías permite elegir entre los dos catálogos y los breadcrumbs conservan ese acceso.
+Planes y pases comparten el formulario de catálogo, la protección de la selección y el guardado auditado, conservando campos y recorridos específicos. La entrada Membresías permite elegir entre los dos catálogos y las contrataciones de planes; los breadcrumbs conservan ese acceso.
 
 Revisión manual: crear un pase Libre y uno de Fin de semana; revisar nombres repetidos, importes cero y negativos, límite diario cero y positivo, filtro por estado, edición y activación/desactivación. Comprobar también reenvíos, dos pestañas editando el mismo producto, rechazo de acceso no administrativo y las diferencias en Auditoría.
 
@@ -224,3 +224,18 @@ La consulta de tarifas muestra las sedes Activas con precio de reserva configura
 Las pantallas de oferta son de lectura: no incluyen edición, cambios de estado, altas comerciales, datos internos de registro ni formularios de contratación. Las escrituras conservan las rutas y controles administrativos. Las consultas sólo admiten GET y comprueban en el servidor que la cuenta esté habilitada y tenga Público o Administrador; consultar no crea turnos, contrataciones ni auditoría.
 
 Revisión manual: acceder con Público, Profesor y Alumno que conserven Público; consultar ambos catálogos y sus descripciones, buscar y navegar páginas; revisar importes cero, productos Inactivos por enlace directo, sedes Inactivas y tarifas ausentes. Comprobar la navegación hacia Agenda, el rechazo de acceso sin rol habilitado y que las rutas administrativas sigan rechazando a cuentas no administrativas.
+
+
+## Contrataciones administrativas de planes
+
+Administración registra y consulta las contrataciones de planes desde Membresías. El listado permite buscar usuario o producto, filtrar por mes y estado y navegar de a veinticinco resultados. El detalle conserva titular, plan, período completo, fecha efectiva, importe acordado, observaciones y responsable del registro. El estado se muestra con texto; Vencido usa el badge neutro compartido.
+
+El alta comienza seleccionando una cuenta activa sin Profesor y un plan Activo. Luego se elige un mes desde agosto de 2026 hasta el siguiente al actual; cada opción muestra su período completo. La fecha efectiva se encuentra entre el inicio operativo y hoy y es independiente del mes cubierto. Se propone el precio vigente y la administración puede establecer un importe acordado no negativo. Ese importe permanece en la contratación y no se recalcula al cambiar el catálogo. El alta no registra cobros ni genera clases o asignaciones.
+
+La confirmación bloquea las cuentas involucradas en orden de identificador y después el plan; comprueba nuevamente la elegibilidad y la exclusividad del mes. Los registros Activos y Vencidos impiden otra contratación de plan para el mismo usuario y mes. Un mes terminado nace Vencido; el actual o futuro nace Activo. Registrar una contratación Activa otorga Alumno cuando falta y el titular no es Administrador, en la misma transacción. Las cuentas Profesor no pueden contratar planes.
+
+Los planes con cualquier contratación conservan modalidad, frecuencia y duración: el formulario impide editar esos campos y el servicio rechaza su modificación. Nombre, descripción, precio y estado mantienen sus operaciones de catálogo. PostgreSQL protege importe, mes y estados, exige coherencia de datos de anulación y dispone de auditoría de modificaciones y eliminaciones; las altas no generan entradas.
+
+El formulario, listado, detalle, avisos y badges reutilizan los componentes vigentes, sin estilos específicos ni cambios de identidad. La anulación, el vencimiento automático, la consulta propia y los cobros tienen sus entregas funcionales independientes.
+
+Revisión manual: registrar mes actual, futuro e histórico; ajustar el importe incluido cero; rechazar duplicados, precio negativo y fechas fuera de rango; verificar Alumno automático y rechazo de Profesor, cuenta Inactiva o plan Inactivo. Cambiar el precio de catálogo y comprobar el importe conservado; intentar cambiar la estructura de un plan con historia. Revisar listado, filtros, detalle, teclado, móvil y rechazo a cuentas no administrativas.
