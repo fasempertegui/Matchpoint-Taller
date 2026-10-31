@@ -65,25 +65,25 @@ def registrar_contratacion_plan(
     return contratacion
 
 
-def version_anulacion_plan(actor, contratacion):
+def version_anulacion_contratacion(actor, contratacion, *, tipo):
     return signing.dumps({
         "actor": actor.pk, "contratacion": contratacion.pk,
         "actualizado_en": contratacion.actualizado_en.isoformat(),
-    }, salt="membresias.anular_plan")
+    }, salt=f"membresias.anular_{tipo}")
 
 
 @transaction.atomic
-def anular_contratacion_plan(actor, contratacion_id, *, motivo, version):
+def _anular_contratacion(actor, contratacion_id, *, modelo, tipo, motivo, version):
     exigir_administracion_membresias(actor)
-    titular_id = PlanUsuario.objects.values_list("usuario_id", flat=True).get(pk=contratacion_id)
+    titular_id = modelo.objects.values_list("usuario_id", flat=True).get(pk=contratacion_id)
     actor, _ = _bloquear_titular(actor, titular_id, exigir_activo=False)
-    contratacion = PlanUsuario.objects.select_for_update().get(pk=contratacion_id)
-    if contratacion.estado == PlanUsuario.Estado.ANULADO:
+    contratacion = modelo.objects.select_for_update().get(pk=contratacion_id)
+    if contratacion.estado == modelo.Estado.ANULADO:
         return contratacion
-    if contratacion.estado != PlanUsuario.Estado.ACTIVO:
-        raise ValidationError("Sólo se pueden anular contrataciones de planes Activas.")
+    if contratacion.estado != modelo.Estado.ACTIVO:
+        raise ValidationError("Sólo se pueden anular contrataciones Activas.")
     try:
-        datos = signing.loads(version, salt="membresias.anular_plan")
+        datos = signing.loads(version, salt=f"membresias.anular_{tipo}")
     except (signing.BadSignature, TypeError):
         raise ValidationError("La revisión no es válida. Volvé a abrir la anulación antes de confirmar.") from None
     if datos != {
@@ -94,7 +94,7 @@ def anular_contratacion_plan(actor, contratacion_id, *, motivo, version):
     motivo = motivo.strip()
     if not motivo:
         raise ValidationError("Indicá el motivo de la anulación.")
-    contratacion.estado = PlanUsuario.Estado.ANULADO
+    contratacion.estado = modelo.Estado.ANULADO
     contratacion.motivo_anulacion = motivo
     contratacion.anulado_por = actor
     contratacion.anulado_en = timezone.now()
@@ -104,6 +104,18 @@ def anular_contratacion_plan(actor, contratacion_id, *, motivo, version):
             "estado", "motivo_anulacion", "anulado_por", "anulado_en", "actualizado_en",
         ])
     return contratacion
+
+
+def anular_contratacion_plan(actor, contratacion_id, *, motivo, version):
+    return _anular_contratacion(
+        actor, contratacion_id, modelo=PlanUsuario, tipo="plan", motivo=motivo, version=version,
+    )
+
+
+def anular_contratacion_pase(actor, contratacion_id, *, motivo, version):
+    return _anular_contratacion(
+        actor, contratacion_id, modelo=PaseUsuario, tipo="pase", motivo=motivo, version=version,
+    )
 
 
 def validar_retiro_rol_alumno(usuario):

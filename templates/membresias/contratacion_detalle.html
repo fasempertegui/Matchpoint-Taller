@@ -57,11 +57,11 @@
                     <div class="perfil-fila"><dt>Fecha de registro</dt><dd>{{ contratacion.creado_en|date:"d/m/Y H:i" }}</dd></div>
                 </dl>
             </section>
-            {% if tipo == 'plan' and contratacion.estado == 'activo' %}
+            {% if contratacion.estado == 'activo' %}
                 <section class="perfil-seccion" aria-labelledby="contratacion-administracion-titulo">
                     <h2 id="contratacion-administracion-titulo">Administración</h2>
                     <div class="perfil-acciones">
-                        <a class="perfil-enlace" href="{% url 'membresias:contratacion_plan_anular' contratacion.pk %}">Anular contratación</a>
+                        <a class="perfil-enlace" href="{% url ruta_anular contratacion.pk %}">Anular contratación</a>
                     </div>
                 </section>
             {% endif %}

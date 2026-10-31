@@ -10,7 +10,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .contrataciones import (
-    anular_contratacion_plan, registrar_contratacion_pase, registrar_contratacion_plan, version_anulacion_plan,
+    anular_contratacion_pase, anular_contratacion_plan, registrar_contratacion_pase,
+    registrar_contratacion_plan, version_anulacion_contratacion,
 )
 from .fechas import meses_contratables
 from .forms import (
@@ -25,11 +26,13 @@ CONFIGURACION_CONTRATACIONES = {
     "plan": {
         "modelo": PlanUsuario, "plural": "planes", "seleccion": SeleccionContratacionPlanForm,
         "formulario": ContratacionPlanForm, "registrar": registrar_contratacion_plan,
+        "anular": anular_contratacion_plan,
         "etiqueta_importe": "Importe acordado (ARS)",
     },
     "pase": {
         "modelo": PaseUsuario, "plural": "pases", "seleccion": SeleccionContratacionPaseForm,
         "formulario": ContratacionPaseForm, "registrar": registrar_contratacion_pase,
+        "anular": anular_contratacion_pase,
         "etiqueta_importe": "Importe aplicado (ARS)",
     },
 }
@@ -51,6 +54,7 @@ def _contexto(tipo, titulo=None):
         "tipo": tipo, "plural": plural, "breadcrumbs": breadcrumbs, "url_lista": url_lista,
         "url_crear": reverse(f"membresias:contratacion_{tipo}_crear"),
         "ruta_detalle": f"membresias:contratacion_{tipo}_detalle",
+        "ruta_anular": f"membresias:contratacion_{tipo}_anular",
         "ruta_producto": f"membresias:{tipo}_detalle", "etiqueta_importe": configuracion["etiqueta_importe"],
     }
 
@@ -151,35 +155,37 @@ def contratacion_crear(request, tipo="plan"):
 @login_required
 @never_cache
 @require_http_methods(["GET", "POST"])
-def contratacion_plan_anular(request, pk):
+def contratacion_anular(request, pk, tipo="plan"):
     actor = exigir_administracion_membresias(request.user)
-    contratacion = get_object_or_404(PlanUsuario.objects.select_related("usuario", "plan"), pk=pk)
-    url_detalle = reverse("membresias:contratacion_plan_detalle", args=[pk])
-    if contratacion.estado != PlanUsuario.Estado.ACTIVO:
-        if contratacion.estado == PlanUsuario.Estado.ANULADO:
+    configuracion = CONFIGURACION_CONTRATACIONES[tipo]
+    modelo = configuracion["modelo"]
+    contratacion = get_object_or_404(modelo.objects.select_related("usuario", tipo), pk=pk)
+    url_detalle = reverse(f"membresias:contratacion_{tipo}_detalle", args=[pk])
+    if contratacion.estado != modelo.Estado.ACTIVO:
+        if contratacion.estado == modelo.Estado.ANULADO:
             messages.info(request, "La contratación ya está Anulada.")
         else:
-            messages.error(request, "Sólo se pueden anular contrataciones de planes Activas.")
+            messages.error(request, "Sólo se pueden anular contrataciones Activas.")
         return redirect(url_detalle)
     formulario = AnulacionContratacionForm(
         request.POST if request.method == "POST" else None,
-        initial={"version": version_anulacion_plan(actor, contratacion)},
+        initial={"version": version_anulacion_contratacion(actor, contratacion, tipo=tipo)},
     )
     if request.method == "POST" and formulario.is_valid():
         try:
-            anular_contratacion_plan(actor, pk, **formulario.cleaned_data)
+            configuracion["anular"](actor, pk, **formulario.cleaned_data)
         except ValidationError as error:
             contratacion.refresh_from_db()
-            if contratacion.estado != PlanUsuario.Estado.ACTIVO:
+            if contratacion.estado != modelo.Estado.ACTIVO:
                 for mensaje in error.messages:
                     messages.error(request, mensaje)
                 return redirect(url_detalle)
             formulario.add_error(None, error)
         else:
-            messages.success(request, "La contratación del plan está Anulada.")
+            messages.success(request, f"La contratación del {tipo} está Anulada.")
             return redirect(url_detalle)
     return render(request, "membresias/contratacion_anular.html", {
-        **_contexto("plan", "Anular contratación"), "contratacion": contratacion,
-        "titulo": "Anular contratación de plan", "formulario": formulario,
+        **_contexto(tipo, "Anular contratación"), "contratacion": contratacion,
+        "titulo": f"Anular contratación de {tipo}", "formulario": formulario,
         "texto_boton": "Confirmar anulación", "url_cancelar": url_detalle,
     })

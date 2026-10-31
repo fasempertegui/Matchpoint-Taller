@@ -266,6 +266,19 @@ La operación no modifica clases, asignaciones, cobros ni roles, y no genera dev
 
 Retirar Alumno bloquea al usuario y comprueba que no existan contrataciones de planes en estado Activo, incluidas las de meses futuros o pendientes de vencimiento automático. Los pases y las contrataciones Vencidas o Anuladas no impiden ese retiro. Registrar y anular planes usan el mismo bloqueo del usuario para coordinarse con la gestión de roles.
 
-El recorrido reutiliza el formulario, botones, avisos y ficha compartidos, sin CSS nuevo ni cambios visuales globales. La anulación de pases tiene su entrega independiente.
+El recorrido reutiliza el formulario, botones, avisos y ficha compartidos, sin CSS nuevo ni cambios visuales globales. Planes y pases comparten la revisión y confirmación, con los datos y efectos correspondientes a cada tipo.
 
 Revisión manual: solicitar y cancelar la revisión, rechazar motivo vacío, confirmar una anulación y comprobar responsable, fecha y auditoría. Reenviar y comprobar que se conservan los datos; intentar anular una Vencida y registrar un reemplazo del mismo mes. Intentar quitar Alumno con un plan Activo, con otro mes Activo y después de anular la última contratación Activa; revisar también un titular inactivo, acceso no administrativo, teclado y móvil.
+
+
+## Anulación administrativa de contrataciones de pases
+
+El detalle de una contratación de pase Activa ofrece Anular contratación. Reutiliza la página de revisión y el formulario de planes: muestra titular, producto, período, importe y efectos, y exige motivo no vacío y confirmación. Las Vencidas no admiten anulación; una ya Anulada conserva su resultado y no sobrescribe motivo, responsable, momento ni auditoría al reenviar.
+
+La operación comprueba el acceso administrativo, bloquea las cuentas involucradas en orden de identificador y después la contratación, y revalida el estado y la versión revisada antes de guardar. La revisión firmada identifica actor, contratación, fecha de modificación y tipo de producto. Una revisión de plan no confirma la anulación de un pase. Los cambios exigen una revisión nueva, sin efectos parciales. El titular puede estar inactivo; quien confirma debe conservar acceso administrativo.
+
+La anulación conserva usuario, pase, mes, importe y relaciones históricas. No modifica planes del mismo titular, roles, reservas, coberturas registradas ni cobros y no devuelve dinero. La consulta de vigencia rechaza nuevas aplicaciones de contrataciones Anuladas. La exclusividad del mes permite registrar otro pase para ese usuario y mes, conservando la contratación anterior.
+
+La ficha muestra motivo, responsable y fecha; PostgreSQL registra la anulación mediante la auditoría existente. El recorrido comparte pantallas y estilos con planes, sin CSS nuevo, bibliotecas ni cambios visuales globales.
+
+Revisión manual: abrir y cancelar la revisión, rechazar motivo vacío y confirmar la anulación. Comprobar motivo, responsable, momento y auditoría, reenviar sin sobrescribirlos e intentar anular una Vencida. Registrar un reemplazo del mismo mes, verificar que el plan y los roles del titular no cambien, y revisar ambas variantes, titular inactivo, acceso no administrativo, teclado y móvil.
