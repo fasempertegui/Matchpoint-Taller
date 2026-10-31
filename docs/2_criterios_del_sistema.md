@@ -423,7 +423,7 @@ Celery Beat ejecuta la finalización de clases y reservas cada hora en punto de 
 
 La finalización automática de una clase no tiene responsable manual. Una finalización manual registra al administrador o profesor autorizado; las reservas no registran responsable de finalización, tampoco en la acción administrativa de emergencia. Cada ejecución recupera todas las clases y reservas pendientes, incluidas las que terminaron durante una interrupción de los servicios.
 
-El vencimiento diario procesa las contrataciones Activas de planes y pases cuyo mes terminó, cambia su estado a Vencido y actualiza su fecha de modificación. No altera contrataciones Anuladas, ingresos ni relaciones históricas. Repetir la tarea no cambia los registros ya procesados. Los avisos de vencimiento y los recordatorios de clases se definen en 2.6.
+El vencimiento diario se ejecuta a las 00:05 de Buenos Aires y procesa las contrataciones Activas de planes y pases cuyo mes terminó, cambia su estado a Vencido y actualiza su fecha de modificación. No altera contrataciones Anuladas, ingresos ni relaciones históricas. Repetir la tarea no cambia los registros ya procesados. Los avisos de vencimiento y los recordatorios de clases se definen en 2.6.
 
 
 ### 2.14 Historial de auditoría

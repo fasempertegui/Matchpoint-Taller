@@ -282,3 +282,18 @@ La anulación conserva usuario, pase, mes, importe y relaciones históricas. No 
 La ficha muestra motivo, responsable y fecha; PostgreSQL registra la anulación mediante la auditoría existente. El recorrido comparte pantallas y estilos con planes, sin CSS nuevo, bibliotecas ni cambios visuales globales.
 
 Revisión manual: abrir y cancelar la revisión, rechazar motivo vacío y confirmar la anulación. Comprobar motivo, responsable, momento y auditoría, reenviar sin sobrescribirlos e intentar anular una Vencida. Registrar un reemplazo del mismo mes, verificar que el plan y los roles del titular no cambien, y revisar ambas variantes, titular inactivo, acceso no administrativo, teclado y móvil.
+
+
+## Vencimiento automático de contrataciones
+
+Celery Beat programa el vencimiento de planes y pases diariamente a las 00:05 de Buenos Aires. La tarea procesa por separado las contrataciones de ambos tipos cuyo estado siga Activo y cuyo mes sea anterior al mes local actual; recupera todos los pendientes, no sólo el mes anterior. Las contrataciones del mes actual o futuro, las Anuladas y las Vencidas quedan fuera.
+
+La actualización de ambos tipos se realiza en una transacción y limita cada escritura al estado Activo. PostgreSQL coordina los bloqueos de fila y vuelve a comprobar esa condición frente a una anulación concurrente, sin sobrescribirla. Sólo se modifican estado a Vencido y fecha de modificación con el momento del procesamiento. No se cambian usuarios, roles, productos, fechas efectivas, importes, clases, reservas, coberturas, cobros ni marcas de aviso. Las restricciones de exclusividad del mes conservan las contrataciones Vencidas.
+
+La auditoría registra las modificaciones con origen tarea y sin responsable manual. El log informa las cantidades de planes y pases procesados. Repetir la ejecución no actualiza filas ya Vencidas ni sus fechas o auditoría. Los errores operativos se reintentan con espera progresiva y confirmación tardía del mensaje; si falla la transacción, no quedan escrituras parciales.
+
+La consulta de vigencia de planes y pases comprueba el estado y el período calendario, aunque la tarea se demore. Los pases comprueban además los días habilitados por su variante. Un mes futuro no da cobertura al actual, ni un mes terminado conserva cobertura por seguir almacenado como Activo. El retiro de Alumno continúa basándose en el estado registrado: el vencimiento no retira el rol automáticamente.
+
+No hay botones de vencimiento ni pantallas nuevas. Los avisos por email tienen su proceso independiente.
+
+Revisión manual: comprobar el cambio al iniciar un mes, la conservación del mes actual y futuro y la recuperación de meses pendientes. Revisar Anulados y Vencidos, ejecución repetida, concurrencia con anulación, importes, roles y auditoría. Comprobar que una contratación fuera de su período no otorgue vigencia aunque su estado almacenado siga Activo.

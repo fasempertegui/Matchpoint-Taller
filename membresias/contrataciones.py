@@ -158,3 +158,15 @@ def registrar_contratacion_pase(
             raise ValidationError("El usuario ya tiene una contratación de pase para ese mes.") from None
         raise
     return contratacion
+
+
+def vencer_contrataciones():
+    inicio_mes_actual = timezone.localdate().replace(day=1)
+    procesado_en = timezone.now()
+    cantidades = {}
+    with contexto_auditoria(origen="tarea"):
+        for tipo, modelo in (("planes", PlanUsuario), ("pases", PaseUsuario)):
+            cantidades[tipo] = modelo.objects.filter(
+                estado=modelo.Estado.ACTIVO, mes_cubierto__lt=inicio_mes_actual,
+            ).update(estado=modelo.Estado.VENCIDO, actualizado_en=procesado_en)
+    return cantidades

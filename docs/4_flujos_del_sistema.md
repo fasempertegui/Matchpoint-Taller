@@ -2453,19 +2453,19 @@ Estos procesos no son flujos: no representan la intención de un actor humano qu
 ### 4.1 Vencimiento de planes y pases contratados
 
 - **Objetivo:** actualizar el estado de contrataciones cuyo mes terminó.
-- **Disparador:** tarea diaria de Celery en la zona de Buenos Aires.
+- **Disparador:** tarea diaria de Celery a las 00:05 en la zona de Buenos Aires.
 
 Procedimiento:
 
 1. Consulta `planes_usuarios` y `pases_usuarios` por separado.
 2. Selecciona los Activos cuyo fin de mes calculado es anterior a la fecha local actual.
-3. Los marca Vencidos y actualiza su fecha de modificación.
-4. Registra la cantidad procesada.
+3. Los marca Vencidos y actualiza su fecha de modificación en una transacción. Cada actualización exige que la fila siga Activa para no sobrescribir una anulación concurrente.
+4. Registra por separado la cantidad de planes y pases procesados.
 
 Condiciones:
 
 - No modifica Anulados o Vencidos ni retira roles.
-- Una repetición sólo encuentra los que siguen Activos.
+- Una repetición sólo encuentra los que siguen Activos. Cada ejecución recupera todos los meses pendientes, incluidas interrupciones previas; los errores operativos de base de datos permiten reintento sin sobrescribir transiciones confirmadas.
 - Cada uso comprueba también el mes cubierto; no depende exclusivamente de que la tarea haya actualizado el estado.
 - Conserva productos, importes aplicados, movimientos y relaciones históricas.
 

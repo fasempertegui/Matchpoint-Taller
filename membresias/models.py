@@ -202,6 +202,9 @@ class PlanUsuario(models.Model):
     def producto(self):
         return self.plan
 
+    def vigente_en(self, fecha):
+        return self.estado == self.Estado.ACTIVO and self.fecha_inicio <= fecha <= self.fecha_fin
+
     @property
     def fecha_inicio(self):
         return self.mes_cubierto

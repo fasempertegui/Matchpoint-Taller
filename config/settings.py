@@ -137,6 +137,10 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_BEAT_SCHEDULE = {
+    "vencer-contrataciones-cada-dia": {
+        "task": "membresias.tasks.vencer_contrataciones",
+        "schedule": crontab(hour=0, minute=5),
+    },
     "finalizar-clases-cada-hora": {
         "task": "clases.tasks.finalizar_clases_vencidas",
         "schedule": crontab(minute=0),
