@@ -1,3 +1,4 @@
+from django.core import signing
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
@@ -10,7 +11,7 @@ from .models import Pase, PaseUsuario, Plan, PlanUsuario
 from .servicios import exigir_administracion_membresias
 
 
-def _bloquear_titular(actor, usuario_id):
+def _bloquear_titular(actor, usuario_id, *, exigir_activo=True):
     exigir_administracion_membresias(actor)
     usuarios = {
         usuario.pk: usuario for usuario in Usuario.objects.select_for_update()
@@ -18,7 +19,7 @@ def _bloquear_titular(actor, usuario_id):
     }
     actor = exigir_administracion_membresias(actor)
     titular = usuarios.get(usuario_id)
-    if titular is None or not titular.is_active:
+    if titular is None or (exigir_activo and not titular.is_active):
         raise ValidationError("Elegí un usuario activo para registrar la contratación.")
     return actor, titular
 
@@ -62,6 +63,52 @@ def registrar_contratacion_plan(
             raise ValidationError("El usuario ya tiene una contratación de plan para ese mes.") from None
         raise
     return contratacion
+
+
+def version_anulacion_plan(actor, contratacion):
+    return signing.dumps({
+        "actor": actor.pk, "contratacion": contratacion.pk,
+        "actualizado_en": contratacion.actualizado_en.isoformat(),
+    }, salt="membresias.anular_plan")
+
+
+@transaction.atomic
+def anular_contratacion_plan(actor, contratacion_id, *, motivo, version):
+    exigir_administracion_membresias(actor)
+    titular_id = PlanUsuario.objects.values_list("usuario_id", flat=True).get(pk=contratacion_id)
+    actor, _ = _bloquear_titular(actor, titular_id, exigir_activo=False)
+    contratacion = PlanUsuario.objects.select_for_update().get(pk=contratacion_id)
+    if contratacion.estado == PlanUsuario.Estado.ANULADO:
+        return contratacion
+    if contratacion.estado != PlanUsuario.Estado.ACTIVO:
+        raise ValidationError("Sólo se pueden anular contrataciones de planes Activas.")
+    try:
+        datos = signing.loads(version, salt="membresias.anular_plan")
+    except (signing.BadSignature, TypeError):
+        raise ValidationError("La revisión no es válida. Volvé a abrir la anulación antes de confirmar.") from None
+    if datos != {
+        "actor": actor.pk, "contratacion": contratacion.pk,
+        "actualizado_en": contratacion.actualizado_en.isoformat(),
+    }:
+        raise ValidationError("La contratación cambió. Volvé a revisar sus datos antes de confirmar la anulación.")
+    motivo = motivo.strip()
+    if not motivo:
+        raise ValidationError("Indicá el motivo de la anulación.")
+    contratacion.estado = PlanUsuario.Estado.ANULADO
+    contratacion.motivo_anulacion = motivo
+    contratacion.anulado_por = actor
+    contratacion.anulado_en = timezone.now()
+    contratacion.full_clean()
+    with contexto_auditoria(actor):
+        contratacion.save(update_fields=[
+            "estado", "motivo_anulacion", "anulado_por", "anulado_en", "actualizado_en",
+        ])
+    return contratacion
+
+
+def validar_retiro_rol_alumno(usuario):
+    if PlanUsuario.objects.filter(usuario=usuario, estado=PlanUsuario.Estado.ACTIVO).exists():
+        raise ValidationError("No se puede quitar el rol Alumno mientras el usuario tenga contrataciones de planes Activas.")
 
 
 @transaction.atomic

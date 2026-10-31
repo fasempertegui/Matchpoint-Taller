@@ -13,6 +13,7 @@ urlpatterns = [
     path("contrataciones/planes/", vistas_contrataciones.contratacion_lista, name="contratacion_plan_lista"),
     path("contrataciones/planes/nueva/", vistas_contrataciones.contratacion_crear, name="contratacion_plan_crear"),
     path("contrataciones/planes/<int:pk>/", vistas_contrataciones.contratacion_detalle, name="contratacion_plan_detalle"),
+    path("contrataciones/planes/<int:pk>/anular/", vistas_contrataciones.contratacion_plan_anular, name="contratacion_plan_anular"),
     path("contrataciones/pases/", vistas_contrataciones.contratacion_lista, {"tipo": "pase"}, name="contratacion_pase_lista"),
     path("contrataciones/pases/nueva/", vistas_contrataciones.contratacion_crear, {"tipo": "pase"}, name="contratacion_pase_crear"),
     path("contrataciones/pases/<int:pk>/", vistas_contrataciones.contratacion_detalle, {"tipo": "pase"}, name="contratacion_pase_detalle"),

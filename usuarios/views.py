@@ -12,6 +12,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 from auditoria.contexto import contexto_auditoria
 from auditoria.models import LogAuditoria
 from clases.validaciones import validar_retiro_rol_profesor
+from membresias.contrataciones import validar_retiro_rol_alumno
 from reservas.models import Evento
 
 from .forms import (
@@ -285,9 +286,12 @@ def usuario_gestionar_rol(request, pk, rol):
             if rol == Rol.RESERVAS and usuario.reservas.filter(evento__estado=Evento.Estado.PROGRAMADO).exists():
                 messages.error(request, "No se puede quitar el rol Reservas mientras el usuario tenga reservas Programadas.")
                 return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
-            if rol == Rol.PROFESOR:
+            if rol in (Rol.PROFESOR, Rol.ALUMNO):
                 try:
-                    validar_retiro_rol_profesor(usuario)
+                    if rol == Rol.PROFESOR:
+                        validar_retiro_rol_profesor(usuario)
+                    else:
+                        validar_retiro_rol_alumno(usuario)
                 except ValidationError as error:
                     for mensaje in error.messages:
                         messages.error(request, mensaje)

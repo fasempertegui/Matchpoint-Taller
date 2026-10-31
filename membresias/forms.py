@@ -142,3 +142,12 @@ class ContratacionPaseForm(ContratacionPlanForm):
     precio_aplicado = forms.DecimalField(
         min_value=0, max_digits=12, decimal_places=2, widget=forms.HiddenInput(),
     )
+
+
+class AnulacionContratacionForm(forms.Form):
+    version = forms.CharField(widget=forms.HiddenInput())
+    motivo = forms.CharField(
+        label="Motivo de anulación",
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3, "autofocus": True}),
+        error_messages={"required": "Indicá el motivo de la anulación."},
+    )

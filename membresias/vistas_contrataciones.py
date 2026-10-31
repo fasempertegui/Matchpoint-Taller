@@ -9,10 +9,13 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
-from .contrataciones import registrar_contratacion_pase, registrar_contratacion_plan
+from .contrataciones import (
+    anular_contratacion_plan, registrar_contratacion_pase, registrar_contratacion_plan, version_anulacion_plan,
+)
 from .fechas import meses_contratables
 from .forms import (
-    ContratacionPaseForm, ContratacionPlanForm, SeleccionContratacionPaseForm, SeleccionContratacionPlanForm,
+    AnulacionContratacionForm, ContratacionPaseForm, ContratacionPlanForm,
+    SeleccionContratacionPaseForm, SeleccionContratacionPlanForm,
 )
 from .models import PaseUsuario, PlanUsuario
 from .servicios import exigir_administracion_membresias
@@ -143,3 +146,40 @@ def contratacion_crear(request, tipo="plan"):
             "precio_propuesto": producto.precio_vigente,
         })
     return render(request, "membresias/contratacion_formulario.html", contexto)
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def contratacion_plan_anular(request, pk):
+    actor = exigir_administracion_membresias(request.user)
+    contratacion = get_object_or_404(PlanUsuario.objects.select_related("usuario", "plan"), pk=pk)
+    url_detalle = reverse("membresias:contratacion_plan_detalle", args=[pk])
+    if contratacion.estado != PlanUsuario.Estado.ACTIVO:
+        if contratacion.estado == PlanUsuario.Estado.ANULADO:
+            messages.info(request, "La contratación ya está Anulada.")
+        else:
+            messages.error(request, "Sólo se pueden anular contrataciones de planes Activas.")
+        return redirect(url_detalle)
+    formulario = AnulacionContratacionForm(
+        request.POST if request.method == "POST" else None,
+        initial={"version": version_anulacion_plan(actor, contratacion)},
+    )
+    if request.method == "POST" and formulario.is_valid():
+        try:
+            anular_contratacion_plan(actor, pk, **formulario.cleaned_data)
+        except ValidationError as error:
+            contratacion.refresh_from_db()
+            if contratacion.estado != PlanUsuario.Estado.ACTIVO:
+                for mensaje in error.messages:
+                    messages.error(request, mensaje)
+                return redirect(url_detalle)
+            formulario.add_error(None, error)
+        else:
+            messages.success(request, "La contratación del plan está Anulada.")
+            return redirect(url_detalle)
+    return render(request, "membresias/contratacion_anular.html", {
+        **_contexto("plan", "Anular contratación"), "contratacion": contratacion,
+        "titulo": "Anular contratación de plan", "formulario": formulario,
+        "texto_boton": "Confirmar anulación", "url_cancelar": url_detalle,
+    })

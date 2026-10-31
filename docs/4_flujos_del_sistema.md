@@ -880,9 +880,9 @@ flowchart TD
 
 Recorrido:
 
-1. Consulta usos e ingresos de la contratación.
-2. Ingresa el motivo y confirma.
-3. En una transacción, bloquea la fila en su tabla, verifica estado Activo y establece Anulado.
+1. Revisa titular, producto, período, importe y efectos de la anulación, junto con los usos e ingresos de la contratación.
+2. Ingresa el motivo y confirma en la página de revisión. Si los datos cambiaron, vuelve a revisarlos antes de confirmar.
+3. En una transacción, bloquea al usuario y la fila de contratación, verifica estado Activo y establece Anulado.
 4. Registra administrador, momento y motivo de anulación, actualizando la fecha de modificación.
 
 Alternativas:
