@@ -108,6 +108,8 @@ def guardar_pase(
         "precio_invitado_vigente": precio_invitado_vigente,
     }
     cambios = [campo for campo, valor in datos.items() if getattr(pase, campo) != valor]
+    if pase_id is not None and {"tipo", "limite_horas_diarias"}.intersection(cambios) and pase.contrataciones.exists():
+        raise ValidationError("La variante y el límite diario no se pueden cambiar en un pase con contrataciones.")
     for campo, valor in datos.items():
         setattr(pase, campo, valor)
     if pase_id is not None and not cambios:

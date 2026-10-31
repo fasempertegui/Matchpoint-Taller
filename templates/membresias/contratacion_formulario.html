@@ -1,0 +1,13 @@
+{% extends "membresias/catalogo_formulario.html" %}
+{% block formulario_contexto %}
+    {% if titular %}
+        <p><strong>{{ titular }}</strong> · {{ producto.nombre }}</p>
+        <p class="texto-secundario">Precio vigente: $ {{ precio_propuesto|floatformat:"2g" }}. {% if tipo == 'pase' %}Se aplica el precio vigente sin ajustes. {% endif %}La contratación cubre el mes completo y el cobro se registra por separado.</p>
+        <p><a href="{{ url_crear }}">Cambiar usuario o {{ tipo }}</a></p>
+    {% else %}
+        <p class="texto-secundario">Elegí el usuario y el {{ tipo }} para preparar la contratación mensual.</p>
+    {% endif %}
+{% endblock %}
+{% block formulario_seleccion %}
+    {% if not titular %}<input type="hidden" name="paso" value="preparar">{% endif %}
+{% endblock %}

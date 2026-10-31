@@ -9,31 +9,56 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
-from .contrataciones import registrar_contratacion_plan
+from .contrataciones import registrar_contratacion_pase, registrar_contratacion_plan
 from .fechas import meses_contratables
-from .forms import ContratacionPlanForm, SeleccionContratacionPlanForm
-from .models import PlanUsuario
+from .forms import (
+    ContratacionPaseForm, ContratacionPlanForm, SeleccionContratacionPaseForm, SeleccionContratacionPlanForm,
+)
+from .models import PaseUsuario, PlanUsuario
 from .servicios import exigir_administracion_membresias
 
 
-def _breadcrumbs(titulo=None):
-    items = [
+CONFIGURACION_CONTRATACIONES = {
+    "plan": {
+        "modelo": PlanUsuario, "plural": "planes", "seleccion": SeleccionContratacionPlanForm,
+        "formulario": ContratacionPlanForm, "registrar": registrar_contratacion_plan,
+        "etiqueta_importe": "Importe acordado (ARS)",
+    },
+    "pase": {
+        "modelo": PaseUsuario, "plural": "pases", "seleccion": SeleccionContratacionPaseForm,
+        "formulario": ContratacionPaseForm, "registrar": registrar_contratacion_pase,
+        "etiqueta_importe": "Importe aplicado (ARS)",
+    },
+}
+
+
+def _contexto(tipo, titulo=None):
+    configuracion = CONFIGURACION_CONTRATACIONES[tipo]
+    plural = configuracion["plural"]
+    url_lista = reverse(f"membresias:contratacion_{tipo}_lista")
+    breadcrumbs = [
         ("Inicio", reverse("inicio")), ("Membresías", reverse("membresias:catalogos")),
-        ("Contrataciones de planes", reverse("membresias:contratacion_plan_lista")),
+        (f"Contrataciones de {plural}", url_lista),
     ]
     if titulo:
-        items.append((titulo, None))
+        breadcrumbs.append((titulo, None))
     else:
-        items[-1] = (items[-1][0], None)
-    return items
+        breadcrumbs[-1] = (breadcrumbs[-1][0], None)
+    return {
+        "tipo": tipo, "plural": plural, "breadcrumbs": breadcrumbs, "url_lista": url_lista,
+        "url_crear": reverse(f"membresias:contratacion_{tipo}_crear"),
+        "ruta_detalle": f"membresias:contratacion_{tipo}_detalle",
+        "ruta_producto": f"membresias:{tipo}_detalle", "etiqueta_importe": configuracion["etiqueta_importe"],
+    }
 
 
 @login_required
 @never_cache
 @require_GET
-def contratacion_plan_lista(request):
+def contratacion_lista(request, tipo="plan"):
     exigir_administracion_membresias(request.user)
-    contrataciones = PlanUsuario.objects.select_related("usuario", "plan")
+    modelo = CONFIGURACION_CONTRATACIONES[tipo]["modelo"]
+    contrataciones = modelo.objects.select_related("usuario", tipo)
     busqueda = request.GET.get("q", "").strip()[:150]
     estado = request.GET.get("estado", "")
     mes = request.GET.get("mes", "")
@@ -41,9 +66,9 @@ def contratacion_plan_lista(request):
     if busqueda:
         contrataciones = contrataciones.filter(
             Q(usuario__first_name__icontains=busqueda) | Q(usuario__last_name__icontains=busqueda)
-            | Q(usuario__username__icontains=busqueda) | Q(plan__nombre__icontains=busqueda),
+            | Q(usuario__username__icontains=busqueda) | Q(**{f"{tipo}__nombre__icontains": busqueda}),
         )
-    if estado in PlanUsuario.Estado.values:
+    if estado in modelo.Estado.values:
         contrataciones = contrataciones.filter(estado=estado)
     else:
         estado = ""
@@ -51,67 +76,70 @@ def contratacion_plan_lista(request):
         contrataciones = contrataciones.filter(mes_cubierto=mes)
     else:
         mes = ""
-    return render(request, "membresias/contratacion_plan_lista.html", {
-        "pagina": Paginator(contrataciones, 25).get_page(request.GET.get("pagina")),
+    return render(request, "membresias/contratacion_lista.html", {
+        **_contexto(tipo), "pagina": Paginator(contrataciones, 25).get_page(request.GET.get("pagina")),
         "busqueda": busqueda, "estado_actual": estado, "mes_actual": mes,
-        "estados": PlanUsuario.Estado.choices, "meses": meses,
-        "hay_contrataciones": PlanUsuario.objects.exists(), "breadcrumbs": _breadcrumbs(),
+        "estados": modelo.Estado.choices, "meses": meses, "hay_contrataciones": modelo.objects.exists(),
     })
 
 
 @login_required
 @never_cache
 @require_GET
-def contratacion_plan_detalle(request, pk):
+def contratacion_detalle(request, pk, tipo="plan"):
     exigir_administracion_membresias(request.user)
+    modelo = CONFIGURACION_CONTRATACIONES[tipo]["modelo"]
     contratacion = get_object_or_404(
-        PlanUsuario.objects.select_related("usuario", "plan", "registrado_por", "anulado_por"), pk=pk,
+        modelo.objects.select_related("usuario", tipo, "registrado_por", "anulado_por"), pk=pk,
     )
-    return render(request, "membresias/contratacion_plan_detalle.html", {
-        "contratacion": contratacion, "breadcrumbs": _breadcrumbs(f"Contratación #{contratacion.pk}"),
+    return render(request, "membresias/contratacion_detalle.html", {
+        **_contexto(tipo, f"Contratación #{contratacion.pk}"), "contratacion": contratacion,
     })
 
 
 @login_required
 @never_cache
 @require_http_methods(["GET", "POST"])
-def contratacion_plan_crear(request):
+def contratacion_crear(request, tipo="plan"):
     exigir_administracion_membresias(request.user)
+    configuracion = CONFIGURACION_CONTRATACIONES[tipo]
     datos = request.POST if request.method == "POST" else request.GET
-    seleccion = SeleccionContratacionPlanForm(datos if datos else None)
+    seleccion = configuracion["seleccion"](datos if datos else None)
     preparar = request.method == "POST" or datos.get("paso") == "preparar"
     contexto = {
-        "titulo": "Registrar contratación de plan", "formulario": seleccion,
+        **_contexto(tipo, "Nueva contratación"),
+        "titulo": f"Registrar contratación de {tipo}", "formulario": seleccion,
         "texto_boton": "Continuar", "metodo_formulario": "get",
-        "url_cancelar": reverse("membresias:contratacion_plan_lista"),
-        "breadcrumbs": _breadcrumbs("Nueva contratación"),
+        "url_cancelar": reverse(f"membresias:contratacion_{tipo}_lista"),
     }
     if preparar and seleccion.is_valid():
         titular = seleccion.cleaned_data["usuario"]
-        plan = seleccion.cleaned_data["plan"]
-        formulario = ContratacionPlanForm(
+        producto = seleccion.cleaned_data[tipo]
+        formulario = configuracion["formulario"](
             request.POST if request.method == "POST" else None,
             initial={
-                "usuario": titular.pk, "plan": plan.pk, "mes_cubierto": timezone.localdate().replace(day=1),
-                "fecha_alta": timezone.localdate(), "precio_aplicado": plan.precio_vigente,
+                "usuario": titular.pk, tipo: producto.pk, "mes_cubierto": timezone.localdate().replace(day=1),
+                "fecha_alta": timezone.localdate(), "precio_aplicado": producto.precio_vigente,
             },
         )
         if request.method == "POST" and formulario.is_valid():
+            argumentos = {
+                "usuario_id": formulario.cleaned_data["usuario"], f"{tipo}_id": formulario.cleaned_data[tipo],
+                "mes_cubierto": formulario.cleaned_data["mes_cubierto"],
+                "fecha_alta": formulario.cleaned_data["fecha_alta"],
+                "precio_aplicado": formulario.cleaned_data["precio_aplicado"],
+                "observaciones": formulario.cleaned_data["observaciones"],
+            }
             try:
-                contratacion = registrar_contratacion_plan(
-                    request.user, usuario_id=formulario.cleaned_data["usuario"],
-                    plan_id=formulario.cleaned_data["plan"], mes_cubierto=formulario.cleaned_data["mes_cubierto"],
-                    fecha_alta=formulario.cleaned_data["fecha_alta"],
-                    precio_aplicado=formulario.cleaned_data["precio_aplicado"],
-                    observaciones=formulario.cleaned_data["observaciones"],
-                )
+                contratacion = configuracion["registrar"](request.user, **argumentos)
             except ValidationError as error:
                 formulario.add_error(None, error)
             else:
-                messages.success(request, "La contratación del plan fue registrada.")
-                return redirect("membresias:contratacion_plan_detalle", pk=contratacion.pk)
+                messages.success(request, f"La contratación del {tipo} fue registrada.")
+                return redirect(f"membresias:contratacion_{tipo}_detalle", pk=contratacion.pk)
         contexto.update({
-            "formulario": formulario, "titular": titular, "plan": plan, "texto_boton": "Registrar contratación",
-            "metodo_formulario": "post", "precio_propuesto": plan.precio_vigente,
+            "formulario": formulario, "titular": titular, "producto": producto,
+            "texto_boton": "Registrar contratación", "metodo_formulario": "post",
+            "precio_propuesto": producto.precio_vigente,
         })
-    return render(request, "membresias/contratacion_plan_formulario.html", contexto)
+    return render(request, "membresias/contratacion_formulario.html", contexto)

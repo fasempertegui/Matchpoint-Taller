@@ -58,9 +58,17 @@ class PaseForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["version"].required = self.instance.pk is not None
+        if self.instance.pk and self.instance.contrataciones.exists():
+            for nombre in ("tipo", "limite_horas_diarias"):
+                self.fields[nombre].disabled = True
+                self.fields[nombre].help_text = "La configuración se conserva porque este pase tiene contrataciones."
 
 
 class SeleccionContratacionPlanForm(forms.Form):
+    campo_producto = "plan"
+    modelo_producto = Plan
+    admite_profesor = False
+
     usuario = forms.ModelChoiceField(
         label="Usuario", queryset=Usuario.objects.none(), widget=forms.Select(attrs={"class": "form-control"}),
         help_text="Elegí una cuenta activa. Quienes tienen rol Profesor no pueden contratar planes.",
@@ -71,10 +79,27 @@ class SeleccionContratacionPlanForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["usuario"].queryset = Usuario.objects.filter(is_active=True).exclude(
-            roles__rol__codigo=Rol.PROFESOR,
-        ).order_by("last_name", "first_name", "username")
-        self.fields["plan"].queryset = Plan.objects.filter(estado=Plan.Estado.ACTIVO)
+        usuarios = Usuario.objects.filter(is_active=True)
+        if not self.admite_profesor:
+            usuarios = usuarios.exclude(roles__rol__codigo=Rol.PROFESOR)
+        self.fields["usuario"].queryset = usuarios.order_by("last_name", "first_name", "username")
+        self.fields[self.campo_producto].queryset = self.modelo_producto.objects.filter(
+            estado=self.modelo_producto.Estado.ACTIVO,
+        )
+
+
+class SeleccionContratacionPaseForm(SeleccionContratacionPlanForm):
+    campo_producto = "pase"
+    modelo_producto = Pase
+    admite_profesor = True
+    plan = None
+    pase = forms.ModelChoiceField(
+        label="Pase", queryset=Pase.objects.none(), widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["usuario"].help_text = "Elegí una cuenta activa. Puede contratar un pase aunque tenga rol Profesor."
 
 
 class ContratacionPlanForm(forms.Form):
@@ -109,3 +134,11 @@ class ContratacionPlanForm(forms.Form):
         self.fields["fecha_alta"].widget.attrs.update({
             "min": FECHA_INICIO_OPERACIONES.isoformat(), "max": timezone.localdate().isoformat(),
         })
+
+
+class ContratacionPaseForm(ContratacionPlanForm):
+    plan = None
+    pase = forms.IntegerField(widget=forms.HiddenInput())
+    precio_aplicado = forms.DecimalField(
+        min_value=0, max_digits=12, decimal_places=2, widget=forms.HiddenInput(),
+    )

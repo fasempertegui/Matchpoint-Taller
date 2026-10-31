@@ -199,6 +199,10 @@ class PlanUsuario(models.Model):
         return f"{self.usuario} · {self.plan} · {self.mes_cubierto:%m/%Y}"
 
     @property
+    def producto(self):
+        return self.plan
+
+    @property
     def fecha_inicio(self):
         return self.mes_cubierto
 
@@ -213,5 +217,97 @@ class PlanUsuario(models.Model):
         if self.pk:
             original = type(self).objects.get(pk=self.pk)
             campos = ("usuario_id", "plan_id", "mes_cubierto", "fecha_alta", "precio_aplicado", "registrado_por_id")
+            if any(getattr(self, campo) != getattr(original, campo) for campo in campos):
+                raise ValidationError("Los datos de una contratación registrada no se pueden editar.")
+
+
+class PaseUsuario(models.Model):
+    class Estado(models.TextChoices):
+        ACTIVO = "activo", "Activo"
+        ANULADO = "anulado", "Anulado"
+        VENCIDO = "vencido", "Vencido"
+
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="pases_contratados")
+    pase = models.ForeignKey(Pase, on_delete=models.PROTECT, related_name="contrataciones")
+    mes_cubierto = models.DateField("Mes cubierto")
+    fecha_alta = models.DateField("Fecha efectiva de alta")
+    precio_aplicado = models.DecimalField(
+        "Importe aplicado (ARS)", max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal("0"))],
+    )
+    registrado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contrataciones_pase_registradas",
+    )
+    observaciones = models.TextField(blank=True, default="")
+    estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
+    aviso_vencimiento_enviado = models.BooleanField(default=False)
+    anulado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contrataciones_pase_anuladas",
+        null=True, blank=True,
+    )
+    anulado_en = models.DateTimeField(null=True, blank=True)
+    motivo_anulacion = models.TextField(blank=True, default="")
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "pases_usuarios"
+        ordering = ("-mes_cubierto", "-pk")
+        default_permissions = ()
+        verbose_name = "contratación de pase"
+        verbose_name_plural = "contrataciones de pases"
+        constraints = [
+            models.UniqueConstraint(
+                fields=("usuario", "mes_cubierto"), condition=models.Q(estado__in=("activo", "vencido")),
+                name="pase_usuario_mes_no_anulado_unico",
+                violation_error_message="El usuario ya tiene una contratación de pase para ese mes.",
+            ),
+            models.CheckConstraint(condition=models.Q(mes_cubierto__day=1), name="pase_usuario_mes_primer_dia"),
+            models.CheckConstraint(
+                condition=models.Q(mes_cubierto__gte=FECHA_INICIO_OPERACIONES), name="pase_usuario_mes_operativo",
+            ),
+            models.CheckConstraint(condition=models.Q(precio_aplicado__gte=0), name="pase_usuario_precio_no_negativo"),
+            models.CheckConstraint(
+                condition=models.Q(estado__in=("activo", "anulado", "vencido")), name="pase_usuario_estado_valido",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(estado="anulado", anulado_por__isnull=False, anulado_en__isnull=False,
+                             motivo_anulacion__regex=r"\S")
+                    | (models.Q(anulado_por__isnull=True, anulado_en__isnull=True, motivo_anulacion="")
+                       & ~models.Q(estado="anulado"))
+                ),
+                name="pase_usuario_anulacion_coherente",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.usuario} · {self.pase} · {self.mes_cubierto:%m/%Y}"
+
+    @property
+    def producto(self):
+        return self.pase
+
+    def vigente_en(self, fecha):
+        return (
+            self.estado == self.Estado.ACTIVO and self.fecha_inicio <= fecha <= self.fecha_fin
+            and (self.pase.tipo == Pase.Tipo.LIBRE or fecha.weekday() >= 5)
+        )
+
+    @property
+    def fecha_inicio(self):
+        return self.mes_cubierto
+
+    @property
+    def fecha_fin(self):
+        return self.mes_cubierto.replace(day=monthrange(self.mes_cubierto.year, self.mes_cubierto.month)[1])
+
+    def clean(self):
+        super().clean()
+        if self.mes_cubierto and self.mes_cubierto.day != 1:
+            raise ValidationError({"mes_cubierto": "Elegí un mes calendario completo."})
+        if self.pk:
+            original = type(self).objects.get(pk=self.pk)
+            campos = ("usuario_id", "pase_id", "mes_cubierto", "fecha_alta", "precio_aplicado", "registrado_por_id")
             if any(getattr(self, campo) != getattr(original, campo) for campo in campos):
                 raise ValidationError("Los datos de una contratación registrada no se pueden editar.")
