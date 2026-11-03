@@ -32,6 +32,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "100.126.16.25",
+    "100.81.181.49",
     "fabricio",
     "fabricio.tail8b189e.ts.net",
 ]
