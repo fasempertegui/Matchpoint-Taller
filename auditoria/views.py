@@ -2,7 +2,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.shortcuts import render
-from django.urls import reverse
 from django.views.decorators.http import require_GET
 
 from usuarios.models import Rol
@@ -31,7 +30,6 @@ def auditoria_lista(request):
         "filas": filas,
         "pagina": pagina,
         "historial_actual": "cambios",
-        "breadcrumbs": [("Inicio", reverse("inicio")), ("Auditoría", None)],
     })
 
 
@@ -43,5 +41,4 @@ def intentos_lista(request):
     pagina = Paginator(registros, 25).get_page(request.GET.get("pagina"))
     return render(request, "auditoria/intentos_lista.html", {
         "filas": preparar_intentos(list(pagina)), "pagina": pagina, "historial_actual": "intentos",
-        "breadcrumbs": [("Inicio", reverse("inicio")), ("Auditoría", reverse("auditoria:auditoria_lista")), ("Intentos rechazados", None)],
     })

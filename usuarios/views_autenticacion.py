@@ -13,7 +13,6 @@ from auditoria.intentos import registrar_intento
 from auditoria.models import IntentoAuditoria, LogAuditoria
 
 from .forms import CambioContrasenaForm, InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario
-from .navegacion import breadcrumbs_usuario
 
 
 @require_GET
@@ -36,9 +35,6 @@ class RegistroView(FormView):
     template_name = "usuarios/registro_formulario.html"
     form_class = UsuarioRegistroForm
     success_url = reverse_lazy("login")
-    extra_context = {
-        "breadcrumbs": [("Acceso", None), ("Iniciar sesión", reverse_lazy("login")), ("Crear cuenta", None)],
-    }
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -58,7 +54,6 @@ class InicioSesionView(auth_views.LoginView):
     template_name = "autenticacion/iniciar_sesion.html"
     authentication_form = InicioSesionForm
     redirect_authenticated_user = True
-    extra_context = {"breadcrumbs": [("Acceso", None), ("Iniciar sesión", None)]}
 
     def post(self, request, *args, **kwargs):
         with contexto_auditoria(origen="autenticacion", accion=LogAuditoria.Accion.ACTUALIZACION_HASH):
@@ -92,14 +87,6 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
         with contexto_auditoria(request.user, accion=LogAuditoria.Accion.ACTUALIZACION_HASH):
             return super().post(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        contexto = super().get_context_data(**kwargs)
-        if self.request.user.debe_cambiar_contrasena:
-            contexto["breadcrumbs"] = [("Acceso", None), ("Cambiar contraseña", None)]
-        else:
-            contexto["breadcrumbs"] = breadcrumbs_usuario(self.request.user, self.request.user) + [("Cambiar contraseña", None)]
-        return contexto
-
     def form_valid(self, form):
         with contexto_auditoria(self.request.user, accion=LogAuditoria.Accion.CAMBIO_CONTRASENA):
             usuario = form.save(commit=False)
@@ -119,8 +106,3 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
 
 class CambioContrasenaCompletadoView(auth_views.PasswordChangeDoneView):
     template_name = "autenticacion/cambio_contrasena_completado.html"
-
-    def get_context_data(self, **kwargs):
-        contexto = super().get_context_data(**kwargs)
-        contexto["breadcrumbs"] = breadcrumbs_usuario(self.request.user, self.request.user) + [("Contraseña actualizada", None)]
-        return contexto

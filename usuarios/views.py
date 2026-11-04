@@ -23,7 +23,6 @@ from .forms import (
     generar_contrasena_valida,
 )
 from .models import Rol, Usuario, UsuarioRol
-from .navegacion import breadcrumbs_usuario
 
 ROLES_GESTIONABLES = {Rol.RESERVAS, Rol.PROFESOR, Rol.ALUMNO}
 
@@ -63,7 +62,6 @@ def usuario_lista(request):
         {
             "usuarios": usuarios,
             "formulario_busqueda": formulario_busqueda,
-            "breadcrumbs": breadcrumbs_usuario(request.user),
         },
     )
 
@@ -84,7 +82,6 @@ def usuario_detalle(request, pk):
         "usuarios/usuario_detalle.html",
         {
             "usuario_obj": usuario,
-            "breadcrumbs": breadcrumbs_usuario(request.user, usuario),
             "roles_asignados": roles_asignados,
             "puede_consultar_actividad": request.user.pk == usuario.pk or request.user.tiene_rol(Rol.ADMINISTRADOR),
             "roles_gestionables": [
@@ -113,18 +110,15 @@ def usuario_crear(request):
                 {
                     "usuario_obj": usuario,
                     "contrasena": formulario.cleaned_data["contrasena"],
-                    "breadcrumbs": breadcrumbs_usuario(request.user, usuario) + [("Usuario creado", None)],
                 },
             )
         return render(request, "usuarios/usuario_formulario.html", {
             "formulario": formulario,
-            "breadcrumbs": breadcrumbs_usuario(request.user) + [("Nuevo usuario", None)],
         })
 
     formulario = UsuarioCrearForm()
     return render(request, "usuarios/usuario_formulario.html", {
         "formulario": formulario,
-        "breadcrumbs": breadcrumbs_usuario(request.user) + [("Nuevo usuario", None)],
     })
 
 
@@ -153,7 +147,6 @@ def usuario_editar(request, pk):
         {
             "formulario": formulario,
             "usuario_obj": usuario,
-            "breadcrumbs": breadcrumbs_usuario(request.user, usuario) + [("Modificar correo", None)],
         },
     )
 
@@ -186,7 +179,6 @@ def usuario_restablecer_contrasena(request, pk):
             {
                 "usuario_obj": usuario,
                 "contrasena": contrasena,
-                "breadcrumbs": breadcrumbs_usuario(request.user, usuario) + [("Contraseña restablecida", None)],
             },
         )
 
@@ -195,7 +187,6 @@ def usuario_restablecer_contrasena(request, pk):
         "usuarios/usuario_restablecer_contrasena.html",
         {
             "usuario_obj": usuario,
-            "breadcrumbs": breadcrumbs_usuario(request.user, usuario) + [("Restablecer contraseña", None)],
         },
     )
 

@@ -27,13 +27,6 @@ def _url_planilla(cancha):
     return reverse("clases:planilla") + "?" + urlencode({"sede": cancha.sede_id, "cancha": cancha.pk})
 
 
-def _breadcrumbs(titulo=None, cancha=None):
-    items = [("Inicio", reverse("inicio")), ("Planilla semanal", _url_planilla(cancha) if cancha else None)]
-    if titulo:
-        items.append((titulo, None))
-    return items
-
-
 @login_required
 @never_cache
 @require_GET
@@ -90,7 +83,7 @@ def planilla(request):
     return render(request, "clases/planilla.html", {
         "formulario": formulario, "hay_sedes": sede is not None,
         "datos": datos, "cancha": cancha, "filas": filas,
-        "dias": TurnoPlanilla.DiaSemana.labels, "breadcrumbs": _breadcrumbs(),
+        "dias": TurnoPlanilla.DiaSemana.labels,
     })
 
 
@@ -119,7 +112,6 @@ def planilla_detalle(request, pk):
         "participantes": [v.usuario for v in turno.alumnos.select_related("usuario").order_by("usuario_id")],
         "version": version_turno_planilla(turno), "url_planilla": _url_planilla(turno.cancha),
         "puede_editar": turno.cancha.estado == Cancha.Estado.ACTIVA and turno.cancha.sede.estado == Sede.Estado.ACTIVA,
-        "breadcrumbs": _breadcrumbs("Horario habitual", turno.cancha),
     })
 
 
@@ -233,5 +225,5 @@ def planilla_formulario(request, pk=None):
         "revision": revision, "impedimento": impedimento,
         "profesores": formulario.seleccionados("profesores"),
         "participantes": formulario.seleccionados("participantes"),
-        "url_cancelar": url_cancelar, "breadcrumbs": _breadcrumbs(titulo, cancha),
+        "url_cancelar": url_cancelar,
     })

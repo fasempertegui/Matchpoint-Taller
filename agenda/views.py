@@ -7,7 +7,6 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
@@ -230,7 +229,6 @@ def agenda(request):
         "panel_acciones_mes": panel_acciones_mes,
         "panel_historial": panel_historial,
         **contexto_acciones,
-        "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", None)],
         "zona_horaria": timezone.get_current_timezone_name(),
         "es_administrador": es_administrador,
     }
@@ -352,9 +350,6 @@ def bloqueo_detalle(request, pk):
         ),
         pk=pk, evento__tipo="bloqueo",
     )
-    turno = bloqueo.evento.turno
-    url_agenda = enlace_agenda(turno.cancha.sede, turno.fecha, turno.cancha, turno.hora_inicio.hour)
     return render(request, "agenda/bloqueo_detalle.html", {
         "bloqueo": bloqueo,
-        "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", url_agenda), (bloqueo.numero, None)],
     })

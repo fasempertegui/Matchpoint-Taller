@@ -4,7 +4,6 @@ from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import prefetch_related_objects
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
@@ -15,13 +14,6 @@ from .models import ClaseAlumno, ClaseProfesor, Feriado
 from .permisos import exigir_administracion_clases
 
 
-def _breadcrumbs(titulo=None):
-    items = [("Inicio", reverse("inicio")), ("Feriados", reverse("clases:feriado_lista") if titulo else None)]
-    if titulo:
-        items.append((titulo, None))
-    return items
-
-
 @login_required
 @never_cache
 @require_GET
@@ -29,7 +21,7 @@ def feriado_lista(request):
     usuario = exigir_administracion_clases(request.user)
     pagina = Paginator(consultar_feriados(usuario), 10).get_page(request.GET.get("pagina"))
     return render(request, "clases/feriado_lista.html", {
-        "pagina": pagina, "breadcrumbs": _breadcrumbs(),
+        "pagina": pagina,
     })
 
 
@@ -72,7 +64,6 @@ def feriado_registrar(request):
             formulario.add_error(None, error)
     return render(request, "clases/feriado_formulario.html", {
         "formulario": formulario, "revision": revision, "clases": clases,
-        "breadcrumbs": _breadcrumbs("Registrar feriado"),
     })
 
 
@@ -97,5 +88,5 @@ def feriado_detalle(request, pk):
                 messages.error(request, mensaje)
             return redirect("clases:feriado_detalle", pk=pk)
     return render(request, "clases/feriado_detalle.html", {
-        "feriado": feriado, "breadcrumbs": _breadcrumbs("Detalle de feriado"),
+        "feriado": feriado,
     })

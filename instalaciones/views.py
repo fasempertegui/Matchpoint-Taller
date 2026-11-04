@@ -19,20 +19,6 @@ from .models import Cancha, Sede, SedeHorario
 from .servicios import cambiar_estado_cancha, cambiar_estado_sede
 
 
-def _breadcrumbs_sede(usuario, sede=None, pestana=None):
-    puede_consultar = usuario.has_perm("instalaciones.view_sede")
-    breadcrumbs = [
-        ("Inicio", reverse("inicio")),
-        ("Sedes", reverse("instalaciones:sede_lista") if puede_consultar else None),
-    ]
-    if sede is not None:
-        enlace = reverse("instalaciones:sede_detalle", args=[sede.pk])
-        if pestana:
-            enlace += "#" + pestana
-        breadcrumbs.append((sede.nombre, enlace if puede_consultar else None))
-    return breadcrumbs
-
-
 @login_required
 @permission_required("instalaciones.view_sede", raise_exception=True)
 def sede_lista(request):
@@ -49,7 +35,6 @@ def sede_lista(request):
             "sedes": sedes,
             "estados": Sede.Estado.choices,
             "estado_actual": estado,
-            "breadcrumbs": _breadcrumbs_sede(request.user),
         },
     )
 
@@ -70,7 +55,6 @@ def sede_detalle(request, pk):
         "instalaciones/sede_detalle.html",
         {
             "sede": sede,
-            "breadcrumbs": _breadcrumbs_sede(request.user, sede),
             "canchas": canchas,
             "horarios_semana": horarios_semana,
             "puede_consultar_precio": es_administrador,
@@ -127,7 +111,6 @@ def sede_precio_configurar(request, pk):
         "formulario": formulario,
         "precio_actual": precio_actual,
         "titulo": "Configurar precio por turno" if precio_actual is None else "Actualizar precio por turno",
-        "breadcrumbs": _breadcrumbs_sede(request.user, sede, "precios") + [("Precio por turno", None)],
     })
 
 
@@ -214,7 +197,6 @@ def sede_horario_configurar(request, pk, dia=None):
                 {"nombre": nombre, "horario": horarios.get(dia_semana)}
                 for dia_semana, nombre in SedeHorario.DiaSemana.choices
             ],
-            "breadcrumbs": _breadcrumbs_sede(request.user, sede, "horarios") + [("Horarios", None)],
         },
     )
 
@@ -247,7 +229,6 @@ def sede_crear(request):
             "formulario": formulario,
             "titulo": "Nueva sede",
             "texto_boton": "Crear sede",
-            "breadcrumbs": _breadcrumbs_sede(request.user) + [("Nueva sede", None)],
         },
     )
 
@@ -258,7 +239,6 @@ def sede_crear(request):
 def sede_editar(request, pk):
     sede = get_object_or_404(Sede, pk=pk)
     titulo = f"Editar {sede.nombre}"
-    breadcrumbs = _breadcrumbs_sede(request.user, sede) + [("Editar sede", None)]
     formulario = SedeForm(
         request.POST if request.method == "POST" else None,
         instance=sede,
@@ -288,7 +268,6 @@ def sede_editar(request, pk):
             "titulo": titulo,
             "texto_boton": "Guardar cambios",
             "sede": sede,
-            "breadcrumbs": breadcrumbs,
         },
     )
 
@@ -347,7 +326,6 @@ def cancha_crear(request, sede_pk):
             "sede": sede,
             "titulo": f"Nueva cancha en {sede.nombre}",
             "texto_boton": "Crear cancha",
-            "breadcrumbs": _breadcrumbs_sede(request.user, sede, "canchas") + [("Nueva cancha", None)],
         },
     )
 
@@ -359,10 +337,6 @@ def cancha_editar(request, sede_pk, pk):
     sede = get_object_or_404(Sede, pk=sede_pk)
     cancha = get_object_or_404(Cancha, pk=pk, sede=sede)
     titulo = f"Editar {cancha.nombre}"
-    breadcrumbs = _breadcrumbs_sede(request.user, sede, "canchas") + [
-        (cancha.nombre, None),
-        ("Editar cancha", None),
-    ]
     formulario = CanchaForm(
         request.POST if request.method == "POST" else None,
         sede=sede,
@@ -394,7 +368,6 @@ def cancha_editar(request, sede_pk, pk):
             "cancha": cancha,
             "titulo": titulo,
             "texto_boton": "Guardar cambios",
-            "breadcrumbs": breadcrumbs,
         },
     )
 

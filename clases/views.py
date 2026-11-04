@@ -81,11 +81,6 @@ def clase_detalle(request, pk):
         "anulado_por": responsables.get(clase["anulado_por_id"]),
         "finalizado_por": responsables.get(clase["finalizado_por_id"]),
         "url_agenda": url_agenda,
-        "breadcrumbs": [
-            ("Inicio", reverse("inicio")),
-            ("Agenda", url_agenda),
-            (f"Clase {clase['id']}", None),
-        ],
     })
 
 
@@ -169,7 +164,6 @@ def clase_crear(request):
         "cancha": cancha, "fecha": fecha, "hora": hora,
         "hora_fin": (datetime.combine(fecha, hora) + timedelta(hours=1)).time(),
         "url_agenda": url_agenda, "url_cancelar": url_agenda, "impedimento": impedimento,
-        "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", url_agenda), ("Crear clase", None)],
     })
 
 
@@ -220,7 +214,6 @@ def clase_editar(request, pk):
         "cancha": turno.cancha, "fecha": turno.fecha,
         "hora": turno.hora_inicio, "hora_fin": turno.hora_fin,
         "url_cancelar": url_detalle,
-        "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Editar", None)],
     })
 
 
@@ -269,7 +262,6 @@ def clase_cambiar_cancha(request, pk):
         "version": version, "confirmacion": confirmacion, "destino": destino,
         "hay_destinos": formulario.fields["cancha"].queryset.exists(),
         "url_detalle": url_detalle,
-        "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Cambiar de cancha", None)],
     })
 
 
@@ -313,7 +305,6 @@ def clase_anular(request, pk, bloquear=False):
         "formulario": formulario, "confirmacion": confirmacion, "version": version,
         "motivo_bloqueo": dict(formulario.fields["motivo_bloqueo"].choices).get(formulario["motivo_bloqueo"].value(), "") if bloquear else "",
         "url_detalle": url_detalle,
-        "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Anular y bloquear" if bloquear else "Anular y liberar", None)],
     })
 
 
@@ -419,7 +410,6 @@ def clase_asistencia(request, pk):
         "version": version, "error_guardado": error_guardado,
         "finalizar": clase.evento.estado == Evento.Estado.PROGRAMADO,
         "url_detalle": url_detalle,
-        "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Asistencia", None)],
     })
 
 
@@ -516,5 +506,4 @@ def actividad_clases(request, usuario_id):
         "es_profesor": es_profesor, "es_alumno": es_alumno, "resumen": resumen,
         "vistas": vistas, "pagina": pagina, "url_anterior": url_anterior, "url_siguiente": url_siguiente,
         "url_perfil": url_perfil,
-        "breadcrumbs": [("Inicio", reverse("inicio")), (str(titular), url_perfil), ("Actividad de clases", None)],
     })

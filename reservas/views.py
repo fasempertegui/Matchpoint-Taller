@@ -2,11 +2,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
-
-from agenda.servicios import enlace_agenda
 
 from .forms import ReservaAnulacionForm
 from .models import Reserva
@@ -17,15 +14,6 @@ from .servicios import (
     validar_anulacion_reserva,
     validar_finalizacion_reserva,
 )
-
-
-def _breadcrumbs_reserva(reserva):
-    turno = reserva.evento.turno
-    return [
-        ("Inicio", reverse("inicio")),
-        ("Agenda", enlace_agenda(turno.cancha.sede, turno.fecha, turno.cancha, turno.hora_inicio.hour)),
-        (reserva.numero, reverse("reservas:reserva_detalle", args=[reserva.pk])),
-    ]
 
 
 @login_required
@@ -43,7 +31,6 @@ def reserva_comprobante(request, pk):
         "reserva": reserva,
         "turno": reserva.evento.turno,
         "total": reserva.precio_por_turno_aplicado,
-        "breadcrumbs": _breadcrumbs_reserva(reserva) + [("Comprobante", None)],
     })
 
 
@@ -83,7 +70,6 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
         "puede_finalizar": puede_finalizar,
         "es_administrador": es_administrador,
         "impedimento_anulacion": impedimento_anulacion,
-        "breadcrumbs": _breadcrumbs_reserva(reserva),
         "formulario_anulacion": formulario_anulacion if formulario_anulacion is not None else ReservaAnulacionForm(),
     }
 

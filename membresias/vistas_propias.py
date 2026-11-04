@@ -19,16 +19,11 @@ def _exigir_titular(usuario):
     )
 
 
-def _contexto(tipo, titulo=None):
+def _contexto(tipo):
     url_lista = reverse("membresias:mis_contrataciones") + f"?tipo={tipo}"
-    breadcrumbs = [("Inicio", reverse("inicio")), ("Mis contrataciones", url_lista)]
-    if titulo:
-        breadcrumbs.append((titulo, None))
-    else:
-        breadcrumbs[-1] = (breadcrumbs[-1][0], None)
     return {
         "propias": True, "tipo": tipo, "plural": "planes" if tipo == "plan" else "pases",
-        "titulo_lista": "Mis contrataciones", "url_lista": url_lista, "breadcrumbs": breadcrumbs,
+        "titulo_lista": "Mis contrataciones", "url_lista": url_lista,
         "ruta_detalle": "membresias:mi_plan_contratado" if tipo == "plan" else "membresias:mi_pase_contratado",
         "etiqueta_importe": "Importe acordado (ARS)" if tipo == "plan" else "Importe aplicado (ARS)",
     }
@@ -67,5 +62,5 @@ def contratacion_propia_detalle(request, pk, tipo="plan"):
         modelo.objects.filter(usuario=titular).select_related("usuario", tipo), pk=pk,
     )
     return render(request, "membresias/contratacion_detalle.html", {
-        **_contexto(tipo, f"Contratación #{contratacion.pk}"), "contratacion": contratacion,
+        **_contexto(tipo), "contratacion": contratacion,
     })

@@ -21,23 +21,7 @@ from .servicios import (
 @require_GET
 def catalogos(request):
     exigir_administracion_membresias(request.user)
-    return render(request, "membresias/catalogos.html", {
-        "breadcrumbs": [("Inicio", reverse("inicio")), ("Membresías", None)],
-    })
-
-
-def _breadcrumbs(plan=None, titulo=None):
-    items = [
-        ("Inicio", reverse("inicio")), ("Membresías", reverse("membresias:catalogos")),
-        ("Planes", reverse("membresias:plan_lista")),
-    ]
-    if plan is not None:
-        items.append((plan.nombre, reverse("membresias:plan_detalle", args=[plan.pk])))
-    if titulo:
-        items.append((titulo, None))
-    else:
-        items[-1] = (items[-1][0], None)
-    return items
+    return render(request, "membresias/catalogos.html")
 
 
 @login_required
@@ -57,7 +41,7 @@ def plan_lista(request):
     return render(request, "membresias/plan_lista.html", {
         "pagina": Paginator(planes, 25).get_page(request.GET.get("pagina")),
         "busqueda": busqueda, "estado_actual": estado, "estados": Plan.Estado.choices,
-        "hay_planes": Plan.objects.exists(), "breadcrumbs": _breadcrumbs(),
+        "hay_planes": Plan.objects.exists(),
     })
 
 
@@ -68,7 +52,7 @@ def plan_detalle(request, pk):
     usuario = exigir_administracion_membresias(request.user)
     plan = get_object_or_404(Plan, pk=pk)
     return render(request, "membresias/plan_detalle.html", {
-        "plan": plan, "version": version_producto(usuario, plan), "breadcrumbs": _breadcrumbs(plan),
+        "plan": plan, "version": version_producto(usuario, plan),
     })
 
 
@@ -93,7 +77,6 @@ def plan_formulario(request, pk=None):
             return redirect("membresias:plan_detalle", pk=guardado.pk)
     return render(request, "membresias/catalogo_formulario.html", {
         "formulario": formulario, "titulo": titulo, "texto_boton": "Guardar plan",
-        "breadcrumbs": _breadcrumbs(plan, titulo),
         "url_cancelar": reverse("membresias:plan_detalle", args=[pk]) if pk is not None
             else reverse("membresias:plan_lista"),
     })
@@ -117,20 +100,6 @@ def plan_cambiar_estado(request, pk):
     return redirect("membresias:plan_detalle", pk=pk)
 
 
-def _breadcrumbs_pase(pase=None, titulo=None):
-    items = [
-        ("Inicio", reverse("inicio")), ("Membresías", reverse("membresias:catalogos")),
-        ("Pases", reverse("membresias:pase_lista")),
-    ]
-    if pase is not None:
-        items.append((pase.nombre, reverse("membresias:pase_detalle", args=[pase.pk])))
-    if titulo:
-        items.append((titulo, None))
-    else:
-        items[-1] = (items[-1][0], None)
-    return items
-
-
 @login_required
 @never_cache
 @require_GET
@@ -148,7 +117,7 @@ def pase_lista(request):
     return render(request, "membresias/pase_lista.html", {
         "pagina": Paginator(pases, 25).get_page(request.GET.get("pagina")),
         "busqueda": busqueda, "estado_actual": estado, "estados": Pase.Estado.choices,
-        "hay_pases": Pase.objects.exists(), "breadcrumbs": _breadcrumbs_pase(),
+        "hay_pases": Pase.objects.exists(),
     })
 
 
@@ -159,7 +128,7 @@ def pase_detalle(request, pk):
     usuario = exigir_administracion_membresias(request.user)
     pase = get_object_or_404(Pase, pk=pk)
     return render(request, "membresias/pase_detalle.html", {
-        "pase": pase, "version": version_producto(usuario, pase), "breadcrumbs": _breadcrumbs_pase(pase),
+        "pase": pase, "version": version_producto(usuario, pase),
     })
 
 
@@ -184,7 +153,6 @@ def pase_formulario(request, pk=None):
             return redirect("membresias:pase_detalle", pk=guardado.pk)
     return render(request, "membresias/catalogo_formulario.html", {
         "formulario": formulario, "titulo": titulo, "texto_boton": "Guardar pase",
-        "breadcrumbs": _breadcrumbs_pase(pase, titulo),
         "url_cancelar": reverse("membresias:pase_detalle", args=[pk]) if pk is not None
             else reverse("membresias:pase_lista"),
     })

@@ -216,7 +216,7 @@ El acceso exige una cuenta activa con rol Administrador y sin cambio de contrase
 
 El catálogo define la oferta comercial. Las contrataciones, las coberturas aplicadas a reservas y los consumos diarios tienen sus propios registros y recorridos. PostgreSQL protege los dominios, importes y nombres activos, genera los identificadores y audita las modificaciones mediante el trigger de pases. Las altas no generan entradas de auditoría y las pantallas no ofrecen eliminación física.
 
-Planes y pases comparten el formulario de catálogo, la protección de la selección y el guardado auditado, conservando campos y recorridos específicos. La entrada Membresías permite elegir entre los dos catálogos y las contrataciones de planes y pases; los breadcrumbs conservan ese acceso.
+Planes y pases comparten el formulario de catálogo, la protección de la selección y el guardado auditado, conservando campos y recorridos específicos. La entrada Membresías permite elegir entre los dos catálogos y las contrataciones de planes y pases.
 
 Revisión manual: crear un pase Libre y uno de Fin de semana; revisar nombres repetidos, importes cero y negativos, límite diario cero y positivo, filtro por estado, edición y activación/desactivación. Comprobar también reenvíos, dos pestañas editando el mismo producto, rechazo de acceso no administrativo y las diferencias en Auditoría.
 

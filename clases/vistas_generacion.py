@@ -121,7 +121,6 @@ def generacion_clases(request):
         "formulario": formulario, "revision": revision, "confirmacion_final": confirmacion_final,
         "titulo": titulo, "hay_cambios": bool(candidatas),
         "candidatas": candidatas, "omitidas": omitidas, "sede": sede, "url_planilla": url_planilla,
-        "breadcrumbs": [("Inicio", reverse("inicio")), ("Planilla semanal", url_planilla), (titulo, None)],
     })
 
 
@@ -149,5 +148,4 @@ def generacion_resultado(request):
         "desde": date.fromisoformat(resultado["desde"]), "hasta": date.fromisoformat(resultado["hasta"]),
         "pagina": pagina, "omitidas": omitidas, "url_planilla": _url_planilla(sede, resultado.get("cancha")),
         "url_agenda": reverse("agenda:agenda") + "?" + urlencode({"sede": resultado["sede"], "fecha": resultado["desde"]}),
-        "breadcrumbs": [("Inicio", reverse("inicio")), ("Planilla semanal", _url_planilla(sede)), (titulo, None)],
     })

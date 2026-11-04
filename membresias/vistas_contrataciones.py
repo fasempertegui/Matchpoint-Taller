@@ -36,21 +36,13 @@ CONFIGURACION_CONTRATACIONES = {
 }
 
 
-def _contexto(tipo, titulo=None):
+def _contexto(tipo):
     configuracion = CONFIGURACION_CONTRATACIONES[tipo]
     plural = configuracion["plural"]
     url_lista = reverse(f"membresias:contratacion_{tipo}_lista")
-    breadcrumbs = [
-        ("Inicio", reverse("inicio")), ("Membresías", reverse("membresias:catalogos")),
-        (f"Contrataciones de {plural}", url_lista),
-    ]
-    if titulo:
-        breadcrumbs.append((titulo, None))
-    else:
-        breadcrumbs[-1] = (breadcrumbs[-1][0], None)
     return {
         "tipo": tipo, "plural": plural, "titulo_lista": f"Contrataciones de {plural}",
-        "breadcrumbs": breadcrumbs, "url_lista": url_lista,
+        "url_lista": url_lista,
         "url_crear": reverse(f"membresias:contratacion_{tipo}_crear"),
         "ruta_detalle": f"membresias:contratacion_{tipo}_detalle",
         "ruta_anular": f"membresias:contratacion_{tipo}_anular",
@@ -80,7 +72,7 @@ def contratacion_detalle(request, pk, tipo="plan"):
         modelo.objects.select_related("usuario", tipo, "registrado_por", "anulado_por"), pk=pk,
     )
     return render(request, "membresias/contratacion_detalle.html", {
-        **_contexto(tipo, f"Contratación #{contratacion.pk}"), "contratacion": contratacion,
+        **_contexto(tipo), "contratacion": contratacion,
     })
 
 
@@ -94,7 +86,7 @@ def contratacion_crear(request, tipo="plan"):
     seleccion = configuracion["seleccion"](datos if datos else None)
     preparar = request.method == "POST" or datos.get("paso") == "preparar"
     contexto = {
-        **_contexto(tipo, "Nueva contratación"),
+        **_contexto(tipo),
         "titulo": f"Registrar contratación de {tipo}", "formulario": seleccion,
         "texto_boton": "Continuar", "metodo_formulario": "get",
         "url_cancelar": reverse(f"membresias:contratacion_{tipo}_lista"),
@@ -165,7 +157,7 @@ def contratacion_anular(request, pk, tipo="plan"):
             messages.success(request, f"La contratación del {tipo} está Anulada.")
             return redirect(url_detalle)
     return render(request, "membresias/contratacion_anular.html", {
-        **_contexto(tipo, "Anular contratación"), "contratacion": contratacion,
+        **_contexto(tipo), "contratacion": contratacion,
         "titulo": f"Anular contratación de {tipo}", "formulario": formulario,
         "texto_boton": "Confirmar anulación", "url_cancelar": url_detalle,
     })
