@@ -271,6 +271,8 @@ def _preparar_acciones(request, sede, fecha, fecha_hasta=None, url_agenda=None):
                 raise signing.BadSignature
             if mensual and confirmacion.get("fecha_hasta") != fecha_hasta.isoformat():
                 raise signing.BadSignature
+            if not {"excluir_clases_manuales", "excluir_clases_generadas"} <= confirmacion["parametros"].keys():
+                raise signing.BadSignature
             datos = QueryDict(mutable=True)
             for nombre, valor in confirmacion["parametros"].items():
                 if isinstance(valor, list):

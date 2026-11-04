@@ -2299,7 +2299,7 @@ Recorrido:
 Alternativas:
 
 - Los bloqueos existentes se conservan como ya cubiertos: no se anulan ni se superponen con otros.
-- Excluir clases o reservas conserva esas actividades y sus turnos ocupados; los turnos libres se bloquean. Los eventos Anulados son historia y no impiden un nuevo bloqueo.
+- Conservar actividades permite marcar por separado clases creadas manualmente, clases generadas desde la planilla y reservas. Las categorías marcadas conservan sus actividades y sus turnos ocupados; las no marcadas se incluyen si son elegibles. Los turnos libres se bloquean. Los eventos Anulados son historia y no impiden un nuevo bloqueo.
 - Los días pasados no admiten la operación. Los turnos iniciados y los eventos Finalizados se muestran como conservados y no impiden actuar sobre los demás.
 - Cada turno debe quedar íntegramente dentro de una franja, aunque los distintos turnos del lote pertenezcan a franjas diferentes. Cada bloqueo referencia un único turno, con estado y auditoría independientes.
 - La confirmación identifica al actor y los parámetros revisados, con una validez de quince minutos. Una confirmación vencida o de otra selección exige preparar nuevamente la vista previa.
@@ -2357,7 +2357,7 @@ Recorrido:
 
 1. Desde Acciones del día o Acciones del mes de Agenda, elige alcance, exclusiones y motivo. En el alcance mensual conserva la sede de Agenda y elige el mes completo dentro del mismo panel lateral, con el mes de la fecha consultada por defecto si está habilitado y el actual en caso contrario; sólo se ofrecen el mes actual y los dos siguientes. Elegir mes, revisar y editar mantienen la grilla visible. El horario se aplica a cada día y no se ofrece crear bloqueos. Un corte a las 18:30 selecciona desde las 19:00; a la hora exacta de inicio el turno ya se considera iniciado.
 2. La vista previa muestra las reservas, clases y bloqueos a anular y los eventos excluidos, iniciados o Finalizados que se conservan. Los turnos libres y los eventos Anulados no requieren acción.
-3. Confirma las acciones. Se exigen los motivos y condiciones de cada tipo, incluido el mínimo de 25 caracteres para reservas. Para seleccionar sólo bloqueos se excluyen clases y reservas.
+3. Confirma las acciones. Se exigen los motivos y condiciones de cada tipo, incluido el mínimo de 25 caracteres para reservas. Conservar actividades ofrece casillas independientes para clases creadas manualmente, clases generadas desde la planilla, reservas y bloqueos. Las categorías marcadas se conservan; las no marcadas se incluyen si son elegibles. Para seleccionar sólo bloqueos se marcan ambas categorías de clases y reservas. La vista previa identifica el origen de cada clase.
 4. En una transacción, bloquea los turnos y eventos afectados en orden estable y vuelve a validar acceso, estado, inicio futuro y alcance confirmado. Anula cada evento efectivo y registra su auditoría, conservando referencias, orígenes, importes y movimientos monetarios.
 5. Confirma todo el lote y envía las notificaciones de cancelación de reservas y clases. Los bloqueos no generan avisos.
 

@@ -93,7 +93,10 @@ def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
                 fila["conservado"] = "Finalizado"
             elif inicio <= ahora:
                 fila["conservado"] = "En curso" if inicio + timedelta(hours=1) > ahora else "Terminado"
-            elif evento and evento.tipo == Evento.Tipo.CLASE and parametros["excluir_clases"]:
+            elif evento and evento.tipo == Evento.Tipo.CLASE and (
+                parametros["excluir_clases_generadas"] if evento.clase.es_generada
+                else parametros["excluir_clases_manuales"]
+            ):
                 fila["conservado"] = "Clase excluida"
             elif evento and evento.tipo == Evento.Tipo.RESERVA and parametros["excluir_reservas"]:
                 fila["conservado"] = "Reserva excluida"

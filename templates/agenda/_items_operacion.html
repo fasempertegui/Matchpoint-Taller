@@ -2,6 +2,7 @@
     <li>
         <strong>{% if mensual %}{{ fila.fecha|date:"d/m/Y" }} · {% endif %}{{ fila.cancha.nombre }} · {{ fila.hora|time:"H:i" }} – {{ fila.fin|time:"H:i" }}</strong>
         <p>{% if fila.reserva %}<a href="{% url 'reservas:reserva_detalle' fila.reserva.pk %}">{{ fila.identificador }}</a> · {{ fila.reserva.organizador }}{% elif fila.clase %}<a href="{% url 'clases:clase_detalle' fila.clase.pk %}">{{ fila.identificador }}</a>{% elif fila.bloqueo %}{{ fila.identificador }} · {{ fila.bloqueo.get_motivo_display }}{% else %}{{ fila.actividad }}{% endif %}</p>
+        {% if fila.clase %}<small>{% if fila.clase.es_generada %}Generada desde la planilla{% else %}Creada manualmente{% endif %}</small>{% endif %}
         <span>{{ fila.accion|default:fila.conservado }}</span>
     </li>
 {% endfor %}
