@@ -17,7 +17,6 @@
                 <div class="perfil-fila"><dt>Día y horario</dt><dd>{{ turno.get_dia_semana_display }} → {{ turno.hora_inicio|time:"H:i" }} a {{ hora_fin|time:"H:i" }}</dd></div>
                 {% if turno.observaciones %}<div class="perfil-fila"><dt>Observaciones</dt><dd>{{ turno.observaciones|linebreaksbr }}</dd></div>{% endif %}
             </dl>
-            <p class="nota-campo">Este horario pertenece a la semana tipo. Editarlo o quitarlo no modifica las clases existentes.</p>
         </section>
         <section class="perfil-seccion">
             <h2>Profesores ({{ profesores|length }})</h2>
