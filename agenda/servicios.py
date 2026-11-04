@@ -71,6 +71,11 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             )
         )
     puede_reservar = usuario.puede_reservar
+    profesores_agenda = Prefetch(
+        "clase__profesores",
+        queryset=ClaseProfesor.objects.filter(estado="activo").select_related("profesor").order_by("profesor_id"),
+        to_attr="profesores_agenda",
+    )
     eventos = Evento.objects.none()
     if fechas:
         eventos = Evento.objects.filter(
@@ -79,11 +84,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         ).exclude(estado=Evento.Estado.ANULADO).select_related(
             "turno__cancha__sede", "reserva__organizador", "registrado_por", "anulado_por",
             "clase", "bloqueo__evento_origen__reserva", "bloqueo__evento_origen__clase",
-        ).prefetch_related(Prefetch(
-            "clase__profesores",
-            queryset=ClaseProfesor.objects.filter(estado="activo").select_related("profesor"),
-            to_attr="profesores_agenda",
-        ))
+        ).prefetch_related(profesores_agenda)
     eventos_por_turno = {}
     for evento in eventos:
         evento.clase_del_usuario = evento.pk in eventos_del_usuario
@@ -97,8 +98,10 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
     anulados = anulados.select_related(
         "turno", "reserva__organizador", "clase", "bloqueo__evento_origen__reserva",
         "bloqueo__evento_origen__clase", "anulado_por", "registrado_por",
-    ).order_by("-anulado_en", "-pk")
+    ).prefetch_related(profesores_agenda).order_by("-anulado_en", "-pk")
     for evento in anulados:
+        if evento.tipo == Evento.Tipo.CLASE:
+            evento.profesores_resumen = [str(asignacion.profesor) for asignacion in evento.clase.profesores_agenda]
         clave = (evento.turno.cancha_id, evento.turno.fecha, evento.turno.hora_inicio.hour)
         anulados_por_turno.setdefault(clave, []).append(evento)
 
