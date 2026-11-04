@@ -5,7 +5,7 @@ from django import forms
 from django.utils import timezone
 
 from bloqueos.models import Bloqueo
-from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
+from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_eventos, opciones_meses_agenda
 from instalaciones.models import Cancha, Sede
 from usuarios.models import Rol, Usuario
 
@@ -153,6 +153,9 @@ class AgendaOperacionForm(forms.Form):
         super().__init__(*args, **kwargs)
         canchas = sede.canchas.order_by("nombre", "pk")
         self.fields["canchas"].queryset = canchas
+        if fecha > fecha_maxima_eventos():
+            self.fields["operacion"].choices = (("liberar", "Anular y liberar"),)
+            self.fields["operacion"].initial = "liberar"
         ahora = timezone.localtime()
         horario = sede.horarios.filter(dia_semana=fecha.isoweekday()).first()
         franjas = []
@@ -186,6 +189,7 @@ class AgendaOperacionForm(forms.Form):
         if datos.get("operacion") == "bloquear":
             if not datos.get("motivo_bloqueo"):
                 self.add_error("motivo_bloqueo", "Elegí el motivo de los bloqueos.")
+            datos["motivo_anulacion"] = dict(Bloqueo.Motivo.choices).get(datos.get("motivo_bloqueo"), "")
             datos["excluir_bloqueos"] = False
         else:
             datos["motivo_bloqueo"] = ""
@@ -193,6 +197,8 @@ class AgendaOperacionForm(forms.Form):
         return datos
 
     def validar_motivos(self, previa):
+        if self.cleaned_data["operacion"] == "bloquear":
+            return not self.errors
         motivo = self.cleaned_data["motivo_anulacion"]
         if previa["anulaciones"] and not motivo:
             self.add_error("motivo_anulacion", "Indicá el motivo de la anulación.")
@@ -215,3 +221,52 @@ class AgendaOperacionForm(forms.Form):
             "motivo_anulacion": datos["motivo_anulacion"],
             "observaciones": datos["observaciones"],
         }
+
+
+class AgendaMesForm(forms.Form):
+    sede = forms.ModelChoiceField(
+        label="Sede", queryset=Sede.objects.order_by("estado", "nombre", "pk"), empty_label=None,
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    mes = forms.DateField(
+        label="Mes", input_formats=["%Y-%m"],
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["mes"].widget.choices = opciones_meses_agenda()
+
+    def clean_mes(self):
+        mes = self.cleaned_data["mes"].replace(day=1)
+        if mes.strftime("%Y-%m") not in dict(opciones_meses_agenda()):
+            raise forms.ValidationError("Elegí un mes completo dentro del calendario operativo.")
+        return mes
+
+
+class AgendaOperacionMesForm(AgendaOperacionForm):
+    def __init__(self, *args, sede, fecha, **kwargs):
+        super().__init__(*args, sede=sede, fecha=fecha, **kwargs)
+        self.fields["operacion"].choices = (("liberar", "Anular y liberar"),)
+        self.fields["operacion"].initial = "liberar"
+        self.fields["operacion"].disabled = True
+        self.fields.pop("motivo_bloqueo")
+        self.fields.pop("observaciones")
+        horas = set()
+        for horario in sede.horarios.all():
+            franjas = [(horario.hora_inicio_1, horario.hora_fin_1)]
+            if horario.hora_inicio_2 is not None:
+                franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
+            horas.update(
+                hora for hora in range(23)
+                if any(time(hora) >= inicio and time(hora + 1) <= fin for inicio, fin in franjas)
+            )
+        self.fields["horario"].choices = [("dia", "Día completo")] + [
+            (f"{hora:02d}:00", f"Desde las {hora:02d}:00") for hora in sorted(horas)
+        ]
+        finales = [f"{hora + 1:02d}:00" for hora in sorted(horas)]
+        desde = self.data.get("horario", "dia")
+        self.fields["hora_hasta"].choices = [("", "Fin del día")] + [
+            (fin, fin) for fin in finales if desde == "dia" or fin > desde
+        ]
+        self.fields["hora_hasta"].widget.attrs["data-finales-habilitados"] = ",".join(finales)

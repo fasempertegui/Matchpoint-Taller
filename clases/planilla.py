@@ -36,7 +36,6 @@ def consultar_planilla(usuario, sede_id, cancha_id):
                 "dia_semana": turno.dia_semana,
                 "hora_inicio": turno.hora_inicio,
                 "hora_fin": time(turno.hora_inicio.hour + 1),
-                "modalidad": turno.modalidad,
                 "observaciones": turno.observaciones,
                 "actualizado_en": turno.actualizado_en,
                 "clases_vinculadas": turno.clases_vinculadas,
@@ -79,12 +78,10 @@ def validar_version_turno_planilla(turno, version):
         raise ValidationError("El horario de la planilla cambió. Abrilo nuevamente antes de continuar.")
 
 
-def _normalizar_datos_planilla(modalidad, observaciones):
-    if modalidad == "":
-        modalidad = None
+def _normalizar_observaciones_planilla(observaciones):
     if isinstance(observaciones, str):
-        observaciones = observaciones.strip() or None
-    return modalidad, observaciones
+        return observaciones.strip() or None
+    return observaciones
 
 
 def _validar_instalaciones_planilla(sede, cancha):
@@ -113,18 +110,18 @@ def _bloquear_turno_planilla(usuario, turno_id, usuarios_nuevos=frozenset()):
 
 def registrar_turno_planilla(
     registrado_por, cancha, dia_semana, hora_inicio,
-    profesores_ids=(), participantes_ids=(), modalidad=None, observaciones=None,
+    profesores_ids=(), participantes_ids=(), observaciones=None,
 ):
     return registrar_turnos_planilla(
         registrado_por, cancha, [(dia_semana, hora_inicio)],
-        profesores_ids, participantes_ids, modalidad, observaciones,
+        profesores_ids, participantes_ids, observaciones,
     )[0]
 
 
 @transaction.atomic
 def registrar_turnos_planilla(
     registrado_por, cancha, turnos, profesores_ids=(), participantes_ids=(),
-    modalidad=None, observaciones=None,
+    observaciones=None,
 ):
     registrado_por = exigir_administracion_clases(registrado_por)
     turnos = list(turnos)
@@ -132,12 +129,12 @@ def registrar_turnos_planilla(
         raise ValidationError("Elegí horarios válidos de la planilla.")
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
     participantes_ids = normalizar_usuarios_clase(participantes_ids)
-    modalidad, observaciones = _normalizar_datos_planilla(modalidad, observaciones)
+    observaciones = _normalizar_observaciones_planilla(observaciones)
     for dia, hora in turnos:
-        validar_datos_planilla(dia, hora, modalidad, observaciones)
+        validar_datos_planilla(dia, hora, observaciones)
     usuarios = bloquear_usuarios_clase(profesores_ids | participantes_ids | {registrado_por.pk})
     registrado_por = exigir_administracion_clases(usuarios.get(registrado_por.pk))
-    validar_usuarios_clase(usuarios, profesores_ids, participantes_ids, requiere_profesor=False)
+    validar_usuarios_clase(usuarios, profesores_ids, participantes_ids)
     sede = Sede.objects.select_for_update().get(pk=cancha.sede_id)
     cancha = Cancha.objects.select_for_update().get(pk=cancha.pk, sede=sede)
     _validar_instalaciones_planilla(sede, cancha)
@@ -147,7 +144,7 @@ def registrar_turnos_planilla(
         if (dia, hora) in ocupados:
             raise ValidationError("Ya existe un turno de planilla para esa cancha, día y hora.")
     creados = TurnoPlanilla.objects.bulk_create([
-        TurnoPlanilla(cancha=cancha, dia_semana=dia, hora_inicio=hora, modalidad=modalidad, observaciones=observaciones)
+        TurnoPlanilla(cancha=cancha, dia_semana=dia, hora_inicio=hora, observaciones=observaciones)
         for dia, hora in sorted(turnos)
     ])
     TurnoPlanillaProfesor.objects.bulk_create([
@@ -162,7 +159,7 @@ def registrar_turnos_planilla(
 
 
 @transaction.atomic
-def editar_turno_planilla(usuario, turno_id, profesores_ids, participantes_ids, modalidad, observaciones, *, version=None):
+def editar_turno_planilla(usuario, turno_id, profesores_ids, participantes_ids, observaciones, *, version=None):
     usuario = exigir_administracion_clases(usuario)
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
     participantes_ids = normalizar_usuarios_clase(participantes_ids)
@@ -171,14 +168,14 @@ def editar_turno_planilla(usuario, turno_id, profesores_ids, participantes_ids, 
     )
     if version is not None:
         validar_version_turno_planilla(turno, version)
-    modalidad, observaciones = _normalizar_datos_planilla(modalidad, observaciones)
-    validar_datos_planilla(turno.dia_semana, turno.hora_inicio, modalidad, observaciones)
+    observaciones = _normalizar_observaciones_planilla(observaciones)
+    validar_datos_planilla(turno.dia_semana, turno.hora_inicio, observaciones)
     _validar_instalaciones_planilla(sede, cancha)
     validar_horario_planilla(sede, turno.dia_semana, turno.hora_inicio)
-    validar_usuarios_clase(usuarios, profesores_ids, participantes_ids, requiere_profesor=False)
+    validar_usuarios_clase(usuarios, profesores_ids, participantes_ids)
     if (
         profesores == profesores_ids and participantes == participantes_ids
-        and turno.modalidad == modalidad and turno.observaciones == observaciones
+        and turno.observaciones == observaciones
     ):
         return turno
     with contexto_auditoria(usuario):
@@ -192,9 +189,8 @@ def editar_turno_planilla(usuario, turno_id, profesores_ids, participantes_ids, 
             TurnoPlanillaAlumno(turno_planilla=turno, usuario_id=pk)
             for pk in sorted(participantes_ids - participantes)
         ])
-        turno.modalidad = modalidad
         turno.observaciones = observaciones
-        turno.save(update_fields=["modalidad", "observaciones", "actualizado_en"])
+        turno.save(update_fields=["observaciones", "actualizado_en"])
     return turno
 
 

@@ -1,8 +1,13 @@
+from calendar import monthrange
+from datetime import time
+
 from django import forms
 from django.db.models import Q
 
 from bloqueos.models import Bloqueo
-from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_feriados
+from common.fechas import (
+    FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_feriados, fecha_maxima_eventos, opciones_meses_agenda, validar_inicio_evento,
+)
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
@@ -18,9 +23,15 @@ class ClaseTurnoForm(forms.Form):
 
     def clean_fecha(self):
         fecha = self.cleaned_data["fecha"]
-        if not FECHA_INICIO_OPERACIONES <= fecha <= fecha_maxima_agenda():
+        if not FECHA_INICIO_OPERACIONES <= fecha <= fecha_maxima_eventos():
             raise forms.ValidationError("La fecha está fuera del calendario operativo de clases.")
         return fecha
+
+    def clean(self):
+        datos = super().clean()
+        if datos.get("fecha") is not None and datos.get("hora") is not None:
+            validar_inicio_evento(datos["fecha"], time(datos["hora"]))
+        return datos
 
 
 class ClaseForm(forms.Form):
@@ -33,10 +44,6 @@ class ClaseForm(forms.Form):
         error_messages={"invalid_choice": "Revisá los participantes seleccionados: alguno ya no está activo."},
     )
     buscar_todos = forms.BooleanField(required=False)
-    modalidad = forms.ChoiceField(
-        choices=(("", "Sin especificar"), *TurnoPlanilla.Modalidad.choices), required=False,
-        widget=forms.RadioSelect(),
-    )
     observaciones = forms.CharField(
         required=False, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     )
@@ -68,7 +75,6 @@ class ClaseForm(forms.Form):
         return {
             "profesores_ids": {usuario.pk for usuario in self.cleaned_data["profesores"]},
             "participantes_ids": {usuario.pk for usuario in self.cleaned_data["participantes"]},
-            "modalidad": self.cleaned_data["modalidad"] or None,
             "observaciones": self.cleaned_data["observaciones"],
         }
 
@@ -93,12 +99,6 @@ class PlanillaFiltroForm(forms.Form):
         sede = self.data.get("sede", "")
         if str(sede).isdecimal() and len(str(sede)) < 19:
             self.fields["cancha"].queryset = Cancha.objects.filter(sede_id=sede).order_by("estado", "nombre", "pk")
-
-
-class PlanillaForm(ClaseForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["profesores"].required = False
 
 
 class ClaseCanchaForm(forms.Form):
@@ -232,24 +232,26 @@ class GeneracionClasesForm(forms.Form):
         label="Sede", queryset=Sede.objects.order_by("estado", "nombre", "pk"), empty_label="Elegí una sede",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
-    fecha_desde = forms.DateField(
-        label="Desde", input_formats=["%Y-%m-%d"],
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
-    )
-    fecha_hasta = forms.DateField(
-        label="Hasta", input_formats=["%Y-%m-%d"],
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    mes = forms.DateField(
+        label="Mes", input_formats=["%Y-%m"],
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for nombre in ("fecha_desde", "fecha_hasta"):
-            self.fields[nombre].widget.attrs.update({
-                "min": FECHA_INICIO_OPERACIONES.isoformat(), "max": fecha_maxima_agenda().isoformat(),
-            })
+        self.fields["mes"].widget.choices = opciones_meses_agenda()
+
+    def clean_mes(self):
+        mes = self.cleaned_data["mes"]
+        if mes.strftime("%Y-%m") not in dict(opciones_meses_agenda()):
+            raise forms.ValidationError("Elegí uno de los meses habilitados.")
+        return mes
 
     def clean(self):
         datos = super().clean()
-        if datos.get("fecha_desde") and datos.get("fecha_hasta"):
+        mes = datos.get("mes")
+        if mes:
+            datos["fecha_desde"] = mes.replace(day=1)
+            datos["fecha_hasta"] = mes.replace(day=monthrange(mes.year, mes.month)[1])
             validar_periodo_generacion(datos["fecha_desde"], datos["fecha_hasta"])
         return datos

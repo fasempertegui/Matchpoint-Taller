@@ -3,7 +3,7 @@ from datetime import date, datetime, time, timedelta
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_feriados
+from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_eventos, fecha_maxima_feriados
 from reservas.models import Evento
 from usuarios.models import Rol
 
@@ -20,15 +20,13 @@ def normalizar_usuarios_clase(identificadores):
     return identificadores
 
 
-def validar_datos_clase(fecha, hora_inicio, modalidad, observaciones):
+def validar_datos_clase(fecha, hora_inicio, observaciones):
     if not isinstance(fecha, date) or isinstance(fecha, datetime):
         raise ValidationError("Indicá una fecha válida para la clase.")
     if not FECHA_INICIO_OPERACIONES <= fecha <= fecha_maxima_agenda():
         raise ValidationError("La fecha debe estar entre el 01/08/2026 y un año después de hoy, inclusive.")
     if hora_inicio not in tuple(time(hora) for hora in range(23)):
         raise ValidationError("La clase debe comenzar en punto entre las 00:00 y las 22:00.")
-    if modalidad is not None and modalidad not in TurnoPlanilla.Modalidad.values:
-        raise ValidationError("Elegí una modalidad válida para la clase.")
     if not isinstance(observaciones, str):
         raise ValidationError("Las observaciones deben ser un texto.")
 
@@ -47,10 +45,10 @@ def validar_horario_clase(sede, fecha, hora_inicio):
 
 def validar_usuarios_clase(
     usuarios, profesores_ids, participantes_ids,
-    profesores_actuales=frozenset(), participantes_actuales=frozenset(), requiere_profesor=True,
+    profesores_actuales=frozenset(), participantes_actuales=frozenset(),
 ):
-    if requiere_profesor and not profesores_ids:
-        raise ValidationError("La clase debe tener al menos un profesor.")
+    if not profesores_ids:
+        raise ValidationError("Agregá al menos un profesor.")
     if profesores_ids & participantes_ids:
         raise ValidationError("Una persona no puede dictar y participar en la misma clase.")
     nuevos_profesores = profesores_ids - profesores_actuales
@@ -164,13 +162,11 @@ def validar_retiro_rol_profesor(usuario):
         )
 
 
-def validar_datos_planilla(dia_semana, hora_inicio, modalidad, observaciones):
+def validar_datos_planilla(dia_semana, hora_inicio, observaciones):
     if type(dia_semana) is not int or dia_semana not in TurnoPlanilla.DiaSemana.values:
         raise ValidationError("Elegí un día de la semana entre lunes y domingo.")
     if hora_inicio not in tuple(time(hora) for hora in range(23)):
         raise ValidationError("El turno de planilla debe comenzar en punto entre las 00:00 y las 22:00.")
-    if modalidad is not None and modalidad not in TurnoPlanilla.Modalidad.values:
-        raise ValidationError("Elegí una modalidad válida para el turno de planilla.")
     if observaciones is not None and not isinstance(observaciones, str):
         raise ValidationError("Las observaciones deben ser un texto.")
 
@@ -203,7 +199,7 @@ def validar_periodo_generacion(fecha_desde, fecha_hasta):
         raise ValidationError("Indicá fechas válidas para generar clases.")
     if fecha_hasta < fecha_desde:
         raise ValidationError("La fecha final no puede ser anterior a la inicial.")
-    if fecha_desde < FECHA_INICIO_OPERACIONES or fecha_hasta > fecha_maxima_agenda():
+    if fecha_desde < FECHA_INICIO_OPERACIONES or fecha_hasta > fecha_maxima_eventos():
         raise ValidationError("El período de generación debe estar dentro del calendario operativo de clases.")
     if (fecha_hasta - fecha_desde).days + 1 > 62:
         raise ValidationError("La generación no puede superar 62 días corridos inclusive.")

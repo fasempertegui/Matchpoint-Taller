@@ -11,8 +11,13 @@
 {% block contenido %}
 <header class="tarjeta encabezado-pagina">
     <h1>Agenda</h1>
-    {% if es_administrador and agenda.fecha >= agenda.hoy and agenda.columnas %}
-        <a class="boton boton-primario" data-agenda-acciones href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones|yesno:'true,false' }}">Acciones del día</a>
+    {% if es_administrador and agenda.columnas %}
+        <div class="acciones">
+            {% if agenda.fecha >= agenda.hoy %}
+                <a class="boton boton-primario" data-agenda-acciones="dia" href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{% if panel_acciones and not panel_acciones_mes %}true{% else %}false{% endif %}">Acciones del día</a>
+            {% endif %}
+            <a class="boton boton-secundario" data-agenda-acciones="mes" href="{{ agenda.url_acciones_mes }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones_mes|yesno:'true,false' }}">Acciones del mes</a>
+        </div>
     {% endif %}
 </header>
 
@@ -138,5 +143,6 @@
     <p class="tarjeta estado-vacio">{% if es_administrador %}Registrá una sede y sus canchas para consultar la agenda.{% else %}No hay sedes disponibles para consultar la agenda.{% endif %}</p>
 {% endif %}
 <script src="{% static 'js/observaciones.js' %}" defer></script>
+<script src="{% static 'js/agenda_operaciones.js' %}" defer></script>
 <script src="{% static 'js/agenda.js' %}" defer></script>
 {% endblock %}

@@ -27,12 +27,10 @@
             {% if revision %}
                 {{ formulario.profesores }}{{ formulario.participantes }}
                 {% if formulario.buscar_todos.value %}<input type="hidden" name="buscar_todos" value="on">{% endif %}
-                <input type="hidden" name="modalidad" value="{{ formulario.modalidad.value|default:'' }}">
                 <textarea name="observaciones" hidden>{{ formulario.observaciones.value|default:'' }}</textarea>
                 <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
                 <div class="clase-revision-cabecera">
                     <h2>Resumen de la clase</h2>
-                    <span class="clase-revision-modalidad">{{ modalidad_texto }}</span>
                 </div>
                 <div class="clase-revision-personas">
                     <section aria-labelledby="revision-profesores">
@@ -42,13 +40,7 @@
                         {% else %}<p class="clase-revision-vacio">Sin profesores asignados.</p>{% endif %}
                     </section>
                     <section aria-labelledby="revision-participantes">
-                        <h3 id="revision-participantes"{% if revision.advertencias_participantes %} class="clase-contador-advertencia"{% endif %}>Participantes <span>({{ participantes|length }})</span></h3>
-                        {% if revision.advertencias_participantes %}
-                            <div class="clase-aviso-participantes" role="alert">
-                                <span aria-hidden="true">⚠</span>
-                                <div>{% for advertencia in revision.advertencias_participantes %}<p>{{ advertencia }}</p>{% endfor %}</div>
-                            </div>
-                        {% endif %}
+                        <h3 id="revision-participantes">Participantes <span>({{ participantes|length }})</span></h3>
                         {% if participantes %}
                             <ul class="clase-revision-nombres{% if participantes|length >= 4 %} clase-revision-nombres-columnas{% endif %}">{% for persona in participantes %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% endfor %}</ul>
                         {% else %}<p class="clase-revision-vacio">Sin participantes asignados.</p>{% endif %}
@@ -77,13 +69,6 @@
                 </div>
             {% else %}
                 <noscript><p class="mensaje mensaje-info">Para buscar y agregar personas necesitás habilitar JavaScript.</p></noscript>
-                <fieldset class="clase-modalidad">
-                    <legend>Modalidad</legend>
-                    <div class="clase-modalidad-opciones">
-                        {% for opcion in formulario.modalidad %}<label>{{ opcion.tag }}<span>{{ opcion.choice_label }}</span></label>{% endfor %}
-                    </div>
-                    {% for error in formulario.modalidad.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-                </fieldset>
                 {% include "clases/_selector_personas.html" with campo=formulario.profesores seleccionados=profesores titulo="Profesores" etiqueta="Agregar profesor" vacio="Todavía no agregaste profesores." only %}
                 {% include "clases/_selector_personas.html" with campo=formulario.participantes seleccionados=participantes titulo="Participantes" etiqueta="Agregar participante" vacio="Podés crear la clase sin participantes y agregarlos después." ampliar_busqueda=formulario.buscar_todos.value only %}
                 {% include "clases/_observaciones_formulario.html" with campo=formulario.observaciones only %}

@@ -6,6 +6,8 @@ from django.db.models import Q
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
+from bloqueos.models import Bloqueo
+from common.fechas import validar_inicio_evento
 from usuarios.models import Rol, Usuario
 
 from .disponibilidad import consultar_disponibilidad
@@ -87,6 +89,7 @@ def registrar_reserva(registrado_por, organizador, cancha, fecha, turno_id, prec
         organizador=organizador,
         precio_por_turno_aplicado=precio,
     )
+    validar_inicio_evento(turno.fecha, turno.hora_inicio)
     return reserva
 
 
@@ -116,13 +119,19 @@ def _bloquear_reserva(reserva_id):
 
 
 @transaction.atomic
-def anular_reserva(anulado_por, reserva_id, motivo):
+def anular_reserva(anulado_por, reserva_id, motivo, *, motivo_bloqueo=None):
     anulado_por = Usuario.objects.select_for_update().get(pk=anulado_por.pk)
     es_administrador = exigir_acceso_reservas(anulado_por)
+    if motivo_bloqueo is not None:
+        if not es_administrador:
+            raise PermissionDenied
+        if motivo_bloqueo not in Bloqueo.Motivo.values:
+            raise ValidationError("Elegí un motivo de bloqueo válido.")
+        motivo = Bloqueo.Motivo(motivo_bloqueo).label
     motivo = motivo.strip()
     if not motivo:
         raise ValidationError("Indicá el motivo de la anulación.")
-    if len(motivo) < 25:
+    if motivo_bloqueo is None and len(motivo) < 25:
         raise ValidationError("El motivo de anulación debe tener al menos 25 caracteres.")
 
     reserva = _bloquear_reserva(reserva_id)

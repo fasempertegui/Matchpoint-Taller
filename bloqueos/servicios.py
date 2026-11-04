@@ -7,7 +7,7 @@ from django.utils import timezone
 from auditoria.contexto import contexto_auditoria
 from clases.models import Clase
 from clases.servicios import anular_clase, bloquear_usuarios_clase
-from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
+from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_eventos
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Turno
 from reservas.servicios import anular_reserva, exigir_acceso_reservas
@@ -17,7 +17,7 @@ from .models import Bloqueo
 
 
 def validar_inicio_bloqueo(fecha, hora, ahora):
-    if not FECHA_INICIO_OPERACIONES <= fecha <= fecha_maxima_agenda():
+    if not FECHA_INICIO_OPERACIONES <= fecha <= fecha_maxima_eventos():
         raise ValidationError("La fecha está fuera del calendario operativo.")
     if hora not in tuple(time(valor) for valor in range(23)):
         raise ValidationError("El turno debe comenzar en punto entre las 00:00 y las 22:00.")
@@ -35,7 +35,10 @@ def validar_anulacion_bloqueo(bloqueo, ahora):
 
 
 @transaction.atomic
-def registrar_bloqueo(registrado_por, cancha, fecha, hora, motivo, observaciones, evento_esperado, motivo_anulacion=""):
+def registrar_bloqueo(
+    registrado_por, cancha, fecha, hora, motivo, observaciones, evento_esperado, motivo_anulacion="",
+    *, usar_motivo_bloqueo=False,
+):
     if not exigir_acceso_reservas(registrado_por):
         raise PermissionDenied
     clase_revisada = Clase.objects.filter(
@@ -56,6 +59,9 @@ def registrar_bloqueo(registrado_por, cancha, fecha, hora, motivo, observaciones
         raise PermissionDenied
     if motivo not in Bloqueo.Motivo.values:
         raise ValidationError("Elegí un motivo de bloqueo válido.")
+
+    if usar_motivo_bloqueo:
+        motivo_anulacion = Bloqueo.Motivo(motivo).label
 
     sede = Sede.objects.select_for_update().get(pk=cancha.sede_id)
     cancha = Cancha.objects.select_for_update().get(pk=cancha.pk, sede=sede)
@@ -81,7 +87,10 @@ def registrar_bloqueo(registrado_por, cancha, fecha, hora, motivo, observaciones
             raise ValidationError("La actividad del turno cambió. Revisá la agenda antes de confirmar.")
         if evento:
             if evento.tipo == Evento.Tipo.RESERVA:
-                evento = anular_reserva(registrado_por, evento.reserva.pk, motivo_anulacion).evento
+                evento = anular_reserva(
+                    registrado_por, evento.reserva.pk, motivo_anulacion,
+                    motivo_bloqueo=motivo if usar_motivo_bloqueo else None,
+                ).evento
             elif evento.tipo == Evento.Tipo.CLASE:
                 clase = Clase.objects.select_for_update().get(evento=evento)
                 if (

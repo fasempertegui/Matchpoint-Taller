@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
+from common.fechas import validar_inicio_evento
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Reserva, Turno
 from usuarios.models import Rol, Usuario
@@ -62,7 +63,8 @@ def _bloquear_clase(clase_id):
 
 
 def validar_ubicacion_clase(cancha, fecha, hora_inicio):
-    validar_datos_clase(fecha, hora_inicio, None, "")
+    validar_datos_clase(fecha, hora_inicio, "")
+    validar_inicio_evento(fecha, hora_inicio)
     if cancha.estado != Cancha.Estado.ACTIVA or cancha.sede.estado != Sede.Estado.ACTIVA:
         raise ValidationError("La sede y la cancha deben estar activas para crear una clase.")
     validar_horario_clase(cancha.sede, fecha, hora_inicio)
@@ -73,14 +75,9 @@ def validar_ubicacion_clase(cancha, fecha, hora_inicio):
 
 
 def _advertencias_asignaciones_clase(
-    usuarios, usuarios_reservas, participantes_ids, modalidad, fecha, hora_inicio,
+    usuarios, usuarios_reservas, fecha, hora_inicio,
 ):
     advertencias = []
-    advertencias_participantes = []
-    if modalidad == "grupal" and len(participantes_ids) > 6:
-        advertencias_participantes.append("Superás el máximo recomendado de 6 participantes para una clase grupal.")
-    if modalidad == "individual" and len(participantes_ids) > 1:
-        advertencias_participantes.append(f"La clase individual tiene {len(participantes_ids)} participantes. Podés continuar si está acordado.")
     reservas = list(Reserva.objects.filter(
         organizador_id__in=usuarios_reservas,
         evento__turno__fecha=fecha, evento__turno__hora_inicio=hora_inicio,
@@ -95,23 +92,22 @@ def _advertencias_asignaciones_clase(
         )
     return {
         "advertencias": advertencias,
-        "advertencias_participantes": advertencias_participantes,
         "reservas": [[reserva.pk, reserva.evento.actualizado_en.isoformat()] for reserva in reservas],
     }
 
 
 def _revision_registro_clase(
     usuario, cancha, fecha, hora_inicio, usuarios,
-    profesores_ids, participantes_ids, modalidad, observaciones,
+    profesores_ids, participantes_ids, observaciones,
 ):
     datos = {
         "usuario": usuario.pk, "cancha": cancha.pk, "sede": cancha.sede_id,
         "fecha": fecha.isoformat(), "hora": hora_inicio.isoformat(),
         "profesores": sorted(profesores_ids), "participantes": sorted(participantes_ids),
         "nombres": {str(pk): str(usuarios[pk]) for pk in sorted(profesores_ids | participantes_ids)},
-        "modalidad": modalidad, "observaciones": observaciones.strip(),
+        "observaciones": observaciones.strip(),
         **_advertencias_asignaciones_clase(
-            usuarios, profesores_ids | participantes_ids, participantes_ids, modalidad, fecha, hora_inicio,
+            usuarios, profesores_ids | participantes_ids, fecha, hora_inicio,
         ),
     }
     feriado = Feriado.objects.filter(fecha=fecha).first()
@@ -122,13 +118,12 @@ def _revision_registro_clase(
 
 def preparar_registro_clase(
     usuario, cancha, fecha, hora_inicio, profesores_ids,
-    participantes_ids=(), modalidad=None, observaciones="",
+    participantes_ids=(), observaciones="",
 ):
     usuario = exigir_administracion_clases(usuario)
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
     participantes_ids = normalizar_usuarios_clase(participantes_ids)
-    modalidad = modalidad or None
-    validar_datos_clase(fecha, hora_inicio, modalidad, observaciones)
+    validar_datos_clase(fecha, hora_inicio, observaciones)
     usuarios = {
         persona.pk: persona for persona in Usuario.objects.filter(
             pk__in=profesores_ids | participantes_ids,
@@ -138,11 +133,10 @@ def preparar_registro_clase(
     validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, fecha, hora_inicio)
     validar_ubicacion_clase(cancha, fecha, hora_inicio)
     datos = _revision_registro_clase(
-        usuario, cancha, fecha, hora_inicio, usuarios, profesores_ids, participantes_ids, modalidad, observaciones,
+        usuario, cancha, fecha, hora_inicio, usuarios, profesores_ids, participantes_ids, observaciones,
     )
     return {
         "advertencias": datos["advertencias"],
-        "advertencias_participantes": datos["advertencias_participantes"],
         "confirmacion": signing.dumps(datos, salt="clases.registro", compress=True),
     }
 
@@ -155,7 +149,6 @@ def registrar_clase(
     hora_inicio,
     profesores_ids,
     participantes_ids=(),
-    modalidad=None,
     observaciones="",
     *,
     confirmacion,
@@ -163,9 +156,8 @@ def registrar_clase(
     registrado_por = exigir_administracion_clases(registrado_por)
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
     participantes_ids = normalizar_usuarios_clase(participantes_ids)
-    if modalidad == "":
-        modalidad = None
-    validar_datos_clase(fecha, hora_inicio, modalidad, observaciones)
+    validar_datos_clase(fecha, hora_inicio, observaciones)
+    validar_inicio_evento(fecha, hora_inicio)
     usuarios_ids = profesores_ids | participantes_ids | {registrado_por.pk}
 
     usuarios = bloquear_usuarios_clase(usuarios_ids)
@@ -194,7 +186,7 @@ def registrar_clase(
         raise ValidationError("La revisión venció o no es válida. Revisá la clase nuevamente.") from None
     actual = _revision_registro_clase(
         registrado_por, cancha, fecha, hora_inicio, usuarios,
-        profesores_ids, participantes_ids, modalidad, observaciones,
+        profesores_ids, participantes_ids, observaciones,
     )
     if revisado != actual:
         raise ValidationError("Los datos o las advertencias cambiaron. Revisá la clase antes de confirmar.")
@@ -205,7 +197,7 @@ def registrar_clase(
         registrado_por=registrado_por,
         observaciones=observaciones.strip(),
     )
-    clase = Clase.objects.create(evento=evento, modalidad=modalidad, es_generada=False)
+    clase = Clase.objects.create(evento=evento, es_generada=False)
     ClaseProfesor.objects.bulk_create([
         ClaseProfesor(clase=clase, profesor_id=usuario_id)
         for usuario_id in sorted(profesores_ids)
@@ -214,6 +206,7 @@ def registrar_clase(
         ClaseAlumno(clase=clase, usuario_id=usuario_id)
         for usuario_id in sorted(participantes_ids)
     ])
+    validar_inicio_evento(fecha, hora_inicio)
     return clase
 
 
@@ -222,7 +215,7 @@ def _version_edicion_clase(usuario, clase):
         "usuario": usuario.pk, "clase": clase.pk, "evento": clase.evento_id,
         "turno": clase.evento.turno_id, "estado": clase.evento.estado,
         "actualizado_en": clase.evento.actualizado_en.isoformat(),
-        "modalidad": clase.modalidad, "observaciones": clase.evento.observaciones,
+        "observaciones": clase.evento.observaciones,
         "profesores": [
             [fila.profesor_id, fila.estado, fila.actualizado_en.isoformat()]
             for fila in clase.profesores.order_by("profesor_id")
@@ -258,7 +251,7 @@ def validar_version_clase(usuario, clase, version):
 
 
 def _revision_edicion_clase(
-    usuario, clase, destino, usuarios, profesores_ids, participantes_ids, modalidad, observaciones,
+    usuario, clase, destino, usuarios, profesores_ids, participantes_ids, observaciones,
 ):
     version = _version_edicion_clase(usuario, clase)
     profesores_activos = {pk for pk, estado, _ in version["profesores"] if estado == "activo"}
@@ -277,16 +270,16 @@ def _revision_edicion_clase(
         "version": version, "cancha": destino.pk,
         "profesores": sorted(profesores_ids), "participantes": sorted(participantes_ids),
         "nombres": {str(pk): str(usuarios[pk]) for pk in sorted(profesores_ids | participantes_ids)},
-        "modalidad": modalidad, "observaciones": observaciones.strip(),
+        "observaciones": observaciones.strip(),
         **_advertencias_asignaciones_clase(
-            usuarios, nuevos, participantes_ids, modalidad,
+            usuarios, nuevos,
             clase.evento.turno.fecha, clase.evento.turno.hora_inicio,
         ),
     }
 
 
 def preparar_edicion_clase(
-    usuario, clase_id, profesores_ids, participantes_ids, modalidad, observaciones,
+    usuario, clase_id, profesores_ids, participantes_ids, observaciones,
     *, version, cancha=None,
 ):
     usuario = exigir_administracion_clases(usuario)
@@ -294,9 +287,8 @@ def preparar_edicion_clase(
     validar_version_clase(usuario, clase, version)
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
     participantes_ids = normalizar_usuarios_clase(participantes_ids)
-    modalidad = modalidad or None
     turno = clase.evento.turno
-    validar_datos_clase(turno.fecha, turno.hora_inicio, modalidad, observaciones)
+    validar_datos_clase(turno.fecha, turno.hora_inicio, observaciones)
     profesores_actuales = set(clase.profesores.filter(estado="activo").values_list("profesor_id", flat=True))
     participantes_actuales = set(clase.alumnos.filter(estado="activo").values_list("usuario_id", flat=True))
     usuarios = {
@@ -316,12 +308,11 @@ def preparar_edicion_clase(
             raise ValidationError("Sólo se puede cambiar de cancha antes del inicio de la clase.")
         validar_ubicacion_clase(destino, turno.fecha, turno.hora_inicio)
     datos = _revision_edicion_clase(
-        usuario, clase, destino, usuarios, profesores_ids, participantes_ids, modalidad, observaciones,
+        usuario, clase, destino, usuarios, profesores_ids, participantes_ids, observaciones,
     )
     return {
         "cambios": datos["cambios"],
         "advertencias": datos["advertencias"],
-        "advertencias_participantes": datos["advertencias_participantes"],
         "confirmacion": signing.dumps(datos, salt="clases.edicion", compress=True),
     }
 
@@ -329,7 +320,7 @@ def preparar_edicion_clase(
 @transaction.atomic
 def editar_clase(
     modificado_por, clase_id, profesores_ids, participantes_ids,
-    modalidad, observaciones, cancha=None, *, confirmacion,
+    observaciones, cancha=None, *, confirmacion,
 ):
     modificado_por = exigir_administracion_clases(modificado_por)
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
@@ -340,9 +331,7 @@ def editar_clase(
     origen = inicial.evento.turno
     destino = cancha if cancha is not None else origen.cancha
     cambia_cancha = destino.pk != origen.cancha_id
-    if modalidad == "":
-        modalidad = None
-    validar_datos_clase(origen.fecha, origen.hora_inicio, modalidad, observaciones)
+    validar_datos_clase(origen.fecha, origen.hora_inicio, observaciones)
     observaciones = observaciones.strip()
 
     usuarios_ids = (
@@ -424,13 +413,13 @@ def editar_clase(
         raise ValidationError("La revisión venció o no es válida. Revisá los cambios nuevamente.") from None
     actual = _revision_edicion_clase(
         modificado_por, clase, destino, usuarios,
-        profesores_ids, participantes_ids, modalidad, observaciones,
+        profesores_ids, participantes_ids, observaciones,
     )
     if revisado != actual:
         raise ValidationError("La clase, los datos o las advertencias cambiaron. Revisá la edición nuevamente.")
 
     if (
-        not cambia_cancha and clase.modalidad == modalidad and evento.observaciones == observaciones
+        not cambia_cancha and evento.observaciones == observaciones
         and profesores_activos == profesores_ids and participantes_activos == participantes_ids
     ):
         clase.evento = evento
@@ -459,9 +448,6 @@ def editar_clase(
                 ClaseAlumno(clase=clase, usuario_id=pk)
                 for pk in sorted(participantes_ids - set(participantes))
             ])
-        if clase.modalidad != modalidad:
-            clase.modalidad = modalidad
-            clase.save(update_fields=["modalidad"])
         campos_evento = ["actualizado_en"]
         if evento.observaciones != observaciones:
             evento.observaciones = observaciones
@@ -484,7 +470,7 @@ def preparar_cambio_cancha(usuario, clase_id, cancha, *, version):
         raise ValidationError("Elegí una cancha distinta de la actual.")
     revision = preparar_edicion_clase(
         usuario, clase_id, datos["profesores_ids"], datos["participantes_ids"],
-        clase.modalidad, clase.evento.observaciones, version=version, cancha=cancha,
+        clase.evento.observaciones, version=version, cancha=cancha,
     )
     return signing.dumps({
         "usuario": usuario.pk, "clase": clase_id, "cancha": cancha.pk,
@@ -507,7 +493,7 @@ def cambiar_cancha_clase(usuario, clase_id, cancha, *, confirmacion):
         raise ValidationError("La clase ya está en esa cancha. Consultá su detalle.")
     return editar_clase(
         usuario, clase_id, datos["profesores_ids"], datos["participantes_ids"],
-        clase.modalidad, clase.evento.observaciones, cancha=cancha,
+        clase.evento.observaciones, cancha=cancha,
         confirmacion=revision["edicion"],
     )
 
@@ -625,7 +611,7 @@ def _version_asistencia_clase(clase):
     return {
         "clase": clase.pk, "evento": clase.evento_id, "turno": clase.evento.turno_id,
         "estado": clase.evento.estado, "actualizado_en": clase.evento.actualizado_en.isoformat(),
-        "modalidad": clase.modalidad, "observaciones": clase.evento.observaciones,
+        "observaciones": clase.evento.observaciones,
         "profesores": [
             [fila.profesor_id, fila.estado, fila.actualizado_en.isoformat()]
             for fila in clase.profesores.order_by("profesor_id")
@@ -742,7 +728,7 @@ def _datos_eliminacion_clase(clase):
         "cancha_id": turno.cancha_id, "sede_id": turno.cancha.sede_id,
         "fecha": turno.fecha.isoformat(), "hora_inicio": turno.hora_inicio.isoformat(),
         "estado": clase.evento.estado, "es_generada": clase.es_generada,
-        "turno_planilla_id": clase.turno_planilla_id, "modalidad": clase.modalidad,
+        "turno_planilla_id": clase.turno_planilla_id,
         "observaciones": clase.evento.observaciones, "actualizado_en": clase.evento.actualizado_en.isoformat(),
         "profesores": sorted([
             [v.profesor_id, v.estado, v.actualizado_en.isoformat()] for v in clase.profesores.all()

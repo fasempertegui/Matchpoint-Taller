@@ -285,7 +285,6 @@ Representa una celda de la programación semanal vigente de una cancha.
 | FK | `cancha_id` | `bigint` | | | `1` |
 | | `dia_semana` | `smallint` | | | `3` (1 = lunes … 7 = domingo) |
 | | `hora_inicio` | `time` | | | `18:00` |
-| | `modalidad` | `varchar(15)` | Sí | | `grupal` (o `individual`) |
 | | `observaciones` | `text` | Sí | | `Cancha techada en invierno` |
 | | `creado_en` | `timestamptz` | | | `2026-10-01 15:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-01 15:00:00-03` |
@@ -357,6 +356,8 @@ Representa los atributos comunes de una reserva, clase o bloqueo, separados de s
 
 `turno_id` es obligatorio y tiene un índice para consultar la historia del turno. Una restricción única parcial sobre `turno_id`, con condición `estado <> 'anulado'`, permite un máximo de un evento Programado o Finalizado por turno y múltiples eventos Anulados históricos. Los eventos conservan identificadores independientes aunque referencien el mismo turno.
 
+La creación de cualquier evento exige que la fecha y hora de inicio de su turno sea estrictamente posterior al momento actual del servidor. La validación incluye las altas individuales y masivas; las actualizaciones de eventos existentes conservan la gestión de su historia.
+
 Cada evento tiene exactamente una especialización en `reservas`, `clases` o `bloqueos`, coherente con `tipo`. Los `evento_id` de esas tablas son únicos. Cancha, fecha y hora pertenecen a `turnos` y no se duplican en el evento ni en sus especializaciones.
 
 La coherencia de estado y auditoría es:
@@ -377,7 +378,6 @@ Contiene la especialización de un evento de tipo clase.
 | FK | `evento_id` | `bigint` | | Sí | `1200` |
 | FK | `turno_planilla_id` | `bigint` | Sí | | `55` |
 | | `es_generada` | `boolean` | | | `true` |
-| | `modalidad` | `varchar(15)` | Sí | | `grupal` (o `individual`) |
 | FK | `finalizado_por_id` | `bigint` | Sí | | `NULL` |
 
 `evento_id` es único y referencia un evento de tipo `clase`. Estado, ubicación, observaciones y marcas de auditoría comunes se obtienen de ese evento y su turno. Profesores, participantes y asistencia se representan en tablas dependientes.

@@ -5,6 +5,8 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from common.fechas import validar_inicio_evento
+
 
 class Turno(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -127,6 +129,11 @@ class Evento(models.Model):
         ]
         verbose_name = "evento"
         verbose_name_plural = "eventos"
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            validar_inicio_evento(self.turno.fecha, self.turno.hora_inicio)
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Evento {self.pk}"

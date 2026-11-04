@@ -5,7 +5,6 @@ from . import views, vistas_feriados, vistas_generacion, vistas_planilla
 app_name = "clases"
 
 urlpatterns = [
-    path("planilla/regenerar/", vistas_generacion.generacion_clases, {"regenerar": True}, name="regeneracion_clases"),
     path("<int:pk>/eliminar/", vistas_generacion.clase_eliminar, name="clase_eliminar"),
     path("planilla/generar/", vistas_generacion.generacion_clases, name="generacion_clases"),
     path("planilla/generar/resultado/", vistas_generacion.generacion_resultado, name="generacion_resultado"),

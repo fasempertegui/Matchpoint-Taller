@@ -2,9 +2,6 @@
     <div class="clase-seccion-titulo">
         <h2 id="{{ campo.name }}-titulo">{{ titulo }} <span class="clase-cantidad">(<span data-cantidad>{{ seleccionados|length }}</span>)</span>{% if campo.field.required %} <span aria-hidden="true">*</span>{% endif %}</h2>
     </div>
-    {% if campo.name == 'participantes' %}
-        <div class="clase-aviso-participantes" data-aviso-cantidad role="status" hidden><span aria-hidden="true">⚠</span><p data-mensaje-cantidad></p></div>
-    {% endif %}
     <ul class="clase-seleccionados" aria-labelledby="{{ campo.name }}-titulo" data-seleccionados>
         {% for persona in seleccionados %}
             <li data-persona="{{ persona.pk }}">

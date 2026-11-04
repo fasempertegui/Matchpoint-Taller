@@ -59,9 +59,9 @@
         <header class="modal-confirmacion-cabecera"><h2 id="asistencia-editor-titulo">Editar asistencia</h2></header>
         <div class="modal-confirmacion-contenido">
             <p data-editor-nombre></p>
-            <fieldset class="clase-modalidad">
+            <fieldset class="clase-opciones">
                 <legend>Asistencia</legend>
-                <div class="clase-modalidad-opciones">{% for opcion in editor.estado %}<label>{{ opcion.tag }}<span>{{ opcion.choice_label }}</span></label>{% endfor %}</div>
+                <div class="clase-opciones-lista">{% for opcion in editor.estado %}<label>{{ opcion.tag }}<span>{{ opcion.choice_label }}</span></label>{% endfor %}</div>
             </fieldset>
             {% include "clases/_observaciones_formulario.html" with campo=editor.observaciones only %}
         </div>

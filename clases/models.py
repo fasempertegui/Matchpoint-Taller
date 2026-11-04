@@ -31,10 +31,6 @@ class TurnoPlanilla(models.Model):
         SABADO = 6, "Sábado"
         DOMINGO = 7, "Domingo"
 
-    class Modalidad(models.TextChoices):
-        INDIVIDUAL = "individual", "Individual"
-        GRUPAL = "grupal", "Grupal"
-
     id = models.BigAutoField(primary_key=True)
     cancha = models.ForeignKey(
         "instalaciones.Cancha",
@@ -43,12 +39,6 @@ class TurnoPlanilla(models.Model):
     )
     dia_semana = models.SmallIntegerField(choices=DiaSemana.choices)
     hora_inicio = models.TimeField()
-    modalidad = models.CharField(
-        max_length=15,
-        choices=Modalidad.choices,
-        blank=True,
-        null=True,
-    )
     observaciones = models.TextField(blank=True, null=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
@@ -71,13 +61,6 @@ class TurnoPlanilla(models.Model):
                 condition=models.Q(hora_inicio__in=tuple(time(hora) for hora in range(23))),
                 name="turno_planilla_horario_valido",
                 violation_error_message="El turno debe comenzar en punto entre las 00:00 y las 22:00.",
-            ),
-            models.CheckConstraint(
-                condition=(
-                    models.Q(modalidad__isnull=True)
-                    | models.Q(modalidad__in=("individual", "grupal"))
-                ),
-                name="turno_planilla_modalidad_valida",
             ),
         ]
         verbose_name = "turno de planilla"
@@ -153,12 +136,6 @@ class Clase(models.Model):
         null=True,
     )
     es_generada = models.BooleanField(default=False)
-    modalidad = models.CharField(
-        max_length=15,
-        choices=TurnoPlanilla.Modalidad.choices,
-        blank=True,
-        null=True,
-    )
     finalizado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -172,13 +149,6 @@ class Clase(models.Model):
         ordering = ("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
         default_permissions = ()
         constraints = [
-            models.CheckConstraint(
-                condition=(
-                    models.Q(modalidad__isnull=True)
-                    | models.Q(modalidad__in=("individual", "grupal"))
-                ),
-                name="clase_modalidad_valida",
-            ),
             models.CheckConstraint(
                 condition=models.Q(es_generada=True) | models.Q(turno_planilla__isnull=True),
                 name="clase_origen_planilla_valido",

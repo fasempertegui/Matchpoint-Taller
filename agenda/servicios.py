@@ -2,27 +2,33 @@ from datetime import datetime, time, timedelta
 from urllib.parse import urlencode
 
 from django.core.exceptions import ValidationError
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
 
 from bloqueos.servicios import validar_anulacion_bloqueo
 from clases.consultas import consultar_clase
-from clases.models import Clase, Feriado
+from clases.models import Asistencia, ClaseAlumno, ClaseProfesor, Feriado
 from clases.validaciones import validar_anulacion_clase
-from common.fechas import FECHA_INICIO_OPERACIONES
+from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_eventos, opciones_meses_agenda
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento
 from reservas.servicios import validar_anulacion_reserva, validar_finalizacion_reserva
 
 
-def enlace_agenda(sede, fecha, cancha=None, hora=None, acciones=False, historial=False):
+def enlace_agenda(sede, fecha, cancha=None, hora=None, acciones=False, historial=False, acciones_mes=False, mes=None):
     datos = {"sede": sede.pk, "fecha": fecha.isoformat()}
     if cancha is not None:
         datos["cancha"] = cancha.pk
     if hora is not None:
         datos["hora"] = hora
-    if acciones:
+    if acciones_mes:
+        datos["panel"] = "acciones_mes"
+        mes_elegido = (mes or fecha).strftime("%Y-%m")
+        if mes is None and mes_elegido not in dict(opciones_meses_agenda()):
+            mes_elegido = timezone.localdate().strftime("%Y-%m")
+        datos["mes"] = mes_elegido
+    elif acciones:
         datos["panel"] = "acciones"
     elif historial:
         datos["panel"] = "historial"
@@ -31,6 +37,7 @@ def enlace_agenda(sede, fecha, cancha=None, hora=None, acciones=False, historial
 
 def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuario, es_administrador, historial=False):
     ahora = timezone.localtime()
+    maxima_eventos = fecha_maxima_eventos()
     canchas = list(sede.canchas.all())
     columnas = [{"cancha": cancha, "fecha": fecha} for cancha in canchas]
 
@@ -49,33 +56,40 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         }
 
     fechas = [columna["fecha"] for columna in columnas]
-    clases_del_usuario = Clase.objects.filter(evento_id=OuterRef("pk")).filter(
-        Q(profesores__profesor_id=usuario.pk)
-        | Q(alumnos__usuario_id=usuario.pk)
-        | Q(asistencias__usuario_id=usuario.pk)
-    )
+    eventos_del_usuario = set()
+    if not es_administrador:
+        eventos_del_usuario = set(
+            ClaseProfesor.objects.filter(
+                profesor_id=usuario.pk, clase__evento__turno__fecha=fecha,
+            ).values_list("clase__evento_id", flat=True).union(
+                ClaseAlumno.objects.filter(
+                    usuario_id=usuario.pk, clase__evento__turno__fecha=fecha,
+                ).values_list("clase__evento_id", flat=True),
+                Asistencia.objects.filter(
+                    usuario_id=usuario.pk, clase__evento__turno__fecha=fecha,
+                ).values_list("clase__evento_id", flat=True),
+            )
+        )
     puede_reservar = usuario.puede_reservar
     eventos = Evento.objects.none()
     if fechas:
         eventos = Evento.objects.filter(
             turno__cancha__in=[columna["cancha"] for columna in columnas],
             turno__fecha__range=(max(min(fechas), FECHA_INICIO_OPERACIONES), min(max(fechas), fecha_maxima)),
-        ).exclude(estado=Evento.Estado.ANULADO).annotate(
-            clase_del_usuario=Exists(clases_del_usuario),
-        ).select_related(
+        ).exclude(estado=Evento.Estado.ANULADO).select_related(
             "turno__cancha__sede", "reserva__organizador", "registrado_por", "anulado_por",
             "clase", "bloqueo__evento_origen__reserva", "bloqueo__evento_origen__clase",
         )
-    eventos_por_turno = {
-        (evento.turno.cancha_id, evento.turno.fecha, evento.turno.hora_inicio.hour): evento
-        for evento in eventos
-    }
+    eventos_por_turno = {}
+    for evento in eventos:
+        evento.clase_del_usuario = evento.pk in eventos_del_usuario
+        eventos_por_turno[(evento.turno.cancha_id, evento.turno.fecha, evento.turno.hora_inicio.hour)] = evento
     anulados_por_turno = {}
     anulados = Evento.objects.filter(
         turno__cancha__in=canchas, turno__fecha=fecha, estado=Evento.Estado.ANULADO,
-    ).annotate(clase_del_usuario=Exists(clases_del_usuario))
+    )
     if not es_administrador:
-        anulados = anulados.filter(Q(reserva__organizador_id=usuario.pk) | Q(clase_del_usuario=True))
+        anulados = anulados.filter(Q(reserva__organizador_id=usuario.pk) | Q(pk__in=eventos_del_usuario))
     anulados = anulados.select_related(
         "turno", "reserva__organizador", "clase", "bloqueo__evento_origen__reserva",
         "bloqueo__evento_origen__clase", "anulado_por", "registrado_por",
@@ -158,13 +172,13 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             else:
                 puede_anular_clase = True
         puede_crear_clase = (
-            es_administrador and evento is None and en_rango and habilitado
+            es_administrador and evento is None and en_rango and habilitado and inicio > ahora and dia <= maxima_eventos
             and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
         )
         return {
             "puede_crear_clase": puede_crear_clase,
             "puede_anular_clase": puede_anular_clase,
-            "puede_bloquear_clase": puede_anular_clase and en_rango and habilitado
+            "puede_bloquear_clase": puede_anular_clase and en_rango and habilitado and dia <= maxima_eventos
                 and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA,
             "url_crear_clase": reverse("clases:clase_crear") + "?" + urlencode({
                 "cancha": cancha.pk, "fecha": dia.isoformat(), "hora": hora,
@@ -181,7 +195,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             "estado_temporal": temporal if puede_ver_evento else "",
             "puede_reservar": puede_reservar and evento is None and not impedimento,
             "puede_anular": puede_anular, "puede_finalizar": puede_finalizar,
-            "puede_bloquear": es_administrador and en_rango and habilitado and inicio > ahora
+            "puede_bloquear": es_administrador and en_rango and habilitado and inicio > ahora and dia <= maxima_eventos
                 and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
                 and (evento is None or puede_anular),
             "puede_liberar_bloqueo": puede_liberar_bloqueo,
@@ -249,6 +263,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         "url_hoy": enlace_agenda(sede, ahora.date(), cancha),
         "url_cerrar": enlace_agenda(sede, fecha, cancha),
         "url_acciones": enlace_agenda(sede, fecha, acciones=True),
+        "url_acciones_mes": enlace_agenda(sede, fecha, cancha, acciones_mes=True),
         "url_seleccion": enlace_agenda(sede, fecha, cancha, hora_seleccionada),
         "url_historial": enlace_agenda(sede, fecha, cancha, hora_seleccionada, historial=True),
     }

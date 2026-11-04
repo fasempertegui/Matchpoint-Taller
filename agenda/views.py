@@ -1,3 +1,5 @@
+from calendar import monthrange
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core import signing
@@ -15,13 +17,14 @@ from bloqueos.forms import BloqueoAnulacionForm, BloqueoForm
 from bloqueos.models import Bloqueo
 from bloqueos.servicios import anular_bloqueo, registrar_bloqueo
 from clases.permisos import exigir_acceso_clases, exigir_administracion_clases
+from common.fechas import opciones_meses_agenda
 from instalaciones.models import Sede
 from reservas.disponibilidad import consultar_disponibilidad
 from reservas.forms import ReservaAnulacionForm
 from reservas.servicios import anular_reserva, exigir_acceso_reservas, finalizar_reserva, registrar_reserva
 from usuarios.models import Rol
 
-from .forms import AgendaFiltroForm, AgendaOperacionForm, AgendaReservaForm
+from .forms import AgendaFiltroForm, AgendaMesForm, AgendaOperacionForm, AgendaOperacionMesForm, AgendaReservaForm
 from .operaciones import ejecutar_operacion, preparar_operacion
 from .servicios import construir_agenda, enlace_agenda
 
@@ -60,7 +63,8 @@ def agenda(request):
     es_administrador = usuario.tiene_rol(Rol.ADMINISTRADOR)
     if request.method == "POST":
         exigir_acceso_reservas(usuario)
-    panel_acciones = request.GET.get("panel") == "acciones"
+    panel_acciones_mes = request.GET.get("panel") == "acciones_mes"
+    panel_acciones = request.GET.get("panel") in ("acciones", "acciones_mes")
     panel_historial = request.GET.get("panel") == "historial" and request.method == "GET"
     accion = request.POST.get("accion") if request.method == "POST" else None
     if not es_administrador and (
@@ -107,11 +111,37 @@ def agenda(request):
                 initial={"bloqueo": detalle["bloqueo"].pk if detalle["bloqueo"] else None},
             )
         if panel_acciones:
-            contexto_acciones = _preparar_acciones_dia(request, filtros["sede"], filtros["fecha"])
+            if panel_acciones_mes:
+                parametros_mes = request.GET.copy()
+                mes_inicial = filtros["fecha"].strftime("%Y-%m")
+                if mes_inicial not in dict(opciones_meses_agenda()):
+                    mes_inicial = timezone.localdate().strftime("%Y-%m")
+                parametros_mes.setdefault("mes", mes_inicial)
+                formulario_mes = AgendaMesForm(parametros_mes)
+                contexto_acciones = {
+                    "mensual": True, "formulario_mes": formulario_mes,
+                    "fecha": filtros["fecha"], "sede": filtros["sede"],
+                    "url_operacion": datos["url_acciones_mes"],
+                }
+                if formulario_mes.is_valid():
+                    mes = formulario_mes.cleaned_data["mes"]
+                    fin = mes.replace(day=monthrange(mes.year, mes.month)[1])
+                    datos["url_acciones_mes"] = enlace_agenda(
+                        filtros["sede"], filtros["fecha"], filtros["cancha"], acciones_mes=True, mes=mes,
+                    )
+                    contexto_acciones["url_operacion"] = datos["url_acciones_mes"]
+                    operacion = _preparar_acciones(request, filtros["sede"], mes, fin, datos["url_cerrar"])
+                    if isinstance(operacion, HttpResponseRedirect):
+                        return operacion
+                    contexto_acciones.update(operacion)
+            else:
+                contexto_acciones = _preparar_acciones(request, filtros["sede"], filtros["fecha"])
             if isinstance(contexto_acciones, HttpResponseRedirect):
                 return contexto_acciones
             if request.method == "POST" and request.POST.get("paso") == "confirmar":
                 datos = construir_agenda(**argumentos)
+                if panel_acciones_mes:
+                    datos["url_acciones_mes"] = contexto_acciones["url_operacion"]
         elif request.method == "POST":
             try:
                 detalle = datos["detalle"]
@@ -197,6 +227,7 @@ def agenda(request):
         "hay_sedes": sede_inicial is not None,
         "agenda": datos,
         "panel_acciones": panel_acciones,
+        "panel_acciones_mes": panel_acciones_mes,
         "panel_historial": panel_historial,
         **contexto_acciones,
         "breadcrumbs": [("Inicio", reverse("inicio")), ("Agenda", None)],
@@ -212,6 +243,7 @@ def agenda(request):
         )
         respuesta = render(request, plantilla, contexto)
         respuesta["X-Agenda-Seleccion"] = (
+            datos["url_acciones_mes"] if panel_acciones_mes else
             datos["url_acciones"] if panel_acciones else
             datos["url_historial"] if panel_historial and datos["detalle"] else
             datos["url_seleccion"] if datos["detalle"] else datos["url_cerrar"]
@@ -220,20 +252,24 @@ def agenda(request):
     return render(request, "agenda/agenda.html", contexto)
 
 
-def _preparar_acciones_dia(request, sede, fecha):
+def _preparar_acciones(request, sede, fecha, fecha_hasta=None, url_agenda=None):
     avisos = []
-    url_agenda = enlace_agenda(sede, fecha)
+    mensual = fecha_hasta is not None
+    sal = "agenda.acciones-mes" if mensual else "agenda.acciones-dia"
+    url_agenda = url_agenda or enlace_agenda(sede, fecha)
     paso = request.POST.get("paso") if request.method == "POST" else None
     datos = request.POST if request.method == "POST" else None
     confirmacion = None
     if paso in ("editar", "confirmar"):
         try:
             confirmacion = signing.loads(
-                request.POST.get("confirmacion", ""), salt="agenda.acciones-dia", max_age=900,
+                request.POST.get("confirmacion", ""), salt=sal, max_age=900,
             )
             if (confirmacion["usuario"], confirmacion["sede"], confirmacion["fecha"]) != (
                 request.user.pk, sede.pk, fecha.isoformat(),
             ):
+                raise signing.BadSignature
+            if mensual and confirmacion.get("fecha_hasta") != fecha_hasta.isoformat():
                 raise signing.BadSignature
             datos = QueryDict(mutable=True)
             for nombre, valor in confirmacion["parametros"].items():
@@ -250,12 +286,13 @@ def _preparar_acciones_dia(request, sede, fecha):
             else:
                 datos["seleccion_canchas"] = "seleccionar"
             datos["horario"] = confirmacion["parametros"]["hora_desde"] or "dia"
-        except signing.BadSignature:
+        except (signing.BadSignature, KeyError, TypeError, ValueError):
             avisos.append("La vista previa venció o no corresponde a esta selección. Preparala nuevamente.")
             datos = None
             paso = None
 
-    formulario = AgendaOperacionForm(datos, sede=sede, fecha=fecha)
+    clase_formulario = AgendaOperacionMesForm if mensual else AgendaOperacionForm
+    formulario = clase_formulario(datos, sede=sede, fecha=fecha)
     previa = None
     token = None
     parametros = None
@@ -267,7 +304,7 @@ def _preparar_acciones_dia(request, sede, fecha):
         try:
             if paso == "confirmar":
                 try:
-                    resultado = ejecutar_operacion(request.user, sede.pk, fecha, parametros, confirmacion["huella"])
+                    resultado = ejecutar_operacion(request.user, sede.pk, fecha, parametros, confirmacion["huella"], fecha_hasta)
                 except ValidationError as error:
                     for mensaje in error.messages:
                         avisos.append(mensaje)
@@ -276,11 +313,11 @@ def _preparar_acciones_dia(request, sede, fecha):
                     messages.success(
                         request,
                         f'La operación fue completada: {resultado["anulaciones"]} eventos anulados '
-                        f'y {resultado["bloqueos_a_crear"]} bloqueos creados.',
+                        + (f'y {resultado["bloqueos_a_crear"]} bloqueos creados.' if not mensual else 'y sus turnos liberados.'),
                     )
                     return redirect(url_agenda)
             if paso != "editar":
-                previa = preparar_operacion(sede, fecha, parametros)
+                previa = preparar_operacion(sede, fecha, parametros, fecha_hasta)
                 if not formulario.validar_motivos(previa):
                     previa = None
         except ValidationError as error:
@@ -290,13 +327,14 @@ def _preparar_acciones_dia(request, sede, fecha):
         token = signing.dumps({
             "usuario": request.user.pk, "sede": sede.pk, "fecha": fecha.isoformat(),
             "parametros": parametros, "huella": previa["huella"],
-        }, salt="agenda.acciones-dia", compress=True)
+            "fecha_hasta": fecha_hasta.isoformat() if mensual else None,
+        }, salt=sal, compress=True)
     return {
-        "sede": sede, "fecha": fecha,
+        "sede": sede, "fecha": fecha, "mensual": mensual,
         "formulario_operacion": formulario, "previa": previa, "confirmacion": token, "parametros_operacion": parametros,
         "avisos_operacion": avisos,
         "motivo_bloqueo": dict(formulario.fields["motivo_bloqueo"].choices).get(parametros["motivo_bloqueo"], "")
-            if parametros else "",
+            if parametros and not mensual else "",
     }
 
 

@@ -13,7 +13,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from instalaciones.models import Cancha, Sede
 
-from .forms import PlanillaFiltroForm, PlanillaForm
+from .forms import ClaseForm, PlanillaFiltroForm
 from .models import TurnoPlanilla
 from .permisos import exigir_administracion_clases
 from .planilla import (
@@ -81,7 +81,6 @@ def planilla(request):
                     url = None
                     if turno:
                         url = reverse("clases:planilla_detalle", args=[turno["id"]])
-                        turno["modalidad_texto"] = dict(TurnoPlanilla.Modalidad.choices).get(turno["modalidad"], "Sin especificar")
                     seleccionable = not turno and habilitada and cancha.estado == Cancha.Estado.ACTIVA and cancha.sede.estado == Sede.Estado.ACTIVA
                     celdas.append({
                         "turno": turno, "habilitada": habilitada, "url": url, "dia": nombre,
@@ -141,7 +140,7 @@ def planilla_formulario(request, pk=None):
         participantes_actuales = list(turno.alumnos.values_list("usuario_id", flat=True))
         inicial = {
             "profesores": profesores_actuales, "participantes": participantes_actuales,
-            "modalidad": turno.modalidad or "", "observaciones": turno.observaciones,
+            "observaciones": turno.observaciones,
         }
     else:
         cancha_id = request.GET.get("cancha", "")
@@ -164,7 +163,7 @@ def planilla_formulario(request, pk=None):
         version = request.POST.get("version", "")
     else:
         version = version_turno_planilla(turno) if turno else ""
-    formulario = PlanillaForm(
+    formulario = ClaseForm(
         request.POST if request.method == "POST" else None, initial=inicial,
         profesores_actuales=profesores_actuales, participantes_actuales=participantes_actuales,
     )
@@ -180,7 +179,6 @@ def planilla_formulario(request, pk=None):
     except ValidationError as error:
         impedimento = " ".join(error.messages)
     revision = None
-    advertencias = []
     if request.method == "POST" and formulario.is_valid():
         try:
             if impedimento:
@@ -190,20 +188,15 @@ def planilla_formulario(request, pk=None):
                 persona.pk: persona for persona in list(formulario.cleaned_data["profesores"].prefetch_related("roles__rol"))
                 + list(formulario.cleaned_data["participantes"].prefetch_related("roles__rol"))
             }
-            validar_usuarios_clase(personas, parametros["profesores_ids"], parametros["participantes_ids"], requiere_profesor=False)
+            validar_usuarios_clase(personas, parametros["profesores_ids"], parametros["participantes_ids"])
             if turno:
                 validar_version_turno_planilla(turno, version)
-            cantidad = len(parametros["participantes_ids"])
-            if parametros["modalidad"] == "grupal" and cantidad > 6:
-                advertencias.append("Superás el máximo recomendado de 6 participantes para una clase grupal.")
-            elif parametros["modalidad"] == "individual" and cantidad > 1:
-                advertencias.append(f"La clase individual tiene {cantidad} participantes. Podés continuar si está acordado.")
             datos_revision = {
                 "actor": usuario.pk, "turno": pk, "cancha": cancha.pk,
                 "horarios": [[dia, hora.isoformat()] for dia, hora in coordenadas],
                 "version": version, "profesores": sorted(parametros["profesores_ids"]),
                 "participantes": sorted(parametros["participantes_ids"]),
-                "modalidad": parametros["modalidad"], "observaciones": parametros["observaciones"],
+                "observaciones": parametros["observaciones"],
             }
             paso = request.POST.get("paso")
             if paso == "confirmar":
@@ -237,9 +230,8 @@ def planilla_formulario(request, pk=None):
             {"dia": TurnoPlanilla.DiaSemana(dia).label, "hora": hora, "hora_fin": time(hora.hour + 1)}
             for dia, hora in coordenadas
         ],
-        "revision": revision, "advertencias": advertencias, "impedimento": impedimento,
+        "revision": revision, "impedimento": impedimento,
         "profesores": formulario.seleccionados("profesores"),
         "participantes": formulario.seleccionados("participantes"),
-        "modalidad_texto": dict(formulario.fields["modalidad"].choices).get(formulario["modalidad"].value(), "Sin especificar"),
         "url_cancelar": url_cancelar, "breadcrumbs": _breadcrumbs(titulo, cancha),
     })

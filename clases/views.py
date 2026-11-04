@@ -21,7 +21,7 @@ from usuarios.models import Rol, Usuario
 from .anulaciones import confirmar_anulacion_clase, preparar_anulacion_clase, validar_accion_anulacion
 from .consultas import consultar_actividad_clases, consultar_clase, consultar_profesores, consultar_participantes
 from .forms import ActividadClasesForm, AsistenciaEditorForm, AsistenciaFormSet, ClaseAnulacionForm, ClaseCanchaForm, ClaseForm, ClaseTurnoForm
-from .models import Asistencia, Clase, TurnoPlanilla
+from .models import Asistencia, Clase
 from .permisos import exigir_acceso_clases, exigir_administracion_clases
 from .servicios import (
     cambiar_cancha_clase, consultar_edicion_clase, editar_clase,
@@ -41,9 +41,6 @@ def clase_detalle(request, pk):
         raise Http404("La clase no existe.") from None
 
     clase["estado_texto"] = Evento.Estado(clase["estado"]).label
-    clase["modalidad_texto"] = (
-        TurnoPlanilla.Modalidad(clase["modalidad"]).label if clase["modalidad"] else "Sin especificar"
-    )
     puede_consultar_grupo = clase["es_administrador"] or clase["es_profesor_asignado"]
     responsables = {}
     if puede_consultar_grupo:
@@ -169,7 +166,6 @@ def clase_crear(request):
         "formulario": formulario, "revision": revision,
         "profesores": formulario.seleccionados("profesores"),
         "participantes": formulario.seleccionados("participantes"),
-        "modalidad_texto": dict(formulario.fields["modalidad"].choices).get(formulario["modalidad"].value(), "Sin especificar"),
         "cancha": cancha, "fecha": fecha, "hora": hora,
         "hora_fin": (datetime.combine(fecha, hora) + timedelta(hours=1)).time(),
         "url_agenda": url_agenda, "url_cancelar": url_agenda, "impedimento": impedimento,
@@ -198,7 +194,7 @@ def clase_editar(request, pk):
         request.POST if request.method == "POST" else None,
         initial={
             "profesores": datos["profesores_ids"], "participantes": datos["participantes_ids"],
-            "modalidad": clase.modalidad or "", "observaciones": clase.evento.observaciones,
+            "observaciones": clase.evento.observaciones,
         },
         profesores_actuales=datos["profesores_ids"], participantes_actuales=datos["participantes_ids"],
     )
@@ -221,7 +217,6 @@ def clase_editar(request, pk):
         "formulario": formulario, "revision": revision,
         "profesores": formulario.seleccionados("profesores"),
         "participantes": formulario.seleccionados("participantes"),
-        "modalidad_texto": dict(formulario.fields["modalidad"].choices).get(formulario["modalidad"].value(), "Sin especificar"),
         "cancha": turno.cancha, "fecha": turno.fecha,
         "hora": turno.hora_inicio, "hora_fin": turno.hora_fin,
         "url_cancelar": url_detalle,
@@ -506,7 +501,6 @@ def actividad_clases(request, usuario_id):
         pagina = Paginator(grupos[filtros["vista"]], 10).get_page(request.GET.get("pagina"))
         for fila in pagina:
             fila["estado_texto"] = Evento.Estado(fila["estado"]).label
-            fila["modalidad_texto"] = TurnoPlanilla.Modalidad(fila["modalidad"]).label if fila["modalidad"] else "Sin especificar"
             fila["asistencia_texto"] = None
             if es_alumno and fila["estado"] == Evento.Estado.FINALIZADO and fila["asistencia"] is not None:
                 fila["asistencia_texto"] = Asistencia.Estado(fila["asistencia"]).label

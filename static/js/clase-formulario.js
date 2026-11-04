@@ -2,26 +2,6 @@ document.addEventListener("DOMContentLoaded", function () {
     var formulario = document.querySelector("[data-clase-formulario]");
     if (!formulario) return;
 
-    function actualizarAvisoParticipantes() {
-        var seccion = formulario.querySelector('[data-tipo="participantes"]');
-        if (!seccion) return;
-        var modalidad = formulario.querySelector('input[name="modalidad"]:checked');
-        var cantidad = seccion.querySelectorAll("[data-persona]").length;
-        var mensaje = "";
-        if (modalidad && modalidad.value === "grupal" && cantidad > 6) {
-            mensaje = "Superás el máximo recomendado de 6 participantes para una clase grupal.";
-        } else if (modalidad && modalidad.value === "individual" && cantidad > 1) {
-            mensaje = "La clase individual tiene " + cantidad + " participantes. Podés continuar si está acordado.";
-        }
-        seccion.querySelector("[data-mensaje-cantidad]").textContent = mensaje;
-        seccion.querySelector("[data-aviso-cantidad]").hidden = !mensaje;
-        seccion.querySelector("h2").classList.toggle("clase-contador-advertencia", Boolean(mensaje));
-    }
-
-    formulario.addEventListener("change", function (evento) {
-        if (evento.target.name === "modalidad") actualizarAvisoParticipantes();
-    });
-
     function idsSeleccionados() {
         return Array.from(formulario.querySelectorAll("[data-persona]"), function (fila) {
             return fila.dataset.persona;
@@ -46,7 +26,6 @@ document.addEventListener("DOMContentLoaded", function () {
             var cantidad = seleccionados.children.length;
             selector.querySelector("[data-cantidad]").textContent = cantidad;
             selector.querySelector("[data-vacio]").hidden = cantidad > 0;
-            actualizarAvisoParticipantes();
         }
 
         function agregar(persona) {
@@ -173,5 +152,4 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
-    actualizarAvisoParticipantes();
 });

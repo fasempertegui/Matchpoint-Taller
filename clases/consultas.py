@@ -5,7 +5,7 @@ from django.db.models import Exists, OuterRef, Prefetch, Q
 from django.utils import timezone
 
 from instalaciones.models import Cancha, Sede
-from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda
+from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_eventos
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
@@ -51,7 +51,7 @@ def consultar_clase(usuario, clase_id):
         es_administrador and programada and ahora < inicio
         and turno.cancha.estado == Cancha.Estado.ACTIVA
         and turno.cancha.sede.estado == Sede.Estado.ACTIVA
-        and FECHA_INICIO_OPERACIONES <= turno.fecha <= fecha_maxima_agenda()
+        and FECHA_INICIO_OPERACIONES <= turno.fecha <= fecha_maxima_eventos()
     ):
         try:
             validar_horario_clase(turno.cancha.sede, turno.fecha, turno.hora_inicio)
@@ -68,7 +68,6 @@ def consultar_clase(usuario, clase_id):
         "sede": {"id": turno.cancha.sede_id, "nombre": turno.cancha.sede.nombre},
         "cancha": {"id": turno.cancha_id, "nombre": turno.cancha.nombre},
         "estado": clase.evento.estado,
-        "modalidad": clase.modalidad,
         "es_generada": clase.es_generada,
         "observaciones": clase.evento.observaciones,
         "turno_planilla_id": clase.turno_planilla_id if puede_consultar_grupo else None,
@@ -211,7 +210,7 @@ def consultar_actividad_clases(usuario, fecha_desde, fecha_hasta, usuario_id=Non
             "sede": {"id": turno.cancha.sede_id, "nombre": turno.cancha.sede.nombre},
             "cancha": {"id": turno.cancha_id, "nombre": turno.cancha.nombre},
             "estado": clase.evento.estado,
-            "modalidad": clase.modalidad,
+
             "es_generada": clase.es_generada,
             "asignacion_profesor": profesor.estado if profesor is not None else None,
             "asignacion_participante": participante.estado if participante is not None else None,
