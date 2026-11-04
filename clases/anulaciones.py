@@ -73,6 +73,6 @@ def confirmar_anulacion_clase(usuario, clase_id, motivo, *, bloquear, motivo_blo
     if bloquear:
         return registrar_bloqueo(
             usuario, cancha, turno.fecha, turno.hora_inicio,
-            motivo_bloqueo, observaciones, evento.pk, motivo,
+            motivo_bloqueo, observaciones, evento.pk, usar_motivo_bloqueo=True,
         )
     return anular_clase(usuario, clase.pk, motivo)

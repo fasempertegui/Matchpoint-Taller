@@ -30,7 +30,7 @@
                 {% for campo in formulario %}<textarea name="{{ campo.name }}" hidden>{{ campo.value|default:'' }}</textarea>{% endfor %}
                 <p>{% if bloquear %}Se anulará la clase y se creará un bloqueo en la misma cancha, fecha y horario. El turno quedará ocupado por ese bloqueo.{% else %}Se anulará la clase y su turno quedará libre.{% endif %}</p>
                 <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Motivo de anulación</dt><dd>{{ formulario.motivo.value|linebreaksbr }}</dd></div>
+                    {% if not bloquear %}<div class="perfil-fila"><dt>Motivo de anulación</dt><dd>{{ formulario.motivo.value|linebreaksbr }}</dd></div>{% endif %}
                     {% if bloquear %}<div class="perfil-fila"><dt>Motivo del bloqueo</dt><dd>{{ motivo_bloqueo }}</dd></div>{% endif %}
                     {% if formulario.observaciones.value %}<div class="perfil-fila"><dt>Observaciones del bloqueo</dt><dd>{{ formulario.observaciones.value|linebreaksbr }}</dd></div>{% endif %}
                 </dl>

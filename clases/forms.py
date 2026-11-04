@@ -144,9 +144,17 @@ class ClaseAnulacionForm(forms.Form):
 
     def __init__(self, *args, bloquear, **kwargs):
         super().__init__(*args, **kwargs)
-        if not bloquear:
+        if bloquear:
+            self.fields.pop("motivo")
+        else:
             self.fields.pop("motivo_bloqueo")
             self.fields.pop("observaciones")
+
+    def clean(self):
+        datos = super().clean()
+        if "motivo_bloqueo" in self.fields:
+            datos["motivo"] = dict(Bloqueo.Motivo.choices).get(datos.get("motivo_bloqueo"), "")
+        return datos
 
 
 class AsistenciaFilaForm(forms.Form):

@@ -101,7 +101,6 @@ def agenda(request):
             formulario_bloqueo = BloqueoForm(
                 request.POST if accion == "bloquear" else None,
                 prefix="bloqueo",
-                anula_reserva=detalle["reserva"] is not None,
                 initial={"evento_esperado": detalle["evento"].pk if detalle["evento"] else 0},
             )
             formulario_liberacion = BloqueoAnulacionForm(
@@ -172,7 +171,7 @@ def agenda(request):
                         bloqueo = registrar_bloqueo(
                             request.user, detalle["cancha"], detalle["fecha"], detalle["hora"],
                             valores["motivo"], valores["observaciones"], valores["evento_esperado"],
-                            valores.get("motivo_anulacion", ""),
+                            usar_motivo_bloqueo=True,
                         )
                         messages.success(request, f"El bloqueo {bloqueo.numero} fue registrado.")
                         return redirect(datos["url_seleccion"])
