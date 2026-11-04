@@ -26,7 +26,7 @@
                         <thead><tr><th scope="col">Hora</th>{% for dia in dias %}<th scope="col">{{ dia }}</th>{% endfor %}</tr></thead>
                         <tbody>{% for fila in filas %}
                             {% if fila.pausa %}
-                                <tr class="planilla-pausa"><td colspan="8">{{ fila.inicio|time:"H:i" }}–{{ fila.fin|time:"H:i" }} · Fuera del horario de funcionamiento</td></tr>
+                                <tr class="planilla-pausa"><td colspan="8">{{ fila.inicio|time:"H:i" }} a {{ fila.fin|time:"H:i" }} · Fuera del horario de funcionamiento</td></tr>
                             {% else %}
                             <tr><th scope="row">{% if fila.seleccionable %}<button class="planilla-hora" type="button" data-seleccionar-hora="{{ fila.hora.hour }}">{{ fila.hora|time:"H:i" }}</button>{% else %}{{ fila.hora|time:"H:i" }}{% endif %}</th>
                             {% for celda in fila.celdas %}

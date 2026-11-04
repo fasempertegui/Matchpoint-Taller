@@ -59,7 +59,7 @@
             <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if formulario.vista.value != 'anuladas' %}<th scope="col">Estado de clase</th>{% endif %}{% if es_alumno %}<th scope="col">Asistencia</th>{% endif %}<th scope="col">Acción</th></tr></thead>
             <tbody>{% for fila in pagina %}
                 <tr>
-                    <td><strong>{{ fila.fecha|date:"d/m/Y" }}</strong><span class="actividad-secundario">{{ fila.hora_inicio|time:"H:i" }} – {{ fila.hora_fin|time:"H:i" }}</span></td>
+                    <td><strong>{{ fila.fecha|date:"d/m/Y" }}</strong><span class="actividad-secundario">{{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</span></td>
                     <td>{{ fila.sede.nombre }}<span class="actividad-secundario">{{ fila.cancha.nombre }}</span></td>
                     {% if formulario.vista.value != 'anuladas' %}<td>{% include "componentes/badge_estado.html" with estado=fila.estado texto=fila.estado_texto only %}</td>{% endif %}
                     {% if es_alumno %}<td>

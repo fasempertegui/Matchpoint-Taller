@@ -13,7 +13,7 @@
         </header>
         <dl class="agenda-datos">
             <div><dt>Cancha</dt><dd>{{ detalle.cancha.nombre }}</dd></div>
-            <div><dt>Horario</dt><dd>{{ detalle.hora|time:"H:i" }}–{{ detalle.fin|time:"H:i" }}</dd></div>
+            <div><dt>Horario</dt><dd>{{ detalle.hora|time:"H:i" }} a {{ detalle.fin|time:"H:i" }}</dd></div>
             {% if detalle.reserva %}
                 <div><dt>Organizador</dt><dd>{{ detalle.reserva.organizador }}</dd></div>
             {% endif %}

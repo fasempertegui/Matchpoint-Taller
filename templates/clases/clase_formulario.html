@@ -13,7 +13,7 @@
     <aside class="tarjeta clase-turno" aria-labelledby="clase-turno-titulo">
         <h2 id="clase-turno-titulo">{% if editando %}Turno de la clase{% else %}Turno seleccionado{% endif %}</h2>
         <p class="clase-turno-fecha">{{ fecha|date:"l d/m/Y"|capfirst }}</p>
-        <p class="clase-turno-hora">{{ hora|time:"H:i" }} – {{ hora_fin|time:"H:i" }}</p>
+        <p class="clase-turno-hora">{{ hora|time:"H:i" }} a {{ hora_fin|time:"H:i" }}</p>
         <p>{{ cancha.sede.nombre }}<br><strong>{{ cancha.nombre }}</strong></p>
         <p class="nota-campo">{% if editando %}Esta edición conserva la fecha, el horario y la cancha de la clase.{% else %}Para elegir otra fecha, hora o cancha, volvé a la agenda.{% endif %}</p>
     </aside>

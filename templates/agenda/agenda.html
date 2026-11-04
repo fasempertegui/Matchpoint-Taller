@@ -72,7 +72,7 @@
                             <tbody>
                                 {% for fila in agenda.filas %}
                                     {% if fila.pausa %}
-                                        <tr class="agenda-pausa"><td colspan="{{ agenda.columnas|length|add:'1' }}">{{ fila.inicio|time:"H:i" }}–{{ fila.fin|time:"H:i" }} · Fuera del horario de funcionamiento</td></tr>
+                                        <tr class="agenda-pausa"><td colspan="{{ agenda.columnas|length|add:'1' }}">{{ fila.inicio|time:"H:i" }} a {{ fila.fin|time:"H:i" }} · Fuera del horario de funcionamiento</td></tr>
                                     {% else %}
                                         <tr>
                                             <th scope="row" data-hora-fila="{{ fila.hora.hour }}"{% if fila.ahora %} class="agenda-hora-actual"{% endif %}>
