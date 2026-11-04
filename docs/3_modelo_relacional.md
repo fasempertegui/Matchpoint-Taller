@@ -376,13 +376,12 @@ Contiene la especialización de un evento de tipo clase.
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `700` |
 | FK | `evento_id` | `bigint` | | Sí | `1200` |
-| FK | `turno_planilla_id` | `bigint` | Sí | | `55` |
 | | `es_generada` | `boolean` | | | `true` |
 | FK | `finalizado_por_id` | `bigint` | Sí | | `NULL` |
 
 `evento_id` es único y referencia un evento de tipo `clase`. Estado, ubicación, observaciones y marcas de auditoría comunes se obtienen de ese evento y su turno. Profesores, participantes y asistencia se representan en tablas dependientes.
 
-`es_generada` distingue el origen en la planilla. `turno_planilla_id` es opcional: es nulo para clases manuales o cuando se elimina la celda de origen. El indicador de origen conserva su valor aunque esa referencia quede nula. Las asignaciones de la clase concreta conservan su propia información.
+`es_generada` distingue las clases generadas desde la planilla de las creadas manualmente. La clase concreta no referencia una celda de planilla y conserva sus propios datos y asignaciones.
 
 `finalizado_por_id` contiene al responsable de una finalización manual. Es nulo antes de finalizar, en clases Anuladas y cuando la finalización es automática. Si está informado, el evento relacionado tiene estado `finalizado`.
 
@@ -631,7 +630,7 @@ La función `registrar_auditoria` recibe los nombres de los componentes de la PK
 - `usuarios_roles` utiliza cascada desde `usuarios`; `rol_id` protege el registro del catálogo mientras tenga asignaciones.
 - `turnos_planilla_profesores` y `turnos_planilla_alumnos` utilizan cascada desde `turnos_planilla`.
 - `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
-- `clases.turno_planilla_id` utiliza `ON DELETE SET NULL`: la eliminación de una celda de planilla no elimina las clases concretas ni su indicador de origen.
+- Las clases concretas son independientes de las celdas de planilla. Eliminar una celda no modifica las clases ni su indicador de origen.
 - `eventos.turno_id` protege al turno. Las especializaciones `reservas`, `clases` y `bloqueos` protegen su evento.
 - `bloqueos.evento_origen_id` protege al evento de origen mientras exista la referencia de trazabilidad.
 - `log_auditoria.usuario_id` protege la cuenta del actor; el historial no admite modificación ni eliminación.

@@ -70,7 +70,6 @@ def consultar_clase(usuario, clase_id):
         "estado": clase.evento.estado,
         "es_generada": clase.es_generada,
         "observaciones": clase.evento.observaciones,
-        "turno_planilla_id": clase.turno_planilla_id if puede_consultar_grupo else None,
         "creado_en": clase.evento.creado_en,
         "actualizado_en": clase.evento.actualizado_en,
         "registrado_por_id": clase.evento.registrado_por_id if puede_consultar_grupo else None,

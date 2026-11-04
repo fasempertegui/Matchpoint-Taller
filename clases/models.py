@@ -128,13 +128,6 @@ class Clase(models.Model):
         related_name="clase",
         limit_choices_to={"tipo": "clase"},
     )
-    turno_planilla = models.ForeignKey(
-        TurnoPlanilla,
-        on_delete=models.SET_NULL,
-        related_name="clases",
-        blank=True,
-        null=True,
-    )
     es_generada = models.BooleanField(default=False)
     finalizado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -148,13 +141,6 @@ class Clase(models.Model):
         db_table = "clases"
         ordering = ("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
         default_permissions = ()
-        constraints = [
-            models.CheckConstraint(
-                condition=models.Q(es_generada=True) | models.Q(turno_planilla__isnull=True),
-                name="clase_origen_planilla_valido",
-                violation_error_message="Una clase manual no puede tener un turno de planilla de origen.",
-            ),
-        ]
         verbose_name = "clase"
         verbose_name_plural = "clases"
 

@@ -4,13 +4,11 @@ from django.core import signing
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count
-from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
 from instalaciones.models import Cancha, Sede
-from reservas.models import Evento, Turno
 
-from .models import Clase, TurnoPlanilla, TurnoPlanillaAlumno, TurnoPlanillaProfesor
+from .models import TurnoPlanilla, TurnoPlanillaAlumno, TurnoPlanillaProfesor
 from .permisos import exigir_administracion_clases
 from .servicios import bloquear_usuarios_clase
 from .validaciones import (
@@ -200,18 +198,6 @@ def quitar_turno_planilla(usuario, turno_id, *, version=None):
     usuario, sede, cancha, turno, usuarios, profesores, participantes = _bloquear_turno_planilla(usuario, turno_id)
     if version is not None:
         validar_version_turno_planilla(turno, version)
-    referencias = list(Clase.objects.filter(turno_planilla=turno).values_list("pk", "evento_id", "evento__turno_id"))
-    list(Turno.objects.select_for_update().filter(pk__in=[r[2] for r in referencias]).order_by("pk"))
-    list(Evento.objects.select_for_update().filter(pk__in=[r[1] for r in referencias]).order_by("pk"))
-    clases = list(
-        Clase.objects.select_for_update(of=("self",)).select_related("evento")
-        .filter(turno_planilla=turno).order_by("pk")
-    )
-    actuales = {(clase.pk, clase.evento_id, clase.evento.turno_id) for clase in clases}
-    if actuales != set(referencias):
-        raise ValidationError("Las clases vinculadas cambiaron. Revisá nuevamente el turno de planilla.")
     with contexto_auditoria(usuario):
         turno.delete()
-        if referencias:
-            Evento.objects.filter(pk__in=[r[1] for r in referencias]).update(actualizado_en=timezone.now())
-    return {"turno_id": turno_id, "clases_desvinculadas": len(referencias)}
+    return {"turno_id": turno_id}

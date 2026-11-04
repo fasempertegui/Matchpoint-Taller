@@ -728,7 +728,6 @@ def _datos_eliminacion_clase(clase):
         "cancha_id": turno.cancha_id, "sede_id": turno.cancha.sede_id,
         "fecha": turno.fecha.isoformat(), "hora_inicio": turno.hora_inicio.isoformat(),
         "estado": clase.evento.estado, "es_generada": clase.es_generada,
-        "turno_planilla_id": clase.turno_planilla_id,
         "observaciones": clase.evento.observaciones, "actualizado_en": clase.evento.actualizado_en.isoformat(),
         "profesores": sorted([
             [v.profesor_id, v.estado, v.actualizado_en.isoformat()] for v in clase.profesores.all()

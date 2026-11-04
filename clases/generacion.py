@@ -89,7 +89,7 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         for fecha in _fechas_del_periodo(fecha_desde, fecha_hasta):
             if fecha.isoweekday() == celda.dia_semana:
                 candidatas.append({
-                    "turno_planilla_id": celda.pk, "cancha_id": celda.cancha_id,
+                    "cancha_id": celda.cancha_id,
                     "fecha": fecha, "hora_inicio": celda.hora_inicio,
                     "observaciones": celda.observaciones or "",
                     "profesores_ids": profesores_ids, "participantes_ids": participantes_ids,
@@ -202,8 +202,8 @@ def _crear_clases_generadas(usuario, candidatas, turnos):
         validar_inicio_evento(fila["fecha"], fila["hora_inicio"])
     Evento.objects.bulk_create(eventos, batch_size=500)
     clases = [
-        Clase(evento=evento, turno_planilla_id=fila["turno_planilla_id"], es_generada=True)
-        for fila, evento in zip(candidatas, eventos)
+        Clase(evento=evento, es_generada=True)
+        for evento in eventos
     ]
     Clase.objects.bulk_create(clases, batch_size=500)
     ClaseProfesor.objects.bulk_create([

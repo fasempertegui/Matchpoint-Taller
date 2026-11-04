@@ -1010,10 +1010,10 @@ Recorrido:
 
 Alternativas:
 
-- Las clases ya generadas desde ese turno no se eliminan: conservan su historia y quedan sin turno de origen.
+- Las clases ya generadas desde ese turno no se eliminan: conservan su historia, sus asignaciones y su indicador de origen sin modificaciones.
 
 - **Resultado:** celda libre en la planilla.
-- **Datos:** turnos de planilla, sus asignaciones, y clases (desvinculación de origen).
+- **Datos:** turnos de planilla y sus asignaciones.
 
 ```mermaid
 flowchart TD
@@ -1076,7 +1076,7 @@ Recorrido:
 4. Presenta las clases a crear, cada candidata omitida con su motivo. Las coincidencias con reservas no generan advertencia ni son motivo de omisión.
 5. Solicita dos confirmaciones explícitas y sucesivas: la generación no admite deshacer; para quitar las clases generadas corresponde eliminarlas manualmente cuando sea válido.
 6. Al confirmar, bloquea usuarios en orden de identificador y coordina sede, canchas y calendario de feriados. Obtiene o crea los turnos concretos, los bloquea y vuelve a evaluar el conjunto revisado. Si cambia, revierte y exige una nueva revisión.
-7. Comprueba el inicio futuro al guardar y al terminar la operación; si un turno alcanza su inicio, revierte todo y exige una nueva revisión. Crea en una transacción los eventos Programados de tipo clase, sus especializaciones con `es_generada = true` y referencia a la celda, y sus asignaciones. Las observaciones se copian al evento.
+7. Comprueba el inicio futuro al guardar y al terminar la operación; si un turno alcanza su inicio, revierte todo y exige una nueva revisión. Crea en una transacción los eventos Programados de tipo clase, sus especializaciones con `es_generada = true`, y sus asignaciones. Las observaciones se copian al evento.
 8. La notificación por email a profesores se describe en el proceso 4.2.
 
 Alternativas:
@@ -1221,7 +1221,7 @@ Alternativas:
 - Modificar y anular son acciones administrativas. Sólo el administrador o un profesor activo con rol Profesor y asignación activa para dictar pueden finalizar y registrar asistencia.
 
 - **Resultado:** detalle consultado sin modificaciones.
-- **Datos:** eventos, turnos, clases, turnos de origen, profesores, usuarios y asistencias.
+- **Datos:** eventos, turnos, clases, profesores, usuarios y asistencias.
 
 ```mermaid
 flowchart TD

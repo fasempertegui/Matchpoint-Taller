@@ -57,7 +57,7 @@ La gestión incluirá:
 - Finalización individual de clases por la administración o por alguno de sus profesores asignados.
 - Registro y corrección de asistencia de clases Finalizadas.
 
-Las clases generadas existirán como instancias individuales, con su origen identificado para distinguirlas de las creadas manualmente. No se conservará una referencia a una planilla histórica: la clase concreta ya contiene por sí sola todo lo necesario para la historia operativa (día, horario, cancha, alumnos, profesor).
+Las clases generadas existirán como instancias individuales, con su origen identificado para distinguirlas de las creadas manualmente. No se conservará una referencia a la celda de planilla: la clase concreta ya contiene por sí sola todo lo necesario para la historia operativa (día, horario, cancha, alumnos, profesor).
 
 No existirá una reprogramación de clases como operación propia: una clase Programada puede cambiar de cancha únicamente antes del inicio de su turno, pero nunca cambiar de día ni de horario. Si hace falta mover una clase a otro día u horario, se anula y se crea una nueva, sin ninguna vinculación entre ambas. Las reservas conservan su vinculación de reprogramación según 2.2.
 
