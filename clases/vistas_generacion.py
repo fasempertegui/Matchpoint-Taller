@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core import signing
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
@@ -22,7 +22,6 @@ from .generacion import (
 )
 from .models import Clase
 from .permisos import exigir_administracion_clases
-from .servicios import eliminar_clase_generada, preparar_eliminacion_clase
 
 
 def _url_planilla(sede, cancha_id=None):
@@ -151,42 +150,4 @@ def generacion_resultado(request):
         "pagina": pagina, "omitidas": omitidas, "url_planilla": _url_planilla(sede, resultado.get("cancha")),
         "url_agenda": reverse("agenda:agenda") + "?" + urlencode({"sede": resultado["sede"], "fecha": resultado["desde"]}),
         "breadcrumbs": [("Inicio", reverse("inicio")), ("Planilla semanal", _url_planilla(sede)), (titulo, None)],
-    })
-
-
-@login_required
-@never_cache
-@require_http_methods(["GET", "POST"])
-def clase_eliminar(request, pk):
-    usuario = exigir_administracion_clases(request.user)
-    clase = get_object_or_404(Clase.objects.select_related("evento__turno__cancha__sede"), pk=pk)
-    turno = clase.evento.turno
-    url_detalle = reverse("clases:clase_detalle", args=[pk])
-    url_agenda = reverse("agenda:agenda") + "?" + urlencode({
-        "sede": turno.cancha.sede_id, "cancha": turno.cancha_id,
-        "fecha": turno.fecha.isoformat(), "hora": turno.hora_inicio.hour,
-    })
-    try:
-        if request.method == "POST":
-            if request.POST.get("paso") != "confirmar":
-                raise ValidationError("La acción solicitada no es válida.")
-            token = request.POST.get("confirmacion", "")
-            try:
-                signing.loads(token, salt="clases.eliminacion", max_age=900)
-            except signing.BadSignature:
-                raise ValidationError("La revisión venció o no es válida. Revisá nuevamente la eliminación.") from None
-            eliminar_clase_generada(usuario, pk, token)
-            messages.success(request, "La clase generada fue eliminada. El turno quedó libre.")
-            return redirect(url_agenda)
-        revision = preparar_eliminacion_clase(usuario, pk)
-    except Clase.DoesNotExist:
-        messages.info(request, "La clase ya no existe.")
-        return redirect(url_agenda)
-    except ValidationError as error:
-        for mensaje in error.messages:
-            messages.error(request, mensaje)
-        return redirect(url_detalle)
-    return render(request, "clases/clase_eliminar.html", {
-        "clase": clase, "turno": turno, "revision": revision, "url_detalle": url_detalle,
-        "breadcrumbs": [("Inicio", reverse("inicio")), (f"Clase {pk}", url_detalle), ("Eliminar clase generada", None)],
     })

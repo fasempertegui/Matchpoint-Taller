@@ -62,7 +62,6 @@ Las altas, las consultas y las vistas previas sin cambios sobre registros existe
 | Planilla y generación de clases | FL-26 | Quitar un turno de planilla |
 | Planilla y generación de clases | FL-27 | Registrar o quitar un feriado |
 | Planilla y generación de clases | FL-28 | Generar clases para un período |
-| Planilla y generación de clases | FL-30 | Eliminar manualmente una clase generada |
 | Agenda | FL-31 | Consultar la agenda diaria |
 | Agenda | FL-32 | Consultar la agenda semanal |
 | Agenda | FL-33 | Consultar el detalle de una clase |
@@ -1074,7 +1073,7 @@ Recorrido:
 2. Evalúa cada candidata completa: horario íntegro dentro de una franja habilitada, instalaciones activas, al menos un profesor previsto y condiciones de asignación de todos sus usuarios. Omite turnos cuyo inicio ya ocurrió o coincide con el momento actual, feriados, turnos ocupados por eventos no Anulados y candidatas cuyos profesores o participantes tienen asignaciones activas a otra clase no Anulada en la misma fecha y hora, sin importar sede, cancha o función.
 3. Compara también las candidatas válidas de esta ejecución. La primera válida conserva sus asignaciones; una posterior en conflicto se omite completa. No elimina usuarios para crear una clase parcial ni aborta las demás candidatas.
 4. Presenta las clases a crear, cada candidata omitida con su motivo. Las coincidencias con reservas no generan advertencia ni son motivo de omisión.
-5. Solicita dos confirmaciones explícitas y sucesivas: la generación no admite deshacer; para quitar las clases generadas corresponde eliminarlas manualmente cuando sea válido.
+5. Solicita dos confirmaciones explícitas y sucesivas: la generación no admite deshacer ni eliminación física de clases. Las generadas por error pueden anularse antes de su inicio desde su detalle mediante **FL-37** o desde Acciones del día o del mes, conservando su historia.
 6. Al confirmar, bloquea usuarios en orden de identificador y coordina sede, canchas y calendario de feriados. Obtiene o crea los turnos concretos, los bloquea y vuelve a evaluar el conjunto revisado. Si cambia, revierte y exige una nueva revisión.
 7. Comprueba el inicio futuro al guardar y al terminar la operación; si un turno alcanza su inicio, revierte todo y exige una nueva revisión. Crea en una transacción los eventos Programados de tipo clase, sus especializaciones con `es_generada = true`, y sus asignaciones. Las observaciones se copian al evento.
 8. La notificación por email a profesores se describe en el proceso 4.2.
@@ -1105,35 +1104,6 @@ flowchart TD
     I -->|Sí| J[Crear eventos, clases y asignaciones en una transacción]
 ```
 
-
-#### FL-30. Eliminar manualmente una clase generada
-
-- **Objetivo:** quitar una clase puntual generada por la planilla y creada por error.
-- **Actor:** administrador.
-- **Precondición:** clase localizada mediante **FL-33**, con `es_generada = true`, sin asistencia registrada ni completar.
-
-Recorrido:
-
-1. El administrador solicita eliminar la clase.
-2. El sistema verifica que esté **Programada**, generada por la planilla (`es_generada = true`) y sin asistencia registrada.
-3. El administrador confirma.
-4. En una transacción bloquea y revalida la clase y su evento, elimina sus datos dependientes y ambos registros, y conserva el turno concreto. La eliminación queda auditada.
-
-Alternativas:
-
-- Una clase **Finalizada**, **Anulada** o con asistencia registrada no puede eliminarse por este flujo.
-- Una clase creada manualmente (`es_generada = false`) tampoco puede eliminarse por este flujo: solo puede cancelarse (**FL-37**), para conservar el registro de que un administrador la creó a propósito.
-
-- **Resultado:** clase eliminada, turno liberado.
-- **Datos:** clases y eventos, turnos.
-
-```mermaid
-flowchart TD
-    A[Solicitar eliminar clase] --> B{Programada, generada y sin asistencia}
-    B -->|No| C[Impedir eliminación]
-    B -->|Sí| D{Confirmar}
-    D -->|Sí| E[Eliminar clase y evento]
-```
 
 ### 3.7 Agenda unificada
 

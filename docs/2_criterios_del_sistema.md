@@ -50,7 +50,7 @@ La gestión incluirá:
 
 - Armado y edición continua de la planilla semanal (semana tipo) por sede: una única planilla viva por sede, sin conservar versiones históricas por período. Cada celda define, para un día y horario, los alumnos asignados.
 - Generación de clases concretas para un período seleccionado, a partir del estado actual de la planilla en ese momento.
-- Eliminación manual de clases generadas cuyo evento siga Programado, para quitar clases puntuales creadas por error.
+- Anulación de clases generadas por error, desde su detalle o mediante Acciones del día o del mes, antes del inicio del turno y conservando su historia.
 - Consulta diaria y semanal de clases existentes.
 - Creación, edición y cancelación de clases individuales, generadas por la planilla o creadas manualmente.
 - Asignación de profesores y alumnos.
@@ -69,7 +69,7 @@ Una persona sólo puede tener una asignación activa a una clase no Anulada en l
 
 La coincidencia de una asignación a clase con una reserva no Anulada que la persona organiza o a la que está invitada de forma identificada genera una advertencia confirmable, sin bloquear. Se presenta tanto al crear una clase manual o agregar o reactivar una asignación como al crear una reserva o agregar un invitado, según 2.2. La generación desde la planilla no presenta esta advertencia.
 
-Generar las clases de un período es una acción irreversible desde el sistema: no existe una operación de deshacer. Antes de ejecutarla, el sistema mostrará al menos dos confirmaciones explícitas advirtiendo que el proceso no puede deshacerse y que, si hace falta quitar clases generadas, deberá hacerse manualmente.
+Generar las clases de un período es una acción irreversible desde el sistema: no existe una operación de deshacer. Antes de ejecutarla, el sistema mostrará al menos dos confirmaciones explícitas advirtiendo que el proceso no puede deshacerse. Las clases manuales y generadas no admiten eliminación física. Las creadas por error pueden anularse antes del inicio del turno desde su detalle o mediante Acciones del día o del mes, conservando sus eventos, asignaciones y auditoría.
 
 Modificar la planilla afecta las próximas clases que se generen. Volver a generar un mes conserva todas las clases existentes y omite los turnos ocupados; sólo crea clases en turnos futuros disponibles. Las clases concretas se modifican mediante sus acciones individuales. Eliminar una celda de planilla no elimina las clases concretas que originó ni modifica sus asignaciones o su indicador de origen.
 
@@ -425,7 +425,7 @@ La coordinación de escrituras concurrentes se aplica así:
 
 Las comprobaciones que dependen de varias filas se realizan en los servicios de escritura, dentro de esas transacciones. La base complementa esa coordinación con las claves y restricciones definidas en el modelo relacional.
 
-La aplicación conserva la historia de usuarios, instalaciones, productos, contrataciones, actividades, sesiones de caja y movimientos. No utiliza la eliminación física de esos registros como una operación cotidiana. Las excepciones son quitar celdas de la planilla viva y eliminar clases generadas que siguen Programadas, mediante las operaciones de 2.1; se eliminan sus datos dependientes de forma coordinada y se conservan los turnos concretos.
+La aplicación conserva la historia de usuarios, instalaciones, productos, contrataciones, actividades, sesiones de caja y movimientos. No ofrece eliminación física de clases, sean manuales o generadas desde la planilla; su anulación conserva sus datos y libera el turno antes de su inicio. Quitar celdas de la planilla viva elimina esas celdas y sus asignaciones previstas, sin modificar las clases concretas. Las operaciones de configuración permiten quitar feriados, horarios de funcionamiento y vínculos de roles conforme a sus reglas específicas.
 
 ### 2.13 Procesos automáticos de finalización y vencimiento
 

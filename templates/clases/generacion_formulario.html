@@ -38,7 +38,7 @@
             {% if hay_cambios %}
                 <section class="perfil-seccion actividad-listado" aria-label="Confirmación de generación">
                     {% if not confirmacion_final %}<h2>Confirmación 1 de 2</h2>{% endif %}
-                    <p>Esta operación no se puede deshacer. Para quitar clases generadas, deberás hacerlo manualmente.</p>
+                    <p>Esta operación no se puede deshacer. Las clases se conservan; si generás clases por error, podés anularlas antes de su inicio desde su detalle o desde Acciones del día o del mes.</p>
                     {% if confirmacion_final %}<p>Al confirmar se crearán {{ candidatas|length }} clases. Se volverán a validar la programación y la disponibilidad antes de guardar.</p>{% endif %}
                 </section>
             {% endif %}

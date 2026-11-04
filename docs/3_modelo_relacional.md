@@ -636,4 +636,4 @@ La función `registrar_auditoria` recibe los nombres de los componentes de la PK
 - `log_auditoria.usuario_id` protege la cuenta del actor; el historial no admite modificación ni eliminación.
 - Las sesiones de caja protegen al responsable y los movimientos protegen su sesión, responsables y orígenes comerciales. No se ofrecen eliminaciones físicas. Los vínculos comerciales apuntan a las contrataciones concretas o a la reserva. La protección de historia se valida en servicios y ambas tablas participan de la auditoría transversal; no hay triggers adicionales de inmutabilidad sobre caja.
 
-La eliminación coordinada de los datos de una clase generada y la conservación de historia se definen en criterios, 2.1 y 2.12. Los turnos no dependen de la vida de una única actividad: su identidad puede ser compartida por eventos históricos.
+Las clases manuales y generadas no admiten eliminación física desde la aplicación. La anulación conserva la clase, su evento y sus asignaciones conforme a criterios, 2.1 y 2.12. Los turnos pueden ser compartidos por eventos históricos.

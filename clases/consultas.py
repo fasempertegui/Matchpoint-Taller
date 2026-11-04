@@ -11,7 +11,7 @@ from usuarios.models import Rol, Usuario
 
 from .models import Asistencia, Clase, ClaseAlumno, ClaseProfesor
 from .permisos import exigir_acceso_clases, exigir_administracion_clases, puede_dictar_clase
-from .validaciones import validar_eliminacion_clase_generada, validar_horario_clase, validar_periodo_actividad_clases
+from .validaciones import validar_horario_clase, validar_periodo_actividad_clases
 
 
 def consultar_clase(usuario, clase_id):
@@ -38,14 +38,6 @@ def consultar_clase(usuario, clase_id):
     inicio = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))
     fin = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_fin))
     programada = clase.evento.estado == Evento.Estado.PROGRAMADO
-    puede_eliminar = False
-    if es_administrador:
-        try:
-            validar_eliminacion_clase_generada(clase)
-        except ValidationError:
-            pass
-        else:
-            puede_eliminar = True
     puede_anular_bloquear = False
     if (
         es_administrador and programada and ahora < inicio
@@ -109,7 +101,6 @@ def consultar_clase(usuario, clase_id):
         ],
         "es_administrador": es_administrador,
         "es_profesor_asignado": es_profesor,
-        "puede_eliminar": puede_eliminar,
         "puede_editar": es_administrador and programada,
         "puede_cambiar_cancha": es_administrador and programada and ahora < inicio,
         "puede_anular": es_administrador and programada and ahora < inicio,
