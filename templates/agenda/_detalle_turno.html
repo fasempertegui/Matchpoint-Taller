@@ -89,12 +89,12 @@
             <div{% if detalle.puede_anular or detalle.puede_liberar_bloqueo or detalle.reserva %} class="agenda-acciones-anulacion"{% endif %}>
             {% if detalle.puede_anular %}
                 <details class="agenda-desplegable" name="agenda-accion"{% if formulario_anulacion.is_bound %} open{% endif %}>
-                    <summary class="boton boton-chico boton-peligro">Anular y liberar</summary>
-                    <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Anular la reserva {{ detalle.reserva.numero }} y liberar su turno?" data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular y liberar">
+                    <summary class="boton boton-chico boton-peligro">{% if es_administrador %}Anular y liberar{% else %}Anular reserva{% endif %}</summary>
+                    <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Confirmás la anulación de la reserva {{ detalle.reserva.numero }}?{% if es_administrador %} Se liberará su turno.{% endif %}" data-confirmar-titulo="Anular reserva" data-confirmar-boton="{% if es_administrador %}Anular y liberar{% else %}Anular reserva{% endif %}">
                         {% csrf_token %}<input type="hidden" name="accion" value="anular"><input type="hidden" name="reserva" value="{{ detalle.reserva.pk }}">
                         {{ formulario_anulacion.non_field_errors }}
                         <div class="grupo-campo"><label for="{{ formulario_anulacion.motivo.id_for_label }}">Motivo</label>{{ formulario_anulacion.motivo }}<small class="nota-campo">{{ formulario_anulacion.motivo.help_text }}</small>{% for error in formulario_anulacion.motivo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
-                        <button class="boton boton-chico boton-confirmar-peligro" type="submit">Confirmar</button>
+                        <button class="boton boton-chico boton-confirmar-peligro" type="submit">{% if es_administrador %}Confirmar{% else %}Anular reserva{% endif %}</button>
                     </form>
                 </details>
             {% endif %}

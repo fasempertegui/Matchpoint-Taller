@@ -122,7 +122,7 @@
                     <details class="perfil-desplegable" id="anulacion"{% if formulario_anulacion.is_bound %} open{% endif %}>
                         <summary class="perfil-accion-desactivar">Anular reserva</summary>
                         <form class="perfil-formulario" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}"
-                              data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? Se liberará su turno."
+                              data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}?{% if es_administrador %} Se liberará su turno.{% endif %}"
                               data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular reserva">
                             {% csrf_token %}
                             {% if not es_administrador %}
