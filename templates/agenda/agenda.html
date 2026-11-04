@@ -27,17 +27,22 @@
             <label for="{{ formulario.sede.id_for_label }}">Sede</label>
             {{ formulario.sede }}
         </div>
-        <div class="agenda-vistas" role="group" aria-label="Vista de agenda">
-            <span aria-current="page">Día</span>
-            <button type="button" disabled>Semana</button>
+        <div class="grupo-campo">
+            <span class="agenda-etiqueta" id="agenda-vista-etiqueta">Vista</span>
+            <div class="agenda-vistas" role="group" aria-labelledby="agenda-vista-etiqueta">
+                <span aria-current="page">Día</span>
+                <button type="button" disabled>Semana</button>
+            </div>
         </div>
         <div class="grupo-campo">
             <label for="{{ formulario.fecha.id_for_label }}">Fecha</label>
             <div class="agenda-fechas">
-                {% if agenda.url_anterior %}<a class="boton boton-secundario boton-chico agenda-flecha" href="{{ agenda.url_anterior }}" aria-label="Período anterior">‹</a>{% endif %}
-                {{ formulario.fecha }}
-                {% if agenda.url_siguiente %}<a class="boton boton-secundario boton-chico agenda-flecha" href="{{ agenda.url_siguiente }}" aria-label="Período siguiente">›</a>{% endif %}
-                {% if agenda %}<a class="boton boton-secundario boton-chico" href="{{ agenda.url_hoy }}">Hoy</a>{% endif %}
+                <div class="agenda-selector-fecha">
+                    {% if agenda.url_anterior %}<a class="boton boton-secundario agenda-flecha" href="{{ agenda.url_anterior }}" aria-label="Día anterior">‹</a>{% endif %}
+                    {{ formulario.fecha }}
+                    {% if agenda.url_siguiente %}<a class="boton boton-secundario agenda-flecha" href="{{ agenda.url_siguiente }}" aria-label="Día siguiente">›</a>{% endif %}
+                </div>
+                {% if agenda %}<a class="boton boton-secundario agenda-hoy" href="{{ agenda.url_hoy }}">Hoy</a>{% endif %}
             </div>
         </div>
         <noscript><button class="boton boton-secundario boton-chico" type="submit">Aplicar filtros</button></noscript>
