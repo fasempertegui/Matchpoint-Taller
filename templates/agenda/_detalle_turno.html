@@ -130,7 +130,7 @@
                         {% if detalle.evento %}{% include "componentes/observaciones_opcionales.html" with campo=formulario_bloqueo.observaciones %}
                         {% else %}{% include "clases/_observaciones_formulario.html" with campo=formulario_bloqueo.observaciones only %}{% endif %}
                         <button class="boton {% if detalle.reserva %}boton-confirmar-peligro{% else %}boton-primario{% endif %} boton-chico" type="submit">{% if detalle.reserva %}Confirmar{% else %}Confirmar bloqueo{% endif %}</button>
-                        <button class="boton boton-secundario boton-chico" type="button" data-cancelar-accion>Cancelar</button>
+                        <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion data-cancelar-accion>Cancelar</button>
                     </form>
                 </details>
             {% endif %}
