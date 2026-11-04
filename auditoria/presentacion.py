@@ -4,6 +4,7 @@ from collections import defaultdict
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import CompositePrimaryKey, prefetch_related_objects
 from django.urls import reverse
+from django.utils.dateparse import parse_date
 
 from agenda.servicios import enlace_agenda
 from bloqueos.models import Bloqueo
@@ -20,53 +21,38 @@ from .models import LogAuditoria
 
 
 TIPOS_REGISTRO = {
-    "usuarios": (Usuario, "Usuario", ()),
-    "roles": (Rol, "Rol", ()),
-    "usuarios_roles": (UsuarioRol, "Rol de usuario", ("usuario", "rol")),
-    "sedes": (Sede, "Sede", ()),
-    "canchas": (Cancha, "Cancha", ("sede",)),
-    "sedes_horarios": (SedeHorario, "Horario de sede", ("sede",)),
-    "turnos": (Turno, "Turno", ("cancha__sede",)),
-    "eventos": (Evento, "Evento", ("clase", "reserva", "bloqueo")),
-    "reservas": (Reserva, "Reserva", ()),
-    "bloqueos": (Bloqueo, "Bloqueo", ()),
-    "feriados": (Feriado, "Feriado", ()),
-    "turnos_planilla": (TurnoPlanilla, "Turno de planilla", ()),
+    "usuarios": (Usuario, "Usuario", (), "usuarios:usuario_detalle"),
+    "roles": (Rol, "Rol", (), None),
+    "usuarios_roles": (UsuarioRol, "Rol de usuario", ("usuario", "rol"), None),
+    "sedes": (Sede, "Sede", (), "instalaciones:sede_detalle"),
+    "canchas": (Cancha, "Cancha", ("sede",), None),
+    "sedes_horarios": (SedeHorario, "Horario de sede", ("sede",), None),
+    "turnos": (Turno, "Turno", ("cancha__sede",), None),
+    "eventos": (Evento, "Evento", ("clase", "reserva", "bloqueo"), None),
+    "reservas": (Reserva, "Reserva", (), "reservas:reserva_detalle"),
+    "bloqueos": (Bloqueo, "Bloqueo", (), "agenda:bloqueo_detalle"),
+    "feriados": (Feriado, "Feriado", (), "clases:feriado_detalle"),
+    "turnos_planilla": (TurnoPlanilla, "Turno de planilla", (), "clases:planilla_detalle"),
     "turnos_planilla_profesores": (
-        TurnoPlanillaProfesor, "Profesor de planilla", ("turno_planilla", "profesor"),
+        TurnoPlanillaProfesor, "Profesor de planilla", ("turno_planilla", "profesor"), None,
     ),
     "turnos_planilla_alumnos": (
-        TurnoPlanillaAlumno, "Alumno de planilla", ("turno_planilla", "usuario"),
+        TurnoPlanillaAlumno, "Alumno de planilla", ("turno_planilla", "usuario"), None,
     ),
-    "clases": (Clase, "Clase", ()),
+    "clases": (Clase, "Clase", (), "clases:clase_detalle"),
     "clases_profesores": (
-        ClaseProfesor, "Profesor de clase", ("clase", "profesor"),
+        ClaseProfesor, "Profesor de clase", ("clase", "profesor"), None,
     ),
     "clases_alumnos": (
-        ClaseAlumno, "Alumno de clase", ("clase", "usuario"),
+        ClaseAlumno, "Alumno de clase", ("clase", "usuario"), None,
     ),
     "asistencias": (
-        Asistencia, "Asistencia", ("clase", "usuario"),
+        Asistencia, "Asistencia", ("clase", "usuario"), None,
     ),
-    "planes": (Plan, "Plan", ()),
-    "pases": (Pase, "Pase de cancha", ()),
-    "planes_usuarios": (PlanUsuario, "Contratación de plan", ("usuario",)),
-    "pases_usuarios": (PaseUsuario, "Contratación de pase", ("usuario",)),
-}
-
-
-RUTAS_DETALLE = {
-    Usuario: "usuarios:usuario_detalle",
-    Sede: "instalaciones:sede_detalle",
-    Reserva: "reservas:reserva_detalle",
-    Bloqueo: "agenda:bloqueo_detalle",
-    Clase: "clases:clase_detalle",
-    TurnoPlanilla: "clases:planilla_detalle",
-    Feriado: "clases:feriado_detalle",
-    Plan: "membresias:plan_detalle",
-    Pase: "membresias:pase_detalle",
-    PlanUsuario: "membresias:contratacion_plan_detalle",
-    PaseUsuario: "membresias:contratacion_pase_detalle",
+    "planes": (Plan, "Plan", (), "membresias:plan_detalle"),
+    "pases": (Pase, "Pase de cancha", (), "membresias:pase_detalle"),
+    "planes_usuarios": (PlanUsuario, "Contratación de plan", ("usuario",), "membresias:contratacion_plan_detalle"),
+    "pases_usuarios": (PaseUsuario, "Contratación de pase", ("usuario",), "membresias:contratacion_pase_detalle"),
 }
 
 
@@ -127,7 +113,7 @@ def _referencia_breve(objeto):
 
 
 def _url_registro(objeto):
-    ruta = RUTAS_DETALLE.get(type(objeto))
+    ruta = TIPOS_REGISTRO[objeto._meta.db_table][3]
     if ruta:
         return reverse(ruta, kwargs={"pk": objeto.pk})
     try:
@@ -208,49 +194,43 @@ def preparar_filas(registros):
 
     for tabla, grupo in por_tabla.items():
         configuracion = TIPOS_REGISTRO.get(tabla)
-        objetos = {}
+        existentes = {}
         urls = {}
         if configuracion:
-            modelo, etiqueta, relaciones = configuracion
+            modelo, etiqueta, relaciones, _ = configuracion
             claves = [
                 tuple(registro.clave_registro[campo] for campo in modelo._meta.pk.field_names)
                 if isinstance(modelo._meta.pk, CompositePrimaryKey) else registro.clave_registro["id"]
                 for registro in grupo
             ]
-            existentes = {objeto.pk: objeto for objeto in modelo.objects.filter(pk__in=claves)}
-            for registro, clave in zip(grupo, claves):
-                if clave not in existentes and registro.accion != "eliminacion":
-                    continue
-                datos = {}
-                if clave in existentes:
-                    datos.update({
-                        campo.attname: getattr(existentes[clave], campo.attname)
-                        for campo in modelo._meta.concrete_fields
-                    })
-                # Las diferencias aportan la identidad de esa entrada; los demás campos se completan con el registro vigente.
-                datos.update(registro.valores_anteriores)
-                datos.update(registro.valores_actuales)
-                datos.update(registro.clave_registro)
-                objetos[registro.pk] = modelo(**{
-                    campo.attname: campo.to_python(datos[campo.attname])
-                    for campo in modelo._meta.concrete_fields
-                    if campo.attname in datos
-                })
-            prefetch_related_objects(list(objetos.values()) + list(existentes.values()), *relaciones)
+            claves_vigentes = [
+                clave for registro, clave in zip(grupo, claves)
+                if registro.accion != LogAuditoria.Accion.ELIMINACION
+            ]
+            existentes = {objeto.pk: objeto for objeto in modelo.objects.filter(pk__in=claves_vigentes)}
+            prefetch_related_objects(list(existentes.values()), *relaciones)
+            objetos = {registro.pk: existentes.get(clave) for registro, clave in zip(grupo, claves)}
             for registro, clave in zip(grupo, claves):
                 if clave in existentes and registro.accion != LogAuditoria.Accion.ELIMINACION:
                     urls[registro.pk] = _url_registro(existentes[clave])
         else:
             modelo, etiqueta = None, tabla.replace("_", " ").capitalize()
+            objetos = {}
 
         for registro in grupo:
-            clave = _clave_legible(registro.clave_registro, modelo)
+            clave = (
+                f"{etiqueta} #{registro.clave_registro['id']}" if "id" in registro.clave_registro
+                else _clave_legible(registro.clave_registro, modelo)
+            )
             objeto = objetos.get(registro.pk)
+            referencia = (_referencia_breve(objeto) or clave) if objeto is not None else clave
+            if registro.accion == LogAuditoria.Accion.ELIMINACION:
+                referencia = _referencia_eliminada(registro, clave)
             filas[registro.pk] = {
                 "registro": registro,
                 "accion": _accion_visible(registro),
                 "tipo": etiqueta,
-                "referencia": (_referencia_breve(objeto) or clave) if objeto is not None else clave,
+                "referencia": referencia,
                 "url": urls.get(registro.pk),
                 "clave": json.dumps(registro.clave_registro, ensure_ascii=False),
                 "anteriores": json.dumps(registro.valores_anteriores, ensure_ascii=False, indent=2),
@@ -258,3 +238,45 @@ def preparar_filas(registros):
             }
 
     return [filas[registro.pk] for registro in registros]
+
+
+def _referencia_eliminada(registro, clave):
+    datos = registro.valores_anteriores
+    if registro.tabla == "usuarios":
+        nombre = " ".join(filter(None, (datos.get("first_name"), datos.get("last_name"))))
+        return nombre or datos.get("username") or clave
+    if registro.tabla in ("roles", "sedes", "canchas", "planes", "pases"):
+        return datos.get("nombre") or clave
+    if registro.tabla == "usuarios_roles" and datos.get("usuario_id") and datos.get("rol_id"):
+        return f"Usuario #{datos['usuario_id']} · Rol #{datos['rol_id']}"
+    if registro.tabla == "feriados" and datos.get("fecha"):
+        fecha = parse_date(datos["fecha"])
+        return f"{fecha:%d/%m/%Y}" if fecha else clave
+    if registro.tabla == "reservas":
+        return f"R-{registro.clave_registro['id']:06d}"
+    if registro.tabla == "bloqueos":
+        return f"B-{registro.clave_registro['id']:06d}"
+    return clave
+
+
+def preparar_intentos(registros):
+    modulos = {
+        "usuarios": "Usuarios", "instalaciones": "Sedes y canchas", "clases": "Clases",
+        "reservas": "Reservas", "agenda": "Agenda", "membresias": "Membresías", "auditoria": "Auditoría",
+    }
+    filas = []
+    for registro in registros:
+        if registro.vista == "login":
+            destino = f"Cuenta ingresada: {registro.identificador_ingresado}"
+        elif registro.vista == "password_change":
+            destino = "Contraseña de la cuenta"
+        else:
+            destino = modulos.get(registro.vista.split(":")[0], "Acceso al sistema")
+            identificador = registro.parametros_destino.get("pk", registro.parametros_destino.get("usuario_id"))
+            if identificador is not None:
+                destino += f" · #{identificador}"
+        filas.append({
+            "registro": registro, "destino": destino,
+            "parametros": json.dumps(registro.parametros_destino, ensure_ascii=False, indent=2),
+        })
+    return filas

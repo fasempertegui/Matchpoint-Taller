@@ -28,6 +28,10 @@ El cierre de `sesiones_caja` y las anulaciones en `movimientos_fondos` participa
 
 Las altas, las consultas y las vistas previas sin cambios sobre registros existentes no agregan entradas. Preparar nuevos turnos tampoco genera auditoría. Los cambios y restablecimientos de contraseña tienen acciones de auditoría específicas, sin contraseñas, hashes ni indicadores artificiales. Se conservan únicamente diferencias reales no sensibles; los objetos pueden quedar vacíos. La actualización técnica del hash tiene su propia acción. El administrador consulta Auditoría desde la navegación o el inicio administrativo, recorre sus páginas y despliega los valores anteriores y actuales. El servidor valida el acceso y sólo admite GET; no hay operaciones de edición o eliminación del historial.
 
+Los intentos rechazados se consultan por separado dentro de Auditoría. Se registran exclusivamente los rechazos de autenticación, de contraseña actual en el cambio de contraseña y de autorización sobre información o acciones restringidas. Los puntos de validación identifican el tipo y un motivo de catálogo, sin conservar secretos ni formularios. Los accesos a registros ajenos que se ocultan con 404 conservan esa respuesta; se registran sólo cuando la pertenencia ajena está comprobada. Los 404 comunes, errores de formulario, cancelaciones y redirecciones al login quedan fuera.
+
+El middleware conserva como máximo un intento por solicitud y lo persiste al salir de la transacción de negocio, también cuando ésta se revierte. Comparte su UUID de contexto y no utiliza un callback de commit. Los errores de persistencia emiten un aviso técnico sin datos sensibles y no cambian la respuesta al usuario. Una interrupción del proceso antes de insertar puede impedir el registro. La consulta Intentos rechazados es administrativa, de sólo lectura, paginada e inmutable; los detalles muestran destino técnico, método y UUID. Las reglas completas y la estructura se definen en criterios, 2.14, y modelo relacional, 4.27.
+
 ## 2. Índice de flujos
 
 | Área | Identificador | Proceso |

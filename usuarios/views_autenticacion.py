@@ -9,7 +9,8 @@ from django.views.generic.edit import FormView
 from django.views.decorators.http import require_GET
 
 from auditoria.contexto import contexto_auditoria
-from auditoria.models import LogAuditoria
+from auditoria.intentos import registrar_intento
+from auditoria.models import IntentoAuditoria, LogAuditoria
 
 from .forms import CambioContrasenaForm, InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario
 from .navegacion import breadcrumbs_usuario
@@ -68,6 +69,19 @@ class InicioSesionView(auth_views.LoginView):
             return reverse("password_change")
         return super().get_success_url()
 
+    def form_invalid(self, form):
+        codigos = {error.code for error in form.errors.as_data().get("__all__", [])}
+        if codigos.intersection(("invalid_login", "inactive")):
+            motivo = (
+                IntentoAuditoria.Motivo.CUENTA_INACTIVA if "inactive" in codigos
+                else IntentoAuditoria.Motivo.CREDENCIALES_INVALIDAS
+            )
+            registrar_intento(
+                self.request, IntentoAuditoria.Tipo.INICIO_SESION_FALLIDO, motivo,
+                identificador_ingresado=form.cleaned_data.get("username", ""),
+            )
+        return super().form_invalid(form)
+
 
 class CambioContrasenaView(auth_views.PasswordChangeView):
     template_name = "autenticacion/cambio_contrasena_formulario.html"
@@ -93,6 +107,14 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
             usuario.save(update_fields=("password", "debe_cambiar_contrasena", "actualizado_en"))
             update_session_auth_hash(self.request, usuario)
         return redirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        if any(error.code == "password_incorrect" for error in form.errors.as_data().get("old_password", [])):
+            registrar_intento(
+                self.request, IntentoAuditoria.Tipo.CAMBIO_CONTRASENA_RECHAZADO,
+                IntentoAuditoria.Motivo.CONTRASENA_ACTUAL_INCORRECTA,
+            )
+        return super().form_invalid(form)
 
 
 class CambioContrasenaCompletadoView(auth_views.PasswordChangeDoneView):

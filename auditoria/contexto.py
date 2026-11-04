@@ -22,7 +22,7 @@ def contexto_auditoria(usuario=None, origen="aplicacion", accion=None):
                        set_config('auditoria.operacion_id', %s, true),
                        set_config('auditoria.accion', %s, true)
             """, [str(usuario.pk) if usuario is not None else "", origen, operacion, str(accion) if accion else ""])
-        yield
+        yield operacion
         if connection.needs_rollback:
             return
         # Ante un error, el rollback restaura también la configuración local.

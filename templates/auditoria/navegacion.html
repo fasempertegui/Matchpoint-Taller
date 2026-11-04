@@ -1,0 +1,6 @@
+<nav class="tarjeta acciones" aria-label="Historiales de auditoría">
+    <a class="boton {% if historial_actual == 'cambios' %}boton-primario{% else %}boton-secundario{% endif %}"
+        href="{% url 'auditoria:auditoria_lista' %}"{% if historial_actual == 'cambios' %} aria-current="page"{% endif %}>Cambios realizados</a>
+    <a class="boton {% if historial_actual == 'intentos' %}boton-primario{% else %}boton-secundario{% endif %}"
+        href="{% url 'auditoria:intentos_lista' %}"{% if historial_actual == 'intentos' %} aria-current="page"{% endif %}>Intentos rechazados</a>
+</nav>
