@@ -119,20 +119,30 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function prepararCreacionTurno() {
+    function prepararAccionesTurno() {
         if (!contenido) return;
         var opciones = Array.from(contenido.querySelectorAll("[data-agenda-opcion-creacion]"));
-        var formularios = opciones.filter(function (opcion) { return opcion.hasAttribute("data-agenda-creacion"); });
+        var formularios = Array.from(contenido.querySelectorAll("[data-agenda-creacion], [data-agenda-accion]"));
         if (!formularios.length) return;
         var titulo = contenido.querySelector("[data-agenda-titulo]");
+        var tituloInicial = titulo.textContent;
+        var secundarios = Array.from(contenido.children).filter(function (elemento) {
+            return !elemento.matches(".agenda-detalle-cabecera, .agenda-datos");
+        });
 
         function actualizar() {
             var activa = formularios.find(function (opcion) { return opcion.open; });
             opciones.forEach(function (opcion) {
                 opcion.hidden = Boolean(activa && opcion !== activa);
-                if (opcion.hasAttribute("data-agenda-creacion")) opcion.querySelector("summary").hidden = opcion === activa;
             });
-            titulo.textContent = activa ? (activa.dataset.agendaCreacion === "reserva" ? "Nueva reserva" : "Nuevo bloqueo") : "Turno libre";
+            secundarios.forEach(function (elemento) {
+                elemento.hidden = Boolean(activa && elemento !== activa && !elemento.contains(activa));
+            });
+            formularios.forEach(function (opcion) {
+                opcion.hidden = Boolean(activa && opcion !== activa);
+                opcion.querySelector("summary").hidden = opcion === activa;
+            });
+            titulo.textContent = activa ? (activa.dataset.agendaAccion || (activa.dataset.agendaCreacion === "reserva" ? "Nueva reserva" : "Nuevo bloqueo")) : tituloInicial;
         }
 
         formularios.forEach(function (opcion) {
@@ -146,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (campo) campo.focus();
                 }
             });
-            opcion.querySelector("[data-cancelar-creacion]").addEventListener("click", function () {
+            opcion.querySelector("[data-cancelar-creacion], [data-cancelar-accion]").addEventListener("click", function () {
                 var formulario = opcion.querySelector("form");
                 formulario.reset();
                 formulario.querySelectorAll("select, textarea, input:not([type=hidden])").forEach(function (campo) {
@@ -232,7 +242,7 @@ document.addEventListener("DOMContentLoaded", function () {
             contenido.innerHTML = html;
             contenido.dispatchEvent(new Event("observaciones:inicializar", {bubbles: true}));
             prepararOrganizador();
-            prepararCreacionTurno();
+            prepararAccionesTurno();
             prepararConfirmacionReserva();
             prepararConfirmacionBloqueo();
             window.prepararCamposOperacion();
@@ -458,7 +468,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     prepararOrganizador();
-    prepararCreacionTurno();
+    prepararAccionesTurno();
     prepararConfirmacionReserva();
     prepararConfirmacionBloqueo();
     window.prepararCamposOperacion();

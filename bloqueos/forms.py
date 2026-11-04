@@ -1,8 +1,4 @@
-from copy import deepcopy
-
 from django import forms
-
-from reservas.forms import ReservaAnulacionForm
 
 from .models import Bloqueo
 
@@ -18,13 +14,6 @@ class BloqueoForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     )
-    motivo_anulacion = deepcopy(ReservaAnulacionForm.base_fields["motivo"])
-
-    def __init__(self, *args, anula_reserva=False, **kwargs):
-        super().__init__(*args, **kwargs)
-        if not anula_reserva:
-            self.fields.pop("motivo_anulacion")
-
 
 class BloqueoAnulacionForm(forms.Form):
     bloqueo = forms.IntegerField(min_value=1, widget=forms.HiddenInput())

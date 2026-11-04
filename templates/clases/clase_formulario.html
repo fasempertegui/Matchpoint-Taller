@@ -71,7 +71,7 @@
                 <noscript><p class="mensaje mensaje-info">Para buscar y agregar personas necesitás habilitar JavaScript.</p></noscript>
                 {% include "clases/_selector_personas.html" with campo=formulario.profesores seleccionados=profesores titulo="Profesores" etiqueta="Agregar profesor" vacio="Todavía no agregaste profesores." only %}
                 {% include "clases/_selector_personas.html" with campo=formulario.participantes seleccionados=participantes titulo="Participantes" etiqueta="Agregar participante" vacio="Podés crear la clase sin participantes y agregarlos después." ampliar_busqueda=formulario.buscar_todos.value only %}
-                {% include "clases/_observaciones_formulario.html" with campo=formulario.observaciones only %}
+                {% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}
                 {% if not impedimento %}
                 <div class="acciones-formulario">
                     <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
@@ -83,6 +83,5 @@
         {% endif %}
     </section>
 </div>
-<script src="{% static 'js/observaciones.js' %}" defer></script>
 <script src="{% static 'js/clase-formulario.js' %}" defer></script>
 {% endblock %}

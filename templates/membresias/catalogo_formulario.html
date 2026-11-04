@@ -10,7 +10,9 @@
         {% for campo in formulario.hidden_fields %}{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
         {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
         {% for campo in formulario.visible_fields %}
-            {% if campo.name == 'descripcion' or campo.name == 'observaciones' %}
+            {% if campo.name == 'observaciones' %}
+                {% include "componentes/observaciones_opcionales.html" with campo=campo only %}
+            {% elif campo.name == 'descripcion' %}
                 <details class="observaciones-opcionales"{% if campo.value or campo.errors %} open{% endif %}>
                     <summary>{{ campo.label }} (opcional)</summary>
                     <div class="grupo-campo">

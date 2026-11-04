@@ -69,7 +69,7 @@
                     {% endif %}
                     {% for error in formulario_reserva.precio_mostrado.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
                     <p class="agenda-precio">Total: $ {{ agenda.sede.precio_reserva_vigente|floatformat:"2g" }}</p>
-                    {% include "clases/_observaciones_formulario.html" with campo=formulario_reserva.observaciones only %}
+                    {% include "componentes/observaciones_opcionales.html" with campo=formulario_reserva.observaciones only %}
                     <button class="boton boton-primario boton-chico" type="submit">Confirmar reserva</button>
                     <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion>Cancelar</button>
                 </form>
@@ -88,18 +88,19 @@
         {% if detalle.puede_anular or detalle.puede_liberar_bloqueo or detalle.puede_bloquear %}
             <div{% if detalle.puede_anular or detalle.puede_liberar_bloqueo or detalle.reserva %} class="agenda-acciones-anulacion"{% endif %}>
             {% if detalle.puede_anular %}
-                <details class="agenda-desplegable" name="agenda-accion"{% if formulario_anulacion.is_bound %} open{% endif %}>
+                <details class="agenda-desplegable" name="agenda-accion" data-agenda-accion="{% if es_administrador %}Anular y liberar{% else %}Anular reserva{% endif %}"{% if formulario_anulacion.is_bound %} open{% endif %}>
                     <summary class="boton boton-chico boton-peligro">{% if es_administrador %}Anular y liberar{% else %}Anular reserva{% endif %}</summary>
                     <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Confirmás la anulación de la reserva {{ detalle.reserva.numero }}?{% if es_administrador %} Se liberará su turno.{% endif %}" data-confirmar-titulo="Anular reserva" data-confirmar-boton="{% if es_administrador %}Anular y liberar{% else %}Anular reserva{% endif %}">
                         {% csrf_token %}<input type="hidden" name="accion" value="anular"><input type="hidden" name="reserva" value="{{ detalle.reserva.pk }}">
                         {{ formulario_anulacion.non_field_errors }}
                         <div class="grupo-campo"><label for="{{ formulario_anulacion.motivo.id_for_label }}">Motivo</label>{{ formulario_anulacion.motivo }}<small class="nota-campo">{{ formulario_anulacion.motivo.help_text }}</small>{% for error in formulario_anulacion.motivo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
                         <button class="boton boton-chico boton-confirmar-peligro" type="submit">{% if es_administrador %}Confirmar{% else %}Anular reserva{% endif %}</button>
+                        <button class="boton boton-secundario boton-chico" type="button" data-cancelar-accion>Cancelar</button>
                     </form>
                 </details>
             {% endif %}
             {% if detalle.puede_liberar_bloqueo %}
-                <details class="agenda-desplegable" name="agenda-accion"{% if formulario_liberacion.is_bound %} open{% endif %}>
+                <details class="agenda-desplegable" name="agenda-accion" data-agenda-accion="Anular y liberar"{% if formulario_liberacion.is_bound %} open{% endif %}>
                     <summary class="boton boton-chico boton-peligro">Anular y liberar</summary>
                     <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Anular el bloqueo {{ detalle.bloqueo.numero }} y liberar el turno de {{ detalle.cancha.nombre }}, el {{ detalle.fecha|date:'d/m/Y' }} de {{ detalle.hora|time:'H:i' }} a {{ detalle.fin|time:'H:i' }}?" data-confirmar-titulo="Anular bloqueo" data-confirmar-boton="Anular y liberar">
                         {% csrf_token %}<input type="hidden" name="accion" value="liberar_bloqueo">
@@ -108,11 +109,12 @@
                         {% for error in formulario_liberacion.bloqueo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
                         <div class="grupo-campo"><label for="{{ formulario_liberacion.motivo.id_for_label }}">Motivo de anulación</label>{{ formulario_liberacion.motivo }}{% for error in formulario_liberacion.motivo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
                         <button class="boton boton-chico boton-confirmar-peligro" type="submit">Confirmar</button>
+                        <button class="boton boton-secundario boton-chico" type="button" data-cancelar-accion>Cancelar</button>
                     </form>
                 </details>
             {% endif %}
             {% if detalle.puede_bloquear %}
-                <details class="agenda-desplegable" name="agenda-accion"{% if not detalle.evento %} data-agenda-creacion="bloqueo" data-agenda-opcion-creacion{% endif %}{% if formulario_bloqueo.is_bound %} open{% endif %}>
+                <details class="agenda-desplegable" name="agenda-accion"{% if detalle.evento %} data-agenda-accion="Anular y bloquear"{% else %} data-agenda-creacion="bloqueo" data-agenda-opcion-creacion{% endif %}{% if formulario_bloqueo.is_bound %} open{% endif %}>
                     <summary class="boton boton-chico {% if detalle.reserva %}boton-peligro{% else %}boton-secundario{% endif %}">{% if detalle.reserva %}Anular y bloquear{% else %}Crear bloqueo{% endif %}</summary>
                     {% if detalle.reserva %}<p class="agenda-impedimento">Se anulará la reserva {{ detalle.reserva.numero }} de {{ detalle.reserva.organizador }} y se creará un bloqueo para este turno.</p>{% endif %}
                     <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="{% if detalle.reserva %}¿Anular la reserva {{ detalle.reserva.numero }} de {{ detalle.reserva.organizador }} y bloquear{% else %}¿Bloquear{% endif %} el turno de {{ detalle.cancha.nombre }}, el {{ detalle.fecha|date:'d/m/Y' }} de {{ detalle.hora|time:'H:i' }} a {{ detalle.fin|time:'H:i' }}?" data-confirmar-titulo="{% if detalle.reserva %}Anular y bloquear{% else %}Crear bloqueo{% endif %}" data-confirmar-boton="{% if detalle.reserva %}Anular y bloquear{% else %}Crear bloqueo{% endif %}" data-agenda-bloqueo>
@@ -125,10 +127,9 @@
                                 <div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}{% for error in campo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
                             {% endif %}
                         {% endfor %}
-                        {% if detalle.evento %}{% include "componentes/observaciones_opcionales.html" with campo=formulario_bloqueo.observaciones %}
-                        {% else %}{% include "clases/_observaciones_formulario.html" with campo=formulario_bloqueo.observaciones only %}{% endif %}
+                        {% include "componentes/observaciones_opcionales.html" with campo=formulario_bloqueo.observaciones only %}
                         <button class="boton {% if detalle.reserva %}boton-confirmar-peligro{% else %}boton-primario{% endif %} boton-chico" type="submit">{% if detalle.reserva %}Confirmar{% else %}Confirmar bloqueo{% endif %}</button>
-                        {% if not detalle.evento %}<button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion>Cancelar</button>{% endif %}
+                        <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion data-cancelar-accion>Cancelar</button>
                     </form>
                 </details>
             {% endif %}
