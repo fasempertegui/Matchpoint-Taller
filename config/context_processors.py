@@ -13,7 +13,10 @@ def navegacion(request):
     namespace = ruta.namespace if ruta else ""
     nombre_vista = ruta.view_name if ruta else ""
     feriados_activo = namespace == "clases" and ruta.url_name.startswith("feriado_")
-    clases_activo = namespace == "clases" and not feriados_activo
+    planilla_activa = namespace == "clases" and ruta.url_name.startswith(("planilla", "generacion_"))
+    clases_concretas = namespace == "clases" and not feriados_activo and not planilla_activa
+    clases_activo = planilla_activa if administrador else clases_concretas
+    agenda_activa = namespace in ("agenda", "reservas") or (administrador and clases_concretas)
     perfil_activo = namespace == "usuarios" and ruta.kwargs.get("pk") == usuario.pk
     contrataciones_propias_activo = namespace == "membresias" and ruta.url_name in (
         "mis_contrataciones", "mi_plan_contratado", "mi_pase_contratado",
@@ -27,7 +30,7 @@ def navegacion(request):
         }
 
     agenda = enlace(
-        "Agenda", "agenda:agenda", namespace in ("agenda", "reservas"),
+        "Agenda", "agenda:agenda", agenda_activa,
         "Consultá tus clases y los horarios de las sedes." if not administrador
         else "Consulta de clases, reservas, bloqueos y disponibilidad de las canchas.",
     )
