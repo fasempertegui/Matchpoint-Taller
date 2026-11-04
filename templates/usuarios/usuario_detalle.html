@@ -29,7 +29,7 @@
                         <dd class="perfil-valor-accion">
                             <span>{{ usuario_obj.email|default:"Sin informar" }}</span>
                             {% if perms.usuarios.change_usuario %}
-                                <a class="perfil-enlace" href="{% url 'usuarios:usuario_editar' usuario_obj.pk %}">Modificar correo</a>
+                                <a class="boton boton-secundario boton-chico" href="{% url 'usuarios:usuario_editar' usuario_obj.pk %}">Modificar correo</a>
                             {% endif %}
                         </dd>
                     </div>
@@ -56,7 +56,7 @@
 
                 {% if perms.usuarios.change_usuario and roles_gestionables %}
                     <details class="perfil-desplegable" data-gestion-roles>
-                        <summary>Modificar roles</summary>
+                        <summary class="boton boton-secundario boton-chico">Modificar roles</summary>
                         <ul class="perfil-roles-opciones">
                             {% for rol in roles_gestionables %}
                                 <li class="perfil-rol-opcion">
@@ -113,8 +113,8 @@
             {% if request.user.pk == usuario_obj.pk and request.user.is_active and not request.user.debe_cambiar_contrasena %}
                 <section class="perfil-seccion" aria-labelledby="mis-contrataciones-titulo">
                     <h2 id="mis-contrataciones-titulo">Mis contrataciones</h2>
-                    <div class="perfil-acciones">
-                        <a class="perfil-enlace" href="{% url 'membresias:mis_contrataciones' %}">Ver mis planes y pases</a>
+                    <div class="perfil-acciones perfil-acciones-botones">
+                        <a class="boton boton-secundario boton-chico" href="{% url 'membresias:mis_contrataciones' %}">Ver mis planes y pases</a>
                     </div>
                 </section>
             {% endif %}
@@ -133,22 +133,22 @@
                     {% if usuario_obj.debe_cambiar_contrasena %}
                         <p class="perfil-aviso-acceso">Cambio de contraseña pendiente.</p>
                     {% endif %}
-                    {% if request.user.pk == usuario_obj.pk %}
-                        <a class="perfil-enlace" href="{% url 'password_change' %}">Cambiar mi contraseña</a>
-                    {% else %}
-                        <a class="perfil-enlace" href="{% url 'usuarios:usuario_restablecer_contrasena' usuario_obj.pk %}">Restablecer contraseña</a>
-                        <div class="perfil-estado-cuenta">
+                    <div class="perfil-acciones perfil-acciones-botones">
+                        {% if request.user.pk == usuario_obj.pk %}
+                            <a class="boton boton-secundario boton-chico" href="{% url 'password_change' %}">Cambiar mi contraseña</a>
+                        {% else %}
+                            <a class="boton boton-secundario boton-chico" href="{% url 'usuarios:usuario_restablecer_contrasena' usuario_obj.pk %}">Restablecer contraseña</a>
                             <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_cambiar_estado' usuario_obj.pk %}"
-                                  data-confirmar="{% if usuario_obj.is_active %}¿Desactivar la cuenta de {{ usuario_obj.get_full_name|default:usuario_obj.username }}? No va a poder iniciar sesión hasta que se reactive su cuenta.{% else %}¿Activar la cuenta de {{ usuario_obj.get_full_name|default:usuario_obj.username }}? Va a poder iniciar sesión de nuevo.{% endif %}"
-                                  data-confirmar-titulo="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta"
-                                  data-confirmar-boton="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta">
-                                {% csrf_token %}
-                                <button class="perfil-enlace perfil-accion{% if usuario_obj.is_active %} perfil-accion-desactivar{% endif %}" type="submit">
-                                    {% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta
-                                </button>
-                            </form>
-                        </div>
-                    {% endif %}
+                                      data-confirmar="{% if usuario_obj.is_active %}¿Desactivar la cuenta de {{ usuario_obj.get_full_name|default:usuario_obj.username }}? No va a poder iniciar sesión hasta que se reactive su cuenta.{% else %}¿Activar la cuenta de {{ usuario_obj.get_full_name|default:usuario_obj.username }}? Va a poder iniciar sesión de nuevo.{% endif %}"
+                                      data-confirmar-titulo="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta"
+                                      data-confirmar-boton="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta">
+                                    {% csrf_token %}
+                                    <button class="boton boton-chico {% if usuario_obj.is_active %}boton-peligro{% else %}boton-secundario{% endif %}" type="submit">
+                                        {% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta
+                                    </button>
+                                </form>
+                        {% endif %}
+                    </div>
                 </section>
             {% endif %}
         </aside>

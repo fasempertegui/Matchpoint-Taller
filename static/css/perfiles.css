@@ -173,6 +173,20 @@
     cursor: pointer;
 }
 
+.perfil-desplegable summary.boton {
+    display: inline-flex;
+    list-style: none;
+    font-size: 0.86rem;
+}
+
+.perfil-desplegable summary.boton::-webkit-details-marker {
+    display: none;
+}
+
+.perfil-desplegable summary.boton-peligro {
+    color: var(--peligro);
+}
+
 .perfil-desplegable summary:focus-visible {
     outline: 2px solid var(--primario);
     outline-offset: 4px;
@@ -199,6 +213,27 @@
 .perfil-acciones-botones {
     justify-items: stretch;
     gap: 12px;
+}
+
+.perfil-acciones-botones > form {
+    display: grid;
+    margin: 0;
+}
+
+.perfil-acciones-botones > form > .boton {
+    width: 100%;
+}
+
+.perfil-lateral .boton {
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.perfil-lateral .perfil-desplegable > summary.boton {
+    width: 100%;
 }
 
 .perfil-impedimento {
@@ -246,11 +281,7 @@
     font-size: 0.9rem;
 }
 
-.perfil-estado-cuenta {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--borde);
-}
+
 
 .perfil-accion {
     padding: 0;

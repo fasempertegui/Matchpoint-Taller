@@ -36,8 +36,8 @@
             </section>
             <section class="perfil-seccion" aria-labelledby="plan-administracion-titulo">
                 <h2 id="plan-administracion-titulo">Administración</h2>
-                <div class="perfil-acciones">
-                    <a class="perfil-enlace" href="{% url 'membresias:plan_editar' plan.pk %}">Editar plan</a>
+                <div class="perfil-acciones perfil-acciones-botones">
+                    <a class="boton boton-secundario boton-chico" href="{% url 'membresias:plan_editar' plan.pk %}">Editar plan</a>
                     <form class="formulario-en-linea" method="post" action="{% url 'membresias:plan_cambiar_estado' plan.pk %}"
                           data-confirmar="{% if plan.estado == 'activo' %}¿Desactivar el plan {{ plan.nombre }}? Dejará de estar disponible para nuevas contrataciones.{% else %}¿Activar el plan {{ plan.nombre }}?{% endif %}"
                           data-confirmar-titulo="{% if plan.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} plan"
@@ -45,7 +45,7 @@
                         {% csrf_token %}
                         <input type="hidden" name="version" value="{{ version }}">
                         <input type="hidden" name="estado" value="{% if plan.estado == 'activo' %}inactivo{% else %}activo{% endif %}">
-                        <button class="perfil-enlace perfil-accion{% if plan.estado == 'activo' %} perfil-accion-desactivar{% endif %}" type="submit">{% if plan.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} plan</button>
+                        <button class="boton boton-chico {% if plan.estado == 'activo' %}boton-peligro{% else %}boton-secundario{% endif %}" type="submit">{% if plan.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} plan</button>
                     </form>
                 </div>
             </section>

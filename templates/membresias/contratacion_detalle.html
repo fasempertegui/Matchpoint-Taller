@@ -60,8 +60,8 @@
             {% if not propias and contratacion.estado == 'activo' %}
                 <section class="perfil-seccion" aria-labelledby="contratacion-administracion-titulo">
                     <h2 id="contratacion-administracion-titulo">Administración</h2>
-                    <div class="perfil-acciones">
-                        <a class="perfil-enlace" href="{% url ruta_anular contratacion.pk %}">Anular contratación</a>
+                    <div class="perfil-acciones perfil-acciones-botones">
+                        <a class="boton boton-peligro boton-chico" href="{% url ruta_anular contratacion.pk %}">Anular contratación</a>
                     </div>
                 </section>
             {% endif %}

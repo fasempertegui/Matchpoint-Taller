@@ -159,6 +159,8 @@ No se crean ni ejecutan pruebas automatizadas ni se realiza commit. La estructur
 
 ### Verificación del origen de bloqueos
 
+Las acciones en los detalles de entidades utilizan botones compactos. En las columnas laterales ocupan todo el ancho disponible, tanto los enlaces como los botones de formularios y los disparadores de formularios desplegables. Las acciones de consulta y edición usan el estilo secundario; anular y desactivar usan el estilo de peligro. Los grupos comparten un espaciado de doce píxeles.
+
 La migración `bloqueos.0002_integrar_evento_origen` incorpora la referencia opcional a `bloqueos`, copia los vínculos existentes y conserva su unicidad y la protección del evento. La copia técnica se realiza dentro de la transacción de la migración sin generar entradas de auditoría de negocio. El esquema utiliza el trigger de `bloqueos` para registrar sus cambios. La agenda y las operaciones individuales y masivas utilizan la referencia directa.
 
 Revisión manual: crear un bloqueo sobre un turno libre y comprobar que no tiene origen; anular y bloquear una reserva y consultar su enlace de origen; liberar ese bloqueo y comprobar que la reserva permanece Anulada y el vínculo se conserva. La base local no contiene bloqueos al aplicar la migración. No se crean ni ejecutan pruebas automatizadas ni se realiza commit.

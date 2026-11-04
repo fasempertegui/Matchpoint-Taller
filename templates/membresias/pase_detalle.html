@@ -37,8 +37,8 @@
             </section>
             <section class="perfil-seccion" aria-labelledby="pase-administracion-titulo">
                 <h2 id="pase-administracion-titulo">Administración</h2>
-                <div class="perfil-acciones">
-                    <a class="perfil-enlace" href="{% url 'membresias:pase_editar' pase.pk %}">Editar pase</a>
+                <div class="perfil-acciones perfil-acciones-botones">
+                    <a class="boton boton-secundario boton-chico" href="{% url 'membresias:pase_editar' pase.pk %}">Editar pase</a>
                     <form class="formulario-en-linea" method="post" action="{% url 'membresias:pase_cambiar_estado' pase.pk %}"
                           data-confirmar="{% if pase.estado == 'activo' %}¿Desactivar el pase {{ pase.nombre }}? Dejará de estar disponible para nuevas contrataciones.{% else %}¿Activar el pase {{ pase.nombre }}?{% endif %}"
                           data-confirmar-titulo="{% if pase.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} pase"
@@ -46,7 +46,7 @@
                         {% csrf_token %}
                         <input type="hidden" name="version" value="{{ version }}">
                         <input type="hidden" name="estado" value="{% if pase.estado == 'activo' %}inactivo{% else %}activo{% endif %}">
-                        <button class="perfil-enlace perfil-accion{% if pase.estado == 'activo' %} perfil-accion-desactivar{% endif %}" type="submit">{% if pase.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} pase</button>
+                        <button class="boton boton-chico {% if pase.estado == 'activo' %}boton-peligro{% else %}boton-secundario{% endif %}" type="submit">{% if pase.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} pase</button>
                     </form>
                 </div>
             </section>

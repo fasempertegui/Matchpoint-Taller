@@ -18,7 +18,7 @@
         </table>
     </div>
     {% if retirados %}
-        <button class="perfil-enlace perfil-accion perfil-historial-asignaciones" type="button" data-historial-asignaciones aria-controls="historial-{{ identificador }}" aria-haspopup="dialog">Ver {{ retirados }} quitado{{ retirados|pluralize:"s" }}</button>
+        <button class="boton boton-secundario boton-chico perfil-historial-asignaciones" type="button" data-historial-asignaciones aria-controls="historial-{{ identificador }}" aria-haspopup="dialog">Ver {{ retirados }} quitado{{ retirados|pluralize:"s" }}</button>
         <dialog class="modal-confirmacion" id="historial-{{ identificador }}" aria-labelledby="historial-{{ identificador }}-titulo">
             <form method="dialog" class="modal-confirmacion-formulario">
                 <header class="modal-confirmacion-cabecera"><h2 id="historial-{{ identificador }}-titulo">{% if identificador == 'profesores' %}Profesores quitados{% else %}Participantes quitados{% endif %}</h2></header>
