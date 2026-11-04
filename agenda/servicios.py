@@ -2,7 +2,7 @@ from datetime import datetime, time, timedelta
 from urllib.parse import urlencode
 
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.urls import reverse
 from django.utils import timezone
 
@@ -79,7 +79,11 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         ).exclude(estado=Evento.Estado.ANULADO).select_related(
             "turno__cancha__sede", "reserva__organizador", "registrado_por", "anulado_por",
             "clase", "bloqueo__evento_origen__reserva", "bloqueo__evento_origen__clase",
-        )
+        ).prefetch_related(Prefetch(
+            "clase__profesores",
+            queryset=ClaseProfesor.objects.filter(estado="activo").select_related("profesor"),
+            to_attr="profesores_agenda",
+        ))
     eventos_por_turno = {}
     for evento in eventos:
         evento.clase_del_usuario = evento.pk in eventos_del_usuario
@@ -188,6 +192,8 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             "reserva": reserva if puede_ver_evento else None,
             "bloqueo": bloqueo if puede_ver_evento else None,
             "clase": clase if puede_ver_evento else None,
+            "profesores": [str(asignacion.profesor) for asignacion in clase.profesores_agenda]
+                if clase and puede_ver_evento else [],
             "ocupado_por_tercero": ocupado_por_tercero,
             "habilitado": habilitado, "en_rango": en_rango,
             "consultable": evento is not None or fin > ahora or puede_crear_clase,

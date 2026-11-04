@@ -89,7 +89,7 @@
                                                             {% if celda.ocupado_por_tercero %}
                                                                 <span>No disponible</span>
                                                             {% elif celda.evento %}
-                                                                {% include "agenda/_contenido_evento.html" with evento=celda.evento only %}
+                                                                {% include "agenda/_contenido_evento.html" with evento=celda.evento profesores=celda.profesores only %}
                                                             {% elif not celda.habilitado %}
                                                                 <span>Fuera de horario</span>
                                                             {% elif celda.cancha.estado == 'inactiva' or agenda.sede.estado == 'inactiva' %}

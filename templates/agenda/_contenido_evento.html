@@ -4,6 +4,7 @@
     <span class="agenda-tipo">Bloqueo</span><span class="agenda-nombre">{{ evento.bloqueo.get_motivo_display }}</span>
 {% elif evento.tipo == 'clase' %}
     <span class="agenda-tipo">Clase</span>
+    {% if profesores %}<span class="agenda-nombre">{{ profesores.0 }}{% if profesores|length > 1 %} +{{ profesores|length|add:"-1" }}{% endif %}</span>{% endif %}
 {% else %}
     <span class="agenda-tipo">{{ evento.get_tipo_display }}</span>
 {% endif %}

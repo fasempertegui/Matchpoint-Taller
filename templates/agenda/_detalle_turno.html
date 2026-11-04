@@ -33,7 +33,7 @@
             {% endif %}
             {% if detalle.clase %}
                 {% if detalle.datos_clase.es_administrador or detalle.datos_clase.es_profesor_asignado %}
-                    <div><dt>Profesores activos</dt><dd>{% for profesor in detalle.profesores_activos|slice:":3" %}{{ profesor.nombre }}{% if not forloop.last %}<br>{% endif %}{% empty %}Sin profesores activos{% endfor %}{% if detalle.profesores_activos|length > 3 %}<br>Y otros {{ detalle.profesores_activos|length|add:"-3" }}{% endif %}</dd></div>
+                    <div><dt>Profesores activos</dt><dd>{% if detalle.profesores_activos %}{{ detalle.profesores_activos.0.nombre }}{% if detalle.profesores_activos|length > 1 %} +{{ detalle.profesores_activos|length|add:"-1" }}{% endif %}{% else %}Sin profesores activos{% endif %}</dd></div>
                     {% if detalle.cantidad_participantes %}<div><dt>Participantes activos</dt><dd>{{ detalle.cantidad_participantes }}</dd></div>{% endif %}
                 {% endif %}
             {% endif %}

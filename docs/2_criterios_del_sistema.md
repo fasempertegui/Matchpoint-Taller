@@ -59,6 +59,8 @@ La gestión incluirá:
 
 Las clases generadas existirán como instancias individuales, con su origen identificado para distinguirlas de las creadas manualmente. No se conservará una referencia a la celda de planilla: la clase concreta ya contiene por sí sola todo lo necesario para la historia operativa (día, horario, cancha, alumnos, profesor).
 
+En la grilla de Agenda, las clases visibles para el usuario muestran el primer profesor activo y, si hay más, la cantidad restante como `+N`. El panel lateral presenta ese mismo resumen como texto fijo en Profesores activos cuando el usuario tiene permiso para consultar el grupo. La lista completa se consulta en el detalle de la clase.
+
 No existirá una reprogramación de clases como operación propia: una clase Programada puede cambiar de cancha únicamente antes del inicio de su turno, pero nunca cambiar de día ni de horario. Si hace falta mover una clase a otro día u horario, se anula y se crea una nueva, sin ninguna vinculación entre ambas. Las reservas conservan su vinculación de reprogramación según 2.2.
 
 Cambiar de cancha conserva fecha y hora, libera la ubicación original y exige disponibilidad y funcionamiento en el destino. Las clases Anuladas o Finalizadas conservan sus datos y asignaciones; el registro y corrección de asistencia de una clase Finalizada sigue las condiciones de esta sección.
