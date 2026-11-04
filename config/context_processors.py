@@ -44,7 +44,7 @@ def navegacion(request):
         clases.append(enlace("Planilla semanal", "clases:planilla", clases_activo, "Programación habitual de clases."))
     elif roles.intersection((Rol.PROFESOR, Rol.ALUMNO)):
         clases.append(enlace(
-            "Mi actividad", "clases:actividad_clases", clases_activo,
+            "Mis clases", "clases:actividad_clases", clases_activo,
             "Consulta de tus clases y su historial.", {"usuario_id": usuario.pk},
         ))
     administracion = []

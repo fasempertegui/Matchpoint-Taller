@@ -3,7 +3,6 @@ from datetime import time
 from django.core import signing
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Count
 
 from auditoria.contexto import contexto_auditoria
 from instalaciones.models import Cancha, Sede
@@ -22,9 +21,9 @@ from .validaciones import (
 def consultar_planilla(usuario, sede_id, cancha_id):
     exigir_administracion_clases(usuario)
     cancha = Cancha.objects.select_related("sede").get(pk=cancha_id, sede_id=sede_id)
-    turnos = TurnoPlanilla.objects.filter(cancha=cancha).annotate(
-        clases_vinculadas=Count("clases"),
-    ).prefetch_related("profesores__profesor", "alumnos__usuario").order_by("dia_semana", "hora_inicio", "pk")
+    turnos = TurnoPlanilla.objects.filter(cancha=cancha).prefetch_related(
+        "profesores__profesor", "alumnos__usuario",
+    ).order_by("dia_semana", "hora_inicio", "pk")
     return {
         "sede": {"id": cancha.sede_id, "nombre": cancha.sede.nombre, "estado": cancha.sede.estado},
         "cancha": {"id": cancha.pk, "nombre": cancha.nombre, "estado": cancha.estado},
@@ -36,7 +35,6 @@ def consultar_planilla(usuario, sede_id, cancha_id):
                 "hora_fin": time(turno.hora_inicio.hour + 1),
                 "observaciones": turno.observaciones,
                 "actualizado_en": turno.actualizado_en,
-                "clases_vinculadas": turno.clases_vinculadas,
                 "profesores": [
                     {"usuario_id": vinculo.profesor_id, "nombre": str(vinculo.profesor)}
                     for vinculo in turno.profesores.all()
