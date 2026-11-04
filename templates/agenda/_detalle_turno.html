@@ -69,7 +69,7 @@
                     {% endif %}
                     {% for error in formulario_reserva.precio_mostrado.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
                     <p class="agenda-precio">Total: $ {{ agenda.sede.precio_reserva_vigente|floatformat:"2g" }}</p>
-                    {% include "clases/_observaciones_formulario.html" with campo=formulario_reserva.observaciones only %}
+                    {% include "componentes/observaciones_opcionales.html" with campo=formulario_reserva.observaciones only %}
                     <button class="boton boton-primario boton-chico" type="submit">Confirmar reserva</button>
                     <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion>Cancelar</button>
                 </form>
@@ -127,8 +127,7 @@
                                 <div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}{% for error in campo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
                             {% endif %}
                         {% endfor %}
-                        {% if detalle.evento %}{% include "componentes/observaciones_opcionales.html" with campo=formulario_bloqueo.observaciones %}
-                        {% else %}{% include "clases/_observaciones_formulario.html" with campo=formulario_bloqueo.observaciones only %}{% endif %}
+                        {% include "componentes/observaciones_opcionales.html" with campo=formulario_bloqueo.observaciones only %}
                         <button class="boton {% if detalle.reserva %}boton-confirmar-peligro{% else %}boton-primario{% endif %} boton-chico" type="submit">{% if detalle.reserva %}Confirmar{% else %}Confirmar bloqueo{% endif %}</button>
                         <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion data-cancelar-accion>Cancelar</button>
                     </form>

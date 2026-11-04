@@ -1,17 +1,14 @@
-<details class="observaciones-opcionales"{% if campo.value or campo.errors %} open{% endif %}>
-    <summary>
-        Observaciones
-        <span class="observaciones-mostrar" aria-hidden="true">▾</span>
-        <span class="observaciones-ocultar" aria-hidden="true">▴</span>
-    </summary>
-    <div class="grupo-campo">
-        <label class="etiqueta-oculta" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+<section class="clase-observaciones-edicion" data-observaciones>
+    <button class="boton boton-secundario clase-agregar-observaciones" type="button"
+            aria-expanded="{% if campo.value or campo.errors %}true{% else %}false{% endif %}" aria-controls="{{ campo.id_for_label }}"
+            data-agregar-observaciones{% if campo.value or campo.errors %} hidden{% endif %}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Agregar observaciones
+    </button>
+    <div class="grupo-campo" data-campo-observaciones{% if not campo.value and not campo.errors %} hidden{% endif %}>
+        <label for="{{ campo.id_for_label }}">{{ campo.label }} <span class="texto-secundario clase-opcional">(opcional)</span></label>
         {{ campo }}
-        {% if campo.help_text %}
-            <small>{{ campo.help_text }}</small>
-        {% endif %}
-        {% for error in campo.errors %}
-            <p class="error-campo">{{ error }}</p>
-        {% endfor %}
+        {% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}
+        {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
     </div>
-</details>
+</section>

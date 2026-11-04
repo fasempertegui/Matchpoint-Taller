@@ -43,7 +43,7 @@
                 <p class="texto-secundario">{% if bloquear %}La anulación y el bloqueo se guardan juntos. Si el bloqueo no puede crearse, la clase se conserva Programada.{% else %}La anulación conserva la clase y libera el turno para otra actividad.{% endif %}</p>
                 {% for campo in formulario %}
                     {% if campo.name == 'observaciones' %}
-                        {% include "clases/_observaciones_formulario.html" with campo=campo only %}
+                        {% include "componentes/observaciones_opcionales.html" with campo=campo only %}
                     {% else %}
                         <div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }} <span aria-hidden="true">*</span></label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
                     {% endif %}
@@ -56,6 +56,5 @@
         </form>
     </section>
 </div>
-<script src="{% static 'js/observaciones.js' %}" defer></script>
 <script src="{% static 'js/clase-formulario.js' %}" defer></script>
 {% endblock %}

@@ -63,7 +63,7 @@
                 <legend>Asistencia</legend>
                 <div class="clase-opciones-lista">{% for opcion in editor.estado %}<label>{{ opcion.tag }}<span>{{ opcion.choice_label }}</span></label>{% endfor %}</div>
             </fieldset>
-            {% include "clases/_observaciones_formulario.html" with campo=editor.observaciones only %}
+            {% include "componentes/observaciones_opcionales.html" with campo=editor.observaciones only %}
         </div>
         <footer class="modal-confirmacion-acciones">
             <button class="boton boton-peligro" type="button" data-quitar-de-carga hidden>Quitar de esta carga</button>
@@ -71,6 +71,5 @@
         </footer>
     </form>
 </dialog>
-<script src="{% static 'js/observaciones.js' %}" defer></script>
 <script src="{% static 'js/clase-asistencia.js' %}" defer></script>
 {% endblock %}
