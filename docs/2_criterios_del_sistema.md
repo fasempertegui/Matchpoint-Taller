@@ -456,4 +456,43 @@ Las entradas forman parte de la misma transacción que la escritura auditada. Un
 
 Los campos de creación, modificación, responsables, fecha de baja, motivos y fechas de anulación o finalización se conservan en sus entidades. Describen el registro vigente, sostienen las restricciones de coherencia y permiten consultas y comprobantes directos. El log conserva la secuencia de cambios y no reemplaza esos campos.
 
-El historial es inmutable: un trigger rechaza `UPDATE`, `DELETE` y `TRUNCATE` sobre `log_auditoria`. La web no permite escribir en él. Auditoría es exclusiva de administradores activos con acceso vigente, sólo admite GET y presenta cambios sin entradas de alta. Muestra veinticinco entradas por página en filas compactas, en orden descendente de fecha e identificador. Cada fila reúne fecha, usuario, acción, tabla y clave; al desplegarla presenta origen, usuario de aplicación, usuario de PostgreSQL, UUID y valores anteriores y actuales. Los eventos de cambio y restablecimiento de contraseña ocultan los bloques de valores anteriores y actuales, aunque el historial conserva las diferencias no sensibles. El resumen identifica al usuario de aplicación, a un Proceso automático cuando el origen es una tarea o al usuario de PostgreSQL cuando la escritura proviene de SQL. El detalle muestra Usuario de aplicación únicamente para el origen Aplicación. La cuenta de PostgreSQL identifica la conexión, sin atribuirle una identidad humana. Los datos se muestran escapados y consultar no modifica el historial.
+El historial es inmutable: un trigger rechaza `UPDATE`, `DELETE` y `TRUNCATE` sobre `log_auditoria`. La web no permite escribir en él. Auditoría es exclusiva de administradores activos con acceso vigente, sólo admite GET y presenta cambios sin entradas de alta. Muestra veinticinco entradas por página en filas compactas, en orden descendente de fecha e identificador. La tabla presenta encabezados para Fecha y hora, Responsable, Acción, Tipo de registro, Registro afectado y Detalle. Cada fila identifica el tipo con una etiqueta funcional y el registro afectado con una única referencia breve, sin JSON en el resumen. La referencia enlaza a la consulta del registro vigente cuando está disponible. El botón Ver cambios despliega la tabla técnica, la clave JSON, el origen, el usuario de aplicación, el usuario de PostgreSQL, el UUID y los valores anteriores y actuales. Los eventos de cambio y restablecimiento de contraseña ocultan los bloques de valores anteriores y actuales, aunque el historial conserva las diferencias no sensibles. El resumen identifica al usuario de aplicación, a un Proceso automático cuando el origen es una tarea o al usuario de PostgreSQL cuando la escritura proviene de SQL. El detalle muestra Usuario de aplicación únicamente para el origen Aplicación. La cuenta de PostgreSQL identifica la conexión, sin atribuirle una identidad humana. Los datos se muestran escapados y consultar no modifica el historial.
+
+
+La columna Acción distingue las modificaciones mediante los valores anteriores y actuales de la entrada:
+
+| Etiqueta | Condición |
+| --- | --- |
+| Inicio de sesión | Modificación de `usuarios` con origen Aplicación y responsable igual a la cuenta afectada. El único campo modificado es `last_login`, sin contar `actualizado_en`, y su valor actual está informado. |
+| Finalización | Cambio de `eventos.estado` de Programado a Finalizado, tanto en operaciones manuales como automáticas. |
+| Activación | Cambio de `usuarios.is_active` de falso a verdadero, de `sedes.estado` o `canchas.estado` de Inactiva a Activa, o de `planes.estado` o `pases.estado` de Inactivo a Activo. |
+| Desactivación | Cambio inverso a la activación en esas mismas tablas y campos. |
+
+Estas etiquetas se determinan al consultar, sin modificar la acción almacenada ni las diferencias del log. Se exige la transición entre los valores indicados; una edición de otros datos o un estado sin cambio conserva Modificación. Finalización, Activación y Desactivación se reconocen para todos los orígenes, incluido SQL. Inicio de sesión se limita a los accesos desde la aplicación. Anulación, Eliminación y las acciones de contraseña conservan sus etiquetas específicas. Las asignaciones de personas y las contrataciones tienen sus propias reglas de estado y no se clasifican como activaciones o desactivaciones de cuentas, instalaciones o productos.
+
+Las referencias del historial se presentan según el tipo de registro:
+
+| Tipo | Referencia breve |
+| --- | --- |
+| Usuario y rol | Nombre del usuario o del rol. |
+| Rol de usuario | Usuario y rol asignado o retirado. |
+| Sede y cancha | Nombre de la sede; para una cancha, su nombre y sede. |
+| Horario de sede | Sede y nombre del día de la semana. |
+| Turno | Número de turno. |
+| Evento | Número de la clase o código de la reserva o bloqueo asociado. Si la actividad no está disponible, tipo de actividad y número de evento. |
+| Reserva | Código de reserva. |
+| Bloqueo y clase | Código de bloqueo o número de clase. |
+| Feriado | Fecha. |
+| Turno de planilla | Número de turno de planilla. |
+| Profesor o alumno de planilla | Persona y número del turno de planilla. |
+| Profesor o alumno de clase y asistencia | Persona y número de clase. |
+| Plan y pase de cancha | Nombre del producto. |
+| Contratación de plan o pase | Titular y mes cubierto. |
+
+Las referencias de las entradas de eliminación se presentan en cursiva.
+
+El resumen muestra una única referencia breve, sin repetir los identificadores en una línea secundaria. Los nombres identifican personas, instalaciones y productos; los códigos o números identifican actividades y turnos. La información completa del registro se consulta desde el enlace de esa referencia. El detalle desplegable concentra las claves, los datos de la operación y las diferencias auditadas, sin repetir una descripción ampliada del registro.
+
+Usuarios, sedes, clases, reservas, bloqueos, feriados, turnos de planilla, productos y contrataciones enlazan a sus fichas. Las canchas y los horarios enlazan a la sección correspondiente de la sede; los vínculos de roles, al perfil del usuario; las asignaciones y asistencias, a su clase o turno de planilla; los turnos, a su selección en Agenda. Los eventos enlazan a su clase, reserva o bloqueo asociado. Las entradas de eliminación, los registros o destinos que ya no están disponibles y los tipos sin pantalla de consulta, como el catálogo de roles, muestran la referencia como texto. Las rutas se construyen al consultar a partir de los registros vigentes, respetan los permisos de las pantallas de destino y no se almacenan en el log.
+
+La referencia se construye con los datos disponibles del registro y las diferencias de la entrada; para una eliminación utiliza los valores anteriores conservados. Los campos no presentes en las diferencias y los nombres de relaciones se completan con datos vigentes, por lo que la referencia no constituye una instantánea histórica completa. Si falta una relación se indica su tipo e identificador; si el registro ya no está disponible y la entrada no conserva datos suficientes, se muestra su clave etiquetada. Los tipos sin una descripción específica también conservan esa referencia por clave. La información histórica verificable permanece en los valores anteriores y actuales del detalle. La consulta resuelve registros y relaciones en grupos por tipo dentro de la página, sin modificar el log ni capturar datos adicionales.

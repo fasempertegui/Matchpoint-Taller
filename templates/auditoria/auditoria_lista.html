@@ -11,15 +11,28 @@
 <header class="tarjeta encabezado-pagina">
     <div>
         <h1>Auditoría</h1>
-        <p class="texto-secundario">Cambios registrados, del más reciente al más antiguo.</p>
     </div>
 </header>
 
-<section class="tarjeta auditoria-lista" aria-label="Registros de auditoría">
+<section class="tarjeta tabla-contenedor auditoria-lista" aria-label="Registros de auditoría">
+<table class="auditoria-tabla">
+    <thead>
+        <tr>
+            <th scope="col">Fecha y hora</th>
+            <th scope="col">Responsable</th>
+            <th scope="col">Acción</th>
+            <th scope="col">Tipo de registro</th>
+            <th scope="col">Registro afectado</th>
+            <th scope="col">Detalle</th>
+        </tr>
+    </thead>
+    <tbody>
 {% for fila in filas %}
-    <details class="auditoria-registro">
-        <summary title="Desplegar o cerrar los cambios">
+    <tr class="auditoria-registro">
+        <td>
             <time datetime="{{ fila.registro.realizado_en|date:'c' }}">{{ fila.registro.realizado_en|date:"d/m/Y H:i:s" }}</time>
+        </td>
+        <td>
             <strong class="auditoria-usuario">
                 {% if fila.registro.usuario %}
                     {{ fila.registro.usuario }}
@@ -29,11 +42,31 @@
                     PostgreSQL: {{ fila.registro.usuario_bd }}
                 {% endif %}
             </strong>
-            <span class="auditoria-accion">{{ fila.registro.get_accion_display }}</span>
-            <span class="auditoria-tabla">{{ fila.registro.tabla }}</span>
-            <code class="auditoria-clave">{{ fila.clave }}</code>
-        </summary>
+        </td>
+        <td class="auditoria-accion">{{ fila.accion }}</td>
+        <td>{{ fila.tipo }}</td>
+        <td>
+            {% if fila.registro.accion == "eliminacion" %}
+            <i class="auditoria-referencia">{{ fila.referencia }}</i>
+            {% elif fila.url %}
+            <a class="auditoria-referencia enlace-tabla" href="{{ fila.url }}">{{ fila.referencia }}</a>
+            {% else %}
+            <span class="auditoria-referencia">{{ fila.referencia }}</span>
+            {% endif %}
+        </td>
+        <td>
+            <button type="button" class="boton boton-secundario boton-chico auditoria-desplegar"
+                aria-expanded="false" aria-controls="auditoria-detalle-{{ fila.registro.pk }}"
+                aria-label="Ver cambios del registro: {{ fila.referencia }}">
+                Ver cambios
+            </button>
+        </td>
+    </tr>
+    <tr id="auditoria-detalle-{{ fila.registro.pk }}" class="auditoria-fila-detalle" hidden>
+        <td colspan="6">
         <div class="auditoria-detalle">
+            <p><strong>Tabla:</strong> <code>{{ fila.registro.tabla }}</code></p>
+            <p><strong>Clave del registro:</strong> <code>{{ fila.clave }}</code></p>
             <p><strong>Origen:</strong> {{ fila.registro.get_origen_display }}</p>
             {% if fila.registro.origen == "aplicacion" %}
             <p><strong>Usuario de aplicación:</strong> {{ fila.registro.usuario }}</p>
@@ -56,10 +89,13 @@
             </div>
             {% endif %}
         </div>
-    </details>
+        </td>
+    </tr>
 {% empty %}
-    <p class="estado-vacio">No hay registros de auditoría.</p>
+    <tr><td colspan="6" class="estado-vacio">No hay registros de auditoría.</td></tr>
 {% endfor %}
+    </tbody>
+</table>
 </section>
 
 {% if pagina.paginator.num_pages > 1 %}
@@ -73,4 +109,5 @@
     {% endif %}
 </nav>
 {% endif %}
+<script src="{% static 'js/auditoria.js' %}" defer></script>
 {% endblock %}
