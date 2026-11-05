@@ -149,7 +149,8 @@ document.addEventListener("DOMContentLoaded", function () {
             opcion.addEventListener("toggle", function () {
                 actualizar();
                 if (opcion.open) {
-                    var campo = opcion.querySelector("[data-organizador-buscador]:not([hidden]) input")
+                    var campo = opcion.querySelector('[data-clase-paso="0"] [data-busqueda]')
+                        || opcion.querySelector("[data-organizador-buscador]:not([hidden]) input")
                         || opcion.querySelector("select")
                         || opcion.querySelector("[data-agregar-observaciones]:not([hidden])")
                         || opcion.querySelector("textarea");
@@ -164,7 +165,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     else if (campo.type === "checkbox" || campo.type === "radio") campo.checked = false;
                     else campo.value = "";
                 });
-                formulario.querySelectorAll(".error-campo, .errorlist").forEach(function (error) { error.remove(); });
+                formulario.querySelectorAll(".error-campo:not([data-clase-error]), .errorlist").forEach(function (error) { error.remove(); });
                 formulario.querySelectorAll("[data-observaciones]").forEach(function (bloque) {
                     bloque.dispatchEvent(new Event("observaciones:actualizar"));
                 });
@@ -198,6 +199,23 @@ document.addEventListener("DOMContentLoaded", function () {
             var motivo = formulario.elements["bloqueo-motivo"];
             formulario.dataset.confirmar = mensaje + "\n\nMotivo: " + motivo.selectedOptions[0].textContent;
         });
+    }
+
+    function desmontarPanel() {
+        contenido.querySelectorAll("[data-clase-formulario]").forEach(function (formulario) {
+            formulario.dispatchEvent(new Event("clase:desmontar"));
+        });
+    }
+
+    function prepararPanel() {
+        if (!contenido) return;
+        prepararOrganizador();
+        prepararAccionesTurno();
+        prepararConfirmacionReserva();
+        prepararConfirmacionBloqueo();
+        window.prepararCamposOperacion();
+        contenido.dispatchEvent(new Event("clase:inicializar", {bubbles: true}));
+        contenido.dispatchEvent(new Event("observaciones:inicializar", {bubbles: true}));
     }
 
     async function cargarDetalle(enlace, datosFormulario, devolverFoco = true) {
@@ -239,13 +257,9 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!seleccion) throw new Error();
             var html = await respuesta.text();
             if (solicitud !== solicitudActual) return;
+            desmontarPanel();
             contenido.innerHTML = html;
-            contenido.dispatchEvent(new Event("observaciones:inicializar", {bubbles: true}));
-            prepararOrganizador();
-            prepararAccionesTurno();
-            prepararConfirmacionReserva();
-            prepararConfirmacionBloqueo();
-            window.prepararCamposOperacion();
+            prepararPanel();
             var panelAcciones = contenido.querySelector("[data-agenda-panel-acciones]");
             document.querySelectorAll("[data-agenda-acciones]").forEach(function (boton) {
                 boton.setAttribute("aria-expanded", String(Boolean(
@@ -280,6 +294,49 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     }
+
+    document.addEventListener("agenda:actualizar", async function (evento) {
+        if (!panel) return;
+        if (solicitudActual) solicitudActual.abort();
+        var solicitud = new AbortController();
+        solicitudActual = solicitud;
+        panel.setAttribute("aria-busy", "true");
+        contenido.inert = true;
+        try {
+            var respuesta = await fetch(evento.detail.url_agenda, {
+                credentials: "same-origin", cache: "no-store", signal: solicitud.signal,
+            });
+            if (!respuesta.ok || respuesta.redirected) throw new Error();
+            var pagina = new DOMParser().parseFromString(await respuesta.text(), "text/html");
+            var calendario = pagina.querySelector("[data-agenda-calendario]");
+            var detalle = pagina.querySelector("[data-agenda-contenido]");
+            if (!calendario || !detalle) throw new Error();
+            if (solicitudActual !== solicitud) return;
+            var contenedorTabla = document.querySelector(".agenda-tabla-contenedor");
+            var desplazamiento = contenedorTabla ? contenedorTabla.scrollLeft : 0;
+            desmontarPanel();
+            document.querySelector("[data-agenda-calendario]").replaceChildren(...calendario.childNodes);
+            contenido.innerHTML = detalle.innerHTML;
+            prepararPanel();
+            contenedorTabla = document.querySelector(".agenda-tabla-contenedor");
+            if (contenedorTabla) contenedorTabla.scrollLeft = desplazamiento;
+            window.history.replaceState(null, "", evento.detail.url_agenda);
+            document.dispatchEvent(new Event("agenda:grilla-actualizada"));
+            aviso.setAttribute("role", "status");
+            aviso.textContent = evento.detail.mensaje;
+            aviso.hidden = false;
+        } catch (error) {
+            if (error.name === "AbortError" || solicitudActual !== solicitud) return;
+            aviso.setAttribute("role", "alert");
+            aviso.textContent = "La clase fue creada. No se pudo actualizar la vista; presioná Actualizar agenda para volver a intentar";
+            aviso.hidden = false;
+        } finally {
+            if (solicitudActual === solicitud) {
+                panel.removeAttribute("aria-busy");
+                contenido.inert = false;
+            }
+        }
+    });
 
     document.addEventListener("click", function (evento) {
         var enlace = evento.target.closest("[data-agenda-turno], [data-agenda-cerrar], [data-agenda-acciones]");
@@ -465,6 +522,8 @@ document.addEventListener("DOMContentLoaded", function () {
             year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23",
         });
         function marcarHoraActual() {
+            tabla = document.querySelector("[data-agenda-tabla]");
+            if (!tabla) return;
             var partes = {};
             formato.formatToParts(new Date()).forEach(function (parte) { partes[parte.type] = parte.value; });
             var fecha = partes.year + "-" + partes.month + "-" + partes.day;
@@ -481,12 +540,9 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
         marcarHoraActual();
+        document.addEventListener("agenda:grilla-actualizada", marcarHoraActual);
         window.setInterval(marcarHoraActual, 30000);
     }
 
-    prepararOrganizador();
-    prepararAccionesTurno();
-    prepararConfirmacionReserva();
-    prepararConfirmacionBloqueo();
-    window.prepararCamposOperacion();
+    prepararPanel();
 });

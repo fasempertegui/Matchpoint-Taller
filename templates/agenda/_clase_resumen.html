@@ -1,0 +1,16 @@
+<section class="agenda-clase-resumen-seccion">
+    <h3>Profesores ({{ profesores|length }})</h3>
+    <ul>{% for persona in profesores %}<li>{{ persona }}</li>{% endfor %}</ul>
+</section>
+<section class="agenda-clase-resumen-seccion">
+    <h3>Participantes ({{ participantes|length }})</h3>
+    {% if participantes %}<ul>{% for persona in participantes %}<li>{{ persona }}</li>{% endfor %}</ul>{% else %}<p>Sin participantes</p>{% endif %}
+</section>
+{% if observaciones %}<section class="agenda-clase-resumen-seccion"><h3>Observaciones</h3><p>{{ observaciones|linebreaksbr }}</p></section>{% endif %}
+{% if advertencias %}
+    <div class="mensaje mensaje-warning" role="alert">
+        <strong>Revisá antes de confirmar</strong>
+        <ul>{% for advertencia in advertencias %}<li>{{ advertencia }}</li>{% endfor %}</ul>
+        <p>Podés continuar si estas condiciones están acordadas</p>
+    </div>
+{% endif %}

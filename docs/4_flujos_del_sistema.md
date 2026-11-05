@@ -1223,11 +1223,11 @@ La coincidencia con una reserva no Anulada que la persona organiza o en la que f
 
 Recorrido:
 
-1. El administrador completa el turno y los participantes.
+1. El administrador selecciona un turno libre en Agenda y solicita Crear clase. Completa tres pasos dentro del panel lateral: Profesores, Participantes y Resumen. Profesores exige al menos uno; Participantes es opcional y permite agregar observaciones al final. Ambos selectores muestran título, buscador y asignaciones, en ese orden. Atrás conserva los datos y la tarjeta del turno permanece visible durante el recorrido.
 2. El sistema calcula la hora de fin exactamente una hora después del inicio.
-3. Valida calendario, profesores, participantes, ausencia de asignaciones simultáneas a otras clases no Anuladas e instalaciones activas. Exige que el turno quede íntegramente dentro de una franja de funcionamiento (**FL-57**); no hay excepciones. Presenta las advertencias confirmables previstas en esta sección.
+3. Valida calendario, profesores, participantes, ausencia de asignaciones simultáneas a otras clases no Anuladas e instalaciones activas. Exige que el turno quede íntegramente dentro de una franja de funcionamiento (**FL-57**); no hay excepciones. El paso Resumen presenta turno, profesores, participantes, observaciones y las advertencias confirmables previstas en esta sección. La confirmación se realiza dentro del panel.
 4. Al confirmar, bloquea usuarios en orden de identificador, sede y cancha; obtiene o crea el turno concreto, lo bloquea y revalida acceso, asignaciones, advertencias y ocupación. En una transacción crea el evento Programado, clase y asignaciones; las observaciones pertenecen al evento. Una revisión que cambió exige nueva confirmación y no deja cambios parciales.
-5. Envía una notificación por email a cada profesor asignado (ver 4.2).
+5. Actualiza la grilla y el panel sin salir de Agenda ni recargar la página. Envía una notificación por email a cada profesor asignado (ver 4.2).
 
 Alternativas:
 

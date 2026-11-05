@@ -329,3 +329,14 @@ Anular y liberar y Anular y bloquear revelan sus formularios dentro del panel. L
 La confirmación vuelve a Agenda y utiliza los servicios transaccionales de anulación con revisión firmada, versión de la clase y revalidación de permisos, estado, horario y ocupación. La anulación con bloqueo confirma ambas operaciones juntas. Las acciones conservan sus condiciones de disponibilidad y la ficha completa mantiene su recorrido propio.
 
 Verificación realizada: controles de Django, carga de plantillas y sintaxis JavaScript. Revisión manual pendiente de ambas acciones, motivos requeridos, cancelación del modal, observaciones, clase iniciada, revisión vencida, cambios concurrentes y permisos. No se crean ni ejecutan pruebas automatizadas.
+
+
+## Creación de clases por pasos en Agenda
+
+Crear clase abre un formulario de tres pasos dentro del panel lateral, conservando visible la tarjeta del turno. Profesores exige una selección; Participantes admite continuar sin asignados y ofrece observaciones opcionales. Ambos pasos usan el orden título, buscador y asignaciones, sin mensajes de alta al agregar personas. Atrás conserva los datos y Cancelar limpia el recorrido.
+
+El paso Resumen se obtiene del servidor y muestra turno, profesores, participantes, observaciones y advertencias. Confirmar creación utiliza la revisión firmada y los servicios transaccionales existentes, que revalidan permisos, profesores, participantes, calendario, coincidencias y ocupación. Los errores conservan la selección y vuelven al paso correspondiente; los cambios requieren una nueva revisión.
+
+El alta actualiza la grilla y el panel sin recargar la página. Si la clase se creó pero falla la actualización visual, Actualizar agenda reintenta la consulta sin repetir el alta. Las búsquedas y revisiones pendientes se cancelan al retirar el formulario y las respuestas de selecciones modificadas se descartan. La edición de clases conserva su recorrido propio.
+
+Verificación: controles de Django, carga de plantillas y sintaxis JavaScript. Revisión manual pendiente de los tres pasos, Atrás, Cancelar, clase sin participantes, profesores obligatorios, búsqueda ampliada, observaciones, advertencias, permisos, turno ocupado y cambios de elegibilidad al confirmar. No se crean ni ejecutan pruebas automatizadas.

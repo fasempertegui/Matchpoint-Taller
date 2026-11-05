@@ -957,3 +957,79 @@ button.agenda-opcion:hover {
 .agenda-resumen-bloqueo .agenda-cerrar:hover {
     background: color-mix(in srgb, var(--agenda-evento-texto) 10%, transparent);
 }
+
+.agenda-clase-progreso {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+}
+
+.agenda-clase-progreso > span {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--borde);
+}
+
+.agenda-clase-progreso > .agenda-clase-segmento-completo {
+    background: var(--primario);
+}
+
+.agenda-clase-numero {
+    margin: 0;
+    color: var(--texto-suave);
+    font-size: .75rem;
+}
+
+.agenda-clase-pasos .clase-seccion-titulo h2,
+.agenda-clase-pasos .agenda-clase-titulo {
+    font-size: 1rem;
+}
+
+.agenda-clase-pasos .clase-buscador {
+    margin-top: 12px;
+}
+
+.agenda-clase-pasos .agenda-formulario-acciones {
+    margin-top: 16px;
+}
+
+.agenda-clase-pasos [data-observaciones] {
+    margin-top: 12px;
+}
+
+.agenda-clase-resumen-seccion {
+    margin-top: 16px;
+    overflow-wrap: anywhere;
+}
+
+.agenda-clase-resumen-seccion h3 {
+    margin: 0 0 8px;
+    font-size: .9rem;
+}
+
+.agenda-clase-resumen-seccion p,
+.agenda-clase-resumen-seccion ul {
+    margin: 0;
+    font-size: .85rem;
+}
+
+.agenda-clase-resumen-seccion ul {
+    padding-inline-start: 18px;
+}
+
+.agenda-clase-navegacion {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.agenda-clase-navegacion > [hidden] + button {
+    grid-column: 1 / -1;
+}
+
+.agenda-clase-aviso {
+    margin: 8px 0 0;
+    color: var(--advertencia);
+    font-size: .85rem;
+}

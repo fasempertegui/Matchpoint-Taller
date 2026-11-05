@@ -16,7 +16,7 @@ from bloqueos.forms import BloqueoAnulacionForm, BloqueoForm
 from bloqueos.models import Bloqueo
 from bloqueos.servicios import anular_bloqueo, registrar_bloqueo
 from clases.anulaciones import confirmar_anulacion_clase
-from clases.forms import ClaseAnulacionForm
+from clases.forms import ClaseAnulacionForm, ClaseForm
 from clases.permisos import exigir_acceso_clases, exigir_administracion_clases
 from clases.servicios import consultar_edicion_clase
 from common.fechas import opciones_meses_agenda
@@ -252,6 +252,7 @@ def agenda(request):
             for mensaje in error.messages:
                 messages.error(request, mensaje)
     contexto = {
+        "formulario_clase": ClaseForm(),
         "version_clase": version_clase,
         "formulario_clase_liberar": formulario_clase_liberar,
         "formulario_clase_bloquear": formulario_clase_bloquear,

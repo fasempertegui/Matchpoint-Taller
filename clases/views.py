@@ -9,6 +9,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
@@ -123,7 +124,10 @@ def buscar_personas(request):
 def clase_crear(request):
     usuario = exigir_administracion_clases(request.user)
     ubicacion = ClaseTurnoForm(request.GET)
+    en_agenda = request.headers.get("X-Agenda-Clase") == "1"
     if not ubicacion.is_valid():
+        if en_agenda:
+            return JsonResponse({"errores": {"__all__": ["El turno ya no es válido. Elegí nuevamente desde Agenda."]}}, status=400)
         messages.error(request, "Elegí una cancha, fecha y hora válidas desde la agenda.")
         return redirect("agenda:agenda")
     cancha = ubicacion.cleaned_data["cancha"]
@@ -132,39 +136,33 @@ def clase_crear(request):
     url_agenda = reverse("agenda:agenda") + "?" + urlencode({
         "sede": cancha.sede_id, "cancha": cancha.pk, "fecha": fecha.isoformat(), "hora": hora.hour,
     })
-    formulario = ClaseForm(request.POST if request.method == "POST" else None)
-    revision = None
-    impedimento = None
-    try:
-        validar_ubicacion_clase(cancha, fecha, hora)
-    except ValidationError as error:
-        impedimento = " ".join(error.messages)
-    if request.method == "POST" and formulario.is_valid():
-        paso = request.POST.get("paso")
+    if request.method != "POST" or not en_agenda:
+        return redirect(url_agenda + "&crear_clase=1")
+    formulario = ClaseForm(request.POST)
+    if formulario.is_valid():
         try:
-            if impedimento:
-                raise ValidationError(impedimento)
-            if paso == "confirmar":
-                clase = registrar_clase(
+            if request.POST.get("paso") == "confirmar":
+                registrar_clase(
                     usuario, cancha, fecha, hora, **formulario.parametros(),
                     confirmacion=request.POST.get("confirmacion", ""),
                 )
-                messages.success(request, "La clase fue creada.")
-                return redirect("clases:clase_detalle", pk=clase.pk)
-            if paso == "revisar":
-                revision = preparar_registro_clase(usuario, cancha, fecha, hora, **formulario.parametros())
-            elif paso != "editar":
+                return JsonResponse({"url_agenda": url_agenda, "mensaje": "La clase fue creada."})
+            if request.POST.get("paso") != "revisar":
                 raise ValidationError("La acción solicitada no es válida.")
+            revision = preparar_registro_clase(usuario, cancha, fecha, hora, **formulario.parametros())
         except ValidationError as error:
             formulario.add_error(None, error)
-    return render(request, "clases/clase_formulario.html", {
-        "formulario": formulario, "revision": revision,
-        "profesores": formulario.seleccionados("profesores"),
-        "participantes": formulario.seleccionados("participantes"),
-        "cancha": cancha, "fecha": fecha, "hora": hora,
-        "hora_fin": (datetime.combine(fecha, hora) + timedelta(hours=1)).time(),
-        "url_agenda": url_agenda, "url_cancelar": url_agenda, "impedimento": impedimento,
-    })
+        else:
+            resumen = render_to_string("agenda/_clase_resumen.html", {
+                "profesores": formulario.seleccionados("profesores"),
+                "participantes": formulario.seleccionados("participantes"),
+                "observaciones": formulario.cleaned_data["observaciones"],
+                "advertencias": revision["advertencias"],
+                "cancha": cancha, "fecha": fecha, "hora": hora,
+                "hora_fin": (datetime.combine(fecha, hora) + timedelta(hours=1)).time(),
+            }, request=request)
+            return JsonResponse({"resumen": resumen, "confirmacion": revision["confirmacion"]})
+    return JsonResponse({"errores": dict(formulario.errors)}, status=400)
 
 
 @login_required

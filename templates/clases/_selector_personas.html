@@ -1,17 +1,8 @@
 <section class="clase-selector" data-selector-personas data-tipo="{{ campo.name }}" data-url="{% url 'clases:buscar_personas' %}">
     <div class="clase-seccion-titulo">
-        <h2 id="{{ campo.name }}-titulo">{{ titulo }} <span class="clase-cantidad">(<span data-cantidad>{{ seleccionados|length }}</span>)</span>{% if campo.field.required %} <span aria-hidden="true">*</span>{% endif %}</h2>
+        <h2 id="{{ campo.name }}-titulo">{{ titulo }} <span class="clase-cantidad">(<span data-cantidad>{{ seleccionados|length }}</span>)</span>{% if campo.field.required and not aviso_profesores %} <span aria-hidden="true">*</span>{% endif %}</h2>
     </div>
-    <ul class="clase-seleccionados" aria-labelledby="{{ campo.name }}-titulo" data-seleccionados>
-        {% for persona in seleccionados %}
-            <li data-persona="{{ persona.pk }}">
-                <span>{{ persona }}<small>{{ persona.username }}</small></span>
-                <input type="hidden" name="{{ campo.name }}" value="{{ persona.pk }}">
-                <button type="button" class="clase-quitar" data-quitar aria-label="Quitar a {{ persona }}">×</button>
-            </li>
-        {% endfor %}
-    </ul>
-    <p class="clase-vacio texto-secundario" data-vacio{% if seleccionados %} hidden{% endif %}>{{ vacio }}</p>
+    {% if aviso_profesores %}<p class="agenda-clase-aviso" role="alert" tabindex="-1" data-clase-profesores-error hidden></p>{% endif %}
     <div class="clase-buscador">
         <label class="clase-etiqueta-oculta" for="buscar-{{ campo.name }}">{{ etiqueta }}</label>
         <div class="clase-campo-busqueda">
@@ -28,5 +19,15 @@
         <ul class="clase-resultados" id="resultados-{{ campo.name }}" aria-label="Coincidencias" data-resultados hidden></ul>
         <p class="clase-busqueda-estado" role="status" aria-live="polite" data-estado></p>
     </div>
+    <ul class="clase-seleccionados" aria-labelledby="{{ campo.name }}-titulo" data-seleccionados>
+        {% for persona in seleccionados %}
+            <li data-persona="{{ persona.pk }}">
+                <span>{{ persona }}<small>{{ persona.username }}</small></span>
+                <input type="hidden" name="{{ campo.name }}" value="{{ persona.pk }}">
+                <button type="button" class="clase-quitar" data-quitar aria-label="Quitar a {{ persona }}">×</button>
+            </li>
+        {% endfor %}
+    </ul>
+    {% if vacio %}<p class="clase-vacio texto-secundario" data-vacio{% if seleccionados %} hidden{% endif %}>{{ vacio }}</p>{% endif %}
     {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
 </section>

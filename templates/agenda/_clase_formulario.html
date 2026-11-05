@@ -1,0 +1,35 @@
+<form class="agenda-formulario agenda-clase-pasos" action="{{ detalle.url_crear_clase }}" method="post" data-clase-formulario data-clase-pasos novalidate>
+    {% csrf_token %}
+    <div class="agenda-clase-progreso" role="progressbar" aria-label="Progreso de creación de clase" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1" data-clase-progreso>
+        <span data-clase-indicador="0" class="agenda-clase-segmento-completo" aria-hidden="true"></span>
+        <span data-clase-indicador="1" aria-hidden="true"></span>
+        <span data-clase-indicador="2" aria-hidden="true"></span>
+    </div>
+    <p class="agenda-clase-numero" data-clase-numero role="status">Paso 1 de 3</p>
+    <div data-clase-paso="0">
+        {% include "clases/_selector_personas.html" with campo=formulario.profesores titulo="Profesores" etiqueta="Agregar profesor" aviso_profesores=True only %}
+        <div class="agenda-formulario-acciones">
+            <button class="boton boton-primario boton-chico" type="button" data-clase-siguiente>Siguiente</button>
+        </div>
+    </div>
+    <div data-clase-paso="1" hidden>
+        {% include "clases/_selector_personas.html" with campo=formulario.participantes titulo="Participantes" etiqueta="Agregar participante" only %}
+        {% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}
+        <div class="agenda-formulario-acciones">
+            <button class="boton boton-primario boton-chico" type="submit" data-clase-revisar>Siguiente</button>
+        </div>
+    </div>
+    <div data-clase-paso="2" hidden>
+        <h2 class="agenda-clase-titulo" tabindex="-1" data-clase-resumen-titulo>Resumen</h2>
+        <div data-clase-resumen></div>
+        <div class="agenda-formulario-acciones">
+            <button class="boton boton-primario boton-chico" type="submit" data-clase-confirmar>Confirmar creación</button>
+        </div>
+    </div>
+    <p class="error-campo" role="alert" tabindex="-1" data-clase-error hidden></p>
+    <div class="agenda-clase-navegacion">
+        <button class="boton boton-secundario boton-chico" type="button" data-clase-atras hidden>Atrás</button>
+        <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion>Cancelar</button>
+    </div>
+    <noscript><p class="agenda-impedimento">Habilitá JavaScript para buscar personas y completar la clase.</p></noscript>
+</form>

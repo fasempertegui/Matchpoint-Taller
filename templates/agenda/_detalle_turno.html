@@ -103,11 +103,12 @@
             {% endif %}
         {% endif %}
         {% if detalle.puede_crear_clase %}
-            <div class="agenda-acciones" data-agenda-opcion-creacion>
-                <a class="agenda-opcion" href="{{ detalle.url_crear_clase }}">
+            <details class="agenda-desplegable" name="agenda-accion" data-agenda-creacion="clase" data-agenda-accion="Nueva clase" data-agenda-opcion-creacion{% if request.GET.crear_clase %} open{% endif %}>
+                <summary class="agenda-opcion">
                     {% include "agenda/_opcion_turno.html" with tipo="clase" titulo="Crear clase" descripcion="Asigná profesores y participantes al turno" only %}
-                </a>
-            </div>
+                </summary>
+                {% include "agenda/_clase_formulario.html" with formulario=formulario_clase %}
+            </details>
         {% endif %}
         {% if not detalle.evento %}</div>{% endif %}
         {% if detalle.puede_anular or detalle.puede_liberar_bloqueo or detalle.puede_bloquear %}
