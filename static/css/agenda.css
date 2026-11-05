@@ -48,7 +48,8 @@
 }
 
 .agenda-selector-fecha input {
-    width: 140px;
+    flex: 0 0 11rem;
+    width: 11rem;
     height: 42px;
     min-height: 42px;
     padding: 8px 10px;
@@ -62,6 +63,7 @@
 }
 
 .agenda-flecha {
+    flex-shrink: 0;
     width: 42px;
     height: 42px;
     padding: 0;
@@ -128,7 +130,7 @@
 
 .agenda-distribucion {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-columns: minmax(0, 1fr) 400px;
     gap: 20px;
     align-items: start;
 }
@@ -597,9 +599,6 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     }
     .agenda-turno {
         padding: 5px;
-    }
-    .agenda-fechas input {
-        width: 132px;
     }
 }
 

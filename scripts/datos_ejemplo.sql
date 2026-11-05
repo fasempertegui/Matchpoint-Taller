@@ -26,7 +26,7 @@ BEGIN
         ) SELECT sede_id, numero, '08:00'::time, '13:00'::time, '16:00'::time, '23:00'::time,
             now(), now() FROM generate_series(1, 7) AS numero;
 
-        FOR cancha_numero IN 1..(CASE sede_numero WHEN 1 THEN 3 ELSE 2 END) LOOP
+        FOR cancha_numero IN 1..2 LOOP
             INSERT INTO canchas (sede_id, nombre, superficie, observaciones, estado, creado_en, actualizado_en)
             VALUES (sede_id, 'Cancha ' || cancha_numero,
                 CASE sede_numero WHEN 1 THEN 'cemento' ELSE 'polvo_ladrillo' END,
