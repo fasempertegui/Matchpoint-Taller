@@ -1307,8 +1307,8 @@ flowchart TD
 
 Recorrido:
 
-1. El administrador solicita cancelar la clase.
-2. Ingresa el motivo y confirma.
+1. El administrador solicita Anular y liberar desde el panel de la clase en Agenda; el formulario se revela dentro del mismo panel.
+2. Ingresa el motivo y continúa. El servidor valida los datos y presenta un modal con sede, cancha, fecha, horario, motivo y efecto. Cancelar el modal conserva el formulario; confirmar utiliza la revisión firmada.
 3. Bloquea el turno y el evento, comprueba acceso, estado Programado e inicio futuro y registra estado Anulado, administrador, momento y motivo de cancelación en el evento.
 4. La cancelación libera el turno de la clase, conserva su referencia histórica al turno y no crea un bloqueo.
 5. Envía la notificación de cancelación a los alumnos asignados (ver 4.2).

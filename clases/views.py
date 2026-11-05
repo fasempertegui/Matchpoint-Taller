@@ -270,6 +270,34 @@ def clase_cambiar_cancha(request, pk):
 @require_http_methods(["GET", "POST"])
 def clase_anular(request, pk, bloquear=False):
     usuario = exigir_administracion_clases(request.user)
+    if request.headers.get("X-Agenda-Anulacion") == "1":
+        if request.method != "POST":
+            return JsonResponse({"error": "La revisión requiere enviar el formulario."}, status=405)
+        formulario = ClaseAnulacionForm(request.POST, bloquear=bloquear)
+        if not formulario.is_valid():
+            return JsonResponse({"error": " ".join(error for errores in formulario.errors.values() for error in errores)}, status=400)
+        try:
+            confirmacion = preparar_anulacion_clase(
+                usuario, pk, bloquear=bloquear, **formulario.cleaned_data,
+                version=request.POST.get("version", ""),
+            )
+            clase = consultar_edicion_clase(usuario, pk)["clase"]
+        except Clase.DoesNotExist:
+            raise Http404("La clase no existe.") from None
+        except ValidationError as error:
+            return JsonResponse({"error": " ".join(error.messages)}, status=400)
+        turno = clase.evento.turno
+        motivo = formulario.cleaned_data["motivo"]
+        efecto = "El turno quedará bloqueado." if bloquear else "El turno quedará disponible."
+        mensaje = (
+            f"¿Anular la clase de {turno.cancha.sede.nombre}, {turno.cancha.nombre}, "
+            f"el {turno.fecha:%d/%m/%Y} de {turno.hora_inicio:%H:%M} a {turno.hora_fin:%H:%M}?"
+            f"\n\nMotivo: {motivo}\n\n{efecto}"
+        )
+        if formulario.cleaned_data.get("observaciones"):
+            mensaje += f"\n\nObservaciones: {formulario.cleaned_data['observaciones']}"
+        return JsonResponse({"confirmacion": confirmacion, "mensaje": mensaje})
+
     url_detalle = reverse("clases:clase_detalle", args=[pk])
     try:
         datos = consultar_edicion_clase(usuario, pk)

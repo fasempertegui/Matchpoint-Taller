@@ -320,3 +320,12 @@ Las rutas propias sólo admiten GET y comprueban nuevamente la cuenta habilitada
 Administración y portal comparten las plantillas de listado y detalle y el filtrado/paginación; las vistas propias mantienen explícita su comprobación de titularidad. No se incorpora CSS, JavaScript, iconos ni bibliotecas nuevas. La composición del rediseño conserva su alcance de presentación independiente.
 
 Revisión manual: consultar con y sin Alumno o Reservas, con Profesor y con una cuenta sin contrataciones; revisar planes y pases Activos, Anulados, Vencidos y de productos Inactivos. Navegar desde el menú y el perfil, buscar, filtrar y paginar ambos tipos. Cambiar el número por uno ajeno, agregar parámetros de otro usuario e intentar acceso directo a rutas de escritura administrativas. Comprobar permisos, estado vacío, teclado y móvil.
+
+
+## Anulación de clases desde el panel de Agenda
+
+Anular y liberar y Anular y bloquear revelan sus formularios dentro del panel. La liberación solicita el motivo; el bloqueo solicita el motivo clasificado y ofrece observaciones opcionales antes del separador y las acciones. Continuar revisa los datos en el servidor y abre el modal compartido con turno, motivo y efecto. Cancelar el modal conserva la selección y los datos.
+
+La confirmación vuelve a Agenda y utiliza los servicios transaccionales de anulación con revisión firmada, versión de la clase y revalidación de permisos, estado, horario y ocupación. La anulación con bloqueo confirma ambas operaciones juntas. Las acciones conservan sus condiciones de disponibilidad y la ficha completa mantiene su recorrido propio.
+
+Verificación realizada: controles de Django, carga de plantillas y sintaxis JavaScript. Revisión manual pendiente de ambas acciones, motivos requeridos, cancelación del modal, observaciones, clase iniciada, revisión vencida, cambios concurrentes y permisos. No se crean ni ejecutan pruebas automatizadas.

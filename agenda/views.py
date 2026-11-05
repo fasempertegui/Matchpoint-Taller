@@ -15,7 +15,10 @@ from django.views.decorators.vary import vary_on_headers
 from bloqueos.forms import BloqueoAnulacionForm, BloqueoForm
 from bloqueos.models import Bloqueo
 from bloqueos.servicios import anular_bloqueo, registrar_bloqueo
+from clases.anulaciones import confirmar_anulacion_clase
+from clases.forms import ClaseAnulacionForm
 from clases.permisos import exigir_acceso_clases, exigir_administracion_clases
+from clases.servicios import consultar_edicion_clase
 from common.fechas import opciones_meses_agenda
 from instalaciones.models import Sede
 from reservas.disponibilidad import consultar_disponibilidad
@@ -85,6 +88,14 @@ def agenda(request):
     formulario_anulacion = ReservaAnulacionForm(request.POST if accion == "anular" else None)
     formulario_bloqueo = None
     formulario_liberacion = None
+    formulario_clase_liberar = ClaseAnulacionForm(
+        request.POST if accion == "anular_clase" else None,
+        bloquear=False, auto_id="clase-liberar_%s",
+    )
+    formulario_clase_bloquear = ClaseAnulacionForm(
+        request.POST if accion == "bloquear_clase" else None,
+        bloquear=True, auto_id="clase-bloquear_%s",
+    )
     datos = {}
     if sede_inicial is not None and formulario.is_valid():
         filtros = formulario.cleaned_data
@@ -163,6 +174,21 @@ def agenda(request):
                         )
                         messages.success(request, f"La reserva {reserva.numero} fue registrada.")
                         return redirect(datos["url_seleccion"])
+                elif accion in ("anular_clase", "bloquear_clase"):
+                    exigir_administracion_clases(usuario)
+                    bloquear = accion == "bloquear_clase"
+                    permiso = "puede_bloquear_clase" if bloquear else "puede_anular_clase"
+                    clase = detalle["clase"]
+                    if not detalle[permiso] or clase is None or request.POST.get("clase") != str(clase.pk):
+                        raise ValidationError("La clase o la acción disponible cambió. Revisá el turno.")
+                    formulario_clase = formulario_clase_bloquear if bloquear else formulario_clase_liberar
+                    if formulario_clase.is_valid():
+                        confirmar_anulacion_clase(
+                            usuario, clase.pk, bloquear=bloquear, **formulario_clase.cleaned_data,
+                            confirmacion=request.POST.get("confirmacion", ""),
+                        )
+                        messages.success(request, "La clase fue anulada y su turno quedó bloqueado." if bloquear else "La clase fue anulada y su turno quedó libre.")
+                        return redirect(datos["url_seleccion"])
                 elif accion == "bloquear":
                     if not detalle["puede_bloquear"]:
                         raise ValidationError("El turno seleccionado no admite un nuevo bloqueo. Revisá la agenda.")
@@ -215,7 +241,20 @@ def agenda(request):
         valor = formulario_reserva["organizador"].value()
         if valor and str(valor).isdecimal() and len(str(valor)) < 19:
             organizador_seleccionado = formulario_reserva.fields["organizador"].queryset.filter(pk=valor).first()
+    version_clase = ""
+    detalle_actual = datos.get("detalle")
+    if detalle_actual and (detalle_actual["puede_anular_clase"] or detalle_actual["puede_bloquear_clase"]):
+        try:
+            version_clase = consultar_edicion_clase(usuario, detalle_actual["clase"].pk)["version"]
+        except ValidationError as error:
+            detalle_actual["puede_anular_clase"] = False
+            detalle_actual["puede_bloquear_clase"] = False
+            for mensaje in error.messages:
+                messages.error(request, mensaje)
     contexto = {
+        "version_clase": version_clase,
+        "formulario_clase_liberar": formulario_clase_liberar,
+        "formulario_clase_bloquear": formulario_clase_bloquear,
         "organizador_seleccionado": organizador_seleccionado,
         "formulario": formulario,
         "formulario_reserva": formulario_reserva,

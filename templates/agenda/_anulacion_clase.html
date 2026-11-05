@@ -1,0 +1,30 @@
+<details class="agenda-desplegable" name="agenda-accion" data-agenda-accion="{% if bloquear %}Anular y bloquear{% else %}Anular y liberar{% endif %}"{% if formulario.is_bound %} open{% endif %}>
+    <summary class="agenda-opcion agenda-opcion-anular">
+        {% if bloquear %}
+            {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular y bloquear" descripcion="Cancelá el evento y marcá el turno como no disponible" only %}
+        {% else %}
+            {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular y liberar" descripcion="Cancelá el evento y dejá el turno disponible" only %}
+        {% endif %}
+    </summary>
+    <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="" data-confirmar-titulo="{% if bloquear %}Anular y bloquear{% else %}Anular y liberar{% endif %}" data-confirmar-boton="Confirmar" data-confirmar-peligro data-confirmar-revision="{% if bloquear %}{% url 'clases:clase_anular_bloquear' detalle.clase.pk %}{% else %}{% url 'clases:clase_anular' detalle.clase.pk %}{% endif %}">
+        {% csrf_token %}
+        <input type="hidden" name="accion" value="{% if bloquear %}bloquear_clase{% else %}anular_clase{% endif %}">
+        <input type="hidden" name="clase" value="{{ detalle.clase.pk }}">
+        <input type="hidden" name="version" value="{{ version_clase }}">
+        <input type="hidden" name="confirmacion" value="">
+        {{ formulario.non_field_errors }}
+        {% for campo in formulario %}
+            {% if campo.name != 'observaciones' %}
+                <div class="grupo-campo">
+                    {{ campo.label_tag }}{{ campo }}
+                    {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+        {% if bloquear %}{% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}{% endif %}
+        <div class="agenda-formulario-acciones">
+            <button class="boton boton-confirmar-peligro boton-chico" type="submit">Continuar</button>
+            <button class="boton boton-secundario boton-chico" type="button" data-cancelar-accion>Cancelar</button>
+        </div>
+    </form>
+</details>

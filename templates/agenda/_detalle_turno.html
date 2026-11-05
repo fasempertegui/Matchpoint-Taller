@@ -63,7 +63,11 @@
         {% elif detalle.puede_reservar %}
             <details class="agenda-desplegable" name="agenda-accion" data-agenda-creacion="reserva" data-agenda-opcion-creacion{% if formulario_reserva.is_bound %} open{% endif %}>
                 <summary class="agenda-opcion">
-                    {% include "agenda/_opcion_turno.html" with tipo="reserva" titulo="Crear reserva" descripcion="Reservá la cancha para un cliente" only %}
+                    {% if es_administrador %}
+                        {% include "agenda/_opcion_turno.html" with tipo="reserva" titulo="Crear reserva" descripcion="Reservá la cancha para un cliente" only %}
+                    {% else %}
+                        {% include "agenda/_opcion_turno.html" with tipo="reserva" titulo="Crear reserva" descripcion="Reservá la cancha para vos" only %}
+                    {% endif %}
                 </summary>
                 <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Registrar una reserva para {{ detalle.cancha.nombre }}, el {{ detalle.fecha|date:'d/m/Y' }} de {{ detalle.hora|time:'H:i' }} a {{ detalle.fin|time:'H:i' }} por $ {{ agenda.sede.precio_reserva_vigente|floatformat:'2g' }}?" data-confirmar-titulo="Confirmar reserva" data-confirmar-boton="Crear reserva" data-agenda-reserva>
                     {% csrf_token %}<input type="hidden" name="accion" value="reservar">
@@ -90,14 +94,10 @@
             {% if detalle.puede_anular_clase or detalle.puede_bloquear_clase %}
                 <div class="agenda-opciones-evento">
                     {% if detalle.puede_anular_clase %}
-                        <a class="agenda-opcion agenda-opcion-anular" href="{% url 'clases:clase_anular' detalle.clase.pk %}">
-                            {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular y liberar" descripcion="Cancelá el evento y dejá el turno disponible" only %}
-                        </a>
+                        {% include "agenda/_anulacion_clase.html" with formulario=formulario_clase_liberar bloquear=False %}
                     {% endif %}
                     {% if detalle.puede_bloquear_clase %}
-                        <a class="agenda-opcion agenda-opcion-anular" href="{% url 'clases:clase_anular_bloquear' detalle.clase.pk %}">
-                            {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular y bloquear" descripcion="Cancelá el evento y marcá el turno como no disponible" only %}
-                        </a>
+                        {% include "agenda/_anulacion_clase.html" with formulario=formulario_clase_bloquear bloquear=True %}
                     {% endif %}
                 </div>
             {% endif %}
@@ -157,7 +157,7 @@
                             {% include "agenda/_opcion_turno.html" with tipo="bloqueo" titulo="Bloquear turno" descripcion="Marcá este turno como no disponible" only %}
                         </summary>
                     {% endif %}
-                    {% if detalle.reserva %}<p class="agenda-impedimento">Se anulará la reserva {{ detalle.reserva.numero }} de {{ detalle.reserva.organizador }} y se creará un bloqueo para este turno.</p>{% endif %}
+                    {% if detalle.reserva %}<p class="agenda-impedimento">Se anulará la reserva de {{ detalle.reserva.organizador }} y se creará un bloqueo para este turno</p>{% endif %}
                     <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="{% if detalle.reserva %}¿Anular la reserva {{ detalle.reserva.numero }} de {{ detalle.reserva.organizador }} y bloquear{% else %}¿Bloquear{% endif %} el turno de {{ detalle.cancha.nombre }}, el {{ detalle.fecha|date:'d/m/Y' }} de {{ detalle.hora|time:'H:i' }} a {{ detalle.fin|time:'H:i' }}?" data-confirmar-titulo="{% if detalle.reserva %}Anular y bloquear{% else %}Bloquear turno{% endif %}" data-confirmar-boton="{% if detalle.reserva %}Anular y bloquear{% else %}Bloquear turno{% endif %}" data-agenda-bloqueo>
                         {% csrf_token %}<input type="hidden" name="accion" value="bloquear">
                         {{ formulario_bloqueo.evento_esperado }}
