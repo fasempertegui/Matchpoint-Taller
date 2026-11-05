@@ -81,3 +81,32 @@ BEGIN
     RAISE NOTICE 'Usuarios de ejemplo procesados; los existentes se conservan.';
 END;
 $$;
+
+DO $$
+DECLARE
+    usuario_id bigint;
+BEGIN
+    PERFORM pg_advisory_xact_lock(734021, 1);
+    IF EXISTS (
+        SELECT 1 FROM usuarios
+        WHERE lower(username) = 'mamanit' OR lower(email) = 'mamanit@gmail.com'
+    ) THEN
+        RAISE NOTICE 'Administrador de ejemplo omitido: el usuario o email ya existe.';
+        RETURN;
+    END IF;
+
+    INSERT INTO usuarios (
+        username, first_name, last_name, email, password, fecha_nacimiento,
+        celular_contacto, observaciones, debe_cambiar_contrasena, is_active,
+        is_staff, is_superuser, date_joined, actualizado_en
+    ) VALUES (
+        'mamanit', 'Tomas', 'Mamani', 'mamanit@gmail.com',
+        'pbkdf2_sha256$1000000$9WAvFtHttzDUqul2SRNGyK$DSmxFyt8hCORkgwKQJNoPwhjXPneiLWArdTdqXfpUhM=', '2000-01-01'::date,
+        '3875001220', '', false, true, false, true, now(), now()
+    ) RETURNING id INTO usuario_id;
+
+    INSERT INTO usuarios_roles (usuario_id, rol_id, creado_en)
+    SELECT usuario_id, id, now() FROM roles WHERE codigo = 'administrador';
+    RAISE NOTICE 'Administrador de ejemplo creado.';
+END;
+$$;
