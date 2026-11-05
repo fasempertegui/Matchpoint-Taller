@@ -9,7 +9,7 @@
                 </div>
                 <p>{{ detalle.fecha|date:"l d/m/Y"|capfirst }}</p>
             </div>
-            <a class="agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar detalle">×</a>
+            <a class="agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar detalle" aria-keyshortcuts="Escape" title="Cerrar detalle (Escape)">×</a>
         </header>
         <dl class="agenda-datos">
             <div><dt>Cancha</dt><dd>{{ detalle.cancha.nombre }}</dd></div>

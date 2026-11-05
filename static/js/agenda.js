@@ -200,7 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    async function cargarDetalle(enlace, datosFormulario) {
+    async function cargarDetalle(enlace, datosFormulario, devolverFoco = true) {
         if (solicitudActual) solicitudActual.abort();
         var seleccionadoAnterior = document.querySelector(".agenda-turno-seleccionado") || document.querySelector('[data-agenda-acciones][aria-expanded="true"]');
         var cerrarDetalle = enlace.matches("[data-agenda-cerrar]");
@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 else turno.removeAttribute("aria-current");
             });
             window.history.replaceState(null, "", destino.href);
-            if (cerrarDetalle && seleccionadoAnterior) seleccionadoAnterior.focus({preventScroll: true});
+            if (cerrarDetalle && devolverFoco && seleccionadoAnterior) seleccionadoAnterior.focus({preventScroll: true});
             aviso.hidden = true;
             aviso.textContent = "";
         } catch (error) {
@@ -286,6 +286,23 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!enlace || !panel || evento.defaultPrevented || evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
         evento.preventDefault();
         cargarDetalle(enlace);
+    });
+
+    document.addEventListener("keydown", function (evento) {
+        if (evento.key !== "Escape" || evento.defaultPrevented || document.querySelector("dialog[open]")) return;
+        var cerrar = contenido && contenido.querySelector("[data-agenda-cerrar]");
+        if (!cerrar) return;
+        evento.preventDefault();
+        cargarDetalle(cerrar);
+    });
+
+    document.addEventListener("click", function (evento) {
+        if (!panel || evento.defaultPrevented || evento.button !== 0
+            || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey
+            || document.querySelector("dialog[open]") || panel.contains(evento.target)
+            || evento.target.closest("[data-agenda-turno], [data-agenda-acciones], [data-agenda-historial]")) return;
+        var cerrar = contenido.querySelector("[data-agenda-cerrar]");
+        if (cerrar) cargarDetalle(cerrar, null, false);
     });
 
     var historial = document.querySelector("[data-agenda-historial-dialogo]");
