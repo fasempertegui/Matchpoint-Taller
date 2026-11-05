@@ -14,6 +14,8 @@
     --acento-suave: #f4f8e2;
     --acento-texto: #3d4b0c;
     --peligro: #b42318;
+    --advertencia: #805212;
+    --advertencia-suave: #fff2d8;
     --estado-inactivo-fondo: #eef1f5;
     --estado-inactivo-texto: #596474;
 }
@@ -971,6 +973,17 @@ html.modal-abierto {
         justify-content: flex-start;
         flex-wrap: wrap;
     }
+}
+
+.boton-advertencia {
+    color: var(--advertencia);
+    border-color: var(--advertencia);
+    background: var(--superficie);
+}
+
+.boton-advertencia:hover {
+    color: var(--advertencia);
+    background: var(--advertencia-suave);
 }
 
 .boton-peligro { color: var(--peligro); border-color: var(--peligro); background: #ffffff; }

@@ -1,0 +1,17 @@
+<svg width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" fill="none" aria-hidden="true" focusable="false">
+    {% if tipo == "reserva" or tipo == "clase" %}
+    <path d="M6 12H12M18 12H12M12 12V6M12 12V18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    {% elif tipo == "bloqueo" or tipo == "anular" %}
+    <path d="M6.75827 17.2426L12.0009 12M17.2435 6.75736L12.0009 12M12.0009 12L6.75827 6.75736M12.0009 12L17.2435 17.2426" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    {% elif tipo == "finalizar" %}
+    <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    {% elif tipo == "detalle" %}
+    <path d="M3 13C6.6 5 17.4 5 21 13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 17C10.3431 17 9 15.6569 9 14C9 12.3431 10.3431 11 12 11C13.6569 11 15 12.3431 15 14C15 15.6569 13.6569 17 12 17Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    {% endif %}
+</svg>
+<span class="agenda-opcion-textos">
+    <span class="agenda-opcion-titulo">{{ titulo }}</span>
+    {% if descripcion %}<span class="agenda-opcion-descripcion">{{ descripcion }}</span>{% endif %}
+</span>
+<span class="agenda-opcion-flecha" aria-hidden="true">›</span>
