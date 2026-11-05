@@ -521,6 +521,25 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     margin-bottom: 0;
 }
 
+[data-agenda-detalle] .clase-observaciones-edicion {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+[data-agenda-detalle] .clase-agregar-observaciones {
+    justify-content: flex-start;
+    padding-inline: 0;
+    text-align: left;
+}
+
+.agenda-formulario-acciones {
+    display: grid;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--borde);
+}
+
 .agenda-precio {
     margin: 0;
     font-weight: 600;

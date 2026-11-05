@@ -70,8 +70,10 @@
                     {% for error in formulario_reserva.precio_mostrado.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
                     <p class="agenda-precio">Total: $ {{ agenda.sede.precio_reserva_vigente|floatformat:"2g" }}</p>
                     {% include "componentes/observaciones_opcionales.html" with campo=formulario_reserva.observaciones only %}
-                    <button class="boton boton-primario boton-chico" type="submit">Confirmar reserva</button>
-                    <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion>Cancelar</button>
+                    <div class="agenda-formulario-acciones">
+                        <button class="boton boton-primario boton-chico" type="submit">Confirmar reserva</button>
+                        <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion>Cancelar</button>
+                    </div>
                 </form>
             </details>
         {% elif not detalle.evento %}
@@ -128,8 +130,10 @@
                             {% endif %}
                         {% endfor %}
                         {% include "componentes/observaciones_opcionales.html" with campo=formulario_bloqueo.observaciones only %}
-                        <button class="boton {% if detalle.reserva %}boton-confirmar-peligro{% else %}boton-primario{% endif %} boton-chico" type="submit">{% if detalle.reserva %}Confirmar{% else %}Confirmar bloqueo{% endif %}</button>
-                        <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion data-cancelar-accion>Cancelar</button>
+                        <div class="agenda-formulario-acciones">
+                            <button class="boton {% if detalle.reserva %}boton-confirmar-peligro{% else %}boton-primario{% endif %} boton-chico" type="submit">{% if detalle.reserva %}Confirmar{% else %}Confirmar bloqueo{% endif %}</button>
+                            <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion data-cancelar-accion>Cancelar</button>
+                        </div>
                     </form>
                 </details>
             {% endif %}

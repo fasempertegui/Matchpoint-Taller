@@ -104,7 +104,9 @@
                 {% for error in formulario_operacion.motivo_anulacion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
             </div>
             {% if not mensual %}<div data-operacion-observaciones>{% include "componentes/observaciones_opcionales.html" with campo=formulario_operacion.observaciones only %}</div>{% endif %}
-            <button class="boton boton-primario boton-chico" type="submit">Revisar acciones</button>
+            <div class="agenda-formulario-acciones">
+                <button class="boton boton-primario boton-chico" type="submit">Revisar acciones</button>
+            </div>
         </form>
     {% endif %}
 </section>
