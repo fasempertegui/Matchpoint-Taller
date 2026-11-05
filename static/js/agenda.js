@@ -299,7 +299,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("click", function (evento) {
         if (!panel || evento.defaultPrevented || evento.button !== 0
             || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey
-            || document.querySelector("dialog[open]") || panel.contains(evento.target)
+            || document.querySelector("dialog[open]") || evento.composedPath().includes(panel)
             || evento.target.closest("[data-agenda-turno], [data-agenda-acciones], [data-agenda-historial]")) return;
         var cerrar = contenido.querySelector("[data-agenda-cerrar]");
         if (cerrar) cargarDetalle(cerrar, null, false);
