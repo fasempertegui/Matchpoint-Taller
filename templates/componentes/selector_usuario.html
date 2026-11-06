@@ -1,0 +1,20 @@
+<div class="grupo-campo" data-usuario-selector data-url="{{ url_busqueda }}">
+    <label for="buscar-{{ campo.name }}">{{ campo.label }} <span aria-hidden="true">*</span></label>
+    {% if campo.help_text %}<small class="nota-campo" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</small>{% endif %}
+    {{ campo }}
+    <ul class="clase-seleccionados" data-usuario-seleccion{% if not seleccionado %} hidden{% endif %}>
+        <li>
+            <span><span data-usuario-nombre>{{ seleccionado }}</span><small data-usuario-usuario>{{ seleccionado.username }}</small></span>
+            <button type="button" class="clase-quitar" data-usuario-quitar aria-label="Quitar usuario">×</button>
+        </li>
+    </ul>
+    <div class="clase-buscador" data-usuario-buscador{% if seleccionado %} hidden{% endif %}>
+        <div class="clase-campo-busqueda">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+            <input class="form-control" id="buscar-{{ campo.name }}" type="search" autocomplete="off" maxlength="100" placeholder="Buscar por nombre, apellido o usuario (mín. 2 letras)" aria-controls="resultados-{{ campo.name }}" {% if campo.help_text %}aria-describedby="{{ campo.auto_id }}_helptext" {% endif %}data-usuario-busqueda>
+        </div>
+        <ul class="clase-resultados" id="resultados-{{ campo.name }}" aria-label="Coincidencias" data-usuario-resultados hidden></ul>
+        <p class="clase-busqueda-estado" role="status" aria-live="polite" data-estado></p>
+    </div>
+    {% for error in campo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+</div>

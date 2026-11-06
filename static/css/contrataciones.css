@@ -1,0 +1,76 @@
+.contratacion-progreso {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 16px;
+}
+
+.contratacion-progreso > span {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--borde);
+}
+
+.contratacion-progreso > .contratacion-paso-completo {
+    background: var(--primario);
+}
+
+.contratacion-numero {
+    margin: 6px 0 16px;
+    color: var(--texto-suave);
+    font-size: .75rem;
+}
+
+.contratacion-resumen {
+    margin-bottom: 20px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    background: var(--primario);
+    color: #ffffff;
+    overflow-wrap: anywhere;
+}
+
+.contratacion-resumen .contratacion-resumen-etiqueta {
+    margin: 0;
+    color: #cdb8e6;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.contratacion-resumen h2 {
+    margin: 8px 0 16px;
+    color: inherit;
+    font-size: 1.75rem;
+    line-height: 1.1;
+}
+
+.contratacion-resumen-usuario > span,
+.contratacion-resumen-usuario small {
+    color: #e6daf3;
+    font-size: .85rem;
+    font-weight: 400;
+}
+
+.contratacion-resumen-usuario p {
+    margin: 4px 0;
+    color: inherit;
+    font-weight: 600;
+}
+
+.contratacion-resumen .contratacion-resumen-precio {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 16px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid #ffffff40;
+    color: #e6daf3;
+    font-size: .9rem;
+}
+
+.contratacion-resumen-precio strong {
+    color: #ffffff;
+}

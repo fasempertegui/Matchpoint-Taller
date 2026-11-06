@@ -7,7 +7,8 @@
     <form method="{{ metodo_formulario|default:'post' }}" novalidate>
         {% if metodo_formulario != 'get' %}{% csrf_token %}{% endif %}
         {% block formulario_seleccion %}{% endblock %}
-        {% for campo in formulario.hidden_fields %}{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
+        {% block formulario_campos_ocultos %}{% for campo in formulario.hidden_fields %}{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
+        {% endblock %}
         {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
         {% for campo in formulario.visible_fields %}
             {% if campo.name == 'observaciones' %}
@@ -24,15 +25,17 @@
                 <div class="grupo-campo">
                     <label for="{{ campo.id_for_label }}">{{ campo.label }}{% if campo.field.required %} <span aria-hidden="true">*</span>{% endif %}</label>
                     {{ campo }}
-                    {% if campo.help_text %}<small>{{ campo.help_text }}</small>{% endif %}
+                    {% if campo.help_text %}<small class="nota-campo" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</small>{% endif %}
                     {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
                 </div>
             {% endif %}
         {% endfor %}
+        {% block formulario_acciones %}
         <div class="acciones-formulario">
             <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
             <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
         </div>
+        {% endblock %}
     </form>
 </section>
 {% endblock %}

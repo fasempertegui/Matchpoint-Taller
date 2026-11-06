@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -78,30 +80,65 @@ def contratacion_detalle(request, pk, tipo="plan"):
 
 @login_required
 @never_cache
+@require_GET
+def buscar_usuarios_contratacion(request, tipo="plan"):
+    exigir_administracion_membresias(request.user)
+    busqueda = request.GET.get("q", "").strip()[:100]
+    if len(busqueda) < 2:
+        return JsonResponse({"resultados": [], "hay_mas": False})
+    personas = CONFIGURACION_CONTRATACIONES[tipo]["seleccion"]().fields["usuario"].queryset
+    for termino in busqueda.split():
+        personas = personas.filter(
+            Q(first_name__icontains=termino) | Q(last_name__icontains=termino)
+            | Q(username__icontains=termino)
+        )
+    filas = list(personas.order_by("first_name", "last_name", "username", "pk")[:11])
+    return JsonResponse({
+        "resultados": [
+            {"id": persona.pk, "nombre": str(persona), "usuario": persona.username}
+            for persona in filas[:10]
+        ],
+        "hay_mas": len(filas) > 10,
+    })
+
+
+@login_required
+@never_cache
 @require_http_methods(["GET", "POST"])
 def contratacion_crear(request, tipo="plan"):
     exigir_administracion_membresias(request.user)
     configuracion = CONFIGURACION_CONTRATACIONES[tipo]
     datos = request.POST if request.method == "POST" else request.GET
     seleccion = configuracion["seleccion"](datos if datos else None)
-    preparar = request.method == "POST" or datos.get("paso") == "preparar"
+    paso = datos.get("paso", "")
+    confirmar = request.method == "POST" and paso == "confirmar"
+    campos_borrador = ("mes_cubierto", "fecha_alta", "precio_aplicado", "observaciones", "producto_precio")
+    borrador = {campo: datos[campo] for campo in campos_borrador if campo in datos}
     contexto = {
         **_contexto(tipo),
         "titulo": f"Registrar contratación de {tipo}", "formulario": seleccion,
-        "texto_boton": "Continuar", "metodo_formulario": "get",
+        "texto_boton": "Continuar", "metodo_formulario": "post",
+        "borrador": borrador,
         "url_cancelar": reverse(f"membresias:contratacion_{tipo}_lista"),
     }
-    if preparar and seleccion.is_valid():
+    valor_usuario = seleccion["usuario"].value()
+    if valor_usuario and str(valor_usuario).isascii() and str(valor_usuario).isdigit():
+        contexto["usuario_seleccionado"] = seleccion.fields["usuario"].queryset.filter(pk=valor_usuario).first()
+    contexto["url_buscar_usuarios"] = reverse(f"membresias:contratacion_{tipo}_buscar_usuarios")
+    if paso in ("preparar", "confirmar") and seleccion.is_valid():
         titular = seleccion.cleaned_data["usuario"]
         producto = seleccion.cleaned_data[tipo]
+        iniciales = {
+            "mes_cubierto": timezone.localdate().replace(day=1), "fecha_alta": timezone.localdate(),
+            **{campo: valor for campo, valor in borrador.items() if campo != "producto_precio"},
+            "usuario": titular.pk, tipo: producto.pk,
+        }
+        if tipo == "pase" or borrador.get("producto_precio") != str(producto.pk):
+            iniciales["precio_aplicado"] = producto.precio_vigente
         formulario = configuracion["formulario"](
-            request.POST if request.method == "POST" else None,
-            initial={
-                "usuario": titular.pk, tipo: producto.pk, "mes_cubierto": timezone.localdate().replace(day=1),
-                "fecha_alta": timezone.localdate(), "precio_aplicado": producto.precio_vigente,
-            },
+            request.POST if confirmar else None, initial=iniciales,
         )
-        if request.method == "POST" and formulario.is_valid():
+        if confirmar and formulario.is_valid():
             argumentos = {
                 "usuario_id": formulario.cleaned_data["usuario"], f"{tipo}_id": formulario.cleaned_data[tipo],
                 "mes_cubierto": formulario.cleaned_data["mes_cubierto"],

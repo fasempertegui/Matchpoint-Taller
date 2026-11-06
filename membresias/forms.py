@@ -5,7 +5,7 @@ from common.fechas import FECHA_INICIO_OPERACIONES
 from usuarios.models import Rol, Usuario
 
 from .fechas import meses_contratables, validar_fecha_alta, validar_mes_contratacion
-from .models import Pase, Plan, PlanUsuario
+from .models import Pase, Plan
 
 
 class PlanForm(forms.ModelForm):
@@ -70,11 +70,12 @@ class SeleccionContratacionPlanForm(forms.Form):
     admite_profesor = False
 
     usuario = forms.ModelChoiceField(
-        label="Usuario", queryset=Usuario.objects.none(), widget=forms.Select(attrs={"class": "form-control"}),
-        help_text="Elegí una cuenta activa. Quienes tienen rol Profesor no pueden contratar planes.",
+        label="Usuario", queryset=Usuario.objects.none(), widget=forms.HiddenInput(),
+        help_text="Solo se muestran cuentas activas",
     )
     plan = forms.ModelChoiceField(
-        label="Plan", queryset=Plan.objects.none(), widget=forms.Select(attrs={"class": "form-control"}),
+        label="Plan", queryset=Plan.objects.none(), empty_label="Seleccioná un plan",
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
 
     def __init__(self, *args, **kwargs):
@@ -94,12 +95,9 @@ class SeleccionContratacionPaseForm(SeleccionContratacionPlanForm):
     admite_profesor = True
     plan = None
     pase = forms.ModelChoiceField(
-        label="Pase", queryset=Pase.objects.none(), widget=forms.Select(attrs={"class": "form-control"}),
+        label="Pase", queryset=Pase.objects.none(), empty_label="Seleccioná un pase",
+        widget=forms.Select(attrs={"class": "form-control"}),
     )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["usuario"].help_text = "Elegí una cuenta activa. Puede contratar un pase aunque tenga rol Profesor."
 
 
 class ContratacionPlanForm(forms.Form):
@@ -112,12 +110,12 @@ class ContratacionPlanForm(forms.Form):
     fecha_alta = forms.DateField(
         label="Fecha efectiva de alta", validators=[validar_fecha_alta],
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "class": "form-control"}),
-        help_text="Es independiente del mes cubierto y no puede ser futura.",
+        help_text="Es independiente del mes cubierto y no puede ser futura",
     )
     precio_aplicado = forms.DecimalField(
         label="Importe acordado (ARS)", min_value=0, max_digits=12, decimal_places=2, localize=True,
         widget=forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal"}),
-        help_text="Se propone el precio vigente. Podés ajustarlo; este importe no registra un cobro.",
+        help_text="El precio acordado puede ser diferente al precio vigente por descuentos o recargos",
     )
     observaciones = forms.CharField(
         label="Observaciones", required=False,
@@ -127,8 +125,7 @@ class ContratacionPlanForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["mes_cubierto"].widget.choices = [
-            (mes.isoformat(), f"{formats.date_format(mes, 'F Y')} · {mes:%d/%m/%Y} al "
-             f"{PlanUsuario(mes_cubierto=mes).fecha_fin:%d/%m/%Y}")
+            (mes.isoformat(), formats.date_format(mes, "F Y").capitalize())
             for mes in meses_contratables()
         ]
         self.fields["fecha_alta"].widget.attrs.update({

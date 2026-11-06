@@ -852,6 +852,7 @@ Recorrido:
 
 Alternativas:
 
+- El formulario tiene dos pasos: selección de usuario y producto, y datos de contratación. Volver conserva la selección, el mes, la fecha de alta, el importe y las observaciones. Cambiar de producto propone su precio vigente; los pases aplican siempre el precio vigente. Cancelar abandona el proceso y sólo la confirmación final registra la contratación.
 - Puede combinar un plan y un pase, pero no duplicar el mismo tipo en un mes, incluidos registros Vencidos.
 - El mes se encuentra entre agosto de 2026 y el mes siguiente al actual. La fecha efectiva de alta es independiente del mes cubierto y admite desde el inicio de operaciones hasta hoy, inclusive.
 - Renovar para otro mes crea una contratación nueva.

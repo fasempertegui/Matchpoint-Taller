@@ -1,13 +1,46 @@
 {% extends "membresias/catalogo_formulario.html" %}
+{% load static %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/contrataciones.css' %}"><script src="{% static 'js/selector-usuario.js' %}" defer></script>{% endblock %}
 {% block formulario_contexto %}
+    <div class="contratacion-progreso" role="progressbar" aria-label="Progreso de contratación" aria-valuemin="1" aria-valuemax="2" aria-valuenow="{% if titular %}2{% else %}1{% endif %}">
+        <span class="contratacion-paso-completo" aria-hidden="true"></span>
+        <span{% if titular %} class="contratacion-paso-completo"{% endif %} aria-hidden="true"></span>
+    </div>
+    <p class="contratacion-numero">Paso {% if titular %}2{% else %}1{% endif %} de 2</p>
     {% if titular %}
-        <p><strong>{{ titular }}</strong> · {{ producto.nombre }}</p>
-        <p class="texto-secundario">Precio vigente: $ {{ precio_propuesto|floatformat:"2g" }}. {% if tipo == 'pase' %}Se aplica el precio vigente sin ajustes. {% endif %}La contratación cubre el mes completo y el cobro se registra por separado.</p>
-        <p><a href="{{ url_crear }}">Cambiar usuario o {{ tipo }}</a></p>
+        <section class="contratacion-resumen" aria-label="Selección de contratación">
+            <p class="contratacion-resumen-etiqueta">{{ tipo|capfirst }} seleccionado</p>
+            <h2>{{ producto.nombre }}</h2>
+            <div class="contratacion-resumen-usuario">
+                <span>Usuario</span>
+                <p>{{ titular.first_name }} {{ titular.last_name }} <small>@{{ titular.username }}</small></p>
+            </div>
+            <p class="contratacion-resumen-precio">Precio vigente <strong>$ {{ precio_propuesto|floatformat:"2g" }}</strong></p>
+        </section>
     {% else %}
         <p class="texto-secundario">Elegí el usuario y el {{ tipo }} para preparar la contratación mensual.</p>
     {% endif %}
 {% endblock %}
 {% block formulario_seleccion %}
-    {% if not titular %}<input type="hidden" name="paso" value="preparar">{% endif %}
+    {% if titular %}
+        <input type="hidden" name="producto_precio" value="{{ producto.pk }}">
+    {% else %}
+        {% for nombre, valor in borrador.items %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
+    {% endif %}
+{% endblock %}
+
+{% block formulario_campos_ocultos %}
+    {% if titular %}
+        {{ block.super }}
+    {% else %}
+        {% include "componentes/selector_usuario.html" with campo=formulario.usuario seleccionado=usuario_seleccionado url_busqueda=url_buscar_usuarios only %}
+    {% endif %}
+{% endblock %}
+
+{% block formulario_acciones %}
+    <div class="acciones-formulario">
+        {% if titular %}<button class="boton boton-secundario" type="submit" name="paso" value="editar">Volver</button>{% endif %}
+        <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+        <button class="boton boton-primario" type="submit" name="paso" value="{% if titular %}confirmar{% else %}preparar{% endif %}">{{ texto_boton }}</button>
+    </div>
 {% endblock %}
