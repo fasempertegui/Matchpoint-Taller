@@ -134,7 +134,7 @@ class PlanUsuario(models.Model):
     mes_cubierto = models.DateField("Mes cubierto")
     fecha_alta = models.DateField("Fecha efectiva de alta")
     precio_aplicado = models.DecimalField(
-        "Importe acordado (ARS)", max_digits=12, decimal_places=2,
+        "Importe aplicado (ARS)", max_digits=12, decimal_places=2,
         validators=[MinValueValidator(Decimal("0"))],
     )
     registrado_por = models.ForeignKey(

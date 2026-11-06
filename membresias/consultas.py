@@ -10,7 +10,7 @@ def listar_contrataciones(contrataciones, parametros, *, tipo, buscar_usuario=Tr
     busqueda = parametros.get("q", "").strip()[:150]
     estado = parametros.get("estado", "")
     mes = parametros.get("mes", "")
-    meses = meses_contratables()
+    meses = meses_contratables(incluir_mes_siguiente=True)
     if busqueda:
         coincidencias = Q(**{f"{tipo}__nombre__icontains": busqueda})
         if buscar_usuario:

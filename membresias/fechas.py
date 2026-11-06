@@ -10,9 +10,10 @@ def mes_siguiente(fecha):
     return date(fecha.year + fecha.month // 12, fecha.month % 12 + 1, 1)
 
 
-def meses_contratables():
+def meses_contratables(*, incluir_mes_siguiente=False):
     mes = FECHA_INICIO_OPERACIONES
-    limite = mes_siguiente(timezone.localdate())
+    hoy = timezone.localdate()
+    limite = mes_siguiente(hoy) if incluir_mes_siguiente or hoy.day >= 25 else hoy.replace(day=1)
     meses = []
     while mes <= limite:
         meses.append(mes)
@@ -21,8 +22,11 @@ def meses_contratables():
 
 
 def validar_mes_contratacion(mes):
-    if mes.day != 1 or not FECHA_INICIO_OPERACIONES <= mes <= mes_siguiente(timezone.localdate()):
-        raise ValidationError("Elegí un mes desde agosto de 2026 hasta el mes siguiente al actual.")
+    if mes not in meses_contratables():
+        raise ValidationError(
+            "Elegí un mes desde agosto de 2026 hasta el actual. "
+            "El mes siguiente se habilita desde el día 25 inclusive."
+        )
 
 
 def validar_fecha_alta(fecha):

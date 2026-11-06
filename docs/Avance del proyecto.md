@@ -221,9 +221,9 @@ Revisión manual: acceder con Público, Profesor y Alumno que conserven Público
 
 ## Contrataciones administrativas de planes
 
-Administración registra y consulta las contrataciones de planes desde Membresías. El listado permite buscar usuario o producto, filtrar por mes y estado y navegar de a veinticinco resultados. El detalle conserva titular, plan, período completo, fecha efectiva, importe acordado, observaciones y responsable del registro. El estado se muestra con texto; Vencido usa el badge neutro compartido.
+Administración registra y consulta las contrataciones de planes desde Membresías. El listado permite buscar usuario o producto, filtrar por mes y estado y navegar de a veinticinco resultados. El detalle conserva titular, plan, período completo, fecha efectiva, importe aplicado, observaciones y responsable del registro. El estado se muestra con texto; Vencido usa el badge neutro compartido.
 
-El alta comienza seleccionando una cuenta activa sin Profesor y un plan Activo. Luego se elige un mes desde agosto de 2026 hasta el siguiente al actual; cada opción muestra su período completo. La fecha efectiva se encuentra entre el inicio operativo y hoy y es independiente del mes cubierto. Se propone el precio vigente y la administración puede establecer un importe acordado no negativo. Ese importe permanece en la contratación y no se recalcula al cambiar el catálogo. El alta no registra cobros ni genera clases o asignaciones.
+El alta comienza seleccionando una cuenta activa sin Profesor y un plan Activo. Luego se elige un mes desde agosto de 2026 hasta el actual; el siguiente al actual se habilita desde el día 25 inclusive según el calendario de Salta. La fecha efectiva se encuentra entre el inicio operativo y hoy y es independiente del mes cubierto. El resumen muestra el precio mensual vigente completo como importe a aplicar, sin campo editable. Una revisión firmada vincula administrador, titular, producto e importe. La confirmación verifica esa revisión con el plan bloqueado y copia su precio vigente, admitiendo cero. Si el precio o la selección cambiaron, no registra la contratación y presenta el importe vigente para una nueva confirmación, conservando mes, fecha efectiva y observaciones. El importe aplicado permanece en la contratación y no se recalcula al cambiar el catálogo. El alta no registra cobros ni genera clases o asignaciones.
 
 La confirmación bloquea las cuentas involucradas en orden de identificador y después el plan; comprueba nuevamente la elegibilidad y la exclusividad del mes. Los registros Activos y Vencidos impiden otra contratación de plan para el mismo usuario y mes. Un mes terminado nace Vencido; el actual o futuro nace Activo. Registrar una contratación Activa otorga Alumno cuando falta y el titular no es Administrador, en la misma transacción. Las cuentas Profesor no pueden contratar planes.
 
@@ -231,7 +231,7 @@ Los planes con cualquier contratación conservan modalidad, frecuencia y duraci�
 
 El formulario, listado, detalle, avisos y badges reutilizan los componentes vigentes, sin estilos específicos ni cambios de identidad. La anulación, el vencimiento automático, la consulta propia y los cobros tienen sus entregas funcionales independientes.
 
-Revisión manual: registrar mes actual, futuro e histórico; ajustar el importe incluido cero; rechazar duplicados, precio negativo y fechas fuera de rango; verificar Alumno automático y rechazo de Profesor, cuenta Inactiva o plan Inactivo. Cambiar el precio de catálogo y comprobar el importe conservado; intentar cambiar la estructura de un plan con historia. Revisar listado, filtros, detalle, teclado, móvil y rechazo a cuentas no administrativas.
+Revisión manual: registrar mes actual, futuro habilitado e histórico; contratar un plan con precio cero; revisar los días 24/25 y el cambio de año; rechazar duplicados y fechas fuera de rango; verificar Alumno automático y rechazo de Profesor, cuenta Inactiva o plan Inactivo. Cambiar el precio entre preparación y confirmación y comprobar la nueva revisión sin alta parcial; cambiarlo después del alta y comprobar el importe conservado; intentar cambiar la estructura de un plan con historia. Revisar listado, filtros, detalle, teclado, móvil y rechazo a cuentas no administrativas.
 
 
 ## Anulación administrativa de contrataciones de planes
@@ -251,7 +251,7 @@ Revisión manual: solicitar y cancelar la revisión, rechazar motivo vacío, con
 
 ## Vencimiento automático de contrataciones
 
-Celery Beat programa el vencimiento de planes diariamente a las 00:05 de Buenos Aires. La tarea procesa las contrataciones de planes cuyo estado siga Activo y cuyo mes sea anterior al mes local actual; recupera todos los pendientes, no sólo el mes anterior. Las contrataciones del mes actual o futuro, las Anuladas y las Vencidas quedan fuera.
+Celery Beat programa el vencimiento de planes diariamente a las 00:05 de Salta. La tarea procesa las contrataciones de planes cuyo estado siga Activo y cuyo mes sea anterior al mes local actual; recupera todos los pendientes, no sólo el mes anterior. Las contrataciones del mes actual o futuro, las Anuladas y las Vencidas quedan fuera.
 
 La actualización de los planes se realiza en una transacción y limita cada escritura al estado Activo. PostgreSQL coordina los bloqueos de fila y vuelve a comprobar esa condición frente a una anulación concurrente, sin sobrescribirla. Sólo se modifican estado a Vencido y fecha de modificación con el momento del procesamiento. No se cambian usuarios, roles, productos, fechas efectivas, importes, clases, reservas, coberturas, cobros ni marcas de aviso. Las restricciones de exclusividad del mes conservan las contrataciones Vencidas.
 
@@ -324,3 +324,12 @@ Verificación realizada: instalación limpia en base temporal, controles de Djan
 La oferta incorpora membresías de socios en el catálogo compartido de lectura, con búsqueda por nombre o descripción, paginación y descripciones extensas bajo demanda. Limpiar búsqueda conserva el catálogo consultado. La navegación entre Planes, Membresías y Tarifas usa enlaces con sección actual accesible, sin controles administrativos ni contratación propia hasta su entrega correspondiente.
 
 Verificación realizada: controles de Django, carga de 84 plantillas y revisión de diferencias. Revisión manual pendiente de las pestañas, búsquedas, paginación, descripción, importes cero, productos Inactivos, estados vacíos, permisos, teclado y móvil. No se crean ni ejecutan pruebas automatizadas.
+
+
+## Confirmación comercial de planes
+
+El alta administrativa aplica el precio vigente confirmado del plan. La revisión del precio se valida dentro de la transacción junto con la habilitación de las cuentas, el producto y la exclusividad del mes. Reenviar una operación registrada no duplica la contratación: la exclusividad de usuario y mes conserva el registro existente. Las contrataciones mantienen sus importes aplicados ante cambios de catálogo o cobros posteriores.
+
+El calendario, las presentaciones y las tareas utilizan America/Argentina/Salta. La selección y el servicio habilitan el mes siguiente desde el día 25 inclusive. Los filtros de consulta permiten ver el mes siguiente independientemente de esa habilitación para conservar acceso a registros existentes.
+
+Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de plantillas y aplicación de la migración de etiqueta del importe. Queda pendiente la revisión manual del bloque 2.1, incluidos cambio de precio durante la revisión, envíos manipulados, reenvíos, días 24/25, cambio de año, precio cero, roles y permisos. No se crean ni ejecutan pruebas automatizadas.

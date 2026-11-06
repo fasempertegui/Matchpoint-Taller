@@ -15,16 +15,15 @@
                 <span>Usuario</span>
                 <p>{{ titular.first_name }} {{ titular.last_name }} <small>@{{ titular.username }}</small></p>
             </div>
-            <p class="contratacion-resumen-precio">Precio vigente <strong>$ {{ precio_propuesto|floatformat:"2g" }}</strong></p>
+            <p class="contratacion-resumen-precio">Importe a aplicar <strong>$ {{ precio_propuesto|floatformat:"2g" }}</strong></p>
+            <p class="texto-secundario">Se aplica el precio mensual vigente completo. El cobro se registra por separado.</p>
         </section>
     {% else %}
         <p class="texto-secundario">Elegí el usuario y el {{ tipo }} para preparar la contratación mensual.</p>
     {% endif %}
 {% endblock %}
 {% block formulario_seleccion %}
-    {% if titular %}
-        <input type="hidden" name="producto_precio" value="{{ producto.pk }}">
-    {% else %}
+    {% if not titular %}
         {% for nombre, valor in borrador.items %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
     {% endif %}
 {% endblock %}

@@ -24,9 +24,28 @@ def _bloquear_titular(actor, usuario_id, *, exigir_activo=True):
     return actor, titular
 
 
+def revision_precio_contratacion(actor, titular, producto):
+    return signing.dumps({
+        "actor": actor.pk, "titular": titular.pk, "producto": producto.pk,
+        "precio": str(producto.precio_vigente),
+    }, salt=f"membresias.precio_{producto._meta.model_name}")
+
+
+def _validar_revision_precio(actor, titular, producto, revision):
+    try:
+        datos = signing.loads(revision, salt=f"membresias.precio_{producto._meta.model_name}")
+    except (signing.BadSignature, TypeError):
+        raise ValidationError("La revisión del precio no es válida. Revisá el importe y volvé a confirmar.") from None
+    if datos != {
+        "actor": actor.pk, "titular": titular.pk, "producto": producto.pk,
+        "precio": str(producto.precio_vigente),
+    }:
+        raise ValidationError("El producto o su precio cambió. Revisá el importe vigente y volvé a confirmar.")
+
+
 @transaction.atomic
 def registrar_contratacion_plan(
-    actor, *, usuario_id, plan_id, mes_cubierto, fecha_alta, precio_aplicado, observaciones="",
+    actor, *, usuario_id, plan_id, mes_cubierto, fecha_alta, revision_precio, observaciones="",
 ):
     actor, titular = _bloquear_titular(actor, usuario_id)
     if titular.tiene_rol(Rol.PROFESOR):
@@ -37,6 +56,7 @@ def registrar_contratacion_plan(
         raise ValidationError("El plan seleccionado ya no está disponible.") from None
     if plan.estado != Plan.Estado.ACTIVO:
         raise ValidationError("Elegí un plan activo para registrar la contratación.")
+    _validar_revision_precio(actor, titular, plan, revision_precio)
     validar_mes_contratacion(mes_cubierto)
     validar_fecha_alta(fecha_alta)
     if PlanUsuario.objects.filter(usuario=titular, mes_cubierto=mes_cubierto).exclude(
@@ -45,7 +65,7 @@ def registrar_contratacion_plan(
         raise ValidationError("El usuario ya tiene una contratación de plan para ese mes.")
     contratacion = PlanUsuario(
         usuario=titular, plan=plan, mes_cubierto=mes_cubierto, fecha_alta=fecha_alta,
-        precio_aplicado=precio_aplicado, registrado_por=actor, observaciones=observaciones.strip(),
+        precio_aplicado=plan.precio_vigente, registrado_por=actor, observaciones=observaciones.strip(),
         estado=PlanUsuario.Estado.VENCIDO if mes_cubierto < timezone.localdate().replace(day=1)
         else PlanUsuario.Estado.ACTIVO,
     )

@@ -11,7 +11,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from .contrataciones import (
     anular_contratacion_plan,
-    registrar_contratacion_plan, version_anulacion_contratacion,
+    registrar_contratacion_plan, revision_precio_contratacion, version_anulacion_contratacion,
 )
 from .consultas import listar_contrataciones
 from .forms import (
@@ -27,7 +27,7 @@ CONFIGURACION_CONTRATACIONES = {
         "modelo": PlanUsuario, "plural": "planes", "seleccion": SeleccionContratacionPlanForm,
         "formulario": ContratacionPlanForm, "registrar": registrar_contratacion_plan,
         "anular": anular_contratacion_plan,
-        "etiqueta_importe": "Importe acordado (ARS)",
+        "etiqueta_importe": "Importe aplicado (ARS)",
     },
 }
 
@@ -121,7 +121,7 @@ def contratacion_crear(request, tipo="plan"):
     seleccion = configuracion["seleccion"](datos if datos else None)
     paso = datos.get("paso", "")
     confirmar = request.method == "POST" and paso == "confirmar"
-    campos_borrador = ("mes_cubierto", "fecha_alta", "precio_aplicado", "observaciones", "producto_precio")
+    campos_borrador = ("mes_cubierto", "fecha_alta", "observaciones")
     borrador = {campo: datos[campo] for campo in campos_borrador if campo in datos}
     contexto = {
         **_contexto(tipo),
@@ -139,11 +139,10 @@ def contratacion_crear(request, tipo="plan"):
         producto = seleccion.cleaned_data[tipo]
         iniciales = {
             "mes_cubierto": timezone.localdate().replace(day=1), "fecha_alta": timezone.localdate(),
-            **{campo: valor for campo, valor in borrador.items() if campo != "producto_precio"},
+            **borrador,
             "usuario": titular.pk, tipo: producto.pk,
+            "revision_precio": revision_precio_contratacion(request.user, titular, producto),
         }
-        if borrador.get("producto_precio") != str(producto.pk):
-            iniciales["precio_aplicado"] = producto.precio_vigente
         formulario = configuracion["formulario"](
             request.POST if confirmar else None, initial=iniciales,
         )
@@ -152,7 +151,7 @@ def contratacion_crear(request, tipo="plan"):
                 "usuario_id": formulario.cleaned_data["usuario"], f"{tipo}_id": formulario.cleaned_data[tipo],
                 "mes_cubierto": formulario.cleaned_data["mes_cubierto"],
                 "fecha_alta": formulario.cleaned_data["fecha_alta"],
-                "precio_aplicado": formulario.cleaned_data["precio_aplicado"],
+                "revision_precio": formulario.cleaned_data["revision_precio"],
                 "observaciones": formulario.cleaned_data["observaciones"],
             }
             try:
@@ -162,6 +161,10 @@ def contratacion_crear(request, tipo="plan"):
             else:
                 messages.success(request, f"La contratación del {tipo} fue registrada.")
                 return redirect(f"membresias:contratacion_{tipo}_detalle", pk=contratacion.pk)
+        if formulario.is_bound:
+            producto.refresh_from_db()
+            formulario.data = formulario.data.copy()
+            formulario.data["revision_precio"] = revision_precio_contratacion(request.user, titular, producto)
         contexto.update({
             "formulario": formulario, "titular": titular, "producto": producto,
             "texto_boton": "Registrar contratación", "metodo_formulario": "post",

@@ -26,7 +26,7 @@ def _contexto(tipo):
         "titulo_lista": "Mis contrataciones", "url_lista": url_lista,
         "ruta_detalle": "membresias:mi_plan_contratado",
         "ruta_comprobante": f"membresias:mi_{tipo}_comprobante",
-        "etiqueta_importe": "Importe acordado (ARS)",
+        "etiqueta_importe": "Importe aplicado (ARS)",
     }
 
 

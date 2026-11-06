@@ -66,6 +66,7 @@ class ContratacionPlanForm(forms.Form):
     plan = forms.IntegerField(widget=forms.HiddenInput())
     mes_cubierto = forms.DateField(
         label="Mes cubierto", validators=[validar_mes_contratacion],
+        help_text="El mes siguiente se habilita desde el día 25 inclusive.",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
     fecha_alta = forms.DateField(
@@ -73,11 +74,7 @@ class ContratacionPlanForm(forms.Form):
         widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "class": "form-control"}),
         help_text="Es independiente del mes cubierto y no puede ser futura",
     )
-    precio_aplicado = forms.DecimalField(
-        label="Importe acordado (ARS)", min_value=0, max_digits=12, decimal_places=2, localize=True,
-        widget=forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal"}),
-        help_text="El precio acordado puede ser diferente al precio vigente por descuentos o recargos",
-    )
+    revision_precio = forms.CharField(widget=forms.HiddenInput())
     observaciones = forms.CharField(
         label="Observaciones", required=False,
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
