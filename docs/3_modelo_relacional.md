@@ -51,6 +51,8 @@ Planes y membresías se modelan como catálogos independientes, con tablas separ
 
 Se admiten pagos parciales mediante varios movimientos Ingreso por origen. El modelo no contiene indicadores de deuda, pendiente, excedente ni estado de pago y no conserva una confirmación o motivo de sobrepago. Los pagos se registran manualmente.
 
+El alta propia y administrativa utiliza las mismas tablas de contratación. La renovación registra otra contratación del mismo producto para el mes siguiente al de referencia, sin una entidad adicional de intención o solicitud. El seguimiento de plantilla consulta las contrataciones por titular y mes sin almacenar un estado de renovación o pago.
+
 El historial transversal de cambios se conserva en `log_auditoria`, separado de los campos propios de creación, modificación y transición de cada entidad.
 
 ## 4. Tablas y representación de datos
@@ -201,9 +203,9 @@ Representa una contratación concreta de un plan por un usuario para un mes cale
 | FK | `plan_id` | `bigint` | | | `12` |
 | | `mes_cubierto` | `date` | | | `2026-10-01` |
 | | `fecha_alta` | `date` | | | `2026-10-01` |
-| | `precio_aplicado` | `numeric(12,2)` | | | `42750.00` |
+| | `precio_aplicado` | `numeric(12,2)` | | | `45000.00` |
 | FK | `registrado_por_id` | `bigint` | | | `4` |
-| | `observaciones` | `text` | | | `Importe acordado con descuento` |
+| | `observaciones` | `text` | | | `Horario coordinado con administración` |
 | | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
 | | `aviso_vencimiento_enviado` | `boolean` | | | `false` |
 | FK | `anulado_por_id` | `bigint` | Sí | | `NULL` |
@@ -214,9 +216,11 @@ Representa una contratación concreta de un plan por un usuario para un mes cale
 
 `usuario_id` y `plan_id` son referencias obligatorias. `mes_cubierto` contiene el primer día del mes; el inicio y fin de cobertura se derivan de ese valor. `fecha_alta` representa la fecha efectiva, entre el inicio de operaciones y hoy, independiente del mes cubierto. `creado_en` conserva el momento de carga; ambas fechas pueden ser distintas.
 
-`precio_aplicado` conserva el importe mensual acordado, separado del dinero cobrado. No es una referencia al precio vigente del catálogo. Una restricción única parcial sobre `(usuario_id, mes_cubierto)` para estados `activo` o `vencido` preserva la exclusividad del mes y admite conservar filas Anuladas.
+`precio_aplicado` conserva el precio mensual vigente copiado al confirmar, no negativo y separado del dinero cobrado. No se edita ni recalcula por la fecha de pago o aumentos de catálogo. El servicio bloquea el producto y revalida el importe revisado; el usuario no lo introduce. El concepto de los ingresos explica pagos parciales o excepciones sin alterar ese precio. Una restricción única parcial sobre `(usuario_id, mes_cubierto)` para estados `activo` o `vencido` preserva la exclusividad del mes y admite conservar filas Anuladas.
 
-`registrado_por_id` referencia obligatoriamente al administrador que registra la contratación. Los campos de anulación están informados sólo en estado `anulado`: responsable y momento no nulos y motivo no vacío. En los demás estados quedan nulos o vacíos, según su tipo. `observaciones` y `motivo_anulacion` admiten cadena vacía, sin `NULL`.
+`registrado_por_id` referencia obligatoriamente al actor real: el titular en una renovación propia autorizada o el administrador que registra el alta. La titularidad y el permiso se validan en el servicio, conservando la incompatibilidad con Profesor. Los campos de anulación están informados sólo en estado `anulado`: responsable y momento no nulos y motivo no vacío. En los demás estados quedan nulos o vacíos, según su tipo. `observaciones` y `motivo_anulacion` admiten cadena vacía, sin `NULL`.
+
+El portal asigna `fecha_alta` con la fecha local del servidor; administración puede informar la fecha efectiva permitida. El mes siguiente se habilita desde el día 25 para ambos actores. El servicio valida límites y, al renovar por el portal, una contratación no Anulada del mismo producto en el mes inmediatamente anterior al solicitado. No hace falta almacenar un estado de aprobación ni una copia de la contratación de referencia.
 
 `aviso_vencimiento_enviado` conserva la marca de envío de esa contratación. No se duplican en esta tabla asignaciones, asistencia ni importes cobrados.
 
@@ -242,7 +246,7 @@ Representa una contratación concreta de membresía por un usuario para un mes c
 | | `creado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
 
-Utiliza la misma representación de mes cubierto, fecha efectiva, importe aplicado, auditoría y estados que 4.7, con referencia obligatoria a `membresias.id`. Tiene su propia restricción única parcial sobre `(usuario_id, mes_cubierto)` entre Activos o Vencidos; no comparte esa restricción con `planes_usuarios`.
+Utiliza la misma representación de mes cubierto, fecha efectiva, importe aplicado, auditoría y estados que 4.7, con referencia obligatoria a `membresias.id`. El responsable de registro puede ser el titular que contrata para sí mismo o el administrador, sin exigir Alumno. Tiene su propia restricción única parcial sobre `(usuario_id, mes_cubierto)` entre Activos o Vencidos; no comparte esa restricción con `planes_usuarios`.
 
 El precio aplicado es no negativo y se conserva independiente del catálogo. La contratación conserva el precio mensual vigente completo al confirmar, sin prorrateo ni importe negociado. La cobertura se evalúa por estado y mes para la fecha del turno. Las referencias de organizador e invitado socio pertenecen a reservas e invitados. Sólo el organizador usa horas. El saldo se deriva del cupo menos las reservas que computan del mismo titular y mes, incluidas las vinculadas a contrataciones Anuladas. La anulación se rechaza si existe aplicación en una reserva Programada como organizador o invitado socio vigente Pendiente o Aceptado. Los vínculos históricos Rechazados o retirados no bloquean.
 
@@ -585,7 +589,7 @@ Representa ingresos, egresos, aportes y retiros registrados manualmente en una s
 
 `monto` es positivo y se calcula con Decimal, sin floats. `concepto` siempre contiene texto no vacío. Los medios no efectivos requieren `referencia`. Egreso exige destinatario y categoría: `alquiler`, `servicios`, `profesores`, `insumos`, `mantenimiento`, `publicidad`, `comisiones`, `otros` o `devoluciones`. En las demás clases esos campos quedan vacíos. Aporte y Retiro solo admiten efectivo y no se contabilizan como cobros o gastos operativos.
 
-Solo Ingreso admite referencias comerciales y como máximo una de las tres está informada; un ingreso sin vínculo se identifica por su concepto obligatorio. `plan_usuario_id` referencia `planes_usuarios.id`, `membresia_usuario_id` referencia `membresias_usuarios.id` y `reserva_id` referencia `reservas.id`. No apuntan a productos del catálogo. Se admiten varios ingresos por origen, sin comparación automática con el precio aplicado. El origen debe existir y estar confirmado; no admite nuevos ingresos si la contratación está Anulada o el evento de la reserva está Anulado. No se crea ni renueva un origen al registrar el cobro.
+Solo Ingreso admite referencias comerciales y como máximo una de las tres está informada; un ingreso sin vínculo se identifica por su concepto obligatorio. `plan_usuario_id` referencia `planes_usuarios.id`, `membresia_usuario_id` referencia `membresias_usuarios.id` y `reserva_id` referencia `reservas.id`. No apuntan a productos del catálogo. Se admiten varios ingresos por origen, sin comparación automática con el precio aplicado. El registro muestra el importe conservado de la contratación y sus ingresos Vigentes; el concepto explica pagos parciales o acuerdos excepcionales, sin representar descuentos ni alterar importes comerciales. El origen debe existir y estar confirmado; no admite nuevos ingresos si la contratación está Anulada o el evento de la reserva está Anulado. No se crea ni renueva un origen al registrar el cobro.
 
 `sesion_id` referencia `sesiones_caja.id`; `registrado_por_id` y `anulado_por_id` referencian `usuarios.id`. Estas relaciones y los vínculos comerciales protegen a sus registros referenciados contra la eliminación. La reserva o contratación y su cobro se confirman como operaciones independientes: un error monetario no revierte el origen comercial.
 

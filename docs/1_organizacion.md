@@ -69,7 +69,7 @@ La oferta contempla planes de entre **1 y 7 encuentros por semana**, tanto grupa
 
 En general, las altas a planes mensuales se realizan al inicio del mes. No suele admitirse el ingreso a un plan ya avanzado el mes, salvo excepciones administrativas.
 
-El plan tiene un precio base. Si el pago se realiza del **1 al 5** de cada mes, se aplica un **5% de descuento** sobre el precio base. Del **6 al 15** se abona el precio base, sin descuento ni recargo. Desde el **16** y hasta fin de mes, se aplica un **10% de recargo** sobre el precio base.
+El plan tiene precio mensual fijo. La contratación conserva el precio vigente al confirmar, sin descuentos ni recargos por fecha de pago. Un cobro posterior no cambia ese importe ni desplaza la cobertura del mes calendario.
 
 Los feriados no tienen clases de la programación habitual. La administración puede organizar clases puntuales para esas fechas. También pueden realizarse reservas de cancha, aunque con horarios posiblemente más acotados según la sede.
 
@@ -145,3 +145,15 @@ Actualmente, los administradores registran ingresos y egresos de la academia. Lo
 Una clase puede estar a cargo de más de un profesor. La academia también organiza clases especiales y capacitaciones a las que pueden asistir profesores u otras personas, además de sus alumnos habituales. Dictar una clase y asistir a ella son funciones diferentes.
 
 La academia puede expulsar alumnos cuando corresponda según sus criterios internos o normas de convivencia. En esos casos, la expulsión no genera derecho automático a devolución de importes ya abonados.
+
+### 5.4 Contratación propia y organización del mes
+
+El titular puede contratar una membresía de socio desde el portal y el alumno puede renovar por su cuenta el mismo plan para el mes siguiente al de referencia, sin habilitación administrativa adicional. La primera contratación de plan, los cambios de producto, las asignaciones iniciales y sus modificaciones se coordinan con administración. Contratar o renovar no genera clases ni modifica automáticamente horarios.
+
+El día 25 de cada mes se habilitan las contrataciones del mes siguiente, tanto propias como administrativas. Este límite no impide gestionar operaciones administrativas del mes vigente o históricas permitidas ni modificar horarios. La membresía puede contratarse también para el mes actual completo, sin prorrateo.
+
+La contratación confirmada habilita sus beneficios para el mes cubierto sin exigir un cobro previo. El dinero se registra después mediante ingresos vinculados a esa contratación concreta, incluso en pagos parciales. La fecha de pago y los aumentos posteriores del catálogo no modifican el importe contratado.
+
+Administración consulta para el mes elegido quiénes de la plantilla semanal tienen o no una contratación de plan no Anulada. La ausencia de contratación no presume baja, falta de pago ni indecisión: las participaciones de prueba o acordadas fuera de un plan mantienen sus recorridos. No se retira automáticamente a nadie de la plantilla ni se modifican clases concretas.
+
+Los cobros menores al importe contratado pueden ser parciales o responder a acuerdos excepcionales aceptados administrativamente. El concepto del ingreso explica el cobro y las observaciones de la contratación conservan acuerdos generales. No se recalcula deuda ni se modifica el precio contratado a partir de esa explicación.

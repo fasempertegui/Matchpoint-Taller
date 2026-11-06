@@ -22,7 +22,7 @@ Un vacío presenta una frase breve y, si existe una acción autorizada, un únic
 
 Se usa español con voseo: «Seleccioná una sede», «Revisá los cambios», «Ingresá el motivo». Los nombres de módulos, etiquetas y estados son nominales. Los botones nombran la operación concreta y evitan «Aceptar» como confirmación genérica de una escritura; Aceptar se reserva también para la decisión del invitado cuando ésa es la acción.
 
-Se distinguen planes de clases, membresías de socios, contrataciones y reservas de cancha. Ser socio es una condición comercial, no un rol de permisos. Contratar, informar continuidad, asignar a clases y cobrar son operaciones separadas. Anular, finalizar, desactivar, retirar, rechazar, quitar una celda y registrar una devolución tienen etiquetas distintas.
+Se distinguen planes de clases, membresías de socios, contrataciones y reservas de cancha. Ser socio es una condición comercial, no un rol de permisos. Contratar, asignar a clases y cobrar son operaciones separadas. Anular, finalizar, desactivar, retirar, rechazar, quitar una celda y registrar una devolución tienen etiquetas distintas.
 
 No se presentan deuda, excedente, sobrepago, pendiente de pago ni estado de pago calculados. Un importe aplicado no acredita dinero recibido; un cobro no confirma asistencia, participación o realización.
 
@@ -46,7 +46,7 @@ La administración utiliza una cabecera y un lateral de grupos visibles. Los enc
 | Operación | Agenda | Día, Semana, búsqueda, disponibilidad, turnos, historial y acciones del día o del mes | `calendar` |
 | Operación | Clases | Planilla semanal, generación y consultas de clases | `tennis-ball` |
 | Operación | Usuarios | Lista, inspector, ficha y actividad de clases o reservas de una persona | `group` |
-| Membresías | Contrataciones | Contrataciones de planes o socios; revisión de continuidad mensual | `clipboard-check` |
+| Membresías | Contrataciones | Altas, renovaciones, consulta y anulación de planes o membresías | `clipboard-check` |
 | Membresías | Planes | Catálogo de planes de clases | `book` |
 | Membresías | Membresías de socios | Catálogo de productos para socios | `credit-card` |
 | Membresías | Caja | Sesión, movimientos e historial | `wallet` |
@@ -54,7 +54,7 @@ La administración utiliza una cabecera y un lateral de grupos visibles. Los enc
 | Configuración | Feriados | Consulta, registro, revisión y retiro de feriados | `calendar-minus` |
 | Consulta transversal | Auditoría | Cambios e intentos rechazados, de sólo lectura | `journal` |
 
-Contrataciones y Continuidad mensual son vistas locales del destino Contrataciones. La ficha de un registro no agrega un tercer nivel permanente de enlaces al lateral. Los grupos no son pantallas ni nuevos módulos de negocio.
+Contrataciones ofrece filtros de tipo, titular, producto, mes y estado. El seguimiento de personas sin contratación se consulta desde la plantilla semanal. La ficha de un registro no agrega un tercer nivel permanente de enlaces al lateral. Los grupos no son pantallas ni nuevos módulos de negocio.
 
 La cabecera identifica Academia TM y Administración. Ofrece Cuenta, con Mi perfil, Cambiar mi contraseña y Cerrar sesión, y el control de modo visual. Las migas muestran los niveles reales del recorrido, sin repetir enlaces al registro actual.
 
@@ -71,13 +71,13 @@ Academia TM | Inicio | Agenda | Mi actividad | Mis contrataciones | Oferta | Cue
 | Inicio | Pantalla de entrada existente, con los componentes y temas compartidos |
 | Agenda | Disponibilidad, creación de reserva y consulta de actividades autorizadas |
 | Mi actividad | Pestañas Clases y Reservas; cada una conserva su contexto de consulta |
-| Mis contrataciones | Planes y membresías propios; desde aquí se accede a Continuidad mensual |
+| Mis contrataciones | Planes y membresías propios; contratar membresía o renovar el mismo plan bajo demanda |
 | Oferta | Pestañas Planes, Membresías y Tarifas |
 | Cuenta | Perfil propio, cambio de contraseña y cierre de sesión |
 
 Inicio conserva su función de entrada; no incorpora indicadores, gráficos, prioridades automáticas ni una composición adicional de dashboard. Los recorridos del sistema son accesibles desde sus destinos de navegación.
 
-Mi actividad es visible para cualquier rol del portal. Clases no exige Alumno. Reservas exige el rol Reservas vigente; un vínculo histórico de invitación no evita ese requisito. Oferta exige autenticación y Público; no es un catálogo anónimo. Mis contrataciones y Continuidad mensual corresponden al titular autenticado sin exigir Alumno para una membresía.
+Mi actividad es visible para cualquier rol del portal. Clases no exige Alumno. Reservas exige el rol Reservas vigente; un vínculo histórico de invitación no evita ese requisito. Oferta exige autenticación y Público; no es un catálogo anónimo. Mis contrataciones corresponde al titular autenticado y ofrece las operaciones propias de §10, sin exigir Alumno para una membresía.
 
 Las pestañas están dentro de la página y no agregan otra cabecera de aplicación. El panel activo se identifica visual y programáticamente; los paneles ocultos no contienen controles alcanzables con teclado. Cambiar de pestaña no confirma ni descarta silenciosamente una edición.
 
@@ -193,7 +193,6 @@ Los bordes de esta tabla son decorativos. No se usan como única señal ni como 
 | Respuesta negativa; invitación retirada | Inactivo con la etiqueta correspondiente; no son estados de la reserva |
 | Caja Abierta/Cerrada; movimiento Vigente | Neutros; no implican acreditación ni pago completo |
 | Realizada/No realizada | Resultado de uso con su etiqueta, separado de Finalizada; sin inferir asistencia individual |
-| Decisión de continuidad | Etiqueta literal y producto; no se interpreta como estado de contratación |
 
 ### 4.3 Superficies y componentes por modo
 
@@ -548,17 +547,17 @@ El nombre es único entre Activos de su propio catálogo sin distinguir mayúscu
 
 La membresía no presenta variantes por día ni límite diario. La oferta inicial de diez horas, ARS 40.000 mensuales y ARS 12.500 por invitado no socio son datos configurables del producto, no constantes de interfaz.
 
-Oferta utiliza pestañas Planes, Membresías y Tarifas y tarjetas comerciales para productos activos. Muestra nombre, precio y características; descripción hasta dos líneas y Leer descripción en modal si existe texto. La tarjeta no funciona como enlace completo a una ficha administrativa. Las tarifas muestran sedes activas con precio configurado y acceso a Agenda. No se contrata ni cobra desde Oferta.
+Oferta utiliza pestañas Planes, Membresías y Tarifas y tarjetas comerciales para productos activos. Muestra nombre, precio y características; descripción hasta dos líneas y Leer descripción en modal si existe texto. La tarjeta no funciona como enlace completo a una ficha administrativa. Las tarifas muestran sedes activas con precio configurado y acceso a Agenda. Oferta enlaza al recorrido propio autorizado de §10 sin abrir un formulario en cada tarjeta. No registra cobros ni permite contratar un plan nuevo o distinto por el portal.
 
 ### 9.2 Registro y detalle de contratación
 
 La lista administrativa filtra por tipo, titular, producto, mes y estado. La ficha prioriza producto, titular, mes cubierto, período, importe aplicado y estado; después cobros Vigentes y usos, sin deuda calculada.
 
-Registrar o renovar utiliza dos momentos: selección de usuario existente y producto Activo, y datos de contratación. Se muestran mes, período calculado, fecha efectiva, precio y observaciones. Volver conserva selección y datos; cambiar producto propone su precio vigente. Sólo la confirmación registra. Renovar otro mes crea otra contratación, sin modificar la anterior.
+Registrar o renovar utiliza dos momentos: selección de usuario existente y producto Activo, y datos de contratación. Se muestran mes, período calculado, fecha efectiva, precio del producto en lectura y observaciones. Volver conserva selección y datos; cambiar producto propone su precio vigente. Sólo la confirmación registra. Renovar otro mes crea otra contratación, sin modificar la anterior.
 
-El mes puede estar entre agosto de 2026 y el siguiente al actual. La fecha efectiva está entre el inicio operativo y hoy y es independiente del mes cubierto. Una histórica terminada nace Vencida; una futura Activa sólo cubre su mes. Se admite un plan y una membresía simultáneos, pero una sola contratación no Anulada por titular, mes y tipo, incluidas las Vencidas.
+El alta administrativa admite meses desde agosto de 2026 hasta el siguiente al actual; ese mes siguiente sólo se habilita desde el día 25 inclusive para altas, renovaciones y cambios. Este límite no impide operar el mes vigente, históricos permitidos o modificar horarios. La fecha efectiva está entre el inicio operativo y hoy y es independiente del mes cubierto. Una histórica terminada nace Vencida; una futura Activa sólo cubre su mes. Se admite un plan y una membresía simultáneos, pero una sola contratación no Anulada por titular, mes y tipo, incluidas las Vencidas.
 
-En planes se propone el precio vigente y administración conserva el importe acordado según su política comercial; descuento del 5% del día 1 al 5, base del 6 al 15 y recargo del 10% desde el 16 se resuelven administrativamente sin cálculo de deuda. En membresías se aplica precio mensual vigente completo al confirmar, sin prorrateo ni importe negociado. Un cambio de precio exige revisión.
+Planes y membresías tienen precio mensual fijo: al confirmar se copia el vigente en precio_aplicado, sin edición del importe, descuentos o recargos por fecha de pago. Un cambio durante la revisión exige otra confirmación; un aumento posterior no altera el importe registrado. La membresía cubre el mes completo sin prorrateo y las altas tardías de planes se coordinan con administración.
 
 Registrar un plan Activo puede otorgar Alumno al titular no administrativo; Profesor no contrata plan mientras conserve ese rol. Contratar membresía no otorga Alumno y se admite para profesores. No genera clases, asignaciones ni consumos.
 
@@ -566,7 +565,7 @@ Anular sólo se ofrece para Activas y abre revisión de página completa con mot
 
 ### 9.3 Consulta propia y comprobante
 
-Mis contrataciones muestra únicamente las propias, con tipo, producto, mes, importe y estado. Mantiene Activas, Anuladas y Vencidas, incluso de productos Inactivos. El detalle propio no muestra responsables, observaciones internas ni motivo libre de anulación y no ofrece alta o anulación comercial.
+Mis contrataciones muestra únicamente las propias, con tipo, producto, mes, importe y estado. Mantiene Activas, Anuladas y Vencidas, incluso de productos Inactivos. El detalle propio no muestra responsables, observaciones internas ni motivo libre de anulación. Ofrece Renovar el mismo plan cuando corresponde; Contratar membresía está en la consulta de contratos. Anular, reemplazar o cambiar un plan son operaciones administrativas.
 
 El comprobante presenta contratación, producto, período y condiciones e importe guardados; acredita contratación, no pago. Administración consulta todos y el titular sólo los propios. Puede imprimir o guardar desde el navegador, también para Anuladas o Vencidas.
 
@@ -576,46 +575,27 @@ La consulta propia o administrativa selecciona mes o rango de hasta 366 días. P
 
 Las reservas Anuladas que computan por cancelación propia tardía se incluyen; las canceladas administrativamente no consumen. Las participaciones como invitado se muestran separadas sin atribuirles uso de horas. No hay saldo editable, reinicio mensual manual ni arrastre al mes siguiente.
 
-## 10. Continuidad mensual
+## 10. Contratación propia y seguimiento de planes
 
-### 10.1 Encuesta propia
+### 10.1 Operaciones del titular
 
-Continuidad mensual se abre desde Mis contrataciones y desde el aviso contextual del portal. Identifica el mes de destino y muestra una fila por tipo de producto con decisión y producto cuando corresponda. Informar continuidad o Modificar decisión revela los campos; no se abren formularios por defecto.
+Mis contrataciones ofrece Contratar membresía y Renovar el mismo plan bajo demanda. En membresías se selecciona producto Activo y mes actual o siguiente habilitado. La renovación conserva el producto de una contratación no Anulada propia y propone el mes siguiente al de referencia, sin permitir cambiar frecuencia, modalidad o duración. No requiere una aprobación individual de administración.
 
-La ventana va del día 23 al último día del mes de referencia inclusive, en Salta, para el mes siguiente. Al comenzar el mes de destino termina la respuesta de esa encuesta. Cada titular con contratación no Anulada en el mes de referencia debe responder por cada tipo contratado; no hay sanción ni bloqueo si falta respuesta. Una contratación anticipada no responde por el titular ni impide editar dentro de la ventana.
+El mes siguiente al actual se ofrece desde el día 25 inclusive en Salta y antes de esa fecha no se confirma su contratación, tampoco desde administración. El portal no ofrece meses históricos. Las altas iniciales de planes y los cambios de producto, asignaciones o horarios son administrativos; renovar no modifica la programación por sí solo.
 
-| Etiqueta | Interacción |
-|---|---|
-| Sin respuesta | Se deriva de ausencia de respuesta; no se ofrece como opción |
-| No lo sé | Respuesta válida que cumple la obligación de contestar |
-| Renovar | Conserva referencia al mismo producto del mes de referencia; no congela su precio |
-| Cambiar | Exige seleccionar otro producto activo del mismo tipo |
-| No renovar | No crea ni anula contrataciones |
-| Contratar | Para quien no tiene producto de ese tipo en referencia; exige elegir producto |
+El formulario no solicita otro titular ni una fecha efectiva o precio editables. Usa la cuenta autenticada y fecha local del servidor. El recorrido tiene Selección, Revisión y Confirmación. La revisión muestra producto, características, mes, período e importe definitivo y aclara que no acredita un pago ni asigna horarios automáticamente. Atrás conserva selección; Cancelar abandona sin registrar.
 
-La selección de productos ofrece características y precios vigentes; observaciones opcionales pueden expresar preferencias sin reservar lugares. Al elegir No lo sé o No renovar no queda una selección residual de producto solicitado. Se conserva el historial de respuestas y cambios sin límite de una modificación; esa restricción pertenece a actividades concretas.
+Confirmar revalida permisos, cuenta, calendario, precio, producto, referencia de renovación y exclusividad por tipo/mes. Un cambio de condiciones exige revisar. Reenvíos no duplican contratos ni cobros; una contratación existente se consulta sin sobrescribirla ni presentar otro producto como el confirmado. El éxito muestra contrato, estado y comprobante.
 
-Sólo responde el titular. Dentro de la ventana puede modificar aunque ya exista una contratación; ésta no cambia automáticamente. Fuera de la ventana la última respuesta queda en lectura y los cambios comerciales se gestionan con administración.
+Los beneficios rigen para el mes cubierto sin exigir cobro previo. Se utilizan los mismos estados Activo, Anulado y Vencido, sin una solicitud comercial, aprobación o estado de pago. El titular coordina anulaciones y reemplazos con administración. No hay renovación automática ni una encuesta de intención.
 
-El aviso aparece sólo durante la ventana si queda alguna respuesta obligatoria Sin respuesta; identifica mes y tipos pendientes y desaparece al responderlos o terminar el plazo. No lo sé detiene el aviso de ese tipo. No es una bandeja ni una campana de notificaciones.
+### 10.2 Seguimiento desde plantilla
 
-### 10.2 Revisión administrativa
+Desde la plantilla semanal, administración solicita consultar contrataciones y elige un mes. El resultado presenta personas, horarios previstos y el plan no Anulado del período o Sin contratación. Se pueden localizar los casos sin contratación y comparar productos de meses contiguos para revisar la programación. Una fila ofrece consulta y acceso a la operación administrativa propia; no monta un formulario completo por persona.
 
-Continuidad mensual es una vista local de Contrataciones. Presenta mes de destino, tipo, titular, producto de referencia, respuesta, producto solicitado y situación de contratación. Los filtros distinguen Sin respuesta, No lo sé, decisiones y existencia de contratación. Respuesta e información comercial aparecen separadas: Renovar · Sin contratación o Renovar · Contratación registrada.
+Sin contratación no significa baja, indecisión, deuda ni falta de pago. Las participaciones de prueba y acuerdos fuera de un plan conservan sus recorridos. La consulta no retira ni reincorpora personas automáticamente y no ofrece eliminar en lote a quienes no contrataron.
 
-Una fila abre lectura y acciones bajo demanda. Administración no responde la encuesta por el usuario. Registrar contratación desde una intención afirmativa propone titular, producto y mes, exige revisar precio y condiciones y revalida que la respuesta no haya cambiado. Producto inactivo impide confirmar sin sustituirlo silenciosamente.
-
-Contrataciones registradas por otros recorridos se reconocen sin duplicarlas. Un producto distinto, una decisión No renovar/No lo sé o una respuesta ausente se muestran junto a la contratación para revisión, sin sobrescribir ninguno. Anular la contratación conserva la intención y no crea otra automáticamente.
-
-### 10.3 Acciones sobre planilla
-
-La planilla ofrece bajo demanda Quitar alumnos que no renuevan y Quitar alumnos que aún no lo saben, como acciones separadas. Se elige el mes de encuesta cuyas respuestas se consultan; ese mes no crea una versión mensual de la plantilla.
-
-Cada acción presenta personas afectadas y exige confirmación administrativa con revalidación de respuestas y conjunto. Sólo utiliza respuestas de planes y excluye Sin respuesta. Modifica la plantilla semanal vigente para futuras generaciones sin alterar clases concretas, sus asignaciones, respuestas, asistencia o contrataciones. Una respuesta afirmativa posterior no reincorpora automáticamente a la persona.
-
-### 10.4 Comunicación
-
-El email de continuidad agrupa por titular los tipos obligatorios Sin respuesta y enlaza la encuesta del mes de destino. Se envía diariamente a las 14:00 de Salta del 23 a fin de mes, revalidando ventana y respuestas, sin duplicar titular/fecha local/mes en reintentos. No lo sé cuenta como respuesta. Su presentación no presume renovación ni exige pago.
+El mes elegido identifica la consulta comercial, sin crear versiones mensuales de la plantilla. Modificar asignaciones conserva su recorrido, revisión y auditoría, sin alterar clases concretas, respuestas, asistencia ni cobros. Las respuestas propias de invitados y participantes siguen perteneciendo a sus actividades, no a una renovación.
 
 ## 11. Usuarios, perfiles y acceso
 
@@ -688,7 +668,7 @@ Cerrar caja presenta esperado, contado no negativo, diferencia y motivo obligato
 
 El historial filtra sesiones por apertura y estado y movimientos por momento de registro, sesión, clase, medio y estado. El detalle muestra concepto, monto, medio, referencia, categoría/destinatario, origen, responsable, fecha y anulación. Se distingue la consulta de movimientos Vigentes de la reconstrucción al cierre, incluidas anulaciones posteriores y sesiones que atraviesan medianoche.
 
-Desde contrataciones y reservas se consultan los ingresos Vigentes vinculados como información separada del importe aplicado. Registrar cobro se revela sólo al administrador que puede operar su sesión y cuando el origen lo permite. El titular consulta sus cobros sin acceso a caja o movimientos ajenos; el invitado no accede a cobros de la reserva.
+Desde contrataciones y reservas se consultan los ingresos Vigentes vinculados como información separada del importe aplicado. Al registrar un cobro de contratación se muestran producto, mes, precio_aplicado y cobros anteriores, sin sustituir el precio por el del catálogo actualizado. El concepto permite explicar un parcial o acuerdo excepcional sobre el dinero recibido sin alterar el precio confirmado; las observaciones de contratación conservan acuerdos generales. No se deduce que el cobro complete lo acordado ni se calcula deuda. Registrar cobro se revela sólo al administrador que puede operar su sesión y cuando el origen lo permite. El titular consulta sus cobros sin acceso a caja o movimientos ajenos; el invitado no accede a cobros de la reserva.
 
 Un fallo de caja no revierte una reserva o contratación confirmada. Reprogramar no traslada dinero y Actualizar socios no modifica cobros existentes.
 
@@ -700,7 +680,7 @@ Cambios muestra momento, tabla, registro, acción y responsable/origen. La expan
 
 Intentos rechazados identifica tipo, motivo de catálogo, destino, método y UUID; los accesos ocultos por privacidad no revelan el registro ajeno al usuario rechazado. Las consultas de administración no transforman el historial en una herramienta de edición.
 
-La comunicación automática utiliza email, sin bandeja interna, campana ni preferencias nuevas. Los mensajes identifican actividad o mes y enlazan una ruta que vuelve a exigir autenticación y autorización. Una notificación de invitación no acredita aceptación; una de asignación no acredita asistencia. Se conservan los casos de alta, recuperación, confirmación de reserva, invitación, cancelación, reprogramación, asignación, vencimiento y recordatorios. El aviso contextual de continuidad es la excepción informativa dentro de su pantalla, definida en §10.1.
+La comunicación automática utiliza email, sin bandeja interna, campana ni preferencias nuevas. Los mensajes identifican actividad o mes y enlazan una ruta que vuelve a exigir autenticación y autorización. Una notificación de invitación no acredita aceptación; una de asignación no acredita asistencia. Se conservan los casos de alta, recuperación, confirmación de reserva, invitación, cancelación, reprogramación, asignación, vencimiento y recordatorios. La contratación propia no exige responder encuestas ni genera recordatorios de encuesta o de renovación comercial.
 
 No se añaden botones para ejecutar vencimiento o finalización automática ni marcas que simulen envíos de email realizados. La finalización horaria sólo cierra eventos; el vencimiento comercial no retira roles ni genera cobros.
 
@@ -724,7 +704,7 @@ Se reutilizan componentes sólo donde comparten un contrato concreto: navegació
 
 ## 16. Límites de interfaz y revisión manual
 
-No se ofrecen reservas recurrentes, reservas agrupadas de varias horas, arrastre de eventos, autoinscripción a clases, contratación o cobro online, solicitudes de recuperación de clases, contabilidad general, salarios, edición general de datos personales, CRUD de roles, reapertura de caja o deshacer generación. Los formularios de recuperación de contraseña sí forman parte del acceso.
+No se ofrecen reservas recurrentes, reservas agrupadas de varias horas, arrastre de eventos, autoinscripción a clases, contratación de planes nuevos o distintos desde el portal, cobro online, solicitudes de recuperación de clases, contabilidad general, salarios, edición general de datos personales, CRUD de roles, reapertura de caja o deshacer generación. Los formularios de recuperación de contraseña sí forman parte del acceso.
 
 La revisión manual de cada entrega comprueba:
 
@@ -734,7 +714,7 @@ La revisión manual de cada entrega comprueba:
 - Teclado, cierre y retorno de foco, errores por campo, zoom y conservación del contexto.
 - Vacío, carga, error, reintento y descarte de respuestas atrasadas.
 - Precios o condiciones modificados durante la revisión, reenvíos y operaciones simultáneas sin efectos parciales.
-- Cupos, cambio de mes, tres días de reserva, umbral exacto de seis horas, inicio de actividades y ventana de continuidad.
+- Cupos, cambio de mes, tres días de reserva, umbral exacto de seis horas, inicio de actividades y apertura de contratación del mes siguiente desde el día 25.
 - Separación entre importe aplicado y cobros, respuesta y asistencia, estado de evento y resultado de uso, plantilla y clases concretas.
 
 Las revisiones se realizan sobre la funcionalidad entregada y no crean ni ejecutan pruebas automatizadas. El trabajo se cierra por grupo funcional para revisión del usuario; el asistente no hace commits.
