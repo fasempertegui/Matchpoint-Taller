@@ -3,6 +3,11 @@
     <path d="M6 12H12M18 12H12M12 12V6M12 12V18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
     {% elif tipo == "bloqueo" or tipo == "anular" %}
     <path d="M6.75827 17.2426L12.0009 12M17.2435 6.75736L12.0009 12M12.0009 12L6.75827 6.75736M12.0009 12L17.2435 17.2426" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    {% elif tipo == "volver" %}
+    <path d="M12 6L6 12M6 12L12 18M6 12H18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+    {% elif tipo == "historial" %}
+    <circle cx="12" cy="12" r="9" stroke="currentColor"/>
+    <path d="m6 18 12-12" stroke="currentColor" stroke-linecap="round"/>
     {% elif tipo == "finalizar" %}
     <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
     {% elif tipo == "detalle" %}
@@ -14,4 +19,4 @@
     <span class="agenda-opcion-titulo">{{ titulo }}</span>
     {% if descripcion %}<span class="agenda-opcion-descripcion">{{ descripcion }}</span>{% endif %}
 </span>
-<span class="agenda-opcion-flecha" aria-hidden="true">›</span>
+{% if tipo != "volver" %}<span class="agenda-opcion-flecha" aria-hidden="true">›</span>{% endif %}

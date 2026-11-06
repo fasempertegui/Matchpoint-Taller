@@ -214,66 +214,26 @@
     overflow-wrap: anywhere;
 }
 
-.agenda-tabla .agenda-celda-con-historial {
+.agenda-tabla .agenda-turno {
     position: relative;
+    padding-right: 30px;
+}
+
+.agenda-tabla .agenda-estado-icono {
+    position: absolute;
+    top: 5px;
+    right: 5px;
 }
 
 .agenda-historial {
     position: absolute;
-    right: 8px;
-    bottom: 8px;
+    right: 5px;
+    bottom: 5px;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    min-height: 20px;
-    padding: 2px 5px;
-    border: 1px solid var(--borde);
-    border-radius: 12px;
-    background: var(--estado-inactivo-fondo);
-    color: var(--estado-inactivo-texto);
-    font: inherit;
-    font-size: .7rem;
-    cursor: pointer;
-}
-
-.agenda-historial::before {
-    content: "";
-    position: absolute;
-    inset: -6px -2px;
-}
-
-.agenda-historial:hover,
-.agenda-historial[aria-expanded="true"] {
-    background: var(--borde);
-}
-
-.agenda-historial:focus-visible {
-    outline: 2px solid var(--texto-suave);
-    outline-offset: 2px;
-}
-
-.agenda-historial-popover {
-    position: fixed;
-    inset: 12px auto auto 12px;
-    width: fit-content;
-    min-width: min(220px, calc(100vw - 24px));
-    max-width: min(320px, calc(100vw - 24px));
-    max-height: min(460px, calc(100dvh - 24px));
-    margin: 0;
-    padding: 8px;
-    overflow-y: auto;
-    overflow-wrap: anywhere;
-    border: 1px solid var(--borde);
-    border-radius: 6px;
-    background: var(--superficie);
-    color: var(--texto);
-    font: inherit;
-    font-size: .85rem;
-    box-shadow: 0 8px 24px rgba(26, 32, 40, .15);
-}
-
-.agenda-historial-popover::backdrop {
-    background: transparent;
+    justify-content: center;
+    color: inherit;
+    cursor: help;
 }
 
 .agenda-historial-lista {
@@ -281,7 +241,7 @@
     gap: 8px;
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 12px 0 0;
     font-size: .85rem;
 }
 
@@ -321,20 +281,6 @@
     font-size: .75rem;
     font-weight: 400;
     color: var(--texto-suave);
-}
-
-@media (max-width: 560px) {
-    .agenda-historial-popover {
-        inset: auto 0 0;
-        width: 100%;
-        max-width: 100%;
-        max-height: 70dvh;
-        border-radius: 12px 12px 0 0;
-    }
-
-    .agenda-historial-popover::backdrop {
-        background: rgba(26, 32, 40, .25);
-    }
 }
 
 a.agenda-turno:not(.agenda-turno-anulado):hover {

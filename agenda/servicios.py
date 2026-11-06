@@ -199,7 +199,8 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
                 if clase and puede_ver_evento else [],
             "ocupado_por_tercero": ocupado_por_tercero,
             "habilitado": habilitado, "en_rango": en_rango,
-            "consultable": evento is not None or fin > ahora or puede_crear_clase,
+            "consultable": evento is not None or fin > ahora or puede_crear_clase
+                or bool(anulados_por_turno.get((cancha.pk, dia, hora))),
             "iniciado": inicio <= ahora, "impedimento": impedimento,
             "estado_temporal": temporal if puede_ver_evento else "",
             "puede_reservar": puede_reservar and evento is None and not impedimento,
@@ -245,7 +246,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         celda_para(cancha, fecha, hora_seleccionada)
         if cancha is not None and hora_seleccionada is not None else None
     )
-    if detalle and not detalle["consultable"] and not (historial and detalle["anulados"]):
+    if detalle and not detalle["consultable"]:
         detalle = None
     if detalle and not es_administrador and detalle["iniciado"] and hora_seleccionada not in horas_propias:
         detalle = None

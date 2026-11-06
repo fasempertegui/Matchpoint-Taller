@@ -260,6 +260,14 @@ document.addEventListener("DOMContentLoaded", function () {
             desmontarPanel();
             contenido.innerHTML = html;
             prepararPanel();
+            contenido.inert = false;
+            if (enlace.matches("[data-agenda-vista]")) {
+                var titulo = contenido.querySelector("[data-agenda-titulo]");
+                if (titulo) {
+                    titulo.setAttribute("tabindex", "-1");
+                    titulo.focus({preventScroll: true});
+                }
+            }
             var panelAcciones = contenido.querySelector("[data-agenda-panel-acciones]");
             document.querySelectorAll("[data-agenda-acciones]").forEach(function (boton) {
                 boton.setAttribute("aria-expanded", String(Boolean(
@@ -272,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var activo = urlTurno.pathname === destino.pathname
                     && ["sede", "fecha", "cancha", "hora"].every(function (campo) {
                         return urlTurno.searchParams.get(campo) === destino.searchParams.get(campo);
-                    }) && !destino.searchParams.has("panel");
+                    }) && (!destino.searchParams.has("panel") || destino.searchParams.get("panel") === "historial");
                 turno.classList.toggle("agenda-turno-seleccionado", activo);
                 if (activo) turno.setAttribute("aria-current", "true");
                 else turno.removeAttribute("aria-current");
@@ -339,7 +347,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.addEventListener("click", function (evento) {
-        var enlace = evento.target.closest("[data-agenda-turno], [data-agenda-cerrar], [data-agenda-acciones]");
+        var enlace = evento.target.closest("[data-agenda-turno], [data-agenda-cerrar], [data-agenda-acciones], [data-agenda-vista]");
         if (!enlace || !panel || evento.defaultPrevented || evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
         evento.preventDefault();
         cargarDetalle(enlace);
@@ -352,135 +360,6 @@ document.addEventListener("DOMContentLoaded", function () {
         evento.preventDefault();
         cargarDetalle(cerrar);
     });
-
-    var historial = document.querySelector("[data-agenda-historial-dialogo]");
-    var chipHistorial = null;
-    var solicitudHistorial = null;
-    var cuadroHistorial = null;
-    var devolverFocoHistorial = true;
-
-    function chipHistorialVisible(rect) {
-        if (!chipHistorial.isConnected || rect.width === 0 || rect.height === 0) return false;
-        if (rect.top < 0 || rect.left < 0 || rect.bottom > window.innerHeight || rect.right > document.documentElement.clientWidth) return false;
-        for (var ancestro = chipHistorial.parentElement; ancestro; ancestro = ancestro.parentElement) {
-            var estilo = window.getComputedStyle(ancestro);
-            var recortaX = /^(auto|scroll|hidden|clip)$/.test(estilo.overflowX);
-            var recortaY = /^(auto|scroll|hidden|clip)$/.test(estilo.overflowY);
-            if (!recortaX && !recortaY) continue;
-            var limites = ancestro.getBoundingClientRect();
-            var izquierda = limites.left + ancestro.clientLeft;
-            var arriba = limites.top + ancestro.clientTop;
-            if (recortaX && (rect.left < izquierda || rect.right > izquierda + ancestro.clientWidth)) return false;
-            if (recortaY && (rect.top < arriba || rect.bottom > arriba + ancestro.clientHeight)) return false;
-        }
-        return true;
-    }
-
-    function programarUbicacionHistorial() {
-        if (cuadroHistorial !== null) return;
-        cuadroHistorial = window.requestAnimationFrame(function () {
-            cuadroHistorial = null;
-            ubicarHistorial();
-        });
-    }
-
-    function seguirHistorial() {
-        window.addEventListener("scroll", programarUbicacionHistorial, {capture: true, passive: true});
-        window.addEventListener("resize", programarUbicacionHistorial);
-    }
-
-    function dejarDeSeguirHistorial() {
-        window.removeEventListener("scroll", programarUbicacionHistorial, true);
-        window.removeEventListener("resize", programarUbicacionHistorial);
-        if (cuadroHistorial !== null) window.cancelAnimationFrame(cuadroHistorial);
-        cuadroHistorial = null;
-    }
-
-    function ubicarHistorial() {
-        if (!historial || !historial.open) return;
-        historial.style.top = "";
-        historial.style.left = "";
-        if (window.matchMedia("(max-width: 560px)").matches) return;
-        var rect = chipHistorial ? chipHistorial.getBoundingClientRect() : {left: 12, bottom: 12, top: 12};
-        if (chipHistorial && !chipHistorialVisible(rect)) {
-            devolverFocoHistorial = false;
-            dejarDeSeguirHistorial();
-            historial.close();
-            return;
-        }
-        var alto = historial.offsetHeight;
-        var arriba = rect.bottom + 6;
-        if (arriba + alto > window.innerHeight - 12) arriba = rect.top - alto - 6;
-        historial.style.top = Math.max(12, Math.min(arriba, window.innerHeight - alto - 12)) + "px";
-        historial.style.left = Math.max(12, Math.min(rect.left, window.innerWidth - historial.offsetWidth - 12)) + "px";
-    }
-
-    async function abrirHistorial(chip) {
-        chipHistorial = chip;
-        devolverFocoHistorial = true;
-        chip.setAttribute("aria-expanded", "true");
-        var contenidoHistorial = historial.querySelector("[data-agenda-historial-contenido]");
-        contenidoHistorial.innerHTML = '<p role="status">Cargando…</p>';
-        historial.showModal();
-        seguirHistorial();
-        ubicarHistorial();
-        if (!historial.open) return;
-        var solicitud = new AbortController();
-        solicitudHistorial = solicitud;
-        try {
-            var respuesta = await fetch(chip.dataset.url, {
-                headers: {"X-Agenda-Detalle": "1"},
-                credentials: "same-origin", cache: "no-store", signal: solicitud.signal,
-            });
-            if (!respuesta.ok || respuesta.redirected || !respuesta.headers.get("X-Agenda-Seleccion")) throw new Error();
-            var html = await respuesta.text();
-            if (solicitudHistorial !== solicitud || !historial.open) return;
-            contenidoHistorial.innerHTML = html;
-            ubicarHistorial();
-            historial.focus({preventScroll: true});
-        } catch (error) {
-            if (error.name === "AbortError" || solicitudHistorial !== solicitud) return;
-            var estado = contenidoHistorial.querySelector('[role="status"]');
-            estado.setAttribute("role", "alert");
-            estado.textContent = "No se pudieron consultar los eventos anulados. Cerrá y volvé a intentar.";
-            ubicarHistorial();
-        }
-    }
-
-    if (historial) {
-        document.addEventListener("click", function (evento) {
-            var chip = evento.target.closest("[data-agenda-historial]");
-            if (!chip || evento.defaultPrevented) return;
-            evento.preventDefault();
-            abrirHistorial(chip);
-        });
-        historial.addEventListener("click", function (evento) {
-            var rect = historial.getBoundingClientRect();
-            var fuera = evento.target === historial && (
-                evento.clientX < rect.left || evento.clientX > rect.right
-                || evento.clientY < rect.top || evento.clientY > rect.bottom
-            );
-            if (fuera) historial.close();
-        });
-        historial.addEventListener("close", function () {
-            dejarDeSeguirHistorial();
-            if (solicitudHistorial) solicitudHistorial.abort();
-            solicitudHistorial = null;
-            if (chipHistorial) {
-                chipHistorial.setAttribute("aria-expanded", "false");
-                if (devolverFocoHistorial) chipHistorial.focus({preventScroll: true});
-            }
-        });
-        if (historial.dataset.urlInicial) {
-            chipHistorial = Array.from(document.querySelectorAll("[data-agenda-historial]")).find(function (chip) {
-                return chip.dataset.url === historial.dataset.urlInicial;
-            });
-            if (chipHistorial) chipHistorial.setAttribute("aria-expanded", "true");
-            historial.showModal();
-            seguirHistorial();
-            ubicarHistorial();
-        }
-    }
 
     document.addEventListener("change", function (evento) {
         if (evento.target.matches('[data-agenda-mes] select[name="mes"]')) {

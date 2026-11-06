@@ -1,3 +1,13 @@
+<header class="agenda-detalle-cabecera agenda-resumen-tarjeta agenda-resumen-compacto">
+    <div class="agenda-resumen-seleccion">
+        <h2 class="agenda-resumen-estado" data-agenda-titulo>Eventos anulados</h2>
+        {% if agenda.detalle %}
+            <p class="agenda-resumen-horario">{{ agenda.detalle.hora|time:"H:i" }} – {{ agenda.detalle.fin|time:"H:i" }}</p>
+            <p class="agenda-resumen-cancha">{{ agenda.detalle.cancha.nombre }}</p>
+        {% endif %}
+    </div>
+    <a class="agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar detalle" aria-keyshortcuts="Escape" title="Cerrar detalle (Escape)">×</a>
+</header>
 <ul class="agenda-historial-lista">
     {% for evento in agenda.detalle.anulados %}
         <li>
@@ -10,3 +20,10 @@
         <li class="texto-secundario">No hay anulaciones disponibles para este turno.</li>
     {% endfor %}
 </ul>
+{% if agenda.detalle %}
+    <div class="agenda-ver-evento">
+        <a class="agenda-opcion" href="{{ agenda.url_seleccion }}" data-agenda-vista>
+            {% include "agenda/_opcion_turno.html" with tipo="volver" titulo="Volver al turno" only %}
+        </a>
+    </div>
+{% endif %}
