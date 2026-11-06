@@ -266,9 +266,9 @@ Revisión manual: comprobar el cambio al iniciar un mes, la conservación del me
 
 ## Contrataciones propias en el portal
 
-Las cuentas autenticadas, activas y sin cambio de contraseña pendiente consultan sus planes desde Mis contrataciones en la navegación del portal y desde su perfil. No se exige Alumno ni Reservas, ni siquiera para la consulta histórica. La navegación administrativa conserva Membresías; un administrador puede consultar sus contrataciones por el acceso de su perfil, con el mismo alcance de titular.
+Las cuentas autenticadas, activas y sin cambio de contraseña pendiente consultan sus planes y membresías desde Mis contrataciones en la navegación del portal y desde su perfil. No se exige Alumno ni Reservas, ni siquiera para la consulta histórica. La navegación administrativa conserva Membresías; un administrador puede consultar sus contrataciones por el acceso de su perfil, con el mismo alcance de titular.
 
-El listado permite buscar por nombre del plan, filtrar por mes y estado y navegar de a veinticinco resultados. Muestra producto, mes cubierto, importe aplicado y estado con texto. Sin contrataciones propias presenta un estado vacío breve. Se consultan estados Activo, Anulado y Vencido sin excluir productos Inactivos del catálogo.
+El listado permite elegir Planes o Membresías, buscar por nombre del producto, filtrar por mes y estado y navegar de a veinticinco resultados. La selección de tipo permanece disponible incluso en estados vacíos. Si sólo hay membresías y no se elige un tipo, se muestran por defecto. La búsqueda, los filtros, la paginación y su limpieza conservan el tipo seleccionado. Muestra producto, mes cubierto, importe aplicado y estado con texto. Sin contrataciones propias presenta un estado vacío breve. Se consultan estados Activo, Anulado y Vencido sin excluir productos Inactivos del catálogo.
 
 El detalle muestra producto y configuración comercial, mes y período completo, importe aplicado, estado, fecha efectiva de alta, fecha de registro y fecha de anulación cuando corresponde. No presenta observaciones internas, motivo libre de anulación ni responsables administrativos. No enlaza al catálogo administrativo ni a fichas de otros usuarios y no incluye alta, edición, anulación o cobro. Los cobros tienen su bloque funcional correspondiente.
 
@@ -276,7 +276,7 @@ Las rutas propias sólo admiten GET y comprueban nuevamente la cuenta habilitada
 
 Administración y portal comparten las plantillas de listado y detalle y el filtrado/paginación; las vistas propias mantienen explícita su comprobación de titularidad. No se incorpora CSS, JavaScript, iconos ni bibliotecas nuevas. La composición del rediseño conserva su alcance de presentación independiente.
 
-Revisión manual: consultar con y sin Alumno o Reservas, con Profesor y con una cuenta sin contrataciones; revisar planes Activos, Anulados, Vencidos y de productos Inactivos. Navegar desde el menú y el perfil, buscar, filtrar y paginar los planes. Cambiar el número por uno ajeno, agregar parámetros de otro usuario e intentar acceso directo a rutas de escritura administrativas. Comprobar permisos, estado vacío, teclado y móvil.
+Revisión manual: consultar con y sin Alumno o Reservas, con Profesor y con una cuenta sin contrataciones; revisar planes y membresías Activos, Anulados, Vencidos y de productos Inactivos. Navegar desde el menú y el perfil, buscar, filtrar y paginar ambos tipos. Cambiar el número por uno ajeno, agregar parámetros de otro usuario e intentar acceso directo a rutas de escritura administrativas. Comprobar permisos, estado vacío, teclado y móvil.
 
 
 ## Anulación de clases desde el panel de Agenda
@@ -301,7 +301,7 @@ Verificación: controles de Django, carga de plantillas y sintaxis JavaScript. R
 
 ## Alcance comercial e instalación
 
-La gestión comercial implementada comprende los catálogos de planes de clases y membresías de socios, y las contrataciones administrativas de ambos tipos. Oferta presenta planes y membresías Activos y tarifas de reservas; Mis contrataciones consulta planes propios. Administración registra y consulta contrataciones de membresías de socios, con comprobante e importe aplicado.
+La gestión comercial implementada comprende los catálogos de planes de clases y membresías de socios, y las contrataciones administrativas de ambos tipos. Oferta presenta planes y membresías Activos y tarifas de reservas; Mis contrataciones consulta planes y membresías propios. Administración registra y consulta contrataciones de membresías de socios, con comprobante e importe aplicado.
 
 Las migraciones definen una instalación limpia con tablas y triggers de auditoría de planes y sus contrataciones. La revisión de esquema comprende migración completa sobre una base temporal, controles de Django, coincidencia entre modelos y migraciones y carga de todas las plantillas. Queda pendiente la revisión manual de navegación, oferta, contrataciones propias, permisos y administración de planes.
 
@@ -343,7 +343,7 @@ La confirmación aplica el precio mensual vigente completo, incluido cero, sin p
 
 Las contrataciones se guardan en membresias_usuarios y tienen exclusividad propia de titular y mes entre Activas o Vencidas, con una restricción única parcial. Pueden coexistir con un plan del mismo mes. Se admiten profesores y cuentas sin Alumno; contratar no modifica roles. La operación bloquea las cuentas por identificador y después el producto para coordinar altas, cambios de acceso y edición del catálogo. Las horas mensuales del producto se conservan desde la primera contratación, cualquiera sea su estado; el formulario muestra el campo en lectura y el servicio rechaza cambios.
 
-El listado permite buscar usuario o producto, filtrar por mes y estado y paginar. El detalle y el comprobante presentan titular, membresía, horas mensuales, período, importe aplicado, fecha efectiva y registro; el detalle administrativo conserva observaciones y responsables. Las consultas propias y los cobros corresponden a sus entregas independientes. El vencimiento automático comprende ambos tipos de contratación. La anulación administrativa se solicita bajo demanda desde el detalle de una contratación Activa. El detalle sólo ofrece acciones implementadas.
+El listado permite buscar usuario o producto, filtrar por mes y estado y paginar. El detalle y el comprobante presentan titular, membresía, horas mensuales, período, importe aplicado, fecha efectiva y registro; el detalle administrativo conserva observaciones y responsables. Las consultas propias muestran planes y membresías con sus comprobantes y datos comerciales autorizados; los cobros corresponden a su entrega independiente. El vencimiento automático comprende ambos tipos de contratación. La anulación administrativa se solicita bajo demanda desde el detalle de una contratación Activa. El detalle sólo ofrece acciones implementadas.
 
 PostgreSQL protege mes, importes, estados y coherencia de datos de anulación, genera los identificadores y audita modificaciones y eliminaciones. Auditoría identifica la contratación y enlaza al detalle administrativo. Los datos comerciales de una contratación registrada no admiten edición desde el modelo.
 
@@ -372,3 +372,14 @@ Cada actualización exige estado Activo y cambia únicamente estado y fecha de m
 El vencimiento conserva roles, actividades, productos, importes aplicados, referencias e historia. La cobertura se consulta por estado y período calendario, de modo que una contratación de un mes terminado no otorga beneficios aunque la tarea todavía no la haya procesado. El proceso no registra cobros ni modifica marcas de envío de avisos.
 
 Verificación realizada: controles de Django, coincidencia de modelos y migraciones y revisión del alcance de las escrituras y de la transacción. Queda pendiente la revisión manual del bloque 2.5: fin de mes, registros futuros, pendientes de varios meses, repetición y concurrencia con anulación. No se crean ni ejecutan pruebas automatizadas.
+
+
+## Consulta propia de membresías
+
+Mis contrataciones ofrece planes y membresías del titular autenticado, sin requerir Alumno ni Reservas. Cada tipo tiene detalle y comprobante propios. El perfil conserva un acceso único a la consulta, también para administradores; la navegación del portal identifica las rutas propias de ambos tipos y sus comprobantes.
+
+Las consultas sólo admiten GET y filtran por el titular antes de localizar registros. Las rutas de detalle y comprobante fijan el tipo en el servidor. Agregar parámetros de otro usuario no amplía el alcance. Una contratación ajena devuelve no encontrado y el intento se registra mediante la auditoría de accesos, con el mismo criterio de planes. Las consultas autorizadas no modifican contratos ni roles.
+
+El detalle y el comprobante muestran producto, período, horas de membresía o configuración del plan, importe aplicado, estado y fechas. No presentan responsables, observaciones internas, motivo libre de anulación, enlaces administrativos ni acciones de edición o anulación. Usos, cobros y contratación propia tienen sus entregas correspondientes.
+
+Verificación realizada: controles de Django, coincidencia de modelos y migraciones y carga de 84 plantillas. Revisión manual pendiente del bloque 2.6: titular y terceros, Profesor sin Alumno, administrador consultando sus propios contratos, ambos tipos y estados, productos Inactivos, filtros, paginación, estados vacíos y privacidad de detalle y comprobante. No se crean ni ejecutan pruebas automatizadas.

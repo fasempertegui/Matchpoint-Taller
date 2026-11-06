@@ -2,7 +2,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import Http404
 
-from membresias.models import PlanUsuario
+from membresias.models import MembresiaUsuario, PlanUsuario
 from reservas.models import Reserva
 
 from .contexto import contexto_auditoria
@@ -42,6 +42,8 @@ class ContextoAuditoriaMiddleware:
                 "reservas:reserva_comprobante": (Reserva, "organizador_id"),
                 "membresias:mi_plan_comprobante": (PlanUsuario, "usuario_id"),
                 "membresias:mi_plan_contratado": (PlanUsuario, "usuario_id"),
+                "membresias:mi_membresia_comprobante": (MembresiaUsuario, "usuario_id"),
+                "membresias:mi_membresia_contratado": (MembresiaUsuario, "usuario_id"),
             }
             destino = destinos_privados.get(ruta.view_name)
             if destino:

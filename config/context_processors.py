@@ -19,7 +19,8 @@ def navegacion(request):
     agenda_activa = namespace in ("agenda", "reservas") or (administrador and clases_concretas)
     perfil_activo = namespace == "usuarios" and ruta.kwargs.get("pk") == usuario.pk
     contrataciones_propias_activo = namespace == "membresias" and ruta.url_name in (
-        "mis_contrataciones", "mi_plan_contratado",
+        "mis_contrataciones", "mi_plan_contratado", "mi_membresia_contratado",
+        "mi_plan_comprobante", "mi_membresia_comprobante",
     )
 
     def enlace(nombre, destino, activo, descripcion, kwargs=None):
@@ -40,7 +41,7 @@ def navegacion(request):
     ) if Rol.PUBLICO in roles else None
     mis_contrataciones = enlace(
         "Mis contrataciones", "membresias:mis_contrataciones", contrataciones_propias_activo,
-        "Consultá tus planes contratados, sus períodos e importes.",
+        "Consultá tus planes y membresías contratados, sus períodos e importes.",
     ) if not administrador else None
     clases = []
     if administrador:
