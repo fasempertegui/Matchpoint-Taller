@@ -333,32 +333,9 @@ Los turnos vacíos cuyo horario ya terminó no ofrecen acciones sobre su estado 
 
 ### 2.9 Apariencia de la web
 
-La aplicación web dispone de modo claro y modo oscuro en todas las pantallas, incluidos el acceso, el portal, las consultas, la agenda y sus paneles. La cabecera ofrece un botón que indica el modo al que se cambiará. La preferencia se conserva en el navegador, se aplica antes de mostrar el contenido y se comparte entre pestañas del mismo origen. Si no existe una elección guardada, se utiliza la preferencia del sistema y se siguen sus cambios. La elección no modifica datos ni permisos de la cuenta. Si el navegador impide guardar preferencias, el cambio sigue disponible en la página abierta.
+La navegación, identidad visual, temas, dimensiones, componentes, presentación por estado, privacidad e interacción de administración y portal se definen en [Diseño de interfaces](5_diseno_de_interfaces.md). Sus reglas abarcan el sistema completo y conservan lectura primero, acciones bajo demanda y edición compacta por fila.
 
-Los colores se definen mediante variables semánticas comunes. La identidad violeta se utiliza en acciones, enlaces y selección; las superficies oscuras tienen un matiz violeta discreto y los textos mantienen contraste con sus fondos. No se invierte el color de imágenes ni se agregan bordes laterales a las tarjetas de actividades. Reservas y bloqueos se distinguen por fondo y etiqueta; la selección conserva ese fondo y utiliza un contorno violeta.
-
-| Uso en modo oscuro | Color |
-|---|---|
-| Fondo general | `#121216` |
-| Tarjetas y panel lateral | `#1C1C24` |
-| Campos y superficies elevadas | `#252530` |
-| Bordes y separadores | `#383845` |
-| Texto principal | `#F2F0F7` |
-| Texto secundario | `#B0ACBF` |
-| Acción principal y selección | `#BE9AF2` |
-| Hover de acción principal | `#CEB2FA` |
-| Texto sobre acción principal | `#251334` |
-| Realce violeta suave | `#2C213B` |
-| Fondo de la cabecera | `#21182E` |
-| Reservas: fondo / texto | `#233249` / `#D0E0FA` |
-| Reservas: hover / marca de leyenda | `#2B3E59` / `#93B7E8` |
-| Bloqueos: fondo / texto | `#382F25` / `#EBD2AE` |
-| Bloqueos: hover / marca de leyenda | `#493B2D` / `#D7AC75` |
-
-Los estados Programado utilizan violeta, los estados Activo y Finalizado conservan el acento verde, y los estados Inactivo y Anulado utilizan una paleta neutral. Los mensajes de error, advertencia e información tienen fondos atenuados y textos claros acordes con su intención. Los botones principales usan texto oscuro sobre violeta claro; los secundarios conservan el contorno y texto violeta. Los campos, selectores nativos, fechas, controles deshabilitados y focos se adaptan al tema activo.
-
-El modo visual no cambia el tamaño ni la distribución funcional de las secciones. Los comprobantes se presentan con el tema activo en pantalla y utilizan fondo blanco y texto oscuro al imprimir o guardar como PDF mediante el navegador.
-
+Los permisos, estados y validaciones funcionales de este documento se aplican también a las consultas y escrituras de la interfaz. Ocultar controles no sustituye la autorización del servidor y ninguna confirmación permite ignorar una prohibición de negocio.
 
 ### 2.10 Bloqueos y acciones del día y del mes
 
