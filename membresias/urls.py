@@ -10,6 +10,7 @@ urlpatterns = [
     path("mis-contrataciones/planes/<int:pk>/comprobante/", vistas_propias.contratacion_propia_comprobante, name="mi_plan_comprobante"),
     path("oferta/", vistas_oferta.oferta, name="oferta"),
     path("oferta/planes/", vistas_oferta.oferta_planes, name="oferta_planes"),
+    path("oferta/membresias/", vistas_oferta.oferta_membresias, name="oferta_membresias"),
     path("oferta/tarifas/", vistas_oferta.oferta_tarifas, name="oferta_tarifas"),
     path("", views.catalogos, name="catalogos"),
     path("contrataciones/planes/", vistas_contrataciones.contratacion_lista, name="contratacion_plan_lista"),

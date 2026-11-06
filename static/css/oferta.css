@@ -1,22 +1,40 @@
-.oferta-opciones {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-auto-rows: 1fr;
+.oferta-navegacion {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--borde);
+}
+
+.oferta-navegacion a {
+    padding: 10px 16px;
+    border-bottom: 2px solid transparent;
+    color: var(--texto-suave);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.oferta-navegacion a:hover,
+.oferta-navegacion a[aria-current="page"] {
+    color: var(--primario);
+    border-bottom-color: var(--primario);
+}
+
+.oferta-navegacion a:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: -2px;
 }
 
 .tarjeta.oferta-tarjeta {
     position: relative;
     min-width: 0;
-    min-height: 260px;
+    min-height: 440px;
+    background: var(--superficie);
     border: 1px solid var(--borde);
     box-shadow: 0 8px 24px rgba(26, 32, 40, .08);
     transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
-.oferta-opciones .oferta-tarjeta {
-    min-height: 0;
-}
-
-.oferta-opciones .oferta-tarjeta:hover,
 .oferta-tarjeta:focus-within {
     transform: translateY(-3px);
     border-color: var(--primario);
@@ -32,29 +50,9 @@
     color: var(--texto-suave);
 }
 
-.oferta-enlace {
-    gap: 8px;
-    margin-top: auto;
-}
-
-.oferta-enlace::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-}
-
-.oferta-enlace:focus-visible {
-    outline: none;
-}
-
-.oferta-enlace:focus-visible::after {
-    outline: 2px solid var(--primario);
-    outline-offset: 4px;
-}
-
 .oferta-catalogo {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
 }
 
 .tarjeta.oferta-producto {
@@ -69,6 +67,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+    min-height: 132px;
     padding-bottom: 12px;
 }
 
@@ -95,6 +94,7 @@
 }
 
 .oferta-producto-precio {
+    container-type: inline-size;
     padding-bottom: 24px;
 }
 
@@ -108,7 +108,8 @@
 .oferta-producto-importe strong {
     color: var(--primario);
     font-family: var(--fuente-titulos);
-    font-size: clamp(2rem, 3vw, 2.65rem);
+    font-size: clamp(1rem, 14cqi, 2.65rem);
+    white-space: nowrap;
     line-height: 1.1;
     letter-spacing: -.04em;
 }
@@ -205,40 +206,9 @@
     outline-offset: -2px;
 }
 
-.tarjeta.oferta-producto:not(.oferta-producto-reserva) {
-    border: 0;
-}
-
-.tarjeta.oferta-producto-grupal {
-    background: linear-gradient(180deg, var(--primario-suave), var(--superficie) 55%);
-}
-
-.tarjeta.oferta-producto-individual {
-    background: linear-gradient(180deg, var(--acento-suave), var(--superficie) 55%);
-}
-
-.oferta-producto-individual .oferta-modalidad {
-    background: var(--acento);
-    color: var(--acento-texto);
-}
-
-.oferta-tarifas .oferta-producto-reserva {
-    display: grid;
-    grid-template-rows: subgrid;
-    grid-row: span 4;
-    row-gap: 0;
-    border-color: var(--borde);
-    background: var(--superficie);
-}
-
 .oferta-reserva-enlace:focus-visible {
     outline: 2px solid var(--primario);
     outline-offset: 4px;
-}
-
-.oferta-producto-grupal .oferta-modalidad {
-    background: var(--primario);
-    color: var(--superficie);
 }
 
 .oferta-catalogo-encabezado {
@@ -295,10 +265,6 @@
 }
 
 @media (max-width: 900px) {
-    .oferta-opciones {
-        grid-template-columns: minmax(0, 1fr);
-    }
-
     .oferta-catalogo {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -324,7 +290,6 @@
         transition: none;
     }
 
-    .oferta-opciones .oferta-tarjeta:hover,
     .oferta-tarjeta:focus-within {
         transform: none;
     }

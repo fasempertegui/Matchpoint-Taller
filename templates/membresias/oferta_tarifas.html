@@ -3,16 +3,18 @@
 {% block titulo %}Tarifas de reservas | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/oferta.css' %}">{% endblock %}
 {% block contenido %}
+{% include "membresias/_oferta_navegacion.html" with tipo=tipo only %}
 <header class="oferta-catalogo-encabezado"><h1>Tarifas de reservas</h1></header>
 {% if sedes %}
-    <section class="inicio-modulos oferta-catalogo oferta-tarifas" aria-label="Tarifas vigentes por sede">
+    <section class="inicio-modulos oferta-catalogo" aria-label="Tarifas vigentes por sede">
         {% for sede in sedes %}
-            <article class="tarjeta inicio-modulo oferta-tarjeta oferta-producto oferta-producto-reserva">
+            <article class="tarjeta inicio-modulo oferta-tarjeta oferta-producto">
                 <header class="oferta-producto-identidad">
+                    <span class="badge-estado oferta-modalidad">Reserva de cancha</span>
                     <h2>{{ sede.nombre }}</h2>
                 </header>
                 <div class="oferta-producto-precio">
-                    <div class="oferta-producto-importe"><strong>$ {{ sede.precio_reserva_vigente|floatformat:"-2g" }}</strong><span>por turno</span></div>
+                    <div class="oferta-producto-importe"><strong>$ {{ sede.precio_reserva_vigente|floatformat:"2g" }}</strong><span>por turno</span></div>
                 </div>
                 <ul class="oferta-producto-beneficios" aria-label="Características">
                     <li>

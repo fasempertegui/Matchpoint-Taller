@@ -188,7 +188,7 @@ El navbar ofrece Inicio, Agenda, Planilla semanal para Administrador o Mis clase
 
 Administración agrupa Usuarios, Sedes y canchas, Membresías, Feriados y Auditoría en ese orden. Sedes y canchas enlaza al listado de Sedes. Si sólo hay un destino administrativo autorizado, se presenta directamente. El menú de cuenta reúne Mi perfil y Cerrar sesión; cerrar sesión utiliza POST. Los desplegables conservan navegación por teclado e indicadores de foco.
 
-Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver membresías para elegir entre Planes y Contrataciones de planes. La gestión de catálogos y contrataciones tiene acceso administrativo y una única entrada Membresías en el desplegable Administración. En el portal, Oferta de la academia permite consultar productos Activos y tarifas vigentes en modo de lectura. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
+Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver membresías para elegir entre Planes, Membresías de socios y Contrataciones de planes. La gestión de catálogos y contrataciones tiene acceso administrativo y una única entrada Membresías en el desplegable Administración. En el portal, Oferta de la academia permite consultar productos Activos y tarifas vigentes en modo de lectura. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
 
 La ruta actual resalta el destino o su grupo. Los desplegables abren con clic, Enter o Espacio; las flechas recorren sus enlaces y Escape cierra devolviendo el foco al disparador. En móvil se expanden dentro de la navegación vertical. Las rutas mantienen las autorizaciones del servidor.
 
@@ -208,15 +208,15 @@ Revisión manual: crear y editar un plan, revisar nombres Activos repetidos incl
 
 ## Oferta de la academia en el portal
 
-Las cuentas activas con rol Público y sin cambio de contraseña pendiente acceden a Oferta desde el navbar y desde el inicio del portal. La entrada presenta Planes de clases y Tarifas de reservas. Los administradores conservan su acceso de gestión y pueden consultar las pantallas de oferta por sus rutas.
+Las cuentas activas con rol Público y sin cambio de contraseña pendiente acceden a Oferta desde el navbar y desde el inicio del portal. La entrada abre Planes de clases. Las pestañas Planes, Membresías y Tarifas permiten recorrer la oferta, indican la sección actual y siguen disponibles cuando un catálogo está vacío. Los administradores conservan su acceso de gestión y pueden consultar las pantallas de oferta por sus rutas.
 
-Los catálogos del portal muestran únicamente productos Activos, con búsqueda por nombre o descripción y veinticinco resultados por página. Las tarjetas presentan nombre, categoría, precio mensual y características comerciales: frecuencia y cantidad de clases por encuentro para planes. La descripción, si existe, ocupa hasta dos líneas y habilita Leer descripción. Esa acción abre un modal en la misma página con el nombre y el texto completo, conservando los párrafos y escapando HTML. El modal se cierra con ×, Escape o clic fuera y devuelve el foco al botón. Una tarjeta sin descripción no ofrece acción y las tarjetas del catálogo no son enlaces completos. El portal no tiene pantallas separadas de detalle de productos; la administración conserva las suyas.
+Los catálogos del portal muestran únicamente productos Activos, con búsqueda por nombre o descripción y veinticinco resultados por página. Las tarjetas presentan nombre, categoría, precio mensual y características comerciales: frecuencia y cantidad de clases por encuentro para planes; horas mensuales y adicional por invitado no socio y turno de una hora para membresías. Los importes se muestran con dos decimales. La descripción, si existe, ocupa hasta dos líneas y habilita Leer descripción. Esa acción abre un modal en la misma página con el nombre y el texto completo, conservando los párrafos y escapando HTML. El modal se cierra con ×, Escape o clic fuera y devuelve el foco al botón. Una tarjeta sin descripción no ofrece acción y las tarjetas del catálogo no son enlaces completos. El portal no tiene pantallas separadas de detalle de productos; la administración conserva las suyas.
 
 La consulta de tarifas muestra las sedes Activas con precio de reserva configurado, en pesos por turno de una hora, común a sus canchas. Cada sede ofrece un acceso a Agenda para consultar disponibilidad. Las sedes Inactivas y las tarifas sin configurar no se incluyen en esta oferta.
 
 Las pantallas de oferta son de lectura: no incluyen edición, cambios de estado, altas comerciales, datos internos de registro ni formularios de contratación. Las escrituras conservan las rutas y controles administrativos. Las consultas sólo admiten GET y comprueban en el servidor que la cuenta esté habilitada y tenga Público o Administrador; consultar no crea turnos, contrataciones ni auditoría.
 
-Revisión manual: acceder con Público, Profesor y Alumno que conserven Público; consultar el catálogo de planes y sus descripciones, buscar y navegar páginas; revisar importes cero, productos Inactivos por enlace directo, sedes Inactivas y tarifas ausentes. Comprobar la navegación hacia Agenda, el rechazo de acceso sin rol habilitado y que las rutas administrativas sigan rechazando a cuentas no administrativas.
+Revisión manual: acceder con Público, Profesor y Alumno que conserven Público; consultar los catálogos de planes y membresías y sus descripciones, buscar y navegar páginas; revisar importes cero, productos Inactivos por enlace directo, sedes Inactivas y tarifas ausentes. Comprobar la navegación hacia Agenda, el rechazo de acceso sin rol habilitado y que las rutas administrativas sigan rechazando a cuentas no administrativas.
 
 
 ## Contrataciones administrativas de planes
@@ -301,7 +301,7 @@ Verificación: controles de Django, carga de plantillas y sintaxis JavaScript. R
 
 ## Alcance comercial e instalación
 
-La gestión comercial implementada comprende los catálogos de planes de clases y membresías de socios, y las contrataciones de planes. Oferta presenta planes Activos y tarifas de reservas; Mis contrataciones consulta planes propios. Las contrataciones de membresías de socios corresponden a la entrega 2.2 del plan de implementación.
+La gestión comercial implementada comprende los catálogos de planes de clases y membresías de socios, y las contrataciones de planes. Oferta presenta planes y membresías Activos y tarifas de reservas; Mis contrataciones consulta planes propios. Las contrataciones de membresías de socios corresponden a la entrega 2.2 del plan de implementación.
 
 Las migraciones definen una instalación limpia con tablas y triggers de auditoría de planes y sus contrataciones. La revisión de esquema comprende migración completa sobre una base temporal, controles de Django, coincidencia entre modelos y migraciones y carga de todas las plantillas. Queda pendiente la revisión manual de navegación, oferta, contrataciones propias, permisos y administración de planes.
 
@@ -314,6 +314,13 @@ El producto registra horas mensuales positivas y dos importes no negativos, admi
 
 Las operaciones exigen Administrador activo sin cambio de contraseña pendiente y revalidan permisos bajo bloqueo del actor y del producto. Una versión firmada identifica actor, producto, tipo y momento de modificación. Las ediciones concurrentes requieren nueva revisión; guardar sin cambios o reenviar el mismo estado no actualiza el registro. La auditoría identifica las membresías, sus modificaciones y sus cambios de estado.
 
-El catálogo no registra contrataciones, usos ni cobros. La protección de horas frente a contrataciones históricas se integra con la relación de contratación en 2.2. La oferta del portal se integra en 1.3.
+El catálogo no registra contrataciones, usos ni cobros. La protección de horas frente a contrataciones históricas se integra con la relación de contratación en 2.2. La oferta del portal permite consultar las membresías Activas, sus horas mensuales y su adicional por invitado no socio.
 
 Verificación realizada: instalación limpia en base temporal, controles de Django, coincidencia de modelos y migraciones, carga de 84 plantillas y consulta de oferta inicial y trigger. Revisión manual pendiente: altas y ediciones válidas, duplicados entre Activas, activación con nombre ocupado, precios cero y negativos, horas cero, reenvíos, modificaciones concurrentes y permisos. No se crean ni ejecutan pruebas automatizadas.
+
+
+## Consulta de oferta de membresías
+
+La oferta incorpora membresías de socios en el catálogo compartido de lectura, con búsqueda por nombre o descripción, paginación y descripciones extensas bajo demanda. Limpiar búsqueda conserva el catálogo consultado. La navegación entre Planes, Membresías y Tarifas usa enlaces con sección actual accesible, sin controles administrativos ni contratación propia hasta su entrega correspondiente.
+
+Verificación realizada: controles de Django, carga de 84 plantillas y revisión de diferencias. Revisión manual pendiente de las pestañas, búsquedas, paginación, descripción, importes cero, productos Inactivos, estados vacíos, permisos, teclado y móvil. No se crean ni ejecutan pruebas automatizadas.

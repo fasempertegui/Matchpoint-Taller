@@ -36,7 +36,7 @@ def navegacion(request):
     )
     oferta = enlace(
         "Oferta", "membresias:oferta", namespace == "membresias" and ruta.url_name.startswith("oferta"),
-        "Planes de clases y tarifas de reservas.",
+        "Planes de clases, membresías de socios y tarifas de reservas.",
     ) if Rol.PUBLICO in roles else None
     mis_contrataciones = enlace(
         "Mis contrataciones", "membresias:mis_contrataciones", contrataciones_propias_activo,
