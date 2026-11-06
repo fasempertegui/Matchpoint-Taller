@@ -8,15 +8,6 @@
 </header>
 {% if hay_contrataciones %}
     <form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos>
-        {% if propias %}
-            <div class="grupo-campo">
-                <label for="contratacion-tipo">Tipo</label>
-                <select class="form-control" id="contratacion-tipo" name="tipo">
-                    <option value="plan"{% if tipo == 'plan' %} selected{% endif %}>Planes</option>
-                    <option value="pase"{% if tipo == 'pase' %} selected{% endif %}>Pases de cancha</option>
-                </select>
-            </div>
-        {% endif %}
         <div class="grupo-campo">
             <label for="contratacion-busqueda">Buscar</label>
             <input class="form-control" type="search" id="contratacion-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="{% if propias %}Nombre del {{ tipo }}{% else %}Usuario o {{ tipo }}{% endif %}">

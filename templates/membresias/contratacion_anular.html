@@ -4,5 +4,4 @@
     <p>Contratación #{{ contratacion.pk }} · {{ contratacion.fecha_inicio|date:"d/m/Y" }} al {{ contratacion.fecha_fin|date:"d/m/Y" }}</p>
     <p>{{ etiqueta_importe }}: <strong>$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</strong></p>
     <p class="texto-secundario">Al confirmar, la contratación queda Anulada y podés registrar un reemplazo para el mismo mes. Se conservan el registro, sus importes y los roles del usuario. No se modifican clases, asignaciones ni cobros, ni se devuelve dinero automáticamente.</p>
-    {% if tipo == 'pase' %}<p class="texto-secundario">El pase deja de admitir nuevas aplicaciones. Se conservan las reservas y sus coberturas registradas.</p>{% endif %}
 {% endblock %}

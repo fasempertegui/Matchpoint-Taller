@@ -32,15 +32,10 @@
     <section class="comprobante-seccion" aria-label="Titular y condiciones del producto">
         <div class="detalle-grid">
             <div><span class="etiqueta">Usuario</span><p>{{ contratacion.usuario }} · @{{ contratacion.usuario.username }}</p></div>
-            {% if tipo == 'plan' %}
+
                 <div><span class="etiqueta">Modalidad</span><p>{{ contratacion.producto.get_modalidad_display }}</p></div>
                 <div><span class="etiqueta">Encuentros por semana</span><p>{{ contratacion.producto.frecuencia_semanal }}</p></div>
                 <div><span class="etiqueta">Duración de cada encuentro</span><p>{{ contratacion.producto.get_cantidad_clases_por_encuentro_display }}</p></div>
-            {% else %}
-                <div><span class="etiqueta">Variante</span><p>{{ contratacion.producto.get_tipo_display }}</p></div>
-                <div><span class="etiqueta">Límite diario</span><p>{{ contratacion.producto.limite_horas_diarias }} hora{{ contratacion.producto.limite_horas_diarias|pluralize:"s" }}</p></div>
-                <div><span class="etiqueta">Días habilitados</span><p>{{ contratacion.producto.dias_habilitados }}</p></div>
-            {% endif %}
         </div>
     </section>
 

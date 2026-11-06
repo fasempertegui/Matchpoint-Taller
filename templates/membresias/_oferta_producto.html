@@ -1,6 +1,6 @@
-<article class="tarjeta inicio-modulo oferta-tarjeta oferta-producto{% if tipo == 'plan' %} oferta-producto-{{ producto.modalidad }}{% endif %}">
+<article class="tarjeta inicio-modulo oferta-tarjeta oferta-producto oferta-producto-{{ producto.modalidad }}">
     <header class="oferta-producto-identidad">
-        <span class="badge-estado oferta-modalidad">{% if tipo == 'plan' %}{{ producto.get_modalidad_display }}{% else %}{{ producto.get_tipo_display }}{% endif %}</span>
+        <span class="badge-estado oferta-modalidad">{{ producto.get_modalidad_display }}</span>
         <h2>{{ producto.nombre }}</h2>
         {% if producto.descripcion %}<p class="oferta-producto-descripcion">{{ producto.descripcion }}</p>{% endif %}
     </header>
@@ -8,7 +8,6 @@
         <div class="oferta-producto-importe"><strong>$ {{ producto.precio_vigente|floatformat:"-2g" }}</strong><span>por mes</span></div>
     </div>
     <ul class="oferta-producto-beneficios" aria-label="Características">
-        {% if tipo == 'plan' %}
             <li>
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4m8-4v4M3 11h18"/></svg>
                 <span><strong>{{ producto.frecuencia_semanal }} encuentro{{ producto.frecuencia_semanal|pluralize:"s" }}</strong> por semana</span>
@@ -17,16 +16,6 @@
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                 <span><strong>{{ producto.cantidad_clases_por_encuentro }} hora{{ producto.cantidad_clases_por_encuentro|pluralize:"s" }}</strong> por encuentro</span>
             </li>
-        {% else %}
-            <li>
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                <span>Hasta <strong>{{ producto.limite_horas_diarias }} hora{{ producto.limite_horas_diarias|pluralize:"s" }}</strong> de cancha por día</span>
-            </li>
-            <li>
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2m4-12v6m-3-3h6"/></svg>
-                <span><strong>$ {{ producto.precio_invitado_vigente|floatformat:"-2g" }}</strong> por invitado sin cobertura, por turno</span>
-            </li>
-        {% endif %}
     </ul>
     {% if producto.descripcion %}<button class="boton boton-secundario oferta-descripcion-abrir" type="button" data-oferta-descripcion aria-haspopup="dialog" aria-controls="oferta-descripcion" aria-label="Leer descripción de {{ producto.nombre }}">Leer descripción</button>{% endif %}
 </article>

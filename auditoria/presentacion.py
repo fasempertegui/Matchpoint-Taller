@@ -13,7 +13,7 @@ from clases.models import (
     TurnoPlanillaAlumno, TurnoPlanillaProfesor,
 )
 from instalaciones.models import Cancha, Sede, SedeHorario
-from membresias.models import Pase, PaseUsuario, Plan, PlanUsuario
+from membresias.models import Plan, PlanUsuario
 from reservas.models import Evento, Reserva, Turno
 from usuarios.models import Rol, Usuario, UsuarioRol
 
@@ -50,9 +50,7 @@ TIPOS_REGISTRO = {
         Asistencia, "Asistencia", ("clase", "usuario"), None,
     ),
     "planes": (Plan, "Plan", (), "membresias:plan_detalle"),
-    "pases": (Pase, "Pase de cancha", (), "membresias:pase_detalle"),
     "planes_usuarios": (PlanUsuario, "Contratación de plan", ("usuario",), "membresias:contratacion_plan_detalle"),
-    "pases_usuarios": (PaseUsuario, "Contratación de pase", ("usuario",), "membresias:contratacion_pase_detalle"),
 }
 
 
@@ -61,7 +59,6 @@ ESTADOS_ACTIVACION = {
     "sedes": ("estado", "activa", "inactiva"),
     "canchas": ("estado", "activa", "inactiva"),
     "planes": ("estado", "activo", "inactivo"),
-    "pases": ("estado", "activo", "inactivo"),
 }
 
 
@@ -78,7 +75,7 @@ def _relacion(objeto, nombre):
 
 
 def _referencia_breve(objeto):
-    if isinstance(objeto, (Usuario, Rol, Sede, Plan, Pase)):
+    if isinstance(objeto, (Usuario, Rol, Sede, Plan)):
         return str(objeto)
     if isinstance(objeto, UsuarioRol):
         return f"{_relacion(objeto, 'usuario')} · {_relacion(objeto, 'rol')}"
@@ -108,7 +105,7 @@ def _referencia_breve(objeto):
     if isinstance(objeto, (ClaseProfesor, ClaseAlumno, Asistencia)):
         persona = "profesor" if isinstance(objeto, ClaseProfesor) else "usuario"
         return f"{_relacion(objeto, persona)} · Clase #{objeto.clase_id}"
-    if isinstance(objeto, (PlanUsuario, PaseUsuario)):
+    if isinstance(objeto, PlanUsuario):
         return f"{_relacion(objeto, 'usuario')} · {objeto.mes_cubierto:%m/%Y}"
 
 
@@ -245,7 +242,7 @@ def _referencia_eliminada(registro, clave):
     if registro.tabla == "usuarios":
         nombre = " ".join(filter(None, (datos.get("first_name"), datos.get("last_name"))))
         return nombre or datos.get("username") or clave
-    if registro.tabla in ("roles", "sedes", "canchas", "planes", "pases"):
+    if registro.tabla in ("roles", "sedes", "canchas", "planes"):
         return datos.get("nombre") or clave
     if registro.tabla == "usuarios_roles" and datos.get("usuario_id") and datos.get("rol_id"):
         return f"Usuario #{datos['usuario_id']} · Rol #{datos['rol_id']}"

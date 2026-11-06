@@ -3,7 +3,7 @@
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/oferta.css' %}">{% endblock %}
 {% block contenido %}
-{% if tipo == 'plan' %}{% url 'membresias:oferta_planes' as url_catalogo %}{% else %}{% url 'membresias:oferta_pases' as url_catalogo %}{% endif %}
+{% url 'membresias:oferta_planes' as url_catalogo %}
 <header class="oferta-catalogo-encabezado">
     <h1>{{ titulo }}</h1>
     {% if pagina or busqueda %}

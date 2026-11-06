@@ -8,7 +8,7 @@ from django.views.decorators.http import require_GET
 from usuarios.models import Usuario
 
 from .consultas import listar_contrataciones
-from .models import PaseUsuario, PlanUsuario
+from .models import PlanUsuario
 
 
 def _exigir_titular(usuario):
@@ -22,11 +22,11 @@ def _exigir_titular(usuario):
 def _contexto(tipo):
     url_lista = reverse("membresias:mis_contrataciones") + f"?tipo={tipo}"
     return {
-        "propias": True, "tipo": tipo, "plural": "planes" if tipo == "plan" else "pases",
+        "propias": True, "tipo": tipo, "plural": "planes",
         "titulo_lista": "Mis contrataciones", "url_lista": url_lista,
-        "ruta_detalle": "membresias:mi_plan_contratado" if tipo == "plan" else "membresias:mi_pase_contratado",
+        "ruta_detalle": "membresias:mi_plan_contratado",
         "ruta_comprobante": f"membresias:mi_{tipo}_comprobante",
-        "etiqueta_importe": "Importe acordado (ARS)" if tipo == "plan" else "Importe aplicado (ARS)",
+        "etiqueta_importe": "Importe acordado (ARS)",
     }
 
 
@@ -35,21 +35,10 @@ def _contexto(tipo):
 @require_GET
 def mis_contrataciones(request):
     titular = _exigir_titular(request.user)
-    tipo = request.GET.get("tipo", "plan")
-    if tipo not in ("plan", "pase"):
-        tipo = "plan"
-    modelo = PlanUsuario if tipo == "plan" else PaseUsuario
+    tipo = "plan"
+    modelo = PlanUsuario
     contrataciones = modelo.objects.filter(usuario=titular).select_related("usuario", tipo)
     datos = listar_contrataciones(contrataciones, request.GET, tipo=tipo, buscar_usuario=False)
-    if not datos["hay_contrataciones"]:
-        otro_modelo = PaseUsuario if tipo == "plan" else PlanUsuario
-        otras = otro_modelo.objects.filter(usuario=titular)
-        datos["hay_contrataciones"] = otras.exists()
-        if datos["hay_contrataciones"] and not request.GET.get("tipo"):
-            tipo = "pase" if tipo == "plan" else "plan"
-            datos = listar_contrataciones(
-                otras.select_related("usuario", tipo), request.GET, tipo=tipo, buscar_usuario=False,
-            )
     return render(request, "membresias/contratacion_lista.html", {**datos, **_contexto(tipo)})
 
 
@@ -58,7 +47,7 @@ def mis_contrataciones(request):
 @require_GET
 def contratacion_propia_detalle(request, pk, tipo="plan"):
     titular = _exigir_titular(request.user)
-    modelo = PlanUsuario if tipo == "plan" else PaseUsuario
+    modelo = PlanUsuario
     contratacion = get_object_or_404(
         modelo.objects.filter(usuario=titular).select_related("usuario", tipo), pk=pk,
     )
@@ -72,7 +61,7 @@ def contratacion_propia_detalle(request, pk, tipo="plan"):
 @require_GET
 def contratacion_propia_comprobante(request, pk, tipo="plan"):
     titular = _exigir_titular(request.user)
-    modelo = PlanUsuario if tipo == "plan" else PaseUsuario
+    modelo = PlanUsuario
     contratacion = get_object_or_404(
         modelo.objects.filter(usuario=titular).select_related("usuario", tipo), pk=pk,
     )

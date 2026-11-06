@@ -5,7 +5,7 @@ from django.db import IntegrityError, transaction
 from auditoria.contexto import contexto_auditoria
 from usuarios.models import Rol, Usuario
 
-from .models import Pase, Plan
+from .models import Plan
 
 
 def exigir_administracion_membresias(usuario, *, bloquear=False):
@@ -91,44 +91,3 @@ def cambiar_estado_plan(usuario, plan_id, estado, *, version):
     with contexto_auditoria(usuario):
         _guardar_producto(plan, campos=["estado", "actualizado_en"])
     return plan
-
-
-@transaction.atomic
-def guardar_pase(
-    usuario, *, nombre, descripcion, tipo, limite_horas_diarias, precio_vigente,
-    precio_invitado_vigente, pase_id=None, version="",
-):
-    usuario = exigir_administracion_membresias(usuario, bloquear=True)
-    pase = Pase.objects.select_for_update().get(pk=pase_id) if pase_id is not None else Pase()
-    if pase_id is not None:
-        _validar_version_producto(usuario, pase, version)
-    datos = {
-        "nombre": nombre.strip(), "descripcion": descripcion.strip(), "tipo": tipo,
-        "limite_horas_diarias": limite_horas_diarias, "precio_vigente": precio_vigente,
-        "precio_invitado_vigente": precio_invitado_vigente,
-    }
-    cambios = [campo for campo, valor in datos.items() if getattr(pase, campo) != valor]
-    if pase_id is not None and {"tipo", "limite_horas_diarias"}.intersection(cambios) and pase.contrataciones.exists():
-        raise ValidationError("La variante y el límite diario no se pueden cambiar en un pase con contrataciones.")
-    for campo, valor in datos.items():
-        setattr(pase, campo, valor)
-    if pase_id is not None and not cambios:
-        return pase
-    with contexto_auditoria(usuario):
-        _guardar_producto(pase, campos=cambios + ["actualizado_en"] if pase_id is not None else None)
-    return pase
-
-
-@transaction.atomic
-def cambiar_estado_pase(usuario, pase_id, estado, *, version):
-    usuario = exigir_administracion_membresias(usuario, bloquear=True)
-    pase = Pase.objects.select_for_update().get(pk=pase_id)
-    if estado not in Pase.Estado.values:
-        raise ValidationError("Elegí un estado válido para el pase.")
-    if pase.estado == estado:
-        return pase
-    _validar_version_producto(usuario, pase, version)
-    pase.estado = estado
-    with contexto_auditoria(usuario):
-        _guardar_producto(pase, campos=["estado", "actualizado_en"])
-    return pase

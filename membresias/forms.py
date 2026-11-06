@@ -5,7 +5,7 @@ from common.fechas import FECHA_INICIO_OPERACIONES
 from usuarios.models import Rol, Usuario
 
 from .fechas import meses_contratables, validar_fecha_alta, validar_mes_contratacion
-from .models import Pase, Plan
+from .models import Plan
 
 
 class PlanForm(forms.ModelForm):
@@ -36,34 +36,6 @@ class PlanForm(forms.ModelForm):
                 self.fields[nombre].help_text = "La configuración se conserva porque este plan tiene contrataciones."
 
 
-class PaseForm(forms.ModelForm):
-    version = forms.CharField(required=False, widget=forms.HiddenInput())
-
-    class Meta:
-        model = Pase
-        fields = (
-            "nombre", "tipo", "limite_horas_diarias", "precio_vigente", "precio_invitado_vigente",
-            "descripcion",
-        )
-        localized_fields = ("precio_vigente", "precio_invitado_vigente")
-        widgets = {
-            "nombre": forms.TextInput(attrs={"class": "form-control", "autofocus": True}),
-            "tipo": forms.Select(attrs={"class": "form-control"}),
-            "limite_horas_diarias": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
-            "precio_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal"}),
-            "precio_invitado_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal"}),
-            "descripcion": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["version"].required = self.instance.pk is not None
-        if self.instance.pk and self.instance.contrataciones.exists():
-            for nombre in ("tipo", "limite_horas_diarias"):
-                self.fields[nombre].disabled = True
-                self.fields[nombre].help_text = "La configuración se conserva porque este pase tiene contrataciones."
-
-
 class SeleccionContratacionPlanForm(forms.Form):
     campo_producto = "plan"
     modelo_producto = Plan
@@ -87,17 +59,6 @@ class SeleccionContratacionPlanForm(forms.Form):
         self.fields[self.campo_producto].queryset = self.modelo_producto.objects.filter(
             estado=self.modelo_producto.Estado.ACTIVO,
         )
-
-
-class SeleccionContratacionPaseForm(SeleccionContratacionPlanForm):
-    campo_producto = "pase"
-    modelo_producto = Pase
-    admite_profesor = True
-    plan = None
-    pase = forms.ModelChoiceField(
-        label="Pase", queryset=Pase.objects.none(), empty_label="Seleccioná un pase",
-        widget=forms.Select(attrs={"class": "form-control"}),
-    )
 
 
 class ContratacionPlanForm(forms.Form):
@@ -131,14 +92,6 @@ class ContratacionPlanForm(forms.Form):
         self.fields["fecha_alta"].widget.attrs.update({
             "min": FECHA_INICIO_OPERACIONES.isoformat(), "max": timezone.localdate().isoformat(),
         })
-
-
-class ContratacionPaseForm(ContratacionPlanForm):
-    plan = None
-    pase = forms.IntegerField(widget=forms.HiddenInput())
-    precio_aplicado = forms.DecimalField(
-        min_value=0, max_digits=12, decimal_places=2, widget=forms.HiddenInput(),
-    )
 
 
 class AnulacionContratacionForm(forms.Form):

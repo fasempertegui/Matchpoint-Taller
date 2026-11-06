@@ -7,7 +7,7 @@ from auditoria.contexto import contexto_auditoria
 from usuarios.models import Rol, Usuario, UsuarioRol
 
 from .fechas import validar_fecha_alta, validar_mes_contratacion
-from .models import Pase, PaseUsuario, Plan, PlanUsuario
+from .models import Plan, PlanUsuario
 from .servicios import exigir_administracion_membresias
 
 
@@ -112,61 +112,16 @@ def anular_contratacion_plan(actor, contratacion_id, *, motivo, version):
     )
 
 
-def anular_contratacion_pase(actor, contratacion_id, *, motivo, version):
-    return _anular_contratacion(
-        actor, contratacion_id, modelo=PaseUsuario, tipo="pase", motivo=motivo, version=version,
-    )
-
-
 def validar_retiro_rol_alumno(usuario):
     if PlanUsuario.objects.filter(usuario=usuario, estado=PlanUsuario.Estado.ACTIVO).exists():
         raise ValidationError("No se puede quitar el rol Alumno mientras el usuario tenga contrataciones de planes Activas.")
 
 
-@transaction.atomic
-def registrar_contratacion_pase(
-    actor, *, usuario_id, pase_id, mes_cubierto, fecha_alta, precio_aplicado, observaciones="",
-):
-    actor, titular = _bloquear_titular(actor, usuario_id)
-    try:
-        pase = Pase.objects.select_for_update().get(pk=pase_id)
-    except Pase.DoesNotExist:
-        raise ValidationError("El pase seleccionado ya no está disponible.") from None
-    if pase.estado != Pase.Estado.ACTIVO:
-        raise ValidationError("Elegí un pase activo para registrar la contratación.")
-    if precio_aplicado != pase.precio_vigente:
-        raise ValidationError("El precio vigente del pase cambió. Volvé a elegir el pase para revisar el importe.")
-    validar_mes_contratacion(mes_cubierto)
-    validar_fecha_alta(fecha_alta)
-    if PaseUsuario.objects.filter(usuario=titular, mes_cubierto=mes_cubierto).exclude(
-        estado=PaseUsuario.Estado.ANULADO,
-    ).exists():
-        raise ValidationError("El usuario ya tiene una contratación de pase para ese mes.")
-    contratacion = PaseUsuario(
-        usuario=titular, pase=pase, mes_cubierto=mes_cubierto, fecha_alta=fecha_alta,
-        precio_aplicado=pase.precio_vigente, registrado_por=actor, observaciones=observaciones.strip(),
-        estado=PaseUsuario.Estado.VENCIDO if mes_cubierto < timezone.localdate().replace(day=1)
-        else PaseUsuario.Estado.ACTIVO,
-    )
-    contratacion.full_clean()
-    try:
-        with transaction.atomic(), contexto_auditoria(actor):
-            contratacion.save()
-    except IntegrityError as error:
-        restriccion = getattr(getattr(error.__cause__, "diag", None), "constraint_name", None)
-        if restriccion == "pase_usuario_mes_no_anulado_unico":
-            raise ValidationError("El usuario ya tiene una contratación de pase para ese mes.") from None
-        raise
-    return contratacion
-
-
 def vencer_contrataciones():
     inicio_mes_actual = timezone.localdate().replace(day=1)
     procesado_en = timezone.now()
-    cantidades = {}
     with contexto_auditoria(origen="tarea"):
-        for tipo, modelo in (("planes", PlanUsuario), ("pases", PaseUsuario)):
-            cantidades[tipo] = modelo.objects.filter(
-                estado=modelo.Estado.ACTIVO, mes_cubierto__lt=inicio_mes_actual,
-            ).update(estado=modelo.Estado.VENCIDO, actualizado_en=procesado_en)
-    return cantidades
+        cantidad = PlanUsuario.objects.filter(
+            estado=PlanUsuario.Estado.ACTIVO, mes_cubierto__lt=inicio_mes_actual,
+        ).update(estado=PlanUsuario.Estado.VENCIDO, actualizado_en=procesado_en)
+    return {"planes": cantidad}

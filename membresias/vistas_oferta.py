@@ -9,7 +9,7 @@ from django.views.decorators.http import require_GET
 from instalaciones.models import Sede
 from usuarios.models import Rol, Usuario
 
-from .models import Pase, Plan
+from .models import Plan
 
 
 def _exigir_acceso_oferta(usuario):
@@ -35,7 +35,7 @@ def _lista_productos(request, modelo, tipo):
     if busqueda:
         productos = productos.filter(Q(nombre__icontains=busqueda) | Q(descripcion__icontains=busqueda))
     return render(request, "membresias/oferta_lista.html", {
-        "tipo": tipo, "titulo": "Planes de clases" if tipo == "plan" else "Pases de cancha",
+        "tipo": tipo, "titulo": "Planes de clases",
         "pagina": Paginator(productos, 25).get_page(request.GET.get("pagina")),
         "busqueda": busqueda,
     })
@@ -46,13 +46,6 @@ def _lista_productos(request, modelo, tipo):
 @require_GET
 def oferta_planes(request):
     return _lista_productos(request, Plan, "plan")
-
-
-@login_required
-@never_cache
-@require_GET
-def oferta_pases(request):
-    return _lista_productos(request, Pase, "pase")
 
 
 @login_required

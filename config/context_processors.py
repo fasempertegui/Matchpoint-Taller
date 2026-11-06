@@ -19,7 +19,7 @@ def navegacion(request):
     agenda_activa = namespace in ("agenda", "reservas") or (administrador and clases_concretas)
     perfil_activo = namespace == "usuarios" and ruta.kwargs.get("pk") == usuario.pk
     contrataciones_propias_activo = namespace == "membresias" and ruta.url_name in (
-        "mis_contrataciones", "mi_plan_contratado", "mi_pase_contratado",
+        "mis_contrataciones", "mi_plan_contratado",
     )
 
     def enlace(nombre, destino, activo, descripcion, kwargs=None):
@@ -36,11 +36,11 @@ def navegacion(request):
     )
     oferta = enlace(
         "Oferta", "membresias:oferta", namespace == "membresias" and ruta.url_name.startswith("oferta"),
-        "Planes de clases, pases de cancha y tarifas de reservas.",
+        "Planes de clases y tarifas de reservas.",
     ) if Rol.PUBLICO in roles else None
     mis_contrataciones = enlace(
         "Mis contrataciones", "membresias:mis_contrataciones", contrataciones_propias_activo,
-        "Consultá tus planes y pases contratados, sus períodos e importes.",
+        "Consultá tus planes contratados, sus períodos e importes.",
     ) if not administrador else None
     clases = []
     if administrador:
@@ -66,7 +66,7 @@ def navegacion(request):
         membresias = enlace(
             "Membresías", "membresias:catalogos",
             namespace == "membresias" and not ruta.url_name.startswith("oferta") and not contrataciones_propias_activo,
-            "Planes mensuales, pases de cancha y contrataciones.",
+            "Planes mensuales y contrataciones.",
         )
         administracion.append(membresias)
         administracion.append(enlace(

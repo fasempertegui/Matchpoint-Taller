@@ -8,11 +8,11 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
-from .forms import PaseForm, PlanForm
-from .models import Pase, Plan
+from .forms import PlanForm
+from .models import Plan
 from .servicios import (
-    cambiar_estado_pase, cambiar_estado_plan, exigir_administracion_membresias,
-    guardar_pase, guardar_plan, version_producto,
+    cambiar_estado_plan, exigir_administracion_membresias,
+    guardar_plan, version_producto,
 )
 
 
@@ -98,79 +98,3 @@ def plan_cambiar_estado(request, pk):
     else:
         messages.success(request, f"El plan está {plan.get_estado_display().lower()}.")
     return redirect("membresias:plan_detalle", pk=pk)
-
-
-@login_required
-@never_cache
-@require_GET
-def pase_lista(request):
-    exigir_administracion_membresias(request.user)
-    pases = Pase.objects.all()
-    busqueda = request.GET.get("q", "").strip()[:150]
-    estado = request.GET.get("estado", "")
-    if busqueda:
-        pases = pases.filter(Q(nombre__icontains=busqueda) | Q(descripcion__icontains=busqueda))
-    if estado in Pase.Estado.values:
-        pases = pases.filter(estado=estado)
-    else:
-        estado = ""
-    return render(request, "membresias/pase_lista.html", {
-        "pagina": Paginator(pases, 25).get_page(request.GET.get("pagina")),
-        "busqueda": busqueda, "estado_actual": estado, "estados": Pase.Estado.choices,
-        "hay_pases": Pase.objects.exists(),
-    })
-
-
-@login_required
-@never_cache
-@require_GET
-def pase_detalle(request, pk):
-    usuario = exigir_administracion_membresias(request.user)
-    pase = get_object_or_404(Pase, pk=pk)
-    return render(request, "membresias/pase_detalle.html", {
-        "pase": pase, "version": version_producto(usuario, pase),
-    })
-
-
-@login_required
-@never_cache
-@require_http_methods(["GET", "POST"])
-def pase_formulario(request, pk=None):
-    usuario = exigir_administracion_membresias(request.user)
-    pase = get_object_or_404(Pase, pk=pk) if pk is not None else None
-    titulo = "Editar pase" if pase is not None else "Nuevo pase"
-    formulario = PaseForm(
-        request.POST if request.method == "POST" else None, instance=pase,
-        initial={"version": version_producto(usuario, pase)} if pase is not None else None,
-    )
-    if request.method == "POST" and formulario.is_valid():
-        try:
-            guardado = guardar_pase(usuario, pase_id=pk, **formulario.cleaned_data)
-        except ValidationError as error:
-            formulario.add_error(None, error)
-        else:
-            messages.success(request, "El pase fue guardado.")
-            return redirect("membresias:pase_detalle", pk=guardado.pk)
-    return render(request, "membresias/catalogo_formulario.html", {
-        "formulario": formulario, "titulo": titulo, "texto_boton": "Guardar pase",
-        "url_cancelar": reverse("membresias:pase_detalle", args=[pk]) if pk is not None
-            else reverse("membresias:pase_lista"),
-    })
-
-
-@login_required
-@never_cache
-@require_POST
-def pase_cambiar_estado(request, pk):
-    exigir_administracion_membresias(request.user)
-    get_object_or_404(Pase, pk=pk)
-    try:
-        pase = cambiar_estado_pase(
-            request.user, pk, request.POST.get("estado"), version=request.POST.get("version", ""),
-        )
-    except ValidationError as error:
-        for mensaje in error.messages:
-            messages.error(request, mensaje)
-    else:
-        messages.success(request, f"El pase está {pase.get_estado_display().lower()}.")
-    return redirect("membresias:pase_detalle", pk=pk)

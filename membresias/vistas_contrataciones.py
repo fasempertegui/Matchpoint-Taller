@@ -10,15 +10,15 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .contrataciones import (
-    anular_contratacion_pase, anular_contratacion_plan, registrar_contratacion_pase,
+    anular_contratacion_plan,
     registrar_contratacion_plan, version_anulacion_contratacion,
 )
 from .consultas import listar_contrataciones
 from .forms import (
-    AnulacionContratacionForm, ContratacionPaseForm, ContratacionPlanForm,
-    SeleccionContratacionPaseForm, SeleccionContratacionPlanForm,
+    AnulacionContratacionForm, ContratacionPlanForm,
+    SeleccionContratacionPlanForm,
 )
-from .models import PaseUsuario, PlanUsuario
+from .models import PlanUsuario
 from .servicios import exigir_administracion_membresias
 
 
@@ -28,12 +28,6 @@ CONFIGURACION_CONTRATACIONES = {
         "formulario": ContratacionPlanForm, "registrar": registrar_contratacion_plan,
         "anular": anular_contratacion_plan,
         "etiqueta_importe": "Importe acordado (ARS)",
-    },
-    "pase": {
-        "modelo": PaseUsuario, "plural": "pases", "seleccion": SeleccionContratacionPaseForm,
-        "formulario": ContratacionPaseForm, "registrar": registrar_contratacion_pase,
-        "anular": anular_contratacion_pase,
-        "etiqueta_importe": "Importe aplicado (ARS)",
     },
 }
 
@@ -148,7 +142,7 @@ def contratacion_crear(request, tipo="plan"):
             **{campo: valor for campo, valor in borrador.items() if campo != "producto_precio"},
             "usuario": titular.pk, tipo: producto.pk,
         }
-        if tipo == "pase" or borrador.get("producto_precio") != str(producto.pk):
+        if borrador.get("producto_precio") != str(producto.pk):
             iniciales["precio_aplicado"] = producto.precio_vigente
         formulario = configuracion["formulario"](
             request.POST if confirmar else None, initial=iniciales,
