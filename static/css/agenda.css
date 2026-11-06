@@ -827,6 +827,11 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     margin-top: 12px;
 }
 
+.agenda-ver-anulados {
+    padding-top: 12px;
+    border-top: 1px solid var(--borde);
+}
+
 .agenda-opciones-evento > .agenda-desplegable {
     margin-top: 0;
     padding-top: 0;
