@@ -23,11 +23,11 @@ Las reglas de negocio, permisos, validaciones de operaciones, confirmaciones y p
 - Horas operativas: `time without time zone`.
 - Auditoría: `timestamptz`.
 - Importes: `numeric(12,2)`, no negativos para precios y positivos para movimientos.
-- La interpretación local de fechas y horas utiliza `America/Argentina/Buenos_Aires`.
+- Calendario, cortes y presentación utilizan `America/Argentina/Salta`. Los instantes se almacenan con zona horaria y se comparan usando el reloj del servidor.
 
 ### 2.3 Dominios y auditoría
 
-Los estados, modalidades, superficies, tipos de pase y medios de pago tienen dominios cerrados, indicados en las tablas y representados mediante opciones de Django. Los roles tienen su propio catálogo, referenciado por clave foránea.
+Los estados, modalidades, superficies y medios de pago tienen dominios cerrados, indicados en las tablas y representados mediante opciones de Django. Los roles tienen su propio catálogo, referenciado por clave foránea.
 
 Las tablas de actividades concentran `creado_en` y `actualizado_en` en `eventos`. Las entidades mutables y las asignaciones con estado conservan sus propias marcas; `actualizado_en` registra automáticamente la última modificación del registro. Los vínculos inmutables no requieren una fecha de modificación. Las referencias a responsables de registro, anulación y finalización son datos de auditoría separados de las asignaciones de participantes.
 
@@ -47,7 +47,7 @@ La ocupación se representa mediante `turnos`, `eventos` y tres especializacione
 
 La programación semanal se representa con `turnos_planilla` y sus asignaciones. Las clases concretas tienen asignaciones y asistencia propias, por lo que su historia no depende del contenido vigente de la planilla. Los roles de cuenta y las funciones de una persona dentro de una clase son datos distintos.
 
-Planes y pases se modelan como catálogos independientes, con tablas separadas de contrataciones. Los precios aplicados se conservan en las contrataciones y reservas; la única fuente monetaria es `movimientos_fondos`. Sus movimientos Ingreso pueden referenciar una contratación concreta o reserva, o conservar solo el concepto. `sesiones_caja` agrupa movimientos y controla el efectivo. Los medios son efectivo, transferencia, tarjeta y QR y la fecha monetaria es la de registro del servidor.
+Planes y membresías se modelan como catálogos independientes, con tablas separadas de contrataciones. Los precios aplicados se conservan en las contrataciones y reservas; la única fuente monetaria es `movimientos_fondos`. Sus movimientos Ingreso pueden referenciar una contratación concreta o reserva, o conservar solo el concepto. `sesiones_caja` agrupa movimientos y controla el efectivo. Los medios son efectivo, transferencia, tarjeta y QR y la fecha monetaria es la de registro del servidor.
 
 Se admiten pagos parciales mediante varios movimientos Ingreso por origen. El modelo no contiene indicadores de deuda, pendiente, excedente ni estado de pago y no conserva una confirmación o motivo de sobrepago. Los pagos se registran manualmente.
 
@@ -172,26 +172,23 @@ Representa la definición comercial de un plan mensual de clases.
 
 El nombre tiene unicidad parcial sin distinguir mayúsculas y minúsculas mediante `LOWER(nombre)` entre filas con `estado = 'activo'`. Las contrataciones se almacenan en `planes_usuarios`; esta tabla no contiene alumnos, asignaciones ni cobros.
 
-### 4.6 `pases`
+### 4.6 `membresias`
 
-Representa la definición comercial de un pase mensual de cancha.
+Representa un producto del catálogo de socios.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `18` |
-| | `nombre` | `varchar(150)` | | | `Pase libre` |
-| | `descripcion` | `text` | | | `Acceso todos los días` |
-| | `tipo` | `varchar(15)` | | | `libre` (o `fin_de_semana`) |
-| | `limite_horas_diarias` | `smallint` | | | `2` |
-| | `precio_vigente` | `numeric(12,2)` | | | `35000.00` |
-| | `precio_invitado_vigente` | `numeric(12,2)` | | | `1500.00` |
-| | `estado` | `varchar(10)` | | | `activo` (o `inactivo`) |
-| | `creado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-10-01 10:00:00-03` |
+| | `nombre` | `varchar(150)` | | | `Socio 10 horas` |
+| | `descripcion` | `text` | | | `Uso mensual de canchas` |
+| | `horas_mensuales` | `smallint` | | | `10` |
+| | `precio_vigente` | `numeric(12,2)` | | | `40000.00` |
+| | `precio_invitado_vigente` | `numeric(12,2)` | | | `12500.00` |
+| | `estado` | `varchar(10)` | | | `activo` |
+| | `creado_en` | `timestamptz` | | | `2026-11-01 10:00:00-03` |
+| | `actualizado_en` | `timestamptz` | | | `2026-11-01 10:00:00-03` |
 
-`tipo` admite `libre` o `fin_de_semana`; no existe una tabla adicional de días por pase. `limite_horas_diarias` es positivo y los precios son no negativos. `descripcion` admite cadena vacía.
-
-El nombre tiene unicidad parcial entre pases Activos sin distinguir mayúsculas y minúsculas mediante `LOWER(nombre)`, independiente de los nombres de planes. El saldo de horas no es un atributo almacenado del catálogo ni de sus contrataciones.
+Las horas son positivas y los precios no negativos, con restricciones de base de datos. El nombre tiene unicidad parcial entre Activas mediante `LOWER(nombre)`, independiente de planes. Descripción admite cadena vacía. Las horas no se modifican cuando existe cualquier contratación histórica; el servicio transaccional coordina edición y contratación. El catálogo no almacena saldo ni variantes por día.
 
 ### 4.7 `planes_usuarios`
 
@@ -223,20 +220,20 @@ Representa una contratación concreta de un plan por un usuario para un mes cale
 
 `aviso_vencimiento_enviado` conserva la marca de envío de esa contratación. No se duplican en esta tabla asignaciones, asistencia ni importes cobrados.
 
-### 4.8 `pases_usuarios`
+### 4.8 `membresias_usuarios`
 
-Representa una contratación concreta de un pase por un usuario para un mes calendario.
+Representa una contratación concreta de membresía por un usuario para un mes calendario.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `340` |
 | FK | `usuario_id` | `bigint` | | | `1` |
-| FK | `pase_id` | `bigint` | | | `18` |
+| FK | `membresia_id` | `bigint` | | | `18` |
 | | `mes_cubierto` | `date` | | | `2026-10-01` |
 | | `fecha_alta` | `date` | | | `2026-10-01` |
-| | `precio_aplicado` | `numeric(12,2)` | | | `35000.00` |
+| | `precio_aplicado` | `numeric(12,2)` | | | `40000.00` |
 | FK | `registrado_por_id` | `bigint` | | | `4` |
-| | `observaciones` | `text` | | | `Pase contratado en sede` |
+| | `observaciones` | `text` | | | `Membresía contratada en sede` |
 | | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
 | | `aviso_vencimiento_enviado` | `boolean` | | | `false` |
 | FK | `anulado_por_id` | `bigint` | Sí | | `NULL` |
@@ -245,9 +242,9 @@ Representa una contratación concreta de un pase por un usuario para un mes cale
 | | `creado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
 
-Utiliza la misma representación de mes cubierto, fecha efectiva, importe aplicado, auditoría y estados que 4.7, con referencia obligatoria a `pases.id`. Tiene su propia restricción única parcial sobre `(usuario_id, mes_cubierto)` entre Activos o Vencidos; no comparte esa restricción con `planes_usuarios`.
+Utiliza la misma representación de mes cubierto, fecha efectiva, importe aplicado, auditoría y estados que 4.7, con referencia obligatoria a `membresias.id`. Tiene su propia restricción única parcial sobre `(usuario_id, mes_cubierto)` entre Activos o Vencidos; no comparte esa restricción con `planes_usuarios`.
 
-La cobertura aplicada queda referenciada desde `reservas.pase_usuario_id` o `reservas_invitados.pase_usuario_id`. El uso diario se deriva de esas referencias y de los eventos de reservas no Anulados, sin almacenar un saldo de horas ni una tabla de consumos separada.
+El precio aplicado es no negativo y se conserva independiente del catálogo. La contratación conserva el precio mensual vigente completo al confirmar, sin prorrateo ni importe negociado. La cobertura se evalúa por estado y mes para la fecha del turno. Las referencias de organizador e invitado socio pertenecen a reservas e invitados. Sólo el organizador usa horas. El saldo se deriva del cupo menos las reservas que computan del mismo titular y mes, incluidas las vinculadas a contrataciones Anuladas. La anulación se rechaza si existe aplicación en una reserva Programada como organizador o invitado socio vigente Pendiente o Aceptado. Los vínculos históricos Rechazados o retirados no bloquean.
 
 ### 4.9 Precios vigentes e importes aplicados
 
@@ -256,9 +253,9 @@ Los valores vigentes se almacenan en los catálogos o la sede. Sus copias aplica
 | Precio vigente | Importe conservado |
 |---|---|
 | `planes.precio_vigente` | `planes_usuarios.precio_aplicado` |
-| `pases.precio_vigente` | `pases_usuarios.precio_aplicado` |
+| `membresias.precio_vigente` | `membresias_usuarios.precio_aplicado` |
 | `sedes.precio_reserva_vigente` | `reservas.precio_por_turno_aplicado` |
-| `pases.precio_invitado_vigente` | `reservas.precio_invitado_aplicado` |
+| `membresias.precio_invitado_vigente` | `reservas.precio_invitado_aplicado` |
 
 El modelo no tiene una tabla de historial de precios. La historia comercial se representa mediante los importes aplicados, mientras que los movimientos de dinero utilizan exclusivamente `movimientos_fondos`. La consulta vigente no calcula deuda y el registro del cobro es separado del alta comercial.
 
@@ -409,6 +406,12 @@ Representa la asignación prevista de una persona para asistir a una clase concr
 | PK, FK | `usuario_id` | `bigint` | | | `1` |
 | | `observaciones` | `text` | Sí | | `Se suma sólo por octubre` |
 | | `estado` | `varchar(10)` | | | `activo` (o `inactivo`) |
+| | `respuesta` | `varchar(10)` | | | `pendiente` |
+| | `respuesta_inicial` | `varchar(10)` | Sí | | `NULL` |
+| FK | `respondido_por_id` | `bigint` | Sí | | `NULL` |
+| | `respondido_en` | `timestamptz` | Sí | | `NULL` |
+| FK | `respuesta_modificada_por_id` | `bigint` | Sí | | `NULL` |
+| | `respuesta_modificada_en` | `timestamptz` | Sí | | `NULL` |
 | | `recordatorio_enviado` | `boolean` | | | `false` |
 | | `creado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
@@ -416,6 +419,8 @@ Representa la asignación prevista de una persona para asistir a una clase concr
 La clave primaria compuesta `(clase_id, usuario_id)` impide repetir una asignación. `usuario_id` referencia a la persona directamente, sin depender de su rol de cuenta ni de una contratación. Se mantiene separada de `clases_profesores` y de la asistencia efectiva.
 
 `estado` representa la vigencia de la asignación. `recordatorio_enviado` es una marca por participante y clase, no por clase completa; permite representar envíos independientes. `observaciones` y las fechas de auditoría pertenecen al vínculo.
+
+Respuesta admite pendiente, afirmativa o negativa. La primera decisión conserva respuesta inicial, titular y momento; el único cambio conserva responsable y momento sin borrar la primera decisión. Los campos de cada operación se informan juntos; Pendiente no tiene primera decisión ni modificación y no se restaura después de responder. El actor de respuesta es el titular de la relación. El servicio rechaza cambios después del inicio, nuevas modificaciones y reaceptación incompatible con disponibilidad personal. Sin respuesta es una presentación calculada al iniciar con Pendiente. La identidad compuesta preserva la historia al reactivar y la auditoría conserva los cambios. La respuesta se mantiene separada del estado de asignación y de asistencia; profesores y plantilla no incorporan estos campos.
 
 ### 4.18 `asistencias`
 
@@ -445,40 +450,65 @@ Contiene los atributos comerciales de un evento de tipo reserva.
 | FK | `evento_id` | `bigint` | | Sí | `1300` |
 | FK | `organizador_id` | `bigint` | | | `1` |
 | | `precio_por_turno_aplicado` | `numeric(12,2)` | Sí | | `NULL` |
-| FK | `pase_usuario_id` | `bigint` | Sí | | `340` |
-| | `cantidad_invitados` | `integer` | Sí | | `3` |
-| | `precio_invitado_aplicado` | `numeric(12,2)` | Sí | | `1500.00` |
+| FK | `membresia_usuario_id` | `bigint` | Sí | | `340` |
+| | `precio_invitado_aplicado` | `numeric(12,2)` | Sí | | `12500.00` |
+| | `computa_hora_membresia` | `boolean` | | | `true` |
+| | `resultado_uso` | `varchar(15)` | | | `sin_registrar` |
+| FK | `resultado_registrado_por_id` | `bigint` | Sí | | `NULL` |
+| | `resultado_registrado_en` | `timestamptz` | Sí | | `NULL` |
+| | `resultado_original` | `varchar(15)` | Sí | | `NULL` |
+| FK | `resultado_corregido_por_id` | `bigint` | Sí | | `NULL` |
+| | `resultado_corregido_en` | `timestamptz` | Sí | | `NULL` |
+| | `motivo_correccion_resultado` | `text` | | | `''` |
 | FK | `reprogramada_desde_id` | `bigint` | Sí | Sí | `1180` |
 | | `anulada_por_organizador` | `boolean` | Sí | | `NULL` |
 
-`evento_id` es único y referencia un evento de tipo `reserva`. `organizador_id` referencia al responsable de la reserva, separado del responsable del registro en `eventos.registrado_por_id`. No hay una entidad beneficiario ni un registro de presencia del organizador. El número de reserva se deriva de `id`; la fecha de registro pertenece al evento.
+El evento único es de tipo reserva. El organizador es distinto del responsable de registro del evento. Número y turno se obtienen del identificador y del evento. No hay beneficiario ni asistencia individual de reservas.
 
-Exactamente uno de `precio_por_turno_aplicado` y `pase_usuario_id` está informado:
+Las restricciones de modalidad exigen exactamente una alternativa:
 
-- Normal: precio por turno positivo aplicado; `pase_usuario_id`, cantidad de invitados y precio adicional nulos.
-- Con pase: referencia a `pases_usuarios`, cantidad total de invitados no negativa y precio adicional unitario no negativo; `precio_por_turno_aplicado` nulo.
+- Normal: precio por turno positivo, membresía y adicional nulos y cómputo de hora falso.
+- Con membresía: contratación del organizador y adicional unitario no negativo obligatorios, precio por turno nulo. Nunca se computa una hora sin contratación aplicada.
 
-El total no se almacena. En una reserva normal se deriva del precio por turno aplicado; con pase se deriva del precio adicional aplicado y de la cantidad de invitados sin cobertura, incluidos los no identificados. Los invitados identificados se representan en `reservas_invitados`.
+La reserva con membresía nace con cómputo verdadero; Programada compromete la hora y Finalizada la consume. La anulación propia conserva el cómputo con seis horas o menos y lo quita con más de seis; la administrativa siempre lo quita. La hora pertenece al mes del turno. El cómputo es un resultado comercial de la reserva, no un saldo mutable. Se cuentan usos de todas las contrataciones del titular y mes, incluidas Anuladas.
 
-`reprogramada_desde_id` es una referencia opcional y única a otra fila de `reservas`; representa una cadena de reemplazos con un máximo de un sucesor por reserva. La reserva de origen tiene evento Anulado administrativamente.
+El total no se almacena: normal utiliza su tarifa; con membresía multiplica el adicional aplicado por los invitados no socios vigentes Pendientes o Aceptados. La cantidad de participantes se deriva de esas relaciones; no existe cantidad total declarada. En normal los invitados son opcionales y no alteran la tarifa.
 
-`anulada_por_organizador` es nulo mientras el evento no esté Anulado; vale `true` para la anulación del organizador y `false` para la administrativa. Los demás datos de anulación pertenecen al evento.
+Resultado admite `sin_registrar`, `realizada` o `no_realizada`. Sin registrar exige datos iniciales nulos y ausencia de corrección. Registrar después de Finalizado exige responsable y momento. La única corrección exige un resultado distinto, original conservado, responsable, momento y motivo no vacío; los campos de corrección se informan juntos. El servicio bloquea la reserva e impide una segunda corrección. El resultado no modifica horas ni invitados.
+
+`reprogramada_desde_id` protege el origen y admite como máximo un sucesor por reserva; no puede apuntar a sí misma. El servicio exige origen Anulado administrativamente, mismo organizador y confirmación atómica de alta y vínculo. La nueva aplica cobertura, cupo e importes propios, sin trasladar cobros ni horas entre meses.
+
+`anulada_por_organizador` es nulo mientras el evento no esté Anulado; verdadero para cancelación propia y falso para administrativa. Motivo, actor y momento de anulación pertenecen al evento.
 
 ### 4.20 `reservas_invitados`
 
-Representa usuarios identificados como invitados de una reserva con pase y su cobertura aplicada.
+Representa invitados identificados de ambas modalidades y conserva la identidad de cada relación, incluso después de rechazar o retirar.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK, FK | `reserva_id` | `bigint` | | | `1200` |
 | PK, FK | `usuario_id` | `bigint` | | | `9` |
-| FK | `pase_usuario_id` | `bigint` | Sí | | `340` |
-| | `creado_en` | `timestamptz` | | | `2026-10-02 17:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-10-02 17:00:00-03` |
+| FK | `membresia_usuario_id` | `bigint` | Sí | | `340` |
+| | `condicion_aplicada` | `varchar(20)` | | | `socio` |
+| | `estado` | `varchar(10)` | | | `vigente` |
+| FK | `retirado_por_id` | `bigint` | Sí | | `NULL` |
+| | `retirado_en` | `timestamptz` | Sí | | `NULL` |
+| | `respuesta` | `varchar(10)` | | | `pendiente` |
+| | `respuesta_inicial` | `varchar(10)` | Sí | | `NULL` |
+| FK | `respondido_por_id` | `bigint` | Sí | | `NULL` |
+| | `respondido_en` | `timestamptz` | Sí | | `NULL` |
+| FK | `respuesta_modificada_por_id` | `bigint` | Sí | | `NULL` |
+| | `respuesta_modificada_en` | `timestamptz` | Sí | | `NULL` |
+| | `creado_en` | `timestamptz` | | | `2026-11-02 17:00:00-03` |
+| | `actualizado_en` | `timestamptz` | | | `2026-11-02 17:00:00-03` |
 
-La clave primaria compuesta `(reserva_id, usuario_id)` impide repetir al invitado dentro de una reserva. `pase_usuario_id` referencia la contratación concreta del invitado y es nulo cuando no hay cobertura aplicada. La tabla no contiene invitados anónimos: su cantidad se deriva de `reservas.cantidad_invitados` y del número de filas identificadas.
+La clave compuesta impide duplicados y el usuario es distinto del organizador. Estado admite vigente o retirado, con responsable y momento para el retiro. Retirar y reincorporar conserva la identidad, respuesta y su único cambio. Sólo se retiran invitaciones Pendientes o Aceptadas; las Rechazadas permanecen visibles sin acción de retiro ni reenvío.
 
-La coherencia del vínculo exige una reserva con pase, un usuario distinto del organizador y una cantidad de filas no superior a la cantidad total declarada. Una contratación aplicada pertenece al usuario de la fila. Las reglas temporales, de coincidencias y cobertura se definen en criterios, 2.2 y 2.4.
+Condición admite socio, no_socio o reserva_normal. En membresía, socio exige contratación del invitado que cubra la fecha; no_socio no tiene contratación aplicada. En normal se usa reserva_normal, sin membresía ni adicional individual. Sólo los vigentes Pendientes o Aceptados intervienen en cupos, coincidencias, adicionales y bloqueo comercial. Las referencias de rechazados o retirados se conservan como historia.
+
+Respuesta admite pendiente, afirmativa o negativa; se presenta como Aceptada o Rechazada. Los campos de respuesta inicial, responsable y momento se informan juntos; Pendiente no tiene datos de decisión ni modificación. El actor de respuesta es el titular de la relación. La primera decisión informa respuesta inicial, titular y momento; un único cambio informa juntos su responsable y momento y conserva la primera decisión. No se vuelve a Pendiente. Sin respuesta se calcula cuando comienza el turno con respuesta Pendiente. Los servicios validan titularidad, inicio futuro y vigencia, y revalidan cupos, coincidencias y condición comercial al volver a aceptar.
+
+«Actualizar socios» evalúa las contrataciones de los vigentes Pendientes o Aceptados antes del inicio. Guarda la condición y contratación aplicadas y su historia mediante auditoría, con actor y momento, sin alterar respuestas ni el precio unitario de la reserva. Editar otros invitados no recalcula condiciones de quienes permanecen. Los cobros son independientes.
 
 ### 4.21 `sesiones_caja`
 
@@ -544,7 +574,7 @@ Representa ingresos, egresos, aportes y retiros registrados manualmente en una s
 | | `categoria_egreso` | `varchar(20)` | | | `''` |
 | | `destinatario` | `varchar(150)` | | | `''` |
 | FK | `plan_usuario_id` | `bigint` | Sí | | `301` |
-| FK | `pase_usuario_id` | `bigint` | Sí | | `NULL` |
+| FK | `membresia_usuario_id` | `bigint` | Sí | | `NULL` |
 | FK | `reserva_id` | `bigint` | Sí | | `NULL` |
 | | `creado_en` | `timestamptz` | | | `2026-10-29 09:10:00-03` |
 | FK | `registrado_por_id` | `bigint` | | | `4` |
@@ -555,13 +585,13 @@ Representa ingresos, egresos, aportes y retiros registrados manualmente en una s
 
 `monto` es positivo y se calcula con Decimal, sin floats. `concepto` siempre contiene texto no vacío. Los medios no efectivos requieren `referencia`. Egreso exige destinatario y categoría: `alquiler`, `servicios`, `profesores`, `insumos`, `mantenimiento`, `publicidad`, `comisiones`, `otros` o `devoluciones`. En las demás clases esos campos quedan vacíos. Aporte y Retiro solo admiten efectivo y no se contabilizan como cobros o gastos operativos.
 
-Solo Ingreso admite referencias comerciales y como máximo una de las tres está informada; un ingreso sin vínculo se identifica por su concepto obligatorio. `plan_usuario_id` referencia `planes_usuarios.id`, `pase_usuario_id` referencia `pases_usuarios.id` y `reserva_id` referencia `reservas.id`. No apuntan a productos del catálogo. Se admiten varios ingresos por origen, sin comparación automática con el precio aplicado. El origen debe existir y estar confirmado; no admite nuevos ingresos si la contratación está Anulada o el evento de la reserva está Anulado. No se crea ni renueva un origen al registrar el cobro.
+Solo Ingreso admite referencias comerciales y como máximo una de las tres está informada; un ingreso sin vínculo se identifica por su concepto obligatorio. `plan_usuario_id` referencia `planes_usuarios.id`, `membresia_usuario_id` referencia `membresias_usuarios.id` y `reserva_id` referencia `reservas.id`. No apuntan a productos del catálogo. Se admiten varios ingresos por origen, sin comparación automática con el precio aplicado. El origen debe existir y estar confirmado; no admite nuevos ingresos si la contratación está Anulada o el evento de la reserva está Anulado. No se crea ni renueva un origen al registrar el cobro.
 
 `sesion_id` referencia `sesiones_caja.id`; `registrado_por_id` y `anulado_por_id` referencian `usuarios.id`. Estas relaciones y los vínculos comerciales protegen a sus registros referenciados contra la eliminación. La reserva o contratación y su cobro se confirman como operaciones independientes: un error monetario no revierte el origen comercial.
 
 Una devolución usa clase `egreso` y categoría `devoluciones`: representa dinero efectivamente reintegrado a un cliente, en cualquiera de los cuatro medios. Exige concepto, destinatario, monto y referencia para no efectivo. No tiene una FK a un ingreso ni un tope contra cobros. Los resúmenes la separan de los gastos operativos. No modifica automáticamente cobros, contratación ni reserva. Cancelar o reprogramar una operación comercial no genera un reintegro ni anula sus cobros; el reintegro se registra como un egreso independiente.
 
-Las FK opcionales y fechas no informadas usan NULL; los textos opcionales usan cadena vacía. La creación pertenece a una sesión abierta y usa exclusivamente `creado_en`, asignado por el servidor, y el responsable de esa sesión. La fecha no es editable y no se almacena una fecha real de operación separada. Las fechas se interpretan en `America/Argentina/Buenos_Aires` y los importes son pesos argentinos con dos decimales.
+Las FK opcionales y fechas no informadas usan NULL; los textos opcionales usan cadena vacía. La creación pertenece a una sesión abierta y usa exclusivamente `creado_en`, asignado por el servidor, y el responsable de esa sesión. La fecha no es editable y no se almacena una fecha real de operación separada. Las fechas se interpretan en `America/Argentina/Salta` y los importes son pesos argentinos con dos decimales.
 
 `operacion_id` tiene unicidad individual y se conserva para reintentos del mismo formulario. El servicio devuelve el registro existente si actor y contenido coinciden, y rechaza el UUID con otro actor o contenido. No se exige que coincida con el UUID de contexto de auditoría. Se indexan `(sesion_id, id)` y `creado_en`.
 
@@ -655,6 +685,8 @@ El UUID único evita duplicados de la misma solicitud. Hay un índice por usuari
 - `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
 - Las clases concretas son independientes de las celdas de planilla. Eliminar una celda no modifica las clases ni su indicador de origen.
 - `eventos.turno_id` protege al turno. Las especializaciones `reservas`, `clases` y `bloqueos` protegen su evento.
+- Las relaciones de invitados protegen reserva, usuario y contratación aplicada; retirar o rechazar no elimina la relación. Las respuestas de alumnos conservan su identidad al reactivar.
+- `reservas.reprogramada_desde_id` protege la reserva original y es único; se conservan todos los eslabones de la cadena.
 - `bloqueos.evento_origen_id` protege al evento de origen mientras exista la referencia de trazabilidad.
 - `log_auditoria.usuario_id` protege la cuenta del actor; el historial no admite modificación ni eliminación.
 - `intentos_auditoria.usuario_id` protege la cuenta del actor autenticado; el historial de intentos tampoco admite modificación, eliminación ni vaciado.

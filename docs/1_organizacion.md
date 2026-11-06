@@ -28,9 +28,7 @@ Las comunicaciones operativas con alumnos, clientes y profesores se realizan act
 
 La semana de clases se representa en una tabla donde cada **columna** corresponde a un día de la semana y cada **fila** a un horario dentro del horario operativo. Si en determinado día y horario existe una clase, la celda se completa con los alumnos asignados a ella.
 
-La tabla representa una **semana tipo** aplicable al mes que se está organizando. Por ejemplo, si dentro de la programación de julio existe una clase los miércoles a las 18:00, se entiende que esa clase corresponde a todos los miércoles incluidos en julio.
-
-Al comenzar un nuevo mes, normalmente se toma como punto de partida la diagramación del mes anterior. Sobre esa copia se agregan, modifican o eliminan las celdas necesarias antes de utilizarla como programación del nuevo mes. Cada mes conserva así su propia diagramación, aunque inicialmente pueda ser igual a la del período anterior.
+La tabla representa una **semana tipo vigente por sede**, con días, horarios, canchas y personas asignadas. La administración la modifica para organizar futuras clases; no conserva versiones mensuales. El mes o período se elige al generar las clases concretas, que conservan sus propias fechas e historia. Modificar la plantilla no altera clases ya generadas.
 
 Además de tener alumnos asignados, en cada clase se registra la asistencia efectiva. Esto permite diferenciar entre los alumnos que forman parte habitual de una clase y quienes efectivamente asistieron en una fecha determinada.
 
@@ -48,11 +46,11 @@ Cuando una persona solicita una reserva, se verifica manualmente si el día, hor
 
 ## 3. Oferta de la academia
 
-La academia distingue entre **membresías mensuales** y **reservas de cancha**. Los planes de clases y los pases de cancha son membresías que un cliente adquiere para un mes calendario. Las reservas, en cambio, se pagan por uso y no generan una membresía.
+La academia ofrece **planes de clases**, **membresías de socios** y **reservas de cancha**. Planes y membresías se contratan por mes calendario; las reservas cubren turnos concretos.
 
 ### 3.1 Planes mensuales
 
-La modalidad predominante. Regionalmente se la conoce como **"cuota"**; en este documento y en la academia se adopta **plan** como nombre de la membresía.
+La modalidad predominante. Regionalmente se la conoce como **"cuota"**; en este documento y en la academia se adopta **plan** como nombre del producto de clases.
 
 Un plan mensual se define por:
 
@@ -63,7 +61,7 @@ Un plan mensual se define por:
 - **Vigencia**: un plan cubre el mes calendario para el que fue contratado.
 - **Días y horarios asignados**: adquirir un plan habilita al alumno a ser asignado a uno o más días y horarios fijos durante su vigencia; la asignación en sí la resuelve la administración. Esta asignación puede modificarse a pedido del alumno, siempre que haya disponibilidad; en ese caso, los nuevos días y horarios aplican para el resto del mes.
 
-Las clases existen y se organizan independientemente de los planes. Tener una membresía de plan otorga al cliente el derecho a participar en ellas, pero no origina ni identifica las clases concretas.
+Las clases existen y se organizan independientemente de los planes. Tener una contratación de plan otorga al cliente el derecho a participar en ellas, pero no origina ni identifica las clases concretas.
 
 Un plan no equivale a un paquete de X clases de libre distribución: la frecuencia semanal es una condición inherente al plan y no puede distribuirse arbitrariamente dentro del mes.
 
@@ -75,47 +73,27 @@ El plan tiene un precio base. Si el pago se realiza del **1 al 5** de cada mes, 
 
 Los feriados no tienen clases de la programación habitual. La administración puede organizar clases puntuales para esas fechas. También pueden realizarse reservas de cancha, aunque con horarios posiblemente más acotados según la sede.
 
-### 3.2 Pases de cancha
+### 3.2 Membresías de socios
 
-Un pase es una membresía mensual que permite al titular **reservar canchas sin pagar el precio normal de la reserva** durante el mes de vigencia. La academia ofrece dos variantes, con precio distinto:
+La membresía representa hacerse socio de la academia durante un mes calendario. Cada producto tiene nombre, cantidad de horas mensuales, precio mensual y adicional por invitado no socio.
 
-- **Pase libre**: válido todos los días de la semana.
-- **Pase de fin de semana**: válido únicamente sábados y domingos.
-
-Ambas variantes comparten el resto de las características:
-
-- Válido por un mes calendario.
-- Permite originar reservas con pase durante su vigencia, dentro de los días habilitados según la variante.
-- La academia establece como política un límite de **2 horas por día**, contando tanto las reservas propias como aquellas donde el titular participa como invitado cubierto. Hoy este límite no se controla de forma confiable: no existe una manera sistemática de verificar cuántas horas ya usó un pase en el día antes de aceptar una nueva reserva.
-- En una reserva con pase, cada invitado con pase vigente queda cubierto por su propia membresía. Por cada invitado sin pase se cobra un precio adicional.
-- Disponible tanto para alumnos de la academia como para usuarios externos.
+La contratación aplica el precio vigente mensual completo, sin prorrateo ni importe negociado. Sólo el organizador utiliza una hora por reserva con membresía. Los socios invitados no generan adicional ni utilizan sus horas, aunque tengan agotado su cupo. Las horas no se acumulan entre meses y la membresía permite reservar en cualquier sede y día, sujeto a disponibilidad.
 
 ### 3.3 Reservas de cancha
 
-Cualquier persona puede reservar una cancha, siempre que haya disponibilidad. Cada reserva ocupa un único turno de una hora. Para jugar más de una hora se registran reservas independientes, una por turno, con confirmación, comprobante y cobros propios.
+Cada reserva ocupa un turno de una hora. El organizador es responsable de gestionarla y tiene cuenta propia. El portal utiliza al usuario autenticado; administración selecciona un organizador existente. Identificar participantes no acredita asistencia.
 
-El organizador es la persona responsable de la reserva, aunque organice el uso de la cancha para otros y no juegue personalmente. Puede organizar varias reservas simultáneas en canchas diferentes. La identificación del organizador o de los invitados no constituye un registro de asistencia.
+La **reserva normal** conserva la tarifa por turno de la sede. Puede organizarla un socio sin usar sus horas. Registrar invitados es opcional y no modifica la tarifa.
 
-Cada reserva se paga por separado. Cada sede define un precio por turno de una hora, común a todas sus canchas. El importe de una reserva normal es el precio de un turno. No se trabaja con reservas recurrentes o fijas.
+La **reserva con membresía** aplica una contratación que cubre la fecha del turno y exige horas disponibles. Se identifican todos los invitados. Los no socios generan el adicional unitario conservado al crear la reserva. «Actualizar socios» permite al organizador o administración reconocer membresías contratadas después de la invitación, antes del inicio y con revisión del nuevo total.
 
-En una **reserva normal**, el organizador paga el precio correspondiente a un turno de su sede. La cantidad e identidad de los invitados no modifica el precio y no necesita registrarse.
+Cada persona puede integrar hasta **dos reservas Programadas**, sumando las que organiza y las invitaciones vigentes Pendientes o Aceptadas. Se admite reservar desde hoy hasta el tercer día calendario siguiente inclusive, con inicio futuro. La disponibilidad personal impide coincidencias entre reservas y clases según los criterios del sistema.
 
-En una **reserva con pase**, el organizador utiliza una membresía de pase vigente. Se conoce la cantidad total de invitados y se identifica a quienes ya existen como clientes. Si un invitado identificado posee un pase vigente con horas disponibles ese día, se registra cuál de sus membresías lo cubre; los demás invitados generan el precio adicional correspondiente. El límite diario del pase (ver 3.2) se aplica igual para el organizador y para cada invitado cubierto.
+## 4. Combinación de planes, membresías y reservas
 
----
+Los planes de clases y las membresías de socios son productos independientes. Una persona puede contratar ambos para el mismo mes. Cada tipo admite una sola contratación no Anulada por titular y mes, incluidos los registros Vencidos. Ser socio no requiere ni otorga el rol Alumno.
 
-## 4. Combinación de membresías y reservas
-
-Las membresías y las reservas descritas no son excluyentes entre sí. Un mismo alumno puede, en un mismo mes, tener una membresía de plan mensual y una membresía de pase de cancha de forma simultánea.
-
-**Ejemplo:** durante el mes de junio, un alumno podría tener:
-
-- Un plan de clases grupales con frecuencia de 3 veces por semana.
-- Un pase de cancha mensual.
-
-> **Nota:** un alumno no puede tener más de un plan mensual vigente en el mismo período. En la práctica esto nunca ocurrió y no tendría sentido permitirlo: un plan define por completo la frecuencia semanal y los horarios asignados del alumno para ese mes. Lo mismo aplica a los pases: no puede tener más de un pase vigente a la vez, sea cual sea la variante (un pase libre ya cubre lo que cubre uno de fin de semana, así que tener ambos a la vez sería redundante). Estas restricciones son propias de cada tipo de membresía por separado; no aplican a la combinación de un plan con un pase, que sí es habitual.
-
----
+Anular una contratación conserva su historia y permite un reemplazo para el mismo mes. Los usos de membresía conservados del titular y período se descuentan del cupo del reemplazo; contratar nuevamente no reinicia beneficios.
 
 ## 5. Funcionamiento operativo
 
@@ -127,7 +105,7 @@ La cancelación de una clase o reserva responde a motivos propios de esa activid
 
 ### 5.1 Cancelación de clases y reservas
 
-Cuando una reserva se cancela se indica si la cancelación fue solicitada por el cliente y se registra un motivo en texto libre.
+El organizador cancela su propia reserva antes del inicio y registra un motivo. Con membresía, más de seis horas de antelación libera la hora; con seis horas o menos la conserva como consumida. Administración cancela por causas de la academia y siempre libera la hora, también en operaciones masivas. Un turno iniciado no se anula. Las reservas normales no tienen penalización por cancelación tardía o por no realizarse.
 
 Si la cancelación fue solicitada por el cliente, no corresponde devolución. Si se produjo por otro motivo (condiciones climáticas, fuerza mayor, mantenimiento u otro imprevisto operativo), el administrador generalmente ofrece reprogramar la reserva para otro momento. No existe hoy una práctica establecida de devolver en efectivo el dinero cobrado en estos casos.
 
@@ -144,7 +122,7 @@ Para clases individuales, la recuperación puede requerir abrir una nueva clase 
 
 Las clases grupales suelen manejar un máximo de **6 alumnos**. En la práctica ese límite puede flexibilizarse por decisión administrativa.
 
-Si una reserva de cancha es cancelada y se coordina otro turno, la reserva original permanece cancelada y se registra una nueva reserva para el día y horario acordados, siempre que exista disponibilidad.
+Una reserva cancelada administrativamente admite un reemplazo vinculado para el mismo organizador. La nueva cumple todas las reglas de creación y aplica la cobertura del mes de su nuevo turno. Cada origen admite un reemplazo directo. Los cobros permanecen en sus reservas respectivas. Administración registra el resultado Realizada o No realizada después de finalizar, con una única corrección con motivo; ese resultado no devuelve horas ni acredita asistencia individual.
 
 ### 5.2 Pagos
 
@@ -160,7 +138,7 @@ Los pagos de la academia pueden realizarse mediante:
 
 Cualquier devolución, crédito o compensación fuera de lo descripto en 5.1 se resuelve de forma administrativa caso por caso; no es parte de una operatoria regular, aunque puede ser necesario dejar registro de lo ocurrido.
 
-Actualmente, los administradores registran ingresos y egresos de la academia. Los ingresos pueden provenir de membresías de planes, membresías de pases, reservas u otros conceptos. Los egresos incluyen conceptos como alquiler, luz, pago a profesores, publicidad y otros gastos operativos.
+Actualmente, los administradores registran ingresos y egresos de la academia. Los ingresos pueden provenir de planes, membresías de socios, reservas u otros conceptos. Los egresos incluyen conceptos como alquiler, luz, pago a profesores, publicidad y otros gastos operativos.
 
 ### 5.3 Profesores y permanencia de alumnos
 

@@ -16,7 +16,7 @@ Lo que el sistema hace por sí solo, sin que ningún actor lo pida en el momento
 
 ## Criterio temporal común
 
-Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; todas las altas de eventos tienen como límite el último día del segundo mes calendario siguiente al actual; ningún evento de reserva, clase o bloqueo admite creación histórica ni sobre un turno ya iniciado; todos exigen inicio estrictamente futuro y ninguna anulación puede afectar un turno iniciado; las reservas nuevas o reprogramadas exigen inicio futuro y fecha entre hoy y catorce días después, inclusive; la generación de clases selecciona un mes completo por defecto, omite los días pasados y turnos iniciados y admite períodos internos de hasta 62 días; las consultas de actividad de clases y uso de pases, hasta 366 días; las contrataciones pueden cubrir hasta el mes siguiente; los movimientos de caja usan únicamente fecha de registro del servidor; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
+Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; todas las altas de eventos tienen como límite el último día del segundo mes calendario siguiente al actual; ningún evento de reserva, clase o bloqueo admite creación histórica ni sobre un turno ya iniciado; todos exigen inicio estrictamente futuro y ninguna anulación puede afectar un turno iniciado; las reservas nuevas o reprogramadas exigen inicio futuro y fecha entre hoy y tres días después, inclusive; la generación de clases selecciona un mes completo por defecto, omite los días pasados y turnos iniciados y admite períodos internos de hasta 62 días; las consultas de actividad de clases y uso de membresías, hasta 366 días; las contrataciones pueden cubrir hasta el mes siguiente; los movimientos de caja usan únicamente fecha de registro del servidor; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
 
 ---
 
@@ -53,13 +53,13 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Sedes y canchas | FL-14 | Cambiar el estado de una cancha |
 | Sedes y canchas | FL-57 | Consultar el horario de funcionamiento de una sede |
 | Sedes y canchas | FL-58 | Configurar el horario de funcionamiento de una sede |
-| Planes y pases | FL-15 | Consultar planes y pases |
-| Planes y pases | FL-16 | Registrar un plan o un pase |
-| Planes y pases | FL-17 | Actualizar un plan o un pase |
-| Planes y pases | FL-18 | Cambiar el estado de un plan o un pase |
-| Contrataciones | FL-19 | Consultar un plan o pase contratado |
-| Contrataciones | FL-20 | Registrar un plan o pase para un usuario |
-| Contrataciones | FL-21 | Anular un plan o pase contratado |
+| Planes y membresías | FL-15 | Consultar planes y membresías |
+| Planes y membresías | FL-16 | Registrar un plan o una membresía |
+| Planes y membresías | FL-17 | Actualizar un plan o una membresía |
+| Planes y membresías | FL-18 | Cambiar el estado de un plan o una membresía |
+| Contrataciones | FL-19 | Consultar una contratación de plan o membresía |
+| Contrataciones | FL-20 | Registrar un plan o una membresía para un usuario |
+| Contrataciones | FL-21 | Anular una contratación de plan o membresía |
 | Planilla y generación de clases | FL-23 | Consultar la planilla de una cancha |
 | Planilla y generación de clases | FL-24 | Crear un turno de planilla |
 | Planilla y generación de clases | FL-25 | Modificar un turno de planilla |
@@ -89,8 +89,12 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Precios de reservas | FL-48 | Establecer el precio de reservas de una sede |
 | Precios de reservas | FL-49 | Actualizar el precio de reservas de una sede |
 | Reservas | FL-51 | Crear una reserva para un usuario |
-| Reservas | FL-52 | Modificar invitados identificados de una reserva con pase |
-| Consultas | FL-53 | Consultar el uso de un pase |
+| Reservas | FL-52 | Modificar invitados de una reserva |
+| Reservas | FL-70 | Actualizar socios de una reserva |
+| Reservas | FL-71 | Registrar o corregir el resultado de una reserva |
+| Participación | FL-72 | Responder una invitación a reserva |
+| Participación | FL-73 | Responder participación en una clase |
+| Consultas | FL-53 | Consultar el uso de una membresía |
 | Consultas | FL-54 | Consultar actividad de clases de un usuario |
 | Reservas | FL-55 | Consultar reservas |
 | Caja y movimientos | FL-56 | Consultar sesiones y movimientos |
@@ -102,7 +106,7 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Bloqueos | FL-66 | Anular y liberar eventos en lote |
 | Bloqueos | FL-67 | Consultar bloqueos |
 
-Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de planes y pases contratados, 4.2 Notificaciones por email, 4.3 Finalización automática de clases y reservas vencidas, 4.5 Aviso de vencimiento próximo de una contratación, 4.6 Recordatorio de la próxima clase asignada.
+Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de contrataciones de planes y membresías, 4.2 Notificaciones por email, 4.3 Finalización automática de clases y reservas vencidas, 4.5 Aviso de vencimiento próximo de una contratación, 4.6 Recordatorio de la próxima clase asignada.
 
 ---
 
@@ -123,7 +127,7 @@ Recorrido:
 1. El actor selecciona sede, cancha y fecha.
 2. El sistema consulta las franjas de funcionamiento y obtiene o prepara los turnos de una hora que corresponden a esa cancha y fecha, sin duplicarlos.
 3. Consulta los eventos que referencian esos turnos Programados o Finalizados y muestra su ocupación. Los eventos Anulados se conservan en la historia, sin impedir reutilizar el turno.
-4. Para reservar, ofrece sólo turnos futuros y libres de instalaciones activas, dentro de las franjas y del límite de catorce días.
+4. Para reservar, ofrece sólo turnos futuros y libres de instalaciones activas, dentro de las franjas y del límite de tres días.
 5. En turnos futuros, la administración puede crear una reserva, crear una clase o bloquear si están libres; si los ocupa una reserva o clase, puede anular la actividad para liberar o iniciar el bloqueo con anulación completa; si los ocupa un bloqueo, puede anularlo para liberar su turno. Cada acción aplica sus permisos y condiciones. El portal ofrece únicamente las acciones autorizadas sobre reservas propias. Consultar no registra ni modifica actividades.
 
 Alternativas:
@@ -173,7 +177,7 @@ Alternativas:
 - Administrador, Público y Reservas no pueden elegirse en este paso: Administrador se crea mediante el comando de gestión `crear_administrador`; Público y Reservas se asignan automáticamente.
 - No marcar ningún rol adicional no impide asignarlo después mediante **FL-07**.
 - Si se cancela antes de confirmar, no se crea el usuario.
-- Este flujo es siempre un paso previo e independiente: ninguna otra operación (como crear una reserva o registrar un plan o pase contratado) lo invoca ni registra un usuario nuevo dentro de su propio trámite. El usuario debe existir antes.
+- Este flujo es siempre un paso previo e independiente: ninguna otra operación (como crear una reserva o registrar una contratación de plan o membresía) lo invoca ni registra un usuario nuevo dentro de su propio trámite. El usuario debe existir antes.
 
 - **Resultado:** nuevo usuario activo con contraseña provisoria pendiente de reemplazo, Público, Reservas y los roles adicionales seleccionados.
 - **Datos:** usuarios, usuarios_roles.
@@ -270,7 +274,7 @@ Recorrido:
 
 Alternativas:
 
-- La inactivación no elimina clases, reservas, asistencias, contrataciones de planes y pases, sesiones de caja, movimientos ni roles asignados.
+- La inactivación no elimina clases, reservas, asistencias, contrataciones de planes y membresías, sesiones de caja, movimientos ni roles asignados.
 - Reactivar la cuenta limpia `fecha_baja`; el campo representa la baja vigente, no un historial de cambios de estado.
 - Un usuario inactivo no podrá iniciar sesión ni ser asignado como profesor activo, aunque conserve credenciales cargadas.
 - Ningún usuario con permiso para cambiar estados puede desactivar su propia cuenta.
@@ -379,14 +383,14 @@ Alternativas:
 
 - **Público no se puede quitar.** Se asigna automáticamente en el alta de cuentas no administrativas. Administrador se gestiona exclusivamente mediante comandos ejecutados por el desarrollador y no puede combinarse con otros roles. Su perfil no ofrece la modificación de roles y el servidor rechaza solicitudes sobre esas cuentas. Este flujo tampoco permite crear, renombrar ni eliminar registros del catálogo `roles`.
 - Reservas sigue asignándose automáticamente en el alta (**FL-02**, **FL-06**), pero puede retirarse si no hay reservas propias programadas y otorgarse nuevamente mediante este flujo.
-- Si el usuario tiene reservas programadas, se rechaza el retiro de Reservas. Si tiene un plan contratado Activo, se rechaza el retiro de Alumno; un pase contratado no impide retirar ese rol. Si tiene clases programadas con una asignación activa como profesor, se rechaza el retiro de Profesor.
+- Si el usuario tiene reservas programadas, se rechaza el retiro de Reservas. Si tiene un plan contratado Activo, se rechaza el retiro de Alumno; una membresía contratada no impide retirar ese rol. Si tiene clases programadas con una asignación activa como profesor, se rechaza el retiro de Profesor.
 - Ante un rechazo, se informa la causa, se conserva el rol y no se cancelan ni modifican las relaciones que lo bloquean. Los estados registrados determinan el bloqueo; una fecha pasada por sí sola no lo libera.
 - El rol Alumno también puede otorgarse automáticamente mediante **FL-20**, además de por este flujo; ambas vías conviven sin conflicto.
 - Quitar Reservas, Profesor o Alumno no elimina el historial de reservas, contrataciones, clases ni asistencia. Las reservas y clases canceladas o completadas y las contrataciones Vencidas o Anuladas no bloquean por sí solas el retiro.
 - Asignar un rol ya vigente, o quitar uno que el usuario no tiene, no genera cambios.
 
 - **Resultado:** asignación actualizada, o retiro rechazado conservando el rol y sus relaciones.
-- **Datos:** usuarios_roles, roles, reservas, planes_usuarios, pases_usuarios, clases_profesores, clases y eventos, turnos.
+- **Datos:** usuarios_roles, roles, reservas, planes_usuarios, membresias_usuarios, clases_profesores, clases y eventos, turnos.
 
 ```mermaid
 flowchart TD
@@ -686,28 +690,28 @@ flowchart TD
     J -->|Sí| G[Guardar o quitar franjas en una transacción]
 ```
 
-### 3.4 Catálogos de planes y pases
+### 3.4 Catálogos de planes y membresías
 
-#### FL-15. Consultar planes y pases
+#### FL-15. Consultar planes y membresías
 
 - **Objetivo:** consultar productos del catálogo.
 - **Actores:** Administrador, con acceso a activos e inactivos; usuario autenticado con rol Público, limitado a activos.
-- **Entradas:** catálogo de planes o pases y filtros por nombre, configuración o estado cuando el actor lo permite.
+- **Entradas:** catálogo de planes o membresías y filtros por nombre, configuración o estado cuando el actor lo permite.
 
 Recorrido:
 
 1. El actor elige el catálogo y los filtros.
-2. El sistema consulta `planes` o `pases`, según lo seleccionado.
+2. El sistema consulta `planes` o `membresias`, según lo seleccionado.
 3. En administración muestra nombre, descripción, configuración y precio vigente, con acceso al detalle. En el portal presenta tarjetas con los datos comerciales y hasta dos líneas de descripción; si existe texto, Leer descripción abre un modal con el contenido completo, sin navegar a una pantalla de detalle. Las tarjetas sin descripción no ofrecen esa acción.
 
 Alternativas:
 
 - El portal sólo ofrece productos Activos.
-- El pase Libre y el de Fin de semana son productos distintos.
+- Cada membresía define sus horas mensuales y precios; no tiene variantes por día ni límites diarios.
 - Los nombres se validan dentro de cada catálogo, no entre ambas tablas.
 
 - **Resultado:** listado y detalle de productos, sin modificar datos.
-- **Datos:** planes o pases.
+- **Datos:** planes o membresías.
 
 ```mermaid
 flowchart TD
@@ -715,27 +719,27 @@ flowchart TD
     B --> C[Mostrar productos y detalle]
 ```
 
-#### FL-16. Registrar un plan o un pase
+#### FL-16. Registrar un plan o una membresía
 
 - **Objetivo:** registrar un producto completo en su catálogo.
 - **Actor:** Administrador.
-- **Entradas:** nombre, descripción y precio; configuración específica del plan o pase.
+- **Entradas:** nombre, descripción y precio; configuración específica del plan o de la membresía.
 
 Recorrido:
 
 1. Selecciona el catálogo y completa los datos.
-2. Para un plan, indica modalidad, frecuencia semanal y cantidad de clases por encuentro. Para un pase, indica variante, límite diario y adicional por invitado.
+2. Para un plan, indica modalidad, frecuencia semanal y cantidad de clases por encuentro. Para una membresía, indica horas mensuales y adicional por invitado no socio.
 3. Valida nombre disponible entre productos Activos del mismo catálogo, importes y configuración.
-4. Registra una fila Activa en `planes` o `pases`.
+4. Registra una fila Activa en `planes` o `membresias`.
 
 Alternativas:
 
 - Frecuencia de plan entre uno y siete, con una o dos clases de una hora por encuentro.
-- Límite diario de pase positivo; Libre habilita todos los días y Fin de semana sólo sábado y domingo.
+- Horas mensuales de membresía positivas; permite cualquier día y sede sujeto a disponibilidad.
 - Los precios no pueden ser negativos.
 
 - **Resultado:** producto Activo en el catálogo correspondiente.
-- **Datos:** planes o pases.
+- **Datos:** planes o membresías.
 
 ```mermaid
 flowchart TD
@@ -744,7 +748,7 @@ flowchart TD
     B -->|Sí| C[Registrar producto completo]
 ```
 
-#### FL-17. Actualizar un plan o un pase
+#### FL-17. Actualizar un plan o una membresía
 
 - **Objetivo:** modificar los datos comerciales de un producto.
 - **Actor:** Administrador.
@@ -759,13 +763,13 @@ Recorrido:
 
 Alternativas:
 
-- Con contrataciones históricas no se cambia modalidad, frecuencia o duración del plan, ni variante o límite diario del pase.
+- Con contrataciones históricas no se cambia modalidad, frecuencia o duración del plan, ni horas mensuales de la membresía.
 - Una configuración estructural distinta se registra como otro producto.
 - Cambiar el precio vigente no modifica importes acordados ni movimientos monetarios registrados.
 - El adicional de invitados se conserva en cada reserva que lo aplica.
 
 - **Resultado:** producto actualizado, conservando los datos aplicados a operaciones existentes.
-- **Datos:** planes y planes_usuarios, o pases y pases_usuarios.
+- **Datos:** planes y planes_usuarios, o membresías y membresias_usuarios.
 
 ```mermaid
 flowchart TD
@@ -774,7 +778,7 @@ flowchart TD
     B -->|No| D[Guardar datos y precios vigentes]
 ```
 
-#### FL-18. Cambiar el estado de un plan o un pase
+#### FL-18. Cambiar el estado de un plan o una membresía
 
 - **Objetivo:** activar o desactivar un producto sin alterar sus contrataciones.
 - **Actor:** Administrador.
@@ -795,7 +799,7 @@ Alternativas:
 - Activar un producto del catálogo no asigna roles a usuarios.
 
 - **Resultado:** producto con el estado solicitado.
-- **Datos:** planes o pases.
+- **Datos:** planes o membresías.
 
 ```mermaid
 flowchart TD
@@ -804,9 +808,9 @@ flowchart TD
     B -->|Sí| D[Establecer estado solicitado]
 ```
 
-### 3.5 Contrataciones de planes y pases
+### 3.5 Contrataciones de planes y membresías
 
-#### FL-19. Consultar un plan o pase contratado
+#### FL-19. Consultar una contratación de plan o membresía
 
 - **Objetivo:** consultar una contratación mensual y sus cobros o usos.
 - **Actores:** Administrador, sobre todas; titular autenticado, sólo sobre las propias.
@@ -814,21 +818,21 @@ flowchart TD
 
 Recorrido:
 
-1. El sistema consulta `planes_usuarios` o `pases_usuarios` y limita el alcance según el actor.
+1. El sistema consulta `planes_usuarios` o `membresias_usuarios` y limita el alcance según el actor.
 2. El actor selecciona una contratación.
-3. Muestra producto, mes, período calculado, importe acordado, estado, auditoría y cobros vinculados vigentes desde movimientos.
-4. Para pases, muestra también las reservas donde se aplicó como organizador o invitado.
+3. Muestra producto, mes, período calculado, importe aplicado, estado y cobros vinculados vigentes. Administración consulta además responsables, observaciones y motivo de anulación; el titular sólo sus fechas y datos comerciales, sin información interna.
+4. Para membresías, muestra usos mensuales como organizador y participaciones como invitado, distinguiendo que estas últimas no consumen horas. El saldo incluye usos conservados del titular y mes de contrataciones Anuladas.
 
 Alternativas:
 
-- Consultar un pase propio no exige Alumno.
+- Consultar una membresía propia no exige Alumno.
 - El titular consulta sus contrataciones en modo de sólo lectura.
 - Desde el detalle, administración y titular pueden abrir el comprobante autorizado e imprimirlo o guardarlo como PDF. Muestra el importe registrado y las condiciones del producto, acredita la contratación y no el pago, y aplica los mismos límites de información del detalle.
-- La consulta comercial excluye toda anulación, incluso posterior al cierre de caja. No calcula deuda ni indicadores de pago y no utiliza los totales históricos del cierre.
+- La consulta de cobros excluye movimientos Anulados, incluso si se anularon después del cierre de caja. Las contrataciones Anuladas conservan su consulta histórica. No calcula deuda ni indicadores de pago y no utiliza los totales históricos del cierre.
 - La consulta histórica utiliza la contratación concreta.
 
 - **Resultado:** detalle autorizado, sin modificar datos.
-- **Datos:** usuarios, planes, pases, planes_usuarios, pases_usuarios, movimientos_fondos, reservas e invitados.
+- **Datos:** usuarios, planes, membresías, planes_usuarios, membresias_usuarios, movimientos_fondos, reservas e invitados.
 
 ```mermaid
 flowchart TD
@@ -836,7 +840,7 @@ flowchart TD
     B --> C[Mostrar período importes auditoría y usos]
 ```
 
-#### FL-20. Registrar un plan o pase para un usuario
+#### FL-20. Registrar un plan o una membresía para un usuario
 
 - **Objetivo:** registrar una contratación mensual desde la administración.
 - **Actor:** Administrador.
@@ -844,24 +848,24 @@ flowchart TD
 
 Recorrido:
 
-1. Selecciona al usuario, un plan o pase y el mes.
+1. Selecciona al usuario, un plan o una membresía y el mes.
 2. Muestra el período calculado y propone el precio vigente.
-3. El Administrador establece el importe final cuando corresponde un ajuste y confirma.
-4. En una transacción, bloquea al usuario y verifica que no exista otra contratación no Anulada del mismo tipo para ese mes.
-5. Registra una fila en `planes_usuarios` o `pases_usuarios`, con su producto obligatorio, mes, importe aplicado y responsable. Si el mes terminó nace Vencida; en otro caso, Activa.
+3. Para planes, el Administrador establece el importe final cuando corresponde un ajuste. Para membresías se aplica el precio mensual vigente completo sin prorrateo ni negociación; un cambio del precio exige revisar antes de confirmar.
+4. En una transacción, bloquea al usuario y al producto, verifica acceso, estado y configuración del producto, precio revisado y ausencia de otra contratación no Anulada del mismo tipo para ese mes.
+5. Registra una fila en `planes_usuarios` o `membresias_usuarios`, con su producto obligatorio, mes, importe aplicado y responsable. Si el mes terminó nace Vencida; en otro caso, Activa.
 6. Si registra un plan Activo, falta Alumno y el titular no es administrador, asigna el rol en la misma transacción.
 
 Alternativas:
 
-- El formulario tiene dos pasos: selección de usuario y producto, y datos de contratación. Volver conserva la selección, el mes, la fecha de alta, el importe y las observaciones. Cambiar de producto propone su precio vigente; los pases aplican siempre el precio vigente. Cancelar abandona el proceso y sólo la confirmación final registra la contratación.
-- Puede combinar un plan y un pase, pero no duplicar el mismo tipo en un mes, incluidos registros Vencidos.
+- El formulario tiene dos pasos: selección de usuario y producto, y datos de contratación. Volver conserva la selección, el mes, la fecha de alta, el importe y las observaciones. Cambiar de producto propone su precio vigente; las membresías aplican siempre el precio vigente. Cancelar abandona el proceso y sólo la confirmación final registra la contratación.
+- Puede combinar un plan y una membresía, pero no duplicar el mismo tipo en un mes, incluidos registros Vencidos.
 - El mes se encuentra entre agosto de 2026 y el mes siguiente al actual. La fecha efectiva de alta es independiente del mes cubierto y admite desde el inicio de operaciones hasta hoy, inclusive.
 - Renovar para otro mes crea una contratación nueva.
-- Un pase no otorga Alumno y su vigencia se verifica para cada fecha de uso.
+- Una membresía no otorga Alumno y su vigencia se verifica para cada fecha de uso.
 - El ingreso se registra por separado mediante **FL-43**; el importe aplicado no representa lo abonado.
 
 - **Resultado:** contratación registrada con precio acordado e historia conservada.
-- **Datos:** usuarios, planes o pases, planes_usuarios o pases_usuarios y usuarios_roles cuando corresponde.
+- **Datos:** usuarios, planes o membresías, planes_usuarios o membresias_usuarios y usuarios_roles cuando corresponde.
 
 ```mermaid
 flowchart TD
@@ -875,7 +879,7 @@ flowchart TD
     G --> H
 ```
 
-#### FL-21. Anular un plan o pase contratado
+#### FL-21. Anular una contratación de plan o membresía
 
 - **Objetivo:** impedir nuevas aplicaciones de una contratación, conservando su historia.
 - **Actor:** Administrador.
@@ -886,20 +890,20 @@ Recorrido:
 
 1. Revisa titular, producto, período, importe y efectos de la anulación, junto con los usos e ingresos de la contratación.
 2. Ingresa el motivo y confirma en la página de revisión. Si los datos cambiaron, vuelve a revisarlos antes de confirmar.
-3. En una transacción, bloquea al usuario y la fila de contratación, verifica estado Activo y establece Anulado.
+3. En una transacción, bloquea al usuario y la fila de contratación, verifica estado Activo y, en membresías, ausencia de aplicaciones en reservas Programadas como organizador o invitado socio vigente Pendiente o Aceptado; sólo entonces establece Anulado.
 4. Registra administrador, momento y motivo de anulación, actualizando la fecha de modificación.
 
 Alternativas:
 
 - Conserva producto, titular, mes, precio aplicado e ingresos.
-- No anula automáticamente clases, reservas, cobros o coberturas de pase registradas ni devuelve dinero. Si corresponde reintegrar, la administración registra un Egreso de categoría devoluciones mediante FL-43.
-- Un pase Anulado no cubre aplicaciones nuevas.
+- No anula automáticamente clases, reservas, cobros o condiciones de socio registradas ni devuelve dinero. Si corresponde reintegrar, la administración registra un Egreso de categoría devoluciones mediante FL-43.
+- Una contratación de membresía Anulada no cubre aplicaciones nuevas.
 - No se retira Alumno automáticamente.
-- El registro Anulado permite contratar un reemplazo para ese mes, conservando ambos.
+- El registro Anulado permite contratar un reemplazo para ese mes, conservando ambos. En membresías se descuentan del nuevo cupo los usos conservados del titular y período; no se reinician horas. Los vínculos Rechazados o retirados, y las reservas Anuladas o Finalizadas, no bloquean anulación.
 - Repetir una anulación no sobrescribe su auditoría.
 
 - **Resultado:** contratación Anulada.
-- **Datos:** planes_usuarios o pases_usuarios, movimientos_fondos y reservas relacionadas.
+- **Datos:** planes_usuarios o membresias_usuarios, movimientos_fondos y reservas relacionadas.
 
 ```mermaid
 flowchart TD
@@ -1078,17 +1082,17 @@ Recorrido:
 1. Valida el acceso, la sede y el mes completo. Acepta que el mes incluya días pasados y omite sus turnos, al igual que los turnos de hoy que ya comenzaron. Expande las celdas de planilla a las fechas que coinciden con su día de semana y ordena las candidatas por fecha, hora e identificadores de sede y cancha.
 2. Evalúa cada candidata completa: horario íntegro dentro de una franja habilitada, instalaciones activas, al menos un profesor previsto y condiciones de asignación de todos sus usuarios. Omite turnos cuyo inicio ya ocurrió o coincide con el momento actual, feriados, turnos ocupados por eventos no Anulados y candidatas cuyos profesores o participantes tienen asignaciones activas a otra clase no Anulada en la misma fecha y hora, sin importar sede, cancha o función.
 3. Compara también las candidatas válidas de esta ejecución. La primera válida conserva sus asignaciones; una posterior en conflicto se omite completa. No elimina usuarios para crear una clase parcial ni aborta las demás candidatas.
-4. Presenta las clases a crear, cada candidata omitida con su motivo. Las coincidencias con reservas no generan advertencia ni son motivo de omisión.
+4. Presenta las clases a crear, cada candidata omitida con su motivo. Las coincidencias personales con reservas también omiten la candidata completa, según criterios 2.2.
 5. Solicita dos confirmaciones explícitas y sucesivas: la generación no admite deshacer ni eliminación física de clases. Las generadas por error pueden anularse antes de su inicio desde su detalle mediante **FL-37** o desde Acciones del día o del mes, conservando su historia.
 6. Al confirmar, bloquea usuarios en orden de identificador y coordina sede, canchas y calendario de feriados. Obtiene o crea los turnos concretos, los bloquea y vuelve a evaluar el conjunto revisado. Si cambia, revierte y exige una nueva revisión.
-7. Comprueba el inicio futuro al guardar y al terminar la operación; si un turno alcanza su inicio, revierte todo y exige una nueva revisión. Crea en una transacción los eventos Programados de tipo clase, sus especializaciones con `es_generada = true`, y sus asignaciones. Las observaciones se copian al evento.
+7. Comprueba el inicio futuro al guardar y al terminar la operación; si un turno alcanza su inicio, revierte todo y exige una nueva revisión. Crea en una transacción los eventos Programados de tipo clase, sus especializaciones con `es_generada = true`, y sus asignaciones con respuesta Pendiente para participantes y sin respuesta para profesores. Las observaciones se copian al evento.
 8. La notificación por email a profesores se describe en el proceso 4.2.
 
 Alternativas:
 
 - Los usuarios inactivos, profesores sin rol Profesor, celdas sin profesor, asignaciones en ambas funciones, instalaciones inactivas y turnos fuera de horario originan omisiones informadas.
 - Las asignaciones inactivas y clases Anuladas no generan conflictos. Una clase Finalizada conserva la ocupación y las asignaciones que correspondan.
-- Las reservas no Anuladas ocupan su turno e impiden generar en él. Una coincidencia de usuario con una reserva en otra cancha no impide generar.
+- Las reservas no Anuladas ocupan su turno e impiden generar en él. La participación personal incompatible en una reserva, aunque sea en otra cancha, omite la candidata completa.
 - Una clase omitida no ocupa el turno ni reserva sus usuarios para las candidatas posteriores.
 - Volver a generar no duplica clases: los turnos ya ocupados se omiten.
 
@@ -1164,7 +1168,7 @@ Alternativas:
 
 - Se aplican la privacidad y los permisos de **FL-31**: cualquier titular puede consultar sus clases como participante sin exigir Alumno; sólo un profesor autorizado tiene acciones de docencia y no accede a datos de actividades ajenas.
 - Una cancha que no pertenece a la sede o una fecha inválida rechaza la consulta.
-- La consulta no requiere una tarifa ni crea eventos o turnos persistidos; las operaciones de reserva conservan el límite de catorce días.
+- La consulta no requiere una tarifa ni crea eventos o turnos persistidos; las operaciones de reserva conservan el límite de tres días.
 
 - **Resultado:** agenda semanal y detalle del turno seleccionado, sin modificaciones.
 - **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, clases, profesores asignados y bloqueos.
@@ -1209,13 +1213,13 @@ flowchart TD
 
 ### 3.8 Clases concretas
 
-Las operaciones se rigen por criterios, 2.0, 2.1 y 2.12. La creación exige inicio estrictamente futuro y fecha hasta el último día del segundo mes calendario siguiente al actual, en Buenos Aires. No admite fechas pasadas ni turnos de hoy que ya comenzaron. Las clases duran una hora y comienzan en punto entre 00:00 y 22:00. La consulta y las correcciones permitidas conservan el acceso a la historia desde el 01/08/2026.
+Las operaciones se rigen por criterios, 2.0, 2.1 y 2.12. La creación exige inicio estrictamente futuro y fecha hasta el último día del segundo mes calendario siguiente al actual, en Salta. No admite fechas pasadas ni turnos de hoy que ya comenzaron. Las clases duran una hora y comienzan en punto entre 00:00 y 22:00. La consulta y las correcciones permitidas conservan el acceso a la historia desde el 01/08/2026.
 
 Profesores nuevos o reactivados requieren cuenta activa y rol Profesor. Los participantes nuevos o reactivados requieren cuenta activa, sin exigir Alumno, contratación ni cobro. La selección propone Alumno por defecto y permite buscar cualquier usuario activo. Cada clase conserva al menos una asignación activa de profesor. La clase admite varios participantes sin un máximo bloqueante.
 
-Una persona no puede tener asignaciones activas a clases no Anuladas en la misma fecha y hora, aunque cambien sede, cancha o función; tampoco puede dictar y participar en la misma clase. Los conflictos entre clases bloquean el guardado. Las asignaciones inactivas y las clases Anuladas no generan esos conflictos.
+La disponibilidad personal aplica criterios 2.2: docencia vigente, participación de clase activa con respuesta Pendiente o Afirmativa, organización de reserva e invitación vigente Pendiente o Aceptada impiden otra actividad simultánea. Una persona tampoco puede dictar y participar en la misma clase. Respuestas negativas, relaciones inactivas y actividades Anuladas no impiden coincidencias.
 
-La coincidencia con una reserva no Anulada que la persona organiza o en la que figura como invitada identificada genera advertencia confirmable. Las advertencias no convierten en válidos los conflictos bloqueantes. La confirmación se vincula al actor y al conjunto revisado; si cambia, exige revisión.
+Las coincidencias personales con reservas se rechazan, sin confirmación que las habilite. La revisión se vincula al actor y al conjunto validado; si cambia, exige nueva revisión. Las altas y reactivaciones conservan la identidad y respuestas de las relaciones concretas.
 
 #### FL-34. Crear una clase concreta
 
@@ -1227,16 +1231,16 @@ Recorrido:
 
 1. El administrador selecciona un turno libre en Agenda y solicita Crear clase. Completa tres pasos dentro del panel lateral: Profesores, Participantes y Resumen. Profesores exige al menos uno; Participantes es opcional y permite agregar observaciones al final. Ambos selectores muestran título, buscador y asignaciones, en ese orden. Atrás conserva los datos y la tarjeta del turno permanece visible durante el recorrido.
 2. El sistema calcula la hora de fin exactamente una hora después del inicio.
-3. Valida calendario, profesores, participantes, ausencia de asignaciones simultáneas a otras clases no Anuladas e instalaciones activas. Exige que el turno quede íntegramente dentro de una franja de funcionamiento (**FL-57**); no hay excepciones. El paso Resumen presenta turno, profesores, participantes, observaciones y las advertencias confirmables previstas en esta sección. La confirmación se realiza dentro del panel.
-4. Al confirmar, bloquea usuarios en orden de identificador, sede y cancha; obtiene o crea el turno concreto, lo bloquea y revalida acceso, asignaciones, advertencias y ocupación. En una transacción crea el evento Programado, clase y asignaciones; las observaciones pertenecen al evento. Una revisión que cambió exige nueva confirmación y no deja cambios parciales.
+3. Valida calendario, profesores, participantes, disponibilidad personal frente a clases y reservas e instalaciones activas. Exige que el turno quede íntegramente dentro de una franja de funcionamiento (**FL-57**); no hay excepciones. El paso Resumen presenta turno, profesores, participantes, observaciones y las condiciones de disponibilidad personal. La confirmación se realiza dentro del panel.
+4. Al confirmar, bloquea usuarios en orden de identificador, sede y cancha; obtiene o crea el turno concreto, lo bloquea y revalida acceso, asignaciones, disponibilidad personal y ocupación. En una transacción crea el evento Programado, clase y asignaciones con respuesta Pendiente para participantes y sin respuesta para profesores; las observaciones pertenecen al evento. Una revisión que cambió exige nueva confirmación y no deja cambios parciales.
 5. Actualiza la grilla y el panel sin salir de Agenda ni recargar la página. Envía una notificación por email a cada profesor asignado (ver 4.2).
 
 Alternativas:
 
 - Un turno ocupado obliga a elegir otro; el evento existente no se desplaza.
 - La clase puede crearse sin alumnos, pero debe tener al menos un profesor activo.
-- Un profesor o participante con asignación activa a otra clase no Anulada en la misma fecha y hora impide confirmar, sin importar sede, cancha o función.
-- Las coincidencias con reservas no Anuladas del organizador o invitado identificado generan advertencia confirmable tanto para profesores como para participantes.
+- Una asignación docente activa o de participante con respuesta Pendiente o Afirmativa a otra clase no Anulada impide confirmar en la misma fecha y hora, sin importar sede, cancha o función. La respuesta negativa libera disponibilidad.
+- Las coincidencias personales con reservas se rechazan para profesores y participantes según criterios 2.2, sin excepciones confirmables.
 - Un turno fuera del horario de funcionamiento de la sede impide crear la clase, sin excepciones administrativas.
 - Las clases generadas desde la planilla se crean mediante **FL-28**, no mediante este flujo; esa generación notifica una sola vez por profesor y por corrida, no clase por clase. Una clase creada por este flujo queda marcada como no generada por planilla.
 
@@ -1265,9 +1269,9 @@ Recorrido:
 
 1. El sistema muestra datos, participantes y turno actuales.
 2. El administrador realiza cambios.
-3. Valida que quede al menos un profesor con asignación activa y comprueba las condiciones de cada alta o reactivación de profesor o participante. Rechaza asignaciones simultáneas a otras clases no Anuladas y personas en ambas funciones. Presenta las advertencias confirmables de coincidencia con reservas, según las reglas comunes.
+3. Valida que quede al menos un profesor con asignación activa y comprueba las condiciones de cada alta o reactivación de profesor o participante. Rechaza participaciones simultáneas incompatibles según criterios 2.2 y personas en ambas funciones. Rechaza coincidencias personales con reservas según las reglas comunes.
 4. Si se indicó una nueva sede o cancha, exige que el turno original no haya comenzado, que las instalaciones de destino estén activas y que el turno de destino, con el mismo día y horario, esté disponible, excluyendo el evento actual de esa comprobación. Exige que el turno quede íntegramente dentro de una franja de funcionamiento de la sede (**FL-57**) para ese día; si no se cumple, rechaza la operación.
-5. Coordina los bloqueos de usuarios en orden de identificador, instalaciones, turnos y evento, y revalida permisos, estado, asignaciones y advertencias antes de guardar. Guarda las asignaciones en sus relaciones específicas y las observaciones en el evento. Si cambió la cancha, actualiza `eventos.turno_id` al turno de la nueva cancha en la misma fecha y hora; bloquea origen y destino, valida la disponibilidad y conserva el turno original. Actualiza la fecha de modificación del evento. Día y hora no cambian.
+5. Coordina los bloqueos de usuarios en orden de identificador, instalaciones, turnos y evento, y revalida permisos, estado, asignaciones y disponibilidad personal antes de guardar. Guarda las asignaciones en sus relaciones específicas y las observaciones en el evento. Si cambió la cancha, actualiza `eventos.turno_id` al turno de la nueva cancha en la misma fecha y hora; bloquea origen y destino, valida la disponibilidad y conserva el turno original. Actualiza la fecha de modificación del evento. Día y hora no cambian.
 6. Si se agregó un profesor que no estaba asignado antes, le envía una notificación por email (ver 4.2).
 
 Alternativas:
@@ -1277,7 +1281,7 @@ Alternativas:
 - Un cambio de cancha que ubique el turno fuera del horario de funcionamiento de la sede impide guardar, igual que en **FL-34**.
 - Una clase cancelada o completada conserva su historia y no se edita mediante este flujo.
 - Quitar un profesor o un alumno no genera notificación.
-- Reactivar la asignación de un alumno que estaba inactiva resetea a `false` su marca de recordatorio enviado (ver 4.6), para que vuelva a recibirlo si la clase sigue programada para el día siguiente en una corrida posterior.
+- Reactivar la asignación de un alumno que estaba inactiva establece en `false` su marca de recordatorio enviado (ver 4.6), para que reciba el recordatorio si la clase sigue programada para el día siguiente. La respuesta, su primera decisión y el único cambio permitido se conservan.
 
 - **Resultado:** datos, participantes y, si correspondía, cancha actualizados, con el mismo día y horario.
 - **Datos:** clases, eventos, turnos, profesores y usuarios asignados, y horarios de sede.
@@ -1412,91 +1416,75 @@ flowchart TD
 
 ### 3.10 Reservas
 
+Todos los recorridos de escritura coordinan los bloqueos y la revalidación según criterios 2.12. La cancelación y las respuestas bloquean primero a las personas involucradas, antes de turno, evento, relaciones y contrataciones. No se muestran formularios abiertos por defecto; los detalles priorizan estado, participantes y condiciones comerciales.
+
 
 #### FL-40. Crear una reserva propia
 
-- **Objetivo:** registrar una reserva propia de un turno de una hora, normal o con pase.
-- **Actor:** usuario con rol Reservas.
-- **Entradas:** sede, cancha, fecha, turno y observaciones opcionales; decisión de usar pase cuando corresponda, cantidad de invitados e invitados identificados.
-- **Precondición:** cuenta activa, acceso vigente y sin cambio obligatorio de contraseña pendiente.
+- **Objetivo:** Registrar una reserva propia normal o con membresía desde Agenda.
+- **Actor:** usuario con rol Reservas o Administrador sobre su propia cuenta.
+- **Entradas y precondiciones:** Cuenta activa y acceso vigente; turno libre seleccionado en Agenda, modalidad, invitados y observaciones opcionales.
 
 Recorrido:
 
-1. El usuario elige sede, cancha y fecha; el organizador es el usuario autenticado.
-2. El sistema exige fecha entre hoy y catorce días después y prepara los turnos futuros y libres dentro de las franjas de funcionamiento.
-3. Busca un pase vigente que cubra la fecha y habilite ese día. Si lo hay, permite decidir si utilizarlo; de lo contrario, continúa como reserva normal.
-4. Selecciona un único turno de una hora dentro de una franja de funcionamiento de la sede.
-5. En el camino normal, calcula el total con la tarifa vigente de la sede. En el camino con pase, verifica las horas disponibles considerando los turnos de reservas no Anuladas como organizador o invitado cubierto; debe quedar al menos una hora disponible para cubrir la reserva.
-6. Si utiliza pase, informa la cantidad total de invitados e identifica opcionalmente usuarios existentes. El sistema evalúa sus pases y calcula los adicionales de quienes no tienen cobertura suficiente, incluidos los no identificados.
-7. Muestra la selección, el precio o pase aplicado y el total, y solicita confirmación mediante el modal compartido.
-8. Dentro de una transacción, vuelve a validar acceso, turno, precio o pase, instalaciones y calendario. Bloquea el turno y comprueba su ocupación compartida en Eventos.
-9. Registra la reserva, un evento Programado que referencia el turno y los invitados cuando corresponda. En una reserva normal copia la tarifa validada en `precio_por_turno_aplicado`; con pase conserva la contratación y el adicional unitario por invitados.
-10. Envía la confirmación al organizador y las invitaciones informativas a los invitados identificados.
+1. Elige en Agenda un turno futuro desde hoy hasta el tercer día calendario siguiente inclusive, dentro del funcionamiento de una instalación activa. El organizador es el titular autenticado.
+2. Si existe membresía que cubre la fecha del turno, muestra Reserva normal y Reserva con membresía; en otro caso sólo Reserva normal. Cada opción abre su propio recorrido.
+3. Normal aplica tarifa positiva de sede y admite invitados opcionales. Con membresía exige horas disponibles del mes, identifica a todos los invitados y evalúa su condición de socios para la fecha del turno, sin consumirles horas.
+4. Presenta turno, modalidad, participantes, tarifa o contratación aplicada, adicional unitario y total para confirmar. Los invitados no socios generan adicional sólo con membresía.
+5. En una transacción bloquea personas en orden estable, instalaciones, turno, evento y contrataciones involucradas conforme a criterios 2.12. Revalida acceso, cupo conjunto de dos Programadas, coincidencias personales, calendario, ocupación, cobertura y precios.
+6. Registra evento Programado, reserva e invitados Pendientes juntos. Con membresía compromete una hora del organizador y conserva el adicional unitario. Normal conserva la tarifa. Envía confirmación e invitaciones por el proceso de email.
 
 Alternativas:
 
-- No permite elegir otro organizador.
-- Sin tarifa configurada no se confirma una reserva normal. Un cambio de sede obliga a recalcular; un cambio de precio desde la selección exige revisar el nuevo total y confirmar nuevamente.
-- Las instalaciones deben estar activas y el turno debe ser futuro, libre y quedar contenido en una franja de funcionamiento. No hay excepciones de fecha ni horario.
-- Sin al menos una hora disponible de pase puede continuar como reserva normal.
-- La superposición de participación personal produce la advertencia definida en los criterios del sistema; la ocupación de cancha rechaza la selección.
-- En reservas normales no se registran invitados. En reservas con pase, el organizador no puede repetirse como invitado.
-- Los invitados identificados no necesitan tener pase; la cobertura depende de vigencia, día habilitado y horas suficientes.
-- La invitación no requiere aceptación para confirmar la reserva.
-- Los cobros se registran administrativamente con una sesión de caja abierta; el portal no registra movimientos monetarios. Si corresponde reintegrar un pago, la administración registra un Egreso de categoría devoluciones por FL-43. Cancelar o reprogramar no genera reintegros ni anula cobros automáticamente.
-- Cancelar el modal o presionar Escape no registra la reserva. Si cambia la disponibilidad al confirmar, se rechaza toda la operación.
-- No se crean reservas recurrentes.
+- No se selecciona otro organizador ni se crean usuarios o roles en este flujo.
+- Sin tarifa no se confirma normal; con membresía no se exige tarifa de sede. Sin horas no se confirma con membresía, aunque la modalidad normal sigue disponible.
+- El organizador no puede repetirse como invitado. Todos los invitados registrados son cuentas activas habilitadas; se rechazan duplicados, cupos completos y coincidencias con reservas o clases.
+- El socio invitado no paga adicional ni usa horas, aunque tenga agotado su cupo. La cantidad participante y el total se derivan de relaciones vigentes Pendientes o Aceptadas.
+- Un cambio de selección, cobertura, precio o disponibilidad exige una nueva revisión, sin escrituras parciales. Cancelar la revisión no registra nada.
+- No hay reservas recurrentes. El portal no cobra; pagos y devoluciones corresponden a caja como operaciones independientes.
 
-- **Resultado:** una reserva propia y un evento Programado que referencia su único turno, con invitados sólo cuando utiliza pase.
-- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, tarifa de sede, pases, contrataciones de planes y pases e invitados.
+- **Resultado:** Reserva propia Programada con sus importes aplicados e invitaciones Pendientes.
+- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, membresias, membresias_usuarios y reservas_invitados.
 
 ```mermaid
 flowchart TD
-    A[Elegir sede cancha y fecha] --> B{Calendario válido}
-    B -->|No| C[Solicitar corrección]
-    B -->|Sí| D[Ofrecer turnos y opción de pase]
-    D --> E[Seleccionar un turno]
-    E --> F[Calcular precio o cobertura e invitados]
-    F --> G{Confirmar}
-    G -->|Sí| H[Bloquear y validar selección completa]
-    H --> I{Selección válida}
-    I -->|No| C
-    I -->|Sí| J[Registrar evento con turno reserva e invitados]
-    J --> K[Notificar confirmación e invitaciones]
+    A[Seleccionar turno en Agenda]
+    A --> B[Elegir modalidad para el titular]
+    B --> C[Revisar invitados e importes]
+    C --> D[Revalidar cupos disponibilidad y cobertura]
+    D --> E[Registrar evento reserva e invitados juntos]
 ```
 
 #### FL-41. Reprogramar una reserva
 
-- **Objetivo:** crear una nueva reserva vinculada a una cancelada por el administrador, para el turno acordado con el organizador.
-- **Actor:** administrador.
-- **Precondición:** reserva cancelada por el administrador (ver **FL-61**), no por el propio organizador, y aún no reprogramada; localizada mediante **FL-55**.
-- **Entrada:** nuevo turno acordado (fecha, hora, sede, cancha) y, si corresponde, la decisión de usar o no un pase vigente, igual que en **FL-51**.
+- **Objetivo:** Crear una reserva de reemplazo vinculada a un origen Anulado administrativamente.
+- **Actor:** Administrador.
+- **Entradas y precondiciones:** Origen Anulado por administración por una causa de la academia, sin reemplazo directo; destino seleccionado en Agenda.
 
 Recorrido:
 
-1. El administrador acuerda con el organizador el nuevo turno, inmediatamente después de cancelar (**FL-61**) o más tarde, sobre una reserva ya cancelada.
-2. Ejecuta **FL-51** para crear la nueva reserva, con el mismo organizador de la reserva cancelada, que resuelve por sí sola si corresponde precio normal o pase y ya envía la confirmación al organizador (y, si aplica, las invitaciones) como parte de su propio recorrido.
-3. El sistema vincula la nueva reserva a la cancelada mediante `reprogramada_desde_id`.
+1. Revisa el origen y acuerda un turno con el mismo organizador, inmediatamente después de cancelar o más adelante.
+2. Inicia el recorrido de FL-51 conservando organizador y vínculo de origen. Revisa modalidad e invitados para la fecha nueva; las invitaciones comienzan Pendientes.
+3. Al confirmar, bloquea el origen y revalida su elegibilidad y ausencia de reemplazo, junto con todas las condiciones de creación. Guarda la reserva nueva y reprogramada_desde_id en una única transacción.
+4. Muestra enlaces autorizados entre ambas reservas, con comprobantes, estados, importes y cobros propios. La nueva creación envía su confirmación sin email duplicado de reprogramación.
 
 Alternativas:
 
-- Una reserva cancelada por el propio organizador (autoservicio, ver **FL-60**) nunca puede reprogramarse.
-- Una reserva cancelada no puede reprogramarse dos veces.
-- La reserva original no se modifica: conserva su evento Anulado y el motivo registrado.
-- Reprogramar o desistir de la reprogramación no devuelve dinero ni anula cobros automáticamente. Si corresponde reintegrar, la administración registra por FL-43 un Egreso de categoría devoluciones, independiente de la reserva y sin modificar sus cobros.
-- Los movimientos vinculados de la reserva cancelada no se anulan ni se modifican automáticamente.
-- Este flujo no envía notificaciones propias: la confirmación de la nueva reserva ya la envía **FL-51** en el paso 2. Evita un segundo email idéntico.
+- Un origen cancelado por el organizador no habilita este flujo. Un origen admite un reemplazo directo; si éste se cancela administrativamente puede continuar una cadena.
+- La cancelación administrativa libera la hora original. El reemplazo con membresía compromete una del mes nuevo y exige cobertura y saldo; no traslada horas entre meses.
+- La ventana de tres días se calcula al crear el reemplazo. Se aplican cupo de dos y disponibilidad personal sin excepciones.
+- No copia aceptación de invitados, no modifica el origen y no traslada cobros ni devuelve dinero automáticamente. Dos envíos concurrentes no generan dos reemplazos.
 
-- **Resultado:** reserva cancelada vinculada a una nueva reserva programada para el turno acordado.
-- **Datos:** reservas (la cancelada y la nueva), eventos, turnos.
+- **Resultado:** Nueva reserva vinculada de forma única al origen Anulado administrativamente.
+- **Datos:** reservas, eventos, turnos, invitados y contrataciones aplicadas.
 
 ```mermaid
 flowchart TD
-    A[Localizar reserva cancelada por el administrador] --> B{Ya reprogramada}
-    B -->|Sí| C[Impedir reprogramación]
-    B -->|No| D[Acordar nuevo turno]
-    D --> E[Ejecutar FL-51 para el mismo organizador]
-    E --> F[Vincular como reprogramación]
+    A[Elegir origen Anulado administrativamente]
+    A --> B[Seleccionar destino y modalidad]
+    B --> C[Revisar invitados y condiciones del turno nuevo]
+    C --> D[Bloquear origen y validar creación]
+    D --> E[Guardar reemplazo y vínculo único juntos]
 ```
 
 #### FL-42. Finalizar una reserva de emergencia
@@ -1533,13 +1521,13 @@ flowchart TD
     E -->|Sí| G[Registrar estado Finalizado y momento]
 ```
 
-La finalización automática se describe en el proceso interno 4.3 y utiliza las mismas condiciones de estado y horario.
+La finalización automática se describe en el proceso interno 4.3 y utiliza las mismas condiciones de estado y horario. Ninguna finalización asigna un resultado de uso; se registra por FL-71.
 
 ### 3.11 Caja y movimientos
 
 `movimientos_fondos` es la única fuente monetaria y `sesiones_caja` agrupa sus registros. El acceso exige usuario autenticado, activo, sin cambio obligatorio de contraseña y con rol Administrador; la marca `is_superuser` por sí sola no habilita acceso. Opera el responsable fijo que abrió la sesión. Otros administradores pueden consultar. No hay reasignación de responsable.
 
-Los medios son efectivo, transferencia, tarjeta y QR. Todos los movimientos usan monto positivo en pesos con dos decimales y Decimal, concepto obligatorio y fecha de registro del servidor en `America/Argentina/Buenos_Aires`, sin fecha real editable. Los estados del movimiento son Vigente y Anulado; los de la sesión, Abierta y Cerrada. Los formularios se revelan bajo demanda, las listas usan filas compactas y un menú por registro, y se ofrecen solo acciones válidas para el estado y el actor. El estado vacío presenta un texto breve y una acción principal.
+Los medios son efectivo, transferencia, tarjeta y QR. Todos los movimientos usan monto positivo en pesos con dos decimales y Decimal, concepto obligatorio y fecha de registro del servidor en `America/Argentina/Salta`, sin fecha real editable. Los estados del movimiento son Vigente y Anulado; los de la sesión, Abierta y Cerrada. Los formularios se revelan bajo demanda, las listas usan filas compactas y un menú por registro, y se ofrecen solo acciones válidas para el estado y el actor. El estado vacío presenta un texto breve y una acción principal.
 
 Se admiten pagos parciales por varios ingresos vinculados al mismo origen. El sistema no calcula deuda, pendiente, excedente ni estado de pago, no compara el acumulado con el precio aplicado y no solicita confirmación ni motivo de sobrepago. Los cobros son manuales; no hay pasarela de pagos.
 
@@ -1935,119 +1923,231 @@ flowchart TD
 
 #### FL-51. Crear una reserva para un usuario
 
-- **Objetivo:** registrar una reserva para un organizador existente; el cobro se registra después como otra operación.
+- **Objetivo:** Registrar una reserva para un organizador existente, separada de su cobro.
 - **Actor:** Administrador.
-- **Entradas:** organizador, sede, cancha, fecha, turno y observaciones; pase e invitados cuando correspondan.
-- **Precondición:** organizador activo con rol Reservas o Administrador. Los invitados identificados ya existen como usuarios.
-- **Operación posterior independiente:** **FL-43** para registrar un cobro cuando corresponda, con sesión abierta a cargo del actor.
+- **Entradas y precondiciones:** Turno libre de Agenda y organizador existente activo con rol Reservas o Administrador.
 
 Recorrido:
 
-1. El Administrador selecciona al organizador entre las cuentas activas habilitadas.
-2. Elige sede, cancha y fecha. El sistema exige inicio futuro, fecha hasta catorce días después y turnos dentro de las franjas, con las mismas condiciones del portal.
-3. Ofrece los turnos libres y la opción de utilizar un pase vigente que cubra la fecha, habilite ese día y tenga horas disponibles.
-4. Selecciona un único turno de una hora dentro de una franja de funcionamiento de la sede.
-5. Calcula el precio normal con la tarifa de la sede o valida el consumo diario de la contratación de pase. Si se utiliza pase, registra cantidad de invitados, evalúa la cobertura de los identificados y calcula adicionales.
-6. Muestra organizador, turno, precio o pase, invitados y total y solicita confirmación.
-7. En una transacción, comprueba nuevamente cuentas, roles, calendario, instalaciones, tarifa o pases y ocupación. Para una reserva normal bloquea la sede y copia la tarifa validada en `precio_por_turno_aplicado`; para una con pase conserva la contratación aplicada y el adicional unitario. Bloquea el turno y registra evento Programado con referencia al turno, reserva e invitados cuando correspondan, sin registrar cobros.
-8. Envía la confirmación al organizador y las invitaciones informativas.
+1. Desde el turno libre selecciona Nueva reserva, elige al organizador y pulsa Continuar.
+2. Con el organizador identificado, ofrece Normal y Con membresía si es socio para la fecha; en otro caso únicamente Normal. Conserva turno y organizador al abrir el recorrido elegido.
+3. Realiza selección de invitados, cálculo y revisión según FL-40, aplicando las mismas condiciones comerciales y personales.
+4. Confirma en una transacción con las revalidaciones, bloqueos y registro conjunto de FL-40, conservando por separado al administrador que registra y al organizador.
+5. Envía confirmación e invitaciones. Registrar un ingreso por FL-43 es una operación posterior independiente con sesión de caja habilitada.
 
 Alternativas:
 
-- Registrar una reserva no crea usuarios ni asigna roles. Si el organizador no existe o no tiene acceso habilitado, se resuelve antes mediante **FL-02**, **FL-06** o **FL-07**.
-- Sin tarifa configurada no se confirma una reserva normal. Si cambia el precio antes de guardar, se recalcula y se exige confirmar nuevamente.
-- No permite reservas pasadas, fuera de las franjas, ni más allá de catorce días. El Administrador no puede confirmar una excepción a esos límites.
-- El turno debe estar libre; un evento que lo ocupe rechaza la operación.
-- Las superposiciones personales conservan las advertencias de los criterios del sistema.
-- En reservas normales no se registran invitados. En reservas con pase, los no identificados y los identificados sin cobertura suficiente generan el adicional histórico aplicado.
-- El organizador no puede repetirse como invitado. El pase del organizador debe cubrir la hora del turno seleccionado.
-- Después de confirmar, el cobro se registra por separado mediante **FL-43**, con referencia a la reserva existente. No hay transacción conjunta ni reversión de la reserva si falla la carga del cobro.
-- Ante un error se revierte el alta de la reserva y sus datos dependientes. No se modifican registros preexistentes.
-- No se crean reservas recurrentes.
+- No crea usuarios ni asigna roles; deben resolverse antes por sus recorridos propios.
+- No admite excepciones a tres días, inicio futuro, funcionamiento, cupos o coincidencias personales.
+- La reserva con membresía no exige tarifa normal. Los invitados socios no consumen horas y todos se identifican en esta modalidad.
+- Si falla el cobro posterior, la reserva conserva su existencia e importes; no hay reversión conjunta con caja.
 
-- **Resultado:** reserva con un evento Programado que referencia un único turno; invitados cuando corresponden y sin movimiento monetario de alta.
-- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, tarifa de sede, pases, contrataciones de planes y pases, invitados.
+- **Resultado:** Reserva Programada del organizador elegido, sin cobro automático.
+- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, membresias_usuarios y reservas_invitados.
 
 ```mermaid
 flowchart TD
-    A[Seleccionar organizador habilitado] --> B[Elegir sede cancha y fecha]
-    B --> C{Calendario válido}
-    C -->|No| B
-    C -->|Sí| D[Elegir un turno y resolver precio o pase]
-    D --> E[Resolver invitados]
-    E --> F{Confirmar}
-    F -->|Sí| G[Bloquear y validar toda la operación]
-    G --> H{Datos válidos}
-    H -->|No| E
-    H -->|Sí| I[Registrar evento con turno reserva y datos opcionales]
-    I --> J[Notificar organizador e invitados]
+    A[Seleccionar turno libre y Nueva reserva]
+    A --> B[Elegir organizador y Continuar]
+    B --> C[Elegir modalidad disponible]
+    C --> D[Revisar invitados importes y disponibilidad]
+    D --> E[Confirmar reserva sin registrar cobro]
 ```
 
-#### FL-52. Modificar invitados identificados de una reserva con pase
+#### FL-52. Modificar invitados de una reserva
 
-- **Objetivo:** agregar o quitar invitados identificados mientras la reserva siga programada.
-- **Actor:** administrador.
-- **Precondición:** reserva con pase en estado **Programada**.
-- **Entradas:** usuario que se desea agregar o quitar de la lista de invitados identificados.
+- **Objetivo:** Modificar invitados conservando respuestas, historia y condiciones comerciales.
+- **Actor:** organizador o Administrador.
+- **Entradas y precondiciones:** Reserva Programada, inicio futuro y usuario que se desea agregar, retirar o reincorporar.
 
 Recorrido:
 
-1. El sistema muestra la cantidad total declarada, los invitados identificados, el precio esperado y los movimientos Ingreso vinculados vigentes.
-2. El administrador agrega un usuario existente o quita uno de los invitados identificados.
-3. Al agregarlo, el sistema resuelve si posee un pase con el día habilitado y al menos una hora disponible para cubrir el turno; si no cumple, lo conserva como invitado sin pase.
-4. El sistema guarda el cambio en una transacción y el detalle vuelve a mostrar el precio esperado y los cobros vigentes, sin calcular deuda ni modificar movimientos.
+1. Abre el detalle informativo y solicita gestionar invitados. Muestra filas compactas con respuesta y condición comercial y una acción por fila.
+2. Agrega una cuenta habilitada, retira una invitación Pendiente o Aceptada, o reincorpora una relación retirada conservando su historia.
+3. Para incorporaciones evalúa cupo de dos, disponibilidad personal y condición comercial para la fecha. En normal no aplica membresías; con membresía identifica a todos y calcula adicionales sin consumir horas de invitados.
+4. Revisa el nuevo total y confirma. En una transacción bloquea y revalida las condiciones y guarda las relaciones y auditoría. Conserva respuestas e historia al reincorporar.
+5. Muestra participantes, total derivado y cobros vigentes separados. Notifica las nuevas invitaciones según el proceso de email.
 
 Alternativas:
 
-- La cantidad de invitados identificados no puede superar el total declarado.
-- Un invitado sin el día habilitado o sin horas disponibles suficientes ese día no puede identificarse con pase; se cuenta como invitado sin pase.
-- Si el invitado agregado ya participa en otra actividad no cancelada superpuesta, el sistema lo informa como advertencia sin impedir el cambio.
-- No se registran nombres de invitados que no sean usuarios del sistema.
-- Solo pueden agregarse usuarios activos como invitados identificados.
-- Los ingresos existentes no se modifican, anulan ni generan automáticamente.
-- Una reserva cancelada o completada conserva sus invitados como historia y no puede editarse.
+- Rechazadas permanecen visibles sin acción de retiro ni reenvío. Retiradas no permiten responder. El único cambio de respuesta nunca se reinicia.
+- Editar otro invitado conserva la condición de quienes permanecen. Para reconocer membresías contratadas después se utiliza FL-70.
+- Retirar un no socio elimina su adicional incluso dentro de seis horas; no altera cobros ni la hora del organizador.
+- No se edita organizador, modalidad, turno ni precio unitario. Anuladas, Finalizadas e iniciadas no admiten cambios de invitados.
 
-- **Resultado:** lista de invitados identificados y precio esperado actualizados de manera consistente; la cantidad total declarada se conserva.
-- **Datos:** reservas, invitados, pases contratados y movimientos_fondos.
+- **Resultado:** Invitados y total derivados actualizados con su historia preservada.
+- **Datos:** reservas, eventos, turnos, usuarios, reservas_invitados, membresias_usuarios y movimientos_fondos.
 
 ```mermaid
 flowchart TD
-    A[Abrir reserva con pase] --> B[Agregar o quitar invitado identificado]
-    B --> C{Datos consistentes}
-    C -->|No| B
-    C -->|Sí| D[Resolver pase y guardar en una transacción]
-    D --> E[Mostrar precio y cobros vigentes]
+    A[Solicitar gestionar invitados]
+    A --> B[Agregar retirar o reincorporar]
+    B --> C[Revisar participantes y nuevo total]
+    C --> D[Revalidar inicio cupos e historia]
+    D --> E[Guardar relaciones conservando cobros]
+```
+
+#### FL-70. Actualizar socios de una reserva
+
+- **Objetivo:** Reconocer la condición de socio de invitados antes del inicio.
+- **Actor:** organizador o Administrador.
+- **Entradas y precondiciones:** Reserva con membresía Programada y turno no iniciado.
+
+Recorrido:
+
+1. Solicita Actualizar socios desde el detalle, bajo demanda.
+2. Evalúa contrataciones que cubran la fecha del turno de invitados vigentes Pendientes o Aceptados. Un invitado que contrató después de ser invitado deja de generar adicional al acreditarse como socio, aunque no tenga horas disponibles.
+3. Muestra cambios de condición y total resultante con el adicional unitario conservado y solicita confirmación.
+4. Bloquea personas, reserva, relaciones y contrataciones de forma consistente; revalida permisos, inicio, cobertura y conjunto revisado. Un cambio exige nueva revisión.
+5. Guarda condiciones aplicadas y auditoría juntas. Conserva historia comercial, respuestas, horas del organizador y cobros.
+
+Alternativas:
+
+- No modifica invitaciones Rechazadas ni retiradas y no las reincorpora.
+- No se ofrece en reservas normales o iniciadas. Sin cambios no produce modificaciones ni auditoría artificial.
+- No actualiza el precio unitario a la tarifa vigente ni registra devoluciones.
+
+- **Resultado:** Condiciones de socios y total derivado actualizados por solicitud explícita.
+- **Datos:** reservas, reservas_invitados, usuarios, membresias_usuarios, eventos y turnos.
+
+```mermaid
+flowchart TD
+    A[Solicitar Actualizar socios]
+    A --> B[Evaluar membresías de invitados vigentes]
+    B --> C[Revisar cambios y nuevo total]
+    C --> D[Revalidar cobertura e inicio al confirmar]
+    D --> E[Guardar condiciones e historia sin alterar cobros]
+```
+
+#### FL-71. Registrar o corregir el resultado de una reserva
+
+- **Objetivo:** Registrar el resultado global de uso y su única corrección administrativa.
+- **Actor:** Administrador.
+- **Entradas y precondiciones:** Reserva Finalizada; resultado Realizada o No realizada y motivo obligatorio para corrección.
+
+Recorrido:
+
+1. Consulta el resultado y solicita registrar o corregir bajo demanda.
+2. Para carga inicial revisa el resultado. Para corrección revisa resultado original y nuevo y completa motivo.
+3. Bloquea la reserva y comprueba Finalizado, acceso y ausencia de corrección previa. Corregir exige resultado inicial y un valor distinto.
+4. Guarda resultado, responsable y momento. En corrección conserva original, responsable, momento y motivo, en la misma transacción.
+
+Alternativas:
+
+- La carga inicial no cuenta como corrección. Sólo se admite una corrección, sin límite temporal; dos solicitudes concurrentes no pueden producir dos.
+- Sin registrar no presume realización. No realizada y su corrección no devuelven horas ni cambian invitados, respuestas, asistencia o cobros.
+
+- **Resultado:** Resultado global de uso conservado con su única corrección auditable.
+- **Datos:** reservas y eventos.
+
+```mermaid
+flowchart TD
+    A[Solicitar registrar o corregir resultado]
+    A --> B[Revisar decisión y motivo de corrección]
+    B --> C[Bloquear reserva y verificar Finalizado]
+    C --> D[Validar carga inicial o única corrección]
+    D --> E[Guardar resultado responsables y momentos]
+```
+
+#### FL-72. Responder una invitación a reserva
+
+- **Objetivo:** registrar la decisión propia del invitado y conservar su único cambio.
+- **Actor:** titular de la invitación, autenticado y con acceso vigente.
+- **Entradas y precondiciones:** invitación vigente de una reserva no Anulada, antes del inicio; Aceptar o Rechazar.
+
+Recorrido:
+
+1. Consulta su participación y solicita responder o modificar su decisión bajo demanda.
+2. Revisa la decisión; la primera respuesta no utiliza el único cambio permitido.
+3. En una transacción bloquea las personas involucradas, la reserva, la relación y las contrataciones aplicadas según criterios 2.12. Revalida titularidad, vigencia, inicio futuro y ausencia de un cambio previo cuando corresponde.
+4. Al pasar de Rechazada a Aceptada comprueba cupo personal, disponibilidad y condición de socio para la fecha. Si no tiene membresía aplicable en una reserva con membresía, genera adicional con el precio unitario conservado y conserva la historia comercial. Una contratación Anulada no se vuelve a aplicar.
+5. Guarda respuesta, primera decisión o único cambio, responsables y momentos junto con la auditoría. El rechazo deja de contar para cupo, coincidencias, adicionales y bloqueo de anulación de membresía.
+
+Alternativas:
+
+- Administración y organizador no responden en nombre del invitado. No se vuelve a Pendiente ni se reinicia la historia retirando y reincorporando.
+- Las Rechazadas siguen visibles sin retiro ni reenvío. Una invitación retirada no permite responder mientras esté retirada.
+- Después del inicio no se responde; Pendiente se presenta como Sin respuesta y conserva sus efectos mientras la relación esté vigente.
+- No modifica la hora del organizador, el estado de reserva ni los cobros. Una respuesta repetida no consume otro cambio ni sobrescribe auditoría.
+
+- **Resultado:** respuesta propia e historia conservadas con sus efectos de participación.
+- **Datos:** usuarios, reservas, eventos, turnos, reservas_invitados y membresias_usuarios.
+
+```mermaid
+flowchart TD
+    A[Revisar invitación propia] --> B[Elegir respuesta]
+    B --> C{Inicio vigencia y cambio válidos}
+    C -->|No| D[Rechazar sin cambios]
+    C -->|Sí| E{Vuelve a aceptar}
+    E -->|Sí| F[Validar cupo disponibilidad y condición comercial]
+    E -->|No| G[Guardar decisión e historia]
+    F --> G
+```
+
+#### FL-73. Responder participación en una clase
+
+- **Objetivo:** registrar la decisión propia sobre una clase concreta.
+- **Actor:** participante titular de la asignación, autenticado y con acceso vigente.
+- **Entradas y precondiciones:** asignación activa en clase no Anulada antes del inicio; Voy a asistir o No voy a asistir.
+
+Recorrido:
+
+1. Abre su clase y solicita responder o cambiar su decisión.
+2. En una transacción bloquea a la persona y su relación con la clase según criterios 2.12. Comprueba titularidad, asignación activa, inicio futuro y primera decisión o único cambio disponible.
+3. Si vuelve de negativa a afirmativa, revalida disponibilidad frente a clases y reservas.
+4. Guarda la primera decisión o el único cambio con responsable, momento e historia.
+
+Alternativas:
+
+- La primera respuesta no utiliza el cambio; no se vuelve a Pendiente. Reactivar conserva historia y no permite un segundo cambio.
+- No voy a asistir libera disponibilidad personal sin retirar asignación ni modificar plantilla o asistencia. Una asistencia posterior Presente no reescribe la respuesta.
+- Pendiente al comenzar se presenta como Sin respuesta. No crea un estado persistido ni presume asistencia.
+- Administración no responde por el titular. Profesores no tienen este circuito por docencia; sus reemplazos se gestionan por asignaciones.
+
+- **Resultado:** decisión del participante conservada por clase concreta.
+- **Datos:** usuarios, clases, clases_alumnos, eventos y turnos.
+
+```mermaid
+flowchart TD
+    A[Consultar clase propia] --> B[Elegir decisión]
+    B --> C[Revalidar titularidad inicio e historia]
+    C --> D{Vuelve a afirmar}
+    D -->|Sí| E[Revalidar disponibilidad]
+    D -->|No| F[Guardar respuesta y auditoría]
+    E --> F
 ```
 
 ### 3.15 Consultas operativas
 
-#### FL-53. Consultar el uso de un pase
+#### FL-53. Consultar uso de membresía
 
-- **Objetivo:** conocer cuántas horas utilizó una pase contratado en un período.
-- **Actor:** administrador.
-- **Entradas:** pase contratado y período; agrupación diaria opcional.
+- **Objetivo:** Consultar usos y disponibilidad mensual de membresía del titular.
+- **Actor:** Administrador o titular autenticado.
+- **Entradas y precondiciones:** Titular y mes o rango de hasta 366 días inclusive dentro del calendario operativo.
 
 Recorrido:
 
-1. El sistema busca reservas con pase no canceladas donde el pase contratado fue aplicado al organizador.
-2. Busca reservas con pase no canceladas donde fue aplicada al usuario como invitado.
-3. Cuenta una hora por cada reserva no Anulada cubierta por esa contratación. Cada reserva se cuenta una sola vez, aunque aparezca en ambos roles.
-4. Muestra total, detalle por reserva, rol y advertencias por días que superan la referencia.
+1. Limita la consulta al titular autorizado y obtiene contrataciones y reservas del período.
+2. Cuenta sólo horas del organizador con computa_hora_membresia verdadero, distinguiendo comprometidas Programadas y consumidas Finalizadas o Anuladas por cancelación propia tardía.
+3. Para cada mes calcula disponibilidad con el cupo de la contratación no Anulada y todos los usos conservados del titular, incluidas contrataciones Anuladas. Si el uso alcanza o supera el cupo, no hay horas disponibles.
+4. Muestra detalle de usos con su contratación concreta y participaciones como invitado separadas sin atribuirles consumo.
 
 Alternativas:
 
-- Si una inconsistencia hiciera aparecer el mismo pase en ambos roles dentro de una reserva, esa reserva se cuenta una sola vez y se informa para revisión.
-- La consulta histórica usa la contratación concreta, no cualquier pase posterior del mismo usuario.
+- Una cancelación administrativa nunca consume. Una propia con seis horas o menos sí puede consumir aunque la reserva esté Anulada.
+- El reemplazo de contratación no reinicia beneficios; no se guardan saldos ni se arrastran horas entre meses.
+- La consulta conserva historia y privacidad; períodos mayores se consultan por tramos.
 
-- **Resultado:** horas organizadas, horas como invitado y total del período.
-- **Datos:** pases contratados, reservas, invitados y eventos, turnos.
+- **Resultado:** Uso y disponibilidad mensual derivados, sin modificar datos.
+- **Datos:** membresias, membresias_usuarios, reservas, reservas_invitados, eventos y turnos.
 
 ```mermaid
 flowchart TD
-    A[Elegir pase y período] --> B[Buscar uso como organizador]
-    B --> C[Buscar uso como invitado cubierto]
-    C --> D[Unificar reservas y contar una hora por reserva]
-    D --> E[Mostrar detalle totales y advertencias]
+    A[Seleccionar titular y período autorizado]
+    A --> B[Obtener usos que computan por mes]
+    B --> C[Incluir contrataciones Anuladas del período]
+    C --> D[Derivar comprometidas consumidas y disponibles]
+    D --> E[Mostrar usos e invitados sin consumo]
 ```
 
 #### FL-54. Consultar actividad de clases de un usuario
@@ -2083,9 +2183,9 @@ flowchart TD
 
 #### FL-55. Consultar reservas
 
-Agenda es la entrada única para las actividades y permite abrir el detalle y comprobante desde el panel del turno. Las celdas muestran el estado del evento en la esquina superior derecha y, cuando corresponde, un indicador de anulaciones sin cantidad en la inferior derecha. Al seleccionar un turno con anulaciones accesibles, incluso pasado o actualmente ocupado por otra actividad, el panel lateral ofrece «Ver eventos anulados». Esta opción abre el listado dentro del mismo panel, con horario, cancha y un enlace para volver al turno. Cada fila conserva el fondo de su tipo y enlaza al detalle completo de la reserva, clase o bloqueo; el detalle de bloqueo es de sólo lectura y exclusivo de administración. El tipo tiene prioridad visual sobre el organizador o el motivo clasificado del bloqueo. La consulta sólo expone eventos autorizados y no incluye motivos de anulación, identificadores internos ni datos de responsable o momento de anulación. La búsqueda por criterios descripta en este flujo se contempla dentro de Agenda y está pendiente de implementación.
+Agenda es la entrada única para las actividades y permite abrir el detalle y comprobante desde el panel del turno. Las celdas muestran el estado del evento en la esquina superior derecha y, cuando corresponde, un indicador de anulaciones sin cantidad en la inferior derecha. Al seleccionar un turno con anulaciones accesibles, incluso pasado o actualmente ocupado por otra actividad, el panel lateral ofrece «Ver eventos anulados». Esta opción abre el listado dentro del mismo panel, con horario, cancha y un enlace para volver al turno. Cada fila conserva el fondo de su tipo y enlaza al detalle completo de la reserva, clase o bloqueo; el detalle de bloqueo es de sólo lectura y exclusivo de administración. El tipo tiene prioridad visual sobre el organizador o el motivo clasificado del bloqueo. La consulta sólo expone eventos autorizados y no incluye motivos de anulación, identificadores internos ni datos de responsable o momento de anulación. La búsqueda por criterios se realiza dentro de Agenda.
 
-- **Objetivo:** localizar y visualizar reservas existentes, normales o con pase.
+- **Objetivo:** localizar y visualizar reservas existentes, normales o con membresía.
 - **Actores:** administrador, sin restricción; usuario con rol Reservas, limitado a las propias, desde el portal.
 - **Entradas:** para el administrador, filtros opcionales por usuario organizador, sede, cancha, fecha o estado; un usuario con rol Reservas no ingresa criterios, ve directamente las suyas.
 
@@ -2093,16 +2193,16 @@ Recorrido:
 
 1. El actor ingresa filtros, o accede directamente a sus propias reservas si tiene rol Reservas.
 2. El sistema busca reservas coincidentes.
-3. Muestra un listado con organizador, fecha, horario, cancha, precio o pase aplicado y estado.
-4. El actor selecciona una reserva para ver el detalle completo, incluidos invitados si es con pase, movimientos Ingreso asociados vigentes y, si corresponde, la reserva de la que proviene o hacia la que fue reprogramada.
+3. Muestra un listado con organizador, fecha, horario, cancha, importe o membresía aplicada y estado.
+4. El organizador o administrador selecciona una reserva para ver el detalle completo, incluidos los invitados registrados y el resultado de uso, movimientos Ingreso asociados vigentes y, si corresponde, la reserva de la que proviene o hacia la que fue reprogramada.
 
 Alternativas:
 
-- Un usuario con rol Reservas solo ve las reservas donde es organizador, en modo de solo lectura.
+- El organizador consulta sus reservas y solicita las acciones propias autorizadas. Un invitado dispone de consulta de su participación y respuesta, sin comprobante, cobros ni datos financieros de terceros.
 - Esta consulta es la vía para localizar una reserva y ejecutar **FL-60** o **FL-61**; una reserva ya cancelada por el administrador también puede reprogramarse desde aquí mediante **FL-41**. La finalización se realiza automáticamente mediante 4.3 o por el administrador mediante **FL-42** cuando terminó el turno.
 
 - **Resultado:** listado y detalle de reservas sin modificaciones.
-- **Datos:** usuarios, reservas, eventos, turnos, invitados, tarifa de sede, pases contratados y movimientos_fondos.
+- **Datos:** usuarios, reservas, eventos, turnos, invitados, tarifa de sede, membresías contratadas y movimientos_fondos.
 
 ```mermaid
 flowchart TD
@@ -2145,20 +2245,20 @@ flowchart TD
 
 - **Objetivo:** cancelar una reserva propia, sin ofrecer reprogramación.
 - **Actor:** usuario con rol Reservas, sobre su propia reserva.
-- **Precondición:** reserva propia en estado **Programada**, localizada mediante **FL-55**, con al menos una hora de antelación al inicio del turno.
+- **Precondición:** reserva propia en estado **Programada**, localizada mediante **FL-55**, cuyo turno todavía no comenzó.
 - **Entrada:** motivo obligatorio en texto libre de al menos 25 caracteres, sin contar los espacios al principio y al final. El formulario y el servidor validan ese mínimo.
 
 Recorrido:
 
 1. El usuario localiza su reserva, solo entre las propias, y solicita cancelarla.
 2. Ingresa el motivo.
-3. Bloquea el turno y el evento, valida nuevamente el plazo y el acceso, cambia el evento a Anulado y registra usuario, momento y motivo. En la reserva guarda `anulada_por_organizador = true`.
+3. Bloquea el turno y el evento, valida nuevamente el plazo y el acceso, cambia el evento a Anulado y registra usuario, momento y motivo. En la reserva guarda `anulada_por_organizador = true` y aplica el cómputo según el umbral de seis horas. Libera el cupo Programado y conserva los vínculos históricos.
 4. Envía al organizador el aviso de cancelación (ver 4.2).
 
 Alternativas:
 
 - Un usuario con rol Reservas no puede cancelar una reserva ajena.
-- El plazo se verifica nuevamente dentro de la transacción al confirmar. Exactamente una hora antes del turno se permite cancelar; con menos tiempo, o cuando la reserva ya comenzó, se rechaza sin modificar el registro ni su ocupación.
+- El inicio y la antelación se verifican dentro de la transacción. Con membresía, más de seis horas libera la hora; con seis horas o menos conserva el consumo. Desde el inicio se rechaza sin modificar datos. Normal no tiene penalización.
 - Este flujo nunca ofrece reprogramación, sin importar el motivo ni la anticipación: reprogramar una reserva cancelada es exclusivo del administrador (ver **FL-61**, **FL-41**).
 - La cancelación no devuelve dinero ni anula cobros automáticamente. Si corresponde reintegrar, la administración registra un Egreso de categoría devoluciones mediante FL-43; el usuario del portal no registra ese egreso.
 - Los movimientos vinculados originales no se anulan ni se modifican automáticamente. Una reserva cancelada no podrá recibir nuevos ingresos.
@@ -2189,7 +2289,7 @@ Recorrido:
 
 1. El administrador localiza la reserva y solicita cancelarla.
 2. Ingresa el motivo.
-3. Bloquea el turno y el evento, valida nuevamente el plazo y el acceso, cambia el evento a Anulado y registra usuario, momento y motivo. En la reserva guarda `anulada_por_organizador = false`.
+3. Bloquea el turno y el evento, valida nuevamente el plazo y el acceso, cambia el evento a Anulado y registra usuario, momento y motivo. En la reserva guarda `anulada_por_organizador = false` y `computa_hora_membresia = false`, liberando siempre la hora y el cupo Programado.
 4. La cancelación libera el turno de la actividad, conserva su referencia histórica y no crea un bloqueo.
 5. Ofrece reprogramar en el mismo momento (ver **FL-41**).
 6. Envía al organizador el aviso de cancelación (ver 4.2). Si se reprogramó, la confirmación de la nueva reserva ya la envió **FL-41** (a través de **FL-51**): este flujo no la repite.
@@ -2198,7 +2298,7 @@ Alternativas:
 
 - Este flujo no es el camino para que un organizador cancele su propia reserva por su propio deseo: si el organizador quiere cancelar, lo hace él mismo mediante **FL-60**, que siempre libera el turno sin importar el motivo. Tener cuenta y gestionar la propia reserva es, en este sistema, un requisito, no una comodidad opcional.
 - Este flujo siempre ofrece reprogramar mediante **FL-41**. La cancelación libera el turno original.
-- El administrador puede cancelar aunque falte menos de una hora, pero nunca desde el inicio del turno. El límite se verifica nuevamente dentro de la transacción al confirmar.
+- Administración puede cancelar en cualquier momento anterior al inicio y siempre libera la hora de membresía. El inicio se revalida dentro de la transacción; no hay selector de consumo.
 - Cancelar o reprogramar no devuelve dinero ni anula cobros automáticamente. Si corresponde reintegrar, la administración registra un Egreso de categoría devoluciones por FL-43, con concepto, destinatario y referencia si no es efectivo. No modifica automáticamente la reserva ni sus cobros.
 - Los movimientos vinculados originales no se anulan ni se modifican automáticamente. Una reserva cancelada no podrá recibir nuevos ingresos.
 - La reserva original no se elimina ni cambia de fecha, horario, duración o cancha.
@@ -2222,6 +2322,8 @@ flowchart TD
 ```
 
 ### 3.16 Bloqueos y operaciones masivas
+
+Toda reserva anulada por estos recorridos queda anulada administrativamente y deja de computar su hora de membresía. La vista previa informa las horas que se liberan; la confirmación coordina personas, contrataciones, relaciones, turnos y eventos con las demás operaciones, sin modificar cobros. También se aplica al desactivar instalaciones. Un evento iniciado nunca se anula.
 
 #### FL-63. Bloquear un turno
 
@@ -2389,17 +2491,17 @@ flowchart TD
 
 Estos procesos no son flujos: no representan la intención de un actor humano que busca completar una tarea, sino comportamiento que el sistema ejecuta por sí solo. Se documentan aparte, con el mismo nivel de detalle que un flujo, y se referencian desde los flujos que los disparan o que compiten con ellos; por ejemplo, **FL-38** para la finalización manual de clases que la 4.3 también puede hacer. Las reservas se finalizan exclusivamente mediante 4.3.
 
-### 4.1 Vencimiento de planes y pases contratados
+### 4.1 Vencimiento de contrataciones de planes y membresías
 
 - **Objetivo:** actualizar el estado de contrataciones cuyo mes terminó.
-- **Disparador:** tarea diaria de Celery a las 00:05 en la zona de Buenos Aires.
+- **Disparador:** tarea diaria de Celery a las 00:05 en la zona de Salta.
 
 Procedimiento:
 
-1. Consulta `planes_usuarios` y `pases_usuarios` por separado.
+1. Consulta `planes_usuarios` y `membresias_usuarios` por separado.
 2. Selecciona los Activos cuyo fin de mes calculado es anterior a la fecha local actual.
 3. Los marca Vencidos y actualiza su fecha de modificación en una transacción. Cada actualización exige que la fila siga Activa para no sobrescribir una anulación concurrente.
-4. Registra por separado la cantidad de planes y pases procesados.
+4. Registra por separado la cantidad de planes y membresías procesados.
 
 Condiciones:
 
@@ -2409,7 +2511,7 @@ Condiciones:
 - Conserva productos, importes aplicados, movimientos y relaciones históricas.
 
 - **Resultado:** contrataciones vencidas actualizadas.
-- **Datos:** planes_usuarios y pases_usuarios.
+- **Datos:** planes_usuarios y membresias_usuarios.
 
 ```mermaid
 flowchart TD
@@ -2435,7 +2537,7 @@ Recorrido:
 
 Alternativas:
 
-- Los tipos de evento contemplados son: confirmación de alta de cuenta (**FL-06**), recuperación de contraseña (**FL-46**), confirmación de una reserva propia (**FL-40**, **FL-51**), invitación a una reserva con pase (**FL-40**, **FL-51**), cancelación de una reserva o clase que afecta al usuario (**FL-37**, **FL-60**, **FL-61**), confirmación de una reserva reprogramada tras la cancelación de otra (**FL-41**), vencimiento próximo de una contratación (ver 4.5), recordatorio de la próxima clase asignada (ver 4.6), y asignación de un profesor a una clase o turno de planilla.
+- Los tipos de evento contemplados son: confirmación de alta de cuenta (**FL-06**), recuperación de contraseña (**FL-46**), confirmación de una reserva propia (**FL-40**, **FL-51**), invitación a una reserva normal o con membresía (**FL-40**, **FL-51**, **FL-52**), cancelación de una reserva o clase que afecta al usuario (**FL-37**, **FL-60**, **FL-61**), confirmación de una reserva reprogramada tras la cancelación de otra (**FL-41**), vencimiento próximo de una contratación (ver 4.5), recordatorio de la próxima clase asignada (ver 4.6), y asignación de participantes o profesores a clases, y de profesores a turnos de planilla.
 - Si el envío falla, registra el error y no revierte la operación que lo originó; queda para reintento según la infraestructura de envío.
 - No existe una bandeja de notificaciones dentro del sistema: el email es el único canal.
 
@@ -2451,7 +2553,7 @@ flowchart TD
 ### 4.3 Finalización automática de clases, reservas y bloqueos vencidos
 
 - **Objetivo:** finalizar eventos de clases, reservas y bloqueos cuyo turno terminó.
-- **Disparador:** Celery Beat cada hora en punto de Buenos Aires; Redis transporta la tarea y el worker la ejecuta.
+- **Disparador:** Celery Beat cada hora en punto de Salta; Redis transporta la tarea y el worker la ejecuta.
 
 Procedimiento:
 
@@ -2489,12 +2591,12 @@ flowchart TD
 
 ### 4.5 Aviso de vencimiento próximo de una contratación
 
-- **Objetivo:** avisar al titular que su plan o pase está por vencer.
+- **Objetivo:** avisar al titular que su plan o membresía está por vencer.
 - **Disparador:** tarea diaria de Celery.
 
 Procedimiento:
 
-1. Consulta por separado las contrataciones Activas de planes y pases.
+1. Consulta por separado las contrataciones Activas de planes y membresías.
 2. Calcula el fin de cada mes cubierto y selecciona las que terminan dentro de los próximos tres días.
 3. Si `aviso_vencimiento_enviado` es falso, envía el email y conserva la marca para no repetirlo.
 
@@ -2505,7 +2607,7 @@ Condiciones:
 - El aviso pertenece a la contratación concreta, no al producto del catálogo.
 
 - **Resultado:** avisos enviados y registrados.
-- **Datos:** usuarios, planes_usuarios y pases_usuarios.
+- **Datos:** usuarios, planes_usuarios y membresias_usuarios.
 
 ```mermaid
 flowchart TD
