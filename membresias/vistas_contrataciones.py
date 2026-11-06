@@ -10,7 +10,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .contrataciones import (
-    anular_contratacion_plan,
+    anular_contratacion_membresia, anular_contratacion_plan,
     registrar_contratacion_membresia, registrar_contratacion_plan,
     revision_precio_contratacion, version_anulacion_contratacion,
 )
@@ -33,6 +33,7 @@ CONFIGURACION_CONTRATACIONES = {
     "membresia": {
         "modelo": MembresiaUsuario, "plural": "membresías", "seleccion": SeleccionContratacionMembresiaForm,
         "formulario": ContratacionMembresiaForm, "registrar": registrar_contratacion_membresia,
+        "anular": anular_contratacion_membresia,
         "etiqueta_importe": "Importe aplicado (ARS)",
     },
 }
@@ -211,10 +212,11 @@ def contratacion_anular(request, pk, tipo="plan"):
                 return redirect(url_detalle)
             formulario.add_error(None, error)
         else:
-            messages.success(request, f"La contratación del {tipo} está Anulada.")
+            messages.success(request, "La contratación está Anulada.")
             return redirect(url_detalle)
     return render(request, "membresias/contratacion_anular.html", {
         **_contexto(tipo), "contratacion": contratacion,
-        "titulo": f"Anular contratación de {tipo}", "formulario": formulario,
+        "titulo": "Anular contratación de membresía" if tipo == "membresia" else "Anular contratación de plan",
+        "formulario": formulario,
         "texto_boton": "Confirmar anulación", "url_cancelar": url_detalle,
     })

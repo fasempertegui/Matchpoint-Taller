@@ -132,6 +132,12 @@ def anular_contratacion_plan(actor, contratacion_id, *, motivo, version):
     )
 
 
+def anular_contratacion_membresia(actor, contratacion_id, *, motivo, version):
+    return _anular_contratacion(
+        actor, contratacion_id, modelo=MembresiaUsuario, tipo="membresia", motivo=motivo, version=version,
+    )
+
+
 def validar_retiro_rol_alumno(usuario):
     if PlanUsuario.objects.filter(usuario=usuario, estado=PlanUsuario.Estado.ACTIVO).exists():
         raise ValidationError("No se puede quitar el rol Alumno mientras el usuario tenga contrataciones de planes Activas.")

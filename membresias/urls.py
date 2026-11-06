@@ -34,4 +34,5 @@ urlpatterns = [
     path("contrataciones/membresias/nueva/", vistas_contrataciones.contratacion_crear, {"tipo": "membresia"}, name="contratacion_membresia_crear"),
     path("contrataciones/membresias/<int:pk>/", vistas_contrataciones.contratacion_detalle, {"tipo": "membresia"}, name="contratacion_membresia_detalle"),
     path("contrataciones/membresias/<int:pk>/comprobante/", vistas_contrataciones.contratacion_comprobante, {"tipo": "membresia"}, name="contratacion_membresia_comprobante"),
+    path("contrataciones/membresias/<int:pk>/anular/", vistas_contrataciones.contratacion_anular, {"tipo": "membresia"}, name="contratacion_membresia_anular"),
 ]

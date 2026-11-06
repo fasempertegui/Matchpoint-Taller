@@ -343,8 +343,21 @@ La confirmación aplica el precio mensual vigente completo, incluido cero, sin p
 
 Las contrataciones se guardan en membresias_usuarios y tienen exclusividad propia de titular y mes entre Activas o Vencidas, con una restricción única parcial. Pueden coexistir con un plan del mismo mes. Se admiten profesores y cuentas sin Alumno; contratar no modifica roles. La operación bloquea las cuentas por identificador y después el producto para coordinar altas, cambios de acceso y edición del catálogo. Las horas mensuales del producto se conservan desde la primera contratación, cualquiera sea su estado; el formulario muestra el campo en lectura y el servicio rechaza cambios.
 
-El listado permite buscar usuario o producto, filtrar por mes y estado y paginar. El detalle y el comprobante presentan titular, membresía, horas mensuales, período, importe aplicado, fecha efectiva y registro; el detalle administrativo conserva observaciones y responsables. Las consultas propias, la anulación, el vencimiento automático de membresías y los cobros corresponden a sus entregas independientes. El detalle sólo ofrece acciones implementadas.
+El listado permite buscar usuario o producto, filtrar por mes y estado y paginar. El detalle y el comprobante presentan titular, membresía, horas mensuales, período, importe aplicado, fecha efectiva y registro; el detalle administrativo conserva observaciones y responsables. Las consultas propias, el vencimiento automático de membresías y los cobros corresponden a sus entregas independientes. La anulación administrativa se solicita bajo demanda desde el detalle de una contratación Activa. El detalle sólo ofrece acciones implementadas.
 
 PostgreSQL protege mes, importes, estados y coherencia de datos de anulación, genera los identificadores y audita modificaciones y eliminaciones. Auditoría identifica la contratación y enlaza al detalle administrativo. Los datos comerciales de una contratación registrada no admiten edición desde el modelo.
 
 Verificación realizada: instalación limpia en base temporal, controles de Django, coincidencia de modelos y migraciones y carga de 84 plantillas. Revisión manual pendiente del bloque 2.2: profesor socio, plan simultáneo, duplicados, fechas históricas y futuras habilitadas, precio cero, precio cambiado durante la confirmación, protección de horas, comprobante y permisos. No se crean ni ejecutan pruebas automatizadas.
+
+
+## Anulación administrativa de contrataciones de membresías
+
+El detalle de una contratación de membresía Activa ofrece Anular contratación. La acción abre una página de revisión con titular, producto, período e importe aplicado, informa los efectos y exige motivo no vacío y confirmación. Vencidas y Anuladas no muestran la acción. El registro Anulado conserva motivo, responsable y momento en su detalle y comprobante.
+
+La confirmación exige Administrador activo con acceso vigente, bloquea las cuentas por identificador y después la contratación y revalida estado y revisión firmada. La firma identifica administrador, contratación, tipo de producto y momento de modificación. Una revisión de plan no autoriza anular una membresía. Los cambios requieren nueva revisión y no dejan escrituras parciales. El titular puede estar inactivo. Reenviar una anulación conserva motivo, responsable, momento y auditoría originales.
+
+Anular conserva producto, titular, mes, importe aplicado e historia y permite registrar otra membresía para ese titular y mes. No modifica planes, roles, clases, asignaciones ni cobros y no genera devoluciones. La vigencia rechaza nuevas aplicaciones de una contratación Anulada; las horas del catálogo permanecen protegidas aunque todas sus contrataciones estén Anuladas. La auditoría registra la transición con su responsable.
+
+Los impedimentos por aplicaciones como organizador o invitado socio vigente en reservas Programadas se integran al crear esas relaciones. El cómputo de usos conservados del titular y mes se integra con reservas; no hay reinicio de registros comerciales ni eliminación de contrataciones al reemplazar.
+
+Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de plantillas y revisión de rutas y condiciones de acciones. Revisión manual pendiente: anulación, motivo vacío, reenvío, Vencidas, reemplazo del mes, convivencia con plan, titular inactivo, firma de otro tipo, acceso no administrativo y protección de horas. Los vínculos de reservas, invitados y usos mantienen su revisión pendiente en el plan. No se crean ni ejecutan pruebas automatizadas.
