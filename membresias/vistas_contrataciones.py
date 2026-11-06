@@ -11,14 +11,15 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from .contrataciones import (
     anular_contratacion_plan,
-    registrar_contratacion_plan, revision_precio_contratacion, version_anulacion_contratacion,
+    registrar_contratacion_membresia, registrar_contratacion_plan,
+    revision_precio_contratacion, version_anulacion_contratacion,
 )
 from .consultas import listar_contrataciones
 from .forms import (
-    AnulacionContratacionForm, ContratacionPlanForm,
-    SeleccionContratacionPlanForm,
+    AnulacionContratacionForm, ContratacionMembresiaForm, ContratacionPlanForm,
+    SeleccionContratacionMembresiaForm, SeleccionContratacionPlanForm,
 )
-from .models import PlanUsuario
+from .models import MembresiaUsuario, PlanUsuario
 from .servicios import exigir_administracion_membresias
 
 
@@ -27,6 +28,11 @@ CONFIGURACION_CONTRATACIONES = {
         "modelo": PlanUsuario, "plural": "planes", "seleccion": SeleccionContratacionPlanForm,
         "formulario": ContratacionPlanForm, "registrar": registrar_contratacion_plan,
         "anular": anular_contratacion_plan,
+        "etiqueta_importe": "Importe aplicado (ARS)",
+    },
+    "membresia": {
+        "modelo": MembresiaUsuario, "plural": "membresías", "seleccion": SeleccionContratacionMembresiaForm,
+        "formulario": ContratacionMembresiaForm, "registrar": registrar_contratacion_membresia,
         "etiqueta_importe": "Importe aplicado (ARS)",
     },
 }
@@ -42,7 +48,8 @@ def _contexto(tipo):
         "url_crear": reverse(f"membresias:contratacion_{tipo}_crear"),
         "ruta_detalle": f"membresias:contratacion_{tipo}_detalle",
         "ruta_comprobante": f"membresias:contratacion_{tipo}_comprobante",
-        "ruta_anular": f"membresias:contratacion_{tipo}_anular",
+        "ruta_anular": f"membresias:contratacion_{tipo}_anular" if "anular" in configuracion else None,
+        "nombre_tipo": "membresía" if tipo == "membresia" else "plan",
         "ruta_producto": f"membresias:{tipo}_detalle", "etiqueta_importe": configuracion["etiqueta_importe"],
     }
 
@@ -125,7 +132,8 @@ def contratacion_crear(request, tipo="plan"):
     borrador = {campo: datos[campo] for campo in campos_borrador if campo in datos}
     contexto = {
         **_contexto(tipo),
-        "titulo": f"Registrar contratación de {tipo}", "formulario": seleccion,
+        "titulo": "Registrar contratación de membresía" if tipo == "membresia" else "Registrar contratación de plan",
+        "formulario": seleccion,
         "texto_boton": "Continuar", "metodo_formulario": "post",
         "borrador": borrador,
         "url_cancelar": reverse(f"membresias:contratacion_{tipo}_lista"),
@@ -159,7 +167,7 @@ def contratacion_crear(request, tipo="plan"):
             except ValidationError as error:
                 formulario.add_error(None, error)
             else:
-                messages.success(request, f"La contratación del {tipo} fue registrada.")
+                messages.success(request, "La contratación fue registrada.")
                 return redirect(f"membresias:contratacion_{tipo}_detalle", pk=contratacion.pk)
         if formulario.is_bound:
             producto.refresh_from_db()

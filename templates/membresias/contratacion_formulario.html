@@ -9,17 +9,16 @@
     <p class="contratacion-numero">Paso {% if titular %}2{% else %}1{% endif %} de 2</p>
     {% if titular %}
         <section class="contratacion-resumen" aria-label="Selección de contratación">
-            <p class="contratacion-resumen-etiqueta">{{ tipo|capfirst }} seleccionado</p>
+            <p class="contratacion-resumen-etiqueta">{{ nombre_tipo|default:tipo|capfirst }} {% if tipo == 'membresia' %}seleccionada{% else %}seleccionado{% endif %}</p>
             <h2>{{ producto.nombre }}</h2>
             <div class="contratacion-resumen-usuario">
                 <span>Usuario</span>
                 <p>{{ titular.first_name }} {{ titular.last_name }} <small>@{{ titular.username }}</small></p>
             </div>
             <p class="contratacion-resumen-precio">Importe a aplicar <strong>$ {{ precio_propuesto|floatformat:"2g" }}</strong></p>
-            <p class="texto-secundario">Se aplica el precio mensual vigente completo. El cobro se registra por separado.</p>
         </section>
     {% else %}
-        <p class="texto-secundario">Elegí el usuario y el {{ tipo }} para preparar la contratación mensual.</p>
+        <p class="texto-secundario">Elegí el usuario y {% if tipo == 'membresia' %}la membresía{% else %}el plan{% endif %} para preparar la contratación mensual.</p>
     {% endif %}
 {% endblock %}
 {% block formulario_seleccion %}

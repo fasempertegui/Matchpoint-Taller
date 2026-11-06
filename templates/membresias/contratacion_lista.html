@@ -10,7 +10,7 @@
     <form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos>
         <div class="grupo-campo">
             <label for="contratacion-busqueda">Buscar</label>
-            <input class="form-control" type="search" id="contratacion-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="{% if propias %}Nombre del {{ tipo }}{% else %}Usuario o {{ tipo }}{% endif %}">
+            <input class="form-control" type="search" id="contratacion-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="{% if propias %}Nombre del producto{% else %}Usuario o producto{% endif %}">
         </div>
         <div class="grupo-campo">
             <label for="contratacion-mes">Mes cubierto</label>
@@ -31,7 +31,7 @@
     </form>
     <section class="tarjeta tabla-contenedor" aria-label="Contrataciones de {{ plural }}">
         <table>
-            <thead><tr>{% if not propias %}<th scope="col">Usuario</th>{% endif %}<th scope="col">{{ tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
+            <thead><tr>{% if not propias %}<th scope="col">Usuario</th>{% endif %}<th scope="col">{{ nombre_tipo|default:tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
             <tbody>
                 {% for contratacion in pagina %}
                     <tr>

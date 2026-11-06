@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block titulo %}Comprobante de {{ tipo }} #{{ contratacion.pk }} | Academia TM{% endblock %}
+{% block titulo %}Comprobante de {{ nombre_tipo|default:tipo }} #{{ contratacion.pk }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/reserva-comprobante.css' %}">{% endblock %}
 
 {% block contenido %}
@@ -12,7 +12,7 @@
                 <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="44" height="44">
                 <span>Academia TM</span>
             </div>
-            <h1>Comprobante de contratación de {{ tipo }}</h1>
+            <h1>Comprobante de contratación de {{ nombre_tipo|default:tipo }}</h1>
         </div>
         <div class="comprobante-identificacion">
             <p><strong>#{{ contratacion.pk }}</strong></p>
@@ -22,7 +22,7 @@
 
     <section class="comprobante-uso" aria-label="Datos de la contratación">
         <div class="detalle-grid">
-            <div><span class="etiqueta">{{ tipo|capfirst }}</span><p>{{ contratacion.producto.nombre }}</p></div>
+            <div><span class="etiqueta">{{ nombre_tipo|default:tipo|capfirst }}</span><p>{{ contratacion.producto.nombre }}</p></div>
             <div><span class="etiqueta">Mes cubierto</span><p>{{ contratacion.mes_cubierto|date:"F Y"|capfirst }}</p></div>
             <div><span class="etiqueta">Período cubierto</span><p>{{ contratacion.fecha_inicio|date:"d/m/Y" }} al {{ contratacion.fecha_fin|date:"d/m/Y" }}</p></div>
             <div><span class="etiqueta">Fecha efectiva de alta</span><p>{{ contratacion.fecha_alta|date:"d/m/Y" }}</p></div>
@@ -33,9 +33,13 @@
         <div class="detalle-grid">
             <div><span class="etiqueta">Usuario</span><p>{{ contratacion.usuario }} · @{{ contratacion.usuario.username }}</p></div>
 
+            {% if tipo == 'plan' %}
                 <div><span class="etiqueta">Modalidad</span><p>{{ contratacion.producto.get_modalidad_display }}</p></div>
                 <div><span class="etiqueta">Encuentros por semana</span><p>{{ contratacion.producto.frecuencia_semanal }}</p></div>
                 <div><span class="etiqueta">Duración de cada encuentro</span><p>{{ contratacion.producto.get_cantidad_clases_por_encuentro_display }}</p></div>
+            {% else %}
+                <div><span class="etiqueta">Horas mensuales</span><p>{{ contratacion.producto.horas_mensuales }}</p></div>
+            {% endif %}
         </div>
     </section>
 
@@ -66,7 +70,7 @@
     </div>
     <footer class="comprobante-pie">
         <strong>Academia TM</strong>
-        <span>Este comprobante acredita la contratación del {{ tipo }}. No acredita el pago.</span>
+        <span>Este comprobante acredita la contratación de {{ nombre_tipo|default:tipo }}. No acredita el pago.</span>
     </footer>
 </article>
 

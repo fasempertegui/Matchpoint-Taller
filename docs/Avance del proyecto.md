@@ -188,7 +188,7 @@ El navbar ofrece Inicio, Agenda, Planilla semanal para Administrador o Mis clase
 
 Administración agrupa Usuarios, Sedes y canchas, Membresías, Feriados y Auditoría en ese orden. Sedes y canchas enlaza al listado de Sedes. Si sólo hay un destino administrativo autorizado, se presenta directamente. El menú de cuenta reúne Mi perfil y Cerrar sesión; cerrar sesión utiliza POST. Los desplegables conservan navegación por teclado e indicadores de foco.
 
-Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver membresías para elegir entre Planes, Membresías de socios y Contrataciones de planes. La gestión de catálogos y contrataciones tiene acceso administrativo y una única entrada Membresías en el desplegable Administración. En el portal, Oferta de la academia permite consultar productos Activos y tarifas vigentes en modo de lectura. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
+Las homes presentan una única grilla titulada Módulos del sistema, filtrada por los permisos de los destinos: Agenda, Usuarios, Sedes y canchas, Clases, Membresías y Auditoría. Cada tarjeta con destino tiene un único botón con el mismo estilo. Clases conserva su descripción del módulo y ofrece Ver planilla semanal para Administrador o Mi actividad para Profesor y Alumno. Feriados se accede desde el navbar, sin tarjeta en la home. Membresías ofrece Ver membresías para elegir entre Planes, Membresías de socios, Contrataciones de planes y Contrataciones de membresías. La gestión de catálogos y contrataciones tiene acceso administrativo y una única entrada Membresías en el desplegable Administración. En el portal, Oferta de la academia permite consultar productos Activos y tarifas vigentes en modo de lectura. Pagos e ingresos aparece al final de la home administrativa como En preparación, sin botón ni entrada en el navbar.
 
 La ruta actual resalta el destino o su grupo. Los desplegables abren con clic, Enter o Espacio; las flechas recorren sus enlaces y Escape cierra devolviendo el foco al disparador. En móvil se expanden dentro de la navegación vertical. Las rutas mantienen las autorizaciones del servidor.
 
@@ -301,7 +301,7 @@ Verificación: controles de Django, carga de plantillas y sintaxis JavaScript. R
 
 ## Alcance comercial e instalación
 
-La gestión comercial implementada comprende los catálogos de planes de clases y membresías de socios, y las contrataciones de planes. Oferta presenta planes y membresías Activos y tarifas de reservas; Mis contrataciones consulta planes propios. Las contrataciones de membresías de socios corresponden a la entrega 2.2 del plan de implementación.
+La gestión comercial implementada comprende los catálogos de planes de clases y membresías de socios, y las contrataciones administrativas de ambos tipos. Oferta presenta planes y membresías Activos y tarifas de reservas; Mis contrataciones consulta planes propios. Administración registra y consulta contrataciones de membresías de socios, con comprobante e importe aplicado.
 
 Las migraciones definen una instalación limpia con tablas y triggers de auditoría de planes y sus contrataciones. La revisión de esquema comprende migración completa sobre una base temporal, controles de Django, coincidencia entre modelos y migraciones y carga de todas las plantillas. Queda pendiente la revisión manual de navegación, oferta, contrataciones propias, permisos y administración de planes.
 
@@ -314,7 +314,7 @@ El producto registra horas mensuales positivas y dos importes no negativos, admi
 
 Las operaciones exigen Administrador activo sin cambio de contraseña pendiente y revalidan permisos bajo bloqueo del actor y del producto. Una versión firmada identifica actor, producto, tipo y momento de modificación. Las ediciones concurrentes requieren nueva revisión; guardar sin cambios o reenviar el mismo estado no actualiza el registro. La auditoría identifica las membresías, sus modificaciones y sus cambios de estado.
 
-El catálogo no registra contrataciones, usos ni cobros. La protección de horas frente a contrataciones históricas se integra con la relación de contratación en 2.2. La oferta del portal permite consultar las membresías Activas, sus horas mensuales y su adicional por invitado no socio.
+El catálogo conserva sus operaciones separadas del registro de contrataciones, usos y cobros. Las horas mensuales quedan en lectura y no admiten modificaciones desde el servicio cuando existe cualquier contratación histórica. La oferta del portal permite consultar las membresías Activas, sus horas mensuales y su adicional por invitado no socio.
 
 Verificación realizada: instalación limpia en base temporal, controles de Django, coincidencia de modelos y migraciones, carga de 84 plantillas y consulta de oferta inicial y trigger. Revisión manual pendiente: altas y ediciones válidas, duplicados entre Activas, activación con nombre ocupado, precios cero y negativos, horas cero, reenvíos, modificaciones concurrentes y permisos. No se crean ni ejecutan pruebas automatizadas.
 
@@ -333,3 +333,18 @@ El alta administrativa aplica el precio vigente confirmado del plan. La revisió
 El calendario, las presentaciones y las tareas utilizan America/Argentina/Salta. La selección y el servicio habilitan el mes siguiente desde el día 25 inclusive. Los filtros de consulta permiten ver el mes siguiente independientemente de esa habilitación para conservar acceso a registros existentes.
 
 Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de plantillas y aplicación de la migración de etiqueta del importe. Queda pendiente la revisión manual del bloque 2.1, incluidos cambio de precio durante la revisión, envíos manipulados, reenvíos, días 24/25, cambio de año, precio cero, roles y permisos. No se crean ni ejecutan pruebas automatizadas.
+
+
+## Contrataciones administrativas de membresías de socios
+
+Membresías ofrece el registro y la consulta de contrataciones de socios mediante un recorrido administrativo de dos pasos: selección de cuenta activa y membresía Activa, y confirmación de mes, fecha efectiva, precio mensual y observaciones. El mes cubierto es calendario completo, desde agosto de 2026 hasta el actual, con el siguiente habilitado desde el día 25 de Salta. La fecha efectiva de alta es independiente del mes y no puede ser futura. Una contratación histórica terminada nace Vencida; la actual o futura nace Activa y sólo otorga cobertura en su propio período.
+
+La confirmación aplica el precio mensual vigente completo, incluido cero, sin prorrateo ni importe negociado. La revisión firmada vincula actor, titular, producto e importe; el servicio la revalida con el producto bloqueado. Un cambio exige nueva revisión y confirmación. El importe aplicado permanece independiente del catálogo y del cobro. Registrar no crea reservas, usos ni movimientos de dinero.
+
+Las contrataciones se guardan en membresias_usuarios y tienen exclusividad propia de titular y mes entre Activas o Vencidas, con una restricción única parcial. Pueden coexistir con un plan del mismo mes. Se admiten profesores y cuentas sin Alumno; contratar no modifica roles. La operación bloquea las cuentas por identificador y después el producto para coordinar altas, cambios de acceso y edición del catálogo. Las horas mensuales del producto se conservan desde la primera contratación, cualquiera sea su estado; el formulario muestra el campo en lectura y el servicio rechaza cambios.
+
+El listado permite buscar usuario o producto, filtrar por mes y estado y paginar. El detalle y el comprobante presentan titular, membresía, horas mensuales, período, importe aplicado, fecha efectiva y registro; el detalle administrativo conserva observaciones y responsables. Las consultas propias, la anulación, el vencimiento automático de membresías y los cobros corresponden a sus entregas independientes. El detalle sólo ofrece acciones implementadas.
+
+PostgreSQL protege mes, importes, estados y coherencia de datos de anulación, genera los identificadores y audita modificaciones y eliminaciones. Auditoría identifica la contratación y enlaza al detalle administrativo. Los datos comerciales de una contratación registrada no admiten edición desde el modelo.
+
+Verificación realizada: instalación limpia en base temporal, controles de Django, coincidencia de modelos y migraciones y carga de 84 plantillas. Revisión manual pendiente del bloque 2.2: profesor socio, plan simultáneo, duplicados, fechas históricas y futuras habilitadas, precio cero, precio cambiado durante la confirmación, protección de horas, comprobante y permisos. No se crean ni ejecutan pruebas automatizadas.

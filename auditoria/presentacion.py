@@ -13,7 +13,7 @@ from clases.models import (
     TurnoPlanillaAlumno, TurnoPlanillaProfesor,
 )
 from instalaciones.models import Cancha, Sede, SedeHorario
-from membresias.models import Membresia, Plan, PlanUsuario
+from membresias.models import Membresia, MembresiaUsuario, Plan, PlanUsuario
 from reservas.models import Evento, Reserva, Turno
 from usuarios.models import Rol, Usuario, UsuarioRol
 
@@ -51,6 +51,7 @@ TIPOS_REGISTRO = {
     ),
     "membresias": (Membresia, "Membresía de socio", (), "membresias:membresia_detalle"),
     "planes": (Plan, "Plan", (), "membresias:plan_detalle"),
+    "membresias_usuarios": (MembresiaUsuario, "Contratación de membresía", ("usuario",), "membresias:contratacion_membresia_detalle"),
     "planes_usuarios": (PlanUsuario, "Contratación de plan", ("usuario",), "membresias:contratacion_plan_detalle"),
 }
 
@@ -107,7 +108,7 @@ def _referencia_breve(objeto):
     if isinstance(objeto, (ClaseProfesor, ClaseAlumno, Asistencia)):
         persona = "profesor" if isinstance(objeto, ClaseProfesor) else "usuario"
         return f"{_relacion(objeto, persona)} · Clase #{objeto.clase_id}"
-    if isinstance(objeto, PlanUsuario):
+    if isinstance(objeto, (PlanUsuario, MembresiaUsuario)):
         return f"{_relacion(objeto, 'usuario')} · {objeto.mes_cubierto:%m/%Y}"
 
 

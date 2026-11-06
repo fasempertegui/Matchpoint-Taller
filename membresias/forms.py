@@ -118,3 +118,22 @@ class MembresiaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["version"].required = self.instance.pk is not None
+        if self.instance.pk and self.instance.contrataciones.exists():
+            self.fields["horas_mensuales"].disabled = True
+            self.fields["horas_mensuales"].help_text = "Las horas se conservan porque esta membresía tiene contrataciones."
+
+
+class SeleccionContratacionMembresiaForm(SeleccionContratacionPlanForm):
+    campo_producto = "membresia"
+    modelo_producto = Membresia
+    admite_profesor = True
+    plan = None
+    membresia = forms.ModelChoiceField(
+        label="Membresía", queryset=Membresia.objects.none(), empty_label="Seleccioná una membresía",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
+
+class ContratacionMembresiaForm(ContratacionPlanForm):
+    plan = None
+    membresia = forms.IntegerField(widget=forms.HiddenInput())

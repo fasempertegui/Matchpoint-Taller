@@ -7,7 +7,7 @@ from auditoria.contexto import contexto_auditoria
 from usuarios.models import Rol, Usuario, UsuarioRol
 
 from .fechas import validar_fecha_alta, validar_mes_contratacion
-from .models import Plan, PlanUsuario
+from .models import Membresia, MembresiaUsuario, Plan, PlanUsuario
 from .servicios import exigir_administracion_membresias
 
 
@@ -145,3 +145,39 @@ def vencer_contrataciones():
             estado=PlanUsuario.Estado.ACTIVO, mes_cubierto__lt=inicio_mes_actual,
         ).update(estado=PlanUsuario.Estado.VENCIDO, actualizado_en=procesado_en)
     return {"planes": cantidad}
+
+
+@transaction.atomic
+def registrar_contratacion_membresia(
+    actor, *, usuario_id, membresia_id, mes_cubierto, fecha_alta, revision_precio, observaciones="",
+):
+    actor, titular = _bloquear_titular(actor, usuario_id)
+    try:
+        membresia = Membresia.objects.select_for_update().get(pk=membresia_id)
+    except Membresia.DoesNotExist:
+        raise ValidationError("La membresía seleccionada ya no está disponible.") from None
+    if membresia.estado != Membresia.Estado.ACTIVO:
+        raise ValidationError("Elegí una membresía activa para registrar la contratación.")
+    _validar_revision_precio(actor, titular, membresia, revision_precio)
+    validar_mes_contratacion(mes_cubierto)
+    validar_fecha_alta(fecha_alta)
+    if MembresiaUsuario.objects.filter(usuario=titular, mes_cubierto=mes_cubierto).exclude(
+        estado=MembresiaUsuario.Estado.ANULADO,
+    ).exists():
+        raise ValidationError("El usuario ya tiene una contratación de membresía para ese mes.")
+    contratacion = MembresiaUsuario(
+        usuario=titular, membresia=membresia, mes_cubierto=mes_cubierto, fecha_alta=fecha_alta,
+        precio_aplicado=membresia.precio_vigente, registrado_por=actor, observaciones=observaciones.strip(),
+        estado=MembresiaUsuario.Estado.VENCIDO if mes_cubierto < timezone.localdate().replace(day=1)
+        else MembresiaUsuario.Estado.ACTIVO,
+    )
+    contratacion.full_clean()
+    try:
+        with transaction.atomic(), contexto_auditoria(actor):
+            contratacion.save()
+    except IntegrityError as error:
+        restriccion = getattr(getattr(error.__cause__, "diag", None), "constraint_name", None)
+        if restriccion == "membresia_usuario_mes_no_anulado_unico":
+            raise ValidationError("El usuario ya tiene una contratación de membresía para ese mes.") from None
+        raise
+    return contratacion

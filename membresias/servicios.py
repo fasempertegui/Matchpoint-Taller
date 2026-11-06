@@ -109,6 +109,8 @@ def guardar_membresia(
         "precio_vigente": precio_vigente, "precio_invitado_vigente": precio_invitado_vigente,
     }
     cambios = [campo for campo, valor in datos.items() if getattr(membresia, campo) != valor]
+    if membresia_id is not None and "horas_mensuales" in cambios and membresia.contrataciones.exists():
+        raise ValidationError("Las horas mensuales no se pueden cambiar en una membresía con contrataciones.")
     for campo, valor in datos.items():
         setattr(membresia, campo, valor)
     if membresia_id is not None and not cambios:

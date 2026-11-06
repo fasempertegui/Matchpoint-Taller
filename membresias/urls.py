@@ -29,4 +29,9 @@ urlpatterns = [
     path("socios/<int:pk>/", views.membresia_detalle, name="membresia_detalle"),
     path("socios/<int:pk>/editar/", views.membresia_formulario, name="membresia_editar"),
     path("socios/<int:pk>/cambiar-estado/", views.membresia_cambiar_estado, name="membresia_cambiar_estado"),
+    path("contrataciones/membresias/", vistas_contrataciones.contratacion_lista, {"tipo": "membresia"}, name="contratacion_membresia_lista"),
+    path("contrataciones/membresias/buscar-usuarios/", vistas_contrataciones.buscar_usuarios_contratacion, {"tipo": "membresia"}, name="contratacion_membresia_buscar_usuarios"),
+    path("contrataciones/membresias/nueva/", vistas_contrataciones.contratacion_crear, {"tipo": "membresia"}, name="contratacion_membresia_crear"),
+    path("contrataciones/membresias/<int:pk>/", vistas_contrataciones.contratacion_detalle, {"tipo": "membresia"}, name="contratacion_membresia_detalle"),
+    path("contrataciones/membresias/<int:pk>/comprobante/", vistas_contrataciones.contratacion_comprobante, {"tipo": "membresia"}, name="contratacion_membresia_comprobante"),
 ]
