@@ -140,9 +140,9 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         temporal = ""
         if evento:
             if evento.estado == Evento.Estado.FINALIZADO:
-                temporal = "Finalizada"
+                temporal = "Finalizado" if bloqueo else "Finalizada"
             elif fin <= ahora:
-                temporal = "Terminado" if bloqueo else "Terminada · pendiente de finalización"
+                temporal = "Terminado" if bloqueo else "Terminada"
             elif inicio <= ahora:
                 temporal = "En curso"
             else:

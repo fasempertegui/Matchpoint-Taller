@@ -584,7 +584,7 @@ Representa un bloqueo de un turno y su vínculo opcional con la actividad anulad
 | | `motivo` | `varchar(20)` | | | `clima_adverso` (o `torneo`, `mantenimiento`) |
 | FK | `evento_origen_id` | `bigint` | Sí | Sí | `1300` |
 
-`evento_id` es único y referencia un evento de tipo `bloqueo`. El turno, estado, observaciones y auditoría pertenecen al evento. `motivo` admite `clima_adverso`, `torneo` y `mantenimiento`. La especialización no agrega un estado ni una ubicación propios; su evento admite `programado` y `anulado`, sin `finalizado`.
+`evento_id` es único y referencia un evento de tipo `bloqueo`. El turno, estado, observaciones y auditoría pertenecen al evento. `motivo` admite `clima_adverso`, `torneo` y `mantenimiento`. La especialización no agrega un estado ni una ubicación propios; su evento admite `programado`, `anulado` y `finalizado`.
 
 `evento_origen_id` referencia opcionalmente un evento de reserva o clase Anulado sobre el mismo turno que el bloqueo. Es único cuando está informado: un evento puede originar como máximo un bloqueo. Un bloqueo creado sobre un turno libre guarda `NULL`; varios bloqueos pueden no tener origen. La referencia protege al evento contra la eliminación física y se conserva aunque se anule el bloqueo.
 

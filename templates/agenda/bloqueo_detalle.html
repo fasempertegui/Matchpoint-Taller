@@ -32,6 +32,9 @@
                     {% endif %}
                 </dd></div>
             {% endif %}
+            {% if bloqueo.evento.finalizado_en %}
+                <div class="perfil-fila"><dt>Finalización</dt><dd>{{ bloqueo.evento.finalizado_en|date:"d/m/Y H:i" }}</dd></div>
+            {% endif %}
             {% if bloqueo.evento.estado == 'anulado' %}
                 <div class="perfil-fila"><dt>Motivo de anulación</dt><dd>{{ bloqueo.evento.motivo_anulacion|linebreaksbr }}</dd></div>
                 <div class="perfil-fila"><dt>Anulado por</dt><dd>{{ bloqueo.evento.anulado_por }}</dd></div>

@@ -122,10 +122,6 @@ class Evento(models.Model):
                 name="evento_estado_y_auditoria_validos",
                 violation_error_message="Los datos de anulación y finalización deben corresponder al estado del evento.",
             ),
-            models.CheckConstraint(
-                condition=~models.Q(tipo="bloqueo", estado="finalizado"),
-                name="evento_bloqueo_no_finalizado",
-            ),
         ]
         verbose_name = "evento"
         verbose_name_plural = "eventos"

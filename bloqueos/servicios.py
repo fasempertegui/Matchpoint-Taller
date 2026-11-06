@@ -2,6 +2,7 @@ from datetime import datetime, time, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
@@ -142,3 +143,42 @@ def anular_bloqueo(anulado_por, bloqueo_id, motivo, cancha, fecha, hora):
     evento.motivo_anulacion = motivo
     evento.save(update_fields=["estado", "anulado_por", "anulado_en", "motivo_anulacion", "actualizado_en"])
     return bloqueo
+
+
+@transaction.atomic
+def finalizar_bloqueo(bloqueo_id):
+    with contexto_auditoria(origen="tarea"):
+        bloqueo = Bloqueo.objects.select_related("evento").get(pk=bloqueo_id)
+        turno = Turno.objects.select_for_update().get(pk=bloqueo.evento.turno_id)
+        evento = Evento.objects.select_for_update().get(pk=bloqueo.evento_id)
+        ahora = timezone.localtime()
+        fin = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_fin))
+        if evento.tipo != Evento.Tipo.BLOQUEO or evento.estado != Evento.Estado.PROGRAMADO:
+            raise ValidationError("Sólo se pueden finalizar bloqueos Programados.")
+        if ahora < fin:
+            raise ValidationError("Sólo se puede finalizar un bloqueo cuando terminó su turno.")
+        evento.estado = Evento.Estado.FINALIZADO
+        evento.finalizado_en = ahora
+        evento.save(update_fields=["estado", "finalizado_en", "actualizado_en"])
+        return bloqueo
+
+
+def finalizar_bloqueos_vencidos():
+    limite_inicio = timezone.localtime() - timedelta(hours=1)
+    pendientes = Bloqueo.objects.filter(
+        evento__tipo=Evento.Tipo.BLOQUEO,
+        evento__estado=Evento.Estado.PROGRAMADO,
+    ).filter(
+        Q(evento__turno__fecha__lt=limite_inicio.date())
+        | Q(evento__turno__fecha=limite_inicio.date(), evento__turno__hora_inicio__lte=limite_inicio.time())
+    ).order_by("pk").values_list("pk", flat=True)
+
+    finalizados = 0
+    for bloqueo_id in pendientes.iterator(chunk_size=500):
+        try:
+            finalizar_bloqueo(bloqueo_id)
+        except ValidationError:
+            continue
+        else:
+            finalizados += 1
+    return finalizados

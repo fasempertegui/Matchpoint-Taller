@@ -108,7 +108,7 @@ Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de planes
 
 ## 3. Flujos
 
-Las actividades utilizan turnos concretos de una hora. `eventos.turno_id` referencia el único turno de cada reserva, clase o bloqueo; `eventos` guarda su estado, observaciones y auditoría. La fecha, cancha, inicio y fin se obtienen del turno y la duración es siempre una hora. Cada registro tiene identidad y estado independientes, incluso si se crea o anula junto con otros mediante una operación administrativa masiva. Cancelar una actividad o liberar un bloqueo deja su evento Anulado; completar una clase o finalizar una reserva lo deja Finalizado.
+Las actividades utilizan turnos concretos de una hora. `eventos.turno_id` referencia el único turno de cada reserva, clase o bloqueo; `eventos` guarda su estado, observaciones y auditoría. La fecha, cancha, inicio y fin se obtienen del turno y la duración es siempre una hora. Cada registro tiene identidad y estado independientes, incluso si se crea o anula junto con otros mediante una operación administrativa masiva. Cancelar una actividad o liberar un bloqueo deja su evento Anulado; completar una clase o finalizar una reserva o bloqueo lo deja Finalizado.
 
 ### 3.1 Disponibilidad
 
@@ -501,7 +501,7 @@ Recorrido:
 
 Alternativas:
 
-- Los eventos Anulados y los turnos terminados no impiden inactivar. Las reservas y clases terminadas pendientes de finalización conservan su procesamiento habitual; los bloqueos terminados conservan su estado y ocupación histórica.
+- Los eventos Anulados y los turnos terminados no impiden inactivar. Las reservas y clases terminadas pendientes de finalización conservan su procesamiento habitual; los bloqueos terminados conservan su finalización automática y ocupación histórica.
 - Las anulaciones conservan participantes, importes y relaciones históricas. No crean bloqueos ni modifican cobros, devoluciones o contrataciones.
 - Una sede inactiva no admite nuevas actividades.
 - Reactivar no restaura eventos Anulados. No modifica el estado individual de las canchas. Reactivar la sede no reactiva sus canchas.
@@ -599,7 +599,7 @@ Recorrido:
 
 Alternativas:
 
-- Los eventos Anulados y los turnos terminados no impiden inactivar. Las reservas y clases terminadas pendientes de finalización conservan su procesamiento habitual; los bloqueos terminados conservan su estado y ocupación histórica.
+- Los eventos Anulados y los turnos terminados no impiden inactivar. Las reservas y clases terminadas pendientes de finalización conservan su procesamiento habitual; los bloqueos terminados conservan su finalización automática y ocupación histórica.
 - Las anulaciones conservan participantes, importes y relaciones históricas. No crean bloqueos ni modifican cobros, devoluciones o contrataciones.
 - Una cancha inactiva no admite nuevas actividades.
 - Reactivar no restaura eventos Anulados. Reactivar la cancha no activa su sede ni habilita nuevas actividades si la sede sigue inactiva.
@@ -2446,23 +2446,23 @@ flowchart TD
     B --> C[Enviar email al usuario]
 ```
 
-### 4.3 Finalización automática de clases y reservas vencidas
+### 4.3 Finalización automática de clases, reservas y bloqueos vencidos
 
-- **Objetivo:** finalizar eventos de clases y reservas cuyo turno terminó.
+- **Objetivo:** finalizar eventos de clases, reservas y bloqueos cuyo turno terminó.
 - **Disparador:** Celery Beat cada hora en punto de Buenos Aires; Redis transporta la tarea y el worker la ejecuta.
 
 Procedimiento:
 
-1. Consulta los eventos de clase o reserva Programados y calcula el fin de su turno mediante `eventos.turno_id` y `turnos`.
+1. Consulta los eventos de clase, reserva o bloqueo Programados y calcula el fin de su turno mediante `eventos.turno_id` y `turnos`.
 2. Selecciona los que terminaron antes o en el momento actual.
 3. Para cada actividad, bloquea su turno y su evento dentro de una transacción, y comprueba nuevamente estado y horario.
-4. Cambia el evento a Finalizado y registra `finalizado_en` con el momento real de procesamiento. No registra responsable de reserva; el responsable manual de clase queda vacío si la tarea la finaliza.
+4. Cambia el evento a Finalizado y registra `finalizado_en` con el momento real de procesamiento. No registra responsable de reserva o bloqueo; el responsable manual de clase queda vacío si la tarea la finaliza.
 5. Conserva la referencia al turno, ocupación histórica, precios y participantes, sin modificar asistencias.
 
 Condiciones:
 
 - No modifica eventos Anulados o Finalizados ni sobrescribe sus fechas.
-- Los bloqueos quedan fuera de esta tarea; se liberan mediante anulación.
+- Los bloqueos se finalizan al terminar su turno; su liberación anticipada se realiza mediante anulación.
 - Consulta todas las vencidas pendientes, incluidas las que terminaron mientras los servicios estuvieron apagados.
 - Una reserva puede finalizarse manualmente como emergencia mediante **FL-42**. Las clases conservan **FL-38** para administradores o profesores autorizados.
 - Una ejecución concurrente utiliza los mismos bloqueos. Sólo la primera operación válida registra la finalización.
