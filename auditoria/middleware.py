@@ -40,6 +40,8 @@ class ContextoAuditoriaMiddleware:
             destinos_privados = {
                 "reservas:reserva_detalle": (Reserva, "organizador_id"),
                 "reservas:reserva_comprobante": (Reserva, "organizador_id"),
+                "membresias:mi_plan_comprobante": (PlanUsuario, "usuario_id"),
+                "membresias:mi_pase_comprobante": (PaseUsuario, "usuario_id"),
                 "membresias:mi_plan_contratado": (PlanUsuario, "usuario_id"),
                 "membresias:mi_pase_contratado": (PaseUsuario, "usuario_id"),
             }

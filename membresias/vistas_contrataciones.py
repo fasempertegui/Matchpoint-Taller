@@ -47,6 +47,7 @@ def _contexto(tipo):
         "url_lista": url_lista,
         "url_crear": reverse(f"membresias:contratacion_{tipo}_crear"),
         "ruta_detalle": f"membresias:contratacion_{tipo}_detalle",
+        "ruta_comprobante": f"membresias:contratacion_{tipo}_comprobante",
         "ruta_anular": f"membresias:contratacion_{tipo}_anular",
         "ruta_producto": f"membresias:{tipo}_detalle", "etiqueta_importe": configuracion["etiqueta_importe"],
     }
@@ -74,6 +75,20 @@ def contratacion_detalle(request, pk, tipo="plan"):
         modelo.objects.select_related("usuario", tipo, "registrado_por", "anulado_por"), pk=pk,
     )
     return render(request, "membresias/contratacion_detalle.html", {
+        **_contexto(tipo), "contratacion": contratacion,
+    })
+
+
+@login_required
+@never_cache
+@require_GET
+def contratacion_comprobante(request, pk, tipo="plan"):
+    exigir_administracion_membresias(request.user)
+    modelo = CONFIGURACION_CONTRATACIONES[tipo]["modelo"]
+    contratacion = get_object_or_404(
+        modelo.objects.select_related("usuario", tipo, "registrado_por", "anulado_por"), pk=pk,
+    )
+    return render(request, "membresias/contratacion_comprobante.html", {
         **_contexto(tipo), "contratacion": contratacion,
     })
 

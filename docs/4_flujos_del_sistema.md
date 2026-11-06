@@ -823,6 +823,7 @@ Alternativas:
 
 - Consultar un pase propio no exige Alumno.
 - El titular consulta sus contrataciones en modo de sólo lectura.
+- Desde el detalle, administración y titular pueden abrir el comprobante autorizado e imprimirlo o guardarlo como PDF. Muestra el importe registrado y las condiciones del producto, acredita la contratación y no el pago, y aplica los mismos límites de información del detalle.
 - La consulta comercial excluye toda anulación, incluso posterior al cierre de caja. No calcula deuda ni indicadores de pago y no utiliza los totales históricos del cierre.
 - La consulta histórica utiliza la contratación concreta.
 

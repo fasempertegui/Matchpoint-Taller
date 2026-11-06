@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}Comprobante de {{ tipo }} #{{ contratacion.pk }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/reserva-comprobante.css' %}">{% endblock %}
+
+{% block contenido %}
+<article class="tarjeta comprobante">
+    <header class="comprobante-cabecera">
+        <div>
+            <div class="marca">
+                <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="44" height="44">
+                <span>Academia TM</span>
+            </div>
+            <h1>Comprobante de contratación de {{ tipo }}</h1>
+        </div>
+        <div class="comprobante-identificacion">
+            <p><strong>#{{ contratacion.pk }}</strong></p>
+            <span class="estado">{{ contratacion.get_estado_display }}</span>
+        </div>
+    </header>
+
+    <section class="comprobante-uso" aria-label="Datos de la contratación">
+        <div class="detalle-grid">
+            <div><span class="etiqueta">{{ tipo|capfirst }}</span><p>{{ contratacion.producto.nombre }}</p></div>
+            <div><span class="etiqueta">Mes cubierto</span><p>{{ contratacion.mes_cubierto|date:"F Y"|capfirst }}</p></div>
+            <div><span class="etiqueta">Período cubierto</span><p>{{ contratacion.fecha_inicio|date:"d/m/Y" }} al {{ contratacion.fecha_fin|date:"d/m/Y" }}</p></div>
+            <div><span class="etiqueta">Fecha efectiva de alta</span><p>{{ contratacion.fecha_alta|date:"d/m/Y" }}</p></div>
+        </div>
+    </section>
+
+    <section class="comprobante-seccion" aria-label="Titular y condiciones del producto">
+        <div class="detalle-grid">
+            <div><span class="etiqueta">Usuario</span><p>{{ contratacion.usuario }} · @{{ contratacion.usuario.username }}</p></div>
+            {% if tipo == 'plan' %}
+                <div><span class="etiqueta">Modalidad</span><p>{{ contratacion.producto.get_modalidad_display }}</p></div>
+                <div><span class="etiqueta">Encuentros por semana</span><p>{{ contratacion.producto.frecuencia_semanal }}</p></div>
+                <div><span class="etiqueta">Duración de cada encuentro</span><p>{{ contratacion.producto.get_cantidad_clases_por_encuentro_display }}</p></div>
+            {% else %}
+                <div><span class="etiqueta">Variante</span><p>{{ contratacion.producto.get_tipo_display }}</p></div>
+                <div><span class="etiqueta">Límite diario</span><p>{{ contratacion.producto.limite_horas_diarias }} hora{{ contratacion.producto.limite_horas_diarias|pluralize:"s" }}</p></div>
+                <div><span class="etiqueta">Días habilitados</span><p>{{ contratacion.producto.dias_habilitados }}</p></div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="comprobante-seccion" aria-label="Importe de la contratación">
+        <div class="comprobante-total">
+            <span class="etiqueta">{{ etiqueta_importe }}</span>
+            <strong>$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</strong>
+        </div>
+    </section>
+
+    {% if contratacion.estado == 'anulado' %}
+        <section class="comprobante-seccion comprobante-anulacion" aria-labelledby="anulacion-titulo">
+            <h2 id="anulacion-titulo">Contratación anulada</h2>
+            <p>{{ contratacion.anulado_en|date:"d/m/Y H:i" }}{% if not propias %} · {{ contratacion.anulado_por }}{% endif %}</p>
+            {% if not propias %}<p><strong>Motivo:</strong> {{ contratacion.motivo_anulacion|linebreaksbr }}</p>{% endif %}
+        </section>
+    {% endif %}
+
+    {% if not propias and contratacion.observaciones %}
+        <section class="comprobante-seccion" aria-labelledby="observaciones-titulo">
+            <h2 id="observaciones-titulo">Observaciones</h2>
+            <p>{{ contratacion.observaciones|linebreaksbr }}</p>
+        </section>
+    {% endif %}
+    <div class="detalle-grid comprobante-registro">
+        <div><span class="etiqueta">Fecha de registro</span><p>{{ contratacion.creado_en|date:"d/m/Y H:i" }}</p></div>
+        {% if not propias %}<div><span class="etiqueta">Registrada por</span><p>{{ contratacion.registrado_por }}</p></div>{% endif %}
+    </div>
+    <footer class="comprobante-pie">
+        <strong>Academia TM</strong>
+        <span>Este comprobante acredita la contratación del {{ tipo }}. No acredita el pago.</span>
+    </footer>
+</article>
+
+<div class="acciones-formulario comprobante-acciones">
+    <button class="boton boton-primario" type="button" data-imprimir-comprobante>Imprimir</button>
+</div>
+<script src="{% static 'js/reserva-comprobante.js' %}" defer></script>
+{% endblock %}

@@ -25,6 +25,7 @@ def _contexto(tipo):
         "propias": True, "tipo": tipo, "plural": "planes" if tipo == "plan" else "pases",
         "titulo_lista": "Mis contrataciones", "url_lista": url_lista,
         "ruta_detalle": "membresias:mi_plan_contratado" if tipo == "plan" else "membresias:mi_pase_contratado",
+        "ruta_comprobante": f"membresias:mi_{tipo}_comprobante",
         "etiqueta_importe": "Importe acordado (ARS)" if tipo == "plan" else "Importe aplicado (ARS)",
     }
 
@@ -62,5 +63,19 @@ def contratacion_propia_detalle(request, pk, tipo="plan"):
         modelo.objects.filter(usuario=titular).select_related("usuario", tipo), pk=pk,
     )
     return render(request, "membresias/contratacion_detalle.html", {
+        **_contexto(tipo), "contratacion": contratacion,
+    })
+
+
+@login_required
+@never_cache
+@require_GET
+def contratacion_propia_comprobante(request, pk, tipo="plan"):
+    titular = _exigir_titular(request.user)
+    modelo = PlanUsuario if tipo == "plan" else PaseUsuario
+    contratacion = get_object_or_404(
+        modelo.objects.filter(usuario=titular).select_related("usuario", tipo), pk=pk,
+    )
+    return render(request, "membresias/contratacion_comprobante.html", {
         **_contexto(tipo), "contratacion": contratacion,
     })
