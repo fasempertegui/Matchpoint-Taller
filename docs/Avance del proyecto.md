@@ -301,6 +301,19 @@ Verificación: controles de Django, carga de plantillas y sintaxis JavaScript. R
 
 ## Alcance comercial e instalación
 
-La gestión comercial implementada comprende planes de clases y sus contrataciones. Oferta presenta planes Activos y tarifas de reservas; Mis contrataciones consulta planes propios. El catálogo de membresías de socios y sus contrataciones corresponden a las entregas del plan de implementación.
+La gestión comercial implementada comprende los catálogos de planes de clases y membresías de socios, y las contrataciones de planes. Oferta presenta planes Activos y tarifas de reservas; Mis contrataciones consulta planes propios. Las contrataciones de membresías de socios corresponden a la entrega 2.2 del plan de implementación.
 
 Las migraciones definen una instalación limpia con tablas y triggers de auditoría de planes y sus contrataciones. La revisión de esquema comprende migración completa sobre una base temporal, controles de Django, coincidencia entre modelos y migraciones y carga de todas las plantillas. Queda pendiente la revisión manual de navegación, oferta, contrataciones propias, permisos y administración de planes.
+
+
+## Catálogo de membresías de socios
+
+Administración accede desde Membresías al catálogo de socios, con listado de veinticinco productos por página, búsqueda por nombre o descripción y filtro de estado. Cada fila muestra nombre, horas mensuales, precio mensual, adicional por invitado no socio y estado, con un único enlace al detalle. La ficha presenta características, descripción y fechas; editar y cambiar el estado son acciones explícitas separadas. El formulario se abre al solicitar alta o edición.
+
+El producto registra horas mensuales positivas y dos importes no negativos, admitiendo precios cero. El nombre es único entre Activas sin distinguir mayúsculas y minúsculas, independiente del catálogo de planes. PostgreSQL protege nombre no vacío, horas, precios y estados. La oferta inicial se carga como un producto editable «Socio 10 horas», con diez horas, ARS 40.000 mensuales y ARS 12.500 por invitado no socio y turno de una hora.
+
+Las operaciones exigen Administrador activo sin cambio de contraseña pendiente y revalidan permisos bajo bloqueo del actor y del producto. Una versión firmada identifica actor, producto, tipo y momento de modificación. Las ediciones concurrentes requieren nueva revisión; guardar sin cambios o reenviar el mismo estado no actualiza el registro. La auditoría identifica las membresías, sus modificaciones y sus cambios de estado.
+
+El catálogo no registra contrataciones, usos ni cobros. La protección de horas frente a contrataciones históricas se integra con la relación de contratación en 2.2. La oferta del portal se integra en 1.3.
+
+Verificación realizada: instalación limpia en base temporal, controles de Django, coincidencia de modelos y migraciones, carga de 84 plantillas y consulta de oferta inicial y trigger. Revisión manual pendiente: altas y ediciones válidas, duplicados entre Activas, activación con nombre ocupado, precios cero y negativos, horas cero, reenvíos, modificaciones concurrentes y permisos. No se crean ni ejecutan pruebas automatizadas.

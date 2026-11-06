@@ -13,7 +13,7 @@ from clases.models import (
     TurnoPlanillaAlumno, TurnoPlanillaProfesor,
 )
 from instalaciones.models import Cancha, Sede, SedeHorario
-from membresias.models import Plan, PlanUsuario
+from membresias.models import Membresia, Plan, PlanUsuario
 from reservas.models import Evento, Reserva, Turno
 from usuarios.models import Rol, Usuario, UsuarioRol
 
@@ -49,6 +49,7 @@ TIPOS_REGISTRO = {
     "asistencias": (
         Asistencia, "Asistencia", ("clase", "usuario"), None,
     ),
+    "membresias": (Membresia, "Membresía de socio", (), "membresias:membresia_detalle"),
     "planes": (Plan, "Plan", (), "membresias:plan_detalle"),
     "planes_usuarios": (PlanUsuario, "Contratación de plan", ("usuario",), "membresias:contratacion_plan_detalle"),
 }
@@ -58,6 +59,7 @@ ESTADOS_ACTIVACION = {
     "usuarios": ("is_active", True, False),
     "sedes": ("estado", "activa", "inactiva"),
     "canchas": ("estado", "activa", "inactiva"),
+    "membresias": ("estado", "activo", "inactivo"),
     "planes": ("estado", "activo", "inactivo"),
 }
 
@@ -75,7 +77,7 @@ def _relacion(objeto, nombre):
 
 
 def _referencia_breve(objeto):
-    if isinstance(objeto, (Usuario, Rol, Sede, Plan)):
+    if isinstance(objeto, (Usuario, Rol, Sede, Plan, Membresia)):
         return str(objeto)
     if isinstance(objeto, UsuarioRol):
         return f"{_relacion(objeto, 'usuario')} · {_relacion(objeto, 'rol')}"
@@ -242,7 +244,7 @@ def _referencia_eliminada(registro, clave):
     if registro.tabla == "usuarios":
         nombre = " ".join(filter(None, (datos.get("first_name"), datos.get("last_name"))))
         return nombre or datos.get("username") or clave
-    if registro.tabla in ("roles", "sedes", "canchas", "planes"):
+    if registro.tabla in ("roles", "sedes", "canchas", "planes", "membresias"):
         return datos.get("nombre") or clave
     if registro.tabla == "usuarios_roles" and datos.get("usuario_id") and datos.get("rol_id"):
         return f"Usuario #{datos['usuario_id']} · Rol #{datos['rol_id']}"

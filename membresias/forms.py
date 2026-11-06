@@ -5,7 +5,7 @@ from common.fechas import FECHA_INICIO_OPERACIONES
 from usuarios.models import Rol, Usuario
 
 from .fechas import meses_contratables, validar_fecha_alta, validar_mes_contratacion
-from .models import Plan
+from .models import Membresia, Plan
 
 
 class PlanForm(forms.ModelForm):
@@ -101,3 +101,23 @@ class AnulacionContratacionForm(forms.Form):
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3, "autofocus": True}),
         error_messages={"required": "Indicá el motivo de la anulación."},
     )
+
+
+class MembresiaForm(forms.ModelForm):
+    version = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    class Meta:
+        model = Membresia
+        fields = ("nombre", "horas_mensuales", "precio_vigente", "precio_invitado_vigente", "descripcion")
+        localized_fields = ("precio_vigente", "precio_invitado_vigente")
+        widgets = {
+            "nombre": forms.TextInput(attrs={"class": "form-control", "autofocus": True}),
+            "horas_mensuales": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
+            "precio_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal"}),
+            "precio_invitado_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal"}),
+            "descripcion": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["version"].required = self.instance.pk is not None

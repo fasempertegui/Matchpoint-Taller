@@ -8,11 +8,11 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
-from .forms import PlanForm
-from .models import Plan
+from .forms import MembresiaForm, PlanForm
+from .models import Membresia, Plan
 from .servicios import (
-    cambiar_estado_plan, exigir_administracion_membresias,
-    guardar_plan, version_producto,
+    cambiar_estado_membresia, cambiar_estado_plan, exigir_administracion_membresias,
+    guardar_membresia, guardar_plan, version_producto,
 )
 
 
@@ -98,3 +98,79 @@ def plan_cambiar_estado(request, pk):
     else:
         messages.success(request, f"El plan está {plan.get_estado_display().lower()}.")
     return redirect("membresias:plan_detalle", pk=pk)
+
+
+@login_required
+@never_cache
+@require_GET
+def membresia_lista(request):
+    exigir_administracion_membresias(request.user)
+    membresias = Membresia.objects.all()
+    busqueda = request.GET.get("q", "").strip()[:150]
+    estado = request.GET.get("estado", "")
+    if busqueda:
+        membresias = membresias.filter(Q(nombre__icontains=busqueda) | Q(descripcion__icontains=busqueda))
+    if estado in Membresia.Estado.values:
+        membresias = membresias.filter(estado=estado)
+    else:
+        estado = ""
+    return render(request, "membresias/membresia_lista.html", {
+        "pagina": Paginator(membresias, 25).get_page(request.GET.get("pagina")),
+        "busqueda": busqueda, "estado_actual": estado, "estados": Membresia.Estado.choices,
+        "hay_membresias": Membresia.objects.exists(),
+    })
+
+
+@login_required
+@never_cache
+@require_GET
+def membresia_detalle(request, pk):
+    usuario = exigir_administracion_membresias(request.user)
+    membresia = get_object_or_404(Membresia, pk=pk)
+    return render(request, "membresias/membresia_detalle.html", {
+        "membresia": membresia, "version": version_producto(usuario, membresia),
+    })
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def membresia_formulario(request, pk=None):
+    usuario = exigir_administracion_membresias(request.user)
+    membresia = get_object_or_404(Membresia, pk=pk) if pk is not None else None
+    titulo = "Editar membresía" if membresia is not None else "Nueva membresía"
+    formulario = MembresiaForm(
+        request.POST if request.method == "POST" else None, instance=membresia,
+        initial={"version": version_producto(usuario, membresia)} if membresia is not None else None,
+    )
+    if request.method == "POST" and formulario.is_valid():
+        try:
+            guardado = guardar_membresia(usuario, membresia_id=pk, **formulario.cleaned_data)
+        except ValidationError as error:
+            formulario.add_error(None, error)
+        else:
+            messages.success(request, "La membresía fue guardada.")
+            return redirect("membresias:membresia_detalle", pk=guardado.pk)
+    return render(request, "membresias/catalogo_formulario.html", {
+        "formulario": formulario, "titulo": titulo, "texto_boton": "Guardar membresía",
+        "url_cancelar": reverse("membresias:membresia_detalle", args=[pk]) if pk is not None
+            else reverse("membresias:membresia_lista"),
+    })
+
+
+@login_required
+@never_cache
+@require_POST
+def membresia_cambiar_estado(request, pk):
+    exigir_administracion_membresias(request.user)
+    get_object_or_404(Membresia, pk=pk)
+    try:
+        membresia = cambiar_estado_membresia(
+            request.user, pk, request.POST.get("estado"), version=request.POST.get("version", ""),
+        )
+    except ValidationError as error:
+        for mensaje in error.messages:
+            messages.error(request, mensaje)
+    else:
+        messages.success(request, f"La membresía está {membresia.get_estado_display().lower()}.")
+    return redirect("membresias:membresia_detalle", pk=pk)

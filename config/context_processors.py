@@ -66,7 +66,7 @@ def navegacion(request):
         membresias = enlace(
             "Membresías", "membresias:catalogos",
             namespace == "membresias" and not ruta.url_name.startswith("oferta") and not contrataciones_propias_activo,
-            "Planes mensuales y contrataciones.",
+            "Planes, membresías de socios y contrataciones.",
         )
         administracion.append(membresias)
         administracion.append(enlace(

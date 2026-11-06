@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}{{ membresia.nombre }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
+{% block contenido %}
+<article class="tarjeta perfil">
+    <header class="perfil-cabecera">
+        <div>
+            <p class="perfil-contexto">Membresía de socio</p>
+            <div class="perfil-identidad">
+                <h1>{{ membresia.nombre }}</h1>
+                {% include "componentes/badge_estado.html" with estado=membresia.estado texto=membresia.get_estado_display only %}
+            </div>
+        </div>
+        <div class="perfil-total"><span>Precio mensual (ARS)</span><strong>$ {{ membresia.precio_vigente|floatformat:"2g" }}</strong></div>
+    </header>
+    <div class="perfil-cuerpo">
+        <div class="perfil-datos">
+            <section class="perfil-seccion" aria-labelledby="membresia-datos-titulo">
+                <h2 id="membresia-datos-titulo">Características</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila"><dt>Horas mensuales</dt><dd>{{ membresia.horas_mensuales }}</dd></div>
+                    <div class="perfil-fila"><dt>Adicional por invitado no socio (ARS)</dt><dd>$ {{ membresia.precio_invitado_vigente|floatformat:"2g" }}</dd></div>
+                </dl>
+            </section>
+            {% if membresia.descripcion %}<section class="perfil-seccion" aria-labelledby="membresia-descripcion-titulo"><h2 id="membresia-descripcion-titulo">Descripción</h2><p class="perfil-observaciones">{{ membresia.descripcion|linebreaksbr }}</p></section>{% endif %}
+        </div>
+        <aside class="perfil-lateral" aria-label="Registro y administración de la membresía">
+            <section class="perfil-seccion" aria-labelledby="membresia-registro-titulo">
+                <h2 id="membresia-registro-titulo">Registro</h2>
+                <dl class="perfil-lista">
+                    <div class="perfil-fila"><dt>Fecha de alta</dt><dd>{{ membresia.creado_en|date:"d/m/Y H:i" }}</dd></div>
+                    <div class="perfil-fila"><dt>Última actualización</dt><dd>{{ membresia.actualizado_en|date:"d/m/Y H:i" }}</dd></div>
+                </dl>
+            </section>
+            <section class="perfil-seccion" aria-labelledby="membresia-administracion-titulo">
+                <h2 id="membresia-administracion-titulo">Administración</h2>
+                <div class="perfil-acciones perfil-acciones-botones">
+                    <a class="boton boton-secundario boton-chico" href="{% url 'membresias:membresia_editar' membresia.pk %}">Editar membresía</a>
+                    <form class="formulario-en-linea" method="post" action="{% url 'membresias:membresia_cambiar_estado' membresia.pk %}"
+                          data-confirmar="{% if membresia.estado == 'activo' %}¿Desactivar la membresía {{ membresia.nombre }}? Dejará de estar disponible para nuevas contrataciones.{% else %}¿Activar la membresía {{ membresia.nombre }}?{% endif %}"
+                          data-confirmar-titulo="{% if membresia.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} membresía"
+                          data-confirmar-boton="{% if membresia.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} membresía">
+                        {% csrf_token %}
+                        <input type="hidden" name="version" value="{{ version }}">
+                        <input type="hidden" name="estado" value="{% if membresia.estado == 'activo' %}inactivo{% else %}activo{% endif %}">
+                        <button class="boton boton-chico {% if membresia.estado == 'activo' %}boton-peligro{% else %}boton-secundario{% endif %}" type="submit">{% if membresia.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} membresía</button>
+                    </form>
+                </div>
+            </section>
+        </aside>
+    </div>
+</article>
+{% endblock %}

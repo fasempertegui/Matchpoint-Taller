@@ -5,7 +5,7 @@ from django.db import IntegrityError, transaction
 from auditoria.contexto import contexto_auditoria
 from usuarios.models import Rol, Usuario
 
-from .models import Plan
+from .models import Membresia, Plan
 
 
 def exigir_administracion_membresias(usuario, *, bloquear=False):
@@ -31,12 +31,13 @@ def version_producto(usuario, producto):
 
 def _validar_version_producto(usuario, producto, version):
     nombre_tipo = producto._meta.verbose_name
+    articulo = "la" if isinstance(producto, Membresia) else "el"
     try:
         datos = signing.loads(version, salt=f"membresias.{producto._meta.model_name}")
     except (signing.BadSignature, TypeError):
-        raise ValidationError(f"La selección no es válida. Volvé a abrir el {nombre_tipo} antes de confirmar.") from None
+        raise ValidationError(f"La selección no es válida. Volvé a abrir {articulo} {nombre_tipo} antes de confirmar.") from None
     if datos != {"usuario": usuario.pk, "producto": producto.pk, "actualizado_en": producto.actualizado_en.isoformat()}:
-        raise ValidationError(f"El {nombre_tipo} cambió. Volvé a abrirlo para revisar sus datos antes de confirmar.")
+        raise ValidationError(f"{articulo.capitalize()} {nombre_tipo} cambió. Volvé a abrir el registro para revisar sus datos antes de confirmar.")
 
 
 def _guardar_producto(producto, campos=None):
@@ -47,7 +48,8 @@ def _guardar_producto(producto, campos=None):
     except IntegrityError as error:
         restriccion = f"{producto._meta.model_name}_nombre_activo_unico"
         if getattr(getattr(error.__cause__, "diag", None), "constraint_name", None) == restriccion:
-            raise ValidationError(f"Ya existe un {producto._meta.verbose_name} activo con ese nombre.") from None
+            mensaje = "Ya existe una membresía activa con ese nombre." if isinstance(producto, Membresia) else "Ya existe un plan activo con ese nombre."
+            raise ValidationError(mensaje) from None
         raise
 
 
@@ -91,3 +93,41 @@ def cambiar_estado_plan(usuario, plan_id, estado, *, version):
     with contexto_auditoria(usuario):
         _guardar_producto(plan, campos=["estado", "actualizado_en"])
     return plan
+
+
+@transaction.atomic
+def guardar_membresia(
+    usuario, *, nombre, descripcion, horas_mensuales, precio_vigente,
+    precio_invitado_vigente, membresia_id=None, version="",
+):
+    usuario = exigir_administracion_membresias(usuario, bloquear=True)
+    membresia = Membresia.objects.select_for_update().get(pk=membresia_id) if membresia_id is not None else Membresia()
+    if membresia_id is not None:
+        _validar_version_producto(usuario, membresia, version)
+    datos = {
+        "nombre": nombre.strip(), "descripcion": descripcion.strip(), "horas_mensuales": horas_mensuales,
+        "precio_vigente": precio_vigente, "precio_invitado_vigente": precio_invitado_vigente,
+    }
+    cambios = [campo for campo, valor in datos.items() if getattr(membresia, campo) != valor]
+    for campo, valor in datos.items():
+        setattr(membresia, campo, valor)
+    if membresia_id is not None and not cambios:
+        return membresia
+    with contexto_auditoria(usuario):
+        _guardar_producto(membresia, campos=cambios + ["actualizado_en"] if membresia_id is not None else None)
+    return membresia
+
+
+@transaction.atomic
+def cambiar_estado_membresia(usuario, membresia_id, estado, *, version):
+    usuario = exigir_administracion_membresias(usuario, bloquear=True)
+    membresia = Membresia.objects.select_for_update().get(pk=membresia_id)
+    if estado not in Membresia.Estado.values:
+        raise ValidationError("Elegí un estado válido para la membresía.")
+    if membresia.estado == estado:
+        return membresia
+    _validar_version_producto(usuario, membresia, version)
+    membresia.estado = estado
+    with contexto_auditoria(usuario):
+        _guardar_producto(membresia, campos=["estado", "actualizado_en"])
+    return membresia

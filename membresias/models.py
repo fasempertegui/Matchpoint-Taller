@@ -70,6 +70,59 @@ class Plan(models.Model):
         return self.nombre
 
 
+class Membresia(models.Model):
+    class Estado(models.TextChoices):
+        ACTIVO = "activo", "Activa"
+        INACTIVO = "inactivo", "Inactiva"
+
+    id = models.BigAutoField(primary_key=True)
+    nombre = models.CharField(max_length=150)
+    descripcion = models.TextField("Descripción", blank=True, default="")
+    horas_mensuales = models.PositiveSmallIntegerField(
+        "Horas mensuales", validators=[MinValueValidator(1)],
+    )
+    precio_vigente = models.DecimalField(
+        "Precio mensual (ARS)", max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal("0"))],
+    )
+    precio_invitado_vigente = models.DecimalField(
+        "Adicional por invitado no socio (ARS)", max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal("0"))],
+        help_text="Importe por invitado y turno de una hora.",
+    )
+    estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "membresias"
+        ordering = ("nombre", "pk")
+        default_permissions = ()
+        verbose_name = "membresía"
+        verbose_name_plural = "membresías"
+        constraints = [
+            models.UniqueConstraint(
+                Lower("nombre"), condition=models.Q(estado="activo"),
+                name="membresia_nombre_activo_unico",
+                violation_error_message="Ya existe una membresía activa con ese nombre.",
+            ),
+            models.CheckConstraint(condition=models.Q(nombre__regex=r"\S"), name="membresia_nombre_no_vacio"),
+            models.CheckConstraint(
+                condition=models.Q(horas_mensuales__gte=1), name="membresia_horas_positivas",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(precio_invitado_vigente__gte=0), name="membresia_invitado_no_negativo",
+            ),
+            models.CheckConstraint(condition=models.Q(precio_vigente__gte=0), name="membresia_precio_no_negativo"),
+            models.CheckConstraint(
+                condition=models.Q(estado__in=("activo", "inactivo")), name="membresia_estado_valido",
+            ),
+        ]
+
+    def __str__(self):
+        return self.nombre
+
+
 class PlanUsuario(models.Model):
     class Estado(models.TextChoices):
         ACTIVO = "activo", "Activo"
