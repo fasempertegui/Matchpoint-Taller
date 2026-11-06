@@ -17,7 +17,7 @@ logger = get_task_logger(__name__)
 def vencer_contrataciones():
     cantidades = contrataciones.vencer_contrataciones()
     logger.info(
-        "Contrataciones vencidas automáticamente: %s planes",
-        cantidades["planes"],
+        "Contrataciones vencidas automáticamente: %s planes y %s membresías",
+        cantidades["planes"], cantidades["membresias"],
     )
     return cantidades

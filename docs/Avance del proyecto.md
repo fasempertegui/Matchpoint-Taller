@@ -251,13 +251,13 @@ Revisión manual: solicitar y cancelar la revisión, rechazar motivo vacío, con
 
 ## Vencimiento automático de contrataciones
 
-Celery Beat programa el vencimiento de planes diariamente a las 00:05 de Salta. La tarea procesa las contrataciones de planes cuyo estado siga Activo y cuyo mes sea anterior al mes local actual; recupera todos los pendientes, no sólo el mes anterior. Las contrataciones del mes actual o futuro, las Anuladas y las Vencidas quedan fuera.
+Celery Beat programa el vencimiento de planes y membresías diariamente a las 00:05 de Salta. La tarea procesa las contrataciones de ambos tipos cuyo estado siga Activo y cuyo mes sea anterior al mes local actual; recupera todos los pendientes, no sólo el mes anterior. Las contrataciones del mes actual o futuro, las Anuladas y las Vencidas quedan fuera.
 
-La actualización de los planes se realiza en una transacción y limita cada escritura al estado Activo. PostgreSQL coordina los bloqueos de fila y vuelve a comprobar esa condición frente a una anulación concurrente, sin sobrescribirla. Sólo se modifican estado a Vencido y fecha de modificación con el momento del procesamiento. No se cambian usuarios, roles, productos, fechas efectivas, importes, clases, reservas, coberturas, cobros ni marcas de aviso. Las restricciones de exclusividad del mes conservan las contrataciones Vencidas.
+La actualización de planes y membresías se realiza en una transacción y limita cada escritura al estado Activo. PostgreSQL coordina los bloqueos de fila y vuelve a comprobar esa condición frente a una anulación concurrente, sin sobrescribirla. Sólo se modifican estado a Vencido y fecha de modificación con el momento del procesamiento. No se cambian usuarios, roles, productos, fechas efectivas, importes, clases, reservas, coberturas, cobros ni marcas de aviso. Las restricciones de exclusividad del mes conservan las contrataciones Vencidas.
 
-La auditoría registra las modificaciones con origen tarea y sin responsable manual. El log informa la cantidad de planes procesados. Repetir la ejecución no actualiza filas ya Vencidas ni sus fechas o auditoría. Los errores operativos se reintentan con espera progresiva y confirmación tardía del mensaje; si falla la transacción, no quedan escrituras parciales.
+La auditoría registra las modificaciones con origen tarea y sin responsable manual. El log informa las cantidades de planes y membresías procesados. Repetir la ejecución no actualiza filas ya Vencidas ni sus fechas o auditoría. Los errores operativos se reintentan con espera progresiva y confirmación tardía del mensaje; si falla la transacción, no quedan escrituras parciales.
 
-La consulta de vigencia de planes comprueba el estado y el período calendario, aunque la tarea se demore. Un mes futuro no da cobertura al actual, ni un mes terminado conserva cobertura por seguir almacenado como Activo. El retiro de Alumno continúa basándose en el estado registrado: el vencimiento no retira el rol automáticamente.
+La consulta de vigencia de planes y membresías comprueba el estado y el período calendario, aunque la tarea se demore. Un mes futuro no da cobertura al actual, ni un mes terminado conserva cobertura por seguir almacenado como Activo. El retiro de Alumno continúa basándose en el estado registrado: el vencimiento no retira el rol automáticamente.
 
 No hay botones de vencimiento ni pantallas nuevas. Los avisos por email tienen su proceso independiente.
 
@@ -343,7 +343,7 @@ La confirmación aplica el precio mensual vigente completo, incluido cero, sin p
 
 Las contrataciones se guardan en membresias_usuarios y tienen exclusividad propia de titular y mes entre Activas o Vencidas, con una restricción única parcial. Pueden coexistir con un plan del mismo mes. Se admiten profesores y cuentas sin Alumno; contratar no modifica roles. La operación bloquea las cuentas por identificador y después el producto para coordinar altas, cambios de acceso y edición del catálogo. Las horas mensuales del producto se conservan desde la primera contratación, cualquiera sea su estado; el formulario muestra el campo en lectura y el servicio rechaza cambios.
 
-El listado permite buscar usuario o producto, filtrar por mes y estado y paginar. El detalle y el comprobante presentan titular, membresía, horas mensuales, período, importe aplicado, fecha efectiva y registro; el detalle administrativo conserva observaciones y responsables. Las consultas propias, el vencimiento automático de membresías y los cobros corresponden a sus entregas independientes. La anulación administrativa se solicita bajo demanda desde el detalle de una contratación Activa. El detalle sólo ofrece acciones implementadas.
+El listado permite buscar usuario o producto, filtrar por mes y estado y paginar. El detalle y el comprobante presentan titular, membresía, horas mensuales, período, importe aplicado, fecha efectiva y registro; el detalle administrativo conserva observaciones y responsables. Las consultas propias y los cobros corresponden a sus entregas independientes. El vencimiento automático comprende ambos tipos de contratación. La anulación administrativa se solicita bajo demanda desde el detalle de una contratación Activa. El detalle sólo ofrece acciones implementadas.
 
 PostgreSQL protege mes, importes, estados y coherencia de datos de anulación, genera los identificadores y audita modificaciones y eliminaciones. Auditoría identifica la contratación y enlaza al detalle administrativo. Los datos comerciales de una contratación registrada no admiten edición desde el modelo.
 
@@ -361,3 +361,14 @@ Anular conserva producto, titular, mes, importe aplicado e historia y permite re
 Los impedimentos por aplicaciones como organizador o invitado socio vigente en reservas Programadas se integran al crear esas relaciones. El cómputo de usos conservados del titular y mes se integra con reservas; no hay reinicio de registros comerciales ni eliminación de contrataciones al reemplazar.
 
 Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de plantillas y revisión de rutas y condiciones de acciones. Revisión manual pendiente: anulación, motivo vacío, reenvío, Vencidas, reemplazo del mes, convivencia con plan, titular inactivo, firma de otro tipo, acceso no administrativo y protección de horas. Los vínculos de reservas, invitados y usos mantienen su revisión pendiente en el plan. No se crean ni ejecutan pruebas automatizadas.
+
+
+## Vencimiento mensual de planes y membresías
+
+La tarea diaria de las 00:05 procesa planes y membresías en una única transacción auditada con origen tarea. Calcula el mes local de Salta a partir del mismo momento utilizado para registrar el procesamiento. Incluye todas las contrataciones cuyo mes terminó y siguen Activas; recupera pendientes de varios meses y conserva el mes actual y los futuros.
+
+Cada actualización exige estado Activo y cambia únicamente estado y fecha de modificación. Las contrataciones Anuladas o ya Vencidas permanecen intactas, incluso ante una anulación concurrente. Repetir el procesamiento no modifica fechas ni agrega auditoría de registros ya vencidos. Si falla cualquiera de los tipos, se revierte la operación completa. El log informa cantidades separadas de planes y membresías; los errores operativos conservan el reintento progresivo de la tarea.
+
+El vencimiento conserva roles, actividades, productos, importes aplicados, referencias e historia. La cobertura se consulta por estado y período calendario, de modo que una contratación de un mes terminado no otorga beneficios aunque la tarea todavía no la haya procesado. El proceso no registra cobros ni modifica marcas de envío de avisos.
+
+Verificación realizada: controles de Django, coincidencia de modelos y migraciones y revisión del alcance de las escrituras y de la transacción. Queda pendiente la revisión manual del bloque 2.5: fin de mes, registros futuros, pendientes de varios meses, repetición y concurrencia con anulación. No se crean ni ejecutan pruebas automatizadas.

@@ -144,14 +144,15 @@ def validar_retiro_rol_alumno(usuario):
 
 
 def vencer_contrataciones():
-    inicio_mes_actual = timezone.localdate().replace(day=1)
     procesado_en = timezone.now()
+    inicio_mes_actual = timezone.localtime(procesado_en).date().replace(day=1)
+    cantidades = {}
     with contexto_auditoria(origen="tarea"):
-        cantidad = PlanUsuario.objects.filter(
-            estado=PlanUsuario.Estado.ACTIVO, mes_cubierto__lt=inicio_mes_actual,
-        ).update(estado=PlanUsuario.Estado.VENCIDO, actualizado_en=procesado_en)
-    return {"planes": cantidad}
-
+        for tipo, modelo in (("planes", PlanUsuario), ("membresias", MembresiaUsuario)):
+            cantidades[tipo] = modelo.objects.filter(
+                estado=modelo.Estado.ACTIVO, mes_cubierto__lt=inicio_mes_actual,
+            ).update(estado=modelo.Estado.VENCIDO, actualizado_en=procesado_en)
+    return cantidades
 
 @transaction.atomic
 def registrar_contratacion_membresia(
