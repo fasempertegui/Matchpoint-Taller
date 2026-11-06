@@ -10,6 +10,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .contrataciones import (
+    ContratacionExistente,
     anular_contratacion_membresia, anular_contratacion_plan,
     registrar_contratacion_membresia, registrar_contratacion_plan,
     revision_precio_contratacion, version_anulacion_contratacion,
@@ -165,6 +166,9 @@ def contratacion_crear(request, tipo="plan"):
             }
             try:
                 contratacion = configuracion["registrar"](request.user, **argumentos)
+            except ContratacionExistente as error:
+                formulario.add_error(None, error)
+                contexto["contratacion_existente"] = error.contratacion
             except ValidationError as error:
                 formulario.add_error(None, error)
             else:

@@ -2,6 +2,9 @@
 {% load static %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/contrataciones.css' %}"><script src="{% static 'js/selector-usuario.js' %}" defer></script>{% endblock %}
 {% block formulario_contexto %}
+    {% if contratacion_existente %}
+        <p><a class="enlace-texto" href="{% url ruta_detalle contratacion_existente.pk %}">Ver contratación existente del mes</a></p>
+    {% endif %}
     <div class="contratacion-progreso" role="progressbar" aria-label="Progreso de contratación" aria-valuemin="1" aria-valuemax="2" aria-valuenow="{% if titular %}2{% else %}1{% endif %}">
         <span class="contratacion-paso-completo" aria-hidden="true"></span>
         <span{% if titular %} class="contratacion-paso-completo"{% endif %} aria-hidden="true"></span>
