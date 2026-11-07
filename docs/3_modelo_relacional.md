@@ -575,6 +575,7 @@ Representa ingresos, egresos, aportes y retiros registrados manualmente en una s
 | | `monto` | `numeric(12,2)` | | | `35000.00` |
 | | `medio_pago` | `varchar(15)` | | | `efectivo` (o `transferencia`, `tarjeta`, `qr`) |
 | | `referencia` | `varchar(150)` | | | `''` |
+| | `categoria_ingreso` | `varchar(20)` | | | `planes` |
 | | `categoria_egreso` | `varchar(20)` | | | `''` |
 | | `destinatario` | `varchar(150)` | | | `''` |
 | FK | `plan_usuario_id` | `bigint` | Sí | | `301` |
@@ -587,13 +588,13 @@ Representa ingresos, egresos, aportes y retiros registrados manualmente en una s
 | FK | `anulado_por_id` | `bigint` | Sí | | `NULL` |
 | | `motivo_anulacion` | `text` | | | `''` |
 
-`monto` es positivo y se calcula con Decimal, sin floats. `concepto` siempre contiene texto no vacío. Los medios no efectivos requieren `referencia`. Egreso exige destinatario y categoría: `alquiler`, `servicios`, `profesores`, `insumos`, `mantenimiento`, `publicidad`, `comisiones`, `otros` o `devoluciones`. En las demás clases esos campos quedan vacíos. Aporte y Retiro solo admiten efectivo y no se contabilizan como cobros o gastos operativos.
+`monto` es positivo y se calcula con Decimal, sin floats. `concepto` siempre contiene texto no vacío. Los medios no efectivos requieren `referencia`. Ingreso exige `categoria_ingreso`: `reservas`, `planes`, `membresias` u `otros`. Con vínculo comercial se determina por el tipo de origen; sin vínculo se selecciona. Egreso exige `categoria_egreso`: `alquiler`, `servicios`, `profesores`, `insumos`, `mantenimiento`, `publicidad`, `otros` o `devoluciones`; `destinatario` es texto opcional. Cada categoría queda vacía fuera de su clase. El destinatario queda vacío fuera de Egreso. Aporte y Retiro solo admiten efectivo y no se contabilizan como cobros o gastos operativos.
 
 Solo Ingreso admite referencias comerciales y como máximo una de las tres está informada; un ingreso sin vínculo se identifica por su concepto obligatorio. `plan_usuario_id` referencia `planes_usuarios.id`, `membresia_usuario_id` referencia `membresias_usuarios.id` y `reserva_id` referencia `reservas.id`. No apuntan a productos del catálogo. Se admiten varios ingresos por origen, sin comparación automática con el precio aplicado. El registro muestra el importe conservado de la contratación y sus ingresos Vigentes; el concepto explica pagos parciales o acuerdos excepcionales, sin representar descuentos ni alterar importes comerciales. El origen debe existir y estar confirmado; no admite nuevos ingresos si la contratación está Anulada o el evento de la reserva está Anulado. No se crea ni renueva un origen al registrar el cobro.
 
 `sesion_id` referencia `sesiones_caja.id`; `registrado_por_id` y `anulado_por_id` referencian `usuarios.id`. Estas relaciones y los vínculos comerciales protegen a sus registros referenciados contra la eliminación. La reserva o contratación y su cobro se confirman como operaciones independientes: un error monetario no revierte el origen comercial.
 
-Una devolución usa clase `egreso` y categoría `devoluciones`: representa dinero efectivamente reintegrado a un cliente, en cualquiera de los cuatro medios. Exige concepto, destinatario, monto y referencia para no efectivo. No tiene una FK a un ingreso ni un tope contra cobros. Los resúmenes la separan de los gastos operativos. No modifica automáticamente cobros, contratación ni reserva. Cancelar o reprogramar una operación comercial no genera un reintegro ni anula sus cobros; el reintegro se registra como un egreso independiente.
+Una devolución usa clase `egreso` y categoría `devoluciones`: representa dinero efectivamente reintegrado a un cliente, en cualquiera de los cuatro medios. Exige concepto, monto y referencia para no efectivo; el destinatario es opcional. No tiene una FK a un ingreso ni un tope contra cobros. Los resúmenes la separan de los gastos operativos. No modifica automáticamente cobros, contratación ni reserva. Cancelar o reprogramar una operación comercial no genera un reintegro ni anula sus cobros; el reintegro se registra como un egreso independiente.
 
 Las FK opcionales y fechas no informadas usan NULL; los textos opcionales usan cadena vacía. La creación pertenece a una sesión abierta y usa exclusivamente `creado_en`, asignado por el servidor, y el responsable de esa sesión. La fecha no es editable y no se almacena una fecha real de operación separada. Las fechas se interpretan en `America/Argentina/Salta` y los importes son pesos argentinos con dos decimales.
 

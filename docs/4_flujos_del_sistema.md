@@ -1575,14 +1575,14 @@ flowchart TD
 
 - **Objetivo:** registrar un ingreso, egreso, aporte o retiro.
 - **Actor:** responsable de la sesión abierta.
-- **Entradas:** clase, concepto, monto positivo y medio; referencia para no efectivo; categoría y destinatario para Egreso; vínculo comercial opcional para Ingreso.
+- **Entradas:** clase, concepto, monto positivo y medio; referencia para no efectivo; categoría para Ingreso y Egreso; destinatario opcional para Egreso; vínculo comercial opcional para Ingreso.
 - **Precondición:** sesión abierta a cargo del actor y operación efectivamente realizada.
 
 Recorrido:
 
 1. Solicita Registrar movimiento y elige clase.
-2. Completa concepto, monto y medio. Para Ingreso puede seleccionar una reserva o contratación concreta confirmada; como máximo un vínculo comercial por movimiento y concepto obligatorio aun sin vínculo.
-3. Para Egreso completa categoría y destinatario de texto. Para transferencia, tarjeta o QR agrega una referencia y verifica la recepción para un ingreso, el pago realizado para un egreso o la aprobación de la operación con tarjeta. Aporte y Retiro usan efectivo y concepto explicativo. Si registra un reintegro, elige Egreso y categoría devoluciones.
+2. Completa concepto, monto y medio. Para Ingreso puede seleccionar una reserva o contratación concreta confirmada; como máximo un vínculo comercial por movimiento y concepto obligatorio aun sin vínculo. La categoría de ingreso es reservas, planes, membresías u otros: se determina por el tipo de origen si hay vínculo, y se selecciona si no lo hay.
+3. Para Egreso completa categoría y puede agregar un destinatario de texto. Para transferencia, tarjeta o QR agrega una referencia y verifica la recepción para un ingreso, el pago realizado para un egreso o la aprobación de la operación con tarjeta. Aporte y Retiro usan efectivo y concepto explicativo. Si registra un reintegro, elige Egreso y categoría devoluciones.
 4. Confirma con el UUID conservado del formulario. El servicio bloquea la sesión, revalida acceso, responsabilidad, estado y datos y registra el movimiento Vigente con fecha del servidor.
 5. Muestra el movimiento y el resumen actualizado.
 
@@ -1593,8 +1593,8 @@ Alternativas:
 
 - Se admite como máximo un vínculo comercial por Ingreso y varios ingresos para el mismo origen. No se compara el acumulado con el precio ni se calcula deuda.
 - No se cobran contrataciones Anuladas ni reservas con evento Anulado. No se crea ni renueva el origen al registrar un cobro.
-- Egreso usa categorías alquiler, servicios, profesores, insumos, mantenimiento, publicidad, comisiones, otros o devoluciones. Registra pagos realizados, no compromisos futuros. Registrar pagos a profesores no calcula salarios ni honorarios.
-- Una devolución es dinero efectivamente reintegrado a un cliente. Se registra como Egreso de categoría devoluciones por cualquiera de los cuatro medios, con concepto, destinatario y referencia si no es efectivo. No tiene vínculo ni tope contra un ingreso y no modifica automáticamente cobros, contratación ni reserva. En los resúmenes se presenta separada de gastos operativos. Si es efectivo, resta al esperado como cualquier egreso en efectivo.
+- Egreso usa categorías alquiler, servicios, profesores, insumos, mantenimiento, publicidad, otros o devoluciones. Registra pagos realizados, no compromisos futuros. Registrar pagos a profesores no calcula salarios ni honorarios.
+- Una devolución es dinero efectivamente reintegrado a un cliente. Se registra como Egreso de categoría devoluciones por cualquiera de los cuatro medios, con concepto y referencia si no es efectivo; el destinatario es opcional. No tiene vínculo ni tope contra un ingreso y no modifica automáticamente cobros, contratación ni reserva. En los resúmenes se presenta separada de gastos operativos. Si es efectivo, resta al esperado como cualquier egreso en efectivo.
 - Cancelar o reprogramar una reserva, o anular una contratación, no genera un reintegro ni anula cobros automáticamente. Si corresponde devolver, la administración ejecuta este flujo y registra el egreso efectivo. Anular una carga mediante FL-44 no representa ese reintegro.
 - Una salida de efectivo no supera lo disponible. Un aporte necesario se registra primero como otra operación. Aporte y Retiro no son cobros ni gastos operativos. Retirar efectivo para depositarlo no crea un ingreso por transferencia.
 - No se permite fecha editable, edición de datos originales ni eliminación. El UUID único se conserva al reenviar el formulario: con los mismos datos y actor devuelve el registro existente; con otro contenido o actor se rechaza. No se exige que coincida con el UUID del contexto de auditoría.
@@ -2222,13 +2222,13 @@ flowchart TD
 
 - **Objetivo:** consultar resumen de sesión, historial de sesiones y listado de movimientos.
 - **Actor:** Administrador con las condiciones de acceso de 3.11; no se exige ser responsable para consultar.
-- **Entradas:** fecha de apertura y estado para sesiones; fecha de registro, sesión, clase, medio y estado para movimientos.
+- **Entradas:** fecha de apertura y estado para sesiones; fecha de registro, sesión, clase, categoría, medio y estado para movimientos.
 
 Recorrido:
 
 1. El administrador elige historial, resumen de sesión o movimientos y sus filtros.
 2. El sistema consulta sesiones y movimientos coincidentes y muestra filas compactas.
-3. Al seleccionar una sesión muestra responsable, apertura, cierre, inicial, totales por clase y medio y, si está cerrada, esperado, contado, diferencia y motivo. Los ingresos, aportes y retiros se distinguen de los egresos; las devoluciones se muestran separadas de los gastos operativos. El motivo de apertura se consulta cuando existe.
+3. Al seleccionar una sesión muestra responsable, apertura, cierre, inicial, totales por clase y medio, ingresos por categoría y, si está cerrada, esperado, contado, diferencia y motivo. Los ingresos, aportes y retiros se distinguen de los egresos; las devoluciones se muestran separadas de los gastos operativos. El motivo de apertura se consulta cuando existe.
 4. Al seleccionar un movimiento muestra clase, concepto, monto, medio, referencia, destinatario y categoría cuando corresponden, vínculo comercial, responsable, fecha de registro, estado y datos de anulación si corresponde. La acción FL-44 se revela bajo demanda solo si está vigente y el actor es responsable de la sesión abierta actual.
 
 Alternativas:
@@ -2305,7 +2305,7 @@ Alternativas:
 - Este flujo no es el camino para que un organizador cancele su propia reserva por su propio deseo: si el organizador quiere cancelar, lo hace él mismo mediante **FL-60**, que siempre libera el turno sin importar el motivo. Tener cuenta y gestionar la propia reserva es, en este sistema, un requisito, no una comodidad opcional.
 - Este flujo siempre ofrece reprogramar mediante **FL-41**. La cancelación libera el turno original.
 - Administración puede cancelar en cualquier momento anterior al inicio y siempre libera la hora de membresía. El inicio se revalida dentro de la transacción; no hay selector de consumo.
-- Cancelar o reprogramar no devuelve dinero ni anula cobros automáticamente. Si corresponde reintegrar, la administración registra un Egreso de categoría devoluciones por FL-43, con concepto, destinatario y referencia si no es efectivo. No modifica automáticamente la reserva ni sus cobros.
+- Cancelar o reprogramar no devuelve dinero ni anula cobros automáticamente. Si corresponde reintegrar, la administración registra un Egreso de categoría devoluciones por FL-43, con concepto y referencia si no es efectivo; el destinatario es opcional. No modifica automáticamente la reserva ni sus cobros.
 - Los movimientos vinculados originales no se anulan ni se modifican automáticamente. Una reserva cancelada no podrá recibir nuevos ingresos.
 - La reserva original no se elimina ni cambia de fecha, horario, duración o cancha.
 - La cancelación actúa sobre el evento completo; cada reserva corresponde a un único turno de una hora.

@@ -649,12 +649,14 @@ Registrar movimiento revela campos según la clase:
 
 | Clase | Campos y comportamiento |
 |---|---|
-| Ingreso | Concepto, monto positivo, medio y vínculo opcional con una contratación concreta de plan, membresía o reserva; como máximo un origen |
-| Egreso | Categoría, concepto, destinatario de texto, monto y medio; no crea cuentas para proveedores |
+| Ingreso | Categoría obligatoria (Reservas, Planes, Membresías u Otros), concepto, monto positivo, medio y vínculo opcional con una contratación concreta de plan, membresía o reserva; como máximo un origen |
+| Egreso | Categoría, concepto, monto y medio; destinatario de texto opcional bajo demanda; no crea cuentas para proveedores |
 | Devolución | Categoría de egreso independiente, sin reescribir ingreso ni origen comercial |
 | Aporte/Retiro | Concepto y monto, exclusivamente efectivo; no se cuentan como ingreso/gasto operativo |
 
 Los medios son Efectivo, Transferencia, Tarjeta y QR. Los no efectivos exigen referencia y verificación manual. Egresos y retiros en efectivo no pueden superar el disponible. La fecha la asigna el servidor, sin carga retroactiva o futura.
+
+Al vincular un ingreso, la categoría se determina por el tipo de origen y se muestra sin selector editable. Sin vínculo, el administrador elige la categoría. La categoría agrupa los cobros y el vínculo conserva el registro concreto pagado.
 
 El ingreso puede ser parcial y pueden existir varios por origen, sin comparar el acumulado con el precio aplicado. No admite nuevos cobros vinculados a contrataciones o reservas Anuladas. El reenvío se identifica por UUID de operación; no duplica movimientos ni acepta contenido distinto para el mismo identificador.
 
@@ -666,7 +668,7 @@ Cerrar caja presenta esperado, contado no negativo, diferencia y motivo obligato
 
 ### 13.3 Historial y cobros comerciales
 
-El historial filtra sesiones por apertura y estado y movimientos por momento de registro, sesión, clase, medio y estado. El detalle muestra concepto, monto, medio, referencia, categoría/destinatario, origen, responsable, fecha y anulación. Se distingue la consulta de movimientos Vigentes de la reconstrucción al cierre, incluidas anulaciones posteriores y sesiones que atraviesan medianoche.
+El historial filtra sesiones por apertura y estado y movimientos por momento de registro, sesión, clase, categoría, medio y estado. Los ingresos se resumen por categoría. El detalle muestra concepto, monto, medio, referencia, categoría/destinatario, origen, responsable, fecha y anulación. Se distingue la consulta de movimientos Vigentes de la reconstrucción al cierre, incluidas anulaciones posteriores y sesiones que atraviesan medianoche.
 
 Desde contrataciones y reservas se consultan los ingresos Vigentes vinculados como información separada del importe aplicado. Al registrar un cobro de contratación se muestran producto, mes, precio_aplicado y cobros anteriores, sin sustituir el precio por el del catálogo actualizado. El concepto permite explicar un parcial o acuerdo excepcional sobre el dinero recibido sin alterar el precio confirmado; las observaciones de contratación conservan acuerdos generales. No se deduce que el cobro complete lo acordado ni se calcula deuda. Registrar cobro se revela sólo al administrador que puede operar su sesión y cuando el origen lo permite. El titular consulta sus cobros sin acceso a caja o movimientos ajenos; el invitado no accede a cobros de la reserva.
 
