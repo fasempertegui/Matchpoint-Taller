@@ -156,6 +156,10 @@ class Reserva(models.Model):
         validators=[MinValueValidator(Decimal("0.01"))], null=True, blank=True,
     )
     anulada_por_organizador = models.BooleanField(blank=True, null=True)
+    reprogramada_desde = models.OneToOneField(
+        "self", on_delete=models.PROTECT, related_name="reemplazo",
+        null=True, blank=True,
+    )
 
     membresia_usuario = models.ForeignKey("membresias.MembresiaUsuario", on_delete=models.PROTECT, related_name="reservas_aplicadas", null=True, blank=True)
     precio_invitado_aplicado = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0"))], null=True, blank=True)
@@ -173,6 +177,10 @@ class Reserva(models.Model):
         ordering = ("-evento__creado_en", "-pk")
         default_permissions = ("add", "view")
         constraints = [
+            models.CheckConstraint(
+                condition=~models.Q(reprogramada_desde=models.F("pk")),
+                name="reserva_origen_distinto",
+            ),
             models.CheckConstraint(condition=(
                 models.Q(membresia_usuario__isnull=True, precio_por_turno_aplicado__isnull=False,
                          precio_por_turno_aplicado__gte=Decimal("0.01"), precio_invitado_aplicado__isnull=True, computa_hora_membresia=False)

@@ -12,7 +12,7 @@
 {% block contenido %}
 <header class="tarjeta encabezado-pagina">
     <h1>Agenda</h1>
-    {% if es_administrador and agenda.columnas %}
+    {% if es_administrador and agenda.columnas and not origen %}
         <div class="acciones">
             {% if agenda.fecha >= agenda.hoy %}
                 <a class="boton boton-primario" data-agenda-acciones="dia" href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{% if panel_acciones and not panel_acciones_mes %}true{% else %}false{% endif %}">Acciones del día</a>
@@ -22,8 +22,10 @@
     {% endif %}
 </header>
 
+{% if origen %}<section class="tarjeta"><h2>Reprogramar {{ origen.numero }}</h2><p>Organizador: <strong>{{ origen.organizador }}</strong>. Elegí un turno futuro dentro de los próximos tres días.</p><a href="{% url 'reservas:reserva_detalle' origen.pk %}">Cancelar reprogramación</a></section>{% endif %}
 {% if hay_sedes %}
     <form class="tarjeta tarjeta-busqueda agenda-controles" method="get" data-agenda-filtros>
+        {% if origen %}<input type="hidden" name="origen" value="{{ origen.pk }}">{% endif %}
         <div class="grupo-campo">
             <label for="{{ formulario.sede.id_for_label }}">Sede</label>
             {{ formulario.sede }}

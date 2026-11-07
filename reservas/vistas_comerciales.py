@@ -19,6 +19,7 @@ from usuarios.models import Rol, Usuario
 from .comercial import (
     _leer, actualizar_socios, coberturas, confirmar_reserva, gestionar_invitados,
     inicio_reserva, preparar_reserva, registrar_resultado, responder_invitacion, usos_del_mes, version_resultado,
+    validar_origen_reprogramacion,
 )
 from .forms import InvitadosReservaForm, OrganizadorReservaForm, ResultadoReservaForm, TurnoReservaForm, UsoMembresiaForm
 from .models import Evento, Reserva, ReservaInvitado
@@ -31,8 +32,23 @@ from .views import _obtener_reserva_para_consulta
 @require_http_methods(["GET", "POST"])
 def crear_reserva(request):
     administrador = exigir_acceso_reservas(request.user)
+    origen = None
+    if "origen" in request.GET:
+        if not administrador:
+            raise PermissionDenied
+        origen_id = request.GET.get("origen", "")
+        origen = get_object_or_404(
+            Reserva.objects.select_related("organizador", "evento"),
+            pk=origen_id if origen_id.isdecimal() else None,
+        )
+        try:
+            validar_origen_reprogramacion(origen)
+        except ValidationError as error:
+            messages.error(request, error.messages[0])
+            return redirect("reservas:reserva_detalle", pk=origen.pk)
     turno_form = TurnoReservaForm(request.GET)
-    contexto = {"titulo": "Nueva reserva", "turno_form": turno_form, "administrador": administrador}
+    contexto = {"titulo": "Reprogramar reserva" if origen else "Nueva reserva", "turno_form": turno_form, "administrador": administrador, "origen": origen}
+    contexto["url_cancelar"] = reverse("reservas:reserva_detalle", args=[origen.pk]) if origen else reverse("agenda:agenda")
     if not turno_form.is_valid():
         return render(request, "reservas/reserva_crear.html", contexto)
     turno = turno_form.cleaned_data
@@ -40,19 +56,26 @@ def crear_reserva(request):
     contexto["hora"] = time(turno["hora"])
     paso = request.POST.get("paso", "")
     datos = request.POST if request.method == "POST" else None
+    if origen and datos is None:
+        datos = {
+            "invitados": list(origen.invitados.filter(estado="vigente").exclude(respuesta="negativa").values_list("usuario_id", flat=True)),
+            "observaciones": origen.evento.observaciones,
+        }
     revisada = None
     if paso in ("confirmar", "editar"):
         try:
             revisada = _leer(request.user, request.POST.get("confirmacion"), "crear")["datos"]
             if any(str(revisada[campo]) != str(valor) for campo, valor in {"cancha": turno["cancha"].pk, "fecha": turno["fecha"].isoformat(), "hora": turno["hora"]}.items()):
                 raise ValidationError("El turno cambió. Revisá nuevamente.")
+            if revisada.get("origen") != (origen.pk if origen else None):
+                raise ValidationError("La reserva de origen cambió. Revisá nuevamente.")
             datos = revisada
         except ValidationError as error:
             messages.error(request, error.messages[0])
             datos, paso = None, ""
     organizador_form = OrganizadorReservaForm(datos) if administrador else None
-    organizador = request.user if not administrador else None
-    if administrador:
+    organizador = origen.organizador if origen else request.user if not administrador else None
+    if administrador and origen is None:
         contexto["organizador_form"] = organizador_form
         if organizador_form.is_bound and organizador_form.is_valid():
             organizador = organizador_form.cleaned_data["organizador"]
@@ -81,6 +104,8 @@ def crear_reserva(request):
             "hora": turno["hora"], "modalidad": modalidad,
             "invitados": [u.pk for u in formulario.cleaned_data["invitados"]], "observaciones": formulario.cleaned_data["observaciones"],
         }
+        if origen:
+            seleccion["origen"] = origen.pk
         try:
             if paso == "confirmar" and revisada is not None:
                 reserva = confirmar_reserva(request.user, request.POST.get("confirmacion"), coordenadas={"cancha": turno["cancha"].pk, "fecha": turno["fecha"].isoformat(), "hora": turno["hora"]})

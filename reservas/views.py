@@ -54,7 +54,7 @@ def _obtener_reserva_para_consulta(usuario, pk, *, solo_organizador=False):
 
 
 def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=None):
-    from .comercial import inicio_reserva
+    from .comercial import inicio_reserva, validar_origen_reprogramacion
     ahora = timezone.localtime()
     try:
         validar_anulacion_reserva(reserva, es_administrador, ahora)
@@ -72,7 +72,17 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
             pass
         else:
             puede_finalizar = True
+    puede_reprogramar = False
+    if es_administrador:
+        try:
+            validar_origen_reprogramacion(reserva)
+        except ValidationError:
+            pass
+        else:
+            puede_reprogramar = True
     return {
+        "puede_reprogramar": puede_reprogramar,
+        "reemplazo": Reserva.objects.filter(reprogramada_desde=reserva).first(),
         "reserva": reserva,
         "turno": reserva.evento.turno,
         "total": reserva.total,

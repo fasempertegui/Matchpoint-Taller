@@ -434,3 +434,15 @@ La consulta propia y administrativa admite mes o rango de hasta 366 días inclus
 
 
 La revisión visual en navegador permanece pendiente. Las pruebas automatizadas requieren autorización expresa del usuario.
+
+## Reprogramación de reservas
+
+La administración puede reprogramar una reserva Anulada por administración que no tenga reemplazo directo. Desde el detalle elige destino en Agenda, conservando el contexto al cambiar sede, fecha o turno. La selección ofrece únicamente continuar al alta del reemplazo. El organizador queda fijado al del origen; modalidad, invitados y observaciones se revisan para el destino.
+
+El alta aplica ventana de tres días, inicio futuro, cupo conjunto de dos, disponibilidad, cobertura y precios vigentes del destino. La revisión firmada identifica el origen y la selección. La confirmación bloquea personas y origen, revalida elegibilidad y crea evento, reserva, invitados y vínculo juntos. La unicidad del vínculo protege contra reemplazos duplicados. La base impide el vínculo a sí misma y protege el origen contra eliminación.
+
+La nueva reserva tiene sus propias invitaciones Pendientes. La cancelación administrativa libera la hora del origen; el reemplazo con membresía utiliza una hora del mes nuevo con su cobertura y saldo. Cada reserva conserva estados, importes, comprobante e historia propios, sin trasladar cobros ni generar devoluciones.
+
+Los detalles del organizador y de administración enlazan el origen y el reemplazo inmediato. Una reserva de reemplazo anulada administrativamente puede tener su propio sucesor, formando una cadena. El invitado conserva la consulta privada de su participación.
+
+Verificación funcional en consola y HTTP con transacción revertida: Agenda, revisión, Atrás, confirmación, titular fijo, modalidades, liberación y nuevo consumo, respuestas Pendientes, cadena, privacidad, comprobantes independientes, destino ocupado, reenvío y rechazos por origen propio, actor no administrativo, cambio de organizador y fecha fuera de ventana. Controles de Django, coincidencia de modelos y migraciones y carga de plantillas sin errores. La revisión visual en navegador permanece pendiente.
