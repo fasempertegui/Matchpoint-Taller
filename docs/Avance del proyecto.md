@@ -270,7 +270,7 @@ Las cuentas autenticadas, activas y sin cambio de contraseña pendiente consulta
 
 El listado permite elegir Planes o Membresías, buscar por nombre del producto, filtrar por mes y estado y navegar de a veinticinco resultados. La selección de tipo permanece disponible incluso en estados vacíos. Si sólo hay membresías y no se elige un tipo, se muestran por defecto. La búsqueda, los filtros, la paginación y su limpieza conservan el tipo seleccionado. Muestra producto, mes cubierto, importe aplicado y estado con texto. Sin contrataciones propias presenta un estado vacío breve. Se consultan estados Activo, Anulado y Vencido sin excluir productos Inactivos del catálogo.
 
-El detalle muestra producto y configuración comercial, mes y período completo, importe aplicado, estado, fecha efectiva de alta, fecha de registro y fecha de anulación cuando corresponde. No presenta observaciones internas, motivo libre de anulación ni responsables administrativos. No enlaza al catálogo administrativo ni a fichas de otros usuarios y no incluye alta, edición, anulación o cobro. Los cobros tienen su bloque funcional correspondiente.
+El detalle muestra producto y configuración comercial, mes y período completo, importe aplicado, estado, fecha efectiva de alta, fecha de registro y fecha de anulación cuando corresponde. No presenta observaciones internas, motivo libre de anulación ni responsables administrativos. No enlaza al catálogo administrativo ni a fichas de otros usuarios. Ofrece renovar el mismo plan cuando la referencia y el mes están habilitados; la contratación de membresía se solicita desde Mis contrataciones. La edición, anulación y cobro conservan sus permisos y recorridos administrativos. Los cobros tienen su bloque funcional correspondiente.
 
 Las rutas propias sólo admiten GET y comprueban nuevamente la cuenta habilitada en el servidor. Todas las consultas se restringen al identificador de la cuenta autenticada antes de obtener los registros; ningún filtro permite sustituir al titular. Solicitar una contratación ajena por su número devuelve no encontrado, también para un administrador que utiliza una ruta propia. La consulta no registra auditoría ni modifica estados o roles. Las rutas administrativas mantienen sus controles independientes.
 
@@ -321,7 +321,7 @@ Verificación realizada: instalación limpia en base temporal, controles de Djan
 
 ## Consulta de oferta de membresías
 
-La oferta incorpora membresías de socios en el catálogo compartido de lectura, con búsqueda por nombre o descripción, paginación y descripciones extensas bajo demanda. Limpiar búsqueda conserva el catálogo consultado. La navegación entre Planes, Membresías y Tarifas usa enlaces con sección actual accesible, sin controles administrativos ni contratación propia hasta su entrega correspondiente.
+La oferta incorpora membresías de socios en el catálogo compartido de lectura, con búsqueda por nombre o descripción, paginación y descripciones extensas bajo demanda. Limpiar búsqueda conserva el catálogo consultado. La navegación entre Planes, Membresías y Tarifas usa enlaces con sección actual accesible, sin controles administrativos. Membresías ofrece un acceso único a Contratar membresía, con selección y revisión en su recorrido propio.
 
 Verificación realizada: controles de Django, carga de 84 plantillas y revisión de diferencias. Revisión manual pendiente de las pestañas, búsquedas, paginación, descripción, importes cero, productos Inactivos, estados vacíos, permisos, teclado y móvil. No se crean ni ejecutan pruebas automatizadas.
 
@@ -380,7 +380,7 @@ Mis contrataciones ofrece planes y membresías del titular autenticado, sin requ
 
 Las consultas sólo admiten GET y filtran por el titular antes de localizar registros. Las rutas de detalle y comprobante fijan el tipo en el servidor. Agregar parámetros de otro usuario no amplía el alcance. Una contratación ajena devuelve no encontrado y el intento se registra mediante la auditoría de accesos, con el mismo criterio de planes. Las consultas autorizadas no modifican contratos ni roles.
 
-El detalle y el comprobante muestran producto, período, horas de membresía o configuración del plan, importe aplicado, estado y fechas. No presentan responsables, observaciones internas, motivo libre de anulación, enlaces administrativos ni acciones de edición o anulación. Usos, cobros y contratación propia tienen sus entregas correspondientes.
+El detalle y el comprobante muestran producto, período, horas de membresía o configuración del plan, importe aplicado, estado y fechas. No presentan responsables, observaciones internas, motivo libre de anulación, enlaces administrativos ni acciones de edición o anulación. Usos y cobros tienen sus entregas correspondientes. La contratación propia y la renovación se solicitan mediante sus accesos bajo demanda.
 
 Verificación realizada: controles de Django, coincidencia de modelos y migraciones y carga de 84 plantillas. Revisión manual pendiente del bloque 2.6: titular y terceros, Profesor sin Alumno, administrador consultando sus propios contratos, ambos tipos y estados, productos Inactivos, filtros, paginación, estados vacíos y privacidad de detalle y comprobante. No se crean ni ejecutan pruebas automatizadas.
 
@@ -395,6 +395,29 @@ Las operaciones bloquean las cuentas por identificador y después el producto; l
 
 La revisión firmada identifica actor, titular, producto, importe y momento de modificación del producto. Para los servicios propios incluye además el mes y, al renovar un plan, la referencia y su momento de modificación. Cambiar selección, producto, precio o referencia exige otra revisión. La firma de una revisión administrativa no confirma una contratación propia ni la de otro tipo de producto.
 
-El registro conserva estados Activo, Anulado y Vencido, responsable real, importes e historia. Contratar no genera clases, asignaciones, usos ni cobros; tampoco registra solicitudes, encuestas o aprobaciones. Las pantallas propias de contratación y renovación se integran en 2.8 y 2.9, con entradas bajo demanda.
+El registro conserva estados Activo, Anulado y Vencido, responsable real, importes e historia. Contratar no genera clases, asignaciones, usos ni cobros; tampoco registra solicitudes, encuestas o aprobaciones. Las pantallas propias de contratación y renovación se abren bajo demanda desde Mis contrataciones y Oferta.
 
 Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de 84 plantillas y revisión de permisos, firma, bloqueos y escrituras. Revisión manual pendiente del bloque 2.7: días 24/25, cambio de año, cambios durante la revisión, reenvío, alta administrativa concurrente, roles y conservación de importes. No se crean ni ejecutan pruebas automatizadas.
+
+
+## Contratar membresía propia y renovar el mismo plan
+
+Mis contrataciones ofrece Contratar membresía; Oferta incluye el mismo acceso en el catálogo de membresías. El formulario solicita producto Activo, mes actual completo o siguiente habilitado desde el día 25 de Salta y observaciones opcionales. No solicita titular, responsable, fecha efectiva ni precio. El servicio fija esos datos desde la cuenta autenticada y el servidor. Profesor puede contratar membresía, sin exigir Alumno ni cobro previo.
+
+El detalle propio de un plan ofrece Renovar el mismo plan cuando el titular conserva Alumno, no tiene Profesor, la referencia no está Anulada, el producto está Activo y el mes siguiente a la referencia está habilitado y no tiene otra contratación no Anulada. El recorrido conserva producto y mes; sólo permite observaciones opcionales. Una referencia ajena no se muestra. Un enlace directo a una referencia o período no habilitado presenta el impedimento y la vuelta a Mis contrataciones, sin formulario de confirmación.
+
+Ambos recorridos separan selección y revisión. La revisión presenta titular, producto, configuración, período completo e importe mensual definitivo; en membresías muestra horas y adicional vigente por invitado no socio. Las observaciones se presentan escapadas. Aclara que los cobros se gestionan en la sede y que confirmar no registra pagos ni asigna horarios o clases. Atrás recupera la selección y observaciones; Cancelar no registra nada.
+
+La confirmación usa una revisión firmada de quince minutos que identifica titular, operación, selección, observaciones y revisión de precio y condiciones. En planes incluye la referencia. Los campos adicionales enviados no sustituyen identidad, producto de renovación, mes o precio de la revisión. El servicio revalida cuenta, producto, precio, período, referencia y exclusividad bajo bloqueos. Las condiciones cambiadas obligan a revisar de nuevo; una contratación existente se ofrece como consulta, sin sobrescribirla ni presentar otro producto como confirmado.
+
+El éxito abre el detalle propio con estado, importe aplicado y comprobante. Las anulaciones y reemplazos son administrativos. La membresía cubre su mes calendario; las aplicaciones a reservas y los usos conservados se integran en sus entregas correspondientes, sin reiniciar ni eliminar historia comercial. No hay cambios automáticos de programación ni cobros.
+
+## Seguimiento de contrataciones desde la plantilla
+
+Consultar contrataciones, desde la planilla semanal, abre una consulta administrativa con la sede y cancha consultadas y el mes actual por defecto. Permite elegir mes desde el inicio operativo hasta el siguiente al actual, incluso antes de habilitar sus altas; el mes identifica la consulta comercial. La plantilla conserva una única programación semanal actual.
+
+El listado agrupa una fila por participante de la cancha, con sus horarios previstos desplegables, plan no Anulado del mes anterior y del elegido, o Sin contratación. Mantiene contrataciones Vencidas y omite Anuladas. Señala Producto distinto al mes anterior cuando ambos períodos tienen planes diferentes. La búsqueda por persona, el filtro Sólo sin contratación y la paginación de veinticinco filas conservan el alcance consultado. Los totales distinguen personas previstas y sin contratación del mes.
+
+Una fila permite consultar el contrato actual o registrar un plan si la cuenta y el mes admiten alta. El enlace de alta conserva persona y mes, y el acceso a cada horario conduce a su gestión administrativa. Profesores, cuentas Inactivas y meses todavía no habilitados no muestran una acción de registro de plan. La consulta incorpora participaciones de prueba y no interpreta Sin contratación como baja, deuda o falta de pago. No modifica plantilla, clases concretas, roles, contratos, respuestas ni cobros y no ofrece retiros automáticos o en lote.
+
+Verificación realizada para 2.8–2.10: controles de Django, coincidencia de modelos y migraciones, carga de 86 plantillas y revisión de rutas, permisos, firma, conservación de selección y condiciones de las acciones. Queda pendiente la revisión manual de los recorridos en navegador: altas y renovaciones, Atrás y Cancelar, cambios de precio o referencia, días 24/25 y cambio de mes, duplicados, cuenta ajena, roles, comprobante, filtros y alcance de plantilla. No se crean ni ejecutan pruebas automatizadas.

@@ -4,7 +4,10 @@ from django.utils import formats, timezone
 from common.fechas import FECHA_INICIO_OPERACIONES
 from usuarios.models import Rol, Usuario
 
-from .fechas import meses_contratables, validar_fecha_alta, validar_mes_contratacion
+from .fechas import (
+    meses_contratables, meses_contratables_propios, validar_fecha_alta,
+    validar_mes_contratacion, validar_mes_contratacion_propia,
+)
 from .models import Membresia, Plan
 
 
@@ -137,3 +140,42 @@ class SeleccionContratacionMembresiaForm(SeleccionContratacionPlanForm):
 class ContratacionMembresiaForm(ContratacionPlanForm):
     plan = None
     membresia = forms.IntegerField(widget=forms.HiddenInput())
+
+
+class ContratacionMembresiaPropiaForm(forms.Form):
+    membresia = forms.ModelChoiceField(
+        label="Membresía", queryset=Membresia.objects.none(), empty_label="Seleccioná una membresía",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    mes_cubierto = forms.DateField(
+        label="Mes cubierto", widget=forms.Select(attrs={"class": "form-control"}),
+        help_text="El mes siguiente se habilita desde el día 25 inclusive. Se cubre el mes completo.",
+    )
+    observaciones = forms.CharField(
+        label="Observaciones", required=False,
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["membresia"].queryset = Membresia.objects.filter(estado=Membresia.Estado.ACTIVO)
+        self.fields["mes_cubierto"].widget.choices = [
+            (mes.isoformat(), formats.date_format(mes, "F Y").capitalize())
+            for mes in meses_contratables_propios()
+        ]
+
+    def clean_mes_cubierto(self):
+        mes = self.cleaned_data["mes_cubierto"]
+        validar_mes_contratacion_propia(mes)
+        return mes
+
+
+class RenovacionPlanPropioForm(forms.Form):
+    observaciones = forms.CharField(
+        label="Observaciones", required=False,
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+    )
+
+
+class ConfirmacionContratacionPropiaForm(forms.Form):
+    revision = forms.CharField(widget=forms.HiddenInput())

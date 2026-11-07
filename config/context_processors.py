@@ -20,7 +20,7 @@ def navegacion(request):
     perfil_activo = namespace == "usuarios" and ruta.kwargs.get("pk") == usuario.pk
     contrataciones_propias_activo = namespace == "membresias" and ruta.url_name in (
         "mis_contrataciones", "mi_plan_contratado", "mi_membresia_contratado",
-        "mi_plan_comprobante", "mi_membresia_comprobante",
+        "mi_plan_comprobante", "mi_membresia_comprobante", "contratar_membresia", "renovar_plan",
     )
 
     def enlace(nombre, destino, activo, descripcion, kwargs=None):

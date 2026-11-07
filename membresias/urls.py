@@ -6,6 +6,8 @@ app_name = "membresias"
 
 urlpatterns = [
     path("mis-contrataciones/", vistas_propias.mis_contrataciones, name="mis_contrataciones"),
+    path("mis-contrataciones/contratar-membresia/", vistas_propias.contratar_membresia, name="contratar_membresia"),
+    path("mis-contrataciones/planes/<int:pk>/renovar/", vistas_propias.renovar_plan, name="renovar_plan"),
     path("mis-contrataciones/planes/<int:pk>/", vistas_propias.contratacion_propia_detalle, name="mi_plan_contratado"),
     path("mis-contrataciones/planes/<int:pk>/comprobante/", vistas_propias.contratacion_propia_comprobante, name="mi_plan_comprobante"),
     path("mis-contrataciones/membresias/<int:pk>/", vistas_propias.contratacion_propia_detalle, {"tipo": "membresia"}, name="mi_membresia_contratado"),

@@ -3,12 +3,14 @@ from datetime import time
 
 from django import forms
 from django.db.models import Q
+from django.utils import formats
 
 from bloqueos.models import Bloqueo
 from common.fechas import (
     FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_feriados, fecha_maxima_eventos, opciones_meses_agenda, validar_inicio_evento,
 )
 from instalaciones.models import Cancha, Sede
+from membresias.fechas import meses_contratables
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
@@ -263,3 +265,25 @@ class GeneracionClasesForm(forms.Form):
             datos["fecha_hasta"] = mes.replace(day=monthrange(mes.year, mes.month)[1])
             validar_periodo_generacion(datos["fecha_desde"], datos["fecha_hasta"])
         return datos
+
+
+class SeguimientoContratacionesForm(PlanillaFiltroForm):
+    mes = forms.DateField(label="Mes", widget=forms.Select(attrs={"class": "form-control"}))
+    q = forms.CharField(
+        label="Buscar persona", required=False, max_length=150,
+        widget=forms.TextInput(attrs={"class": "form-control", "type": "search"}),
+    )
+    solo_sin = forms.BooleanField(label="Sólo sin contratación", required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.meses = meses_contratables(incluir_mes_siguiente=True)
+        self.fields["mes"].widget.choices = [
+            (mes.isoformat(), formats.date_format(mes, "F Y").capitalize()) for mes in self.meses
+        ]
+
+    def clean_mes(self):
+        mes = self.cleaned_data["mes"]
+        if mes not in self.meses:
+            raise forms.ValidationError("Elegí un mes del calendario operativo disponible.")
+        return mes

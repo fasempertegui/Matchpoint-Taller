@@ -156,23 +156,23 @@ def registrar_contratacion_membresia(
 
 
 @transaction.atomic
-def contratar_membresia_propia(actor, *, membresia_id, mes_cubierto, revision_precio):
+def contratar_membresia_propia(actor, *, membresia_id, mes_cubierto, revision_precio, observaciones=""):
     titular = _bloquear_titular_propio(actor)
     return _registrar_contratacion(
         titular, titular, modelo=MembresiaUsuario, producto_id=membresia_id, mes_cubierto=mes_cubierto,
-        fecha_alta=timezone.localdate(), revision_precio=revision_precio, propia=True,
+        fecha_alta=timezone.localdate(), revision_precio=revision_precio, observaciones=observaciones, propia=True,
     )
 
 
 @transaction.atomic
-def renovar_plan_propio(actor, *, referencia_id, mes_cubierto, revision_precio):
+def renovar_plan_propio(actor, *, referencia_id, mes_cubierto, revision_precio, observaciones=""):
     titular = _bloquear_titular_propio(actor)
     referencia = PlanUsuario.objects.filter(pk=referencia_id, usuario=titular).first()
     if referencia is None:
         raise ValidationError("Elegí una contratación propia para renovar el mismo plan.")
     return _registrar_contratacion(
         titular, titular, modelo=PlanUsuario, producto_id=referencia.plan_id, mes_cubierto=mes_cubierto,
-        fecha_alta=timezone.localdate(), revision_precio=revision_precio, propia=True, referencia_id=referencia_id,
+        fecha_alta=timezone.localdate(), revision_precio=revision_precio, observaciones=observaciones, propia=True, referencia_id=referencia_id,
     )
 
 

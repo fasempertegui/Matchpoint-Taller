@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+{% block titulo %}Contrataciones de la plantilla | Academia TM{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina">
+    <h1>Contrataciones de la plantilla</h1>
+    {% if url_planilla %}<a class="boton boton-secundario" href="{{ url_planilla }}">Volver a la plantilla</a>{% endif %}
+</header>
+{% if hay_sedes %}
+<form class="tarjeta tarjeta-busqueda filtros-compactos" method="get">
+    {% for campo in formulario %}
+        <div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
+    {% endfor %}
+    <button class="boton boton-secundario" type="submit">Consultar</button>
+</form>
+{% if cancha %}
+    <section class="tarjeta">
+        <h2>{{ cancha.sede.nombre }} · {{ cancha.nombre }} · {{ mes|date:"F Y" }}</h2>
+        <p>{{ total_personas }} persona{{ total_personas|pluralize:"s" }} prevista{{ total_personas|pluralize:"s" }} · {{ sin_contratacion }} sin contratación.</p>
+        <p class="texto-secundario">Los horarios son los previstos actualmente. Sin contratación no indica baja ni falta de pago; se conservan las participaciones de prueba y acuerdos fuera de un plan.</p>
+    </section>
+    <section class="tarjeta tabla-contenedor" aria-label="Contrataciones de personas previstas">
+        <table>
+            <thead><tr><th scope="col">Persona</th><th scope="col">Horarios previstos</th><th scope="col">{% if mes_anterior %}{{ mes_anterior|date:"F Y" }}{% else %}Mes anterior{% endif %}</th><th scope="col">{{ mes|date:"F Y" }}</th><th scope="col">Acción</th></tr></thead>
+            <tbody>
+                {% for fila in pagina %}
+                <tr>
+                    <td><strong>{{ fila.usuario }}</strong><br><span class="texto-secundario">@{{ fila.usuario.username }}</span></td>
+                    <td><details><summary>{{ fila.horarios|length }} horario{{ fila.horarios|length|pluralize:"s" }}</summary><ul>{% for horario in fila.horarios %}<li><a href="{% url 'clases:planilla_detalle' horario.pk %}">{{ horario.get_dia_semana_display }} {{ horario.hora_inicio|time:"H:i" }}</a></li>{% endfor %}</ul></details></td>
+                    <td>{% if fila.anterior %}<a href="{% url 'membresias:contratacion_plan_detalle' fila.anterior.pk %}">{{ fila.anterior.plan.nombre }}</a>{% elif mes_anterior %}Sin contratación{% else %}—{% endif %}</td>
+                    <td>{% if fila.contrato %}{{ fila.contrato.plan.nombre }}{% if fila.producto_distinto %}<br><span class="texto-secundario">Producto distinto al mes anterior</span>{% endif %}{% else %}Sin contratación{% endif %}</td>
+                    <td>{% if fila.contrato %}<a class="boton boton-secundario boton-chico" href="{% url 'membresias:contratacion_plan_detalle' fila.contrato.pk %}">Ver contratación</a>{% elif fila.url_alta %}<a class="boton boton-secundario boton-chico" href="{{ fila.url_alta }}">Registrar plan</a>{% else %}—{% endif %}</td>
+                </tr>
+                {% empty %}<tr><td colspan="5" class="estado-vacio">No hay personas que coincidan con la consulta.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% if pagina.paginator.num_pages > 1 %}<nav class="acciones" aria-label="Páginas de seguimiento">
+        {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?{{ consulta }}&amp;pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+        <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+        {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?{{ consulta }}&amp;pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+    </nav>{% endif %}
+{% endif %}
+{% else %}<p class="tarjeta estado-vacio">No hay sedes registradas.</p>{% endif %}
+{% endblock %}

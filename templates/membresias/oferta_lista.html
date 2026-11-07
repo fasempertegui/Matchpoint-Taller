@@ -7,6 +7,7 @@
 {% url ruta_catalogo as url_catalogo %}
 <header class="oferta-catalogo-encabezado">
     <h1>{{ titulo }}</h1>
+    {% if tipo == 'membresia' %}<a class="boton boton-secundario" href="{% url 'membresias:contratar_membresia' %}">Contratar membresía</a>{% endif %}
     {% if pagina or busqueda %}
         <form class="oferta-buscador" method="get" role="search" aria-label="Buscar en el catálogo" data-filtros-automaticos>
             <div class="oferta-buscador-campo">

@@ -6,6 +6,7 @@
 <header class="tarjeta encabezado-pagina">
     <h1>Planilla semanal</h1>
     {% if cancha %}<div class="acciones">
+        <a class="boton boton-secundario" href="{% url 'clases:planilla_contrataciones' %}?sede={{ cancha.sede_id }}&amp;cancha={{ cancha.pk }}">Consultar contrataciones</a>
         <a class="boton boton-secundario" href="{% url 'clases:generacion_clases' %}?sede={{ cancha.sede_id }}&amp;cancha={{ cancha.pk }}">Generar clases</a>
     </div>{% endif %}
 </header>

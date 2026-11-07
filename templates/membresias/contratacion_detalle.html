@@ -61,6 +61,12 @@
                     <a class="boton boton-secundario boton-chico" href="{% url ruta_comprobante contratacion.pk %}">Ver comprobante</a>
                 </div>
             </section>
+            {% if propias and puede_renovar %}
+                <section class="perfil-seccion" aria-labelledby="contratacion-renovacion-titulo">
+                    <h2 id="contratacion-renovacion-titulo">Renovación</h2>
+                    <a class="boton boton-secundario boton-chico" href="{% url 'membresias:renovar_plan' contratacion.pk %}">Renovar el mismo plan</a>
+                </section>
+            {% endif %}
             {% if not propias and ruta_anular and contratacion.estado == 'activo' %}
                 <section class="perfil-seccion" aria-labelledby="contratacion-administracion-titulo">
                     <h2 id="contratacion-administracion-titulo">Administración</h2>

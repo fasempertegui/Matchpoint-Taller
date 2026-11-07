@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, vistas_feriados, vistas_generacion, vistas_planilla
+from . import views, vistas_feriados, vistas_generacion, vistas_planilla, vistas_seguimiento
 
 app_name = "clases"
 
@@ -11,6 +11,7 @@ urlpatterns = [
     path("feriados/registrar/", vistas_feriados.feriado_registrar, name="feriado_registrar"),
     path("feriados/<int:pk>/", vistas_feriados.feriado_detalle, name="feriado_detalle"),
     path("planilla/", vistas_planilla.planilla, name="planilla"),
+    path("planilla/contrataciones/", vistas_seguimiento.seguimiento_contrataciones, name="planilla_contrataciones"),
     path("planilla/agregar/", vistas_planilla.planilla_formulario, name="planilla_crear"),
     path("planilla/<int:pk>/", vistas_planilla.planilla_detalle, name="planilla_detalle"),
     path("planilla/<int:pk>/editar/", vistas_planilla.planilla_formulario, name="planilla_editar"),
