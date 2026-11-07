@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "clases.apps.ClasesConfig",
     "agenda.apps.AgendaConfig",
     "membresias.apps.MembresiasConfig",
+    "caja.apps.CajaConfig",
 ]
 
 MIDDLEWARE = [

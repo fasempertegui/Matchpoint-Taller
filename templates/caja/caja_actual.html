@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titulo %}Caja | Academia TM{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina"><h1>Caja</h1></header>
+<section class="tarjeta"><p>No hay una sesión abierta.</p>
+{% if ultimo_cierre %}<p>Último cierre: <a href="{% url 'caja:sesion_detalle' ultimo_cierre.pk %}">{{ ultimo_cierre.numero }}</a> · Efectivo contado: $ {{ ultimo_cierre.efectivo_contado|floatformat:"2g" }}</p>{% endif %}
+<a class="boton boton-primario" href="{% url 'caja:caja_abrir' %}">Abrir caja</a></section>
+{% endblock %}

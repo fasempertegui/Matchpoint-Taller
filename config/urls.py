@@ -25,6 +25,7 @@ urlpatterns = [
     path('reservas/', include('reservas.urls')),
     path('agenda/', include('agenda.urls')),
     path('clases/', include('clases.urls')),
+    path('caja/', include('caja.urls')),
     path('auditoria/', include('auditoria.urls')),
     path('membresias/', include('membresias.urls')),
     path('', views.inicio, name='inicio'),

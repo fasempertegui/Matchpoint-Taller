@@ -74,6 +74,8 @@ def navegacion(request):
             "Feriados", "clases:feriado_lista", feriados_activo,
             "Consulta y gestión de feriados.",
         ))
+    if administrador:
+        administracion.append(enlace("Caja", "caja:caja_actual", namespace == "caja", "Apertura, consulta y cierre de la sesión de caja."))
     auditoria = enlace(
         "Auditoría", "auditoria:auditoria_lista", namespace == "auditoria",
         "Historial de operaciones y consulta de sus valores anteriores y actuales.",

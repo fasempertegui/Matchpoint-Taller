@@ -8,6 +8,7 @@ from django.utils.dateparse import parse_date
 
 from agenda.servicios import enlace_agenda
 from bloqueos.models import Bloqueo
+from caja.models import SesionCaja
 from clases.models import (
     Asistencia, Clase, ClaseAlumno, ClaseProfesor, Feriado, TurnoPlanilla,
     TurnoPlanillaAlumno, TurnoPlanillaProfesor,
@@ -21,6 +22,7 @@ from .models import LogAuditoria
 
 
 TIPOS_REGISTRO = {
+    "sesiones_caja": (SesionCaja, "Sesión de caja", ("responsable",), "caja:sesion_detalle"),
     "usuarios": (Usuario, "Usuario", (), "usuarios:usuario_detalle"),
     "roles": (Rol, "Rol", (), None),
     "usuarios_roles": (UsuarioRol, "Rol de usuario", ("usuario", "rol"), None),
@@ -95,7 +97,7 @@ def _referencia_breve(objeto):
         return _referencia_breve(actividad)
     if isinstance(objeto, ReservaInvitado):
         return f"{objeto.reserva.numero} · {_relacion(objeto, 'usuario')}"
-    if isinstance(objeto, (Reserva, Bloqueo)):
+    if isinstance(objeto, (Reserva, Bloqueo, SesionCaja)):
         return objeto.numero
     if isinstance(objeto, Clase):
         return f"Clase #{objeto.pk}"
@@ -267,7 +269,7 @@ def _referencia_eliminada(registro, clave):
 def preparar_intentos(registros):
     modulos = {
         "usuarios": "Usuarios", "instalaciones": "Sedes y canchas", "clases": "Clases",
-        "reservas": "Reservas", "agenda": "Agenda", "membresias": "Membresías", "auditoria": "Auditoría",
+        "reservas": "Reservas", "agenda": "Agenda", "membresias": "Membresías", "caja": "Caja", "auditoria": "Auditoría",
     }
     filas = []
     for registro in registros:

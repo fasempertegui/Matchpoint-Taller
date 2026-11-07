@@ -446,3 +446,15 @@ La nueva reserva tiene sus propias invitaciones Pendientes. La cancelación admi
 Los detalles del organizador y de administración enlazan el origen y el reemplazo inmediato. Una reserva de reemplazo anulada administrativamente puede tener su propio sucesor, formando una cadena. El invitado conserva la consulta privada de su participación.
 
 Verificación funcional en consola y HTTP con transacción revertida: Agenda, revisión, Atrás, confirmación, titular fijo, modalidades, liberación y nuevo consumo, respuestas Pendientes, cadena, privacidad, comprobantes independientes, destino ocupado, reenvío y rechazos por origen propio, actor no administrativo, cambio de organizador y fecha fuera de ventana. Controles de Django, coincidencia de modelos y migraciones y carga de plantillas sin errores. La revisión visual en navegador permanece pendiente.
+
+## Sesiones de caja
+
+Caja permite abrir, consultar y cerrar una única sesión para toda la academia. El acceso exige Administrador activo sin cambio obligatorio de contraseña. El responsable queda fijado al abrir; otros administradores consultan sin operar ni cerrar. La navegación administrativa y el inicio ofrecen acceso a Caja.
+
+La apertura declara efectivo inicial no negativo y muestra el contado del último cierre como referencia. Si difiere, exige motivo; si coincide o es la primera apertura, el motivo queda vacío. La revisión firmada conserva actor y referencia del último cierre. La unicidad parcial de la base impide dos sesiones abiertas.
+
+El cierre bloquea actor y sesión, revalida responsabilidad y estado y guarda esperado, contado, diferencia, motivo y momento del servidor. Una diferencia exige explicación. La sesión cerrada conserva sus importes y no admite reapertura ni segundo cierre. Las pantallas muestran primero el estado y abren los formularios mediante acciones explícitas.
+
+En el bloque 5.1, el esperado corresponde al efectivo inicial. Los movimientos y su incorporación al cálculo corresponden a los bloques 5.2–5.5; historial con filtros y consulta de cobros corresponden a 5.6–5.7. La especificación de caja conserva ese alcance completo.
+
+La tabla sesiones_caja integra la auditoría transversal de modificaciones y anulaciones. La verificación manual en consola y HTTP abarcó apertura, segunda apertura rechazada, cierre con y sin diferencia, motivos, siguiente apertura, referencia vencida por otro cierre, importes negativos, responsable, consulta por otro administrador y cierre auditado. La transacción de revisión se revirtió sin conservar sesiones. Controles de Django, migraciones y carga de plantillas sin errores; la revisión visual en navegador queda pendiente.
