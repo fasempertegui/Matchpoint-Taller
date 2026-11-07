@@ -1,12 +1,13 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from .forms import ReservaAnulacionForm
-from .models import Reserva
+from .models import Evento, Reserva
 from .servicios import (
     anular_reserva,
     exigir_acceso_reservas,
@@ -20,31 +21,40 @@ from .servicios import (
 @require_http_methods(["GET"])
 def reserva_detalle(request, pk):
     reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk)
+    from .comercial import inicio_reserva
+    if not es_administrador and reserva.organizador_id != request.user.pk:
+        invitacion = reserva.invitados.get(usuario=request.user)
+        return render(request, "reservas/reserva_invitacion.html", {
+            "reserva": reserva, "invitacion": invitacion, "respuesta_texto": invitacion.respuesta_visible(inicio_reserva(reserva)),
+            "puede_responder": invitacion.estado == "vigente" and invitacion.respuesta_modificada_en is None
+                and reserva.evento.estado == Evento.Estado.PROGRAMADO and timezone.now() < inicio_reserva(reserva),
+        })
     return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador))
 
 
 @login_required
 @require_http_methods(["GET"])
 def reserva_comprobante(request, pk):
-    reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk)
+    reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk, solo_organizador=True)
     return render(request, "reservas/reserva_comprobante.html", {
         "reserva": reserva,
         "turno": reserva.evento.turno,
-        "total": reserva.precio_por_turno_aplicado,
+        "total": reserva.total,
     })
 
 
-def _obtener_reserva_para_consulta(usuario, pk):
+def _obtener_reserva_para_consulta(usuario, pk, *, solo_organizador=False):
     es_administrador = exigir_acceso_reservas(usuario)
     reservas = Reserva.objects.select_related(
         "organizador", "evento__registrado_por", "evento__anulado_por", "evento__turno__cancha__sede",
     )
     if not es_administrador:
-        reservas = reservas.filter(organizador=usuario)
+        reservas = reservas.filter(organizador=usuario) if solo_organizador else reservas.filter(Q(organizador=usuario) | Q(invitados__usuario=usuario)).distinct()
     return get_object_or_404(reservas, pk=pk), es_administrador
 
 
 def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=None):
+    from .comercial import inicio_reserva
     ahora = timezone.localtime()
     try:
         validar_anulacion_reserva(reserva, es_administrador, ahora)
@@ -65,7 +75,9 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
     return {
         "reserva": reserva,
         "turno": reserva.evento.turno,
-        "total": reserva.precio_por_turno_aplicado,
+        "total": reserva.total,
+        "invitados": [{"invitado": i, "respuesta_texto": i.respuesta_visible(inicio_reserva(reserva))} for i in reserva.invitados.select_related("usuario").order_by("usuario__last_name", "usuario__first_name")],
+        "puede_gestionar": reserva.evento.estado == Evento.Estado.PROGRAMADO and ahora < inicio_reserva(reserva),
         "puede_anular": puede_anular,
         "puede_finalizar": puede_finalizar,
         "es_administrador": es_administrador,
@@ -78,6 +90,8 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
 @require_http_methods(["POST"])
 def reserva_anular(request, pk):
     reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk)
+    if not es_administrador and reserva.organizador_id != request.user.pk:
+        raise PermissionDenied
     formulario = ReservaAnulacionForm(request.POST)
     if formulario.is_valid():
         try:
@@ -86,7 +100,7 @@ def reserva_anular(request, pk):
             formulario.add_error(None, error)
             reserva.refresh_from_db()
         else:
-            messages.success(request, f"La reserva {reserva.numero} fue anulada. Su turno quedó liberado.")
+            messages.success(request, f"La reserva {reserva.numero} fue anulada. El turno y el cupo Programado quedaron liberados.")
             return redirect("reservas:reserva_detalle", pk=reserva.pk)
     return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador, formulario))
 

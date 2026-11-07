@@ -14,6 +14,7 @@ from auditoria.models import LogAuditoria
 from clases.validaciones import validar_retiro_rol_profesor
 from membresias.contrataciones import validar_retiro_rol_alumno
 from reservas.models import Evento
+from common.disponibilidad import reservas_personales
 
 from .forms import (
     UsuarioBusquedaForm,
@@ -274,7 +275,7 @@ def usuario_gestionar_rol(request, pk, rol):
             return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
 
         if accion == "quitar":
-            if rol == Rol.RESERVAS and usuario.reservas.filter(evento__estado=Evento.Estado.PROGRAMADO).exists():
+            if rol == Rol.RESERVAS and reservas_personales(usuario.pk).exists():
                 messages.error(request, "No se puede quitar el rol Reservas mientras el usuario tenga reservas Programadas.")
                 return redirect(reverse("usuarios:usuario_detalle", args=[usuario.pk]) + "#roles")
             if rol in (Rol.PROFESOR, Rol.ALUMNO):

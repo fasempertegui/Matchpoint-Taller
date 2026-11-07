@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
 from common.fechas import validar_inicio_evento
+from common.bloqueos import bloquear_usuarios as bloquear_usuarios_clase
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Reserva, Turno
 from usuarios.models import Rol, Usuario
@@ -25,22 +26,6 @@ from .validaciones import (
     validar_horario_clase,
     validar_usuarios_clase,
 )
-
-
-def bloquear_usuarios_clase(usuarios_ids):
-    # La inactivación de cuentas también bloquea primero a los administradores activos.
-    list(
-        Usuario.objects.select_for_update(of=("self",))
-        .filter(pk__in=usuarios_ids, is_active=True, roles__rol__codigo=Rol.ADMINISTRADOR)
-        .order_by("pk")
-    )
-    return {
-        usuario.pk: usuario
-        for usuario in Usuario.objects.select_for_update()
-        .filter(pk__in=usuarios_ids)
-        .order_by("pk")
-        .prefetch_related("roles__rol")
-    }
 
 
 def bloquear_calendario_clases(fecha):

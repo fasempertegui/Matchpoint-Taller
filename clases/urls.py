@@ -16,6 +16,7 @@ urlpatterns = [
     path("planilla/<int:pk>/", vistas_planilla.planilla_detalle, name="planilla_detalle"),
     path("planilla/<int:pk>/editar/", vistas_planilla.planilla_formulario, name="planilla_editar"),
     path("actividad/<int:usuario_id>/", views.actividad_clases, name="actividad_clases"),
+    path("<int:pk>/responder/", views.clase_responder, name="clase_responder"),
     path("<int:pk>/asistencia/", views.clase_asistencia, name="clase_asistencia"),
     path("<int:pk>/asistencia/personas/", views.buscar_personas_asistencia, name="buscar_personas_asistencia"),
     path("<int:pk>/finalizar/", views.clase_finalizar, name="clase_finalizar"),

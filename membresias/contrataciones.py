@@ -4,6 +4,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
+from common.bloqueos import bloquear_usuarios
 from usuarios.models import Rol, Usuario, UsuarioRol
 
 from .fechas import (
@@ -15,10 +16,7 @@ from .servicios import exigir_administracion_membresias
 
 def _bloquear_titular(actor, usuario_id, *, exigir_activo=True):
     exigir_administracion_membresias(actor)
-    usuarios = {
-        usuario.pk: usuario for usuario in Usuario.objects.select_for_update()
-        .filter(pk__in=(actor.pk, usuario_id)).order_by("pk")
-    }
+    usuarios = bloquear_usuarios({actor.pk, usuario_id})
     actor = exigir_administracion_membresias(actor)
     titular = usuarios.get(usuario_id)
     if titular is None or (exigir_activo and not titular.is_active):
@@ -202,6 +200,15 @@ def _anular_contratacion(actor, contratacion_id, *, modelo, tipo, motivo, versio
         "actualizado_en": contratacion.actualizado_en.isoformat(),
     }:
         raise ValidationError("La contratación cambió. Volvé a revisar sus datos antes de confirmar la anulación.")
+    if modelo is MembresiaUsuario:
+        from django.db.models import Q
+        from reservas.models import Reserva
+        if Reserva.objects.filter(
+            Q(membresia_usuario=contratacion) | Q(invitados__membresia_usuario=contratacion,
+                invitados__estado="vigente", invitados__respuesta__in=("pendiente", "afirmativa")),
+            evento__estado="programado",
+        ).exists():
+            raise ValidationError("La membresía está aplicada en una reserva Programada como organizador o invitado socio.")
     motivo = motivo.strip()
     if not motivo:
         raise ValidationError("Indicá el motivo de la anulación.")

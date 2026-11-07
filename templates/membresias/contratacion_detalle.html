@@ -55,6 +55,7 @@
                     <div class="perfil-fila"><dt>Fecha de registro</dt><dd>{{ contratacion.creado_en|date:"d/m/Y H:i" }}</dd></div>
                 </dl>
             </section>
+            {% if tipo == 'membresia' %}<section class="perfil-seccion"><h2>Usos</h2><a class="boton boton-secundario boton-chico" href="{% url 'reservas:uso_membresia' %}?usuario={{ contratacion.usuario_id }}&amp;desde={{ contratacion.fecha_inicio|date:'Y-m-d' }}&amp;hasta={{ contratacion.fecha_fin|date:'Y-m-d' }}">Consultar uso del mes</a></section>{% endif %}
             <section class="perfil-seccion" aria-labelledby="contratacion-comprobante-titulo">
                 <h2 id="contratacion-comprobante-titulo">Comprobante</h2>
                 <div class="perfil-acciones perfil-acciones-botones">

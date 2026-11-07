@@ -10,7 +10,7 @@ from django.utils import timezone
 from auditoria.contexto import contexto_auditoria
 from common.fechas import validar_inicio_evento
 from instalaciones.models import Cancha, Sede
-from reservas.models import Evento, Turno
+from reservas.models import Evento, Reserva, ReservaInvitado, Turno
 from usuarios.models import Usuario
 
 from .models import Clase, ClaseAlumno, ClaseProfesor, Feriado, TurnoPlanilla
@@ -64,13 +64,21 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     ).order_by("clase_id", "profesor_id"))
     participantes_ocupados = list(ClaseAlumno.objects.filter(
         usuario_id__in=usuarios_ids, **filtros_asignacion,
-    ).exclude(clase__evento__estado=Evento.Estado.ANULADO).values_list(
+    ).exclude(respuesta="negativa").exclude(clase__evento__estado=Evento.Estado.ANULADO).values_list(
         "clase_id", "usuario_id", "clase__evento__turno__fecha", "clase__evento__turno__hora_inicio",
     ).order_by("clase_id", "usuario_id"))
     asignaciones_ocupadas = {
         (fecha, hora, usuario_id)
         for _, usuario_id, fecha, hora in profesores_ocupados + participantes_ocupados
     }
+    reservas_ocupadas = list(Reserva.objects.filter(
+        organizador_id__in=usuarios_ids, evento__turno__fecha__range=(fecha_desde, fecha_hasta),
+    ).exclude(evento__estado=Evento.Estado.ANULADO).values_list("organizador_id", "evento__turno__fecha", "evento__turno__hora_inicio"))
+    invitados_ocupados = list(ReservaInvitado.objects.filter(
+        usuario_id__in=usuarios_ids, estado="vigente", respuesta__in=("pendiente", "afirmativa"),
+        reserva__evento__turno__fecha__range=(fecha_desde, fecha_hasta),
+    ).exclude(reserva__evento__estado=Evento.Estado.ANULADO).values_list("usuario_id", "reserva__evento__turno__fecha", "reserva__evento__turno__hora_inicio"))
+    asignaciones_ocupadas.update((fecha, hora, pk) for pk, fecha, hora in reservas_ocupadas + invitados_ocupados)
     candidatas = []
     omitidas = []
     planilla = []
@@ -117,7 +125,7 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         elif (candidata["cancha_id"], fecha, hora) in ocupados:
             motivo = "El turno está ocupado por una actividad no Anulada."
         elif any((fecha, hora, usuario_id) in asignaciones_ocupadas for usuario_id in participantes):
-            motivo = "Un profesor o participante tiene otra clase asignada en esa fecha y hora."
+            motivo = "Un profesor o participante ya tiene otra clase o reserva en esa fecha y hora."
         candidata.pop("motivo_usuarios")
         candidata.pop("cancha_activa")
         if motivo:
@@ -130,6 +138,7 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         "canchas": [[cancha.pk, cancha.nombre, cancha.estado] for cancha in canchas],
         "desde": fecha_desde, "hasta": fecha_hasta, "planilla": planilla, "horarios": horarios,
         "feriados": sorted(feriados), "eventos": eventos,
+        "reservas_ocupadas": reservas_ocupadas, "invitaciones_ocupadas": invitados_ocupados,
         "docencia_ocupada": profesores_ocupados, "participacion_ocupada": participantes_ocupados,
         "usuarios": [
             [usuario.pk, str(usuario), usuario.is_active, sorted(v.rol.codigo for v in usuario.roles.all())]

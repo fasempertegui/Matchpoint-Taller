@@ -533,3 +533,18 @@ def actividad_clases(request, usuario_id):
         "vistas": vistas, "pagina": pagina, "url_anterior": url_anterior, "url_siguiente": url_siguiente,
         "url_perfil": url_perfil,
     })
+
+
+@login_required
+@never_cache
+@require_POST
+def clase_responder(request, pk):
+    from .respuestas import responder_clase
+    try:
+        responder_clase(request.user, pk, request.POST.get("respuesta"))
+    except ValidationError as error:
+        for mensaje in error.messages:
+            messages.error(request, mensaje)
+    else:
+        messages.success(request, "Tu respuesta de participación fue registrada.")
+    return redirect("clases:clase_detalle", pk=pk)

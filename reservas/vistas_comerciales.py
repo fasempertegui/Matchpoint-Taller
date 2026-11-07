@@ -1,0 +1,219 @@
+from calendar import monthrange
+from datetime import date, datetime, time
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
+
+from membresias.fechas import mes_siguiente
+from membresias.models import MembresiaUsuario
+from usuarios.models import Rol, Usuario
+
+from .comercial import (
+    _leer, actualizar_socios, coberturas, confirmar_reserva, gestionar_invitados,
+    inicio_reserva, preparar_reserva, registrar_resultado, responder_invitacion, usos_del_mes, version_resultado,
+)
+from .forms import InvitadosReservaForm, OrganizadorReservaForm, ResultadoReservaForm, TurnoReservaForm, UsoMembresiaForm
+from .models import Evento, Reserva, ReservaInvitado
+from .servicios import exigir_acceso_reservas
+from .views import _obtener_reserva_para_consulta
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def crear_reserva(request):
+    administrador = exigir_acceso_reservas(request.user)
+    turno_form = TurnoReservaForm(request.GET)
+    contexto = {"titulo": "Nueva reserva", "turno_form": turno_form, "administrador": administrador}
+    if not turno_form.is_valid():
+        return render(request, "reservas/reserva_crear.html", contexto)
+    turno = turno_form.cleaned_data
+    contexto["turno"] = turno
+    contexto["hora"] = time(turno["hora"])
+    paso = request.POST.get("paso", "")
+    datos = request.POST if request.method == "POST" else None
+    revisada = None
+    if paso in ("confirmar", "editar"):
+        try:
+            revisada = _leer(request.user, request.POST.get("confirmacion"), "crear")["datos"]
+            if any(str(revisada[campo]) != str(valor) for campo, valor in {"cancha": turno["cancha"].pk, "fecha": turno["fecha"].isoformat(), "hora": turno["hora"]}.items()):
+                raise ValidationError("El turno cambió. Revisá nuevamente.")
+            datos = revisada
+        except ValidationError as error:
+            messages.error(request, error.messages[0])
+            datos, paso = None, ""
+    organizador_form = OrganizadorReservaForm(datos) if administrador else None
+    organizador = request.user if not administrador else None
+    if administrador:
+        contexto["organizador_form"] = organizador_form
+        if organizador_form.is_bound and organizador_form.is_valid():
+            organizador = organizador_form.cleaned_data["organizador"]
+        else:
+            contexto["url_buscar_usuarios"] = reverse("agenda:buscar_organizadores")
+            return render(request, "reservas/reserva_crear.html", contexto)
+    contexto["organizador"] = organizador
+    contrato = coberturas({organizador.pk}, turno["fecha"]).get(organizador.pk)
+    puede_membresia = contrato is not None and usos_del_mes(organizador.pk, turno["fecha"]).count() < contrato.membresia.horas_mensuales
+    contexto["puede_membresia"] = puede_membresia
+    contexto["puede_normal"] = turno["cancha"].sede.precio_reserva_vigente is not None and turno["cancha"].sede.precio_reserva_vigente > 0
+    contexto["invitados_borrador"] = (datos.getlist("invitados") if hasattr(datos, "getlist") else datos.get("invitados", [])) if datos else []
+    contexto["observaciones_borrador"] = datos.get("observaciones", "") if datos else ""
+    modalidad = datos.get("modalidad") if datos and paso != "organizador" else None
+    if modalidad not in ("normal", "membresia"):
+        return render(request, "reservas/reserva_crear.html", contexto)
+    contexto["modalidad"] = modalidad
+    formulario = InvitadosReservaForm(
+        datos if paso in ("revisar", "confirmar", "editar") else None, organizador_id=organizador.pk,
+        initial={"invitados": contexto["invitados_borrador"], "observaciones": contexto["observaciones_borrador"]},
+    )
+    contexto["formulario"] = formulario
+    if paso in ("revisar", "confirmar") and formulario.is_valid():
+        seleccion = {
+            "organizador": organizador.pk, "cancha": turno["cancha"].pk, "fecha": turno["fecha"].isoformat(),
+            "hora": turno["hora"], "modalidad": modalidad,
+            "invitados": [u.pk for u in formulario.cleaned_data["invitados"]], "observaciones": formulario.cleaned_data["observaciones"],
+        }
+        try:
+            if paso == "confirmar" and revisada is not None:
+                reserva = confirmar_reserva(request.user, request.POST.get("confirmacion"), coordenadas={"cancha": turno["cancha"].pk, "fecha": turno["fecha"].isoformat(), "hora": turno["hora"]})
+                messages.success(request, f"La reserva {reserva.numero} fue registrada. El cobro se registra por separado.")
+                return redirect("reservas:reserva_detalle", pk=reserva.pk)
+            contexto["revision"] = preparar_reserva(request.user, seleccion)
+        except ValidationError as error:
+            formulario.add_error(None, error)
+    return render(request, "reservas/reserva_crear.html", contexto)
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def reserva_invitados(request, pk):
+    reserva, administrador = _obtener_reserva_para_consulta(request.user, pk)
+    if not administrador and reserva.organizador_id != request.user.pk:
+        raise PermissionDenied
+    if reserva.evento.estado != Evento.Estado.PROGRAMADO or timezone.now() >= inicio_reserva(reserva):
+        messages.error(request, "Sólo se gestionan invitados antes del inicio de una reserva Programada.")
+        return redirect("reservas:reserva_detalle", pk=pk)
+    datos = request.POST if request.method == "POST" else None
+    seleccion = list(reserva.invitados.filter(estado="vigente").exclude(respuesta="negativa").values_list("usuario_id", flat=True))
+    formulario = InvitadosReservaForm(datos, organizador_id=reserva.organizador_id, reserva=reserva, initial={"invitados": seleccion})
+    contexto = {"reserva": reserva, "formulario": formulario, "titulo": "Gestionar invitados"}
+    if request.method == "POST" and formulario.is_valid():
+        try:
+            ids = {u.pk for u in formulario.cleaned_data["invitados"]}
+            if request.POST.get("paso") == "confirmar":
+                gestionar_invitados(request.user, pk, ids, confirmacion=request.POST.get("confirmacion") or "")
+                messages.success(request, "Los invitados fueron actualizados.")
+                return redirect("reservas:reserva_detalle", pk=pk)
+            contexto["revision"] = gestionar_invitados(request.user, pk, ids)
+        except ValidationError as error:
+            formulario.add_error(None, error)
+    return render(request, "reservas/reserva_gestion.html", contexto)
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def reserva_socios(request, pk):
+    reserva, administrador = _obtener_reserva_para_consulta(request.user, pk)
+    if not administrador and reserva.organizador_id != request.user.pk:
+        raise PermissionDenied
+    contexto = {"reserva": reserva, "titulo": "Actualizar socios"}
+    try:
+        if request.method == "POST":
+            actualizar_socios(request.user, pk, confirmacion=request.POST.get("confirmacion") or "")
+            messages.success(request, "La condición de socios fue actualizada.")
+            return redirect("reservas:reserva_detalle", pk=pk)
+        contexto["revision"] = actualizar_socios(request.user, pk)
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+        return redirect("reservas:reserva_detalle", pk=pk)
+    return render(request, "reservas/reserva_gestion.html", contexto)
+
+
+@login_required
+@never_cache
+@require_POST
+def reserva_responder(request, pk):
+    try:
+        responder_invitacion(request.user, pk, request.POST.get("respuesta"))
+    except ValidationError as error:
+        for mensaje in error.messages:
+            messages.error(request, mensaje)
+    else:
+        messages.success(request, "Tu respuesta fue registrada.")
+    return redirect("reservas:reserva_detalle", pk=pk)
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def reserva_resultado(request, pk):
+    reserva, administrador = _obtener_reserva_para_consulta(request.user, pk)
+    if not administrador:
+        raise PermissionDenied
+    if not reserva.es_con_membresia or reserva.evento.estado != Evento.Estado.FINALIZADO or reserva.resultado_corregido_en:
+        messages.error(request, "La reserva no admite registro o corrección de resultado.")
+        return redirect("reservas:reserva_detalle", pk=pk)
+    formulario = ResultadoReservaForm(request.POST if request.method == "POST" else None, reserva=reserva, initial={"version": version_resultado(request.user, reserva)})
+    if request.method == "POST" and formulario.is_valid():
+        try:
+            registrar_resultado(request.user, pk, formulario.cleaned_data["resultado"], formulario.cleaned_data.get("motivo", ""), version=formulario.cleaned_data["version"])
+        except ValidationError as error:
+            formulario.add_error(None, error)
+        else:
+            messages.success(request, "El resultado fue registrado sin modificar horas ni cobros.")
+            return redirect("reservas:reserva_detalle", pk=pk)
+    return render(request, "reservas/reserva_gestion.html", {"reserva": reserva, "titulo": "Resultado de uso", "formulario": formulario, "resultado": True})
+
+
+@login_required
+@never_cache
+@require_GET
+def mis_reservas(request):
+    exigir_acceso_reservas(request.user)
+    consulta = Reserva.objects.filter(Q(organizador=request.user) | Q(invitados__usuario=request.user)).distinct().select_related("evento__turno__cancha__sede").order_by("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
+    return render(request, "reservas/mis_reservas.html", {"pagina": Paginator(consulta, 25).get_page(request.GET.get("pagina"))})
+
+
+@login_required
+@never_cache
+@require_GET
+def uso_membresia(request):
+    usuario = get_object_or_404(Usuario, pk=request.user.pk, is_active=True, debe_cambiar_contrasena=False)
+    administrador = usuario.tiene_rol(Rol.ADMINISTRADOR)
+    hoy = timezone.localdate()
+    parametros = request.GET.copy()
+    parametros.setdefault("modo", "rango" if request.GET.get("desde") or request.GET.get("hasta") else "mes")
+    parametros.setdefault("mes", hoy.strftime("%Y-%m"))
+    parametros.setdefault("desde", hoy.replace(day=1).isoformat())
+    parametros.setdefault("hasta", hoy.replace(day=monthrange(hoy.year, hoy.month)[1]).isoformat())
+    if administrador:
+        parametros.setdefault("usuario", str(request.user.pk))
+    formulario = UsoMembresiaForm(parametros, administrador=administrador)
+    contexto = {"formulario": formulario}
+    if formulario.is_valid():
+        titular = formulario.cleaned_data["usuario"] if administrador else request.user
+        desde, hasta = formulario.cleaned_data["desde"], formulario.cleaned_data["hasta"]
+        meses = []
+        mes = desde.replace(day=1)
+        while mes <= hasta:
+            consultas = usos_del_mes(titular.pk, mes)
+            comprometidas = consultas.filter(evento__estado=Evento.Estado.PROGRAMADO).count()
+            consumidas = consultas.exclude(evento__estado=Evento.Estado.PROGRAMADO).count()
+            contrato = MembresiaUsuario.objects.filter(usuario=titular, mes_cubierto=mes).exclude(estado=MembresiaUsuario.Estado.ANULADO).select_related("membresia").first()
+            cupo = contrato.membresia.horas_mensuales if contrato else 0
+            meses.append({"mes": mes, "cupo": cupo, "comprometidas": comprometidas, "consumidas": consumidas, "saldo": cupo - comprometidas - consumidas})
+            mes = mes_siguiente(mes)
+        reservas = Reserva.objects.filter(organizador=titular, membresia_usuario__isnull=False, evento__turno__fecha__range=(desde, hasta)).select_related("evento__turno__cancha__sede").order_by("evento__turno__fecha", "evento__turno__hora_inicio")
+        invitaciones = ReservaInvitado.objects.filter(usuario=titular, reserva__evento__turno__fecha__range=(desde, hasta)).select_related("reserva__evento__turno__cancha__sede")
+        contexto.update({"titular": titular, "meses": meses, "reservas": reservas, "invitaciones": invitaciones})
+    return render(request, "reservas/uso_membresia.html", contexto)

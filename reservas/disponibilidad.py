@@ -11,12 +11,12 @@ from .models import Evento, Turno
 
 def validar_fecha_reserva(fecha):
     hoy = timezone.localdate()
-    if not hoy <= fecha <= hoy + timedelta(days=14):
-        raise ValidationError("Elegí una fecha desde hoy hasta catorce días después, inclusive.")
+    if not hoy <= fecha <= hoy + timedelta(days=3):
+        raise ValidationError("Elegí una fecha desde hoy hasta tres días después, inclusive.")
 
 
 @transaction.atomic
-def consultar_disponibilidad(cancha, fecha):
+def consultar_disponibilidad(cancha, fecha, *, requiere_tarifa=True):
     validar_fecha_reserva(fecha)
 
     # La sede coordina la preparación con los cambios de horarios y precios.
@@ -25,7 +25,7 @@ def consultar_disponibilidad(cancha, fecha):
     if sede.estado != Sede.Estado.ACTIVA or cancha.estado != Cancha.Estado.ACTIVA:
         raise ValidationError("La sede y la cancha deben estar activas para consultar disponibilidad.")
     precio = sede.precio_reserva_vigente
-    if precio is None:
+    if requiere_tarifa and precio is None:
         raise ValidationError("La sede necesita un precio por turno configurado para ofrecer turnos.")
 
     horario = sede.horarios.filter(dia_semana=fecha.isoweekday()).first()

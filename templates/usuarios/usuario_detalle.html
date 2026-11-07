@@ -115,6 +115,8 @@
                     <h2 id="mis-contrataciones-titulo">Mis contrataciones</h2>
                     <div class="perfil-acciones perfil-acciones-botones">
                         <a class="boton boton-secundario boton-chico" href="{% url 'membresias:mis_contrataciones' %}">Ver mis contrataciones</a>
+                        <a class="boton boton-secundario boton-chico" href="{% url 'reservas:uso_membresia' %}">Uso de membresías</a>
+                        {% if request.user.puede_reservar %}<a class="boton boton-secundario boton-chico" href="{% url 'reservas:mis_reservas' %}">Mis reservas e invitaciones</a>{% endif %}
                     </div>
                 </section>
             {% endif %}

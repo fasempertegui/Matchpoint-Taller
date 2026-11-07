@@ -12,7 +12,7 @@ from clases.models import Asistencia, ClaseAlumno, ClaseProfesor, Feriado
 from clases.validaciones import validar_anulacion_clase
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_eventos, opciones_meses_agenda
 from instalaciones.models import Cancha, Sede
-from reservas.models import Evento
+from reservas.models import Evento, ReservaInvitado
 from reservas.servicios import validar_anulacion_reserva, validar_finalizacion_reserva
 
 
@@ -70,6 +70,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
                 ).values_list("clase__evento_id", flat=True),
             )
         )
+    reservas_invitadas = set(ReservaInvitado.objects.filter(usuario=usuario, reserva__evento__turno__fecha=fecha).values_list("reserva__evento_id", flat=True))
     puede_reservar = usuario.puede_reservar
     profesores_agenda = Prefetch(
         "clase__profesores",
@@ -94,7 +95,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         turno__cancha__in=canchas, turno__fecha=fecha, estado=Evento.Estado.ANULADO,
     )
     if not es_administrador:
-        anulados = anulados.filter(Q(reserva__organizador_id=usuario.pk) | Q(pk__in=eventos_del_usuario))
+        anulados = anulados.filter(Q(reserva__organizador_id=usuario.pk) | Q(pk__in=eventos_del_usuario) | Q(pk__in=reservas_invitadas))
     anulados = anulados.select_related(
         "turno", "reserva__organizador", "clase", "bloqueo__evento_origen__reserva",
         "bloqueo__evento_origen__clase", "anulado_por", "registrado_por",
@@ -116,7 +117,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         clase = getattr(evento, "clase", None) if evento and evento.tipo == Evento.Tipo.CLASE else None
         puede_ver_evento = (
             es_administrador
-            or (reserva is not None and reserva.organizador_id == usuario.pk)
+            or (reserva is not None and (reserva.organizador_id == usuario.pk or evento.pk in reservas_invitadas))
             or (clase is not None and evento.clase_del_usuario)
         )
         ocupado_por_tercero = evento is not None and not puede_ver_evento
@@ -131,12 +132,10 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             impedimento = "La sede y la cancha deben estar activas para registrar una reserva."
         elif not habilitado:
             impedimento = "Este turno está fuera del horario de funcionamiento de la sede."
-        elif dia > ahora.date() + timedelta(days=14):
-            impedimento = "Las reservas se registran con hasta catorce días de anticipación."
+        elif dia > ahora.date() + timedelta(days=3):
+            impedimento = "Las reservas se registran con hasta tres días de anticipación."
         elif not puede_reservar:
             impedimento = "Tu cuenta no tiene habilitada la creación de reservas."
-        elif sede.precio_reserva_vigente is None:
-            impedimento = "La sede necesita un precio por turno configurado para registrar reservas."
         temporal = ""
         if evento:
             if evento.estado == Evento.Estado.FINALIZADO:
@@ -157,7 +156,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
                 pass
             else:
                 puede_liberar_bloqueo = True
-        if reserva and puede_ver_evento and puede_reservar:
+        if reserva and (es_administrador or reserva.organizador_id == usuario.pk) and puede_reservar:
             try:
                 validar_anulacion_reserva(reserva, es_administrador, ahora)
             except ValidationError:
@@ -183,6 +182,8 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
         )
         return {
+            "es_invitado": reserva is not None and not es_administrador and reserva.organizador_id != usuario.pk and evento.pk in reservas_invitadas,
+            "url_crear_reserva": reverse("reservas:crear_reserva") + "?" + urlencode({"cancha": cancha.pk, "fecha": dia.isoformat(), "hora": hora}),
             "puede_crear_clase": puede_crear_clase,
             "puede_anular_clase": puede_anular_clase,
             "puede_bloquear_clase": puede_anular_clase and en_rango and habilitado and dia <= maxima_eventos
@@ -222,7 +223,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
     horas_propias = {
         evento.turno.hora_inicio.hour
         for evento in eventos_por_turno.values()
-        if (evento.tipo == Evento.Tipo.RESERVA and evento.reserva.organizador_id == usuario.pk)
+        if (evento.tipo == Evento.Tipo.RESERVA and (evento.reserva.organizador_id == usuario.pk or evento.pk in reservas_invitadas))
         or evento.clase_del_usuario
     }
     horas_propias.update(clave[2] for clave in anulados_por_turno)

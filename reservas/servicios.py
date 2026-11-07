@@ -15,6 +15,8 @@ from .models import Evento, Reserva, Turno
 
 
 def exigir_acceso_reservas(usuario):
+    if usuario is None or not usuario.is_authenticated:
+        raise PermissionDenied
     roles = set(usuario.roles.values_list("rol__codigo", flat=True))
     if (
         not usuario.is_active
@@ -39,58 +41,15 @@ def validar_turno_seleccionado(disponibilidad, identificador):
 
 @transaction.atomic
 def registrar_reserva(registrado_por, organizador, cancha, fecha, turno_id, precio_mostrado, observaciones):
-    participantes = {registrado_por.pk, organizador.pk}
-    # La desactivación de cuentas también bloquea primero los administradores activos.
-    list(
-        Usuario.objects.select_for_update(of=("self",))
-        .filter(pk__in=participantes, is_active=True, roles__rol__codigo=Rol.ADMINISTRADOR)
-        .order_by("pk")
-    )
-    usuarios = {
-        usuario.pk: usuario
-        for usuario in Usuario.objects.select_for_update().filter(pk__in=participantes).order_by("pk")
-    }
-    registrado_por = usuarios[registrado_por.pk]
-    organizador = usuarios[organizador.pk]
-    es_administrador = exigir_acceso_reservas(registrado_por)
-    if not es_administrador and organizador.pk != registrado_por.pk:
-        raise PermissionDenied
-    if not organizador.is_active:
-        raise ValidationError("El organizador debe estar activo para registrar la reserva.")
-    if not organizador.puede_reservar:
-        raise ValidationError("El organizador debe tener el rol Reservas o Administrador para registrar la reserva.")
-    reservas_programadas = Reserva.objects.filter(
-        organizador=organizador,
-        evento__estado=Evento.Estado.PROGRAMADO,
-    ).count()
-    if reservas_programadas >= 5:
-        raise ValidationError("El organizador ya tiene el máximo de cinco reservas Programadas.")
-
-    disponibilidad = consultar_disponibilidad(cancha, fecha)
-    turno = validar_turno_seleccionado(disponibilidad, turno_id)
-    turno = Turno.objects.select_for_update().get(pk=turno.pk, cancha=cancha, fecha=fecha)
-    ahora = timezone.localtime()
-    if fecha < ahora.date() or (fecha == ahora.date() and turno.hora_inicio <= ahora.time()):
-        raise ValidationError("La reserva debe comenzar en un horario futuro. Elegí nuevamente.")
-    if Evento.objects.filter(turno=turno).exclude(estado=Evento.Estado.ANULADO).exists():
-        raise ValidationError("El turno fue ocupado por otra actividad. Elegí nuevamente.")
-    precio = disponibilidad["precio_por_turno"]
-    if precio != precio_mostrado:
-        raise ValidationError("El precio por turno cambió. Revisá el nuevo total y confirmá nuevamente.")
-
-    evento = Evento.objects.create(
-        turno=turno,
-        tipo=Evento.Tipo.RESERVA,
-        registrado_por=registrado_por,
-        observaciones=observaciones,
-    )
-    reserva = Reserva.objects.create(
-        evento=evento,
-        organizador=organizador,
-        precio_por_turno_aplicado=precio,
-    )
-    validar_inicio_evento(turno.fecha, turno.hora_inicio)
-    return reserva
+    from .comercial import preparar_reserva, confirmar_reserva
+    turno = Turno.objects.get(pk=turno_id, cancha=cancha, fecha=fecha)
+    revision = preparar_reserva(registrado_por, {
+        "organizador": organizador.pk, "cancha": cancha.pk, "fecha": fecha.isoformat(),
+        "hora": turno.hora_inicio.hour, "modalidad": "normal", "invitados": [], "observaciones": observaciones,
+    })
+    if revision["total"] != precio_mostrado:
+        raise ValidationError("El precio cambió. Revisá nuevamente la reserva.")
+    return confirmar_reserva(registrado_por, revision["confirmacion"])
 
 
 def validar_anulacion_reserva(reserva, es_administrador, ahora):
@@ -105,8 +64,6 @@ def validar_anulacion_reserva(reserva, es_administrador, ahora):
     )
     if ahora >= inicio:
         raise ValidationError("Sólo se puede anular una reserva antes de su inicio.")
-    if not es_administrador and ahora > inicio - timedelta(hours=1):
-        raise ValidationError("Para anular tu reserva debe faltar al menos una hora para el inicio del turno.")
 
 
 def _bloquear_reserva(reserva_id):
@@ -120,8 +77,8 @@ def _bloquear_reserva(reserva_id):
 
 @transaction.atomic
 def anular_reserva(anulado_por, reserva_id, motivo, *, motivo_bloqueo=None):
-    anulado_por = Usuario.objects.select_for_update().get(pk=anulado_por.pk)
-    es_administrador = exigir_acceso_reservas(anulado_por)
+    from .comercial import bloquear_reserva_personas
+    anulado_por, es_administrador, reserva, _, _ = bloquear_reserva_personas(anulado_por, reserva_id)
     if motivo_bloqueo is not None:
         if not es_administrador:
             raise PermissionDenied
@@ -134,7 +91,6 @@ def anular_reserva(anulado_por, reserva_id, motivo, *, motivo_bloqueo=None):
     if motivo_bloqueo is None and len(motivo) < 25:
         raise ValidationError("El motivo de anulación debe tener al menos 25 caracteres.")
 
-    reserva = _bloquear_reserva(reserva_id)
     if not es_administrador and reserva.organizador_id != anulado_por.pk:
         raise PermissionDenied
     ahora = timezone.localtime()
@@ -147,7 +103,10 @@ def anular_reserva(anulado_por, reserva_id, motivo, *, motivo_bloqueo=None):
     evento.motivo_anulacion = motivo
     evento.save(update_fields=["estado", "anulado_en", "anulado_por", "motivo_anulacion", "actualizado_en"])
     reserva.anulada_por_organizador = not es_administrador
-    reserva.save(update_fields=["anulada_por_organizador"])
+    if reserva.es_con_membresia:
+        inicio = timezone.make_aware(datetime.combine(reserva.evento.turno.fecha, reserva.evento.turno.hora_inicio))
+        reserva.computa_hora_membresia = not es_administrador and inicio - ahora <= timedelta(hours=6)
+    reserva.save(update_fields=["anulada_por_organizador", "computa_hora_membresia"])
     return reserva
 
 

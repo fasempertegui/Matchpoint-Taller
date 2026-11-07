@@ -9,7 +9,7 @@
                 {% for persona in personas %}
                     {% if persona.estado == 'activo' %}
                         <tr>
-                            <td>{{ persona.nombre }}{% if persona.observaciones %}<p class="texto-secundario">{{ persona.observaciones|linebreaksbr }}</p>{% endif %}</td>
+                            <td>{{ persona.nombre }}{% if persona.respuesta_texto %} <span class="estado">{{ persona.respuesta_texto }}</span>{% endif %}{% if persona.observaciones %}<p class="texto-secundario">{{ persona.observaciones|linebreaksbr }}</p>{% endif %}</td>
                             {% if mostrar_asistencia %}<td>{% include "componentes/badge_estado.html" with estado=persona.badge_asistencia texto=persona.asistencia_texto only %}{% if persona.observaciones_asistencia %}<p class="texto-secundario perfil-observaciones">{{ persona.observaciones_asistencia|linebreaksbr }}</p>{% endif %}</td>{% endif %}
                         </tr>
                     {% endif %}

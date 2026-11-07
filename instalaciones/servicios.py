@@ -55,6 +55,7 @@ def _revisar_desactivacion(sede, canchas, cancha_id):
              evento.actualizado_en.isoformat()]
             for evento in futuros
         ],
+        "invitados": [[evento.reserva.pk, list(evento.reserva.invitados.order_by("usuario_id").values_list("usuario_id", "estado", "respuesta", "actualizado_en"))] for evento in futuros if evento.tipo == Evento.Tipo.RESERVA],
         "asignaciones": [
             [evento.clase.pk,
              sorted([v.profesor_id, v.estado, v.actualizado_en.isoformat()] for v in evento.clase.profesores.all()),
@@ -62,7 +63,7 @@ def _revisar_desactivacion(sede, canchas, cancha_id):
             for evento in futuros if evento.tipo == Evento.Tipo.CLASE
         ],
     }
-    huella = hashlib.sha256(json.dumps(instantanea, sort_keys=True).encode()).hexdigest()
+    huella = hashlib.sha256(json.dumps(instantanea, sort_keys=True, default=str).encode()).hexdigest()
     return {
         "sede": sede,
         "cancha": canchas[0] if cancha_id is not None else None,
@@ -79,6 +80,7 @@ def _usuarios_de_eventos(eventos):
             usuarios_ids.update(v.usuario_id for v in evento.clase.alumnos.all())
         elif evento.tipo == Evento.Tipo.RESERVA:
             usuarios_ids.add(evento.reserva.organizador_id)
+            usuarios_ids.update(evento.reserva.invitados.values_list("usuario_id", flat=True))
     return usuarios_ids
 
 

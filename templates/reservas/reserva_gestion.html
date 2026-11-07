@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} | Academia TM{% endblock %}
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario">
+    <h1>{{ titulo }}</h1><p>{{ reserva.numero }} · {{ reserva.organizador }}</p>
+    <form method="post">{% csrf_token %}
+        {% if revision %}
+            {% if revision.cambios %}<h2>Cambios a confirmar</h2><ul>{% for cambio in revision.cambios %}<li>{{ cambio }}</li>{% endfor %}</ul><p>Total resultante: <strong>$ {{ revision.total|floatformat:"2g" }}</strong></p>{% else %}<p>No hay cambios para aplicar.</p>{% endif %}
+            <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+            {% if formulario %}{% for valor in formulario.invitados.value %}<input type="hidden" name="invitados" value="{{ valor }}">{% endfor %}{% endif %}
+            <p class="texto-secundario">Se conservan la historia, las respuestas y los cobros.</p>
+        {% elif formulario %}
+            {{ formulario.non_field_errors }}
+            {% for campo in formulario.hidden_fields %}{{ campo }}{{ campo.errors }}{% endfor %}
+            {% for campo in formulario.visible_fields %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}{% if campo.help_text %}<small>{{ campo.help_text }}</small>{% endif %}</div>{% endfor %}
+            {% if not resultado %}<p class="texto-secundario">Se retiran quienes dejes sin seleccionar. Las invitaciones Rechazadas conservan su historia y no se vuelven a enviar.</p>{% endif %}
+        {% endif %}
+        <div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' reserva.pk %}">Volver a la reserva</a>{% if revision.cambios %}<button class="boton boton-primario" name="paso" value="confirmar">Confirmar cambios</button>{% elif not revision %}<button class="boton boton-primario" name="paso" value="revisar">{% if resultado %}Guardar resultado{% else %}Revisar invitados{% endif %}</button>{% endif %}</div>
+    </form>
+</section>
+{% endblock %}

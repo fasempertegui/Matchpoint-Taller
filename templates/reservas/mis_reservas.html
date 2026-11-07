@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}Mis reservas e invitaciones | Academia TM{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina"><h1>Mis reservas e invitaciones</h1><a class="boton boton-secundario" href="{% url 'agenda:agenda' %}">Ver Agenda</a></header>
+<section class="tarjeta tabla-contenedor"><table><thead><tr><th>Reserva</th><th>Turno</th><th>Participación</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
+{% for reserva in pagina %}<tr><td>{{ reserva.numero }}</td><td>{{ reserva.evento.turno.fecha|date:"d/m/Y" }} {{ reserva.evento.turno.hora_inicio|time:"H:i" }} · {{ reserva.evento.turno.cancha }}</td><td>{% if reserva.organizador_id == request.user.pk %}Organizador{% else %}Invitado{% endif %}</td><td>{{ reserva.evento.get_estado_display }}</td><td><a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_detalle' reserva.pk %}">Detalles</a></td></tr>{% empty %}<tr><td colspan="5">No tenés reservas ni invitaciones registradas.</td></tr>{% endfor %}
+</tbody></table></section>
+{% if pagina.paginator.num_pages > 1 %}<nav class="acciones">{% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}<span>{{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>{% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}</nav>{% endif %}
+{% endblock %}

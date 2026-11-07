@@ -10,7 +10,7 @@ from clases.models import Clase
 from clases.servicios import anular_clase, bloquear_usuarios_clase
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_eventos
 from instalaciones.models import Cancha, Sede
-from reservas.models import Evento, Turno
+from reservas.models import Evento, Reserva, Turno
 from reservas.servicios import anular_reserva, exigir_acceso_reservas
 from usuarios.models import Usuario
 
@@ -54,6 +54,11 @@ def registrar_bloqueo(
     if clase_revisada is not None:
         profesores_ids = set(clase_revisada.profesores.values_list("profesor_id", flat=True))
         participantes_ids = set(clase_revisada.alumnos.values_list("usuario_id", flat=True))
+    reserva_revisada = Reserva.objects.filter(evento_id=evento_esperado).first()
+    invitados_ids = set(reserva_revisada.invitados.values_list("usuario_id", flat=True)) if reserva_revisada else set()
+    if reserva_revisada:
+        participantes_ids.add(reserva_revisada.organizador_id)
+    participantes_ids.update(invitados_ids)
     usuarios = bloquear_usuarios_clase(profesores_ids | participantes_ids | {registrado_por.pk})
     registrado_por = usuarios.get(registrado_por.pk)
     if registrado_por is None or not exigir_acceso_reservas(registrado_por):
@@ -88,6 +93,8 @@ def registrar_bloqueo(
             raise ValidationError("La actividad del turno cambió. Revisá la agenda antes de confirmar.")
         if evento:
             if evento.tipo == Evento.Tipo.RESERVA:
+                if reserva_revisada is None or set(evento.reserva.invitados.values_list("usuario_id", flat=True)) != invitados_ids:
+                    raise ValidationError("El grupo de la reserva cambió. Revisá nuevamente el bloqueo.")
                 evento = anular_reserva(
                     registrado_por, evento.reserva.pk, motivo_anulacion,
                     motivo_bloqueo=motivo if usar_motivo_bloqueo else None,

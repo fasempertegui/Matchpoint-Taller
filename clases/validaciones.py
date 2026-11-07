@@ -64,28 +64,11 @@ def validar_usuarios_clase(
 
 
 def validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, fecha, hora_inicio, clase_id=None):
-    usuarios_ids = profesores_ids | participantes_ids
-    profesores_ocupados = ClaseProfesor.objects.filter(
-        profesor_id__in=usuarios_ids,
-        estado=ClaseProfesor.Estado.ACTIVO,
-        clase__evento__turno__fecha=fecha,
-        clase__evento__turno__hora_inicio=hora_inicio,
-    ).exclude(clase__evento__estado=Evento.Estado.ANULADO)
-    participantes_ocupados = ClaseAlumno.objects.filter(
-        usuario_id__in=usuarios_ids,
-        estado=ClaseAlumno.Estado.ACTIVO,
-        clase__evento__turno__fecha=fecha,
-        clase__evento__turno__hora_inicio=hora_inicio,
-    ).exclude(clase__evento__estado=Evento.Estado.ANULADO)
+    from common.disponibilidad import validar_disponibilidad
     if clase_id is not None:
-        profesores_ocupados = profesores_ocupados.exclude(clase_id=clase_id)
-        participantes_ocupados = participantes_ocupados.exclude(clase_id=clase_id)
-    ocupados = set(profesores_ocupados.values_list("profesor_id", flat=True)) | set(
-        participantes_ocupados.values_list("usuario_id", flat=True)
-    )
-    if ocupados:
-        nombres = ", ".join(str(usuarios[usuario_id]) for usuario_id in sorted(ocupados))
-        raise ValidationError(f"Ya tienen otra clase asignada en esa fecha y hora: {nombres}.")
+        negativos = set(ClaseAlumno.objects.filter(clase_id=clase_id, respuesta="negativa").values_list("usuario_id", flat=True))
+        participantes_ids = participantes_ids - negativos
+    validar_disponibilidad(profesores_ids | participantes_ids, fecha, hora_inicio, clase_id=clase_id)
 
 
 def validar_anulacion_clase(clase, ahora):

@@ -35,8 +35,10 @@
     <div class="detalle-grid comprobante-datos">
         <div><span class="etiqueta">Organizador</span><p>{{ reserva.organizador }}</p></div>
         <div><span class="etiqueta">Duración</span><p>1 hora</p></div>
-        <div><span class="etiqueta">Precio por turno (ARS)</span><p>$ {{ reserva.precio_por_turno_aplicado|floatformat:"2g" }}</p></div>
+        <div><span class="etiqueta">Modalidad</span><p>{% if reserva.es_con_membresia %}Con membresía · {{ reserva.membresia_usuario.membresia.nombre }} · Adicional aplicado por invitado no socio: $ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}{% else %}Normal · $ {{ reserva.precio_por_turno_aplicado|floatformat:"2g" }}{% endif %}</p></div>
     </div>
+
+    <section class="comprobante-seccion"><h2>Invitados</h2><ul>{% for invitado in reserva.invitados.all %}<li>{{ invitado.usuario }} · {{ invitado.get_estado_display }} · {{ invitado.get_respuesta_display }} · {{ invitado.get_condicion_aplicada_display }}</li>{% empty %}<li>Sin invitados.</li>{% endfor %}</ul></section>
 
     <section class="comprobante-seccion" aria-label="Importe de la reserva">
         <div class="comprobante-total">

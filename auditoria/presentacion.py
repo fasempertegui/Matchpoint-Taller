@@ -14,7 +14,7 @@ from clases.models import (
 )
 from instalaciones.models import Cancha, Sede, SedeHorario
 from membresias.models import Membresia, MembresiaUsuario, Plan, PlanUsuario
-from reservas.models import Evento, Reserva, Turno
+from reservas.models import Evento, Reserva, ReservaInvitado, Turno
 from usuarios.models import Rol, Usuario, UsuarioRol
 
 from .models import LogAuditoria
@@ -29,6 +29,7 @@ TIPOS_REGISTRO = {
     "sedes_horarios": (SedeHorario, "Horario de sede", ("sede",), None),
     "turnos": (Turno, "Turno", ("cancha__sede",), None),
     "eventos": (Evento, "Evento", ("clase", "reserva", "bloqueo"), None),
+    "reservas_invitados": (ReservaInvitado, "Invitación de reserva", ("reserva", "usuario"), None),
     "reservas": (Reserva, "Reserva", (), "reservas:reserva_detalle"),
     "bloqueos": (Bloqueo, "Bloqueo", (), "agenda:bloqueo_detalle"),
     "feriados": (Feriado, "Feriado", (), "clases:feriado_detalle"),
@@ -92,6 +93,8 @@ def _referencia_breve(objeto):
         except ObjectDoesNotExist:
             return f"{objeto.get_tipo_display()} · Evento #{objeto.pk}"
         return _referencia_breve(actividad)
+    if isinstance(objeto, ReservaInvitado):
+        return f"{objeto.reserva.numero} · {_relacion(objeto, 'usuario')}"
     if isinstance(objeto, (Reserva, Bloqueo)):
         return objeto.numero
     if isinstance(objeto, Clase):
@@ -128,6 +131,8 @@ def _url_registro(objeto):
             return _url_registro(objeto.turno_planilla)
         if isinstance(objeto, (ClaseProfesor, ClaseAlumno, Asistencia)):
             return _url_registro(objeto.clase)
+        if isinstance(objeto, ReservaInvitado):
+            return _url_registro(objeto.reserva)
         if isinstance(objeto, Turno):
             return enlace_agenda(objeto.cancha.sede, objeto.fecha, objeto.cancha, objeto.hora_inicio.hour)
     except ObjectDoesNotExist:

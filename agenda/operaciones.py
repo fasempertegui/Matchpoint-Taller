@@ -146,6 +146,7 @@ def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
             }
             for fila in filas if fila["clase"] is not None
         ],
+        "invitados": [list(fila["reserva"].invitados.order_by("usuario_id").values_list("usuario_id", "estado", "respuesta", "actualizado_en")) for fila in filas if fila["reserva"]],
         "filas": [
             [fila["cancha"].pk, fila["hora"].isoformat(), fila["accion"], fila["conservado"],
              fila["evento"].pk if fila["evento"] else None,
@@ -154,7 +155,7 @@ def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
             for fila in filas
         ],
     }
-    huella = hashlib.sha256(json.dumps(instantanea, sort_keys=True).encode()).hexdigest()
+    huella = hashlib.sha256(json.dumps(instantanea, sort_keys=True, default=str).encode()).hexdigest()
     return {
         "acciones": acciones, "conservados": conservados, "canchas": canchas,
         "anulaciones": anulaciones, "reservas_a_anular": reservas_a_anular,
@@ -213,6 +214,10 @@ def ejecutar_operacion(usuario, sede_id, fecha, parametros, huella, fecha_hasta=
         if fila["clase"] is not None:
             usuarios_ids.update(vinculo.profesor_id for vinculo in fila["clase"].profesores.all())
             usuarios_ids.update(vinculo.usuario_id for vinculo in fila["clase"].alumnos.all())
+    for fila in seleccion["acciones"]:
+        if fila["reserva"] is not None:
+            usuarios_ids.add(fila["reserva"].organizador_id)
+            usuarios_ids.update(fila["reserva"].invitados.values_list("usuario_id", flat=True))
     usuarios = bloquear_usuarios_clase(usuarios_ids)
     usuario = exigir_administracion_clases(usuarios.get(usuario.pk))
     sede = Sede.objects.select_for_update().get(pk=sede_id)

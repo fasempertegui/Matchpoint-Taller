@@ -2,6 +2,7 @@ from datetime import time
 
 from django.conf import settings
 from django.db import models
+from common.models import RespuestaActividad
 
 
 class Feriado(models.Model):
@@ -181,7 +182,7 @@ class ClaseProfesor(models.Model):
         return f"{self.clase} - {self.profesor}"
 
 
-class ClaseAlumno(models.Model):
+class ClaseAlumno(RespuestaActividad):
     class Estado(models.TextChoices):
         ACTIVO = "activo", "Activo"
         INACTIVO = "inactivo", "Inactivo"
@@ -204,6 +205,7 @@ class ClaseAlumno(models.Model):
         ordering = ("clase_id", "usuario_id")
         default_permissions = ()
         constraints = [
+            *RespuestaActividad.Meta.constraints,
             models.CheckConstraint(
                 condition=models.Q(estado__in=("activo", "inactivo")),
                 name="clase_alumno_estado_valido",

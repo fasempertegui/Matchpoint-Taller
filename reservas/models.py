@@ -6,6 +6,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from common.fechas import validar_inicio_evento
+from common.models import RespuestaActividad
 
 
 class Turno(models.Model):
@@ -152,19 +153,44 @@ class Reserva(models.Model):
         "Precio por turno aplicado (ARS)",
         max_digits=12,
         decimal_places=2,
-        validators=[MinValueValidator(Decimal("0.01"))],
+        validators=[MinValueValidator(Decimal("0.01"))], null=True, blank=True,
     )
     anulada_por_organizador = models.BooleanField(blank=True, null=True)
+
+    membresia_usuario = models.ForeignKey("membresias.MembresiaUsuario", on_delete=models.PROTECT, related_name="reservas_aplicadas", null=True, blank=True)
+    precio_invitado_aplicado = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0"))], null=True, blank=True)
+    computa_hora_membresia = models.BooleanField(default=False)
+    resultado_uso = models.CharField(max_length=15, choices=(("sin_registrar", "Sin registrar"), ("realizada", "Realizada"), ("no_realizada", "No realizada")), default="sin_registrar")
+    resultado_registrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", null=True, blank=True)
+    resultado_registrado_en = models.DateTimeField(null=True, blank=True)
+    resultado_original = models.CharField(max_length=15, null=True, blank=True)
+    resultado_corregido_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", null=True, blank=True)
+    resultado_corregido_en = models.DateTimeField(null=True, blank=True)
+    motivo_correccion_resultado = models.TextField(blank=True, default="")
 
     class Meta:
         db_table = "reservas"
         ordering = ("-evento__creado_en", "-pk")
         default_permissions = ("add", "view")
         constraints = [
-            models.CheckConstraint(
-                condition=models.Q(precio_por_turno_aplicado__gte=Decimal("0.01")),
-                name="reserva_precio_por_turno_positivo",
-            ),
+            models.CheckConstraint(condition=(
+                models.Q(membresia_usuario__isnull=True, precio_por_turno_aplicado__isnull=False,
+                         precio_por_turno_aplicado__gte=Decimal("0.01"), precio_invitado_aplicado__isnull=True, computa_hora_membresia=False)
+                | models.Q(membresia_usuario__isnull=False, precio_por_turno_aplicado__isnull=True,
+                           precio_invitado_aplicado__isnull=False, precio_invitado_aplicado__gte=0)
+            ), name="reserva_modalidad_coherente"),
+            models.CheckConstraint(condition=(
+                models.Q(resultado_uso="sin_registrar", resultado_registrado_por__isnull=True, resultado_registrado_en__isnull=True,
+                         resultado_original__isnull=True, resultado_corregido_por__isnull=True, resultado_corregido_en__isnull=True,
+                         motivo_correccion_resultado="")
+                | (models.Q(membresia_usuario__isnull=False, resultado_uso__in=("realizada", "no_realizada"),
+                            resultado_registrado_por__isnull=False, resultado_registrado_en__isnull=False)
+                   & (models.Q(resultado_original__isnull=True, resultado_corregido_por__isnull=True,
+                               resultado_corregido_en__isnull=True, motivo_correccion_resultado="")
+                      | (models.Q(resultado_original__in=("realizada", "no_realizada"), resultado_original__isnull=False, resultado_corregido_por__isnull=False,
+                                  resultado_corregido_en__isnull=False, motivo_correccion_resultado__regex=r"\S")
+                         & ~models.Q(resultado_original=models.F("resultado_uso")))))
+            ), name="reserva_resultado_coherente"),
         ]
         verbose_name = "reserva"
         verbose_name_plural = "reservas"
@@ -175,3 +201,62 @@ class Reserva(models.Model):
     @property
     def numero(self):
         return f"R-{self.pk:06d}" if self.pk is not None else ""
+
+
+    @property
+    def resultado_original_texto(self):
+        return dict(self._meta.get_field("resultado_uso").choices).get(self.resultado_original, "")
+
+    @property
+    def es_con_membresia(self):
+        return self.membresia_usuario_id is not None
+
+    @property
+    def total(self):
+        if not self.es_con_membresia:
+            return self.precio_por_turno_aplicado
+        return self.precio_invitado_aplicado * sum(
+            invitado.estado == "vigente" and invitado.respuesta != "negativa" and invitado.condicion_aplicada == "no_socio"
+            for invitado in self.invitados.all()
+        )
+
+
+class ReservaInvitado(RespuestaActividad):
+    pk = models.CompositePrimaryKey("reserva_id", "usuario_id")
+    reserva = models.ForeignKey(Reserva, on_delete=models.PROTECT, related_name="invitados")
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="invitaciones_reserva")
+    membresia_usuario = models.ForeignKey("membresias.MembresiaUsuario", on_delete=models.PROTECT, related_name="invitaciones_aplicadas", null=True, blank=True)
+    condicion_aplicada = models.CharField(max_length=20, choices=(("socio", "Socio"), ("no_socio", "No socio"), ("reserva_normal", "Reserva normal")))
+    estado = models.CharField(max_length=10, choices=(("vigente", "Vigente"), ("retirado", "Retirado")), default="vigente")
+    retirado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", null=True, blank=True)
+    retirado_en = models.DateTimeField(null=True, blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "reservas_invitados"
+        ordering = ("creado_en", "usuario_id")
+        default_permissions = ()
+        constraints = [
+            *RespuestaActividad.Meta.constraints,
+            models.CheckConstraint(condition=(
+                models.Q(estado="vigente", retirado_por__isnull=True, retirado_en__isnull=True)
+                | models.Q(estado="retirado", retirado_por__isnull=False, retirado_en__isnull=False)
+            ), name="invitado_retiro_coherente"),
+            models.CheckConstraint(condition=(
+                models.Q(condicion_aplicada="socio", membresia_usuario__isnull=False)
+                | models.Q(condicion_aplicada__in=("no_socio", "reserva_normal"), membresia_usuario__isnull=True)
+            ), name="invitado_condicion_coherente"),
+        ]
+        verbose_name = "invitación de reserva"
+        verbose_name_plural = "invitaciones de reservas"
+
+    def __str__(self):
+        return f"{self.reserva.numero} · {self.usuario}"
+
+    @property
+    def respuesta_inicial_texto(self):
+        return {"afirmativa": "Aceptada", "negativa": "Rechazada"}.get(self.respuesta_inicial, "")
+
+    def get_respuesta_display(self):
+        return {"pendiente": "Pendiente", "afirmativa": "Aceptada", "negativa": "Rechazada"}[self.respuesta]

@@ -84,6 +84,9 @@ def consultar_clase(usuario, clase_id):
                 "nombre": str(asignacion.usuario),
                 "estado": asignacion.estado,
                 "observaciones": asignacion.observaciones,
+                "respuesta_texto": asignacion.respuesta_visible(inicio),
+                "respuesta": asignacion.respuesta,
+                "respuesta_modificada_en": asignacion.respuesta_modificada_en,
             }
             for asignacion in participantes
         ],
@@ -99,6 +102,8 @@ def consultar_clase(usuario, clase_id):
             }
             for asistencia in asistencias
         ],
+        "mi_respuesta": participantes.filter(usuario=usuario).first(),
+        "puede_responder": programada and ahora < inicio and participantes.filter(usuario=usuario, estado="activo", respuesta_modificada_en__isnull=True).exists(),
         "es_administrador": es_administrador,
         "es_profesor_asignado": es_profesor,
         "puede_editar": es_administrador and programada,
@@ -204,6 +209,7 @@ def consultar_actividad_clases(usuario, fecha_desde, fecha_hasta, usuario_id=Non
             "es_generada": clase.es_generada,
             "asignacion_profesor": profesor.estado if profesor is not None else None,
             "asignacion_participante": participante.estado if participante is not None else None,
+            "respuesta_texto": participante.respuesta_visible(timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))) if participante else None,
             "asistencia": estado_asistencia,
             "asistencia_cargada": clase.asistencia_cargada,
             "observaciones_asistencia": asistencia.observaciones if asistencia is not None else None,

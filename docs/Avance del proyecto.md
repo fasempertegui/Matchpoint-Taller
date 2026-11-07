@@ -44,7 +44,7 @@ Los estados del evento son Programado, Anulado y Finalizado, con auditoría cohe
 
 ### Disponibilidad
 
-Se preparan y consultan turnos para una cancha y fecha entre hoy y catorce días después, inclusive. La sede y la cancha deben estar activas, y la sede debe tener una tarifa vigente configurada.
+Se preparan y consultan turnos para una cancha y fecha entre hoy y el tercer día calendario siguiente, inclusive. La sede y la cancha deben estar activas, y la sede debe tener una tarifa vigente configurada.
 
 Los turnos faltantes se generan dentro de una transacción, según las franjas actuales de funcionamiento. Sólo se ofrecen turnos futuros y libres. Preparar turnos no registra una reserva ni ocupa horarios.
 
@@ -58,19 +58,17 @@ Cada reserva ocupa un único turno de una hora, contenido en una franja de funci
 
 El servidor valida permisos, selección, estados, horarios, precio y disponibilidad dentro de una transacción, con bloqueos para coordinar solicitudes simultáneas. Registra la reserva y su evento Programado con referencia al turno, número, fecha y usuario responsable automáticos. Ante un error, no queda una reserva parcial. Si cambia el precio antes del registro, se exige revisar el importe y confirmar nuevamente.
 
-Cada organizador puede tener como máximo cinco reservas en estado Programado, sumando todas las sedes y fechas. El límite se comprueba al confirmar, con el organizador bloqueado dentro de la transacción, tanto en el portal como en los registros administrativos, incluidas las reservas de cuentas administrativas. Los turnos terminados siguen contando mientras su evento permanezca Programado; las reservas Anuladas y Finalizadas no consumen cupo.
-
-El importe por turno se copia desde la tarifa validada de la sede al registrar y se conserva en la reserva. El total es ese importe aplicado; actualizar la tarifa no modifica reservas existentes. No se permite retirar el rol Reservas a un usuario con reservas propias Programadas.
+Cada persona admite dos reservas Programadas entre organización e invitaciones vigentes Pendientes o Aceptadas, en todas las sedes. Se validan coincidencias con clases como alumno o profesor bajo bloqueos coordinados. No se permite retirar Reservas con participaciones Programadas que ocupan cupo. Se conservan tarifa normal, contratación y adicional unitario aplicados. Sólo el organizador utiliza horas de membresía.
 
 ### Consulta
 
 El Administrador consulta las reservas desde Agenda; el usuario con rol Reservas puede consultar el detalle y comprobante de las propias. El panel del turno ofrece enlaces a ambas pantallas. El detalle incluye organizador, sede, cancha, fecha, horario, precio aplicado, estado, observaciones y los datos de registro, anulación o finalización que corresponden. Las rutas de detalle y comprobante comprueban el acceso al registro en el servidor.
 
-La búsqueda por criterios desde Agenda está pendiente. Las reservas Anuladas se localizan desde el historial de su turno. No hay una sección independiente de Reservas ni un formulario de alta separado.
+La búsqueda por criterios desde Agenda está pendiente. Las reservas Anuladas se localizan desde el historial de su turno. Mis reservas reúne reservas propias e invitaciones. La creación desde Agenda ofrece organizador, modalidad, invitados, revisión y confirmación. El invitado consulta únicamente su participación, sin comprobante ni información comercial ajena.
 
 ### Anulación
 
-El Administrador puede anular cualquier reserva Programada antes de que comience su turno. El usuario con rol Reservas puede anular únicamente las propias con al menos una hora de antelación al turno. El motivo es obligatorio y debe tener al menos 25 caracteres, sin contar los espacios al principio y al final. El formulario y el procesamiento de la anulación validan ese mínimo.
+El Administrador puede anular cualquier reserva Programada antes de que comience su turno. El usuario con rol Reservas puede anular únicamente las propias hasta antes del inicio del turno. El motivo es obligatorio y debe tener al menos 25 caracteres, sin contar los espacios al principio y al final. El formulario y el procesamiento de la anulación validan ese mínimo.
 
 La operación cambia el evento a Anulado, registra motivo, fecha, hora y responsable, y libera su turno. Guarda en la reserva si la anulación corresponde al organizador o a la administración. Conserva reserva, evento, referencia al turno e importe aplicado. Se ejecuta en una única transacción, validando nuevamente permisos, estado y horario después de obtener los bloqueos.
 
@@ -285,7 +283,7 @@ Anular y liberar y Anular y bloquear revelan sus formularios dentro del panel. L
 
 La confirmación vuelve a Agenda y utiliza los servicios transaccionales de anulación con revisión firmada, versión de la clase y revalidación de permisos, estado, horario y ocupación. La anulación con bloqueo confirma ambas operaciones juntas. Las acciones conservan sus condiciones de disponibilidad y la ficha completa mantiene su recorrido propio.
 
-Verificación realizada: controles de Django, carga de plantillas y sintaxis JavaScript. Revisión manual pendiente de ambas acciones, motivos requeridos, cancelación del modal, observaciones, clase iniciada, revisión vencida, cambios concurrentes y permisos. No se crean ni ejecutan pruebas automatizadas.
+Verificación realizada: controles de Django, carga de plantillas y sintaxis JavaScript. Revisión manual pendiente de ambas acciones, motivos requeridos, cancelación del modal, observaciones, clase iniciada, revisión vencida, cambios concurrentes y permisos. Las pruebas automatizadas requieren autorización expresa del usuario.
 
 
 ## Creación de clases por pasos en Agenda
@@ -296,7 +294,7 @@ El paso Resumen se obtiene del servidor y muestra turno, profesores, participant
 
 El alta actualiza la grilla y el panel sin recargar la página. Si la clase se creó pero falla la actualización visual, Actualizar agenda reintenta la consulta sin repetir el alta. Las búsquedas y revisiones pendientes se cancelan al retirar el formulario y las respuestas de selecciones modificadas se descartan. La edición de clases conserva su recorrido propio.
 
-Verificación: controles de Django, carga de plantillas y sintaxis JavaScript. Revisión manual pendiente de los tres pasos, Atrás, Cancelar, clase sin participantes, profesores obligatorios, búsqueda ampliada, observaciones, advertencias, permisos, turno ocupado y cambios de elegibilidad al confirmar. No se crean ni ejecutan pruebas automatizadas.
+Verificación: controles de Django, carga de plantillas y sintaxis JavaScript. Revisión manual pendiente de los tres pasos, Atrás, Cancelar, clase sin participantes, profesores obligatorios, búsqueda ampliada, observaciones, advertencias, permisos, turno ocupado y cambios de elegibilidad al confirmar. Las pruebas automatizadas requieren autorización expresa del usuario.
 
 
 ## Alcance comercial e instalación
@@ -316,14 +314,14 @@ Las operaciones exigen Administrador activo sin cambio de contraseña pendiente 
 
 El catálogo conserva sus operaciones separadas del registro de contrataciones, usos y cobros. Las horas mensuales quedan en lectura y no admiten modificaciones desde el servicio cuando existe cualquier contratación histórica. La oferta del portal permite consultar las membresías Activas, sus horas mensuales y su adicional por invitado no socio.
 
-Verificación realizada: instalación limpia en base temporal, controles de Django, coincidencia de modelos y migraciones, carga de 84 plantillas y consulta de oferta inicial y trigger. Revisión manual pendiente: altas y ediciones válidas, duplicados entre Activas, activación con nombre ocupado, precios cero y negativos, horas cero, reenvíos, modificaciones concurrentes y permisos. No se crean ni ejecutan pruebas automatizadas.
+Verificación realizada: instalación limpia en base temporal, controles de Django, coincidencia de modelos y migraciones, carga de 84 plantillas y consulta de oferta inicial y trigger. Revisión manual pendiente: altas y ediciones válidas, duplicados entre Activas, activación con nombre ocupado, precios cero y negativos, horas cero, reenvíos, modificaciones concurrentes y permisos. Las pruebas automatizadas requieren autorización expresa del usuario.
 
 
 ## Consulta de oferta de membresías
 
 La oferta incorpora membresías de socios en el catálogo compartido de lectura, con búsqueda por nombre o descripción, paginación y descripciones extensas bajo demanda. Limpiar búsqueda conserva el catálogo consultado. La navegación entre Planes, Membresías y Tarifas usa enlaces con sección actual accesible, sin controles administrativos. Membresías ofrece un acceso único a Contratar membresía, con selección y revisión en su recorrido propio.
 
-Verificación realizada: controles de Django, carga de 84 plantillas y revisión de diferencias. Revisión manual pendiente de las pestañas, búsquedas, paginación, descripción, importes cero, productos Inactivos, estados vacíos, permisos, teclado y móvil. No se crean ni ejecutan pruebas automatizadas.
+Verificación realizada: controles de Django, carga de 84 plantillas y revisión de diferencias. Revisión manual pendiente de las pestañas, búsquedas, paginación, descripción, importes cero, productos Inactivos, estados vacíos, permisos, teclado y móvil. Las pruebas automatizadas requieren autorización expresa del usuario.
 
 
 ## Confirmación comercial de planes
@@ -332,7 +330,7 @@ El alta administrativa aplica el precio vigente confirmado del plan. La revisió
 
 El calendario, las presentaciones y las tareas utilizan America/Argentina/Salta. La selección y el servicio habilitan el mes siguiente desde el día 25 inclusive. Los filtros de consulta permiten ver el mes siguiente independientemente de esa habilitación para conservar acceso a registros existentes.
 
-Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de plantillas y aplicación de la migración de etiqueta del importe. Queda pendiente la revisión manual del bloque 2.1, incluidos cambio de precio durante la revisión, envíos manipulados, reenvíos, días 24/25, cambio de año, precio cero, roles y permisos. No se crean ni ejecutan pruebas automatizadas.
+Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de plantillas y aplicación de la migración de etiqueta del importe. Queda pendiente la revisión manual del bloque 2.1, incluidos cambio de precio durante la revisión, envíos manipulados, reenvíos, días 24/25, cambio de año, precio cero, roles y permisos. Las pruebas automatizadas requieren autorización expresa del usuario.
 
 
 ## Contrataciones administrativas de membresías de socios
@@ -347,7 +345,7 @@ El listado permite buscar usuario o producto, filtrar por mes y estado y paginar
 
 PostgreSQL protege mes, importes, estados y coherencia de datos de anulación, genera los identificadores y audita modificaciones y eliminaciones. Auditoría identifica la contratación y enlaza al detalle administrativo. Los datos comerciales de una contratación registrada no admiten edición desde el modelo.
 
-Verificación realizada: instalación limpia en base temporal, controles de Django, coincidencia de modelos y migraciones y carga de 84 plantillas. Revisión manual pendiente del bloque 2.2: profesor socio, plan simultáneo, duplicados, fechas históricas y futuras habilitadas, precio cero, precio cambiado durante la confirmación, protección de horas, comprobante y permisos. No se crean ni ejecutan pruebas automatizadas.
+Verificación realizada: instalación limpia en base temporal, controles de Django, coincidencia de modelos y migraciones y carga de 84 plantillas. Revisión manual pendiente del bloque 2.2: profesor socio, plan simultáneo, duplicados, fechas históricas y futuras habilitadas, precio cero, precio cambiado durante la confirmación, protección de horas, comprobante y permisos. Las pruebas automatizadas requieren autorización expresa del usuario.
 
 
 ## Anulación administrativa de contrataciones de membresías
@@ -360,7 +358,7 @@ Anular conserva producto, titular, mes, importe aplicado e historia y permite re
 
 Los impedimentos por aplicaciones como organizador o invitado socio vigente en reservas Programadas se integran al crear esas relaciones. El cómputo de usos conservados del titular y mes se integra con reservas; no hay reinicio de registros comerciales ni eliminación de contrataciones al reemplazar.
 
-Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de plantillas y revisión de rutas y condiciones de acciones. Revisión manual pendiente: anulación, motivo vacío, reenvío, Vencidas, reemplazo del mes, convivencia con plan, titular inactivo, firma de otro tipo, acceso no administrativo y protección de horas. Los vínculos de reservas, invitados y usos mantienen su revisión pendiente en el plan. No se crean ni ejecutan pruebas automatizadas.
+Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de plantillas y revisión de rutas y condiciones de acciones. Revisión manual pendiente: anulación, motivo vacío, reenvío, Vencidas, reemplazo del mes, convivencia con plan, titular inactivo, firma de otro tipo, acceso no administrativo y protección de horas. Los vínculos de reservas, invitados y usos mantienen su revisión pendiente en el plan. Las pruebas automatizadas requieren autorización expresa del usuario.
 
 
 ## Vencimiento mensual de planes y membresías
@@ -371,7 +369,7 @@ Cada actualización exige estado Activo y cambia únicamente estado y fecha de m
 
 El vencimiento conserva roles, actividades, productos, importes aplicados, referencias e historia. La cobertura se consulta por estado y período calendario, de modo que una contratación de un mes terminado no otorga beneficios aunque la tarea todavía no la haya procesado. El proceso no registra cobros ni modifica marcas de envío de avisos.
 
-Verificación realizada: controles de Django, coincidencia de modelos y migraciones y revisión del alcance de las escrituras y de la transacción. Queda pendiente la revisión manual del bloque 2.5: fin de mes, registros futuros, pendientes de varios meses, repetición y concurrencia con anulación. No se crean ni ejecutan pruebas automatizadas.
+Verificación realizada: controles de Django, coincidencia de modelos y migraciones y revisión del alcance de las escrituras y de la transacción. Queda pendiente la revisión manual del bloque 2.5: fin de mes, registros futuros, pendientes de varios meses, repetición y concurrencia con anulación. Las pruebas automatizadas requieren autorización expresa del usuario.
 
 
 ## Consulta propia de membresías
@@ -382,7 +380,7 @@ Las consultas sólo admiten GET y filtran por el titular antes de localizar regi
 
 El detalle y el comprobante muestran producto, período, horas de membresía o configuración del plan, importe aplicado, estado y fechas. No presentan responsables, observaciones internas, motivo libre de anulación, enlaces administrativos ni acciones de edición o anulación. Usos y cobros tienen sus entregas correspondientes. La contratación propia y la renovación se solicitan mediante sus accesos bajo demanda.
 
-Verificación realizada: controles de Django, coincidencia de modelos y migraciones y carga de 84 plantillas. Revisión manual pendiente del bloque 2.6: titular y terceros, Profesor sin Alumno, administrador consultando sus propios contratos, ambos tipos y estados, productos Inactivos, filtros, paginación, estados vacíos y privacidad de detalle y comprobante. No se crean ni ejecutan pruebas automatizadas.
+Verificación realizada: controles de Django, coincidencia de modelos y migraciones y carga de 84 plantillas. Revisión manual pendiente del bloque 2.6: titular y terceros, Profesor sin Alumno, administrador consultando sus propios contratos, ambos tipos y estados, productos Inactivos, filtros, paginación, estados vacíos y privacidad de detalle y comprobante. Las pruebas automatizadas requieren autorización expresa del usuario.
 
 
 ## Base comercial para contratación propia
@@ -397,7 +395,7 @@ La revisión firmada identifica actor, titular, producto, importe y momento de m
 
 El registro conserva estados Activo, Anulado y Vencido, responsable real, importes e historia. Contratar no genera clases, asignaciones, usos ni cobros; tampoco registra solicitudes, encuestas o aprobaciones. Las pantallas propias de contratación y renovación se abren bajo demanda desde Mis contrataciones y Oferta.
 
-Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de 84 plantillas y revisión de permisos, firma, bloqueos y escrituras. Revisión manual pendiente del bloque 2.7: días 24/25, cambio de año, cambios durante la revisión, reenvío, alta administrativa concurrente, roles y conservación de importes. No se crean ni ejecutan pruebas automatizadas.
+Verificación realizada: controles de Django, coincidencia de modelos y migraciones, carga de 84 plantillas y revisión de permisos, firma, bloqueos y escrituras. Revisión manual pendiente del bloque 2.7: días 24/25, cambio de año, cambios durante la revisión, reenvío, alta administrativa concurrente, roles y conservación de importes. Las pruebas automatizadas requieren autorización expresa del usuario.
 
 
 ## Contratar membresía propia y renovar el mismo plan
@@ -420,4 +418,19 @@ El listado agrupa una fila por participante de la cancha, con sus horarios previ
 
 Una fila permite consultar el contrato actual o registrar un plan si la cuenta y el mes admiten alta. El enlace de alta conserva persona y mes, y el acceso a cada horario conduce a su gestión administrativa. Profesores, cuentas Inactivas y meses todavía no habilitados no muestran una acción de registro de plan. La consulta incorpora participaciones de prueba y no interpreta Sin contratación como baja, deuda o falta de pago. No modifica plantilla, clases concretas, roles, contratos, respuestas ni cobros y no ofrece retiros automáticos o en lote.
 
-Verificación realizada para 2.8–2.10: controles de Django, coincidencia de modelos y migraciones, carga de 86 plantillas y revisión de rutas, permisos, firma, conservación de selección y condiciones de las acciones. Queda pendiente la revisión manual de los recorridos en navegador: altas y renovaciones, Atrás y Cancelar, cambios de precio o referencia, días 24/25 y cambio de mes, duplicados, cuenta ajena, roles, comprobante, filtros y alcance de plantilla. No se crean ni ejecutan pruebas automatizadas.
+Verificación realizada para 2.8–2.10: controles de Django, coincidencia de modelos y migraciones, carga de 86 plantillas y revisión de rutas, permisos, firma, conservación de selección y condiciones de las acciones. Queda pendiente la revisión manual de los recorridos en navegador: altas y renovaciones, Atrás y Cancelar, cambios de precio o referencia, días 24/25 y cambio de mes, duplicados, cuenta ajena, roles, comprobante, filtros y alcance de plantilla. Las pruebas automatizadas requieren autorización expresa del usuario.
+
+## Participación y usos de membresía
+
+La creación y gestión comercial utilizan revisión firmada y confirmación transaccional con revalidación de cobertura, personas, cupos, ocupación y precios. Con membresía no se requiere tarifa normal. Actualizar socios reconoce coberturas posteriores a la invitación sin exigir saldo al invitado. Las aplicaciones como organizador o invitado socio vigente Pendiente o Aceptado en reservas Programadas impiden anular la contratación; Rechazadas y retiradas no impiden anular. Los reemplazos descuentan usos conservados del titular y mes incluso de contrataciones Anuladas.
+
+Alumnos e invitados responden por sí mismos antes del inicio, con primera decisión y un único cambio. La historia conserva responsables y momentos. La negativa libera disponibilidad sin retirar asignación ni modificar asistencia; Sin respuesta se calcula al inicio. Profesores no responden. Retirar y reincorporar conserva identidad e historia; las invitaciones Rechazadas no se retiran ni reenvían. Reaceptar revalida coincidencias y cupo.
+
+Con membresía, cancelar por cuenta propia con más de seis horas libera el uso; con seis horas o menos lo conserva. Cancelar administrativamente siempre libera, también desde Agenda, bloqueos y desactivación de instalaciones. Las operaciones conservan historia y liberan ocupación y cupo dentro de la transacción.
+
+Después de Finalizado, administración registra Realizada o No realizada y admite una única corrección motivada sin límite temporal, conservando el original. Sin registrar no presume realización. El resultado no modifica consumo ni cobros.
+
+La consulta propia y administrativa admite mes o rango de hasta 366 días inclusive. Distingue comprometidas y consumidas y deriva saldo por titular y mes, incluyendo anulaciones que computan y usos de contrataciones Anuladas. Las participaciones de invitado se consultan separadas sin consumir horas.
+
+
+La revisión visual en navegador permanece pendiente. Las pruebas automatizadas requieren autorización expresa del usuario.
