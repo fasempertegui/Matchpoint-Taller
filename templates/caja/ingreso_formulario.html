@@ -14,7 +14,7 @@
         {% for campo in formulario.visible_fields %}
             <div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
                 {% if campo.name == 'verificado' %}
-                    <label class="ingreso-verificacion" for="{{ campo.id_for_label }}">{{ campo }}<span>{{ campo.label }}</span></label>
+                    <label class="ingreso-verificacion" for="{{ campo.id_for_label }}">{{ campo }}<span>Verifiqué la recepción o aprobación del pago</span></label>
                 {% else %}
                     <label for="{{ campo.id_for_label }}">{{ campo.label }}{% if campo.field.required %} <span aria-hidden="true">*</span>{% endif %}</label>
                     {{ campo }}
