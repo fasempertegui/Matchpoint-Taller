@@ -3,4 +3,5 @@
 {% for fila in resumen_medios %}<tr><td>{{ fila.clase_texto }}</td><td>{{ fila.medio_texto }}</td><td>$ {{ fila.total|floatformat:"2g" }}</td></tr>{% empty %}<tr><td colspan="3">No hay movimientos que sumar.</td></tr>{% endfor %}
 </tbody></table></div>
 {% if resumen_ingresos %}<h3>Ingresos por categoría</h3><div class="tabla-contenedor"><table><thead><tr><th>Categoría</th><th>Total</th></tr></thead><tbody>{% for fila in resumen_ingresos %}<tr><td>{{ fila.categoria_texto }}</td><td>$ {{ fila.total|floatformat:"2g" }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+<p>Gastos operativos: <strong>$ {{ gastos_operativos|floatformat:"2g" }}</strong> · Devoluciones: <strong>$ {{ devoluciones|floatformat:"2g" }}</strong></p>
 </section>

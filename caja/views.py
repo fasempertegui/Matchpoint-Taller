@@ -8,9 +8,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
-from .forms import AperturaCajaForm, CierreCajaForm, IngresoForm, SeleccionOrigenIngresoForm
+from .forms import (
+    AnulacionMovimientoForm, AperturaCajaForm, CierreCajaForm, HistorialMovimientosForm,
+    HistorialSesionesForm, IngresoForm, MovimientoCajaForm, SeleccionOrigenIngresoForm,
+)
 from .ingresos import ORIGENES, cobros_del_origen, consultar_origen, registrar_ingreso
 from .models import MovimientoFondo, SesionCaja
+from .movimientos import anular_movimiento, registrar_movimiento, revision_anulacion
 from .servicios import abrir_caja, cerrar_caja, efectivo_esperado, exigir_acceso_caja, revision_apertura, ultimo_cierre, resumen_sesion
 
 
@@ -56,8 +60,12 @@ def caja_abrir(request):
 def sesion_detalle(request, pk):
     actor = exigir_acceso_caja(request.user)
     sesion = get_object_or_404(SesionCaja.objects.select_related("responsable"), pk=pk)
+    pagina = Paginator(sesion.movimientos.all(), 25).get_page(request.GET.get("pagina"))
+    if sesion.estado == "cerrada":
+        for movimiento in pagina:
+            movimiento.incluido_al_cierre = movimiento.anulado_en is None or movimiento.anulado_en > sesion.cerrada_en
     return render(request, "caja/sesion_detalle.html", {
-        "pagina_movimientos": Paginator(sesion.movimientos.all(), 25).get_page(request.GET.get("pagina")),
+        "pagina_movimientos": pagina,
         **resumen_sesion(sesion),
         "sesion": sesion, "esperado": efectivo_esperado(sesion) if sesion.estado == SesionCaja.Estado.ABIERTA else sesion.efectivo_esperado,
         "puede_cerrar": sesion.estado == SesionCaja.Estado.ABIERTA and sesion.responsable_id == actor.pk,
@@ -144,9 +152,9 @@ def ingreso_crear(request, pk):
 @never_cache
 @require_GET
 def movimiento_detalle(request, pk):
-    exigir_acceso_caja(request.user)
+    actor = exigir_acceso_caja(request.user)
     movimiento = get_object_or_404(MovimientoFondo.objects.select_related(
-        "sesion", "registrado_por", "plan_usuario__usuario", "plan_usuario__plan",
+        "sesion", "registrado_por", "anulado_por", "plan_usuario__usuario", "plan_usuario__plan",
         "membresia_usuario__usuario", "membresia_usuario__membresia", "reserva__organizador",
     ), pk=pk)
     url_origen = None
@@ -155,4 +163,121 @@ def movimiento_detalle(request, pk):
             destino = {"reserva": "reservas:reserva_detalle", "plan": "membresias:contratacion_plan_detalle", "membresia": "membresias:contratacion_membresia_detalle"}[tipo]
             url_origen = reverse(destino, args=[getattr(movimiento, campo)])
             break
-    return render(request, "caja/movimiento_detalle.html", {"movimiento": movimiento, "url_origen": url_origen})
+    actual = SesionCaja.objects.filter(estado="abierta", responsable=actor).first()
+    return render(request, "caja/movimiento_detalle.html", {
+        "movimiento": movimiento, "url_origen": url_origen,
+        "puede_anular": actual is not None and movimiento.estado == "vigente",
+    })
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def movimiento_crear(request, pk):
+    actor = exigir_acceso_caja(request.user)
+    sesion = get_object_or_404(SesionCaja, pk=pk)
+    if sesion.responsable_id != actor.pk:
+        raise PermissionDenied
+    if sesion.estado != "abierta" and request.method == "GET":
+        messages.error(request, "La sesión está cerrada y no admite movimientos nuevos.")
+        return redirect("caja:sesion_detalle", pk=pk)
+    clase = request.GET.get("clase")
+    if clase is None:
+        return render(request, "caja/movimiento_tipo.html", {"sesion": sesion})
+    if clase not in ("egreso", "aporte", "retiro"):
+        raise Http404
+    formulario = MovimientoCajaForm(request.POST if request.method == "POST" else None, clase=clase)
+    if request.method == "POST" and formulario.is_valid():
+        try:
+            movimiento = registrar_movimiento(actor, pk, clase=clase, **formulario.cleaned_data)
+        except ValidationError as error:
+            formulario.add_error(None, error.messages)
+        else:
+            messages.success(request, f"El movimiento {movimiento.numero} está registrado.")
+            return redirect("caja:movimiento_detalle", pk=movimiento.pk)
+    return render(request, "caja/movimiento_formulario.html", {
+        "sesion": sesion, "formulario": formulario, "clase": clase,
+        "titulo": f"Registrar {dict(MovimientoFondo.Clase.choices)[clase].lower()}",
+        "disponible": efectivo_esperado(sesion),
+    })
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def movimiento_anular(request, pk):
+    actor = exigir_acceso_caja(request.user)
+    actual = SesionCaja.objects.filter(estado="abierta", responsable=actor).first()
+    if actual is None:
+        raise PermissionDenied
+    movimiento = get_object_or_404(MovimientoFondo.objects.select_related("sesion"), pk=pk)
+    if movimiento.estado != "vigente" and request.method == "GET":
+        messages.info(request, "El movimiento ya está Anulado.")
+        return redirect("caja:movimiento_detalle", pk=pk)
+    formulario = AnulacionMovimientoForm(request.POST if request.method == "POST" else None, initial={"revision": revision_anulacion(actor, movimiento, actual)})
+    if request.method == "POST" and formulario.is_valid():
+        try:
+            anular_movimiento(actor, pk, **formulario.cleaned_data)
+        except ValidationError as error:
+            formulario.add_error(None, error.messages)
+        else:
+            messages.success(request, "El movimiento fue Anulado. Sus datos originales se conservan.")
+            return redirect("caja:movimiento_detalle", pk=pk)
+    origen = movimiento.sesion
+    return render(request, "caja/movimiento_anular.html", {
+        "movimiento": movimiento, "actual": actual, "formulario": formulario,
+        "efecto": -movimiento.efecto_efectivo,
+        "esperado_resultante": efectivo_esperado(origen) - movimiento.efecto_efectivo if origen.estado == "abierta" else None,
+    })
+
+
+def _filtrar_fechas(consulta, datos):
+    if datos.get("desde"):
+        consulta = consulta.filter(creado_en__date__gte=datos["desde"])
+    if datos.get("hasta"):
+        consulta = consulta.filter(creado_en__date__lte=datos["hasta"])
+    return consulta
+
+
+@login_required
+@never_cache
+@require_GET
+def historial_sesiones(request):
+    exigir_acceso_caja(request.user)
+    formulario = HistorialSesionesForm(request.GET)
+    consulta = SesionCaja.objects.select_related("responsable").none()
+    if formulario.is_valid():
+        datos = formulario.cleaned_data
+        consulta = _filtrar_fechas(SesionCaja.objects.select_related("responsable"), datos)
+        if datos.get("estado"):
+            consulta = consulta.filter(estado=datos["estado"])
+    parametros = request.GET.copy()
+    parametros.pop("pagina", None)
+    return render(request, "caja/historial.html", {
+        "formulario": formulario, "pagina": Paginator(consulta, 25).get_page(request.GET.get("pagina")),
+        "parametros": parametros.urlencode(), "sesiones": True, "titulo": "Historial de sesiones",
+    })
+
+
+@login_required
+@never_cache
+@require_GET
+def movimiento_lista(request):
+    exigir_acceso_caja(request.user)
+    formulario = HistorialMovimientosForm(request.GET)
+    consulta = MovimientoFondo.objects.none()
+    if formulario.is_valid():
+        datos = formulario.cleaned_data
+        consulta = _filtrar_fechas(MovimientoFondo.objects.all(), datos)
+        for campo in ("sesion", "clase", "medio_pago", "estado"):
+            if datos.get(campo):
+                consulta = consulta.filter(**{campo: datos[campo]})
+        if datos.get("categoria"):
+            clase, categoria = datos["categoria"].split(":")
+            consulta = consulta.filter(**{f"categoria_{clase}": categoria})
+    parametros = request.GET.copy()
+    parametros.pop("pagina", None)
+    return render(request, "caja/historial.html", {
+        "formulario": formulario, "pagina": Paginator(consulta, 25).get_page(request.GET.get("pagina")),
+        "parametros": parametros.urlencode(), "titulo": "Movimientos de caja",
+    })

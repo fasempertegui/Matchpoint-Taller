@@ -9,6 +9,8 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
+from caja.consultas import contexto_cobros
+
 from .contrataciones import (
     ContratacionExistente,
     anular_contratacion_membresia, anular_contratacion_plan,
@@ -78,6 +80,7 @@ def contratacion_detalle(request, pk, tipo="plan"):
         modelo.objects.select_related("usuario", tipo, "registrado_por", "anulado_por"), pk=pk,
     )
     return render(request, "membresias/contratacion_detalle.html", {
+        **contexto_cobros(request.user, tipo, contratacion, request.GET),
         **_contexto(tipo), "contratacion": contratacion,
     })
 

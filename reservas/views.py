@@ -6,6 +6,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from caja.consultas import contexto_cobros
+
 from .forms import ReservaAnulacionForm
 from .models import Evento, Reserva
 from .servicios import (
@@ -29,7 +31,7 @@ def reserva_detalle(request, pk):
             "puede_responder": invitacion.estado == "vigente" and invitacion.respuesta_modificada_en is None
                 and reserva.evento.estado == Evento.Estado.PROGRAMADO and timezone.now() < inicio_reserva(reserva),
         })
-    return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador))
+    return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador, usuario=request.user, parametros=request.GET))
 
 
 @login_required
@@ -53,7 +55,7 @@ def _obtener_reserva_para_consulta(usuario, pk, *, solo_organizador=False):
     return get_object_or_404(reservas, pk=pk), es_administrador
 
 
-def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=None):
+def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=None, *, usuario, parametros):
     from .comercial import inicio_reserva, validar_origen_reprogramacion
     ahora = timezone.localtime()
     try:
@@ -81,6 +83,7 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
         else:
             puede_reprogramar = True
     return {
+        **contexto_cobros(usuario, "reserva", reserva, parametros),
         "puede_reprogramar": puede_reprogramar,
         "reemplazo": Reserva.objects.filter(reprogramada_desde=reserva).first(),
         "reserva": reserva,
@@ -112,7 +115,7 @@ def reserva_anular(request, pk):
         else:
             messages.success(request, f"La reserva {reserva.numero} fue anulada. El turno y el cupo Programado quedaron liberados.")
             return redirect("reservas:reserva_detalle", pk=reserva.pk)
-    return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador, formulario))
+    return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador, formulario, usuario=request.user, parametros=request.GET))
 
 
 @login_required

@@ -1,0 +1,10 @@
+<section class="perfil-seccion"><h2>Cobros registrados</h2>
+{% if pagina_cobros %}<div class="tabla-contenedor"><table><thead><tr><th>Registro</th><th>Concepto</th><th>Medio</th><th>Monto recibido</th></tr></thead><tbody>
+{% for cobro in pagina_cobros %}<tr><td>{% if cobros_administrativos %}<a href="{% url 'caja:movimiento_detalle' cobro.pk %}">{{ cobro.creado_en|date:"d/m/Y H:i" }}</a>{% else %}{{ cobro.creado_en|date:"d/m/Y H:i" }}{% endif %}</td><td>{{ cobro.concepto|truncatechars:100 }}</td><td>{{ cobro.get_medio_pago_display }}</td><td>$ {{ cobro.monto|floatformat:"2g" }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% if pagina_cobros.has_other_pages %}<nav aria-label="Páginas de cobros">
+{% if pagina_cobros.has_previous %}<a href="?{% if parametros_cobros %}{{ parametros_cobros }}&amp;{% endif %}pagina_cobros={{ pagina_cobros.previous_page_number }}">Anterior</a>{% endif %}<span>{{ pagina_cobros.number }} de {{ pagina_cobros.paginator.num_pages }}</span>{% if pagina_cobros.has_next %}<a href="?{% if parametros_cobros %}{{ parametros_cobros }}&amp;{% endif %}pagina_cobros={{ pagina_cobros.next_page_number }}">Siguiente</a>{% endif %}
+</nav>{% endif %}
+{% else %}<p class="texto-secundario">No hay cobros vigentes registrados.</p>{% endif %}
+{% if url_cobrar %}<a class="boton boton-secundario boton-chico" href="{{ url_cobrar }}">Registrar cobro</a>{% endif %}
+</section>

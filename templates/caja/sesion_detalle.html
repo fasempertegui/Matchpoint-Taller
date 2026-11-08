@@ -3,7 +3,7 @@
 {% block titulo %}Caja {{ sesion.numero }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><div><h1>Caja {{ sesion.numero }}</h1>{% include "componentes/badge_estado.html" with estado=sesion.estado texto=sesion.get_estado_display only %}</div><a class="boton boton-secundario" href="{% url 'caja:caja_actual' %}">Caja actual</a></header>
+<header class="tarjeta encabezado-pagina"><div><h1>Caja {{ sesion.numero }}</h1>{% include "componentes/badge_estado.html" with estado=sesion.estado texto=sesion.get_estado_display only %}</div><div class="acciones"><a class="boton boton-secundario" href="{% url 'caja:caja_actual' %}">Caja actual</a><a class="boton boton-secundario" href="{% url 'caja:historial_sesiones' %}">Historial</a><a class="boton boton-secundario" href="{% url 'caja:movimiento_lista' %}">Movimientos</a></div></header>
 <section class="tarjeta"><h2>Sesión</h2><dl class="perfil-lista">
 <div class="perfil-fila"><dt>Responsable</dt><dd>{{ sesion.responsable }}</dd></div>
 <div class="perfil-fila"><dt>Apertura</dt><dd>{{ sesion.creado_en|date:"d/m/Y H:i" }}</dd></div>
@@ -17,7 +17,7 @@
 {% if sesion.motivo_diferencia %}<div class="perfil-fila"><dt>Motivo de diferencia</dt><dd>{{ sesion.motivo_diferencia|linebreaksbr }}</dd></div>{% endif %}
 {% endif %}
 </dl>
-{% if puede_cerrar %}<a class="boton boton-secundario" href="{% url 'caja:ingreso_crear' sesion.pk %}">Registrar ingreso</a> <a class="boton boton-secundario" href="{% url 'caja:caja_cerrar' sesion.pk %}">Cerrar caja</a>{% elif sesion.estado == 'abierta' %}<p class="texto-secundario">La sesión está a cargo de {{ sesion.responsable }}.</p>{% endif %}
+{% if puede_cerrar %}<a class="boton boton-secundario" href="{% url 'caja:movimiento_crear' sesion.pk %}">Registrar movimiento</a> <a class="boton boton-secundario" href="{% url 'caja:caja_cerrar' sesion.pk %}">Cerrar caja</a>{% elif sesion.estado == 'abierta' %}<p class="texto-secundario">La sesión está a cargo de {{ sesion.responsable }}.</p>{% endif %}
 </section>
 {% include "caja/_resumen.html" %}
 <section class="tarjeta"><h2>Movimientos de la sesión</h2>{% include "caja/_movimientos.html" with pagina=pagina_movimientos %}</section>

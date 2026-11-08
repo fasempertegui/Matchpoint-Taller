@@ -1,18 +1,21 @@
 {% extends "base.html" %}
 {% load static %}
-{% block titulo %}Ingreso {{ movimiento.numero }} | Academia TM{% endblock %}
+{% block titulo %}{{ movimiento.get_clase_display }} {{ movimiento.numero }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><h1>Ingreso {{ movimiento.numero }}</h1><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' movimiento.sesion_id %}">Ver sesión de caja</a></header>
+<header class="tarjeta encabezado-pagina"><h1>{{ movimiento.get_clase_display }} {{ movimiento.numero }}</h1><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' movimiento.sesion_id %}">Ver sesión de caja</a></header>
 <section class="tarjeta"><dl class="perfil-lista">
     <div class="perfil-fila"><dt>Estado</dt><dd>{{ movimiento.get_estado_display }}</dd></div>
-    <div class="perfil-fila"><dt>Categoría</dt><dd>{{ movimiento.get_categoria_ingreso_display }}</dd></div>
+    {% if movimiento.categoria_ingreso %}<div class="perfil-fila"><dt>Categoría</dt><dd>{{ movimiento.get_categoria_ingreso_display }}</dd></div>{% elif movimiento.categoria_egreso %}<div class="perfil-fila"><dt>Categoría</dt><dd>{{ movimiento.get_categoria_egreso_display }}</dd></div>{% endif %}
+{% if movimiento.destinatario %}<div class="perfil-fila"><dt>Destinatario</dt><dd>{{ movimiento.destinatario }}</dd></div>{% endif %}
     <div class="perfil-fila"><dt>Concepto</dt><dd>{{ movimiento.concepto|linebreaksbr }}</dd></div>
-    <div class="perfil-fila"><dt>Monto recibido</dt><dd>$ {{ movimiento.monto|floatformat:"2g" }}</dd></div>
+    <div class="perfil-fila"><dt>Monto</dt><dd>$ {{ movimiento.monto|floatformat:"2g" }}</dd></div>
     <div class="perfil-fila"><dt>Medio</dt><dd>{{ movimiento.get_medio_pago_display }}</dd></div>
     {% if movimiento.referencia %}<div class="perfil-fila"><dt>Referencia</dt><dd>{{ movimiento.referencia }}</dd></div>{% endif %}
     {% if url_origen %}<div class="perfil-fila"><dt>Origen</dt><dd><a href="{{ url_origen }}">{{ movimiento.origen }}</a></dd></div>{% endif %}
     <div class="perfil-fila"><dt>Responsable</dt><dd>{{ movimiento.registrado_por }}</dd></div>
     <div class="perfil-fila"><dt>Registro</dt><dd>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</dd></div>
 </dl></section>
+{% if movimiento.estado == 'anulado' %}<section class="tarjeta"><h2>Anulación</h2><p>{{ movimiento.anulado_en|date:"d/m/Y H:i" }} · {{ movimiento.anulado_por }}</p><p>{{ movimiento.motivo_anulacion|linebreaksbr }}</p>{% if movimiento.sesion.estado == 'cerrada' and movimiento.anulado_en > movimiento.sesion.cerrada_en %}<p>La anulación es posterior al cierre. Los importes y totales históricos de esa sesión se conservan.</p>{% endif %}</section>{% endif %}
+{% if puede_anular %}<section class="tarjeta"><a class="boton boton-secundario" href="{% url 'caja:movimiento_anular' movimiento.pk %}">Anular movimiento</a></section>{% endif %}
 {% endblock %}

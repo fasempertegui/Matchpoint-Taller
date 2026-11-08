@@ -1,7 +1,7 @@
 from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
@@ -43,8 +43,11 @@ def _validar_importe(campo, valor):
 
 
 def efectivo_esperado(sesion):
-    ingresos = sesion.movimientos.filter(estado="vigente", clase="ingreso", medio_pago="efectivo").aggregate(total=Sum("monto"))["total"]
-    return sesion.efectivo_inicial + (ingresos or 0)
+    totales = sesion.movimientos.filter(estado="vigente", medio_pago="efectivo").aggregate(
+        entradas=Sum("monto", filter=Q(clase__in=("ingreso", "aporte"))),
+        salidas=Sum("monto", filter=Q(clase__in=("egreso", "retiro"))),
+    )
+    return sesion.efectivo_inicial + (totales["entradas"] or 0) - (totales["salidas"] or 0)
 
 
 @transaction.atomic
@@ -104,7 +107,6 @@ def cerrar_caja(actor, sesion_id, *, efectivo_contado, motivo_diferencia=""):
 
 
 def movimientos_validos_sesion(sesion):
-    from django.db.models import Q
     consulta = sesion.movimientos.all()
     if sesion.estado == SesionCaja.Estado.CERRADA:
         return consulta.filter(Q(anulado_en__isnull=True) | Q(anulado_en__gt=sesion.cerrada_en))
@@ -123,4 +125,7 @@ def resumen_sesion(sesion):
     ingresos = list(consulta.filter(clase="ingreso").values("categoria_ingreso").annotate(total=Sum("monto")).order_by("categoria_ingreso"))
     for fila in ingresos:
         fila["categoria_texto"] = categorias[fila["categoria_ingreso"]]
-    return {"resumen_medios": totales, "resumen_ingresos": ingresos}
+    egresos = consulta.filter(clase="egreso")
+    gastos = egresos.exclude(categoria_egreso="devoluciones").aggregate(total=Sum("monto"))["total"] or 0
+    devoluciones = egresos.filter(categoria_egreso="devoluciones").aggregate(total=Sum("monto"))["total"] or 0
+    return {"resumen_medios": totales, "resumen_ingresos": ingresos, "gastos_operativos": gastos, "devoluciones": devoluciones}

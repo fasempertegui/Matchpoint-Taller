@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block titulo %}Anular {{ movimiento.numero }} | Academia TM{% endblock %}
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario"><h1>Anular {{ movimiento.numero }}</h1>
+<p>{{ movimiento.get_clase_display }} · {{ movimiento.concepto }} · $ {{ movimiento.monto|floatformat:"2g" }} · {{ movimiento.get_medio_pago_display }}</p>
+<p>Sesión de origen: {{ movimiento.sesion.numero }} ({{ movimiento.sesion.get_estado_display }}). Sesión actual: {{ actual.numero }}.</p>
+{% if movimiento.sesion.estado == 'cerrada' %}<p>El cierre de origen conserva sus importes y totales históricos. Esta anulación no cambia el efectivo de la sesión actual.</p>{% else %}<p>Cambio en el efectivo esperado: $ {{ efecto|floatformat:"2g" }}. Efectivo esperado resultante: <strong>$ {{ esperado_resultante|floatformat:"2g" }}</strong>.</p>{% endif %}
+<p>Se invalida esta carga y se conservan sus datos originales. Anular no entrega dinero. Una corrección se registra como otro movimiento.</p>
+<form method="post">{% csrf_token %}{{ formulario.non_field_errors }}{{ formulario.revision }}{{ formulario.revision.errors }}
+<div class="grupo-campo"><label for="{{ formulario.motivo.id_for_label }}">{{ formulario.motivo.label }}</label>{{ formulario.motivo }}{{ formulario.motivo.errors }}</div>
+<div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'caja:movimiento_detalle' movimiento.pk %}">Cancelar</a><button class="boton boton-confirmar-peligro">Confirmar anulación</button></div>
+</form></section>
+{% endblock %}

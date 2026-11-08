@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}Registrar movimiento | Academia TM{% endblock %}
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario"><h1>Registrar movimiento</h1><p>Caja {{ sesion.numero }}</p>
+<div class="acciones-formulario">
+<a class="boton boton-secundario" href="{% url 'caja:ingreso_crear' sesion.pk %}">Ingreso</a>
+<a class="boton boton-secundario" href="?clase=egreso">Egreso o devolución</a>
+<a class="boton boton-secundario" href="?clase=aporte">Aporte de efectivo</a>
+<a class="boton boton-secundario" href="?clase=retiro">Retiro de efectivo</a>
+</div><p><a href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a></p></section>
+{% endblock %}

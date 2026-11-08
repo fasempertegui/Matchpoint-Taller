@@ -52,6 +52,9 @@ class SesionCaja(models.Model):
 class MovimientoFondo(models.Model):
     class Clase(models.TextChoices):
         INGRESO = "ingreso", "Ingreso"
+        EGRESO = "egreso", "Egreso"
+        APORTE = "aporte", "Aporte"
+        RETIRO = "retiro", "Retiro"
 
     class Medio(models.TextChoices):
         EFECTIVO = "efectivo", "Efectivo"
@@ -65,6 +68,16 @@ class MovimientoFondo(models.Model):
         MEMBRESIAS = "membresias", "Membresías"
         OTROS = "otros", "Otros"
 
+    class CategoriaEgreso(models.TextChoices):
+        ALQUILER = "alquiler", "Alquiler"
+        SERVICIOS = "servicios", "Servicios"
+        PROFESORES = "profesores", "Profesores"
+        INSUMOS = "insumos", "Insumos"
+        MANTENIMIENTO = "mantenimiento", "Mantenimiento"
+        PUBLICIDAD = "publicidad", "Publicidad"
+        OTROS = "otros", "Otros"
+        DEVOLUCIONES = "devoluciones", "Devoluciones"
+
     class Estado(models.TextChoices):
         VIGENTE = "vigente", "Vigente"
         ANULADO = "anulado", "Anulado"
@@ -76,7 +89,9 @@ class MovimientoFondo(models.Model):
     monto = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))])
     medio_pago = models.CharField(max_length=15, choices=Medio.choices)
     referencia = models.CharField(max_length=150, blank=True, default="")
-    categoria_ingreso = models.CharField(max_length=20, choices=CategoriaIngreso.choices)
+    categoria_ingreso = models.CharField(max_length=20, choices=CategoriaIngreso.choices, blank=True, default="")
+    categoria_egreso = models.CharField(max_length=20, choices=CategoriaEgreso.choices, blank=True, default="")
+    destinatario = models.CharField(max_length=150, blank=True, default="")
     plan_usuario = models.ForeignKey("membresias.PlanUsuario", on_delete=models.PROTECT, related_name="movimientos", null=True, blank=True)
     membresia_usuario = models.ForeignKey("membresias.MembresiaUsuario", on_delete=models.PROTECT, related_name="movimientos", null=True, blank=True)
     reserva = models.ForeignKey("reservas.Reserva", on_delete=models.PROTECT, related_name="movimientos", null=True, blank=True)
@@ -95,18 +110,24 @@ class MovimientoFondo(models.Model):
         verbose_name_plural = "movimientos de fondos"
         indexes = [models.Index(fields=("sesion", "id")), models.Index(fields=("creado_en",))]
         constraints = [
-            models.CheckConstraint(condition=models.Q(clase="ingreso", monto__gt=0, concepto__regex=r"\S"), name="caja_ingreso_valido"),
+            models.CheckConstraint(condition=models.Q(clase__in=("ingreso", "egreso", "aporte", "retiro"), monto__gt=0, concepto__regex=r"\S"), name="caja_movimiento_valido"),
             models.CheckConstraint(condition=(
                 models.Q(medio_pago="efectivo")
                 | models.Q(medio_pago__in=("transferencia", "tarjeta", "qr"), referencia__regex=r"\S")
             ), name="caja_medio_referencia_coherente"),
             models.CheckConstraint(condition=(
-                models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=True,
-                         categoria_ingreso__in=("reservas", "planes", "membresias", "otros"))
-                | models.Q(plan_usuario__isnull=False, membresia_usuario__isnull=True, reserva__isnull=True, categoria_ingreso="planes")
-                | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=False, reserva__isnull=True, categoria_ingreso="membresias")
-                | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=False, categoria_ingreso="reservas")
-            ), name="caja_ingreso_origen_coherente"),
+                (models.Q(clase="ingreso", categoria_egreso="", destinatario="") & (
+                    models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=True,
+                             categoria_ingreso__in=("reservas", "planes", "membresias", "otros"))
+                    | models.Q(plan_usuario__isnull=False, membresia_usuario__isnull=True, reserva__isnull=True, categoria_ingreso="planes")
+                    | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=False, reserva__isnull=True, categoria_ingreso="membresias")
+                    | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=False, categoria_ingreso="reservas")
+                ))
+                | (models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=True, categoria_ingreso="") & (
+                    models.Q(clase="egreso", categoria_egreso__in=("alquiler", "servicios", "profesores", "insumos", "mantenimiento", "publicidad", "otros", "devoluciones"))
+                    | models.Q(clase__in=("aporte", "retiro"), medio_pago="efectivo", categoria_egreso="", destinatario="")
+                ))
+            ), name="caja_movimiento_campos_coherentes"),
             models.CheckConstraint(condition=(
                 models.Q(estado="vigente", anulado_en__isnull=True, anulado_por__isnull=True, motivo_anulacion="")
                 | models.Q(estado="anulado", anulado_en__isnull=False, anulado_por__isnull=False, motivo_anulacion__regex=r"\S")
@@ -116,6 +137,12 @@ class MovimientoFondo(models.Model):
     @property
     def numero(self):
         return f"M-{self.pk:06d}"
+
+    @property
+    def efecto_efectivo(self):
+        if self.medio_pago != self.Medio.EFECTIVO:
+            return Decimal("0")
+        return self.monto if self.clase in (self.Clase.INGRESO, self.Clase.APORTE) else -self.monto
 
     @property
     def origen(self):

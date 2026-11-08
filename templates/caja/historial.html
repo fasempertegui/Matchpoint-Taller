@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} | Academia TM{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina"><h1>{{ titulo }}</h1><div class="acciones"><a class="boton boton-secundario" href="{% url 'caja:caja_actual' %}">Caja actual</a><a class="boton boton-secundario" href="{% if sesiones %}{% url 'caja:movimiento_lista' %}{% else %}{% url 'caja:historial_sesiones' %}{% endif %}">{% if sesiones %}Movimientos{% else %}Sesiones{% endif %}</a></div></header>
+<details class="tarjeta"{% if formulario.errors %} open{% endif %}><summary>Filtrar</summary><form method="get" class="tarjeta-busqueda filtros-compactos">{{ formulario.non_field_errors }}
+{% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
+<button class="boton boton-secundario">Consultar</button><a href="{{ request.path }}">Limpiar filtros</a></form></details>
+<section class="tarjeta">
+{% if sesiones %}<div class="tabla-contenedor"><table><thead><tr><th>Sesión</th><th>Responsable</th><th>Apertura</th><th>Estado</th><th>Cierre</th><th>Contado</th></tr></thead><tbody>
+{% for sesion in pagina %}<tr><td><a href="{% url 'caja:sesion_detalle' sesion.pk %}">{{ sesion.numero }}</a></td><td>{{ sesion.responsable }}</td><td>{{ sesion.creado_en|date:"d/m/Y H:i" }}</td><td>{{ sesion.get_estado_display }}</td><td>{{ sesion.cerrada_en|date:"d/m/Y H:i"|default:"—" }}</td><td>{% if sesion.estado == 'cerrada' %}$ {{ sesion.efectivo_contado|floatformat:"2g" }}{% else %}—{% endif %}</td></tr>{% empty %}<tr><td colspan="6">No hay sesiones que coincidan.</td></tr>{% endfor %}
+</tbody></table></div>{% include "caja/_paginacion.html" %}
+{% else %}{% include "caja/_movimientos.html" %}{% endif %}
+</section>
+{% endblock %}
