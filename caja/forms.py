@@ -33,7 +33,7 @@ class SeleccionOrigenIngresoForm(forms.Form):
 
 
 class IngresoForm(forms.Form):
-    concepto = forms.CharField(label="Concepto", strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}), help_text="Describí el cobro y cualquier parcial o acuerdo que corresponda.")
+    concepto = forms.CharField(label="Concepto", strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}), help_text="Describí el cobro y cualquier parcial o acuerdo que corresponda")
     monto = forms.DecimalField(label="Monto recibido", min_value=Decimal("0.01"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
     medio_pago = forms.ChoiceField(label="Medio de pago", widget=forms.Select(attrs={"class": "form-control", "data-ingreso-medio": ""}))
     referencia = forms.CharField(label="Referencia del pago", max_length=150, required=False, strip=True, widget=forms.TextInput(attrs={"class": "form-control"}))
