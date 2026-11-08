@@ -1,25 +1,39 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends "base.html" %}{% load static %}
 {% block titulo %}Registrar ingreso | Academia TM{% endblock %}
-{% block estilos %}<script src="{% static 'js/ingreso-caja.js' %}" defer></script>{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script>{% endblock %}
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario">
-    <h1>Registrar ingreso</h1><p>Caja {{ sesion.numero }}</p>
-    {% if origen %}
-        <h2>Origen del cobro</h2>
-        {% if tipo == 'reserva' %}<p>{{ origen.numero }} · {{ origen.organizador }}<br>{{ origen.evento.turno }}</p>{% else %}<p>{{ origen.usuario }} · {{ origen.producto.nombre }}<br>Mes: {{ origen.mes_cubierto|date:"F Y" }}</p>{% endif %}
-        <p>Importe aplicado: <strong>$ {{ importe_aplicado|floatformat:"2g" }}</strong><br>Categoría: {{ categoria_texto }}</p>
-    {% endif %}
-    <form method="post" data-ingreso-formulario>{% csrf_token %}{{ formulario.non_field_errors }}
-        {% for campo in formulario %}
-            {% if campo.is_hidden %}{{ campo }}{{ campo.errors }}
-            {% else %}<div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
-                {% if campo.name == 'verificado' %}<label>{{ campo }} {{ campo.label }}</label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}
-                {% if campo.help_text %}<small>{{ campo.help_text }}</small>{% endif %}{{ campo.errors }}
-            </div>{% endif %}
+    <h1>Registrar ingreso</h1>
+    {% include "caja/_ingreso_contexto.html" %}
+    <form method="post" action="?tipo={{ tipo }}" data-ingreso-formulario novalidate>
+        {% csrf_token %}
+        {% if origen %}<input type="hidden" name="origen" value="{{ origen.pk }}">{% endif %}
+        {% for campo in formulario.hidden_fields %}{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
+        {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert"><div>{% for error in formulario.non_field_errors %}<p class="ingreso-error">{{ error }}</p>{% endfor %}</div></div>{% endif %}
+        <h2 class="ingreso-seccion-titulo">Datos del cobro</h2>
+        {% for campo in formulario.visible_fields %}
+            <div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
+                {% if campo.name == 'verificado' %}
+                    <label class="ingreso-verificacion" for="{{ campo.id_for_label }}">{{ campo }}<span>{{ campo.label }}</span></label>
+                {% else %}
+                    <label for="{{ campo.id_for_label }}">{{ campo.label }}{% if campo.field.required %} <span aria-hidden="true">*</span>{% endif %}</label>
+                    {{ campo }}
+                {% endif %}
+                {% if campo.help_text %}<small class="nota-campo" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</small>{% endif %}
+                {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            </div>
         {% endfor %}
-        <div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'caja:ingreso_crear' sesion.pk %}">Cambiar origen</a><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a><button class="boton boton-primario">Registrar ingreso</button></div>
+        <div class="acciones-formulario">
+            {% if origen %}<button class="boton boton-secundario" name="paso" value="volver" formnovalidate>Volver</button>{% else %}<button class="boton boton-secundario" name="paso" value="volver_tipo" formnovalidate>Volver</button>{% endif %}
+            <a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>
+            <button class="boton boton-primario" name="paso" value="registrar">Registrar ingreso</button>
+        </div>
     </form>
+    {% if origen %}
+        <details class="ingreso-cobros"{% if request.GET.pagina %} open{% endif %}>
+            <summary>Cobros registrados <span>({{ pagina_cobros.paginator.count }})</span></summary>
+            {% if pagina_cobros %}{% include "caja/_movimientos.html" with pagina=pagina_cobros %}{% else %}<p class="texto-secundario">Este registro todavía no tiene cobros vigentes.</p>{% endif %}
+        </details>
+    {% endif %}
 </section>
-{% if origen %}<section class="tarjeta"><h2>Cobros vigentes del origen</h2>{% include "caja/_movimientos.html" with pagina=pagina_cobros %}</section>{% endif %}
 {% endblock %}

@@ -1,0 +1,53 @@
+<div class="ingreso-progreso" role="progressbar" aria-label="Progreso del ingreso" aria-valuemin="1" aria-valuemax="{{ total_pasos }}" aria-valuenow="{{ numero_paso }}">
+    <span class="completo" aria-hidden="true"></span><span{% if numero_paso >= 2 %} class="completo"{% endif %} aria-hidden="true"></span>{% if total_pasos == 3 %}<span{% if numero_paso == 3 %} class="completo"{% endif %} aria-hidden="true"></span>{% endif %}
+</div>
+<p class="ingreso-paso">Paso {{ numero_paso }} de {{ total_pasos }} · {{ nombre_paso }}</p>
+<div class="ingreso-contexto">
+    <section class="ingreso-tarjeta ingreso-tarjeta-oscura"><p>Caja</p><h2>{{ sesion.numero }}</h2></section>
+    {% if tipo %}
+        <section class="ingreso-tarjeta ingreso-tarjeta-oscura">
+            <div class="ingreso-origen-encabezado">
+                <p>Origen</p>
+                {% if origen and tipo == 'reserva' %}
+                    <div class="ingreso-origen-ayuda">
+                        <button type="button" class="ingreso-origen-ayuda-boton" aria-label="Información de la reserva" aria-describedby="ingreso-origen-tooltip">?</button>
+                        <div class="ingreso-origen-tooltip" id="ingreso-origen-tooltip" role="tooltip">
+                            <strong>{{ origen.numero }}</strong>
+                            <dl>
+                                <div><dt>Organizador</dt><dd>{{ origen.organizador }}<small>@{{ origen.organizador.username }}</small></dd></div>
+                                <div><dt>Importe aplicado</dt><dd>$ {{ importe_aplicado|floatformat:"2g" }}</dd></div>
+                                <div><dt>Sede</dt><dd>{{ origen.evento.turno.cancha.sede.nombre }}</dd></div>
+                                <div><dt>Cancha</dt><dd>{{ origen.evento.turno.cancha.nombre }}</dd></div>
+                                <div><dt>Fecha</dt><dd>{{ origen.evento.turno.fecha|date:"d/m/Y" }}</dd></div>
+                                <div><dt>Hora</dt><dd>{{ origen.evento.turno.hora_inicio|time:"H:i" }}</dd></div>
+                                <div><dt>Modalidad</dt><dd>{% if origen.es_con_membresia %}Con membresía{% else %}Reserva normal{% endif %}</dd></div>
+                                <div><dt>Categoría</dt><dd>{{ categoria_texto }}</dd></div>
+                            </dl>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            <h2>{{ tipo_texto }}</h2>
+        </section>
+    {% endif %}
+</div>
+{% if origen and tipo != 'reserva' %}
+    <div class="ingreso-contexto">
+        <section class="ingreso-tarjeta ingreso-tarjeta-clara">
+            <p>{% if tipo == 'reserva' %}Organizador{% else %}Titular{% endif %}</p>
+            <h2>{% if tipo == 'reserva' %}{{ origen.organizador }}{% else %}{{ origen.usuario }}{% endif %}</h2>
+        </section>
+        <section class="ingreso-tarjeta ingreso-tarjeta-clara"><p>Importe aplicado</p><h2>$ {{ importe_aplicado|floatformat:"2g" }}</h2></section>
+    </div>
+    <dl class="ingreso-datos-origen">
+        <div><dt>Categoría</dt><dd>{{ categoria_texto }}</dd></div>
+        {% if tipo == 'reserva' %}
+            <div><dt>Reserva</dt><dd>{{ origen.numero }}</dd></div>
+            <div><dt>Cancha</dt><dd>{{ origen.evento.turno.cancha.nombre }}<small>{{ origen.evento.turno.cancha.sede.nombre }}</small></dd></div>
+            <div><dt>Turno</dt><dd>{{ origen.evento.turno.fecha|date:"d/m/Y" }}<small>{{ origen.evento.turno.hora_inicio|time:"H:i" }}</small></dd></div>
+        {% else %}
+            <div><dt>{% if tipo == 'plan' %}Plan{% else %}Membresía{% endif %}</dt><dd>{{ origen.producto.nombre }}</dd></div>
+            <div><dt>Mes cubierto</dt><dd>{{ origen.mes_cubierto|date:"F Y"|capfirst }}</dd></div>
+        {% endif %}
+    </dl>
+{% endif %}

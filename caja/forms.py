@@ -19,13 +19,13 @@ class CierreCajaForm(forms.Form):
 
 
 class SeleccionOrigenIngresoForm(forms.Form):
-    origen = forms.ModelChoiceField(label="Reserva o contratación", queryset=None, widget=forms.Select(attrs={"class": "form-control"}))
+    origen = forms.ModelChoiceField(label="Reserva o contratación", queryset=None, empty_label="Elegí un registro", widget=forms.Select(attrs={"class": "form-control"}))
 
     def __init__(self, *args, tipo, **kwargs):
         super().__init__(*args, **kwargs)
         modelo = ORIGENES[tipo][0]
         if tipo == "reserva":
-            consulta = modelo.objects.exclude(evento__estado="anulado").select_related("organizador", "evento__turno__cancha__sede")
+            consulta = modelo.objects.exclude(evento__estado="anulado").select_related("organizador", "evento__turno__cancha__sede").prefetch_related("invitados")
             self.fields["origen"].label_from_instance = lambda r: f"{r.numero} · {r.organizador} · {r.evento.turno}"
         else:
             consulta = modelo.objects.exclude(estado="anulado").select_related("usuario", "plan" if tipo == "plan" else "membresia")
