@@ -43,11 +43,6 @@
     color: #fff;
 }
 
-.ingreso-tarjeta-clara {
-    background: var(--primario-suave);
-    color: var(--primario);
-}
-
 .ingreso-tarjeta p {
     margin: 0 0 6px;
     color: inherit;
@@ -189,8 +184,7 @@
     text-align: right;
 }
 
-.ingreso-registro-lugar small,
-.ingreso-datos-origen small {
+.ingreso-registro-lugar small {
     display: block;
     margin-top: 3px;
     color: var(--texto-suave);
@@ -204,23 +198,6 @@
     gap: 16px;
     margin-top: 16px;
     font-size: .85rem;
-}
-
-.ingreso-datos-origen {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 24px;
-    margin: 0 0 24px;
-}
-
-.ingreso-datos-origen dt {
-    color: var(--texto-suave);
-    font-size: .75rem;
-}
-
-.ingreso-datos-origen dd {
-    margin: 3px 0 0;
-    font-weight: 600;
 }
 
 .grupo-campo .ingreso-verificacion {
