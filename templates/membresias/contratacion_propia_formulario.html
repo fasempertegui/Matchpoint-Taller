@@ -24,7 +24,8 @@
                 <div><dt>Mes cubierto</dt><dd>{{ mes|date:"F Y" }}</dd></div>
                 <div><dt>Período completo</dt><dd>{{ mes|date:"d/m/Y" }} al {{ fecha_fin|date:"d/m/Y" }}</dd></div>
                 {% if tipo == 'membresia' %}
-                    <div><dt>Horas mensuales</dt><dd>{{ producto.horas_mensuales }}</dd></div>
+                    <div><dt>Horas mensuales como organizador</dt><dd>{{ producto.horas_organizador }}</dd></div>
+                    <div><dt>Horas mensuales como invitado</dt><dd>{{ producto.horas_invitado }}</dd></div>
                     <div><dt>Adicional vigente por invitado no socio y turno (ARS)</dt><dd>$ {{ producto.precio_invitado_vigente|floatformat:"2g" }}</dd></div>
                 {% else %}
                     <div><dt>Modalidad</dt><dd>{{ producto.get_modalidad_display }}</dd></div>

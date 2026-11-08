@@ -38,7 +38,8 @@
                 <div><span class="etiqueta">Encuentros por semana</span><p>{{ contratacion.producto.frecuencia_semanal }}</p></div>
                 <div><span class="etiqueta">Duración de cada encuentro</span><p>{{ contratacion.producto.get_cantidad_clases_por_encuentro_display }}</p></div>
             {% else %}
-                <div><span class="etiqueta">Horas mensuales</span><p>{{ contratacion.producto.horas_mensuales }}</p></div>
+                <div><span class="etiqueta">Horas mensuales como organizador</span><p>{{ contratacion.horas_organizador_aplicadas }}</p></div>
+                <div><span class="etiqueta">Horas mensuales como invitado</span><p>{{ contratacion.horas_invitado_aplicadas }}</p></div>
             {% endif %}
         </div>
     </section>

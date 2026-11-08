@@ -18,6 +18,7 @@
                 <span>Usuario</span>
                 <p>{{ titular.first_name }} {{ titular.last_name }} <small>@{{ titular.username }}</small></p>
             </div>
+            {% if tipo == 'membresia' %}<p>{{ producto.horas_organizador }} horas mensuales como organizador · {{ producto.horas_invitado }} como invitado</p>{% endif %}
             <p class="contratacion-resumen-precio">Importe a aplicar <strong>$ {{ precio_propuesto|floatformat:"2g" }}</strong></p>
         </section>
     {% else %}

@@ -114,7 +114,7 @@ def _contexto_creacion(actor, datos):
     if modalidad == "membresia" and contrato is None:
         raise ValidationError("El organizador necesita una membresía Activa que cubra la fecha del turno.")
     usados = usos_del_mes(organizador_id, fecha).count() if contrato else 0
-    if contrato and usados >= contrato.membresia.horas_mensuales:
+    if contrato and usados >= contrato.horas_organizador_aplicadas:
         raise ValidationError("El organizador no tiene horas disponibles para ese mes.")
     reserva = Reserva(
         organizador=usuarios[organizador_id], membresia_usuario=contrato,
@@ -130,6 +130,7 @@ def _contexto_creacion(actor, datos):
         "datos": datos, "turno": turno.pk, "tarifa": reserva.precio_por_turno_aplicado,
         "cuentas": [[u.pk, u.is_active, u.debe_cambiar_contrasena, u.actualizado_en, sorted(v.rol.codigo for v in u.roles.all())] for u in usuarios.values()],
         "contratos": [[c.pk, c.estado, c.actualizado_en, c.membresia.actualizado_en] for c in contratos.values()],
+        "cupo_organizador": contrato.horas_organizador_aplicadas if contrato else None,
         "usados": usados, "total": total,
     })
     return {"actor": actor, "reserva": reserva, "invitados": invitados, "turno": turno, "total": total, "observaciones": observaciones, "huella": huella}

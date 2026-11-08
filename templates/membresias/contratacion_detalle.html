@@ -31,7 +31,8 @@
                     <div class="perfil-fila"><dt>Encuentros por semana</dt><dd>{{ contratacion.producto.frecuencia_semanal }}</dd></div>
                     <div class="perfil-fila"><dt>Duración de cada encuentro</dt><dd>{{ contratacion.producto.get_cantidad_clases_por_encuentro_display }}</dd></div>
                     {% else %}
-                    <div class="perfil-fila"><dt>Horas mensuales</dt><dd>{{ contratacion.producto.horas_mensuales }}</dd></div>
+                    <div class="perfil-fila"><dt>Horas mensuales como organizador</dt><dd>{{ contratacion.horas_organizador_aplicadas }}</dd></div>
+                    <div class="perfil-fila"><dt>Horas mensuales como invitado</dt><dd>{{ contratacion.horas_invitado_aplicadas }}</dd></div>
                     {% endif %}
                 </dl>
                 <p class="texto-secundario">El importe aplicado se conserva en esta contratación. El cobro se registra por separado.</p>

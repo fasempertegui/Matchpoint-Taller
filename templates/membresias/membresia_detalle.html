@@ -19,7 +19,8 @@
             <section class="perfil-seccion" aria-labelledby="membresia-datos-titulo">
                 <h2 id="membresia-datos-titulo">Características</h2>
                 <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Horas mensuales</dt><dd>{{ membresia.horas_mensuales }}</dd></div>
+                    <div class="perfil-fila"><dt>Horas mensuales como organizador</dt><dd>{{ membresia.horas_organizador }}</dd></div>
+                    <div class="perfil-fila"><dt>Horas mensuales como invitado</dt><dd>{{ membresia.horas_invitado }}</dd></div>
                     <div class="perfil-fila"><dt>Adicional por invitado no socio (ARS)</dt><dd>$ {{ membresia.precio_invitado_vigente|floatformat:"2g" }}</dd></div>
                 </dl>
             </section>

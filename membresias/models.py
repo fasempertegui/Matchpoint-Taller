@@ -78,8 +78,11 @@ class Membresia(models.Model):
     id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=150)
     descripcion = models.TextField("Descripción", blank=True, default="")
-    horas_mensuales = models.PositiveSmallIntegerField(
-        "Horas mensuales", validators=[MinValueValidator(1)],
+    horas_organizador = models.PositiveSmallIntegerField(
+        "Horas mensuales como organizador", default=10, validators=[MinValueValidator(1)],
+    )
+    horas_invitado = models.PositiveSmallIntegerField(
+        "Horas mensuales como invitado", default=10, validators=[MinValueValidator(1)],
     )
     precio_vigente = models.DecimalField(
         "Precio mensual (ARS)", max_digits=12, decimal_places=2,
@@ -108,7 +111,10 @@ class Membresia(models.Model):
             ),
             models.CheckConstraint(condition=models.Q(nombre__regex=r"\S"), name="membresia_nombre_no_vacio"),
             models.CheckConstraint(
-                condition=models.Q(horas_mensuales__gte=1), name="membresia_horas_positivas",
+                condition=models.Q(horas_organizador__gte=1), name="membresia_horas_organizador_positivas",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(horas_invitado__gte=1), name="membresia_horas_invitado_positivas",
             ),
             models.CheckConstraint(
                 condition=models.Q(precio_invitado_vigente__gte=0), name="membresia_invitado_no_negativo",
@@ -226,6 +232,12 @@ class MembresiaUsuario(models.Model):
         "Importe aplicado (ARS)", max_digits=12, decimal_places=2,
         validators=[MinValueValidator(Decimal("0"))],
     )
+    horas_organizador_aplicadas = models.PositiveSmallIntegerField(
+        "Horas mensuales como organizador", validators=[MinValueValidator(1)],
+    )
+    horas_invitado_aplicadas = models.PositiveSmallIntegerField(
+        "Horas mensuales como invitado", validators=[MinValueValidator(1)],
+    )
     registrado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contrataciones_membresia_registradas",
     )
@@ -258,6 +270,14 @@ class MembresiaUsuario(models.Model):
                 condition=models.Q(mes_cubierto__gte=FECHA_INICIO_OPERACIONES), name="membresia_usuario_mes_operativo",
             ),
             models.CheckConstraint(condition=models.Q(precio_aplicado__gte=0), name="membresia_usuario_precio_no_negativo"),
+            models.CheckConstraint(
+                condition=models.Q(horas_organizador_aplicadas__gte=1),
+                name="membresia_usuario_organizador_positivo",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(horas_invitado_aplicadas__gte=1),
+                name="membresia_usuario_invitado_positivo",
+            ),
             models.CheckConstraint(
                 condition=models.Q(estado__in=("activo", "anulado", "vencido")), name="membresia_usuario_estado_valido",
             ),
@@ -296,6 +316,7 @@ class MembresiaUsuario(models.Model):
             raise ValidationError({"mes_cubierto": "Elegí un mes calendario completo."})
         if self.pk:
             original = type(self).objects.get(pk=self.pk)
-            campos = ("usuario_id", "membresia_id", "mes_cubierto", "fecha_alta", "precio_aplicado", "registrado_por_id")
+            campos = ("usuario_id", "membresia_id", "mes_cubierto", "fecha_alta", "precio_aplicado", "registrado_por_id",
+                      "horas_organizador_aplicadas", "horas_invitado_aplicadas")
             if any(getattr(self, campo) != getattr(original, campo) for campo in campos):
                 raise ValidationError("Los datos de una contratación registrada no se pueden editar.")

@@ -8,8 +8,9 @@ def cargar_oferta(apps, schema_editor):
     Membresia.objects.using(schema_editor.connection.alias).get_or_create(
         nombre="Socio 10 horas",
         defaults={
-            "descripcion": "Diez horas mensuales de cancha. Adicional por invitado no socio por turno de una hora.",
-            "horas_mensuales": 10,
+            "descripcion": "Diez horas mensuales como organizador y diez como invitado. Cupos independientes.",
+            "horas_organizador": 10,
+            "horas_invitado": 10,
             "precio_vigente": Decimal("40000.00"),
             "precio_invitado_vigente": Decimal("12500.00"),
         },

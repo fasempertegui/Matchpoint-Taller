@@ -31,13 +31,16 @@ class ContratacionExistente(ValidationError):
 
 
 def _datos_revision(actor, titular, producto, mes_cubierto, referencia):
-    return {
+    datos = {
         "actor": actor.pk, "titular": titular.pk, "producto": producto.pk,
         "precio": str(producto.precio_vigente), "actualizado_en": producto.actualizado_en.isoformat(),
         "mes": mes_cubierto.isoformat() if mes_cubierto is not None else None,
         "referencia": referencia.pk if referencia is not None else None,
         "referencia_actualizada_en": referencia.actualizado_en.isoformat() if referencia is not None else None,
     }
+    if isinstance(producto, Membresia):
+        datos.update({"horas_organizador": producto.horas_organizador, "horas_invitado": producto.horas_invitado})
+    return datos
 
 
 def revision_precio_contratacion(actor, titular, producto, *, mes_cubierto=None, referencia=None):
@@ -112,6 +115,9 @@ def _registrar_contratacion(
         estado=modelo.Estado.VENCIDO if mes_cubierto < timezone.localdate().replace(day=1)
         else modelo.Estado.ACTIVO,
     )
+    if not es_plan:
+        contratacion.horas_organizador_aplicadas = producto.horas_organizador
+        contratacion.horas_invitado_aplicadas = producto.horas_invitado
     contratacion.full_clean()
     try:
         with transaction.atomic(), contexto_auditoria(actor):

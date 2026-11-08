@@ -97,7 +97,7 @@ def cambiar_estado_plan(usuario, plan_id, estado, *, version):
 
 @transaction.atomic
 def guardar_membresia(
-    usuario, *, nombre, descripcion, horas_mensuales, precio_vigente,
+    usuario, *, nombre, descripcion, horas_organizador, horas_invitado, precio_vigente,
     precio_invitado_vigente, membresia_id=None, version="",
 ):
     usuario = exigir_administracion_membresias(usuario, bloquear=True)
@@ -105,12 +105,13 @@ def guardar_membresia(
     if membresia_id is not None:
         _validar_version_producto(usuario, membresia, version)
     datos = {
-        "nombre": nombre.strip(), "descripcion": descripcion.strip(), "horas_mensuales": horas_mensuales,
+        "nombre": nombre.strip(), "descripcion": descripcion.strip(),
+        "horas_organizador": horas_organizador, "horas_invitado": horas_invitado,
         "precio_vigente": precio_vigente, "precio_invitado_vigente": precio_invitado_vigente,
     }
     cambios = [campo for campo, valor in datos.items() if getattr(membresia, campo) != valor]
-    if membresia_id is not None and "horas_mensuales" in cambios and membresia.contrataciones.exists():
-        raise ValidationError("Las horas mensuales no se pueden cambiar en una membresía con contrataciones.")
+    if membresia_id is not None and {"horas_organizador", "horas_invitado"}.intersection(cambios) and membresia.contrataciones.exists():
+        raise ValidationError("Los cupos mensuales no se pueden cambiar en una membresía con contrataciones.")
     for campo, valor in datos.items():
         setattr(membresia, campo, valor)
     if membresia_id is not None and not cambios:

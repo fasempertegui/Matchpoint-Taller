@@ -19,7 +19,8 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(primary_key=True, serialize=False)),
                 ('nombre', models.CharField(max_length=150)),
                 ('descripcion', models.TextField(blank=True, default='', verbose_name='Descripción')),
-                ('horas_mensuales', models.PositiveSmallIntegerField(validators=[django.core.validators.MinValueValidator(1)], verbose_name='Horas mensuales')),
+                ('horas_organizador', models.PositiveSmallIntegerField(default=10, validators=[django.core.validators.MinValueValidator(1)], verbose_name='Horas mensuales como organizador')),
+                ('horas_invitado', models.PositiveSmallIntegerField(default=10, validators=[django.core.validators.MinValueValidator(1)], verbose_name='Horas mensuales como invitado')),
                 ('precio_vigente', models.DecimalField(decimal_places=2, max_digits=12, validators=[django.core.validators.MinValueValidator(Decimal('0'))], verbose_name='Precio mensual (ARS)')),
                 ('precio_invitado_vigente', models.DecimalField(decimal_places=2, help_text='Importe por invitado y turno de una hora.', max_digits=12, validators=[django.core.validators.MinValueValidator(Decimal('0'))], verbose_name='Adicional por invitado no socio (ARS)')),
                 ('estado', models.CharField(choices=[('activo', 'Activa'), ('inactivo', 'Inactiva')], default='activo', max_length=10)),
@@ -32,7 +33,7 @@ class Migration(migrations.Migration):
                 'db_table': 'membresias',
                 'ordering': ('nombre', 'pk'),
                 'default_permissions': (),
-                'constraints': [models.UniqueConstraint(django.db.models.functions.text.Lower('nombre'), condition=models.Q(('estado', 'activo')), name='membresia_nombre_activo_unico', violation_error_message='Ya existe una membresía activa con ese nombre.'), models.CheckConstraint(condition=models.Q(('nombre__regex', '\\S')), name='membresia_nombre_no_vacio'), models.CheckConstraint(condition=models.Q(('horas_mensuales__gte', 1)), name='membresia_horas_positivas'), models.CheckConstraint(condition=models.Q(('precio_invitado_vigente__gte', 0)), name='membresia_invitado_no_negativo'), models.CheckConstraint(condition=models.Q(('precio_vigente__gte', 0)), name='membresia_precio_no_negativo'), models.CheckConstraint(condition=models.Q(('estado__in', ('activo', 'inactivo'))), name='membresia_estado_valido')],
+                'constraints': [models.UniqueConstraint(django.db.models.functions.text.Lower('nombre'), condition=models.Q(('estado', 'activo')), name='membresia_nombre_activo_unico', violation_error_message='Ya existe una membresía activa con ese nombre.'), models.CheckConstraint(condition=models.Q(('nombre__regex', '\\S')), name='membresia_nombre_no_vacio'), models.CheckConstraint(condition=models.Q(('horas_organizador__gte', 1)), name='membresia_horas_organizador_positivas'), models.CheckConstraint(condition=models.Q(('horas_invitado__gte', 1)), name='membresia_horas_invitado_positivas'), models.CheckConstraint(condition=models.Q(('precio_invitado_vigente__gte', 0)), name='membresia_invitado_no_negativo'), models.CheckConstraint(condition=models.Q(('precio_vigente__gte', 0)), name='membresia_precio_no_negativo'), models.CheckConstraint(condition=models.Q(('estado__in', ('activo', 'inactivo'))), name='membresia_estado_valido')],
             },
         ),
     ]

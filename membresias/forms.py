@@ -109,7 +109,7 @@ class MembresiaForm(forms.ModelForm):
 
     class Meta:
         model = Membresia
-        fields = ("nombre", "horas_mensuales", "precio_vigente", "precio_invitado_vigente", "descripcion")
+        fields = ("nombre", "horas_organizador", "horas_invitado", "precio_vigente", "precio_invitado_vigente", "descripcion")
         localized_fields = ("precio_vigente", "precio_invitado_vigente")
         labels = {
             "precio_vigente": "Precio mensual",
@@ -117,7 +117,8 @@ class MembresiaForm(forms.ModelForm):
         }
         widgets = {
             "nombre": forms.TextInput(attrs={"class": "form-control", "autofocus": True}),
-            "horas_mensuales": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
+            "horas_organizador": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
+            "horas_invitado": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
             "precio_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal", "placeholder": "Pesos argentinos"}),
             "precio_invitado_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal", "placeholder": "Pesos argentinos"}),
             "descripcion": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
@@ -127,8 +128,9 @@ class MembresiaForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["version"].required = self.instance.pk is not None
         if self.instance.pk and self.instance.contrataciones.exists():
-            self.fields["horas_mensuales"].disabled = True
-            self.fields["horas_mensuales"].help_text = "Las horas se conservan porque esta membresía tiene contrataciones."
+            for nombre in ("horas_organizador", "horas_invitado"):
+                self.fields[nombre].disabled = True
+                self.fields[nombre].help_text = "El cupo se conserva porque esta membresía tiene contrataciones."
 
 
 class SeleccionContratacionMembresiaForm(SeleccionContratacionPlanForm):

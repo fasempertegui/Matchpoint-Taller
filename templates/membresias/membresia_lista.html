@@ -24,18 +24,18 @@
     </form>
     <section class="tarjeta tabla-contenedor" aria-label="Catálogo de membresías">
         <table>
-            <thead><tr><th scope="col">Nombre</th><th scope="col">Horas mensuales</th><th scope="col">Precio mensual (ARS)</th><th scope="col">Adicional por invitado no socio (ARS)</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
+            <thead><tr><th scope="col">Nombre</th><th scope="col">Horas de organizador</th><th scope="col">Horas de invitado</th><th scope="col">Precio mensual (ARS)</th><th scope="col">Adicional por invitado no socio (ARS)</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
             <tbody>
                 {% for membresia in pagina %}
                     <tr>
                         <td><strong>{{ membresia.nombre }}</strong></td>
-                        <td>{{ membresia.horas_mensuales }}</td>
+                        <td>{{ membresia.horas_organizador }}</td><td>{{ membresia.horas_invitado }}</td>
                         <td>$ {{ membresia.precio_vigente|floatformat:"2g" }}</td>
                         <td>$ {{ membresia.precio_invitado_vigente|floatformat:"2g" }}</td>
                         <td>{% include "componentes/badge_estado.html" with estado=membresia.estado texto=membresia.get_estado_display only %}</td>
                         <td><a class="boton boton-secundario boton-chico" href="{% url 'membresias:membresia_detalle' membresia.pk %}" aria-label="Ver detalle de {{ membresia.nombre }}">Detalles</a></td>
                     </tr>
-                {% empty %}<tr><td class="estado-vacio" colspan="6">No hay membresías que coincidan con los filtros.</td></tr>{% endfor %}
+                {% empty %}<tr><td class="estado-vacio" colspan="7">No hay membresías que coincidan con los filtros.</td></tr>{% endfor %}
             </tbody>
         </table>
     </section>

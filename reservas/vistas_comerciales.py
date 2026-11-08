@@ -111,7 +111,7 @@ def crear_reserva(request):
     contexto.update({"numero_paso": total_pasos - 2, "nombre_paso": "Modalidad"})
     contexto["organizador"] = organizador
     contrato = coberturas({organizador.pk}, turno["fecha"]).get(organizador.pk)
-    horas_disponibles = max(0, contrato.membresia.horas_mensuales - usos_del_mes(organizador.pk, turno["fecha"]).count()) if contrato else 0
+    horas_disponibles = max(0, contrato.horas_organizador_aplicadas - usos_del_mes(organizador.pk, turno["fecha"]).count()) if contrato else 0
     puede_membresia = horas_disponibles > 0
     contexto["horas_disponibles"] = horas_disponibles
     contexto["puede_membresia"] = puede_membresia
@@ -277,8 +277,12 @@ def uso_membresia(request):
             comprometidas = consultas.filter(evento__estado=Evento.Estado.PROGRAMADO).count()
             consumidas = consultas.exclude(evento__estado=Evento.Estado.PROGRAMADO).count()
             contrato = MembresiaUsuario.objects.filter(usuario=titular, mes_cubierto=mes).exclude(estado=MembresiaUsuario.Estado.ANULADO).select_related("membresia").first()
-            cupo = contrato.membresia.horas_mensuales if contrato else 0
-            meses.append({"mes": mes, "cupo": cupo, "comprometidas": comprometidas, "consumidas": consumidas, "saldo": cupo - comprometidas - consumidas})
+            cupo = contrato.horas_organizador_aplicadas if contrato else 0
+            meses.append({
+                "mes": mes, "cupo": cupo, "cupo_invitado": contrato.horas_invitado_aplicadas if contrato else 0,
+                "comprometidas": comprometidas, "consumidas": consumidas,
+                "saldo": max(0, cupo - comprometidas - consumidas),
+            })
             mes = mes_siguiente(mes)
         reservas = Reserva.objects.filter(organizador=titular, membresia_usuario__isnull=False, evento__turno__fecha__range=(desde, hasta)).select_related("evento__turno__cancha__sede").order_by("evento__turno__fecha", "evento__turno__hora_inicio")
         invitaciones = ReservaInvitado.objects.filter(usuario=titular, reserva__evento__turno__fecha__range=(desde, hasta)).select_related("reserva__evento__turno__cancha__sede")
