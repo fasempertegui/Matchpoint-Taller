@@ -37,7 +37,7 @@ def personas_ocupadas(usuarios_ids, fecha, hora, *, clase_id=None, reserva_id=No
 
 def validar_disponibilidad(usuarios_ids, fecha, hora, *, clase_id=None, reserva_id=None, controlar_cupo=False):
     if personas_ocupadas(usuarios_ids, fecha, hora, clase_id=clase_id, reserva_id=reserva_id):
-        raise ValidationError("Una persona ya participa en otra reserva o clase en esa fecha y hora.")
+        raise ValidationError("Una persona ya participa en otra reserva o clase en esa fecha y hora.", code="persona_ocupada")
     if controlar_cupo:
         for usuario_id in sorted(usuarios_ids):
             if reservas_personales(usuario_id, excluir=reserva_id).count() >= 2:

@@ -18,3 +18,50 @@
 .clase-resultados button:focus { background: var(--primario-suave); }
 .clase-resultados small { display: block; margin-top: 3px; color: var(--texto-suave); }
 .clase-buscador [data-estado]:empty { display: none; }
+
+.selector-usuarios-titulo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.selector-usuarios-titulo h2 {
+    margin: 0;
+}
+
+.selector-usuarios-alternar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--primario);
+    color: #fff;
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.selector-usuarios-alternar:hover {
+    background: var(--primario-hover);
+}
+
+.selector-usuarios-alternar:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: 3px;
+}
+
+.selector-usuarios-alternar svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+    flex-shrink: 0;
+}
+
+.selector-usuarios-alternar[aria-expanded="true"] svg {
+    transform: rotate(45deg);
+}

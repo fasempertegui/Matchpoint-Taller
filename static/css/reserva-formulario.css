@@ -1,0 +1,338 @@
+.reserva-progreso {
+    display: flex;
+    gap: 6px;
+    margin-top: 16px;
+}
+
+.reserva-progreso > span {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--borde);
+}
+
+.reserva-progreso > .completo {
+    background: var(--primario);
+}
+
+.reserva-invitados-resumen {
+    list-style: none;
+    padding: 0;
+}
+
+.reserva-invitados-resumen li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--borde);
+    overflow-wrap: anywhere;
+}
+
+.reserva-turno-tarjetas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.reserva-turno-tarjetas section {
+    padding: 14px 16px;
+    border-radius: 10px;
+    overflow-wrap: anywhere;
+}
+
+.reserva-tarjeta-lugar,
+.reserva-tarjeta-horario {
+    background: var(--primario);
+    color: #fff;
+}
+
+.reserva-turno-tarjetas p,
+.reserva-tarjeta-organizador p,
+.reserva-tarjeta-modalidad p {
+    margin: 0 0 6px;
+    color: inherit;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.reserva-turno-tarjetas h2,
+.reserva-tarjeta-organizador h2,
+.reserva-tarjeta-modalidad h2 {
+    margin: 0;
+    color: inherit;
+    font-size: 1.6rem;
+    line-height: 1.15;
+}
+
+.reserva-tarjeta-lugar p,
+.reserva-tarjeta-horario p {
+    color: #e6daf3;
+}
+
+.reserva-invitados-resumen li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.reserva-invitado-condicion {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: .8rem;
+}
+
+.reserva-invitado-socio {
+    background: var(--acento-suave);
+    color: var(--acento-texto);
+}
+
+.reserva-invitado-no-socio {
+    background: var(--advertencia-suave);
+    color: var(--advertencia);
+}
+
+.reserva-total {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 24px 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--borde);
+}
+
+.reserva-total strong {
+    color: var(--primario);
+    font-size: 1.5rem;
+}
+
+
+.reserva-modalidad-titulo {
+    margin: 0 0 12px;
+    font-size: 1.1rem;
+}
+
+.reserva-modalidades {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.reserva-modalidad {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--superficie);
+    color: var(--texto);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+
+.reserva-modalidad:not(:has(input:disabled)):hover {
+    border-color: var(--primario);
+    background: var(--primario-suave);
+}
+
+.reserva-modalidad:has(input:focus-visible) {
+    outline: 2px solid var(--primario);
+    outline-offset: 3px;
+}
+
+.reserva-modalidad-nombre {
+    font-weight: 600;
+}
+
+.reserva-modalidad-importe {
+    color: var(--primario);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.reserva-modalidad-importe small {
+    display: block;
+    margin-top: 4px;
+    color: var(--texto-suave);
+    font-size: .8rem;
+    font-weight: 400;
+}
+
+.reserva-modalidad-nota {
+    color: var(--texto-suave);
+    font-size: .85rem;
+}
+
+.reserva-modalidad-grupo {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.reserva-modalidad-nombre {
+    padding-right: 24px;
+}
+
+.reserva-modalidad-radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.reserva-modalidad-check {
+    display: none;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    color: var(--primario);
+}
+
+.reserva-modalidad:has(input:checked) {
+    border-color: var(--primario);
+    background: var(--primario-suave);
+}
+
+.reserva-modalidad:has(input:checked) .reserva-modalidad-check {
+    display: block;
+}
+
+.reserva-modalidad:has(input:disabled) {
+    background: var(--fondo);
+    color: var(--texto-suave);
+    cursor: default;
+}
+
+@media (max-width: 420px) {
+    .reserva-modalidades {
+        grid-template-columns: 1fr;
+    }
+}
+
+.reserva-tarjeta-organizador,
+.reserva-tarjeta-modalidad {
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: var(--primario-suave);
+    color: var(--primario);
+    overflow-wrap: anywhere;
+}
+
+.reserva-contexto-tarjetas {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.reserva-contexto-tarjetas-doble {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+
+.reserva-modalidad-encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.reserva-modalidad-encabezado p {
+    margin: 0;
+}
+
+.reserva-membresia-ayuda {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.reserva-membresia-ayuda-boton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--primario);
+    color: #fff;
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: help;
+}
+
+.reserva-membresia-ayuda-boton:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: 3px;
+}
+
+.reserva-membresia-tooltip {
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    right: 0;
+    width: min(260px, 75vw);
+    box-sizing: border-box;
+    padding: 14px 16px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: var(--superficie);
+    color: var(--texto);
+    box-shadow: 0 6px 20px #00000018;
+    visibility: hidden;
+    opacity: 0;
+}
+
+.reserva-membresia-tooltip strong,
+.reserva-membresia-tooltip span,
+.reserva-membresia-tooltip b {
+    display: block;
+}
+
+.reserva-membresia-tooltip strong {
+    margin-bottom: 10px;
+    color: var(--primario);
+    font-size: .95rem;
+}
+
+.reserva-membresia-tooltip span {
+    color: var(--texto-suave);
+    font-size: .8rem;
+}
+
+.reserva-membresia-tooltip b {
+    margin-top: 4px;
+    font-size: 1rem;
+}
+
+.reserva-membresia-ayuda:hover .reserva-membresia-tooltip,
+.reserva-membresia-ayuda:focus-within .reserva-membresia-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.reserva-invitados-resumen li:last-child {
+    border-bottom: 0;
+}
+
+
+.reserva-error-texto {
+    margin: 0;
+}
+
+.reserva-error-texto + .reserva-error-texto {
+    margin-top: 6px;
+}

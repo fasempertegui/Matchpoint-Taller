@@ -5,6 +5,7 @@ from . import views, vistas_comerciales
 app_name = "reservas"
 
 urlpatterns = [
+    path("buscar-invitados/", vistas_comerciales.buscar_invitados, name="buscar_invitados"),
     path("nueva/", vistas_comerciales.crear_reserva, name="crear_reserva"),
     path("mis-reservas/", vistas_comerciales.mis_reservas, name="mis_reservas"),
     path("uso/", vistas_comerciales.uso_membresia, name="uso_membresia"),

@@ -1,0 +1,18 @@
+<div class="grupo-campo" data-usuario-selector data-usuario-multiple data-campo="{{ campo.name }}" data-url="{{ url_busqueda }}">
+    <div class="selector-usuarios-titulo">
+        <h2>{{ campo.label }}</h2>
+        <button class="selector-usuarios-alternar" type="button" data-usuario-alternar aria-expanded="{% if campo.errors %}true{% else %}false{% endif %}" aria-controls="buscador-{{ campo.name }}" aria-label="{% if campo.errors %}Cerrar buscador{% else %}Agregar invitados{% endif %}"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+    </div>
+    {% if nota %}<p class="nota-campo">{{ nota }}</p>{% endif %}
+        <div class="clase-buscador" id="buscador-{{ campo.name }}" data-usuario-buscador{% if not campo.errors %} hidden{% endif %}>
+            <label for="buscar-{{ campo.name }}">Buscar por nombre, apellido o usuario</label>
+            <input class="form-control" id="buscar-{{ campo.name }}" type="search" autocomplete="off" maxlength="100" placeholder="Escribí al menos 2 letras" aria-controls="resultados-{{ campo.name }}" data-usuario-busqueda>
+            <ul class="clase-resultados" id="resultados-{{ campo.name }}" aria-label="Coincidencias" data-usuario-resultados hidden></ul>
+            <p class="clase-busqueda-estado" role="status" aria-live="polite" data-estado></p>
+        </div>
+    <ul class="clase-seleccionados" data-usuario-seleccion{% if not seleccionados %} hidden{% endif %}>
+        {% for persona in seleccionados %}<li><span>{{ persona }}<small>{{ persona.username }}</small></span><input type="hidden" name="{{ campo.name }}" value="{{ persona.pk }}"><button type="button" class="clase-quitar" data-usuario-quitar aria-label="Quitar a {{ persona }}">×</button></li>{% endfor %}
+    </ul>
+    <p class="texto-secundario" data-usuario-vacio{% if seleccionados %} hidden{% endif %}>Sin invitados</p>
+    {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+</div>

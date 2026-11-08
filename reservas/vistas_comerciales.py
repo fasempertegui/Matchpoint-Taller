@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -25,6 +26,29 @@ from .forms import InvitadosReservaForm, OrganizadorReservaForm, ResultadoReserv
 from .models import Evento, Reserva, ReservaInvitado
 from .servicios import exigir_acceso_reservas
 from .views import _obtener_reserva_para_consulta
+
+
+@login_required
+@never_cache
+@require_GET
+def buscar_invitados(request):
+    exigir_acceso_reservas(request.user)
+    busqueda = request.GET.get("q", "").strip()[:100]
+    if len(busqueda) < 2:
+        return JsonResponse({"resultados": [], "hay_mas": False})
+    organizador_id = request.GET.get("organizador", "")
+    formulario = InvitadosReservaForm(
+        organizador_id=organizador_id if organizador_id.isdecimal() else request.user.pk,
+    )
+    personas = formulario.fields["invitados"].queryset
+    for termino in busqueda.split():
+        personas = personas.filter(Q(first_name__icontains=termino) | Q(last_name__icontains=termino) | Q(username__icontains=termino))
+    excluidos = [valor for valor in request.GET.getlist("excluir") if valor.isdecimal()]
+    filas = list(personas.exclude(pk__in=excluidos)[:11])
+    return JsonResponse({
+        "resultados": [{"id": persona.pk, "nombre": str(persona), "usuario": persona.username} for persona in filas[:10]],
+        "hay_mas": len(filas) > 10,
+    })
 
 
 @login_required
@@ -52,6 +76,8 @@ def crear_reserva(request):
     if not turno_form.is_valid():
         return render(request, "reservas/reserva_crear.html", contexto)
     turno = turno_form.cleaned_data
+    total_pasos = 4 if administrador and not origen else 3
+    contexto.update({"total_pasos": total_pasos, "pasos": range(1, total_pasos + 1), "numero_paso": 1, "nombre_paso": "Organizador"})
     contexto["turno"] = turno
     contexto["hora"] = time(turno["hora"])
     paso = request.POST.get("paso", "")
@@ -73,31 +99,49 @@ def crear_reserva(request):
         except ValidationError as error:
             messages.error(request, error.messages[0])
             datos, paso = None, ""
-    organizador_form = OrganizadorReservaForm(datos) if administrador else None
+    contexto["invitados_borrador"] = (datos.getlist("invitados") if hasattr(datos, "getlist") else datos.get("invitados", [])) if datos else []
+    contexto["observaciones_borrador"] = datos.get("observaciones", "") if datos else ""
+    organizador_form = OrganizadorReservaForm(
+        datos, fecha=turno["fecha"], hora=contexto["hora"],
+    ) if administrador else None
     organizador = origen.organizador if origen else request.user if not administrador else None
     if administrador and origen is None:
         contexto["organizador_form"] = organizador_form
+        valor_organizador = organizador_form["organizador"].value()
+        if valor_organizador and str(valor_organizador).isdecimal():
+            contexto["usuario_seleccionado"] = organizador_form.fields["organizador"].queryset.filter(pk=valor_organizador).first()
         if organizador_form.is_bound and organizador_form.is_valid():
             organizador = organizador_form.cleaned_data["organizador"]
+            if paso == "volver_organizador":
+                contexto["usuario_seleccionado"] = organizador
+                contexto["url_buscar_usuarios"] = reverse("agenda:buscar_organizadores")
+                return render(request, "reservas/reserva_crear.html", contexto)
         else:
             contexto["url_buscar_usuarios"] = reverse("agenda:buscar_organizadores")
             return render(request, "reservas/reserva_crear.html", contexto)
+    contexto.update({"numero_paso": total_pasos - 2, "nombre_paso": "Modalidad"})
     contexto["organizador"] = organizador
     contrato = coberturas({organizador.pk}, turno["fecha"]).get(organizador.pk)
-    puede_membresia = contrato is not None and usos_del_mes(organizador.pk, turno["fecha"]).count() < contrato.membresia.horas_mensuales
+    horas_disponibles = max(0, contrato.membresia.horas_mensuales - usos_del_mes(organizador.pk, turno["fecha"]).count()) if contrato else 0
+    puede_membresia = horas_disponibles > 0
+    contexto["horas_disponibles"] = horas_disponibles
     contexto["puede_membresia"] = puede_membresia
+    contexto["contrato_disponible"] = contrato
     contexto["puede_normal"] = turno["cancha"].sede.precio_reserva_vigente is not None and turno["cancha"].sede.precio_reserva_vigente > 0
-    contexto["invitados_borrador"] = (datos.getlist("invitados") if hasattr(datos, "getlist") else datos.get("invitados", [])) if datos else []
-    contexto["observaciones_borrador"] = datos.get("observaciones", "") if datos else ""
     modalidad = datos.get("modalidad") if datos and paso != "organizador" else None
     if modalidad not in ("normal", "membresia"):
         return render(request, "reservas/reserva_crear.html", contexto)
+    contexto.update({"numero_paso": total_pasos - 1, "nombre_paso": "Invitados"})
     contexto["modalidad"] = modalidad
     formulario = InvitadosReservaForm(
         datos if paso in ("revisar", "confirmar", "editar") else None, organizador_id=organizador.pk,
         initial={"invitados": contexto["invitados_borrador"], "observaciones": contexto["observaciones_borrador"]},
     )
     contexto["formulario"] = formulario
+    valores = formulario["invitados"].value() or []
+    identificadores = [valor for valor in valores if str(valor).isdecimal()]
+    contexto["invitados_seleccionados"] = formulario.fields["invitados"].queryset.filter(pk__in=identificadores)
+    contexto["url_buscar_invitados"] = reverse("reservas:buscar_invitados") + f"?organizador={organizador.pk}"
     if paso in ("revisar", "confirmar") and formulario.is_valid():
         seleccion = {
             "organizador": organizador.pk, "cancha": turno["cancha"].pk, "fecha": turno["fecha"].isoformat(),
@@ -112,6 +156,7 @@ def crear_reserva(request):
                 messages.success(request, f"La reserva {reserva.numero} fue registrada. El cobro se registra por separado.")
                 return redirect("reservas:reserva_detalle", pk=reserva.pk)
             contexto["revision"] = preparar_reserva(request.user, seleccion)
+            contexto.update({"numero_paso": total_pasos, "nombre_paso": "Revisión"})
         except ValidationError as error:
             formulario.add_error(None, error)
     return render(request, "reservas/reserva_crear.html", contexto)

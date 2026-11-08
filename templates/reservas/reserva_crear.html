@@ -1,48 +1,116 @@
 {% extends "base.html" %}{% load static %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
-{% block estilos %}<script src="{% static 'js/selector-usuario.js' %}" defer></script>{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/contrataciones.css' %}"><link rel="stylesheet" href="{% static 'css/reserva-formulario.css' %}"><script src="{% static 'js/selector-usuario.js' %}" defer></script>{% endblock %}
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario">
     <h1>{{ titulo }}</h1>
     {% if origen %}<p>Reemplazo de <a href="{% url 'reservas:reserva_detalle' origen.pk %}">{{ origen.numero }}</a>. Se conservan los registros e importes de cada reserva por separado.</p>{% endif %}
     {% if turno %}
-        <p><strong>{{ turno.cancha.sede.nombre }} · {{ turno.cancha.nombre }}</strong><br>{{ turno.fecha|date:"d/m/Y" }} · {{ hora|time:"H:i" }} · 1 hora</p>
+        <div class="reserva-progreso" role="progressbar" aria-label="Progreso de reserva" aria-valuemin="1" aria-valuemax="{{ total_pasos }}" aria-valuenow="{{ numero_paso }}">
+            {% for paso in pasos %}<span{% if paso <= numero_paso %} class="completo"{% endif %} aria-hidden="true"></span>{% endfor %}
+        </div>
+        <p class="contratacion-numero">Paso {{ numero_paso }} de {{ total_pasos }} · {{ nombre_paso }}</p>
+        <div class="reserva-turno-tarjetas" aria-label="Turno seleccionado">
+            <section class="reserva-tarjeta-lugar" aria-label="Lugar">
+                <p>{{ turno.cancha.sede.nombre }}</p>
+                <h2>{{ turno.cancha.nombre }}</h2>
+            </section>
+            <section class="reserva-tarjeta-horario" aria-label="Fecha y horario">
+                <p>{{ turno.fecha|date:"D j M Y"|capfirst }}</p>
+                <h2>{{ hora|time:"H:i" }}</h2>
+            </section>
+        </div>
+        {% if organizador %}
+            <div class="reserva-contexto-tarjetas{% if modalidad %} reserva-contexto-tarjetas-doble{% endif %}">
+                <section class="reserva-tarjeta-organizador" aria-label="Organizador">
+                    <p>Organizador</p>
+                    <h2>{{ organizador }}</h2>
+                </section>
+                {% if modalidad %}
+                    <section class="reserva-tarjeta-modalidad" aria-label="Modalidad">
+                        <div class="reserva-modalidad-encabezado">
+                            <p>Modalidad</p>
+                            {% if modalidad == 'membresia' %}
+                                <div class="reserva-membresia-ayuda">
+                                    <button type="button" class="reserva-membresia-ayuda-boton" aria-label="Información de la membresía aplicada" aria-describedby="reserva-membresia-tooltip">?</button>
+                                    <div class="reserva-membresia-tooltip" id="reserva-membresia-tooltip" role="tooltip">
+                                        <strong>{% if revision %}{{ revision.reserva.membresia_usuario.membresia.nombre }}{% else %}{{ contrato_disponible.membresia.nombre }}{% endif %}</strong>
+                                        <span>Adicional por invitado no socio</span>
+                                        <b>$ {% if revision %}{{ revision.reserva.precio_invitado_aplicado|floatformat:"2g" }}{% else %}{{ contrato_disponible.membresia.precio_invitado_vigente|floatformat:"2g" }}{% endif %}</b>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <h2>{% if modalidad == 'membresia' %}Con membresía{% else %}Reserva normal{% endif %}</h2>
+                    </section>
+                {% endif %}
+            </div>
+        {% endif %}
         {% if not organizador %}
             <form method="post">{% csrf_token %}
-                {% include "componentes/selector_usuario.html" with campo=organizador_form.organizador seleccionado=organizador url_busqueda=url_buscar_usuarios only %}
-                {{ organizador_form.non_field_errors }}
+                {% for identificador in invitados_borrador %}<input type="hidden" name="invitados" value="{{ identificador }}">{% endfor %}
+                <textarea name="observaciones" hidden>{{ observaciones_borrador }}</textarea>
+                {% include "componentes/selector_usuario.html" with campo=organizador_form.organizador seleccionado=usuario_seleccionado url_busqueda=url_buscar_usuarios only %}
+                {% if organizador_form.non_field_errors %}
+                    <div class="mensaje mensaje-error" role="alert"><div>{% for error in organizador_form.non_field_errors %}<p class="reserva-error-texto">{{ error }}</p>{% endfor %}</div></div>
+                {% endif %}
                 <div class="acciones-formulario"><a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a><button class="boton boton-primario" name="paso" value="organizador">Continuar</button></div>
             </form>
         {% elif not modalidad %}
-            <p>Organizador: <strong>{{ organizador }}</strong></p>
-            {% if puede_normal or puede_membresia %}
-            <form method="post">{% csrf_token %}<input type="hidden" name="organizador" value="{{ organizador.pk }}"><input type="hidden" name="paso" value="modalidad">
-                {% for identificador in invitados_borrador %}<input type="hidden" name="invitados" value="{{ identificador }}">{% endfor %}<textarea name="observaciones" hidden>{{ observaciones_borrador }}</textarea>
-                <p>Elegí la modalidad de la reserva.</p><div class="acciones-formulario">
-                {% if puede_normal %}<button class="boton boton-secundario" name="modalidad" value="normal">Reserva normal</button>{% endif %}
-                {% if puede_membresia %}<button class="boton boton-secundario" name="modalidad" value="membresia">Reserva con membresía</button>{% endif %}
+
+            <form method="post" class="reserva-modalidad-formulario">
+                {% csrf_token %}
+                <input type="hidden" name="organizador" value="{{ organizador.pk }}">
+                <input type="hidden" name="paso" value="modalidad">
+                {% for identificador in invitados_borrador %}<input type="hidden" name="invitados" value="{{ identificador }}">{% endfor %}
+                <textarea name="observaciones" hidden>{{ observaciones_borrador }}</textarea>
+                <fieldset class="reserva-modalidad-grupo">
+                    <legend class="reserva-modalidad-titulo">¿Cómo querés reservar?</legend>
+                    <div class="reserva-modalidades">
+                        <label class="reserva-modalidad">
+                            <input class="reserva-modalidad-radio" type="radio" name="modalidad" value="normal" required{% if not puede_normal %} disabled{% endif %}>
+                            <svg class="reserva-modalidad-check" aria-hidden="true" width="24" height="24" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13L9 17L19 7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span class="reserva-modalidad-nombre">Reserva normal</span>
+                            <span class="reserva-modalidad-nota">Reservá el turno con la tarifa de la sede</span>
+                            {% if puede_normal %}<span class="reserva-modalidad-importe">$ {{ turno.cancha.sede.precio_reserva_vigente|floatformat:"2g" }}<small>por turno</small></span>{% else %}<span class="reserva-modalidad-nota">Sin tarifa disponible.</span>{% endif %}
+                        </label>
+                        <label class="reserva-modalidad">
+                            <input class="reserva-modalidad-radio" type="radio" name="modalidad" value="membresia" required{% if not puede_membresia %} disabled{% endif %}>
+                            <svg class="reserva-modalidad-check" aria-hidden="true" width="24" height="24" stroke-width="1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13L9 17L19 7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span class="reserva-modalidad-nombre">Con membresía</span>
+                            <span class="reserva-modalidad-nota">Reservá con la membresía del organizador</span>
+                            {% if puede_membresia %}<span class="reserva-modalidad-importe">{{ horas_disponibles }} hora{{ horas_disponibles|pluralize }}<small>disponible{{ horas_disponibles|pluralize }}</small></span>{% else %}<span class="reserva-modalidad-nota">{% if contrato_disponible %}Sin horas disponibles.{% else %}Sin membresía para la fecha elegida.{% endif %}</span>{% endif %}
+                        </label>
+                    </div>
+                </fieldset>
+                <div class="acciones-formulario">
+                    {% if administrador and not origen %}<button class="boton boton-secundario" type="submit" name="paso" value="volver_organizador" formnovalidate>Volver</button>{% else %}<a class="boton boton-secundario" href="{% url 'agenda:agenda' %}{% if origen %}?origen={{ origen.pk }}{% endif %}">Volver</a>{% endif %}
+                    <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+                    {% if puede_normal or puede_membresia %}<button class="boton boton-primario" type="submit">Siguiente</button>{% endif %}
                 </div>
             </form>
-            {% else %}<p>No hay una modalidad disponible para esa fecha: se requiere una tarifa normal configurada o una membresía con horas disponibles.</p>{% endif %}
-            <a class="enlace-texto" href="{% url 'agenda:agenda' %}{% if origen %}?origen={{ origen.pk }}{% endif %}">Volver a Agenda</a>
         {% elif revision %}
             <h2>Revisar reserva</h2>
-            <p>Organizador: <strong>{{ organizador }}</strong> · {% if revision.reserva.es_con_membresia %}Con membresía: {{ revision.reserva.membresia_usuario.membresia.nombre }} · 1 hora del mes{% else %}Normal{% endif %}</p>
-            {% if revision.invitados %}<ul>{% for invitado in revision.invitados %}<li>{{ invitado.usuario }} · {{ invitado.get_condicion_aplicada_display }} · Pendiente</li>{% endfor %}</ul>{% else %}<p>Sin invitados.</p>{% endif %}
-            {% if revision.reserva.es_con_membresia %}<p>Adicional aplicado por invitado no socio: $ {{ revision.reserva.precio_invitado_aplicado|floatformat:"2g" }}.</p>{% endif %}
-            <p><strong>Total: $ {{ revision.total|floatformat:"2g" }}</strong></p>
+            {% if revision.invitados %}<p class="nota-campo">Los invitados pueden aceptar o rechazar la invitación hasta el inicio de la reserva</p><ul class="reserva-invitados-resumen">{% for invitado in revision.invitados %}<li><span class="reserva-invitado-identidad">{{ invitado.usuario }}</span>{% if revision.reserva.es_con_membresia %}<span class="reserva-invitado-condicion{% if invitado.condicion_aplicada == 'socio' %} reserva-invitado-socio{% else %} reserva-invitado-no-socio{% endif %}">{{ invitado.get_condicion_aplicada_display }}</span>{% endif %}</li>{% endfor %}</ul>{% else %}<p>Sin invitados</p>{% endif %}
+            <div class="reserva-total"><span>Total de la reserva</span><strong>$ {{ revision.total|floatformat:"2g" }}</strong></div>
             {% if revision.observaciones %}<p>{{ revision.observaciones|linebreaksbr }}</p>{% endif %}
-            <p class="texto-secundario">Confirmar registra la reserva y sus invitaciones Pendientes. El cobro se registra por separado.</p>
-            <form method="post">{% csrf_token %}<input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}"><div class="acciones-formulario"><button class="boton boton-secundario" name="paso" value="editar">Atrás</button><a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a><button class="boton boton-primario" name="paso" value="confirmar">Confirmar reserva</button></div></form>
+            <form method="post">{% csrf_token %}<input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}"><div class="acciones-formulario"><button class="boton boton-secundario" name="paso" value="editar">Volver</button><a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a><button class="boton boton-primario" name="paso" value="confirmar">Confirmar reserva</button></div></form>
         {% else %}
-            <p>Organizador: <strong>{{ organizador }}</strong> · {% if modalidad == 'membresia' %}Con membresía{% else %}Normal{% endif %}</p>
+
             <form method="post">{% csrf_token %}<input type="hidden" name="organizador" value="{{ organizador.pk }}"><input type="hidden" name="modalidad" value="{{ modalidad }}">
-                {{ formulario.non_field_errors }}
-                <div class="grupo-campo"><label for="{{ formulario.invitados.id_for_label }}">{{ formulario.invitados.label }}</label>{{ formulario.invitados }}<small>{{ formulario.invitados.help_text }}</small>{{ formulario.invitados.errors }}</div>
+                {% if formulario.non_field_errors %}
+                    <div class="mensaje mensaje-error" role="alert"><div>{% for error in formulario.non_field_errors %}<p class="reserva-error-texto">{{ error }}</p>{% endfor %}</div></div>
+                {% endif %}
+                {% if modalidad == 'normal' %}
+                    {% include "componentes/selector_usuarios.html" with campo=formulario.invitados seleccionados=invitados_seleccionados url_busqueda=url_buscar_invitados nota="Agregar invitados es opcional" only %}
+                {% else %}
+                    {% include "componentes/selector_usuarios.html" with campo=formulario.invitados seleccionados=invitados_seleccionados url_busqueda=url_buscar_invitados only %}
+                {% endif %}
+                <noscript><p>Habilitá JavaScript para buscar y agregar invitados.</p></noscript>
                 {% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}
-                <div class="acciones-formulario"><button class="boton boton-secundario" name="paso" value="organizador">Cambiar modalidad</button><a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a><button class="boton boton-primario" name="paso" value="revisar">Revisar reserva</button></div>
+                <div class="acciones-formulario"><button class="boton boton-secundario" name="paso" value="organizador">Volver</button><a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a><button class="boton boton-primario" name="paso" value="revisar">Revisar reserva</button></div>
             </form>
         {% endif %}
-    {% else %}<p>Elegí un turno disponible en Agenda para comenzar.</p>{{ turno_form.errors }}<a class="boton boton-secundario" href="{% url 'agenda:agenda' %}{% if origen %}?origen={{ origen.pk }}{% endif %}">Ir a Agenda</a>{% endif %}
+    {% else %}<p>Elegí un turno disponible en Agenda para comenzar.</p>{% if turno_form.errors %}<div class="mensaje mensaje-error" role="alert"><div>{% for campo in turno_form %}{% for error in campo.errors %}<p class="reserva-error-texto">{{ error }}</p>{% endfor %}{% endfor %}{% for error in turno_form.non_field_errors %}<p class="reserva-error-texto">{{ error }}</p>{% endfor %}</div></div>{% endif %}<a class="boton boton-secundario" href="{% url 'agenda:agenda' %}{% if origen %}?origen={{ origen.pk }}{% endif %}">Ir a Agenda</a>{% endif %}
 </section>
 {% endblock %}

@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll("[data-usuario-selector]").forEach(function (selector) {
         var entrada = selector.querySelector("[data-usuario-busqueda]");
+        var multiple = selector.hasAttribute("data-usuario-multiple");
         var campo = selector.querySelector('input[type="hidden"]');
         var seleccion = selector.querySelector("[data-usuario-seleccion]");
         var buscador = selector.querySelector("[data-usuario-buscador]");
@@ -31,6 +32,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
         function elegir(persona) {
             limpiarBusqueda();
+            if (multiple) {
+                if (Array.from(seleccion.querySelectorAll("input")).some(function (valor) { return valor.value === String(persona.id); })) return;
+                var fila = document.createElement("li");
+                var texto = document.createElement("span");
+                texto.textContent = persona.nombre;
+                var detalle = document.createElement("small");
+                detalle.textContent = persona.usuario;
+                texto.append(detalle);
+                var valor = document.createElement("input");
+                valor.type = "hidden";
+                valor.name = selector.dataset.campo;
+                valor.value = persona.id;
+                var boton = document.createElement("button");
+                boton.type = "button";
+                boton.className = "clase-quitar";
+                boton.dataset.usuarioQuitar = "";
+                boton.setAttribute("aria-label", "Quitar a " + persona.nombre);
+                boton.textContent = "×";
+                fila.append(texto, valor, boton);
+                seleccion.append(fila);
+                seleccion.hidden = false;
+                selector.querySelector("[data-usuario-vacio]").hidden = true;
+                entrada.value = "";
+                entrada.focus();
+                return;
+            }
             campo.value = persona.id;
             nombre.textContent = persona.nombre;
             usuario.textContent = persona.usuario;
@@ -48,6 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
             estado.textContent = "Buscando…";
             var url = new URL(selector.dataset.url, window.location.origin);
             url.searchParams.set("q", texto);
+            if (multiple) seleccion.querySelectorAll("input").forEach(function (valor) { url.searchParams.append("excluir", valor.value); });
             try {
                 var respuesta = await fetch(url, {signal: actual.signal, credentials: "same-origin", cache: "no-store"});
                 if (!respuesta.ok || respuesta.redirected) throw new Error();
@@ -80,11 +108,36 @@ document.addEventListener("DOMContentLoaded", function () {
             limpiarBusqueda();
             if (entrada.value.trim().length >= 2) demora = window.setTimeout(buscar, 250);
         });
-        selector.querySelector("[data-usuario-quitar]").addEventListener("click", function () {
-            quitar();
-            entrada.focus();
-        });
-        selector.addEventListener("usuario:limpiar", quitar);
+        if (multiple) {
+            var alternar = selector.querySelector("[data-usuario-alternar]");
+            alternar.addEventListener("click", function () {
+                buscador.hidden = !buscador.hidden;
+                alternar.setAttribute("aria-expanded", String(!buscador.hidden));
+                alternar.setAttribute("aria-label", buscador.hidden ? "Agregar invitados" : "Cerrar buscador");
+                if (buscador.hidden) {
+                    limpiarBusqueda();
+                    entrada.value = "";
+                } else {
+                    entrada.focus();
+                }
+            });
+            seleccion.addEventListener("click", function (evento) {
+                var boton = evento.target.closest("[data-usuario-quitar]");
+                if (!boton) return;
+                boton.closest("li").remove();
+                limpiarBusqueda();
+                seleccion.hidden = seleccion.children.length === 0;
+                selector.querySelector("[data-usuario-vacio]").hidden = !seleccion.hidden;
+                if (buscador.hidden) alternar.focus();
+                else entrada.focus();
+            });
+        } else {
+            selector.querySelector("[data-usuario-quitar]").addEventListener("click", function () {
+                quitar();
+                entrada.focus();
+            });
+            selector.addEventListener("usuario:limpiar", quitar);
+        }
         selector.addEventListener("keydown", function (evento) {
             var botones = Array.from(resultados.querySelectorAll("button"));
             var indice = botones.indexOf(document.activeElement);

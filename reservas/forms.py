@@ -2,6 +2,7 @@ from calendar import monthrange
 
 from django import forms
 from django.db.models import Q
+from common.disponibilidad import validar_disponibilidad
 from common.fechas import FECHA_INICIO_OPERACIONES
 from instalaciones.models import Cancha
 from usuarios.models import Rol, Usuario
@@ -30,16 +31,35 @@ class TurnoReservaForm(forms.Form):
 class OrganizadorReservaForm(forms.Form):
     organizador = forms.ModelChoiceField(queryset=Usuario.objects.none(), widget=forms.HiddenInput())
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, fecha, hora, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fecha = fecha
+        self.hora = hora
         self.fields["organizador"].queryset = Usuario.objects.filter(
             is_active=True, roles__rol__codigo__in=(Rol.RESERVAS, Rol.ADMINISTRADOR),
         ).distinct().order_by("last_name", "first_name", "username")
 
 
+    def clean(self):
+        datos = super().clean()
+        organizador = datos.get("organizador")
+        if organizador is not None:
+            try:
+                validar_disponibilidad(
+                    {organizador.pk}, self.fecha, self.hora, controlar_cupo=True,
+                )
+            except forms.ValidationError as error:
+                if error.code == "persona_ocupada":
+                    raise forms.ValidationError(
+                        "Esta persona participa en otro evento a esa hora",
+                        code=error.code,
+                    ) from error
+                raise
+        return datos
+
 class InvitadosReservaForm(forms.Form):
     invitados = forms.ModelMultipleChoiceField(
-        label="Invitados identificados", required=False, queryset=Usuario.objects.none(),
+        label="Invitados", required=False, queryset=Usuario.objects.none(),
         widget=forms.SelectMultiple(attrs={"class": "form-control", "size": 8}),
         help_text="Podés seleccionar varias personas. El organizador no se incluye.",
     )
