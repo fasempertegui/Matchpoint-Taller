@@ -365,3 +365,80 @@
     background: var(--advertencia-suave);
     color: var(--advertencia);
 }
+
+.reserva-reprogramacion-origen {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0 16px;
+    font-size: .85rem;
+}
+
+.reserva-reprogramacion-origen > span {
+    color: var(--texto-suave);
+}
+
+.reserva-reprogramacion-origen > a {
+    color: var(--primario);
+    font-weight: 600;
+}
+
+.reserva-reprogramacion-origen .reserva-membresia-ayuda {
+    position: static;
+}
+
+.reserva-original-tooltip {
+    right: auto;
+    left: 0;
+    width: min(300px, 65vw);
+}
+
+.reserva-original-tooltip dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+}
+
+.reserva-original-tooltip dt {
+    color: var(--texto-suave);
+    font-size: .75rem;
+}
+
+.reserva-original-tooltip dd {
+    margin: 3px 0 0;
+    font-size: .85rem;
+    font-weight: 600;
+}
+
+.reserva-reprogramacion-panel {
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-top: 0;
+}
+
+.reserva-reprogramacion-panel .reserva-original-numero {
+    color: inherit;
+    text-decoration: none;
+}
+
+.reserva-reprogramacion-panel .reserva-membresia-ayuda-boton {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+
+.reserva-reprogramacion-panel .reserva-membresia-ayuda-boton {
+    color: #e6daf3;
+}
+
+.reserva-reprogramacion-panel .reserva-membresia-ayuda-boton:focus-visible {
+    outline-color: #e6daf3;
+}
+
+.reserva-reprogramacion-panel .reserva-original-tooltip {
+    left: auto;
+    right: 0;
+    width: min(300px, 75vw);
+}

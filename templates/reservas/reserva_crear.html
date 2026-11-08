@@ -4,13 +4,14 @@
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario">
     <h1>{{ titulo }}</h1>
-    {% if origen %}<p>Reemplazo de <a href="{% url 'reservas:reserva_detalle' origen.pk %}">{{ origen.numero }}</a>. Se conservan los registros e importes de cada reserva por separado.</p>{% endif %}
+    {% if origen %}{% include "reservas/_reprogramacion_origen.html" %}{% endif %}
     {% if turno %}
         <div class="reserva-progreso" role="progressbar" aria-label="Progreso de reserva" aria-valuemin="1" aria-valuemax="{{ total_pasos }}" aria-valuenow="{{ numero_paso }}">
             {% for paso in pasos %}<span{% if paso <= numero_paso %} class="completo"{% endif %} aria-hidden="true"></span>{% endfor %}
         </div>
         <p class="contratacion-numero">Paso {{ numero_paso }} de {{ total_pasos }} · {{ nombre_paso }}</p>
-        <div class="reserva-turno-tarjetas" aria-label="Turno seleccionado">
+        {% if origen %}<h2 class="reserva-gestion-titulo">Nuevo turno</h2>{% endif %}
+        <div class="reserva-turno-tarjetas" aria-label="{% if origen %}Nuevo turno{% else %}Turno seleccionado{% endif %}">
             <section class="reserva-tarjeta-lugar" aria-label="Lugar">
                 <p>{{ turno.cancha.sede.nombre }}</p>
                 <h2>{{ turno.cancha.nombre }}</h2>
@@ -90,11 +91,12 @@
                 </div>
             </form>
         {% elif revision %}
-            <h2>Revisar reserva</h2>
+            <h2>{% if origen %}Revisar reprogramación{% else %}Revisar reserva{% endif %}</h2>
+            {% if origen %}<p class="nota-campo reserva-nota-advertencia">Se crea una reserva vinculada a la original, con los importes del nuevo turno y las invitaciones pendientes de respuesta. Los cobros no se trasladan</p>{% endif %}
             {% if revision.invitados %}<p class="nota-campo">Los invitados pueden aceptar o rechazar la invitación hasta el inicio de la reserva</p><ul class="reserva-invitados-resumen">{% for invitado in revision.invitados %}<li><span class="reserva-invitado-identidad">{{ invitado.usuario }}</span>{% if revision.reserva.es_con_membresia %}<span class="reserva-invitado-condicion{% if invitado.condicion_aplicada == 'socio' %} reserva-invitado-socio{% else %} reserva-invitado-no-socio{% endif %}">{{ invitado.get_condicion_aplicada_display }}</span>{% endif %}</li>{% endfor %}</ul>{% else %}<p>Sin invitados</p>{% endif %}
             <div class="reserva-total"><span>Total de la reserva</span><strong>$ {{ revision.total|floatformat:"2g" }}</strong></div>
             {% if revision.observaciones %}<p>{{ revision.observaciones|linebreaksbr }}</p>{% endif %}
-            <form method="post">{% csrf_token %}<input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}"><div class="acciones-formulario"><button class="boton boton-secundario" name="paso" value="editar">Volver</button><a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a><button class="boton boton-primario" name="paso" value="confirmar">Confirmar reserva</button></div></form>
+            <form method="post">{% csrf_token %}<input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}"><div class="acciones-formulario"><button class="boton boton-secundario" name="paso" value="editar">Volver</button><a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a><button class="boton boton-primario" name="paso" value="confirmar">{% if origen %}Confirmar reprogramación{% else %}Confirmar reserva{% endif %}</button></div></form>
         {% else %}
 
             <form method="post">{% csrf_token %}<input type="hidden" name="organizador" value="{{ organizador.pk }}"><input type="hidden" name="modalidad" value="{{ modalidad }}">
@@ -108,7 +110,7 @@
                 {% endif %}
                 <noscript><p>Habilitá JavaScript para buscar y agregar invitados.</p></noscript>
                 {% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}
-                <div class="acciones-formulario"><button class="boton boton-secundario" name="paso" value="organizador">Volver</button><a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a><button class="boton boton-primario" name="paso" value="revisar">Revisar reserva</button></div>
+                <div class="acciones-formulario"><button class="boton boton-secundario" name="paso" value="organizador">Volver</button><a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a><button class="boton boton-primario" name="paso" value="revisar">{% if origen %}Revisar reprogramación{% else %}Revisar reserva{% endif %}</button></div>
             </form>
         {% endif %}
     {% else %}<p>Elegí un turno disponible en Agenda para comenzar.</p>{% if turno_form.errors %}<div class="mensaje mensaje-error" role="alert"><div>{% for campo in turno_form %}{% for error in campo.errors %}<p class="reserva-error-texto">{{ error }}</p>{% endfor %}{% endfor %}{% for error in turno_form.non_field_errors %}<p class="reserva-error-texto">{{ error }}</p>{% endfor %}</div></div>{% endif %}<a class="boton boton-secundario" href="{% url 'agenda:agenda' %}{% if origen %}?origen={{ origen.pk }}{% endif %}">Ir a Agenda</a>{% endif %}

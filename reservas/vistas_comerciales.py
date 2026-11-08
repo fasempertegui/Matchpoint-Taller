@@ -73,7 +73,7 @@ def crear_reserva(request):
             raise PermissionDenied
         origen_id = request.GET.get("origen", "")
         origen = get_object_or_404(
-            Reserva.objects.select_related("organizador", "evento"),
+            Reserva.objects.select_related("organizador", "evento__turno__cancha__sede").prefetch_related("invitados"),
             pk=origen_id if origen_id.isdecimal() else None,
         )
         try:
@@ -87,6 +87,11 @@ def crear_reserva(request):
     if not turno_form.is_valid():
         return render(request, "reservas/reserva_crear.html", contexto)
     turno = turno_form.cleaned_data
+    if origen:
+        turno_original = origen.evento.turno
+        if (turno["cancha"].pk, turno["fecha"], time(turno["hora"])) == (turno_original.cancha_id, turno_original.fecha, turno_original.hora_inicio):
+            turno_form.add_error(None, "Elegí un turno distinto al de la reserva original")
+            return render(request, "reservas/reserva_crear.html", contexto)
     total_pasos = 4 if administrador and not origen else 3
     contexto.update({"total_pasos": total_pasos, "pasos": range(1, total_pasos + 1), "numero_paso": 1, "nombre_paso": "Organizador"})
     contexto["turno"] = turno

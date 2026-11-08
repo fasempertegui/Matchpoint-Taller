@@ -1,53 +1,18 @@
 {% load l10n %}
 {% with detalle=agenda.detalle %}
     {% if origen %}
-        <h2>Elegir destino</h2>
         {% if detalle %}
-            <p>{{ detalle.fecha|date:"d/m/Y" }} · {{ detalle.hora|time:"H:i" }} · {{ detalle.cancha.nombre }}</p>
-            {% if detalle.puede_reservar %}<a class="boton boton-primario" href="{{ detalle.url_crear_reserva }}">Reprogramar en este turno</a>{% else %}<p>{{ detalle.impedimento|default:"Este turno no está disponible." }}</p>{% endif %}
-            <a class="enlace-texto" data-agenda-cerrar href="{{ agenda.url_cerrar }}">Cerrar detalle</a>
+            {% include "agenda/_cabecera_turno.html" %}
+            {% if detalle.puede_reservar %}
+                <div class="agenda-creaciones">
+                    <a class="agenda-opcion" href="{{ detalle.url_crear_reserva }}">{% include "agenda/_opcion_turno.html" with tipo="reserva" titulo="Reprogramar reserva" descripcion="Usá este turno para la nueva reserva" only %}</a>
+                </div>
+            {% else %}<p class="agenda-impedimento">{{ detalle.impedimento|default:"Este turno no está disponible." }}</p>{% endif %}
         {% else %}<p>Elegí un turno disponible para continuar.</p>{% endif %}
     {% elif detalle.es_invitado %}
         <h2>Tu invitación · {{ detalle.reserva.numero }}</h2><p>{{ detalle.fecha|date:"d/m/Y" }} · {{ detalle.hora|time:"H:i" }} · {{ detalle.cancha.nombre }}</p><a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' detalle.reserva.pk %}">Ver mi invitación</a>
     {% elif detalle %}
-        <header class="agenda-detalle-cabecera agenda-resumen-tarjeta{% if detalle.clase %} agenda-resumen-clase{% elif detalle.reserva %} agenda-resumen-reserva{% elif detalle.bloqueo %} agenda-resumen-bloqueo{% endif %}{% if not detalle.evento or detalle.bloqueo or detalle.reserva or detalle.clase %} agenda-resumen-compacto{% endif %}">
-            <div class="agenda-resumen-seleccion">
-                {% if not detalle.evento or detalle.bloqueo or detalle.reserva or detalle.clase %}
-                    {% if detalle.reserva or detalle.clase %}
-                        <h2 class="agenda-resumen-estado agenda-resumen-etiqueta">
-                            <span data-agenda-titulo>{% if detalle.clase %}Clase{% else %}Reserva{% endif %}</span>
-                            {% include "agenda/_estado_evento.html" with evento=detalle.evento estado_temporal=detalle.estado_temporal only %}
-                        </h2>
-                    {% else %}
-                        <h2 class="agenda-resumen-estado" data-agenda-titulo>{% if detalle.bloqueo %}{{ detalle.bloqueo.get_motivo_display }}{% else %}Turno libre{% endif %}</h2>
-                    {% endif %}
-                    <p class="agenda-resumen-horario">{{ detalle.hora|time:"H:i" }} – {{ detalle.fin|time:"H:i" }}</p>
-                    <p class="agenda-resumen-cancha">{{ detalle.cancha.nombre }}</p>
-                    {% if detalle.reserva %}
-                        <div class="agenda-resumen-personas">
-                            <span>Organizador</span>
-                            <p>{{ detalle.reserva.organizador }}</p>
-                        </div>
-                    {% elif detalle.clase %}
-                        {% if detalle.datos_clase.es_administrador or detalle.datos_clase.es_profesor_asignado %}
-                            <div class="agenda-resumen-personas">
-                                <span>{% if detalle.profesores_activos|length > 1 %}Profesores{% else %}Profesor{% endif %}</span>
-                                <p>{% if detalle.profesores_activos %}{{ detalle.profesores_activos.0.nombre }}{% if detalle.profesores_activos|length > 1 %} +{{ detalle.profesores_activos|length|add:"-1" }}{% endif %}{% else %}Sin profesores{% endif %}</p>
-                            </div>
-                        {% endif %}
-                    {% endif %}
-                {% else %}
-                <div class="agenda-detalle-titulo">
-                    <h2 data-agenda-titulo>{% if detalle.ocupado_por_tercero %}No disponible{% elif detalle.reserva %}{{ detalle.reserva.numero }}{% elif detalle.bloqueo %}{{ detalle.bloqueo.numero }}{% elif detalle.evento %}{{ detalle.evento.get_tipo_display }}{% else %}Turno libre{% endif %}</h2>
-                    {% if detalle.evento %}{% include "componentes/badge_estado.html" with estado=detalle.evento.estado texto=detalle.evento.get_estado_display only %}{% endif %}
-                </div>
-                <p>{{ detalle.fecha|date:"l d/m/Y"|capfirst }}</p>
-                <p><strong>{{ detalle.hora|time:"H:i" }} a {{ detalle.fin|time:"H:i" }}</strong></p>
-                <p>{{ detalle.cancha.nombre }}</p>
-                {% endif %}
-            </div>
-            <a class="agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar detalle" aria-keyshortcuts="Escape" title="Cerrar detalle (Escape)">×</a>
-        </header>
+        {% include "agenda/_cabecera_turno.html" %}
         {% if not detalle.evento %}<div class="agenda-creaciones">{% endif %}
         {% if detalle.reserva %}
             {% if detalle.puede_finalizar %}

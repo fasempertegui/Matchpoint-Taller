@@ -73,7 +73,7 @@ def agenda(request):
             raise PermissionDenied
         origen_id = request.GET.get("origen", "")
         origen = get_object_or_404(
-            Reserva.objects.select_related("evento", "organizador"),
+            Reserva.objects.select_related("evento__turno__cancha__sede", "organizador").prefetch_related("invitados"),
             pk=origen_id if origen_id.isdecimal() else None,
         )
         try:
@@ -270,6 +270,15 @@ def agenda(request):
             for mensaje in error.messages:
                 messages.error(request, mensaje)
     if origen:
+        turno_original = origen.evento.turno
+        celdas = [celda for fila in datos.get("filas", []) for celda in fila.get("celdas", [])]
+        if datos.get("detalle"):
+            celdas.append(datos["detalle"])
+        for celda in celdas:
+            if (celda["cancha"].pk, celda["fecha"], celda["hora"]) == (turno_original.cancha_id, turno_original.fecha, turno_original.hora_inicio):
+                celda["turno_original"] = True
+                celda["puede_reservar"] = False
+                celda["impedimento"] = "Elegí un turno distinto al de la reserva original"
         _conservar_origen_en_enlaces(datos, origen.pk)
     contexto = {
         "origen": origen,

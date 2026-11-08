@@ -119,8 +119,8 @@
             {% endif %}
             <section class="perfil-seccion" aria-labelledby="reserva-acciones-titulo">
                 <h2 id="reserva-acciones-titulo">Acciones</h2>
-                {% if puede_reprogramar %}<p><a class="boton boton-secundario" href="{% url 'agenda:agenda' %}?origen={{ reserva.pk }}&amp;sede={{ turno.cancha.sede_id }}&amp;fecha={% now 'Y-m-d' %}">Reprogramar reserva</a></p>{% endif %}
                 <div class="perfil-acciones perfil-acciones-botones">
+                {% if puede_reprogramar %}<a class="boton boton-secundario boton-chico" href="{% url 'agenda:agenda' %}?origen={{ reserva.pk }}&amp;sede={{ turno.cancha.sede_id }}&amp;fecha={% now 'Y-m-d' %}">Reprogramar reserva</a>{% endif %}
                     <a class="boton boton-secundario boton-chico" href="{% url 'agenda:agenda' %}?sede={{ turno.cancha.sede_id }}&amp;cancha={{ turno.cancha_id }}&amp;fecha={{ turno.fecha|date:'Y-m-d' }}&amp;hora={{ turno.hora_inicio.hour }}">Ver turno en agenda</a>
                     <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
                     {% if puede_finalizar %}

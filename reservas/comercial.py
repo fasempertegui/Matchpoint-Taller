@@ -111,6 +111,9 @@ def _contexto_creacion(actor, datos):
         except (ValueError, TypeError, Reserva.DoesNotExist):
             raise ValidationError("La reserva de origen no es válida.") from None
         validar_origen_reprogramacion(origen)
+        turno_original = origen.evento.turno
+        if (cancha_inicial.pk, fecha, hora) == (turno_original.cancha_id, turno_original.fecha, turno_original.hora_inicio):
+            raise ValidationError("Elegí un turno distinto al de la reserva original.")
         if origen.organizador_id != organizador_id:
             raise ValidationError("El reemplazo debe conservar el organizador de la reserva original.")
     for pk in invitados_ids | {organizador_id}:
