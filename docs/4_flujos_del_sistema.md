@@ -2173,7 +2173,7 @@ Recorrido:
 1. El actor ingresa filtros, o accede directamente a sus propias reservas si tiene rol Reservas.
 2. El sistema busca reservas coincidentes.
 3. Muestra un listado con organizador, fecha, horario, cancha, importe o membresía aplicada y estado.
-4. El organizador o administrador selecciona una reserva para ver el detalle completo, incluidos los invitados registrados y el resultado de uso, movimientos Ingreso asociados vigentes devoluciones Vigentes y neto recibido, con la situación comercial correspondiente.
+4. El organizador o administrador selecciona una reserva para ver el detalle completo, incluidos los invitados registrados y el resultado de uso, ingresos Vigentes asociados, devoluciones Vigentes y neto recibido, con la situación comercial correspondiente.
 
 Alternativas:
 

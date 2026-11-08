@@ -305,7 +305,7 @@ Las operaciones Anuladas muestran movimientos y neto sin exigir completar el imp
 
 ### 2.6 Notificaciones
 
-El sistema enviará notificaciones automáticas por email en los siguientes casos: confirmación de alta de cuenta, recuperación de contraseña, confirmación de una reserva propia, invitación a una reserva normal o con membresía, cancelación de una reserva o clase que afecta al usuario, reprogramación de una reserva cancelada por un motivo ajeno al cliente, vencimiento próximo de una contratación, recordatorio de la próxima clase asignada, asignación de participantes o profesores a clases y de profesores a turnos programados.
+El sistema enviará notificaciones automáticas por email en los siguientes casos: confirmación de alta de cuenta, recuperación de contraseña, confirmación de una reserva propia, incluida una nueva reserva independiente después de una cancelación, invitación a una reserva normal o con membresía, cancelación de una reserva o clase que afecta al usuario, vencimiento próximo de una contratación, recordatorio de la próxima clase asignada, asignación de participantes o profesores a clases y de profesores a turnos programados.
 
 Las notificaciones se enviarán únicamente por email; no habrá una bandeja de notificaciones dentro del sistema. Las comunicaciones no cubiertas por estos casos seguirán realizándose por fuera del sistema.
 
