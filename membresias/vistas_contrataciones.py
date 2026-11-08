@@ -17,6 +17,7 @@ from .contrataciones import (
     registrar_contratacion_membresia, registrar_contratacion_plan,
     revision_precio_contratacion, version_anulacion_contratacion,
 )
+from .ajustes import contexto_horas_contratacion
 from .consultas import listar_contrataciones
 from .forms import (
     AnulacionContratacionForm, ContratacionMembresiaForm, ContratacionPlanForm,
@@ -82,6 +83,7 @@ def contratacion_detalle(request, pk, tipo="plan"):
     return render(request, "membresias/contratacion_detalle.html", {
         **contexto_cobros(request.user, tipo, contratacion, request.GET),
         **_contexto(tipo), "contratacion": contratacion,
+        **(contexto_horas_contratacion(contratacion, request.GET, administrador=True) if tipo == "membresia" else {}),
     })
 
 

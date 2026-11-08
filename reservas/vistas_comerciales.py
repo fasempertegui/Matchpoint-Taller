@@ -22,7 +22,7 @@ from .comercial import (
     inicio_reserva, preparar_reserva, registrar_resultado, responder_invitacion, version_resultado,
 )
 from .forms import InvitadosReservaForm, OrganizadorReservaForm, ResultadoReservaForm, TurnoReservaForm, UsoMembresiaForm
-from .horas import resumen_horas_del_mes, usos_del_mes
+from .horas import horas_disponibles_organizador, resumen_horas_del_mes
 from .models import Evento, Reserva, ReservaInvitado
 from .servicios import exigir_acceso_reservas
 from .views import _obtener_reserva_para_consulta
@@ -112,7 +112,7 @@ def crear_reserva(request):
     contexto.update({"numero_paso": total_pasos - 2, "nombre_paso": "Modalidad"})
     contexto["organizador"] = organizador
     contrato = coberturas({organizador.pk}, turno["fecha"]).get(organizador.pk)
-    horas_disponibles = max(0, contrato.horas_organizador_aplicadas - usos_del_mes(organizador.pk, turno["fecha"]).count()) if contrato else 0
+    horas_disponibles = horas_disponibles_organizador(contrato) if contrato else 0
     puede_membresia = horas_disponibles > 0
     contexto["horas_disponibles"] = horas_disponibles
     contexto["puede_membresia"] = puede_membresia

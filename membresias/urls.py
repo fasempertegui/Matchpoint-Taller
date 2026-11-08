@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, vistas_contrataciones, vistas_oferta, vistas_propias
+from . import vistas_ajustes, views, vistas_contrataciones, vistas_oferta, vistas_propias
 
 app_name = "membresias"
 
@@ -39,4 +39,6 @@ urlpatterns = [
     path("contrataciones/membresias/<int:pk>/", vistas_contrataciones.contratacion_detalle, {"tipo": "membresia"}, name="contratacion_membresia_detalle"),
     path("contrataciones/membresias/<int:pk>/comprobante/", vistas_contrataciones.contratacion_comprobante, {"tipo": "membresia"}, name="contratacion_membresia_comprobante"),
     path("contrataciones/membresias/<int:pk>/anular/", vistas_contrataciones.contratacion_anular, {"tipo": "membresia"}, name="contratacion_membresia_anular"),
+    path("contrataciones/membresias/<int:pk>/ajustar-horas/", vistas_ajustes.ajustar_horas, name="ajustar_horas"),
+    path("contrataciones/membresias/<int:pk>/ajustes/<int:ajuste_id>/revertir/", vistas_ajustes.ajustar_horas, name="revertir_ajuste_horas"),
 ]

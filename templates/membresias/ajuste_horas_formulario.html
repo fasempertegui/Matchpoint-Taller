@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load static %}
+{% block titulo %}{{ titulo }} | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario">
+    <h1>{{ titulo }}</h1>
+    <p>{{ contratacion.usuario }} · {{ contratacion.mes_cubierto|date:"F Y" }}<br>{{ contratacion.membresia.nombre }}</p>
+    {% if original %}<p>Reversión del ajuste #{{ original.pk }}: {{ original.get_operacion_display|lower }} {{ original.cantidad }} hora{{ original.cantidad|pluralize }} como {{ original.get_tipo_horas_display|lower }}.</p>{% endif %}
+    <form method="post">{% csrf_token %}
+        {% if revision %}
+            <h2>Revisar efecto</h2>
+            <dl class="perfil-lista">
+                <div class="perfil-fila"><dt>Tipo de horas</dt><dd>{{ revision.tipo_horas_texto }}</dd></div>
+                <div class="perfil-fila"><dt>Operación</dt><dd>{{ revision.operacion_texto }} {{ revision.datos.cantidad }} hora{{ revision.datos.cantidad|pluralize }}</dd></div>
+                <div class="perfil-fila"><dt>Disponibles ahora</dt><dd>{{ revision.saldo_actual }}</dd></div>
+                <div class="perfil-fila"><dt>Disponibles después</dt><dd>{{ revision.saldo_resultante }}</dd></div>
+                <div class="perfil-fila"><dt>Motivo visible al titular</dt><dd>{{ revision.datos.motivo|linebreaksbr }}</dd></div>
+            </dl>
+            <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+            <p>El ajuste afecta sólo a esta contratación y tipo de horas. No modifica el cupo base, las participaciones existentes ni los movimientos de dinero.</p>
+        {% else %}
+            {{ formulario.non_field_errors }}
+            {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}</div>{% endfor %}
+        {% endif %}
+        <div class="acciones-formulario">
+            {% if revision %}<button class="boton boton-secundario" name="paso" value="editar">Volver</button>{% endif %}
+            <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+            <button class="boton boton-primario" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar{% else %}Revisar efecto{% endif %}</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

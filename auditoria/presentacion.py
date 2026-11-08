@@ -14,7 +14,7 @@ from clases.models import (
     TurnoPlanillaAlumno, TurnoPlanillaProfesor,
 )
 from instalaciones.models import Cancha, Sede, SedeHorario
-from membresias.models import Membresia, MembresiaUsuario, Plan, PlanUsuario
+from membresias.models import AjusteHorasMembresia, Membresia, MembresiaUsuario, Plan, PlanUsuario
 from reservas.models import Evento, Reserva, ReservaInvitado, Turno
 from usuarios.models import Rol, Usuario, UsuarioRol
 
@@ -53,6 +53,7 @@ TIPOS_REGISTRO = {
     "asistencias": (
         Asistencia, "Asistencia", ("clase", "usuario"), None,
     ),
+    "ajustes_horas_membresia": (AjusteHorasMembresia, "Ajuste de horas de membresía", ("membresia_usuario__usuario",), None),
     "membresias": (Membresia, "Membresía de socio", (), "membresias:membresia_detalle"),
     "planes": (Plan, "Plan", (), "membresias:plan_detalle"),
     "membresias_usuarios": (MembresiaUsuario, "Contratación de membresía", ("usuario",), "membresias:contratacion_membresia_detalle"),
@@ -114,6 +115,8 @@ def _referencia_breve(objeto):
     if isinstance(objeto, (ClaseProfesor, ClaseAlumno, Asistencia)):
         persona = "profesor" if isinstance(objeto, ClaseProfesor) else "usuario"
         return f"{_relacion(objeto, persona)} · Clase #{objeto.clase_id}"
+    if isinstance(objeto, AjusteHorasMembresia):
+        return f"{_referencia_breve(objeto.membresia_usuario)} · {objeto.get_tipo_horas_display()}"
     if isinstance(objeto, (PlanUsuario, MembresiaUsuario)):
         return f"{_relacion(objeto, 'usuario')} · {objeto.mes_cubierto:%m/%Y}"
 
@@ -134,6 +137,8 @@ def _url_registro(objeto):
             return _url_registro(objeto.turno_planilla)
         if isinstance(objeto, (ClaseProfesor, ClaseAlumno, Asistencia)):
             return _url_registro(objeto.clase)
+        if isinstance(objeto, AjusteHorasMembresia):
+            return _url_registro(objeto.membresia_usuario) + "#ajustes-horas"
         if isinstance(objeto, ReservaInvitado):
             return _url_registro(objeto.reserva)
         if isinstance(objeto, Turno):

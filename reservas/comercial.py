@@ -17,7 +17,7 @@ from membresias.models import Membresia, MembresiaUsuario
 from usuarios.models import Rol
 
 from .disponibilidad import consultar_disponibilidad, validar_fecha_reserva
-from .horas import horas_disponibles_invitado, usos_del_mes
+from .horas import horas_disponibles_invitado, saldo_horas_contratacion
 from .models import Evento, Reserva, ReservaInvitado, Turno
 from .servicios import exigir_acceso_reservas, validar_turno_seleccionado
 
@@ -113,8 +113,8 @@ def _contexto_creacion(actor, datos):
     contrato = contratos.get(organizador_id) if modalidad == "membresia" else None
     if modalidad == "membresia" and contrato is None:
         raise ValidationError("El organizador necesita una membresía Activa que cubra la fecha del turno.")
-    usados = usos_del_mes(organizador_id, fecha).count() if contrato else 0
-    if contrato and usados >= contrato.horas_organizador_aplicadas:
+    saldo_organizador = saldo_horas_contratacion(contrato, "organizador") if contrato else None
+    if contrato and saldo_organizador["disponibles"] == 0:
         raise ValidationError("El organizador no tiene horas disponibles para ese mes.")
     reserva = Reserva(
         organizador=usuarios[organizador_id], membresia_usuario=contrato,
@@ -130,9 +130,9 @@ def _contexto_creacion(actor, datos):
         "datos": datos, "turno": turno.pk, "tarifa": reserva.precio_por_turno_aplicado,
         "cuentas": [[u.pk, u.is_active, u.debe_cambiar_contrasena, u.actualizado_en, sorted(v.rol.codigo for v in u.roles.all())] for u in usuarios.values()],
         "contratos": [[c.pk, c.estado, c.actualizado_en, c.membresia.actualizado_en] for c in contratos.values()],
-        "cupo_organizador": contrato.horas_organizador_aplicadas if contrato else None,
+        "saldo_organizador": saldo_organizador,
         "invitados": [[i.usuario_id, i.condicion_aplicada, i.membresia_usuario_id] for i in invitados],
-        "usados": usados, "total": total,
+        "total": total,
     })
     return {"actor": actor, "reserva": reserva, "invitados": invitados, "turno": turno, "total": total, "observaciones": observaciones, "huella": huella}
 

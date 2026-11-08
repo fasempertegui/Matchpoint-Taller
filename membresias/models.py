@@ -320,3 +320,40 @@ class MembresiaUsuario(models.Model):
                       "horas_organizador_aplicadas", "horas_invitado_aplicadas")
             if any(getattr(self, campo) != getattr(original, campo) for campo in campos):
                 raise ValidationError("Los datos de una contratación registrada no se pueden editar.")
+
+
+class AjusteHorasMembresia(models.Model):
+    class TipoHoras(models.TextChoices):
+        ORGANIZADOR = "organizador", "Organizador"
+        INVITADO = "invitado", "Invitado"
+
+    class Operacion(models.TextChoices):
+        OTORGAR = "otorgar", "Otorgar"
+        QUITAR = "quitar", "Quitar"
+
+    membresia_usuario = models.ForeignKey(MembresiaUsuario, on_delete=models.PROTECT, related_name="ajustes_horas")
+    tipo_horas = models.CharField("Tipo de horas", max_length=15, choices=TipoHoras.choices)
+    operacion = models.CharField("Operación", max_length=10, choices=Operacion.choices)
+    cantidad = models.PositiveSmallIntegerField("Cantidad de horas", validators=[MinValueValidator(1)])
+    motivo = models.TextField()
+    registrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="ajustes_horas_registrados")
+    creado_en = models.DateTimeField(auto_now_add=True)
+    reversion_de = models.OneToOneField("self", on_delete=models.PROTECT, related_name="reversion", null=True, blank=True)
+
+    class Meta:
+        db_table = "ajustes_horas_membresia"
+        ordering = ("-creado_en", "-pk")
+        default_permissions = ()
+        verbose_name = "ajuste de horas de membresía"
+        verbose_name_plural = "ajustes de horas de membresías"
+        indexes = [models.Index(fields=("membresia_usuario", "tipo_horas", "creado_en"), name="ajuste_contrato_tipo_fecha")]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(tipo_horas__in=("organizador", "invitado")), name="ajuste_horas_tipo_valido"),
+            models.CheckConstraint(condition=models.Q(operacion__in=("otorgar", "quitar")), name="ajuste_horas_operacion_valida"),
+            models.CheckConstraint(condition=models.Q(cantidad__gte=1), name="ajuste_horas_cantidad_positiva"),
+            models.CheckConstraint(condition=models.Q(motivo__regex=r"\S"), name="ajuste_horas_motivo_obligatorio"),
+            models.CheckConstraint(condition=~models.Q(reversion_de=models.F("pk")), name="ajuste_horas_reversion_distinta"),
+        ]
+
+    def __str__(self):
+        return f"Ajuste #{self.pk} · {self.get_tipo_horas_display()}"

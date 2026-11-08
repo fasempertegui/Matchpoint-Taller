@@ -8,7 +8,7 @@ from .fechas import (
     meses_contratables, meses_contratables_propios, validar_fecha_alta,
     validar_mes_contratacion, validar_mes_contratacion_propia,
 )
-from .models import Membresia, Plan
+from .models import AjusteHorasMembresia, Membresia, Plan
 
 
 class PlanForm(forms.ModelForm):
@@ -186,3 +186,20 @@ class RenovacionPlanPropioForm(forms.Form):
 
 class ConfirmacionContratacionPropiaForm(forms.Form):
     revision = forms.CharField(widget=forms.HiddenInput())
+
+
+class AjusteHorasForm(forms.Form):
+    tipo_horas = forms.ChoiceField(label="Tipo de horas", choices=AjusteHorasMembresia.TipoHoras.choices,
+                                  widget=forms.Select(attrs={"class": "form-control"}))
+    operacion = forms.ChoiceField(label="Operación", choices=AjusteHorasMembresia.Operacion.choices,
+                                 widget=forms.Select(attrs={"class": "form-control"}))
+    cantidad = forms.IntegerField(label="Cantidad de horas", min_value=1, max_value=32767,
+                                  widget=forms.NumberInput(attrs={"class": "form-control", "min": 1, "step": 1}))
+    motivo = forms.CharField(label="Motivo", help_text="El titular podrá consultar este motivo.",
+                             widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+
+    def __init__(self, *args, reversion=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if reversion:
+            for campo in ("tipo_horas", "operacion", "cantidad"):
+                self.fields.pop(campo)

@@ -13,8 +13,8 @@
     <h2>{{ titular }} · Resumen por meses completos</h2>
     <p>Los cupos de organizador e invitado son independientes. Las invitaciones con beneficio comprometen una hora desde Pendiente y la consumen al comenzar el turno, aunque no se respondan. El saldo incluye usos conservados de contrataciones Anuladas.</p>
     <div class="tabla-contenedor"><table>
-        <thead><tr><th>Mes</th><th>Tipo de horas</th><th>Cupo</th><th>Comprometidas</th><th>Consumidas</th><th>Disponibles</th></tr></thead>
-        <tbody>{% for fila in meses %}<tr><td>{{ fila.mes|date:"F Y" }}</td><td>{{ fila.rol }}</td><td>{{ fila.cupo }}</td><td>{{ fila.comprometidas }}</td><td>{{ fila.consumidas }}</td><td>{{ fila.disponibles }}</td></tr>{% endfor %}</tbody>
+        <thead><tr><th>Mes</th><th>Tipo de horas</th><th>Cupo</th><th>Otorgadas</th><th>Descontadas</th><th>Comprometidas</th><th>Consumidas</th><th>Disponibles</th></tr></thead>
+        <tbody>{% for fila in meses %}<tr><td>{{ fila.mes|date:"F Y" }}</td><td>{{ fila.rol }}</td><td>{{ fila.cupo }}</td><td>{{ fila.otorgadas }}</td><td>{{ fila.descontadas }}</td><td>{{ fila.comprometidas }}</td><td>{{ fila.consumidas }}</td><td>{{ fila.disponibles }}</td></tr>{% endfor %}</tbody>
     </table></div>
 </section>
 <section class="tarjeta"><h2>Reservas del período</h2><div class="tabla-contenedor"><table><thead><tr><th>Reserva</th><th>Turno</th><th>Estado</th><th>Computa una hora</th></tr></thead><tbody>{% for reserva in reservas %}<tr><td>{% if request.user.puede_reservar %}<a href="{% url 'reservas:reserva_detalle' reserva.pk %}">{{ reserva.numero }}</a>{% else %}{{ reserva.numero }}{% endif %}</td><td>{{ reserva.evento.turno.fecha|date:"d/m/Y" }} {{ reserva.evento.turno.hora_inicio|time:"H:i" }}</td><td>{{ reserva.evento.get_estado_display }}</td><td>{{ reserva.computa_hora_membresia|yesno:"Sí,No" }}</td></tr>{% empty %}<tr><td colspan="4">No hay reservas con membresía en el período.</td></tr>{% endfor %}</tbody></table></div></section>

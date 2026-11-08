@@ -14,6 +14,7 @@ from usuarios.models import Rol, Usuario
 
 from caja.consultas import contexto_cobros
 
+from .ajustes import contexto_horas_contratacion
 from .consultas import listar_contrataciones
 from .models import MembresiaUsuario, PlanUsuario
 from .contrataciones import (
@@ -77,6 +78,7 @@ def contratacion_propia_detalle(request, pk, tipo="plan"):
     return render(request, "membresias/contratacion_detalle.html", {
         **contexto_cobros(request.user, tipo, contratacion, request.GET),
         **_contexto(tipo), "contratacion": contratacion,
+        **(contexto_horas_contratacion(contratacion, request.GET, administrador=False) if tipo == "membresia" else {}),
         "puede_renovar": tipo == "plan" and not _impedimento_renovacion(titular, contratacion)
             and not PlanUsuario.objects.filter(
                 usuario=titular, mes_cubierto=mes_siguiente(contratacion.mes_cubierto),
