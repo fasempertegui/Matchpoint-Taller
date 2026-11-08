@@ -215,7 +215,7 @@ class Reserva(models.Model):
         if not self.es_con_membresia:
             return self.precio_por_turno_aplicado
         return self.precio_invitado_aplicado * sum(
-            invitado.estado == "vigente" and invitado.respuesta != "negativa" and invitado.condicion_aplicada == "no_socio"
+            invitado.estado == "vigente" and invitado.respuesta != "negativa" and invitado.genera_adicional
             for invitado in self.invitados.all()
         )
 
@@ -225,7 +225,10 @@ class ReservaInvitado(RespuestaActividad):
     reserva = models.ForeignKey(Reserva, on_delete=models.PROTECT, related_name="invitados")
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="invitaciones_reserva")
     membresia_usuario = models.ForeignKey("membresias.MembresiaUsuario", on_delete=models.PROTECT, related_name="invitaciones_aplicadas", null=True, blank=True)
-    condicion_aplicada = models.CharField(max_length=20, choices=(("socio", "Socio"), ("no_socio", "No socio"), ("reserva_normal", "Reserva normal")))
+    condicion_aplicada = models.CharField(max_length=20, choices=(
+        ("socio", "Socio con beneficio"), ("no_socio", "No socio"),
+        ("cupo_agotado", "Socio con cupo de invitado agotado"), ("reserva_normal", "Reserva normal"),
+    ))
     estado = models.CharField(max_length=10, choices=(("vigente", "Vigente"), ("retirado", "Retirado")), default="vigente")
     retirado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", null=True, blank=True)
     retirado_en = models.DateTimeField(null=True, blank=True)
@@ -243,7 +246,7 @@ class ReservaInvitado(RespuestaActividad):
                 | models.Q(estado="retirado", retirado_por__isnull=False, retirado_en__isnull=False)
             ), name="invitado_retiro_coherente"),
             models.CheckConstraint(condition=(
-                models.Q(condicion_aplicada="socio", membresia_usuario__isnull=False)
+                models.Q(condicion_aplicada__in=("socio", "cupo_agotado"), membresia_usuario__isnull=False)
                 | models.Q(condicion_aplicada__in=("no_socio", "reserva_normal"), membresia_usuario__isnull=True)
             ), name="invitado_condicion_coherente"),
         ]
@@ -252,6 +255,10 @@ class ReservaInvitado(RespuestaActividad):
 
     def __str__(self):
         return f"{self.reserva.numero} · {self.usuario}"
+
+    @property
+    def genera_adicional(self):
+        return self.condicion_aplicada in ("no_socio", "cupo_agotado")
 
     @property
     def respuesta_inicial_texto(self):

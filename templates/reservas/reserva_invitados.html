@@ -22,7 +22,7 @@
                         <button type="button" class="reserva-membresia-ayuda-boton" aria-label="Información de la membresía aplicada" aria-describedby="reserva-membresia-tooltip"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11.5V16.5M12 7.51L12.01 7.49889"/><circle cx="12" cy="12" r="10"/></svg></button>
                         <div class="reserva-membresia-tooltip" id="reserva-membresia-tooltip" role="tooltip">
                             <strong>{{ reserva.membresia_usuario.membresia.nombre }}</strong>
-                            <span>Adicional por invitado no socio</span>
+                            <span>Adicional por invitado sin beneficio</span>
                             <b>$ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}</b>
                         </div>
                     </div>
@@ -42,7 +42,7 @@
                 <ul class="reserva-invitados-resumen">
                     {% for nombre, estado, condicion in revision.cambios %}
                         <li>
-                            <span>{{ nombre }}{% if reserva.es_con_membresia %}<small class="reserva-gestion-condicion">{% if condicion == 'socio' %}Socio{% else %}No socio{% endif %}</small>{% endif %}</span>
+                            <span>{{ nombre }}{% if reserva.es_con_membresia %}<small class="reserva-gestion-condicion">{% if condicion == 'socio' %}Socio con beneficio{% elif condicion == 'cupo_agotado' %}Socio con cupo de invitado agotado{% else %}No socio{% endif %}</small>{% endif %}</span>
                             <span class="reserva-invitado-condicion {% if estado == 'vigente' %}reserva-invitado-socio{% else %}reserva-invitado-no-socio{% endif %}">{% if estado == 'vigente' %}Agregar{% else %}Retirar{% endif %}</span>
                         </li>
                     {% endfor %}

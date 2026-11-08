@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('horas_organizador', models.PositiveSmallIntegerField(default=10, validators=[django.core.validators.MinValueValidator(1)], verbose_name='Horas mensuales como organizador')),
                 ('horas_invitado', models.PositiveSmallIntegerField(default=10, validators=[django.core.validators.MinValueValidator(1)], verbose_name='Horas mensuales como invitado')),
                 ('precio_vigente', models.DecimalField(decimal_places=2, max_digits=12, validators=[django.core.validators.MinValueValidator(Decimal('0'))], verbose_name='Precio mensual (ARS)')),
-                ('precio_invitado_vigente', models.DecimalField(decimal_places=2, help_text='Importe por invitado y turno de una hora.', max_digits=12, validators=[django.core.validators.MinValueValidator(Decimal('0'))], verbose_name='Adicional por invitado no socio (ARS)')),
+                ('precio_invitado_vigente', models.DecimalField(decimal_places=2, help_text='Importe por invitado y turno de una hora.', max_digits=12, validators=[django.core.validators.MinValueValidator(Decimal('0'))], verbose_name='Adicional por invitado sin beneficio (ARS)')),
                 ('estado', models.CharField(choices=[('activo', 'Activa'), ('inactivo', 'Inactiva')], default='activo', max_length=10)),
                 ('creado_en', models.DateTimeField(auto_now_add=True)),
                 ('actualizado_en', models.DateTimeField(auto_now=True)),

@@ -19,9 +19,10 @@ from usuarios.models import Rol, Usuario
 
 from .comercial import (
     _leer, actualizar_socios, coberturas, confirmar_reserva, gestionar_invitados,
-    inicio_reserva, preparar_reserva, registrar_resultado, responder_invitacion, usos_del_mes, version_resultado,
+    inicio_reserva, preparar_reserva, registrar_resultado, responder_invitacion, version_resultado,
 )
 from .forms import InvitadosReservaForm, OrganizadorReservaForm, ResultadoReservaForm, TurnoReservaForm, UsoMembresiaForm
+from .horas import resumen_horas_del_mes, usos_del_mes
 from .models import Evento, Reserva, ReservaInvitado
 from .servicios import exigir_acceso_reservas
 from .views import _obtener_reserva_para_consulta
@@ -273,18 +274,13 @@ def uso_membresia(request):
         meses = []
         mes = desde.replace(day=1)
         while mes <= hasta:
-            consultas = usos_del_mes(titular.pk, mes)
-            comprometidas = consultas.filter(evento__estado=Evento.Estado.PROGRAMADO).count()
-            consumidas = consultas.exclude(evento__estado=Evento.Estado.PROGRAMADO).count()
-            contrato = MembresiaUsuario.objects.filter(usuario=titular, mes_cubierto=mes).exclude(estado=MembresiaUsuario.Estado.ANULADO).select_related("membresia").first()
-            cupo = contrato.horas_organizador_aplicadas if contrato else 0
-            meses.append({
-                "mes": mes, "cupo": cupo, "cupo_invitado": contrato.horas_invitado_aplicadas if contrato else 0,
-                "comprometidas": comprometidas, "consumidas": consumidas,
-                "saldo": max(0, cupo - comprometidas - consumidas),
-            })
+            contrato = MembresiaUsuario.objects.filter(usuario=titular, mes_cubierto=mes).exclude(
+                estado=MembresiaUsuario.Estado.ANULADO,
+            ).first()
+            meses.extend(resumen_horas_del_mes(titular.pk, mes, contrato))
             mes = mes_siguiente(mes)
         reservas = Reserva.objects.filter(organizador=titular, membresia_usuario__isnull=False, evento__turno__fecha__range=(desde, hasta)).select_related("evento__turno__cancha__sede").order_by("evento__turno__fecha", "evento__turno__hora_inicio")
         invitaciones = ReservaInvitado.objects.filter(usuario=titular, reserva__evento__turno__fecha__range=(desde, hasta)).select_related("reserva__evento__turno__cancha__sede")
-        contexto.update({"titular": titular, "meses": meses, "reservas": reservas, "invitaciones": invitaciones})
+        participaciones = [{"invitacion": i, "respuesta_texto": i.respuesta_visible(inicio_reserva(i.reserva))} for i in invitaciones]
+        contexto.update({"titular": titular, "meses": meses, "reservas": reservas, "invitaciones": participaciones})
     return render(request, "reservas/uso_membresia.html", contexto)

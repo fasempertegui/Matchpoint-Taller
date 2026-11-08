@@ -21,7 +21,7 @@
                 <dl class="perfil-lista">
                     <div class="perfil-fila"><dt>Horas mensuales como organizador</dt><dd>{{ membresia.horas_organizador }}</dd></div>
                     <div class="perfil-fila"><dt>Horas mensuales como invitado</dt><dd>{{ membresia.horas_invitado }}</dd></div>
-                    <div class="perfil-fila"><dt>Adicional por invitado no socio (ARS)</dt><dd>$ {{ membresia.precio_invitado_vigente|floatformat:"2g" }}</dd></div>
+                    <div class="perfil-fila"><dt>Adicional por invitado sin beneficio (ARS)</dt><dd>$ {{ membresia.precio_invitado_vigente|floatformat:"2g" }}</dd></div>
                 </dl>
             </section>
             {% if membresia.descripcion %}<section class="perfil-seccion" aria-labelledby="membresia-descripcion-titulo"><h2 id="membresia-descripcion-titulo">Descripción</h2><p class="perfil-observaciones">{{ membresia.descripcion|linebreaksbr }}</p></section>{% endif %}

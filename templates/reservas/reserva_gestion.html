@@ -5,7 +5,8 @@
     <h1>{{ titulo }}</h1><p>{{ reserva.numero }} · {{ reserva.organizador }}</p>
     <form method="post">{% csrf_token %}
         {% if revision %}
-            {% if revision.cambios %}<h2>Cambios a confirmar</h2><ul>{% for cambio in revision.cambios %}<li>{{ cambio }}</li>{% endfor %}</ul><p>Total resultante: <strong>$ {{ revision.total|floatformat:"2g" }}</strong></p>{% else %}<p>No hay cambios para aplicar.</p>{% endif %}
+            <p class="texto-secundario">El beneficio exige membresía para la fecha del turno y horas de invitado disponibles. Cada actualización compromete una hora y elimina el adicional de esa participación.</p>
+            {% if revision.cambios %}<h2>Cambios a confirmar</h2><ul>{% for cambio in revision.cambios %}<li>{{ cambio }}</li>{% endfor %}</ul><p>Total resultante: <strong>$ {{ revision.total|floatformat:"2g" }}</strong></p>{% else %}<p>No hay invitados con cobertura y horas disponibles para actualizar.</p>{% endif %}
             <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
             {% if formulario %}{% for valor in formulario.invitados.value %}<input type="hidden" name="invitados" value="{{ valor }}">{% endfor %}{% endif %}
             <p class="texto-secundario">Se conservan la historia, las respuestas y los cobros.</p>

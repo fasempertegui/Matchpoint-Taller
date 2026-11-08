@@ -113,7 +113,7 @@ class MembresiaForm(forms.ModelForm):
         localized_fields = ("precio_vigente", "precio_invitado_vigente")
         labels = {
             "precio_vigente": "Precio mensual",
-            "precio_invitado_vigente": "Adicional por invitado no socio",
+            "precio_invitado_vigente": "Adicional por invitado sin beneficio",
         }
         widgets = {
             "nombre": forms.TextInput(attrs={"class": "form-control", "autofocus": True}),

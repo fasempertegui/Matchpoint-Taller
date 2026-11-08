@@ -17,6 +17,7 @@ from membresias.models import Membresia, MembresiaUsuario
 from usuarios.models import Rol
 
 from .disponibilidad import consultar_disponibilidad, validar_fecha_reserva
+from .horas import horas_disponibles_invitado, usos_del_mes
 from .models import Evento, Reserva, ReservaInvitado, Turno
 from .servicios import exigir_acceso_reservas, validar_turno_seleccionado
 
@@ -63,16 +64,15 @@ def coberturas(usuarios_ids, fecha, *, bloquear=False):
     return {contrato.usuario_id: contrato for contrato in contratos if contrato.vigente_en(fecha)}
 
 
-def usos_del_mes(usuario_id, mes):
-    return Reserva.objects.filter(
-        organizador_id=usuario_id, computa_hora_membresia=True,
-        evento__turno__fecha__year=mes.year, evento__turno__fecha__month=mes.month,
-    )
-
-
 def _condicion(reserva, usuario_id, contratos):
-    contrato = contratos.get(usuario_id) if reserva.es_con_membresia else None
-    return ("socio", contrato) if contrato else ("no_socio" if reserva.es_con_membresia else "reserva_normal", None)
+    if not reserva.es_con_membresia:
+        return "reserva_normal", None
+    contrato = contratos.get(usuario_id)
+    if contrato is None:
+        return "no_socio", None
+    if horas_disponibles_invitado(contrato) == 0:
+        return "cupo_agotado", contrato
+    return "socio", contrato
 
 
 def _contexto_creacion(actor, datos):
@@ -125,12 +125,13 @@ def _contexto_creacion(actor, datos):
     invitados = [ReservaInvitado(reserva=reserva, usuario=usuarios[pk]) for pk in sorted(invitados_ids)]
     for invitado in invitados:
         invitado.condicion_aplicada, invitado.membresia_usuario = _condicion(reserva, invitado.usuario_id, contratos)
-    total = reserva.precio_por_turno_aplicado if contrato is None else reserva.precio_invitado_aplicado * sum(i.condicion_aplicada == "no_socio" for i in invitados)
+    total = reserva.precio_por_turno_aplicado if contrato is None else reserva.precio_invitado_aplicado * sum(i.genera_adicional for i in invitados)
     huella = _huella({
         "datos": datos, "turno": turno.pk, "tarifa": reserva.precio_por_turno_aplicado,
         "cuentas": [[u.pk, u.is_active, u.debe_cambiar_contrasena, u.actualizado_en, sorted(v.rol.codigo for v in u.roles.all())] for u in usuarios.values()],
         "contratos": [[c.pk, c.estado, c.actualizado_en, c.membresia.actualizado_en] for c in contratos.values()],
         "cupo_organizador": contrato.horas_organizador_aplicadas if contrato else None,
+        "invitados": [[i.usuario_id, i.condicion_aplicada, i.membresia_usuario_id] for i in invitados],
         "usados": usados, "total": total,
     })
     return {"actor": actor, "reserva": reserva, "invitados": invitados, "turno": turno, "total": total, "observaciones": observaciones, "huella": huella}
@@ -230,7 +231,7 @@ def gestionar_invitados(actor, reserva_id, invitados_ids, *, confirmacion=None):
         estados = {i.usuario_id: (i.estado, i.condicion_aplicada, i.respuesta) for i in relaciones}
         for i, estado, condicion, _ in propuestas:
             estados[i.usuario_id] = (estado, condicion, i.respuesta)
-        total = reserva.precio_invitado_aplicado * sum(estado == "vigente" and condicion == "no_socio" and respuesta != "negativa" for estado, condicion, respuesta in estados.values())
+        total = reserva.precio_invitado_aplicado * sum(estado == "vigente" and condicion in ("no_socio", "cupo_agotado") and respuesta != "negativa" for estado, condicion, respuesta in estados.values())
     if confirmacion is None:
         return {"reserva": reserva, "total": total, "cambios": [(str(i.usuario), estado, condicion) for i, estado, condicion, _ in propuestas], "confirmacion": _firmar(actor, "invitados", datos, huella)}
     firmado = _leer(actor, confirmacion, "invitados")
@@ -255,14 +256,16 @@ def responder_invitacion(actor, reserva_id, respuesta):
         raise PermissionDenied
     if relacion.estado != "vigente" or reserva.evento.estado != Evento.Estado.PROGRAMADO:
         raise ValidationError("La invitación no admite respuestas en su estado actual.")
+    respuesta_anterior = relacion.respuesta
     cambio = aplicar_respuesta(relacion, actor, respuesta, inicio_reserva(reserva))
     if not cambio:
         return relacion
     if respuesta == "afirmativa":
         _validar_persona(actor)
         validar_disponibilidad({actor.pk}, reserva.evento.turno.fecha, reserva.evento.turno.hora_inicio, reserva_id=reserva.pk, controlar_cupo=True)
-        contratos = coberturas({actor.pk}, reserva.evento.turno.fecha, bloquear=True)
-        relacion.condicion_aplicada, relacion.membresia_usuario = _condicion(reserva, actor.pk, contratos)
+        if respuesta_anterior == "negativa":
+            contratos = coberturas({actor.pk}, reserva.evento.turno.fecha, bloquear=True)
+            relacion.condicion_aplicada, relacion.membresia_usuario = _condicion(reserva, actor.pk, contratos)
     if timezone.now() >= inicio_reserva(reserva):
         raise ValidationError("La reserva alcanzó su inicio. No se modificó la respuesta.")
     with contexto_auditoria(actor):
@@ -277,9 +280,10 @@ def actualizar_socios(actor, reserva_id, *, confirmacion=None):
     _validar_edicion(actor, administrador, reserva)
     if not reserva.es_con_membresia:
         raise ValidationError("Actualizar socios sólo corresponde a reservas con membresía.")
-    candidatos = [i for i in relaciones if i.estado == "vigente" and i.respuesta != "negativa" and i.condicion_aplicada == "no_socio"]
+    candidatos = [i for i in relaciones if i.estado == "vigente" and i.respuesta != "negativa" and i.genera_adicional]
     contratos = coberturas({i.usuario_id for i in candidatos}, reserva.evento.turno.fecha, bloquear=True)
-    cambios = [(i, contratos[i.usuario_id]) for i in candidatos if i.usuario_id in contratos]
+    cambios = [(i, contratos[i.usuario_id]) for i in candidatos
+               if i.usuario_id in contratos and horas_disponibles_invitado(contratos[i.usuario_id]) > 0]
     huella = _huella([instantanea_reserva(reserva, relaciones), [(i.usuario_id, c.pk, c.actualizado_en) for i, c in cambios]])
     total = reserva.total - reserva.precio_invitado_aplicado * len(cambios)
     if confirmacion is None:

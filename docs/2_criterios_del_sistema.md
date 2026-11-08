@@ -119,7 +119,7 @@ Agregar o reincorporar evalúa la condición comercial para la fecha del turno. 
 
 #### Compromiso de invitados
 
-Aceptar una invitación conserva su compromiso, sin doble descuento. Rechazar o retirar antes del inicio libera la hora; reincorporar o volver a aceptar revalida saldo, cobertura y disponibilidad personal. Al inicio, una participación vigente Pendiente o Aceptada consume la hora: no responder no la libera. Las participaciones con adicional no utilizan horas de invitado. Toda cancelación libera horas comprometidas de invitados, sin penalización por proximidad al inicio.
+Aceptar una invitación Pendiente conserva su condición comercial y su compromiso, sin doble descuento. Reconocer una membresía contratada después exige «Actualizar socios». Rechazar o retirar antes del inicio libera la hora; reincorporar o volver a aceptar revalida saldo, cobertura y disponibilidad personal. Al inicio, una participación vigente Pendiente o Aceptada consume la hora: no responder no la libera. Las participaciones con adicional no utilizan horas de invitado. Toda cancelación libera horas comprometidas de invitados, sin penalización por proximidad al inicio.
 
 #### Cancelación y consumo
 

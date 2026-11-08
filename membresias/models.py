@@ -89,7 +89,7 @@ class Membresia(models.Model):
         validators=[MinValueValidator(Decimal("0"))],
     )
     precio_invitado_vigente = models.DecimalField(
-        "Adicional por invitado no socio (ARS)", max_digits=12, decimal_places=2,
+        "Adicional por invitado sin beneficio (ARS)", max_digits=12, decimal_places=2,
         validators=[MinValueValidator(Decimal("0"))],
         help_text="Importe por invitado y turno de una hora.",
     )

@@ -26,7 +26,7 @@
                 {% if tipo == 'membresia' %}
                     <div><dt>Horas mensuales como organizador</dt><dd>{{ producto.horas_organizador }}</dd></div>
                     <div><dt>Horas mensuales como invitado</dt><dd>{{ producto.horas_invitado }}</dd></div>
-                    <div><dt>Adicional vigente por invitado no socio y turno (ARS)</dt><dd>$ {{ producto.precio_invitado_vigente|floatformat:"2g" }}</dd></div>
+                    <div><dt>Adicional vigente por invitado sin membresía o con cupo agotado y turno (ARS)</dt><dd>$ {{ producto.precio_invitado_vigente|floatformat:"2g" }}</dd></div>
                 {% else %}
                     <div><dt>Modalidad</dt><dd>{{ producto.get_modalidad_display }}</dd></div>
                     <div><dt>Encuentros por semana</dt><dd>{{ producto.frecuencia_semanal }}</dd></div>
