@@ -8,13 +8,13 @@ from .models import MovimientoFondo, SesionCaja
 
 
 class AperturaCajaForm(forms.Form):
-    efectivo_inicial = forms.DecimalField(label="Efectivo inicial (ARS)", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}))
+    efectivo_inicial = forms.DecimalField(label="Efectivo inicial", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
     motivo_apertura = forms.CharField(label="Motivo si difiere del último contado", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
     revision = forms.CharField(widget=forms.HiddenInput())
 
 
 class CierreCajaForm(forms.Form):
-    efectivo_contado = forms.DecimalField(label="Efectivo contado (ARS)", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}))
+    efectivo_contado = forms.DecimalField(label="Efectivo contado", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
     motivo_diferencia = forms.CharField(label="Motivo si hay diferencia", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
 
 
@@ -34,7 +34,7 @@ class SeleccionOrigenIngresoForm(forms.Form):
 
 class IngresoForm(forms.Form):
     concepto = forms.CharField(label="Concepto", strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}), help_text="Describí el cobro y cualquier parcial o acuerdo que corresponda.")
-    monto = forms.DecimalField(label="Monto recibido (ARS)", min_value=Decimal("0.01"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}))
+    monto = forms.DecimalField(label="Monto recibido", min_value=Decimal("0.01"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
     medio_pago = forms.ChoiceField(label="Medio de pago", widget=forms.Select(attrs={"class": "form-control", "data-ingreso-medio": ""}))
     referencia = forms.CharField(label="Referencia del pago", max_length=150, required=False, strip=True, widget=forms.TextInput(attrs={"class": "form-control"}))
     verificado = forms.BooleanField(label="Verifiqué la recepción del pago o la aprobación de la operación con tarjeta", required=False)
@@ -63,7 +63,7 @@ class MovimientoCajaForm(IngresoForm):
         super().__init__(*args, **kwargs)
         self.clase = clase
         self.fields["concepto"].help_text = "Describí el pago realizado." if clase == "egreso" else "Explicá el aporte o retiro de efectivo."
-        self.fields["monto"].label = "Monto (ARS)"
+        self.fields["monto"].label = "Monto"
         self.fields["verificado"].label = "Verifiqué el pago realizado o la aprobación de la operación con tarjeta"
         self.fields["categoria_egreso"].choices = [("", "Elegí una categoría"), *MovimientoFondo.CategoriaEgreso.choices]
         if clase == "egreso":

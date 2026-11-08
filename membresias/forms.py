@@ -21,12 +21,13 @@ class PlanForm(forms.ModelForm):
             "precio_vigente", "descripcion",
         )
         localized_fields = ("precio_vigente",)
+        labels = {"precio_vigente": "Precio mensual"}
         widgets = {
             "nombre": forms.TextInput(attrs={"class": "form-control", "autofocus": True}),
             "modalidad": forms.Select(attrs={"class": "form-control"}),
             "frecuencia_semanal": forms.Select(attrs={"class": "form-control"}),
             "cantidad_clases_por_encuentro": forms.Select(attrs={"class": "form-control"}),
-            "precio_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal"}),
+            "precio_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal", "placeholder": "Pesos argentinos"}),
             "descripcion": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
 
@@ -110,11 +111,15 @@ class MembresiaForm(forms.ModelForm):
         model = Membresia
         fields = ("nombre", "horas_mensuales", "precio_vigente", "precio_invitado_vigente", "descripcion")
         localized_fields = ("precio_vigente", "precio_invitado_vigente")
+        labels = {
+            "precio_vigente": "Precio mensual",
+            "precio_invitado_vigente": "Adicional por invitado no socio",
+        }
         widgets = {
             "nombre": forms.TextInput(attrs={"class": "form-control", "autofocus": True}),
             "horas_mensuales": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
-            "precio_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal"}),
-            "precio_invitado_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal"}),
+            "precio_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal", "placeholder": "Pesos argentinos"}),
+            "precio_invitado_vigente": forms.TextInput(attrs={"class": "form-control", "inputmode": "decimal", "placeholder": "Pesos argentinos"}),
             "descripcion": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
 

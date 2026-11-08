@@ -47,9 +47,10 @@ class SedePrecioForm(forms.ModelForm):
         model = Sede
         fields = ("precio_reserva_vigente",)
         localized_fields = ("precio_reserva_vigente",)
+        labels = {"precio_reserva_vigente": "Precio por turno"}
         widgets = {
             "precio_reserva_vigente": forms.TextInput(
-                attrs={"class": "form-control", "inputmode": "decimal", "autofocus": True}
+                attrs={"class": "form-control", "inputmode": "decimal", "autofocus": True, "placeholder": "Pesos argentinos"}
             ),
         }
 
