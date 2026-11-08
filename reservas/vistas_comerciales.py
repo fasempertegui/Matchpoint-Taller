@@ -20,7 +20,6 @@ from usuarios.models import Rol, Usuario
 from .comercial import (
     _leer, actualizar_socios, coberturas, confirmar_reserva, gestionar_invitados,
     inicio_reserva, preparar_reserva, registrar_resultado, responder_invitacion, usos_del_mes, version_resultado,
-    validar_origen_reprogramacion,
 )
 from .forms import InvitadosReservaForm, OrganizadorReservaForm, ResultadoReservaForm, TurnoReservaForm, UsoMembresiaForm
 from .models import Evento, Reserva, ReservaInvitado
@@ -67,50 +66,24 @@ def buscar_invitados(request):
 @require_http_methods(["GET", "POST"])
 def crear_reserva(request):
     administrador = exigir_acceso_reservas(request.user)
-    origen = None
-    if "origen" in request.GET:
-        if not administrador:
-            raise PermissionDenied
-        origen_id = request.GET.get("origen", "")
-        origen = get_object_or_404(
-            Reserva.objects.select_related("organizador", "evento__turno__cancha__sede").prefetch_related("invitados"),
-            pk=origen_id if origen_id.isdecimal() else None,
-        )
-        try:
-            validar_origen_reprogramacion(origen)
-        except ValidationError as error:
-            messages.error(request, error.messages[0])
-            return redirect("reservas:reserva_detalle", pk=origen.pk)
     turno_form = TurnoReservaForm(request.GET)
-    contexto = {"titulo": "Reprogramar reserva" if origen else "Nueva reserva", "turno_form": turno_form, "administrador": administrador, "origen": origen}
-    contexto["url_cancelar"] = reverse("reservas:reserva_detalle", args=[origen.pk]) if origen else reverse("agenda:agenda")
+    contexto = {"titulo": "Nueva reserva", "turno_form": turno_form, "administrador": administrador}
+    contexto["url_cancelar"] = reverse("agenda:agenda")
     if not turno_form.is_valid():
         return render(request, "reservas/reserva_crear.html", contexto)
     turno = turno_form.cleaned_data
-    if origen:
-        turno_original = origen.evento.turno
-        if (turno["cancha"].pk, turno["fecha"], time(turno["hora"])) == (turno_original.cancha_id, turno_original.fecha, turno_original.hora_inicio):
-            turno_form.add_error(None, "Elegí un turno distinto al de la reserva original")
-            return render(request, "reservas/reserva_crear.html", contexto)
-    total_pasos = 4 if administrador and not origen else 3
+    total_pasos = 4 if administrador else 3
     contexto.update({"total_pasos": total_pasos, "pasos": range(1, total_pasos + 1), "numero_paso": 1, "nombre_paso": "Organizador"})
     contexto["turno"] = turno
     contexto["hora"] = time(turno["hora"])
     paso = request.POST.get("paso", "")
     datos = request.POST if request.method == "POST" else None
-    if origen and datos is None:
-        datos = {
-            "invitados": list(origen.invitados.filter(estado="vigente").exclude(respuesta="negativa").values_list("usuario_id", flat=True)),
-            "observaciones": origen.evento.observaciones,
-        }
     revisada = None
     if paso in ("confirmar", "editar"):
         try:
             revisada = _leer(request.user, request.POST.get("confirmacion"), "crear")["datos"]
             if any(str(revisada[campo]) != str(valor) for campo, valor in {"cancha": turno["cancha"].pk, "fecha": turno["fecha"].isoformat(), "hora": turno["hora"]}.items()):
                 raise ValidationError("El turno cambió. Revisá nuevamente.")
-            if revisada.get("origen") != (origen.pk if origen else None):
-                raise ValidationError("La reserva de origen cambió. Revisá nuevamente.")
             datos = revisada
         except ValidationError as error:
             messages.error(request, error.messages[0])
@@ -120,8 +93,8 @@ def crear_reserva(request):
     organizador_form = OrganizadorReservaForm(
         datos, fecha=turno["fecha"], hora=contexto["hora"],
     ) if administrador else None
-    organizador = origen.organizador if origen else request.user if not administrador else None
-    if administrador and origen is None:
+    organizador = request.user if not administrador else None
+    if administrador:
         contexto["organizador_form"] = organizador_form
         valor_organizador = organizador_form["organizador"].value()
         if valor_organizador and str(valor_organizador).isdecimal():
@@ -164,8 +137,6 @@ def crear_reserva(request):
             "hora": turno["hora"], "modalidad": modalidad,
             "invitados": [u.pk for u in formulario.cleaned_data["invitados"]], "observaciones": formulario.cleaned_data["observaciones"],
         }
-        if origen:
-            seleccion["origen"] = origen.pk
         try:
             if paso == "confirmar" and revisada is not None:
                 reserva = confirmar_reserva(request.user, request.POST.get("confirmacion"), coordenadas={"cancha": turno["cancha"].pk, "fecha": turno["fecha"].isoformat(), "hora": turno["hora"]})

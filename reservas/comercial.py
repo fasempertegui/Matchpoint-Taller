@@ -49,13 +49,6 @@ def _validar_persona(usuario):
         raise ValidationError("Cada organizador e invitado debe tener cuenta activa y rol Reservas o Administrador.")
 
 
-def validar_origen_reprogramacion(reserva):
-    if reserva.evento.estado != Evento.Estado.ANULADO or reserva.anulada_por_organizador is not False:
-        raise ValidationError("Sólo se reprograman reservas anuladas por administración.")
-    if Reserva.objects.filter(reprogramada_desde=reserva).exists():
-        raise ValidationError("Esta reserva ya tiene un reemplazo. Consultalo desde su detalle.")
-
-
 def coberturas(usuarios_ids, fecha, *, bloquear=False):
     consulta = MembresiaUsuario.objects.filter(
         usuario_id__in=usuarios_ids, mes_cubierto=fecha.replace(day=1), estado=MembresiaUsuario.Estado.ACTIVO,
@@ -102,20 +95,6 @@ def _contexto_creacion(actor, datos):
     administrador = exigir_acceso_reservas(actor)
     if not administrador and actor.pk != organizador_id:
         raise PermissionDenied
-    origen = None
-    if datos.get("origen") is not None:
-        if not administrador:
-            raise PermissionDenied
-        try:
-            origen = Reserva.objects.select_for_update(of=("self",)).select_related("evento").get(pk=int(datos["origen"]))
-        except (ValueError, TypeError, Reserva.DoesNotExist):
-            raise ValidationError("La reserva de origen no es válida.") from None
-        validar_origen_reprogramacion(origen)
-        turno_original = origen.evento.turno
-        if (cancha_inicial.pk, fecha, hora) == (turno_original.cancha_id, turno_original.fecha, turno_original.hora_inicio):
-            raise ValidationError("Elegí un turno distinto al de la reserva original.")
-        if origen.organizador_id != organizador_id:
-            raise ValidationError("El reemplazo debe conservar el organizador de la reserva original.")
     for pk in invitados_ids | {organizador_id}:
         _validar_persona(usuarios.get(pk))
     validar_fecha_reserva(fecha)
@@ -138,7 +117,6 @@ def _contexto_creacion(actor, datos):
     if contrato and usados >= contrato.membresia.horas_mensuales:
         raise ValidationError("El organizador no tiene horas disponibles para ese mes.")
     reserva = Reserva(
-        reprogramada_desde=origen,
         organizador=usuarios[organizador_id], membresia_usuario=contrato,
         precio_por_turno_aplicado=disponibilidad["precio_por_turno"] if contrato is None else None,
         precio_invitado_aplicado=contrato.membresia.precio_invitado_vigente if contrato else None,
@@ -149,7 +127,6 @@ def _contexto_creacion(actor, datos):
         invitado.condicion_aplicada, invitado.membresia_usuario = _condicion(reserva, invitado.usuario_id, contratos)
     total = reserva.precio_por_turno_aplicado if contrato is None else reserva.precio_invitado_aplicado * sum(i.condicion_aplicada == "no_socio" for i in invitados)
     huella = _huella({
-        "origen": [origen.pk, origen.evento.estado, origen.evento.actualizado_en, origen.anulada_por_organizador] if origen else None,
         "datos": datos, "turno": turno.pk, "tarifa": reserva.precio_por_turno_aplicado,
         "cuentas": [[u.pk, u.is_active, u.debe_cambiar_contrasena, u.actualizado_en, sorted(v.rol.codigo for v in u.roles.all())] for u in usuarios.values()],
         "contratos": [[c.pk, c.estado, c.actualizado_en, c.membresia.actualizado_en] for c in contratos.values()],

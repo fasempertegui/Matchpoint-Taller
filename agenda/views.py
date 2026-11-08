@@ -1,5 +1,4 @@
 from calendar import monthrange
-from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -8,7 +7,6 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
@@ -24,9 +22,7 @@ from clases.servicios import consultar_edicion_clase
 from common.fechas import opciones_meses_agenda
 from instalaciones.models import Sede
 from reservas.disponibilidad import consultar_disponibilidad
-from reservas.comercial import validar_origen_reprogramacion
 from reservas.forms import ReservaAnulacionForm
-from reservas.models import Reserva
 from reservas.servicios import anular_reserva, exigir_acceso_reservas, finalizar_reserva, registrar_reserva
 from usuarios.models import Rol
 
@@ -67,20 +63,6 @@ def buscar_organizadores(request):
 def agenda(request):
     usuario = exigir_acceso_clases(request.user)
     es_administrador = usuario.tiene_rol(Rol.ADMINISTRADOR)
-    origen = None
-    if "origen" in request.GET:
-        if not es_administrador or request.method != "GET":
-            raise PermissionDenied
-        origen_id = request.GET.get("origen", "")
-        origen = get_object_or_404(
-            Reserva.objects.select_related("evento__turno__cancha__sede", "organizador").prefetch_related("invitados"),
-            pk=origen_id if origen_id.isdecimal() else None,
-        )
-        try:
-            validar_origen_reprogramacion(origen)
-        except ValidationError as error:
-            messages.error(request, error.messages[0])
-            return redirect("reservas:reserva_detalle", pk=origen.pk)
     if request.method == "POST":
         exigir_acceso_reservas(usuario)
     panel_acciones_mes = request.GET.get("panel") == "acciones_mes"
@@ -269,19 +251,7 @@ def agenda(request):
             detalle_actual["puede_bloquear_clase"] = False
             for mensaje in error.messages:
                 messages.error(request, mensaje)
-    if origen:
-        turno_original = origen.evento.turno
-        celdas = [celda for fila in datos.get("filas", []) for celda in fila.get("celdas", [])]
-        if datos.get("detalle"):
-            celdas.append(datos["detalle"])
-        for celda in celdas:
-            if (celda["cancha"].pk, celda["fecha"], celda["hora"]) == (turno_original.cancha_id, turno_original.fecha, turno_original.hora_inicio):
-                celda["turno_original"] = True
-                celda["puede_reservar"] = False
-                celda["impedimento"] = "Elegí un turno distinto al de la reserva original"
-        _conservar_origen_en_enlaces(datos, origen.pk)
     contexto = {
-        "origen": origen,
         "formulario_clase": ClaseForm(),
         "version_clase": version_clase,
         "formulario_clase_liberar": formulario_clase_liberar,
@@ -317,18 +287,6 @@ def agenda(request):
         )
         return respuesta
     return render(request, "agenda/agenda.html", contexto)
-
-
-def _conservar_origen_en_enlaces(datos, origen_id):
-    for clave, valor in datos.items():
-        if isinstance(valor, dict):
-            _conservar_origen_en_enlaces(valor, origen_id)
-        elif isinstance(valor, list):
-            for elemento in valor:
-                if isinstance(elemento, dict):
-                    _conservar_origen_en_enlaces(elemento, origen_id)
-        elif clave.startswith("url") and isinstance(valor, str) and valor.split("?", 1)[0] in (reverse("agenda:agenda"), reverse("reservas:crear_reserva")):
-            datos[clave] = valor + ("&" if "?" in valor else "?") + urlencode({"origen": origen_id})
 
 
 def _preparar_acciones(request, sede, fecha, fecha_hasta=None, url_agenda=None):

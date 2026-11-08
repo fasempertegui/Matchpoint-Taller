@@ -1,15 +1,6 @@
 {% load l10n %}
 {% with detalle=agenda.detalle %}
-    {% if origen %}
-        {% if detalle %}
-            {% include "agenda/_cabecera_turno.html" %}
-            {% if detalle.puede_reservar %}
-                <div class="agenda-creaciones">
-                    <a class="agenda-opcion" href="{{ detalle.url_crear_reserva }}">{% include "agenda/_opcion_turno.html" with tipo="reserva" titulo="Reprogramar reserva" descripcion="Usá este turno para la nueva reserva" only %}</a>
-                </div>
-            {% else %}<p class="agenda-impedimento">{{ detalle.impedimento|default:"Este turno no está disponible." }}</p>{% endif %}
-        {% else %}<p>Elegí un turno disponible para continuar.</p>{% endif %}
-    {% elif detalle.es_invitado %}
+    {% if detalle.es_invitado %}
         <h2>Tu invitación · {{ detalle.reserva.numero }}</h2><p>{{ detalle.fecha|date:"d/m/Y" }} · {{ detalle.hora|time:"H:i" }} · {{ detalle.cancha.nombre }}</p><a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' detalle.reserva.pk %}">Ver mi invitación</a>
     {% elif detalle %}
         {% include "agenda/_cabecera_turno.html" %}

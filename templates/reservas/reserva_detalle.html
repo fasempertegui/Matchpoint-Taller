@@ -110,17 +110,9 @@
                 </dl>
             </section>
 
-            {% if reserva.reprogramada_desde_id or reemplazo %}
-            <section class="perfil-seccion"><h2>Reprogramación</h2>
-                {% if reserva.reprogramada_desde_id %}<p>Proviene de <a href="{% url 'reservas:reserva_detalle' reserva.reprogramada_desde_id %}">{{ reserva.reprogramada_desde.numero }}</a>.</p>{% endif %}
-                {% if reemplazo %}<p>Reemplazada por <a href="{% url 'reservas:reserva_detalle' reemplazo.pk %}">{{ reemplazo.numero }}</a>.</p>{% endif %}
-                <p class="texto-secundario">Cada reserva conserva su estado, comprobante e importes. La reprogramación no traslada cobros ni genera devoluciones.</p>
-            </section>
-            {% endif %}
             <section class="perfil-seccion" aria-labelledby="reserva-acciones-titulo">
                 <h2 id="reserva-acciones-titulo">Acciones</h2>
                 <div class="perfil-acciones perfil-acciones-botones">
-                {% if puede_reprogramar %}<a class="boton boton-secundario boton-chico" href="{% url 'agenda:agenda' %}?origen={{ reserva.pk }}&amp;sede={{ turno.cancha.sede_id }}&amp;fecha={% now 'Y-m-d' %}">Reprogramar reserva</a>{% endif %}
                     <a class="boton boton-secundario boton-chico" href="{% url 'agenda:agenda' %}?sede={{ turno.cancha.sede_id }}&amp;cancha={{ turno.cancha_id }}&amp;fecha={{ turno.fecha|date:'Y-m-d' }}&amp;hora={{ turno.hora_inicio.hour }}">Ver turno en agenda</a>
                     <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
                     {% if puede_finalizar %}

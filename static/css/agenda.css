@@ -984,21 +984,3 @@ button.agenda-opcion:hover {
     color: var(--advertencia);
     font-size: .85rem;
 }
-
-.agenda-reprogramacion-lateral {
-    position: sticky;
-    top: 16px;
-    display: grid;
-    gap: 16px;
-    min-width: 0;
-}
-
-.agenda-reprogramacion-lateral > .agenda-detalle {
-    position: static;
-}
-
-@media (max-width: 900px) {
-    .agenda-reprogramacion-lateral {
-        position: static;
-    }
-}
