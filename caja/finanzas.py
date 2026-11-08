@@ -21,6 +21,21 @@ def situacion_financiera(tipo, origen_id):
     return {**totales, "neto_recibido": neto, "maximo_devolucion": max(Decimal("0.00"), neto)}
 
 
+def resumen_financiero(tipo, origen):
+    situacion = situacion_financiera(tipo, origen.pk)
+    importe = origen.total if tipo == "reserva" else origen.precio_aplicado
+    anulado = origen.evento.estado == "anulado" if tipo == "reserva" else origen.estado == "anulado"
+    diferencia = situacion["neto_recibido"] - importe
+    estado = None
+    if not anulado:
+        estado = "Falta cobrar" if diferencia < 0 else "Excedente por resolver" if diferencia > 0 else "Cubierto"
+    return {
+        **situacion, "importe_acordado": importe, "operacion_anulada": anulado,
+        "estado_financiero": estado, "diferencia_importe": abs(diferencia),
+        "diferencia_revision": max(Decimal("0.00"), -situacion["neto_recibido"]),
+    }
+
+
 def _datos_revision(actor, sesion_id, tipo, origen_id, datos, situacion):
     campos = {campo: datos.get(campo, "") for campo in CAMPOS_DEVOLUCION}
     campos["monto"] = format(Decimal(campos["monto"]), ".2f")

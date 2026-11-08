@@ -2594,7 +2594,7 @@ flowchart TD
 1. Desde el detalle consulta importe acordado, ingresos Vigentes, devoluciones Vigentes y neto recibido.
 2. Si no está Anulada, compara neto e importe: Falta cobrar, Cubierto o Excedente por resolver. Si está Anulada, muestra movimientos y neto sin exigir completar el precio ni presumir devolución.
 3. Un neto negativo muestra una diferencia para revisión administrativa y sus movimientos explicativos.
-4. Despliega movimientos bajo demanda con accesos según permisos. Ninguna consulta genera cobros, devoluciones o compensaciones.
+4. Despliega movimientos bajo demanda, incluidos los Anulados, y consulta concepto, medio, referencia y motivo de anulación. El titular ve los detalles dentro de su operación; el administrador puede abrir el movimiento en caja y volver a su origen. El historial se pagina de a 25 registros. Ninguna consulta genera cobros, devoluciones o compensaciones.
 
 #### FL-80. Registrar una devolución vinculada
 

@@ -16,6 +16,7 @@
     <div class="perfil-fila"><dt>Responsable</dt><dd>{{ movimiento.registrado_por }}</dd></div>
     <div class="perfil-fila"><dt>Registro</dt><dd>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</dd></div>
 </dl></section>
+{% if finanzas %}<section class="tarjeta"><h2>Situación financiera del origen</h2>{% include "caja/_resumen_financiero.html" %}</section>{% endif %}
 {% if movimiento.estado == 'anulado' %}<section class="tarjeta"><h2>Anulación</h2><p>{{ movimiento.anulado_en|date:"d/m/Y H:i" }} · {{ movimiento.anulado_por }}</p><p>{{ movimiento.motivo_anulacion|linebreaksbr }}</p>{% if movimiento.sesion.estado == 'cerrada' and movimiento.anulado_en > movimiento.sesion.cerrada_en %}<p>La anulación es posterior al cierre. Los importes y totales históricos de esa sesión se conservan.</p>{% endif %}</section>{% endif %}
 {% if puede_anular %}<section class="tarjeta"><a class="boton boton-secundario" href="{% url 'caja:movimiento_anular' movimiento.pk %}">Anular movimiento</a></section>{% endif %}
 {% endblock %}

@@ -14,7 +14,8 @@ from .forms import (
     AnulacionMovimientoForm, AperturaCajaForm, CierreCajaForm, HistorialMovimientosForm,
     HistorialSesionesForm, IngresoForm, MovimientoCajaForm, SeleccionOrigenMovimientoForm,
 )
-from .ingresos import ORIGENES, cobros_del_origen, filtrar_origenes, registrar_ingreso
+from .finanzas import resumen_financiero, situacion_financiera
+from .ingresos import consultar_origen, origen_del_movimiento, ORIGENES, cobros_del_origen, filtrar_origenes, registrar_ingreso
 from .models import MovimientoFondo, SesionCaja
 from .movimientos import anular_movimiento, registrar_movimiento, revision_anulacion
 from .servicios import abrir_caja, cerrar_caja, efectivo_esperado, exigir_acceso_caja, revision_apertura, ultimo_cierre, resumen_sesion
@@ -187,8 +188,11 @@ def movimiento_detalle(request, pk):
             destino = {"reserva": "reservas:reserva_detalle", "plan": "membresias:contratacion_plan_detalle", "membresia": "membresias:contratacion_membresia_detalle"}[tipo]
             url_origen = reverse(destino, args=[getattr(movimiento, campo)])
             break
+    tipo, origen_id = origen_del_movimiento(movimiento)
+    finanzas = resumen_financiero(tipo, consultar_origen(tipo, origen_id)) if origen_id else None
     actual = SesionCaja.objects.filter(estado="abierta", responsable=actor).first()
     return render(request, "caja/movimiento_detalle.html", {
+        "finanzas": finanzas,
         "movimiento": movimiento, "url_origen": url_origen,
         "puede_anular": actual is not None and movimiento.estado == "vigente",
     })
@@ -254,7 +258,13 @@ def movimiento_anular(request, pk):
             messages.success(request, "El movimiento fue Anulado. Sus datos originales se conservan.")
             return redirect("caja:movimiento_detalle", pk=pk)
     origen = movimiento.sesion
+    tipo, origen_id = origen_del_movimiento(movimiento)
+    neto_resultante = None
+    if origen_id:
+        neto = situacion_financiera(tipo, origen_id)["neto_recibido"]
+        neto_resultante = neto - movimiento.monto if movimiento.clase == "ingreso" else neto + movimiento.monto
     return render(request, "caja/movimiento_anular.html", {
+        "neto_resultante": neto_resultante,
         "movimiento": movimiento, "actual": actual, "formulario": formulario,
         "efecto": -movimiento.efecto_efectivo,
         "esperado_resultante": efectivo_esperado(origen) - movimiento.efecto_efectivo if origen.estado == "abierta" else None,

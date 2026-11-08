@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from caja.consultas import contexto_cobros
+from caja.consultas import contexto_financiero
 
 from .forms import ReservaAnulacionForm
 from .models import Evento, Reserva
@@ -75,7 +75,7 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
         else:
             puede_finalizar = True
     return {
-        **contexto_cobros(usuario, "reserva", reserva, parametros),
+        **contexto_financiero(usuario, "reserva", reserva, parametros),
         "reserva": reserva,
         "turno": reserva.evento.turno,
         "total": reserva.total,

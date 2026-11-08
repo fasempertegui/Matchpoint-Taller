@@ -12,7 +12,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from usuarios.models import Rol, Usuario
 
-from caja.consultas import contexto_cobros
+from caja.consultas import contexto_financiero
 
 from .ajustes import contexto_horas_contratacion
 from .consultas import listar_contrataciones
@@ -76,7 +76,7 @@ def contratacion_propia_detalle(request, pk, tipo="plan"):
         modelo.objects.filter(usuario=titular).select_related("usuario", tipo), pk=pk,
     )
     return render(request, "membresias/contratacion_detalle.html", {
-        **contexto_cobros(request.user, tipo, contratacion, request.GET),
+        **contexto_financiero(request.user, tipo, contratacion, request.GET),
         **_contexto(tipo), "contratacion": contratacion,
         **(contexto_horas_contratacion(contratacion, request.GET, administrador=False) if tipo == "membresia" else {}),
         "puede_renovar": tipo == "plan" and not _impedimento_renovacion(titular, contratacion)

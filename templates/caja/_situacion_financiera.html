@@ -1,0 +1,29 @@
+<section class="perfil-seccion">
+<h2>Situación financiera</h2>
+{% include "caja/_resumen_financiero.html" %}
+{% if pagina_finanzas %}
+<details {% if historial_financiero_abierto %}open{% endif %}>
+<summary>Ver movimientos ({{ pagina_finanzas.paginator.count }})</summary>
+<div class="tabla-contenedor"><table><thead><tr><th>Registro</th><th>Movimiento</th><th>Estado</th><th>Monto</th><th>Detalle</th></tr></thead><tbody>
+{% for movimiento in pagina_finanzas %}<tr>
+<td>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</td>
+<td>{% if movimiento.clase == 'ingreso' %}Ingreso{% else %}Devolución{% endif %}</td>
+<td>{{ movimiento.get_estado_display }}</td><td>$ {{ movimiento.monto|floatformat:"2g" }}</td>
+<td><details><summary>{{ movimiento.numero }}</summary>
+<p>{{ movimiento.concepto|linebreaksbr }}</p><p>{{ movimiento.get_medio_pago_display }}{% if movimiento.referencia %} · {{ movimiento.referencia }}{% endif %}</p>
+{% if movimiento.estado == 'anulado' %}<p>Anulado el {{ movimiento.anulado_en|date:"d/m/Y H:i" }}. Motivo: {{ movimiento.motivo_anulacion|linebreaksbr }}</p>{% endif %}
+{% if finanzas_administrativas %}<a href="{% url 'caja:movimiento_detalle' movimiento.pk %}">Consultar en caja</a>{% endif %}
+</details></td></tr>{% endfor %}
+</tbody></table></div>
+{% if pagina_finanzas.has_other_pages %}<nav aria-label="Páginas de movimientos financieros">
+{% if pagina_finanzas.has_previous %}<a href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_finanzas={{ pagina_finanzas.previous_page_number }}">Anterior</a>{% endif %}
+<span>{{ pagina_finanzas.number }} de {{ pagina_finanzas.paginator.num_pages }}</span>
+{% if pagina_finanzas.has_next %}<a href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_finanzas={{ pagina_finanzas.next_page_number }}">Siguiente</a>{% endif %}
+</nav>{% endif %}
+</details>
+{% else %}<p class="texto-secundario">No hay movimientos registrados.</p>{% endif %}
+{% if url_cobrar or url_devolver %}<details><summary>Registrar movimiento</summary><div class="perfil-acciones">
+{% if url_cobrar %}<a class="boton boton-secundario boton-chico" href="{{ url_cobrar }}">Registrar cobro</a>{% endif %}
+{% if url_devolver %}<a class="boton boton-secundario boton-chico" href="{{ url_devolver }}">Registrar devolución</a>{% endif %}
+</div></details>{% endif %}
+</section>

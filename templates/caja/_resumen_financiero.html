@@ -1,0 +1,10 @@
+<dl class="perfil-lista">
+    <div class="perfil-fila"><dt>Importe acordado</dt><dd>$ {{ finanzas.importe_acordado|floatformat:"2g" }}</dd></div>
+    <div class="perfil-fila"><dt>Ingresos vigentes</dt><dd>$ {{ finanzas.ingresos|floatformat:"2g" }}</dd></div>
+    <div class="perfil-fila"><dt>Devoluciones vigentes</dt><dd>$ {{ finanzas.devoluciones|floatformat:"2g" }}</dd></div>
+    <div class="perfil-fila"><dt>Neto recibido</dt><dd><strong>$ {{ finanzas.neto_recibido|floatformat:"2g" }}</strong></dd></div>
+    {% if finanzas.estado_financiero %}<div class="perfil-fila"><dt>Situación</dt><dd>{{ finanzas.estado_financiero }}{% if finanzas.diferencia_importe %} · $ {{ finanzas.diferencia_importe|floatformat:"2g" }}{% endif %}</dd></div>{% endif %}
+</dl>
+{% if finanzas.operacion_anulada %}<p class="texto-secundario">Operación anulada. El neto informa el dinero recibido menos las devoluciones; no exige completar el importe acordado ni determina una devolución pendiente.</p>{% endif %}
+{% if finanzas.diferencia_revision %}<p role="status">Diferencia para revisión administrativa: $ {{ finanzas.diferencia_revision|floatformat:"2g" }}. Las devoluciones vigentes superan los ingresos vigentes.</p>{% endif %}
+{% if finanzas.estado_financiero == 'Excedente por resolver' %}<p class="texto-secundario">El excedente requiere una decisión administrativa. No se devuelve ni se aplica a otra operación automáticamente.</p>{% endif %}
