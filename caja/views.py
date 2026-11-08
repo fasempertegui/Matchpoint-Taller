@@ -118,10 +118,10 @@ def ingreso_crear(request, pk):
     contexto = {
         "sesion": sesion, "tipo": tipo, "tipo_previo": tipo_previo, "borrador": borrador,
         "opciones_origen": [
-            ("reserva", "Reserva", "Cobrá un turno de cancha."),
-            ("plan", "Contratación de plan", "Cobrá las clases de un plan contratado."),
-            ("membresia", "Contratación de membresía", "Cobrá una membresía contratada."),
-            ("general", "Ingreso sin vínculo", "Registrá un cobro sin asociarlo a una reserva o contratación."),
+            ("reserva", "Reserva", "Cobrá un turno de cancha"),
+            ("plan", "Contratación de plan", "Cobrá un plan contratado"),
+            ("membresia", "Contratación de membresía", "Cobrá una membresía contratada"),
+            ("general", "Ingreso sin vínculo", "Registrá cobros en general"),
         ],
         "numero_paso": 1, "total_pasos": 3, "nombre_paso": "Origen del ingreso",
     }
