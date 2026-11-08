@@ -17,6 +17,8 @@
 {% if sesion.motivo_diferencia %}<div class="perfil-fila"><dt>Motivo de diferencia</dt><dd>{{ sesion.motivo_diferencia|linebreaksbr }}</dd></div>{% endif %}
 {% endif %}
 </dl>
-{% if puede_cerrar %}<a class="boton boton-secundario" href="{% url 'caja:caja_cerrar' sesion.pk %}">Cerrar caja</a>{% elif sesion.estado == 'abierta' %}<p class="texto-secundario">La sesión está a cargo de {{ sesion.responsable }}.</p>{% endif %}
+{% if puede_cerrar %}<a class="boton boton-secundario" href="{% url 'caja:ingreso_crear' sesion.pk %}">Registrar ingreso</a> <a class="boton boton-secundario" href="{% url 'caja:caja_cerrar' sesion.pk %}">Cerrar caja</a>{% elif sesion.estado == 'abierta' %}<p class="texto-secundario">La sesión está a cargo de {{ sesion.responsable }}.</p>{% endif %}
 </section>
+{% include "caja/_resumen.html" %}
+<section class="tarjeta"><h2>Movimientos de la sesión</h2>{% include "caja/_movimientos.html" with pagina=pagina_movimientos %}</section>
 {% endblock %}

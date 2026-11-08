@@ -8,7 +8,7 @@ from django.utils.dateparse import parse_date
 
 from agenda.servicios import enlace_agenda
 from bloqueos.models import Bloqueo
-from caja.models import SesionCaja
+from caja.models import MovimientoFondo, SesionCaja
 from clases.models import (
     Asistencia, Clase, ClaseAlumno, ClaseProfesor, Feriado, TurnoPlanilla,
     TurnoPlanillaAlumno, TurnoPlanillaProfesor,
@@ -22,6 +22,7 @@ from .models import LogAuditoria
 
 
 TIPOS_REGISTRO = {
+    "movimientos_fondos": (MovimientoFondo, "Movimiento de fondos", ("sesion", "registrado_por"), "caja:movimiento_detalle"),
     "sesiones_caja": (SesionCaja, "Sesión de caja", ("responsable",), "caja:sesion_detalle"),
     "usuarios": (Usuario, "Usuario", (), "usuarios:usuario_detalle"),
     "roles": (Rol, "Rol", (), None),
@@ -97,7 +98,7 @@ def _referencia_breve(objeto):
         return _referencia_breve(actividad)
     if isinstance(objeto, ReservaInvitado):
         return f"{objeto.reserva.numero} · {_relacion(objeto, 'usuario')}"
-    if isinstance(objeto, (Reserva, Bloqueo, SesionCaja)):
+    if isinstance(objeto, (Reserva, Bloqueo, SesionCaja, MovimientoFondo)):
         return objeto.numero
     if isinstance(objeto, Clase):
         return f"Clase #{objeto.pk}"

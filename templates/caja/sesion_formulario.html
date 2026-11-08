@@ -9,4 +9,5 @@
 {% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{{ campo.errors }}{% else %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endif %}{% endfor %}
 <div class="acciones-formulario"><a class="boton boton-secundario" href="{% if sesion %}{% url 'caja:sesion_detalle' sesion.pk %}{% else %}{% url 'caja:caja_actual' %}{% endif %}">Cancelar</a><button class="boton boton-primario" type="submit">Confirmar {% if sesion %}cierre{% else %}apertura{% endif %}</button></div>
 </form></section>
+{% if sesion %}{% include "caja/_resumen.html" %}{% endif %}
 {% endblock %}

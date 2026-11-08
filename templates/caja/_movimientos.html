@@ -1,0 +1,13 @@
+<div class="tabla-contenedor"><table>
+    <thead><tr><th>Movimiento</th><th>Registro</th><th>Concepto</th><th>Medio</th><th>Monto</th><th>Estado</th></tr></thead>
+    <tbody>{% for movimiento in pagina %}<tr>
+        <td><a href="{% url 'caja:movimiento_detalle' movimiento.pk %}">{{ movimiento.numero }}</a></td>
+        <td>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</td><td>{{ movimiento.concepto|truncatechars:100 }}</td>
+        <td>{{ movimiento.get_medio_pago_display }}</td><td>$ {{ movimiento.monto|floatformat:"2g" }}</td><td>{{ movimiento.get_estado_display }}</td>
+    </tr>{% empty %}<tr><td colspan="6">No hay ingresos registrados.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% if pagina.has_other_pages %}<nav aria-label="Páginas de movimientos">
+    {% if pagina.has_previous %}<a href="?{% if parametros %}{{ parametros }}&amp;{% endif %}pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+    <span>{{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a href="?{% if parametros %}{{ parametros }}&amp;{% endif %}pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+</nav>{% endif %}

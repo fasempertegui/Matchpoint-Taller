@@ -1,12 +1,13 @@
 from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Sum
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
 from usuarios.models import Rol, Usuario
 
-from .models import SesionCaja
+from .models import MovimientoFondo, SesionCaja
 
 
 def exigir_acceso_caja(actor, *, bloquear=False):
@@ -42,7 +43,8 @@ def _validar_importe(campo, valor):
 
 
 def efectivo_esperado(sesion):
-    return sesion.efectivo_inicial
+    ingresos = sesion.movimientos.filter(estado="vigente", clase="ingreso", medio_pago="efectivo").aggregate(total=Sum("monto"))["total"]
+    return sesion.efectivo_inicial + (ingresos or 0)
 
 
 @transaction.atomic
@@ -99,3 +101,26 @@ def cerrar_caja(actor, sesion_id, *, efectivo_contado, motivo_diferencia=""):
     with contexto_auditoria(actor):
         sesion.save(update_fields=["estado", "cerrada_en", "efectivo_esperado", "efectivo_contado", "diferencia", "motivo_diferencia"])
     return sesion
+
+
+def movimientos_validos_sesion(sesion):
+    from django.db.models import Q
+    consulta = sesion.movimientos.all()
+    if sesion.estado == SesionCaja.Estado.CERRADA:
+        return consulta.filter(Q(anulado_en__isnull=True) | Q(anulado_en__gt=sesion.cerrada_en))
+    return consulta.filter(estado=MovimientoFondo.Estado.VIGENTE)
+
+
+def resumen_sesion(sesion):
+    consulta = movimientos_validos_sesion(sesion)
+    clases = dict(MovimientoFondo.Clase.choices)
+    medios = dict(MovimientoFondo.Medio.choices)
+    categorias = dict(MovimientoFondo.CategoriaIngreso.choices)
+    totales = list(consulta.values("clase", "medio_pago").annotate(total=Sum("monto")).order_by("clase", "medio_pago"))
+    for fila in totales:
+        fila["clase_texto"] = clases[fila["clase"]]
+        fila["medio_texto"] = medios[fila["medio_pago"]]
+    ingresos = list(consulta.filter(clase="ingreso").values("categoria_ingreso").annotate(total=Sum("monto")).order_by("categoria_ingreso"))
+    for fila in ingresos:
+        fila["categoria_texto"] = categorias[fila["categoria_ingreso"]]
+    return {"resumen_medios": totales, "resumen_ingresos": ingresos}

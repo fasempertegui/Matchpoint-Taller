@@ -1,6 +1,10 @@
 from decimal import Decimal
+from uuid import uuid4
 
 from django import forms
+
+from .ingresos import ORIGENES
+from .models import MovimientoFondo
 
 
 class AperturaCajaForm(forms.Form):
@@ -12,3 +16,44 @@ class AperturaCajaForm(forms.Form):
 class CierreCajaForm(forms.Form):
     efectivo_contado = forms.DecimalField(label="Efectivo contado (ARS)", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}))
     motivo_diferencia = forms.CharField(label="Motivo si hay diferencia", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+
+
+class SeleccionOrigenIngresoForm(forms.Form):
+    origen = forms.ModelChoiceField(label="Reserva o contratación", queryset=None, widget=forms.Select(attrs={"class": "form-control"}))
+
+    def __init__(self, *args, tipo, **kwargs):
+        super().__init__(*args, **kwargs)
+        modelo = ORIGENES[tipo][0]
+        if tipo == "reserva":
+            consulta = modelo.objects.exclude(evento__estado="anulado").select_related("organizador", "evento__turno__cancha__sede")
+            self.fields["origen"].label_from_instance = lambda r: f"{r.numero} · {r.organizador} · {r.evento.turno}"
+        else:
+            consulta = modelo.objects.exclude(estado="anulado").select_related("usuario", "plan" if tipo == "plan" else "membresia")
+        self.fields["origen"].queryset = consulta
+
+
+class IngresoForm(forms.Form):
+    categoria_ingreso = forms.ChoiceField(label="Categoría", widget=forms.Select(attrs={"class": "form-control"}))
+    concepto = forms.CharField(label="Concepto", strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}), help_text="Describí el cobro y cualquier parcial o acuerdo que corresponda.")
+    monto = forms.DecimalField(label="Monto recibido (ARS)", min_value=Decimal("0.01"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}))
+    medio_pago = forms.ChoiceField(label="Medio de pago", widget=forms.Select(attrs={"class": "form-control", "data-ingreso-medio": ""}))
+    referencia = forms.CharField(label="Referencia del pago", max_length=150, required=False, strip=True, widget=forms.TextInput(attrs={"class": "form-control"}))
+    verificado = forms.BooleanField(label="Verifiqué la recepción del pago o la aprobación de la operación con tarjeta", required=False)
+    operacion_id = forms.UUIDField(widget=forms.HiddenInput())
+
+    def __init__(self, *args, vinculado=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["operacion_id"].initial = uuid4()
+        self.fields["categoria_ingreso"].choices = [("", "Elegí una categoría"), *MovimientoFondo.CategoriaIngreso.choices]
+        self.fields["medio_pago"].choices = [("", "Elegí un medio"), *MovimientoFondo.Medio.choices]
+        if vinculado:
+            self.fields.pop("categoria_ingreso")
+
+    def clean(self):
+        datos = super().clean()
+        if datos.get("medio_pago") in ("transferencia", "tarjeta", "qr"):
+            if not datos.get("referencia"):
+                self.add_error("referencia", "Indicá una referencia del pago.")
+            if not datos.get("verificado"):
+                self.add_error("verificado", "Verificá manualmente el pago antes de registrarlo.")
+        return datos

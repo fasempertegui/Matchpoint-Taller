@@ -455,6 +455,18 @@ La apertura declara efectivo inicial no negativo y muestra el contado del últim
 
 El cierre bloquea actor y sesión, revalida responsabilidad y estado y guarda esperado, contado, diferencia, motivo y momento del servidor. Una diferencia exige explicación. La sesión cerrada conserva sus importes y no admite reapertura ni segundo cierre. Las pantallas muestran primero el estado y abren los formularios mediante acciones explícitas.
 
-En el bloque 5.1, el esperado corresponde al efectivo inicial. Los movimientos y su incorporación al cálculo corresponden a los bloques 5.2–5.5; historial con filtros y consulta de cobros corresponden a 5.6–5.7. La especificación de caja conserva ese alcance completo.
+El esperado suma el efectivo inicial y los ingresos Vigentes en efectivo. Los egresos, aportes, retiros y anulaciones corresponden a 5.3–5.5; historial con filtros y consulta de cobros desde los detalles comerciales corresponden a 5.6–5.7. La especificación de caja conserva ese alcance completo.
 
 La tabla sesiones_caja integra la auditoría transversal de modificaciones y anulaciones. La verificación manual en consola y HTTP abarcó apertura, segunda apertura rechazada, cierre con y sin diferencia, motivos, siguiente apertura, referencia vencida por otro cierre, importes negativos, responsable, consulta por otro administrador y cierre auditado. La transacción de revisión se revirtió sin conservar sesiones. Controles de Django, migraciones y carga de plantillas sin errores; la revisión visual en navegador queda pendiente.
+
+## Ingresos y cobros vinculados
+
+El responsable de la sesión abierta registra ingresos desde Caja, eligiendo un ingreso sin vínculo o una reserva o contratación concreta de plan o membresía. El formulario pide concepto, monto positivo y medio de pago. Transferencia, tarjeta y QR exigen referencia y verificación manual de recepción o aprobación. La fecha de registro pertenece al servidor.
+
+La categoría es obligatoria: Reservas, Planes, Membresías u Otros. Con origen se deriva del tipo y se muestra sin selector editable; sin vínculo se selecciona. El recorrido vinculado muestra titular, producto y mes o turno, importe aplicado y cobros Vigentes anteriores paginados. Se admiten varios cobros y acuerdos explicados en el concepto, sin comparar el acumulado con el importe aplicado ni modificarlo. Un origen Anulado no recibe nuevos ingresos.
+
+Cada formulario conserva un UUID de operación. Reenviar los mismos datos devuelve el movimiento registrado, incluso si después se cerró la sesión o anuló el origen; reutilizarlo con otros datos o actor se rechaza. La confirmación coordina usuarios, sesión y origen bajo transacción. Los movimientos conservan sus datos originales y disponen de consulta administrativa, sin edición o eliminación.
+
+El efectivo esperado y el cierre incluyen sólo ingresos Vigentes en efectivo; los medios digitales se muestran separados. La sesión presenta movimientos paginados, resumen por clase y medio e ingresos por categoría. El cierre guarda los importes calculados y el resumen de una sesión Cerrada conserva el criterio de validez al cierre. La tabla movimientos_fondos participa de la auditoría transversal de modificaciones y anulaciones.
+
+Verificación manual en consola y HTTP con transacción revertida: cuatro medios, referencia y verificación, ingreso general, tres tipos de origen, categoría derivada, pagos parciales y acumulados superiores al precio sin alterarlo, cobros previos, origen Anulado, responsable ajeno, importe cero, reenvíos iguales y distintos, sesión cerrada, conservación del registro en reintentos y cierre con sus sumas. No se conservaron movimientos ni registros de revisión; la sesión existente mantiene su estado. Controles de Django, migraciones, plantillas y sintaxis JavaScript sin errores. La revisión visual en navegador queda pendiente.

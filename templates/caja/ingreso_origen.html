@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titulo %}Registrar ingreso | Academia TM{% endblock %}
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario">
+    <h1>Registrar ingreso</h1><p>Caja {{ sesion.numero }}</p>
+    {% if seleccion %}
+        <h2>{% if tipo == 'reserva' %}Elegir reserva{% elif tipo == 'plan' %}Elegir contratación de plan{% else %}Elegir contratación de membresía{% endif %}</h2>
+        {% if hay_origenes %}<form method="get"><input type="hidden" name="tipo" value="{{ tipo }}">
+            <div class="grupo-campo"><label for="{{ seleccion.origen.id_for_label }}">{{ seleccion.origen.label }}</label>{{ seleccion.origen }}</div>
+            <div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'caja:ingreso_crear' sesion.pk %}">Atrás</a><button class="boton boton-primario">Continuar</button></div>
+        </form>{% else %}<p>No hay registros disponibles para cobrar en esta categoría.</p>{% endif %}
+    {% else %}
+        <p>¿Qué cobro vas a registrar?</p>
+        <div class="acciones-formulario">
+            <a class="boton boton-secundario" href="?tipo=general">Ingreso sin vínculo</a>
+            <a class="boton boton-secundario" href="?tipo=reserva">Reserva</a>
+            <a class="boton boton-secundario" href="?tipo=plan">Contratación de plan</a>
+            <a class="boton boton-secundario" href="?tipo=membresia">Contratación de membresía</a>
+        </div>
+    {% endif %}
+    <p><a href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a></p>
+</section>
+{% endblock %}
