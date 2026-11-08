@@ -75,9 +75,9 @@ Los feriados no tienen clases de la programación habitual. La administración p
 
 ### 3.2 Membresías de socios
 
-La membresía representa hacerse socio de la academia durante un mes calendario. Cada producto tiene nombre, cantidad de horas mensuales, precio mensual y adicional por invitado no socio.
+La membresía representa hacerse socio de la academia durante un mes calendario. Cada producto tiene nombre, cupos mensuales independientes de organizador e invitado, precio mensual y adicional por invitado sin beneficio. La oferta es de 10 horas como organizador y 10 como invitado; cada contratación conserva ambos cupos y el precio aplicado.
 
-La contratación aplica el precio vigente mensual completo, sin prorrateo ni importe negociado. Sólo el organizador utiliza una hora por reserva con membresía. Los socios invitados no generan adicional ni utilizan sus horas, aunque tengan agotado su cupo. Las horas no se acumulan entre meses y la membresía permite reservar en cualquier sede y día, sujeto a disponibilidad.
+La contratación aplica el precio vigente mensual completo, sin prorrateo ni importe negociado. En reservas con membresía, organizar compromete una hora de organizador e invitar con beneficio compromete una hora de invitado desde la respuesta Pendiente. Aceptar mantiene el compromiso; rechazar o retirar antes del inicio lo libera. Al inicio, las participaciones vigentes Pendientes o Aceptadas computan como consumidas. Quien no tiene membresía o agota su cupo de invitado participa con el mismo adicional, distinguiendo ambos motivos. Las reservas normales no utilizan horas de ninguno de los dos roles. No se transfieren horas entre roles ni meses; cualquier sede y día requiere disponibilidad.
 
 ### 3.3 Reservas de cancha
 
@@ -85,7 +85,7 @@ Cada reserva ocupa un turno de una hora. El organizador es responsable de gestio
 
 La **reserva normal** conserva la tarifa por turno de la sede. Puede organizarla un socio sin usar sus horas. Registrar invitados es opcional y no modifica la tarifa.
 
-La **reserva con membresía** aplica una contratación que cubre la fecha del turno y exige horas disponibles. Se identifican todos los invitados. Los no socios generan el adicional unitario conservado al crear la reserva. «Actualizar socios» permite al organizador o administración reconocer membresías contratadas después de la invitación, antes del inicio y con revisión del nuevo total.
+La **reserva con membresía** aplica una contratación que cubre la fecha del turno y exige horas de organizador disponibles. Se identifican todos los invitados. El adicional unitario se conserva al crear la reserva. «Actualizar socios» exige cobertura y horas de invitado disponibles para comprometer una hora y quitar el adicional, sin cambiar respuestas ni registrar dinero.
 
 Cada persona puede integrar hasta **dos reservas Programadas**, sumando las que organiza y las invitaciones vigentes Pendientes o Aceptadas. Se admite reservar desde hoy hasta el tercer día calendario siguiente inclusive, con inicio futuro. La disponibilidad personal impide coincidencias entre reservas y clases según los criterios del sistema.
 
@@ -105,9 +105,9 @@ La cancelación de una clase o reserva responde a motivos propios de esa activid
 
 ### 5.1 Cancelación de clases y reservas
 
-El organizador cancela su propia reserva antes del inicio y registra un motivo. Con membresía, más de seis horas de antelación libera la hora; con seis horas o menos la conserva como consumida. Administración cancela por causas de la academia y siempre libera la hora, también en operaciones masivas. Un turno iniciado no se anula. Las reservas normales no tienen penalización por cancelación tardía o por no realizarse.
+El organizador cancela su propia reserva antes del inicio y registra un motivo. Con membresía, más de dos horas de antelación libera la hora de organizador; con dos horas o menos la conserva como consumida. Toda cancelación libera las horas comprometidas de invitados. Administración cancela por causas de la academia y libera ambos tipos de horas, también en operaciones masivas. El plazo se calcula al confirmar con el reloj del servidor. Un turno iniciado no se anula. Las reservas normales no tienen penalización de horas.
 
-Si la cancelación fue solicitada por el cliente, no corresponde devolución. Si se produjo por otro motivo (condiciones climáticas, fuerza mayor, mantenimiento u otro imprevisto operativo), el administrador generalmente ofrece reprogramar la reserva para otro momento. No existe hoy una práctica establecida de devolver en efectivo el dinero cobrado en estos casos.
+La administración decide si corresponde devolver dinero y cuánto, independientemente del tratamiento de horas. La cancelación no genera devoluciones automáticas. Una reserva anulada permanece anulada; otro turno, o el mismo si está disponible, se reserva mediante el alta habitual, con sus propias validaciones, participantes Pendientes y condiciones comerciales.
 
 Tanto las clases como las reservas de cancha pueden cancelarse por estos motivos. Anular una reserva libera su único turno.
 
@@ -122,7 +122,7 @@ Para clases individuales, la recuperación puede requerir abrir una nueva clase 
 
 Las clases grupales suelen manejar un máximo de **6 alumnos**. En la práctica ese límite puede flexibilizarse por decisión administrativa.
 
-Una reserva cancelada administrativamente admite un reemplazo vinculado para el mismo organizador. La nueva cumple todas las reglas de creación y aplica la cobertura del mes de su nuevo turno. Cada origen admite un reemplazo directo. Los cobros permanecen en sus reservas respectivas. Administración registra el resultado Realizada o No realizada después de finalizar, con una única corrección con motivo; ese resultado no devuelve horas ni acredita asistencia individual.
+Las reservas son independientes: no existe restauración ni reprogramación vinculada, ni traslado de horas, ajustes o movimientos financieros. Administración registra el resultado Realizada o No realizada después de finalizar, con una única corrección con motivo; ese resultado no devuelve horas ni acredita asistencia individual.
 
 ### 5.2 Pagos
 
@@ -136,7 +136,7 @@ Los pagos de la academia pueden realizarse mediante:
 - Tarjeta de crédito
 - QR
 
-Cualquier devolución, crédito o compensación fuera de lo descripto en 5.1 se resuelve de forma administrativa caso por caso; no es parte de una operatoria regular, aunque puede ser necesario dejar registro de lo ocurrido.
+Las devoluciones son egresos efectivos de categoría Devoluciones, con vínculo opcional a una reserva o contratación concreta. Las vinculadas no superan el neto recibido disponible, incluso si el origen está anulado; las no vinculadas exigen concepto y las validaciones habituales de caja. Las compensaciones que exceden lo recibido se registran como otros egresos. Los ingresos y devoluciones permanecen en su operación y sesión de caja.
 
 Actualmente, los administradores registran ingresos y egresos de la academia. Los ingresos pueden provenir de planes, membresías de socios, reservas u otros conceptos. Los egresos incluyen conceptos como alquiler, luz, pago a profesores, publicidad y otros gastos operativos.
 
@@ -157,3 +157,12 @@ La contratación confirmada habilita sus beneficios para el mes cubierto sin exi
 Administración consulta para el mes elegido quiénes de la plantilla semanal tienen o no una contratación de plan no Anulada. La ausencia de contratación no presume baja, falta de pago ni indecisión: las participaciones de prueba o acordadas fuera de un plan mantienen sus recorridos. No se retira automáticamente a nadie de la plantilla ni se modifican clases concretas.
 
 Los cobros menores al importe contratado pueden ser parciales o responder a acuerdos excepcionales aceptados administrativamente. El concepto del ingreso explica el cobro y las observaciones de la contratación conservan acuerdos generales. No se recalcula deuda ni se modifica el precio contratado a partir de esa explicación.
+
+
+### 5.5 Ajustes de horas y consulta comercial
+
+Administración otorga o quita horas enteras positivas por contratación y rol, con motivo obligatorio visible para el titular, responsable y fecha. Sólo se ajustan contrataciones Activas del mes vigente o programadas para meses futuros. Los movimientos preservan el cupo base; su reversión exige motivo, responsable y fecha, no borra el ajuste y sólo se admite una vez. Un descuento o reversión no puede dejar horas disponibles negativas ni afectar participaciones existentes. No hay penalizaciones pendientes ni movimientos automáticos de dinero.
+
+La consulta de cada rol distingue cupo contratado, horas otorgadas y descontadas por ajustes, comprometidas, consumidas y disponibles. Los usos conservados del titular y mes cuentan aunque provengan de contrataciones Anuladas.
+
+Reservas y contrataciones muestran importe acordado, ingresos Vigentes, devoluciones Vigentes y neto recibido. Las no anuladas indican Falta cobrar, Cubierto o Excedente por resolver. Las anuladas muestran movimientos y neto sin exigir completar el precio ni presumir devolución. Anular un ingreso erróneo exige motivo y auditoría y puede revelar un neto negativo; conserva devoluciones, mantiene las validaciones de caja e informa la diferencia para revisión administrativa.

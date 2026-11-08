@@ -47,9 +47,9 @@ La ocupación se representa mediante `turnos`, `eventos` y tres especializacione
 
 La programación semanal se representa con `turnos_planilla` y sus asignaciones. Las clases concretas tienen asignaciones y asistencia propias, por lo que su historia no depende del contenido vigente de la planilla. Los roles de cuenta y las funciones de una persona dentro de una clase son datos distintos.
 
-Planes y membresías se modelan como catálogos independientes, con tablas separadas de contrataciones. Los precios aplicados se conservan en las contrataciones y reservas; la única fuente monetaria es `movimientos_fondos`. Sus movimientos Ingreso pueden referenciar una contratación concreta o reserva, o conservar solo el concepto. `sesiones_caja` agrupa movimientos y controla el efectivo. Los medios son efectivo, transferencia, tarjeta y QR y la fecha monetaria es la de registro del servidor.
+Planes y membresías se modelan como catálogos independientes, con tablas separadas de contrataciones. Las contrataciones de membresía conservan cupos independientes de organizador e invitado; `ajustes_horas_membresia` registra otorgamientos, descuentos y reversiones por rol. Los precios aplicados se conservan en las contrataciones y reservas; la única fuente monetaria es `movimientos_fondos`. Sus movimientos Ingreso y Egreso de categoría Devoluciones pueden referenciar una contratación concreta o reserva, o conservar solo el concepto. `sesiones_caja` agrupa movimientos y controla el efectivo. Los medios son efectivo, transferencia, tarjeta y QR y la fecha monetaria es la de registro del servidor.
 
-Se admiten pagos parciales mediante varios movimientos Ingreso por origen. El modelo no contiene indicadores de deuda, pendiente, excedente ni estado de pago y no conserva una confirmación o motivo de sobrepago. Los pagos se registran manualmente.
+Se admiten pagos parciales mediante varios movimientos Ingreso por origen. La situación financiera se deriva de ingresos y devoluciones Vigentes y del importe acordado, sin almacenar saldos ni estados de pago mutables. Indica Falta cobrar, Cubierto o Excedente por resolver en operaciones no Anuladas y muestra diferencias negativas para revisión administrativa. Los pagos se registran manualmente.
 
 El alta propia y administrativa utiliza las mismas tablas de contratación. La renovación registra otra contratación del mismo producto para el mes siguiente al de referencia, sin una entidad adicional de intención o solicitud. El seguimiento de plantilla consulta las contrataciones por titular y mes sin almacenar un estado de renovación o pago.
 
@@ -183,7 +183,8 @@ Representa un producto del catálogo de socios.
 | PK | `id` | `bigint` identity | | | `18` |
 | | `nombre` | `varchar(150)` | | | `Socio 10 horas` |
 | | `descripcion` | `text` | | | `Uso mensual de canchas` |
-| | `horas_mensuales` | `smallint` | | | `10` |
+| | `horas_organizador` | `smallint` | | | `10` |
+| | `horas_invitado` | `smallint` | | | `10` |
 | | `precio_vigente` | `numeric(12,2)` | | | `40000.00` |
 | | `precio_invitado_vigente` | `numeric(12,2)` | | | `12500.00` |
 | | `estado` | `varchar(10)` | | | `activo` |
@@ -236,6 +237,8 @@ Representa una contratación concreta de membresía por un usuario para un mes c
 | | `mes_cubierto` | `date` | | | `2026-10-01` |
 | | `fecha_alta` | `date` | | | `2026-10-01` |
 | | `precio_aplicado` | `numeric(12,2)` | | | `40000.00` |
+| | `horas_organizador_aplicadas` | `smallint` | | | `10` |
+| | `horas_invitado_aplicadas` | `smallint` | | | `10` |
 | FK | `registrado_por_id` | `bigint` | | | `4` |
 | | `observaciones` | `text` | | | `Membresía contratada en sede` |
 | | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
@@ -248,7 +251,7 @@ Representa una contratación concreta de membresía por un usuario para un mes c
 
 Utiliza la misma representación de mes cubierto, fecha efectiva, importe aplicado, auditoría y estados que 4.7, con referencia obligatoria a `membresias.id`. El responsable de registro puede ser el titular que contrata para sí mismo o el administrador, sin exigir Alumno. Tiene su propia restricción única parcial sobre `(usuario_id, mes_cubierto)` entre Activos o Vencidos; no comparte esa restricción con `planes_usuarios`.
 
-El precio aplicado es no negativo y se conserva independiente del catálogo. La contratación conserva el precio mensual vigente completo al confirmar, sin prorrateo ni importe negociado. La cobertura se evalúa por estado y mes para la fecha del turno. Las referencias de organizador e invitado socio pertenecen a reservas e invitados. Sólo el organizador usa horas. El saldo se deriva del cupo menos las reservas que computan del mismo titular y mes, incluidas las vinculadas a contrataciones Anuladas. La anulación se rechaza si existe aplicación en una reserva Programada como organizador o invitado socio vigente Pendiente o Aceptado. Los vínculos históricos Rechazados o retirados no bloquean.
+El precio aplicado es no negativo y se conserva independiente del catálogo. La contratación conserva el precio mensual vigente completo al confirmar, sin prorrateo ni importe negociado. La cobertura se evalúa por estado y mes para la fecha del turno. Las referencias de organizador e invitado socio pertenecen a reservas e invitados. Ambos cupos aplicados son positivos y se copian del producto al confirmar; no se modifican por cambios posteriores del catálogo. El saldo de cada rol se deriva del cupo conservado, ajustes y usos del titular y mes, incluidos los vinculados a contrataciones Anuladas. Las reservas normales no computan horas de ningún rol. La anulación se rechaza si existe aplicación en una reserva Programada como organizador o invitado socio vigente Pendiente o Aceptado. Los vínculos históricos Rechazados o retirados no bloquean.
 
 ### 4.9 Precios vigentes e importes aplicados
 
@@ -261,7 +264,7 @@ Los valores vigentes se almacenan en los catálogos o la sede. Sus copias aplica
 | `sedes.precio_reserva_vigente` | `reservas.precio_por_turno_aplicado` |
 | `membresias.precio_invitado_vigente` | `reservas.precio_invitado_aplicado` |
 
-El modelo no tiene una tabla de historial de precios. La historia comercial se representa mediante los importes aplicados, mientras que los movimientos de dinero utilizan exclusivamente `movimientos_fondos`. La consulta vigente no calcula deuda y el registro del cobro es separado del alta comercial.
+El modelo no tiene una tabla de historial de precios. La historia comercial se representa mediante los importes aplicados, mientras que los movimientos de dinero utilizan exclusivamente `movimientos_fondos`. La consulta vigente compara neto recibido e importe acordado y el registro del cobro es separado del alta comercial.
 
 ### 4.10 `feriados`
 
@@ -464,7 +467,6 @@ Contiene los atributos comerciales de un evento de tipo reserva.
 | FK | `resultado_corregido_por_id` | `bigint` | Sí | | `NULL` |
 | | `resultado_corregido_en` | `timestamptz` | Sí | | `NULL` |
 | | `motivo_correccion_resultado` | `text` | | | `''` |
-| FK | `reprogramada_desde_id` | `bigint` | Sí | Sí | `1180` |
 | | `anulada_por_organizador` | `boolean` | Sí | | `NULL` |
 
 El evento único es de tipo reserva. El organizador es distinto del responsable de registro del evento. Número y turno se obtienen del identificador y del evento. No hay beneficiario ni asistencia individual de reservas.
@@ -474,13 +476,12 @@ Las restricciones de modalidad exigen exactamente una alternativa:
 - Normal: precio por turno positivo, membresía y adicional nulos y cómputo de hora falso.
 - Con membresía: contratación del organizador y adicional unitario no negativo obligatorios, precio por turno nulo. Nunca se computa una hora sin contratación aplicada.
 
-La reserva con membresía nace con cómputo verdadero; Programada compromete la hora y Finalizada la consume. La anulación propia conserva el cómputo con seis horas o menos y lo quita con más de seis; la administrativa siempre lo quita. La hora pertenece al mes del turno. El cómputo es un resultado comercial de la reserva, no un saldo mutable. Se cuentan usos de todas las contrataciones del titular y mes, incluidas Anuladas.
+La reserva con membresía nace con cómputo verdadero; Programada compromete la hora y Finalizada la consume. La anulación propia conserva el cómputo con dos horas o menos y lo quita con más de dos; la administrativa siempre lo quita. La hora pertenece al mes del turno. El cómputo es un resultado comercial de la reserva, no un saldo mutable. Se cuentan usos de todas las contrataciones del titular y mes, incluidas Anuladas, y los ajustes netos por rol. La cancelación libera siempre las horas comprometidas de invitados.
 
-El total no se almacena: normal utiliza su tarifa; con membresía multiplica el adicional aplicado por los invitados no socios vigentes Pendientes o Aceptados. La cantidad de participantes se deriva de esas relaciones; no existe cantidad total declarada. En normal los invitados son opcionales y no alteran la tarifa.
+El total no se almacena: normal utiliza su tarifa; con membresía multiplica el adicional aplicado por los invitados sin beneficio vigentes Pendientes o Aceptados, tanto no socios como socios con cupo agotado. La cantidad de participantes se deriva de esas relaciones; no existe cantidad total declarada. En normal los invitados son opcionales y no alteran la tarifa.
 
 Resultado admite `sin_registrar`, `realizada` o `no_realizada`. Sin registrar exige datos iniciales nulos y ausencia de corrección. Registrar después de Finalizado exige responsable y momento. La única corrección exige un resultado distinto, original conservado, responsable, momento y motivo no vacío; los campos de corrección se informan juntos. El servicio bloquea la reserva e impide una segunda corrección. El resultado no modifica horas ni invitados.
 
-`reprogramada_desde_id` protege el origen y admite como máximo un sucesor por reserva; no puede apuntar a sí misma. El servicio exige origen Anulado administrativamente, mismo organizador y confirmación atómica de alta y vínculo. La nueva aplica cobertura, cupo e importes propios, sin trasladar cobros ni horas entre meses.
 
 `anulada_por_organizador` es nulo mientras el evento no esté Anulado; verdadero para cancelación propia y falso para administrativa. Motivo, actor y momento de anulación pertenecen al evento.
 
@@ -508,11 +509,11 @@ Representa invitados identificados de ambas modalidades y conserva la identidad 
 
 La clave compuesta impide duplicados y el usuario es distinto del organizador. Estado admite vigente o retirado, con responsable y momento para el retiro. Retirar y reincorporar conserva la identidad, respuesta y su único cambio. Sólo se retiran invitaciones Pendientes o Aceptadas; las Rechazadas permanecen visibles sin acción de retiro ni reenvío.
 
-Condición admite socio, no_socio o reserva_normal. En membresía, socio exige contratación del invitado que cubra la fecha; no_socio no tiene contratación aplicada. En normal se usa reserva_normal, sin membresía ni adicional individual. Sólo los vigentes Pendientes o Aceptados intervienen en cupos, coincidencias, adicionales y bloqueo comercial. Las referencias de rechazados o retirados se conservan como historia.
+Condición admite `socio`, `no_socio`, `cupo_agotado` o `reserva_normal`. En membresía, `socio` exige contratación del invitado con cobertura y hora disponible al aplicar el beneficio; compromete una hora de invitado desde Pendiente. `no_socio` no tiene contratación aplicada; `cupo_agotado` conserva la contratación cuya cobertura existe pero cuyo cupo disponible está agotado. Ambos generan el mismo adicional. En normal se usa `reserva_normal`, sin contratación ni consumo de membresía. Sólo los vigentes Pendientes o Aceptados de reservas no Anuladas intervienen en compromisos; al inicio consumen aun sin respuesta. Rechazar, retirar o cancelar antes del inicio libera el compromiso. Las referencias históricas se conservan.
 
 Respuesta admite pendiente, afirmativa o negativa; se presenta como Aceptada o Rechazada. Los campos de respuesta inicial, responsable y momento se informan juntos; Pendiente no tiene datos de decisión ni modificación. El actor de respuesta es el titular de la relación. La primera decisión informa respuesta inicial, titular y momento; un único cambio informa juntos su responsable y momento y conserva la primera decisión. No se vuelve a Pendiente. Sin respuesta se calcula cuando comienza el turno con respuesta Pendiente. Los servicios validan titularidad, inicio futuro y vigencia, y revalidan cupos, coincidencias y condición comercial al volver a aceptar.
 
-«Actualizar socios» evalúa las contrataciones de los vigentes Pendientes o Aceptados antes del inicio. Guarda la condición y contratación aplicadas y su historia mediante auditoría, con actor y momento, sin alterar respuestas ni el precio unitario de la reserva. Editar otros invitados no recalcula condiciones de quienes permanecen. Los cobros son independientes.
+«Actualizar socios» evalúa las contrataciones de los vigentes Pendientes o Aceptados antes del inicio. Exige cobertura y disponibilidad de invitado y compromete una hora al quitar el adicional. Guarda la condición y contratación aplicadas y su historia mediante auditoría, con actor y momento, sin alterar respuestas ni el precio unitario de la reserva. Editar otros invitados no recalcula condiciones de quienes permanecen. Los cobros son independientes.
 
 ### 4.21 `sesiones_caja`
 
@@ -590,11 +591,11 @@ Representa ingresos, egresos, aportes y retiros registrados manualmente en una s
 
 `monto` es positivo y se calcula con Decimal, sin floats. `concepto` siempre contiene texto no vacío. Los medios no efectivos requieren `referencia`. Ingreso exige `categoria_ingreso`: `reservas`, `planes`, `membresias` u `otros`. Se determina por el tipo de origen: Reservas, Planes y Membresías requieren su vínculo correspondiente; sin vínculo, la categoría es Otros. Egreso exige `categoria_egreso`: `alquiler`, `servicios`, `profesores`, `insumos`, `mantenimiento`, `publicidad`, `otros` o `devoluciones`; `destinatario` es texto opcional. Cada categoría queda vacía fuera de su clase. El destinatario queda vacío fuera de Egreso. Aporte y Retiro solo admiten efectivo y no se contabilizan como cobros o gastos operativos.
 
-Solo Ingreso admite referencias comerciales y como máximo una de las tres está informada; un ingreso sin vínculo se identifica por su concepto obligatorio. `plan_usuario_id` referencia `planes_usuarios.id`, `membresia_usuario_id` referencia `membresias_usuarios.id` y `reserva_id` referencia `reservas.id`. No apuntan a productos del catálogo. Se admiten varios ingresos por origen, sin comparación automática con el precio aplicado. El registro muestra el importe conservado de la contratación y sus ingresos Vigentes; el concepto explica pagos parciales o acuerdos excepcionales, sin representar descuentos ni alterar importes comerciales. El origen debe existir y estar confirmado; no admite nuevos ingresos si la contratación está Anulada o el evento de la reserva está Anulado. No se crea ni renueva un origen al registrar el cobro.
+Ingreso y Egreso de categoría `devoluciones` admiten referencias comerciales y como máximo una de las tres está informada. Una restricción de base de datos impide esos vínculos en otros egresos, aportes y retiros; un ingreso sin vínculo se identifica por su concepto obligatorio. `plan_usuario_id` referencia `planes_usuarios.id`, `membresia_usuario_id` referencia `membresias_usuarios.id` y `reserva_id` referencia `reservas.id`. No apuntan a productos del catálogo. Se admiten varios ingresos por origen, con comparación informativa del neto con el importe acordado. El registro muestra el importe conservado de la contratación y sus ingresos Vigentes; el concepto explica pagos parciales o acuerdos excepcionales, sin representar descuentos ni alterar importes comerciales. El origen debe existir y estar confirmado; no admite nuevos ingresos si la contratación está Anulada o el evento de la reserva está Anulado. No se crea ni renueva un origen al registrar el cobro.
 
 `sesion_id` referencia `sesiones_caja.id`; `registrado_por_id` y `anulado_por_id` referencian `usuarios.id`. Estas relaciones y los vínculos comerciales protegen a sus registros referenciados contra la eliminación. La reserva o contratación y su cobro se confirman como operaciones independientes: un error monetario no revierte el origen comercial.
 
-Una devolución usa clase `egreso` y categoría `devoluciones`: representa dinero efectivamente reintegrado a un cliente, en cualquiera de los cuatro medios. Exige concepto, monto y referencia para no efectivo; el destinatario es opcional. No tiene una FK a un ingreso ni un tope contra cobros. Los resúmenes la separan de los gastos operativos. No modifica automáticamente cobros, contratación ni reserva. Cancelar o reprogramar una operación comercial no genera un reintegro ni anula sus cobros; el reintegro se registra como un egreso independiente.
+Una devolución usa clase `egreso` y categoría `devoluciones`: representa dinero efectivamente reintegrado a un cliente, en cualquiera de los cuatro medios. Exige concepto, monto y referencia para no efectivo; el destinatario es opcional. No tiene FK a un ingreso particular. Su vínculo opcional utiliza las FK comerciales y el máximo vinculado es ingresos Vigentes menos devoluciones Vigentes de ese origen, recalculado bajo bloqueo común con ingresos y anulaciones. Un neto no positivo impide nuevas devoluciones vinculadas; el origen puede estar Anulado. Sin vínculo no tiene tope comercial y exige concepto. Compensaciones superiores se registran como otros egresos sin vínculo comercial. Los resúmenes la separan de los gastos operativos. No modifica automáticamente cobros, contratación ni reserva. Cancelar una operación comercial no genera un reintegro ni anula sus cobros; el reintegro se registra como un egreso independiente.
 
 Las FK opcionales y fechas no informadas usan NULL; los textos opcionales usan cadena vacía. La creación pertenece a una sesión abierta y usa exclusivamente `creado_en`, asignado por el servidor, y el responsable de esa sesión. La fecha no es editable y no se almacena una fecha real de operación separada. Las fechas se interpretan en `America/Argentina/Salta` y los importes son pesos argentinos con dos decimales.
 
@@ -604,7 +605,7 @@ Los servicios validan dominios, importes, referencias y coherencia de campos den
 
 Anular invalida la carga y no representa un reintegro. En sesión abierta recalcula el esperado y no puede dejarlo negativo; en sesión cerrada no modifica los resultados guardados. Corregir requiere una nueva carga independiente en la sesión actual; si corresponde a efectivo, tiene efecto ordinario y puede producir una diferencia explicada aunque no haya movimiento físico presente. No existe un vínculo entre el movimiento anulado y la nueva carga.
 
-La consulta comercial vigente usa únicamente clase Ingreso y estado Vigente, excluyendo toda anulación. El resumen histórico de una sesión cerrada incluye los movimientos con `anulado_en IS NULL OR anulado_en > cerrada_en`; los anulados antes o al cerrar no suman. Una anulación posterior no modifica los importes guardados del cierre. No se derivan indicadores de deuda.
+La consulta comercial suma ingresos Vigentes y devoluciones Vigentes por cada origen y obtiene el neto recibido, sin reasignar movimientos. Compara ese neto con el importe acordado sólo en operaciones no Anuladas para indicar Falta cobrar, Cubierto o Excedente por resolver. Anular un ingreso puede revelar neto negativo sin anular devoluciones; se conserva la validación de efectivo y se muestra la diferencia para revisión administrativa. El resumen histórico de una sesión cerrada incluye los movimientos con `anulado_en IS NULL OR anulado_en > cerrada_en`; los anulados antes o al cerrar no suman. Una anulación posterior no modifica los importes guardados del cierre. La comparación comercial no modifica los importes guardados del cierre.
 
 La protección de datos originales y la inmutabilidad del cierre se validan en servicios; no hay triggers adicionales de inmutabilidad sobre las tablas de caja. El trigger común registra modificaciones y anulaciones dentro de la transacción y las altas conservan sus datos de creación sin agregar entradas al historial. Un error revierte la escritura y su auditoría. El registro de una escritura SQL no impide esa escritura. Las reglas operativas se detallan también en criterios, 2.5 y 2.12.
 
@@ -682,6 +683,30 @@ El UUID único evita duplicados de la misma solicitud. Hay un índice por usuari
 
 ---
 
+
+### 4.28 `ajustes_horas_membresia`
+
+Registra movimientos administrativos de horas de una contratación concreta.
+
+| Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
+|---|---|---|---|---|---|
+| PK | `id` | `bigint` identity | | | `1` |
+| FK | `membresia_usuario_id` | `bigint` | | | `340` |
+| | `tipo_horas` | `varchar(15)` | | | `organizador` |
+| | `operacion` | `varchar(10)` | | | `otorgar` |
+| | `cantidad` | `smallint` | | | `2` |
+| | `motivo` | `text` | | | `Premio del torneo` |
+| FK | `registrado_por_id` | `bigint` | | | `4` |
+| | `creado_en` | `timestamptz` | | | `2026-11-08 10:00:00-03` |
+| FK | `reversion_de_id` | `bigint` | Sí | Sí | `NULL` |
+
+Las FK protegen contratación, administrador y ajuste original contra eliminación. `tipo_horas` admite organizador o invitado; `operacion`, otorgar o quitar; `cantidad` es entera positiva y el motivo no vacío. Otorgar suma y quitar resta. Se indexan contratación, tipo y fecha. Los registros no se editan ni borran.
+
+Una reversión es otro movimiento de igual cantidad y operación inversa, misma contratación y rol, con referencia única al original, motivo propio y administrador responsable. No puede apuntarse a sí misma ni revertir una reversión; el servicio valida coherencia bajo bloqueo y la unicidad impide dobles reversiones. Ambos registros permanecen en la suma y el historial. El registro conserva la evidencia de alta; las modificaciones y eliminaciones quedan cubiertas por el trigger común de auditoría.
+
+El servicio sólo admite ajustes y reversiones para contrataciones Activas del período vigente o programadas para un período futuro. Bloquea titular y contratación en el orden común con reservas e invitaciones. Recalcula por rol `cupo + otorgadas − descontadas − comprometidas − consumidas` y rechaza descuentos o reversiones que dejen disponibilidad negativa. No modifica participaciones existentes ni genera penalizaciones pendientes, cambios de precio o movimientos monetarios. Los cupos aplicados y los movimientos explican la disponibilidad sin almacenar saldo mutable.
+
+
 ## 5. Dependencias referenciales y eliminación
 
 - Las referencias a usuarios, sedes, canchas, productos y contrataciones protegen los registros que tienen datos dependientes. Cada contratación referencia obligatoriamente a su usuario y producto.
@@ -691,7 +716,6 @@ El UUID único evita duplicados de la misma solicitud. Hay un índice por usuari
 - Las clases concretas son independientes de las celdas de planilla. Eliminar una celda no modifica las clases ni su indicador de origen.
 - `eventos.turno_id` protege al turno. Las especializaciones `reservas`, `clases` y `bloqueos` protegen su evento.
 - Las relaciones de invitados protegen reserva, usuario y contratación aplicada; retirar o rechazar no elimina la relación. Las respuestas de alumnos conservan su identidad al reactivar.
-- `reservas.reprogramada_desde_id` protege la reserva original y es único; se conservan todos los eslabones de la cadena.
 - `bloqueos.evento_origen_id` protege al evento de origen mientras exista la referencia de trazabilidad.
 - `log_auditoria.usuario_id` protege la cuenta del actor; el historial no admite modificación ni eliminación.
 - `intentos_auditoria.usuario_id` protege la cuenta del actor autenticado; el historial de intentos tampoco admite modificación, eliminación ni vaciado.

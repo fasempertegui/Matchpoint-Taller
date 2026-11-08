@@ -422,7 +422,7 @@ Con el organizador identificado, se comprueba si es socio para la fecha del turn
 | Normal | Tarifa por turno de sede, invitados opcionales y observaciones opcionales; su identidad no altera la tarifa |
 | Con membresía | Contratación del organizador para la fecha, horas mensuales disponibles e identificación de todos los invitados; condición socio/no socio y adicional unitario aplicado |
 
-El recorrido con membresía exige una hora disponible y no exige tarifa normal configurada. Sólo el organizador compromete una hora; el invitado socio no usa sus horas ni genera adicional aunque tenga agotado su cupo. En normal no se aplican membresías de invitados.
+El recorrido con membresía exige una hora disponible y no exige tarifa normal configurada. El organizador compromete una hora de su cupo y cada invitado con beneficio compromete una hora de invitado desde Pendiente. Aceptar conserva ese compromiso; al inicio consume aun sin respuesta. Sin membresía o con cupo de invitado agotado aplica el mismo adicional, con etiquetas que explican el motivo. En normal no se utilizan horas de ningún participante.
 
 La creación presenta progreso por pasos: organizador cuando lo elige administración, modalidad, invitados y revisión. Dos tarjetas contiguas con fondo violeta oscuro y texto claro resumen el turno: una destaca la cancha y muestra la sede; la otra destaca la hora y muestra la fecha. El organizador se presenta en una tercera tarjeta debajo del turno, con fondo claro y texto violeta. Desde el paso de invitados, la modalidad elegida se presenta en una tarjeta contigua a la del organizador, ambas con fondo violeta claro y texto violeta oscuro. En el paso de modalidad, la tarjeta del organizador ocupa todo el ancho. La selección de modalidad presenta dos opciones contiguas con una explicación y su tarifa o disponibilidad. La opción seleccionada se identifica con un check en la esquina superior derecha y el botón «Siguiente» permite avanzar. Las opciones no disponibles se muestran atenuadas, sin acción y con el motivo visible. Los invitados se agregan mediante un buscador por nombre, apellido o usuario, abierto con un botón circular «+» junto a «Invitados», que cambia a «×» para cerrarlo; el buscador aparece antes de los seleccionados, y se muestran en filas compactas con una acción para quitarlos. Al volver se conservan los invitados y las observaciones.
 
@@ -438,43 +438,42 @@ Gestionar invitados se revela al organizador o administración sólo en una rese
 
 Sólo se retiran invitaciones Pendientes o Aceptadas. Las Rechazadas permanecen visibles con su respuesta, sin Retirar ni Reenviar. Una retirada muestra su condición histórica y no permite responder mientras esté retirada. Editar a otro invitado conserva las condiciones comerciales de quienes permanecen.
 
-La revisión muestra participantes y nuevo total con el adicional unitario conservado. Retirar un no socio elimina su adicional incluso dentro de las seis horas. Nada de esto modifica cobros ni horas del organizador. No se editan organizador, modalidad, turno ni precio unitario; cambiar turno requiere cancelar y crear otra reserva.
+La revisión muestra participantes y nuevo total con el adicional unitario conservado. Retirar un no socio elimina su adicional incluso dentro de las dos horas. Nada de esto modifica cobros ni horas del organizador. No se editan organizador, modalidad, turno ni precio unitario; cambiar turno requiere cancelar y crear otra reserva.
 
 ### 7.3 Actualizar socios
 
 «Actualizar socios» es una acción bajo demanda del organizador o administración, sólo en reservas con membresía Programadas antes del inicio. Revisa membresías que cubren la fecha del turno de los invitados vigentes Pendientes o Aceptados.
 
-La vista previa presenta únicamente los cambios de condición y el total resultante. Si un invitado contrató una membresía después de ser invitado, se acredita como socio y deja de generar adicional, sin exigirle horas disponibles. Sin cambios se informa que la condición de socios está actualizada, sin simular una modificación.
+La vista previa presenta únicamente los cambios de condición y el total resultante. Si un invitado contrató una membresía después de ser invitado, se acredita como socio y deja de generar adicional, si tiene cobertura y horas de invitado disponibles. Confirmar compromete una hora; sin saldo el adicional se mantiene. Sin cambios se informa que la condición de socios está actualizada, sin simular una modificación.
 
-Confirmar revalida inicio, permisos, relaciones y contrataciones. Si cambió el conjunto revisado se exige otra revisión. Se conserva el adicional unitario original, la historia comercial, respuestas, horas del organizador y cobros. No modifica Rechazadas ni retiradas ni reincorpora personas.
+Confirmar revalida inicio, permisos, relaciones, contrataciones y saldo disponible bajo los bloqueos comunes con invitaciones y ajustes. Si cambió el conjunto revisado se exige otra revisión. Se conserva el adicional unitario original, la historia comercial, respuestas, horas del organizador y cobros. No modifica Rechazadas ni retiradas ni reincorpora personas.
 
 ### 7.4 Respuesta del invitado
 
 El invitado titular solicita Responder invitación y elige Aceptar o Rechazar antes del inicio. Después de la primera respuesta puede usar Cambiar respuesta una sola vez, sin volver a Pendiente. El detalle muestra decisión, primera respuesta y disponibilidad del cambio sin abrir controles por defecto.
 
-Rechazar libera cupo personal, disponibilidad y adicional; conserva relación e historia. Volver a aceptar revalida disponibilidad, cupo y condición de socio para la fecha; si ya no puede aplicarse una membresía y la reserva utiliza la membresía del organizador, participa como no socio y genera adicional con el importe unitario conservado. La respuesta no cancela la reserva ni devuelve la hora del organizador.
+Rechazar libera hora de invitado comprometida, cupo personal, disponibilidad y adicional; conserva relación e historia. Volver a aceptar revalida disponibilidad, cupo y condición de socio para la fecha; si falta cobertura o saldo de invitado y la reserva utiliza la membresía del organizador, participa con adicional, distinguiendo no socio de cupo agotado, con el importe unitario conservado. La respuesta no cancela la reserva ni devuelve la hora del organizador.
 
 Al comenzar, Pendiente se presenta como Sin respuesta, sin nueva transición almacenada y sin presumir asistencia. Ya no se ofrecen Responder ni Cambiar respuesta. Organizador y administración no responden por el titular y no reinician su único cambio mediante retiros o reincorporaciones.
 
-### 7.5 Cancelación, reprogramación y resultado
+### 7.5 Cancelación, nueva reserva y resultado
 
 | Operación | Presentación y efecto |
 |---|---|
-| Cancelación propia | Antes del inicio, motivo libre de al menos 25 caracteres y revisión; más de seis horas libera la hora, seis horas o menos conserva consumo |
+| Cancelación propia | Antes del inicio, motivo libre de al menos 25 caracteres y revisión; más de dos horas libera la hora, dos horas o menos conserva consumo |
 | Cancelación administrativa | Causa de la academia y motivo; siempre libera hora y cupo, sin elección de consumo |
 | Anulación con bloqueo | Muestra también el bloqueo que ocupará el turno y confirma ambos efectos juntos |
-| Reprogramación | Sólo desde origen Anulado administrativamente sin sucesor; conserva organizador y selecciona destino en Agenda |
 | Finalización manual | Sólo administración y turno terminado, como alternativa a la tarea horaria |
 | Resultado de uso | Después de Finalizado, Realizada o No realizada; antes se lee Sin registrar |
 | Corrección del resultado | Una sola vez, resultado distinto y motivo obligatorio, sin plazo límite; muestra original y datos de corrección |
 
 Cada organizador gestiona su propia cancelación; administración no se usa como sustituto para evitar el consumo de una cancelación propia tardía. El límite se calcula al confirmar con precisión del servidor, sin redondeo a minutos. Ningún evento iniciado se anula.
 
-En Agenda, un bloque fijo encima del detalle lateral muestra la reprogramación, la referencia a la reserva original y Cancelar reprogramación; conserva el estilo del panel y permanece visible al elegir turnos. La selección en Agenda y el formulario identifican la reserva original con un enlace y un ícono de información de Iconoir. Su tooltip muestra organizador, sede, cancha, fecha, hora, modalidad e importe original. En Agenda, el destino utiliza la misma cabecera y estilo de acción del detalle habitual de turno. En el formulario se presenta como «Nuevo turno» en tarjetas oscuras de lugar y horario. El organizador se conserva sin selector. La revisión y el botón final nombran la reprogramación; una nota advierte que las invitaciones comienzan pendientes y los cobros no se trasladan.
+Una reserva Anulada conserva su detalle e historia. No muestra acciones de restaurar o reprogramar ni enlaces a un origen o sucesor. Una nueva reserva se inicia por el recorrido habitual de Agenda, incluso para el mismo turno si está disponible. Se seleccionan participantes explícitamente y sus respuestas comienzan Pendientes; se revisan cobertura, cupos y precios para la fecha elegida. Cada reserva conserva sus movimientos y sus horas sin traslados.
 
-El turno original se muestra no disponible durante la selección de destino y no se admite reprogramar en la misma cancha, fecha y hora. Reprogramar crea otra reserva con sus condiciones de fecha, modalidad, importes e invitados. Las respuestas del nuevo turno comienzan Pendientes. El origen conserva su historia y cada origen admite un reemplazo directo; los detalles enlazan una cadena según permisos. La cancelación administrativa libera la hora original y la nueva reserva con membresía compromete una del mes de su nuevo turno, sin arrastrar horas ni cobros entre períodos.
+La revisión de cancelación informa el efecto por rol: libera siempre las horas comprometidas de invitados; la propia conserva la hora de organizador con dos horas o menos y la libera con más de dos; la administrativa libera ambos roles. La devolución de dinero es una decisión administrativa independiente.
 
-Finalizar no presume realización. No realizada y una corrección del resultado no devuelven horas ni cambian invitados o respuestas. Ninguna cancelación, reprogramación o corrección devuelve dinero automáticamente; las devoluciones se registran como egresos independientes de caja. La reserva Anulada no recibe nuevos ingresos.
+Finalizar no presume realización. No realizada y una corrección del resultado no devuelven horas ni cambian invitados o respuestas. Ninguna cancelación o corrección devuelve dinero automáticamente; las devoluciones se registran como egresos independientes de caja. La reserva Anulada no recibe nuevos ingresos.
 
 ### 7.6 Datos del invitado y comprobantes
 
@@ -536,6 +535,15 @@ Guardar asistencia confirma el conjunto sin paso de revisión adicional. La clas
 
 La respuesta previa y la asistencia efectiva se presentan separadas: una persona puede estar Presente aunque haya dicho No voy a asistir. La carga no responde pendientes ni cambia el único cambio permitido. La finalización automática no marca presentes o ausentes.
 
+### 8.8 Ajustes administrativos de horas
+
+El detalle de contratación prioriza lectura: dos resúmenes compactos, uno por rol, muestran cupo contratado, otorgadas, descontadas, comprometidas, consumidas y disponibles. El historial de ajustes usa filas con fecha, rol, operación, cantidad y motivo visible para el titular; una expansión permite consultar responsable y reversión. No se repiten formularios ni controles completos por fila.
+
+Sólo administración ve Ajustar horas y sólo en contrataciones Activas del mes vigente o programadas para un período futuro. El disparador abre el formulario de rol, otorgar/quitar, cantidad entera positiva y motivo, indicando que lo verá el titular. La revisión presenta contratación, período, saldo y efecto antes de confirmar. Un descuento excedido indica el máximo sin modificar participaciones.
+
+Cada ajuste elegible ofrece Revertir bajo demanda mediante una única acción de fila. Abre motivo y revisión del efecto inverso; no permite editar, borrar, revertir dos veces ni dejar saldo negativo. El estado vacío muestra un texto breve y, para el administrador autorizado, un solo disparador. El titular consulta el historial sin controles administrativos.
+
+
 ## 9. Catálogos, contrataciones y usos
 
 ### 9.1 Catálogos administrativos y oferta
@@ -545,17 +553,17 @@ Los catálogos de Planes y Membresías de socios usan lista e inspector, búsque
 | Producto | Campos y reglas de presentación |
 |---|---|
 | Plan | Nombre, descripción, modalidad Individual/Grupal, uno a siete encuentros semanales, una o dos clases de una hora por encuentro y precio no negativo |
-| Membresía de socio | Nombre, descripción, horas mensuales positivas, precio mensual y adicional no negativo por invitado no socio |
+| Membresía de socio | Nombre, descripción, cupos mensuales positivos e independientes de organizador e invitado, precio mensual y adicional no negativo por invitado no socio |
 
-El nombre es único entre Activos de su propio catálogo sin distinguir mayúsculas. La configuración estructural queda en lectura si hay cualquier contratación histórica: modalidad, frecuencia y duración del plan, u horas mensuales de la membresía. Para otro cupo se registra otro producto. Nombre, descripción y precios pueden actualizarse sin alterar importes aplicados. Desactivar impide nuevas contrataciones y no anula las existentes.
+El nombre es único entre Activos de su propio catálogo sin distinguir mayúsculas. La configuración estructural queda en lectura si hay cualquier contratación histórica: modalidad, frecuencia y duración del plan, o ambos cupos mensuales de la membresía. Para otro cupo se registra otro producto. Nombre, descripción y precios pueden actualizarse sin alterar importes aplicados. Desactivar impide nuevas contrataciones y no anula las existentes.
 
-La membresía no presenta variantes por día ni límite diario. La oferta inicial de diez horas, ARS 40.000 mensuales y ARS 12.500 por invitado no socio son datos configurables del producto, no constantes de interfaz.
+La membresía no presenta variantes por día ni límite diario. La oferta inicial de diez horas de organizador y diez de invitado, ARS 40.000 mensuales y ARS 12.500 por invitado no socio son datos configurables del producto, no constantes de interfaz.
 
 Oferta utiliza pestañas Planes, Membresías y Tarifas y tarjetas comerciales para productos activos. Muestra nombre, precio y características; descripción hasta dos líneas y Leer descripción en modal si existe texto. La tarjeta no funciona como enlace completo a una ficha administrativa. Las tarifas muestran sedes activas con precio configurado y acceso a Agenda. Oferta enlaza al recorrido propio autorizado de §10 sin abrir un formulario en cada tarjeta. No registra cobros ni permite contratar un plan nuevo o distinto por el portal.
 
 ### 9.2 Registro y detalle de contratación
 
-La lista administrativa filtra por tipo, titular, producto, mes y estado. La ficha prioriza producto, titular, mes cubierto, período, importe aplicado y estado; después cobros Vigentes y usos, sin deuda calculada.
+La lista administrativa filtra por tipo, titular, producto, mes y estado. La ficha prioriza producto, titular, mes cubierto, período, importe aplicado y estado; después situación financiera, usos por rol e historial de ajustes.
 
 Registrar o renovar utiliza dos momentos: selección de usuario existente y producto Activo, y datos de contratación. Se muestran mes, período calculado, fecha efectiva, precio del producto en lectura y observaciones. Volver conserva selección y datos; cambiar producto propone su precio vigente. Sólo la confirmación registra. Renovar otro mes crea otra contratación, sin modificar la anterior.
 
@@ -575,9 +583,9 @@ El comprobante presenta contratación, producto, período y condiciones e import
 
 ### 9.4 Uso de membresías
 
-La consulta propia o administrativa selecciona mes o rango de hasta 366 días. Presenta cupo, horas comprometidas Programadas, consumidas y disponibles derivadas, con detalle de reserva y contratación concreta. Los usos del mismo titular y mes de contrataciones Anuladas se conservan al calcular el cupo del reemplazo. Si alcanzan o superan el cupo nuevo no se muestran horas disponibles negativas: se informa que no quedan horas.
+La consulta propia o administrativa selecciona mes o rango de hasta 366 días. Presenta por rol el cupo aplicado, horas otorgadas y descontadas, comprometidas, consumidas y disponibles derivadas, con detalle de reserva y contratación concreta. Los usos del mismo titular y mes de contrataciones Anuladas se conservan al calcular el cupo del reemplazo. Si alcanzan o superan el cupo nuevo no se muestran horas disponibles negativas: se informa que no quedan horas.
 
-Las reservas Anuladas que computan por cancelación propia tardía se incluyen; las canceladas administrativamente no consumen. Las participaciones como invitado se muestran separadas sin atribuirles uso de horas. No hay saldo editable, reinicio mensual manual ni arrastre al mes siguiente.
+Las reservas Anuladas que computan por cancelación propia tardía se incluyen; las canceladas administrativamente no consumen. Las participaciones con beneficio de invitado se muestran en su cupo: comprometen desde Pendiente y consumen desde el inicio, aun sin respuesta. Las de reservas normales y las que tienen adicional no usan horas. No hay saldo editable, reinicio mensual manual ni arrastre al mes siguiente.
 
 ## 10. Contratación propia y seguimiento de planes
 
@@ -655,7 +663,7 @@ Registrar movimiento revela campos según la clase:
 |---|---|
 | Ingreso | Categoría determinada por el origen (Reservas, Planes, Membresías u Otros), concepto, monto positivo, medio y vínculo opcional con una contratación concreta de plan, membresía o reserva; como máximo un origen |
 | Egreso | Categoría, concepto, monto y medio; destinatario de texto opcional bajo demanda; no crea cuentas para proveedores |
-| Devolución | Categoría de egreso independiente, sin reescribir ingreso ni origen comercial |
+| Devolución | Egreso con vínculo opcional a reserva o contratación concreta; contexto compacto y máximo disponible, sin modificar ingresos originales |
 | Aporte/Retiro | Concepto y monto, exclusivamente efectivo; no se cuentan como ingreso/gasto operativo |
 
 Los medios son Efectivo, Transferencia, Tarjeta y QR. Los no efectivos exigen referencia y verificación manual. Egresos y retiros en efectivo no pueden superar el disponible. La fecha la asigna el servidor, sin carga retroactiva o futura.
@@ -664,11 +672,14 @@ Al vincular un ingreso, la categoría se determina por el tipo de origen y se mu
 
 Registrar ingreso presenta origen, selección del registro y datos del cobro; el ingreso sin vínculo pasa directamente del origen a los datos. Las categorías de origen se eligen mediante tarjetas con un check y se avanza con «Siguiente». Las reservas y contrataciones se buscan por persona, usuario y datos del registro, con resultados compactos y paginados. Las tarjetas oscuras muestran caja y tipo de origen. Los datos del registro vinculado se consultan desde el tooltip «?» de Origen: para reservas muestra organizador, importe aplicado, sede, cancha, turno, modalidad y categoría; para contrataciones muestra producto, titular, importe aplicado, mes cubierto, fecha de alta y categoría. «Volver» conserva los campos del cobro al elegir otro registro o categoría de origen. Los cobros vigentes del origen se consultan bajo demanda. La referencia y verificación del pago aparecen únicamente para medios no efectivos. Los errores se presentan junto al campo o como alerta del formulario.
 
-El ingreso puede ser parcial y pueden existir varios por origen, sin comparar el acumulado con el precio aplicado. No admite nuevos cobros vinculados a contrataciones o reservas Anuladas. El reenvío se identifica por UUID de operación; no duplica movimientos ni acepta contenido distinto para el mismo identificador.
+El ingreso puede ser parcial y pueden existir varios por origen, mostrando la comparación entre importe acordado y neto recibido sin modificar el precio aplicado. No admite nuevos cobros vinculados a contrataciones o reservas Anuladas. El reenvío se identifica por UUID de operación; no duplica movimientos ni acepta contenido distinto para el mismo identificador.
+
+Para Devoluciones, Vincular operación revela el selector de reserva o contratación; no aparece un formulario de vínculo abierto por defecto. La búsqueda es compacta y paginada, con contexto del origen, ingresos Vigentes, devoluciones Vigentes y máximo disponible. Se admite origen Anulado con cobros. La revisión muestra monto, medio, concepto y efecto sobre el neto; confirmar revalida el máximo bajo bloqueo. Sin vínculo se exige concepto y validaciones habituales. Otros egresos no ofrecen vínculo comercial.
+
 
 ### 13.2 Anulación y cierre
 
-Anular un movimiento Vigente exige motivo y revisión de página completa. Lo opera el responsable de la sesión abierta actual, incluso si pertenece a otra sesión cerrada. La vista distingue sesión actual y origen, el efecto sobre efectivo y los cierres históricos preservados. Una anulación no es devolución y la corrección se carga como operación independiente.
+Anular un movimiento Vigente exige motivo y revisión de página completa. Si anular un ingreso revela neto comercial negativo, la revisión muestra la diferencia y conserva las devoluciones. Se permite corregir el ingreso manteniendo las validaciones de caja; no se generan movimientos compensatorios ni nuevas devoluciones con neto no positivo. Lo opera el responsable de la sesión abierta actual, incluso si pertenece a otra sesión cerrada. La vista distingue sesión actual y origen, el efecto sobre efectivo y los cierres históricos preservados. Una anulación no es devolución y la corrección se carga como operación independiente.
 
 Cerrar caja presenta esperado, contado no negativo, diferencia y motivo obligatorio cuando difieren. Se revalida el cálculo definitivo al confirmar. El cierre guarda sus resultados y no ofrece editar, reabrir o reasignar. Anulaciones posteriores se identifican en la consulta sin reescribir el cierre guardado. No se confirman operaciones que dejen efectivo esperado negativo en una sesión abierta.
 
@@ -676,9 +687,9 @@ Cerrar caja presenta esperado, contado no negativo, diferencia y motivo obligato
 
 El historial filtra sesiones por apertura y estado y movimientos por momento de registro, sesión, clase, categoría, medio y estado. Los ingresos se resumen por categoría. El detalle muestra concepto, monto, medio, referencia, categoría/destinatario, origen, responsable, fecha y anulación. Se distingue la consulta de movimientos Vigentes de la reconstrucción al cierre, incluidas anulaciones posteriores y sesiones que atraviesan medianoche.
 
-Desde contrataciones y reservas se consultan los ingresos Vigentes vinculados como información separada del importe aplicado. Al registrar un cobro de contratación se muestran producto, mes, precio_aplicado y cobros anteriores, sin sustituir el precio por el del catálogo actualizado. El concepto permite explicar un parcial o acuerdo excepcional sobre el dinero recibido sin alterar el precio confirmado; las observaciones de contratación conservan acuerdos generales. No se deduce que el cobro complete lo acordado ni se calcula deuda. Registrar cobro se revela sólo al administrador que puede operar su sesión y cuando el origen lo permite. El titular consulta sus cobros sin acceso a caja o movimientos ajenos; el invitado no accede a cobros de la reserva.
+Desde contrataciones y reservas se muestran importe acordado, ingresos Vigentes, devoluciones Vigentes y neto recibido. El detalle de movimientos se despliega bajo demanda, con enlaces según permisos. Los movimientos permanecen en su origen y no se ofrece selección de destino ni compensación entre operaciones. Al registrar un cobro de contratación se muestran producto, mes, precio_aplicado y cobros anteriores, sin sustituir el precio por el del catálogo actualizado. El concepto permite explicar un parcial o acuerdo excepcional sobre el dinero recibido sin alterar el precio confirmado; las observaciones de contratación conservan acuerdos generales. Se presenta Falta cobrar, Cubierto o Excedente por resolver según el neto y el importe acordado, sin devolución automática. En operaciones Anuladas sólo se muestran movimientos y neto, sin exigir completar el precio ni presumir reintegro. Un neto negativo destaca una diferencia para revisión administrativa. Registrar cobro se revela sólo al administrador que puede operar su sesión y cuando el origen lo permite. El titular consulta sus cobros sin acceso a caja o movimientos ajenos; el invitado no accede a cobros de la reserva.
 
-Un fallo de caja no revierte una reserva o contratación confirmada. Reprogramar no traslada dinero y Actualizar socios no modifica cobros existentes.
+Un fallo de caja no revierte una reserva o contratación confirmada. Una nueva reserva conserva sus propios movimientos y Actualizar socios no modifica cobros existentes.
 
 ## 14. Auditoría y comunicación
 
@@ -688,7 +699,7 @@ Cambios muestra momento, tabla, registro, acción y responsable/origen. La expan
 
 Intentos rechazados identifica tipo, motivo de catálogo, destino, método y UUID; los accesos ocultos por privacidad no revelan el registro ajeno al usuario rechazado. Las consultas de administración no transforman el historial en una herramienta de edición.
 
-La comunicación automática utiliza email, sin bandeja interna, campana ni preferencias nuevas. Los mensajes identifican actividad o mes y enlazan una ruta que vuelve a exigir autenticación y autorización. Una notificación de invitación no acredita aceptación; una de asignación no acredita asistencia. Se conservan los casos de alta, recuperación, confirmación de reserva, invitación, cancelación, reprogramación, asignación, vencimiento y recordatorios. La contratación propia no exige responder encuestas ni genera recordatorios de encuesta o de renovación comercial.
+La comunicación automática utiliza email, sin bandeja interna, campana ni preferencias nuevas. Los mensajes identifican actividad o mes y enlazan una ruta que vuelve a exigir autenticación y autorización. Una notificación de invitación no acredita aceptación; una de asignación no acredita asistencia. Se conservan los casos de alta, recuperación, confirmación de reserva, invitación, cancelación, asignación, vencimiento y recordatorios. La contratación propia no exige responder encuestas ni genera recordatorios de encuesta o de renovación comercial.
 
 No se añaden botones para ejecutar vencimiento o finalización automática ni marcas que simulen envíos de email realizados. La finalización horaria sólo cierra eventos; el vencimiento comercial no retira roles ni genera cobros.
 
@@ -722,7 +733,7 @@ La revisión manual de cada entrega comprueba:
 - Teclado, cierre y retorno de foco, errores por campo, zoom y conservación del contexto.
 - Vacío, carga, error, reintento y descarte de respuestas atrasadas.
 - Precios o condiciones modificados durante la revisión, reenvíos y operaciones simultáneas sin efectos parciales.
-- Cupos, cambio de mes, tres días de reserva, umbral exacto de seis horas, inicio de actividades y apertura de contratación del mes siguiente desde el día 25.
+- Cupos, cambio de mes, tres días de reserva, umbral exacto de dos horas, inicio de actividades y apertura de contratación del mes siguiente desde el día 25.
 - Separación entre importe aplicado y cobros, respuesta y asistencia, estado de evento y resultado de uso, plantilla y clases concretas.
 
 Las revisiones se realizan sobre la funcionalidad entregada y no crean ni ejecutan pruebas automatizadas. El trabajo se cierra por grupo funcional para revisión del usuario; el asistente no hace commits.
