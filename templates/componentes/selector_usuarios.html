@@ -4,6 +4,7 @@
         <button class="selector-usuarios-alternar" type="button" data-usuario-alternar aria-expanded="{% if campo.errors %}true{% else %}false{% endif %}" aria-controls="buscador-{{ campo.name }}" aria-label="{% if campo.errors %}Cerrar buscador{% else %}Agregar invitados{% endif %}"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
     {% if nota %}<p class="nota-campo">{{ nota }}</p>{% endif %}
+    {% for aviso in advertencias %}<p class="nota-campo reserva-nota-advertencia">{{ aviso }}</p>{% endfor %}
         <div class="clase-buscador" id="buscador-{{ campo.name }}" data-usuario-buscador{% if not campo.errors %} hidden{% endif %}>
             <label for="buscar-{{ campo.name }}">Buscar por nombre, apellido o usuario</label>
             <input class="form-control" id="buscar-{{ campo.name }}" type="search" autocomplete="off" maxlength="100" placeholder="Escribí al menos 2 letras" aria-controls="resultados-{{ campo.name }}" data-usuario-busqueda>

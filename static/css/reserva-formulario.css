@@ -266,8 +266,8 @@
     padding: 0;
     border: 0;
     border-radius: 50%;
-    background: var(--primario);
-    color: #fff;
+    background: transparent;
+    color: var(--primario);
     font: inherit;
     font-size: .8rem;
     font-weight: 600;
@@ -335,4 +335,33 @@
 
 .reserva-error-texto + .reserva-error-texto {
     margin-top: 6px;
+}
+
+.reserva-gestion-paso {
+    margin: 6px 0 16px;
+    color: var(--texto-suave);
+    font-size: .75rem;
+}
+
+.reserva-gestion-titulo {
+    font-size: 1.1rem;
+}
+
+.reserva-gestion-condicion {
+    display: block;
+    margin-top: 4px;
+    color: var(--texto-suave);
+    font-size: .8rem;
+}
+
+.reserva-gestion-separador {
+    margin: 16px 0;
+    border: 0;
+    border-top: 1px solid var(--borde);
+}
+
+.reserva-nota-advertencia {
+    border-left-color: var(--advertencia);
+    background: var(--advertencia-suave);
+    color: var(--advertencia);
 }

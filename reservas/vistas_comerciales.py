@@ -36,9 +36,20 @@ def buscar_invitados(request):
     busqueda = request.GET.get("q", "").strip()[:100]
     if len(busqueda) < 2:
         return JsonResponse({"resultados": [], "hay_mas": False})
+    reserva = None
+    if "reserva" in request.GET:
+        identificador = request.GET.get("reserva", "")
+        reserva, administrador = _obtener_reserva_para_consulta(
+            request.user, identificador if identificador.isdecimal() else None,
+        )
+        if not administrador and reserva.organizador_id != request.user.pk:
+            raise PermissionDenied
+        if reserva.evento.estado != Evento.Estado.PROGRAMADO or timezone.now() >= inicio_reserva(reserva):
+            raise PermissionDenied
     organizador_id = request.GET.get("organizador", "")
     formulario = InvitadosReservaForm(
-        organizador_id=organizador_id if organizador_id.isdecimal() else request.user.pk,
+        organizador_id=reserva.organizador_id if reserva else organizador_id if organizador_id.isdecimal() else request.user.pk,
+        reserva=reserva,
     )
     personas = formulario.fields["invitados"].queryset
     for termino in busqueda.split():
@@ -176,7 +187,17 @@ def reserva_invitados(request, pk):
     seleccion = list(reserva.invitados.filter(estado="vigente").exclude(respuesta="negativa").values_list("usuario_id", flat=True))
     formulario = InvitadosReservaForm(datos, organizador_id=reserva.organizador_id, reserva=reserva, initial={"invitados": seleccion})
     contexto = {"reserva": reserva, "formulario": formulario, "titulo": "Gestionar invitados"}
-    if request.method == "POST" and formulario.is_valid():
+    contexto["advertencias_invitados"] = [
+        "Retirar o reincorporar a una persona conserva su respuesta e historia"
+        + ("; agregar invitados es opcional y no modifica el precio del turno" if not reserva.es_con_membresia else ""),
+        "Las invitaciones rechazadas no se vuelven a enviar",
+    ]
+    valores = formulario["invitados"].value() or []
+    contexto["invitados_seleccionados"] = formulario.fields["invitados"].queryset.filter(
+        pk__in=[valor for valor in valores if str(valor).isdecimal()],
+    )
+    contexto["url_buscar_invitados"] = reverse("reservas:buscar_invitados") + f"?reserva={reserva.pk}"
+    if request.POST.get("paso") in ("revisar", "confirmar") and formulario.is_valid():
         try:
             ids = {u.pk for u in formulario.cleaned_data["invitados"]}
             if request.POST.get("paso") == "confirmar":
@@ -186,7 +207,7 @@ def reserva_invitados(request, pk):
             contexto["revision"] = gestionar_invitados(request.user, pk, ids)
         except ValidationError as error:
             formulario.add_error(None, error)
-    return render(request, "reservas/reserva_gestion.html", contexto)
+    return render(request, "reservas/reserva_invitados.html", contexto)
 
 
 @login_required
