@@ -33,7 +33,6 @@ class SeleccionOrigenIngresoForm(forms.Form):
 
 
 class IngresoForm(forms.Form):
-    categoria_ingreso = forms.ChoiceField(label="Categoría", widget=forms.Select(attrs={"class": "form-control"}))
     concepto = forms.CharField(label="Concepto", strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}), help_text="Describí el cobro y cualquier parcial o acuerdo que corresponda.")
     monto = forms.DecimalField(label="Monto recibido (ARS)", min_value=Decimal("0.01"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}))
     medio_pago = forms.ChoiceField(label="Medio de pago", widget=forms.Select(attrs={"class": "form-control", "data-ingreso-medio": ""}))
@@ -41,13 +40,10 @@ class IngresoForm(forms.Form):
     verificado = forms.BooleanField(label="Verifiqué la recepción del pago o la aprobación de la operación con tarjeta", required=False)
     operacion_id = forms.UUIDField(widget=forms.HiddenInput())
 
-    def __init__(self, *args, vinculado=False, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["operacion_id"].initial = uuid4()
-        self.fields["categoria_ingreso"].choices = [("", "Elegí una categoría"), *MovimientoFondo.CategoriaIngreso.choices]
         self.fields["medio_pago"].choices = [("", "Elegí un medio"), *MovimientoFondo.Medio.choices]
-        if vinculado:
-            self.fields.pop("categoria_ingreso")
 
     def clean(self):
         datos = super().clean()
@@ -64,7 +60,7 @@ class MovimientoCajaForm(IngresoForm):
     destinatario = forms.CharField(label="Destinatario (opcional)", max_length=150, required=False, strip=True, widget=forms.TextInput(attrs={"class": "form-control"}))
 
     def __init__(self, *args, clase, **kwargs):
-        super().__init__(*args, vinculado=True, **kwargs)
+        super().__init__(*args, **kwargs)
         self.clase = clase
         self.fields["concepto"].help_text = "Describí el pago realizado." if clase == "egreso" else "Explicá el aporte o retiro de efectivo."
         self.fields["monto"].label = "Monto (ARS)"

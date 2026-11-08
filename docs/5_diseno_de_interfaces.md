@@ -651,14 +651,14 @@ Registrar movimiento revela campos según la clase:
 
 | Clase | Campos y comportamiento |
 |---|---|
-| Ingreso | Categoría obligatoria (Reservas, Planes, Membresías u Otros), concepto, monto positivo, medio y vínculo opcional con una contratación concreta de plan, membresía o reserva; como máximo un origen |
+| Ingreso | Categoría determinada por el origen (Reservas, Planes, Membresías u Otros), concepto, monto positivo, medio y vínculo opcional con una contratación concreta de plan, membresía o reserva; como máximo un origen |
 | Egreso | Categoría, concepto, monto y medio; destinatario de texto opcional bajo demanda; no crea cuentas para proveedores |
 | Devolución | Categoría de egreso independiente, sin reescribir ingreso ni origen comercial |
 | Aporte/Retiro | Concepto y monto, exclusivamente efectivo; no se cuentan como ingreso/gasto operativo |
 
 Los medios son Efectivo, Transferencia, Tarjeta y QR. Los no efectivos exigen referencia y verificación manual. Egresos y retiros en efectivo no pueden superar el disponible. La fecha la asigna el servidor, sin carga retroactiva o futura.
 
-Al vincular un ingreso, la categoría se determina por el tipo de origen y se muestra sin selector editable. Sin vínculo, el administrador elige la categoría. La categoría agrupa los cobros y el vínculo conserva el registro concreto pagado.
+Al vincular un ingreso, la categoría se determina por el tipo de origen y se muestra sin selector editable. Sin vínculo, la categoría es Otros y no se muestra un selector. Reservas, Planes y Membresías requieren el vínculo correspondiente. La categoría agrupa los cobros y el vínculo conserva el registro concreto pagado.
 
 Registrar ingreso presenta origen, selección del registro y datos del cobro; el ingreso sin vínculo pasa directamente del origen a los datos. Las categorías de origen se eligen mediante tarjetas con un check y se avanza con «Siguiente». Las reservas y contrataciones se buscan por persona, usuario y datos del registro, con resultados compactos y paginados. Las tarjetas oscuras muestran caja y tipo de origen. Para reservas, el organizador, importe aplicado, sede, cancha, turno, modalidad y categoría se consultan desde el tooltip «?» de Origen. Para contrataciones, las tarjetas claras muestran titular e importe aplicado y los datos del registro se presentan debajo. «Volver» conserva los campos del cobro al elegir otro registro o categoría de origen. Los cobros vigentes del origen se consultan bajo demanda. La referencia y verificación del pago aparecen únicamente para medios no efectivos. Los errores se presentan junto al campo o como alerta del formulario.
 

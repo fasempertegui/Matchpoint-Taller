@@ -36,6 +36,11 @@ def registrar_movimiento(actor, sesion_id, *, clase, operacion_id, concepto, mon
         raise ValidationError("Elegí un tipo de origen válido.")
     if (tipo_origen == "general") != (origen_id is None) or (clase != "ingreso" and tipo_origen != "general"):
         raise ValidationError("Sólo los ingresos admiten un vínculo comercial, como máximo uno.")
+    if clase == MovimientoFondo.Clase.INGRESO:
+        categoria_esperada = ORIGENES[tipo_origen][2] if tipo_origen != "general" else MovimientoFondo.CategoriaIngreso.OTROS
+        if categoria_ingreso and categoria_ingreso != categoria_esperada:
+            raise ValidationError("La categoría del ingreso debe corresponder al origen. Los ingresos sin vínculo se registran como Otros.")
+        categoria_ingreso = categoria_esperada
     if isinstance(monto, float):
         raise ValidationError("El monto debe tener hasta dos decimales.")
     monto = MovimientoFondo._meta.get_field("monto").clean(monto, None)
@@ -48,7 +53,7 @@ def registrar_movimiento(actor, sesion_id, *, clase, operacion_id, concepto, mon
     datos = {
         "sesion_id": sesion_id, "registrado_por_id": actor.pk, "clase": clase,
         "concepto": concepto.strip(), "monto": monto, "medio_pago": medio_pago,
-        "referencia": referencia.strip(), "categoria_ingreso": ORIGENES[tipo_origen][2] if tipo_origen != "general" else categoria_ingreso,
+        "referencia": referencia.strip(), "categoria_ingreso": categoria_ingreso,
         "categoria_egreso": categoria_egreso, "destinatario": destinatario.strip(),
         "plan_usuario_id": None, "membresia_usuario_id": None, "reserva_id": None,
     }

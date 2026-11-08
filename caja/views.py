@@ -167,7 +167,7 @@ def ingreso_crear(request, pk):
         contexto["parametros"] = parametros.urlencode()
     contexto.update({"numero_paso": contexto["total_pasos"], "nombre_paso": "Datos del cobro"})
     registrar = request.method == "POST" and paso == "registrar"
-    formulario = IngresoForm(request.POST if registrar else None, initial=borrador, vinculado=origen is not None)
+    formulario = IngresoForm(request.POST if registrar else None, initial=borrador)
     formulario.fields["concepto"].widget = forms.TextInput(attrs={"class": "form-control"})
     contexto["formulario"] = formulario
     if registrar and formulario.is_valid():

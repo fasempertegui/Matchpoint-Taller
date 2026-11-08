@@ -1581,7 +1581,7 @@ flowchart TD
 Recorrido:
 
 1. Solicita Registrar movimiento y elige clase.
-2. Completa concepto, monto y medio. Para Ingreso puede seleccionar una reserva o contratación concreta confirmada; como máximo un vínculo comercial por movimiento y concepto obligatorio aun sin vínculo. La categoría de ingreso es reservas, planes, membresías u otros: se determina por el tipo de origen si hay vínculo, y se selecciona si no lo hay.
+2. Completa concepto, monto y medio. Para Ingreso puede seleccionar una reserva o contratación concreta confirmada; como máximo un vínculo comercial por movimiento y concepto obligatorio aun sin vínculo. La categoría de ingreso es reservas, planes, membresías u otros: se determina por el tipo de origen si hay vínculo, y es Otros si no lo hay. Reservas, Planes y Membresías requieren el vínculo correspondiente.
 3. Para Egreso completa categoría y puede agregar un destinatario de texto. Para transferencia, tarjeta o QR agrega una referencia y verifica la recepción para un ingreso, el pago realizado para un egreso o la aprobación de la operación con tarjeta. Aporte y Retiro usan efectivo y concepto explicativo. Si registra un reintegro, elige Egreso y categoría devoluciones.
 4. Confirma con el UUID conservado del formulario. El servicio bloquea la sesión, revalida acceso, responsabilidad, estado y datos y registra el movimiento Vigente con fecha del servidor.
 5. Muestra el movimiento y el resumen actualizado.

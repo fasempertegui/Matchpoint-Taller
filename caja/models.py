@@ -118,7 +118,7 @@ class MovimientoFondo(models.Model):
             models.CheckConstraint(condition=(
                 (models.Q(clase="ingreso", categoria_egreso="", destinatario="") & (
                     models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=True,
-                             categoria_ingreso__in=("reservas", "planes", "membresias", "otros"))
+                             categoria_ingreso="otros")
                     | models.Q(plan_usuario__isnull=False, membresia_usuario__isnull=True, reserva__isnull=True, categoria_ingreso="planes")
                     | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=False, reserva__isnull=True, categoria_ingreso="membresias")
                     | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=False, categoria_ingreso="reservas")
