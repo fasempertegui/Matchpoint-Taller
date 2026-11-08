@@ -8,7 +8,8 @@ from django.utils import timezone
 from auditoria.contexto import contexto_auditoria
 from common.bloqueos import bloquear_usuarios
 
-from .ingresos import ORIGENES, consultar_origen
+from .ingresos import ORIGENES, consultar_origen, origen_del_movimiento
+from .finanzas import situacion_financiera, validar_revision_devolucion
 from .models import MovimientoFondo, SesionCaja
 from .servicios import efectivo_esperado, exigir_acceso_caja
 
@@ -22,7 +23,7 @@ def _reintento(movimiento, datos):
 @transaction.atomic
 def registrar_movimiento(actor, sesion_id, *, clase, operacion_id, concepto, monto, medio_pago,
                          categoria_ingreso="", categoria_egreso="", destinatario="", referencia="",
-                         verificado=False, tipo_origen="general", origen_id=None):
+                         verificado=False, tipo_origen="general", origen_id=None, revision_devolucion=None):
     actor = exigir_acceso_caja(actor)
     try:
         operacion = UUID(str(operacion_id))
@@ -34,8 +35,11 @@ def registrar_movimiento(actor, sesion_id, *, clase, operacion_id, concepto, mon
         raise ValidationError("Elegí una clase de movimiento válida.")
     if tipo_origen != "general" and tipo_origen not in ORIGENES:
         raise ValidationError("Elegí un tipo de origen válido.")
-    if (tipo_origen == "general") != (origen_id is None) or (clase != "ingreso" and tipo_origen != "general"):
-        raise ValidationError("Sólo los ingresos admiten un vínculo comercial, como máximo uno.")
+    es_devolucion = clase == "egreso" and categoria_egreso == "devoluciones"
+    if (tipo_origen == "general") != (origen_id is None) or (clase != "ingreso" and not es_devolucion and tipo_origen != "general"):
+        raise ValidationError("Sólo los ingresos y las devoluciones admiten un vínculo comercial, como máximo uno.")
+    if revision_devolucion is not None and not es_devolucion:
+        raise ValidationError("La revisión corresponde únicamente a una devolución.")
     if clase == MovimientoFondo.Clase.INGRESO:
         categoria_esperada = ORIGENES[tipo_origen][2] if tipo_origen != "general" else MovimientoFondo.CategoriaIngreso.OTROS
         if categoria_ingreso and categoria_ingreso != categoria_esperada:
@@ -81,10 +85,17 @@ def registrar_movimiento(actor, sesion_id, *, clase, operacion_id, concepto, mon
     if origen:
         origen = consultar_origen(tipo_origen, origen_id, bloquear=True)
         anulado = origen.evento.estado == "anulado" if tipo_origen == "reserva" else origen.estado == "anulado"
-        if anulado:
+        if anulado and clase == "ingreso":
             raise ValidationError("El origen está Anulado y no admite nuevos cobros.")
     movimiento = MovimientoFondo(operacion_id=operacion, **datos)
     movimiento.full_clean(validate_unique=False)
+    if es_devolucion:
+        situacion = situacion_financiera(tipo_origen, origen_id) if origen else None
+        if situacion is not None and monto > situacion["maximo_devolucion"]:
+            raise ValidationError(f"El máximo disponible para devolver es ARS {situacion['maximo_devolucion']:.2f}.")
+        if revision_devolucion is not None:
+            revisados = {**datos, "operacion_id": operacion, "verificado": verificado}
+            validar_revision_devolucion(actor, sesion_id, tipo_origen, origen_id, revisados, situacion, revision_devolucion)
     if efectivo_esperado(sesion) + movimiento.efecto_efectivo < 0:
         raise ValidationError("El efectivo disponible no alcanza para esta salida.")
     try:
@@ -107,7 +118,7 @@ def revision_anulacion(actor, movimiento, sesion_actual):
 
 @transaction.atomic
 def anular_movimiento(actor, movimiento_id, *, motivo, revision):
-    actor = exigir_acceso_caja(actor, bloquear=True)
+    actor = exigir_acceso_caja(actor)
     actual = SesionCaja.objects.filter(estado="abierta", responsable=actor).first()
     if actual is None:
         raise PermissionDenied
@@ -115,10 +126,17 @@ def anular_movimiento(actor, movimiento_id, *, motivo, revision):
         inicial = MovimientoFondo.objects.get(pk=movimiento_id)
     except MovimientoFondo.DoesNotExist:
         raise ValidationError("El movimiento no existe.") from None
+    tipo_comercial, origen_id = origen_del_movimiento(inicial)
+    comercial = consultar_origen(tipo_comercial, origen_id) if origen_id is not None else None
+    titular_id = comercial.organizador_id if tipo_comercial == "reserva" else comercial.usuario_id if comercial else None
+    bloquear_usuarios({actor.pk} | ({titular_id} if titular_id else set()))
+    actor = exigir_acceso_caja(actor)
     sesiones = {s.pk: s for s in SesionCaja.objects.select_for_update().filter(pk__in={actual.pk, inicial.sesion_id}).order_by("pk")}
     actual = sesiones[actual.pk]
     if actual.estado != "abierta" or actual.responsable_id != actor.pk:
         raise ValidationError("La sesión actual cambió. Revisá nuevamente antes de anular.")
+    if comercial is not None:
+        consultar_origen(tipo_comercial, origen_id, bloquear=True)
     movimiento = MovimientoFondo.objects.select_for_update().get(pk=movimiento_id)
     if movimiento.estado != "vigente":
         raise ValidationError("El movimiento ya está Anulado y no admite otra anulación.")

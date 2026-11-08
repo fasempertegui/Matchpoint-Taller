@@ -12,9 +12,9 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from .forms import (
     AnulacionMovimientoForm, AperturaCajaForm, CierreCajaForm, HistorialMovimientosForm,
-    HistorialSesionesForm, IngresoForm, MovimientoCajaForm, SeleccionOrigenIngresoForm,
+    HistorialSesionesForm, IngresoForm, MovimientoCajaForm, SeleccionOrigenMovimientoForm,
 )
-from .ingresos import ORIGENES, cobros_del_origen, registrar_ingreso
+from .ingresos import ORIGENES, cobros_del_origen, filtrar_origenes, registrar_ingreso
 from .models import MovimientoFondo, SesionCaja
 from .movimientos import anular_movimiento, registrar_movimiento, revision_anulacion
 from .servicios import abrir_caja, cerrar_caja, efectivo_esperado, exigir_acceso_caja, revision_apertura, ultimo_cierre, resumen_sesion
@@ -133,22 +133,12 @@ def ingreso_crear(request, pk):
     contexto["total_pasos"] = 2 if tipo == "general" else 3
     origen = None
     if tipo != "general":
-        seleccion = SeleccionOrigenIngresoForm(datos if datos.get("origen") else None, tipo=tipo)
+        seleccion = SeleccionOrigenMovimientoForm(datos if datos.get("origen") else None, tipo=tipo)
         contexto.update({"seleccion": seleccion, "numero_paso": 2, "nombre_paso": "Seleccionar registro"})
         if paso in ("volver", "buscar") or "pagina_origen" in datos or not datos.get("origen") or not seleccion.is_valid():
             consulta = seleccion.fields["origen"].queryset
             busqueda = datos.get("q", "").strip()[:100]
-            persona = "organizador" if tipo == "reserva" else "usuario"
-            for termino in busqueda.split():
-                filtro = Q(**{f"{persona}__first_name__icontains": termino}) | Q(**{f"{persona}__last_name__icontains": termino}) | Q(**{f"{persona}__username__icontains": termino})
-                if tipo == "reserva":
-                    filtro |= Q(evento__turno__cancha__nombre__icontains=termino) | Q(evento__turno__cancha__sede__nombre__icontains=termino)
-                    numero = termino.upper().removeprefix("R-")
-                    if numero.isascii() and numero.isdigit() and len(numero) <= 18:
-                        filtro |= Q(pk=int(numero))
-                else:
-                    filtro |= Q(**{f"{tipo}__nombre__icontains": termino})
-                consulta = consulta.filter(filtro)
+            consulta = filtrar_origenes(consulta, tipo, busqueda)
             contexto.update({
                 "busqueda": busqueda,
                 "registros": Paginator(consulta.order_by("-pk"), 8).get_page(datos.get("pagina_origen")),
@@ -220,8 +210,14 @@ def movimiento_crear(request, pk):
         return render(request, "caja/movimiento_tipo.html", {"sesion": sesion})
     if clase not in ("egreso", "aporte", "retiro"):
         raise Http404
-    formulario = MovimientoCajaForm(request.POST if request.method == "POST" else None, clase=clase)
-    if request.method == "POST" and formulario.is_valid():
+    paso = request.POST.get("paso")
+    if clase == "egreso" and paso == "vincular_devolucion" and request.POST.get("categoria_egreso") == "devoluciones":
+        from .vistas_devoluciones import devolucion_crear
+        return devolucion_crear(request, pk)
+    actualizar = paso == "actualizar_categoria"
+    formulario = MovimientoCajaForm(request.POST if request.method == "POST" and not actualizar else None,
+                                   clase=clase, initial=request.POST.dict() if actualizar else None)
+    if request.method == "POST" and not actualizar and formulario.is_valid():
         try:
             movimiento = registrar_movimiento(actor, pk, clase=clase, **formulario.cleaned_data)
         except ValidationError as error:

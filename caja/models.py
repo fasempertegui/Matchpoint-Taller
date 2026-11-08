@@ -123,6 +123,11 @@ class MovimientoFondo(models.Model):
                     | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=False, reserva__isnull=True, categoria_ingreso="membresias")
                     | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=False, categoria_ingreso="reservas")
                 ))
+                | (models.Q(clase="egreso", categoria_egreso="devoluciones", categoria_ingreso="") & (
+                    models.Q(plan_usuario__isnull=False, membresia_usuario__isnull=True, reserva__isnull=True)
+                    | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=False, reserva__isnull=True)
+                    | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=False)
+                ))
                 | (models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=True, categoria_ingreso="") & (
                     models.Q(clase="egreso", categoria_egreso__in=("alquiler", "servicios", "profesores", "insumos", "mantenimiento", "publicidad", "otros", "devoluciones"))
                     | models.Q(clase__in=("aporte", "retiro"), medio_pago="efectivo", categoria_egreso="", destinatario="")

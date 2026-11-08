@@ -34,3 +34,27 @@ def cobros_del_origen(tipo, origen_id):
 def registrar_ingreso(actor, sesion_id, **datos):
     from .movimientos import registrar_movimiento
     return registrar_movimiento(actor, sesion_id, clase="ingreso", **datos)
+
+
+def origen_del_movimiento(movimiento):
+    for tipo, (_, campo, _) in ORIGENES.items():
+        identificador = getattr(movimiento, campo)
+        if identificador is not None:
+            return tipo, identificador
+    return "general", None
+
+
+def filtrar_origenes(consulta, tipo, busqueda):
+    from django.db.models import Q
+    persona = "organizador" if tipo == "reserva" else "usuario"
+    for termino in busqueda.split():
+        filtro = Q(**{f"{persona}__first_name__icontains": termino}) | Q(**{f"{persona}__last_name__icontains": termino}) | Q(**{f"{persona}__username__icontains": termino})
+        if tipo == "reserva":
+            filtro |= Q(evento__turno__cancha__nombre__icontains=termino) | Q(evento__turno__cancha__sede__nombre__icontains=termino)
+            numero = termino.upper().removeprefix("R-")
+            if numero.isascii() and numero.isdigit() and len(numero) <= 18:
+                filtro |= Q(pk=int(numero))
+        else:
+            filtro |= Q(**{f"{tipo}__nombre__icontains": termino})
+        consulta = consulta.filter(filtro)
+    return consulta

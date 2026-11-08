@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% load static %}
+{% block titulo %}Registrar devolución | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script>{% endblock %}
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario">
+    <h1>Registrar devolución</h1>
+    {% include "caja/_ingreso_contexto.html" %}
+    {% if origen %}<p>{% if tipo == 'reserva' %}{{ origen.numero }} · {{ origen.organizador }} · {{ origen.evento.get_estado_display }}{% else %}{{ origen.producto.nombre }} · {{ origen.usuario }} · {{ origen.mes_cubierto|date:"F Y" }} · {{ origen.get_estado_display }}{% endif %}</p>
+        <dl class="perfil-lista"><div class="perfil-fila"><dt>Ingresos vigentes</dt><dd>$ {{ situacion.ingresos|floatformat:"2g" }}</dd></div><div class="perfil-fila"><dt>Devoluciones vigentes</dt><dd>$ {{ situacion.devoluciones|floatformat:"2g" }}</dd></div><div class="perfil-fila"><dt>Máximo disponible para devolver</dt><dd><strong>$ {{ situacion.maximo_devolucion|floatformat:"2g" }}</strong></dd></div></dl>
+    {% else %}<p>Devolución sin vínculo a una reserva o contratación. El concepto debe explicar el motivo.</p>{% endif %}
+    <form method="post" action="?tipo={{ tipo }}"{% if not revision %} data-ingreso-formulario{% endif %}>{% csrf_token %}
+        {% if origen %}<input type="hidden" name="origen" value="{{ origen.pk }}">{% endif %}
+        {{ formulario.non_field_errors }}
+        {% if revision %}
+            <h2>Revisar devolución</h2>
+            <p>{{ revision.concepto|linebreaksbr }}</p><p><strong>$ {{ revision.monto|floatformat:"2g" }}</strong> · {{ medio_texto }}</p>
+            {% if revision.referencia %}<p>Referencia: {{ revision.referencia }}</p>{% endif %}
+            {% if revision.destinatario %}<p>Destinatario: {{ revision.destinatario }}</p>{% endif %}
+            <p>Se registra un egreso nuevo en esta sesión. Los ingresos originales y los cierres anteriores se conservan.</p>
+            <input type="hidden" name="confirmacion" value="{{ confirmacion }}">
+        {% elif origen and situacion.maximo_devolucion <= 0 %}
+            {% for campo in formulario %}<input type="hidden" name="{{ campo.name }}" value="{{ campo.value|default_if_none:'' }}">{% endfor %}
+        {% else %}
+            {% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{{ campo.errors }}
+            {% elif campo.name == 'destinatario' %}<details{% if campo.value or campo.errors %} open{% endif %}><summary>Agregar destinatario</summary><div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div></details>
+            {% else %}<div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>{% if campo.name == 'verificado' %}<label>{{ campo }} {{ campo.label }}</label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}{{ campo.errors }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}
+        {% endif %}
+        <div class="acciones-formulario">
+            {% if revision %}<button class="boton boton-secundario" name="paso" value="editar">Volver</button>{% else %}<button class="boton boton-secundario" name="paso" value="{% if origen %}volver{% else %}volver_tipo{% endif %}" formnovalidate>Volver</button>{% endif %}
+            <a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>
+            {% if not origen or situacion.maximo_devolucion > 0 %}<button class="boton boton-primario" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar devolución{% else %}Revisar devolución{% endif %}</button>{% endif %}
+        </div>
+        {% if origen and situacion.maximo_devolucion <= 0 %}<p>No hay neto recibido disponible para una nueva devolución vinculada.</p>{% endif %}
+    </form>
+</section>
+{% endblock %}

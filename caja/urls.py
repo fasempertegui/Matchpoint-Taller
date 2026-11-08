@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import views, vistas_devoluciones
 
 app_name = "caja"
 urlpatterns = [
@@ -14,4 +14,5 @@ urlpatterns = [
     path("<int:pk>/ingresos/nuevo/", views.ingreso_crear, name="ingreso_crear"),
     path("<int:pk>/", views.sesion_detalle, name="sesion_detalle"),
     path("<int:pk>/cerrar/", views.caja_cerrar, name="caja_cerrar"),
+    path("<int:pk>/devoluciones/nueva/", vistas_devoluciones.devolucion_crear, name="devolucion_crear"),
 ]

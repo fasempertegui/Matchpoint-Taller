@@ -12,6 +12,16 @@
             });
         });
     }
+    var categoria = formulario.querySelector("[data-categoria-egreso]");
+    function actualizarCategoria() {
+        formulario.querySelectorAll("[data-devolucion-vinculo]").forEach(function (bloque) {
+            bloque.hidden = categoria.value !== "devoluciones";
+        });
+    }
+    if (categoria) {
+        categoria.addEventListener("change", actualizarCategoria);
+        actualizarCategoria();
+    }
     medio.addEventListener("change", actualizarMedio);
     actualizarMedio();
 })();

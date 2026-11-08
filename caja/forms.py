@@ -18,17 +18,19 @@ class CierreCajaForm(forms.Form):
     motivo_diferencia = forms.CharField(label="Motivo si hay diferencia", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
 
 
-class SeleccionOrigenIngresoForm(forms.Form):
+class SeleccionOrigenMovimientoForm(forms.Form):
     origen = forms.ModelChoiceField(label="Reserva o contratación", queryset=None, empty_label="Elegí un registro", widget=forms.Select(attrs={"class": "form-control"}))
 
-    def __init__(self, *args, tipo, **kwargs):
+    def __init__(self, *args, tipo, devolucion=False, **kwargs):
         super().__init__(*args, **kwargs)
         modelo = ORIGENES[tipo][0]
         if tipo == "reserva":
-            consulta = modelo.objects.exclude(evento__estado="anulado").select_related("organizador", "evento__turno__cancha__sede").prefetch_related("invitados")
+            consulta = modelo.objects.all().select_related("organizador", "evento__turno__cancha__sede").prefetch_related("invitados")
             self.fields["origen"].label_from_instance = lambda r: f"{r.numero} · {r.organizador} · {r.evento.turno}"
         else:
-            consulta = modelo.objects.exclude(estado="anulado").select_related("usuario", "plan" if tipo == "plan" else "membresia")
+            consulta = modelo.objects.all().select_related("usuario", "plan" if tipo == "plan" else "membresia")
+        if not devolucion:
+            consulta = consulta.exclude(**{"evento__estado" if tipo == "reserva" else "estado": "anulado"})
         self.fields["origen"].queryset = consulta
 
 
@@ -56,7 +58,7 @@ class IngresoForm(forms.Form):
 
 
 class MovimientoCajaForm(IngresoForm):
-    categoria_egreso = forms.ChoiceField(label="Categoría", required=False, widget=forms.Select(attrs={"class": "form-control"}))
+    categoria_egreso = forms.ChoiceField(label="Categoría", required=False, widget=forms.Select(attrs={"class": "form-control", "data-categoria-egreso": ""}))
     destinatario = forms.CharField(label="Destinatario (opcional)", max_length=150, required=False, strip=True, widget=forms.TextInput(attrs={"class": "form-control"}))
 
     def __init__(self, *args, clase, **kwargs):
@@ -78,6 +80,14 @@ class MovimientoCajaForm(IngresoForm):
         if self.clase in ("aporte", "retiro"):
             datos["medio_pago"] = "efectivo"
         return datos
+
+
+class DevolucionForm(MovimientoCajaForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, clase="egreso", **kwargs)
+        self.fields.pop("categoria_egreso")
+        self.fields["concepto"].help_text = "Explicá el motivo de la devolución."
+        self.fields["monto"].label = "Monto a devolver"
 
 
 class AnulacionMovimientoForm(forms.Form):

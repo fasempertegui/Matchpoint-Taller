@@ -1,9 +1,9 @@
 {% extends "base.html" %}{% load static %}
-{% block titulo %}Registrar ingreso | Academia TM{% endblock %}
+{% block titulo %}{{ titulo|default:"Registrar ingreso" }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}">{% endblock %}
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario">
-    <h1>Registrar ingreso</h1>
+    <h1>{{ titulo|default:"Registrar ingreso" }}</h1>
     {% include "caja/_ingreso_contexto.html" %}
     {% if seleccion %}
         <h2 class="ingreso-seccion-titulo">{% if tipo == 'reserva' %}Elegí la reserva{% elif tipo == 'plan' %}Elegí la contratación de plan{% else %}Elegí la contratación de membresía{% endif %}</h2>
@@ -15,7 +15,7 @@
             </div>
             {% if seleccion.errors %}<div class="mensaje mensaje-error" role="alert"><div>{% for error in seleccion.origen.errors %}<p class="ingreso-error">{{ error }}</p>{% endfor %}</div></div>{% endif %}
             <fieldset class="ingreso-opciones ingreso-registros">
-                <legend class="clase-etiqueta-oculta">Registro a cobrar</legend>
+                <legend class="clase-etiqueta-oculta">{% if devolucion %}Registro de la devolución{% else %}Registro a cobrar{% endif %}</legend>
                 {% for registro in registros %}
                     <label class="ingreso-opcion ingreso-registro">
                         <input type="radio" name="origen" value="{{ registro.pk }}" required{% if origen_seleccionado == registro.pk|stringformat:'s' %} checked{% endif %}>
@@ -24,9 +24,10 @@
                         <span class="ingreso-registro-detalle">{% if tipo == 'reserva' %}{{ registro.numero }}{% else %}{{ registro.producto.nombre }}{% endif %}</span>
                         <span class="ingreso-registro-fecha">{% if tipo == 'reserva' %}{{ registro.evento.turno.fecha|date:"d/m/Y" }} a las {{ registro.evento.turno.hora_inicio|time:"H:i" }}{% else %}{{ registro.mes_cubierto|date:"F Y"|capfirst }}{% endif %}</span>
                         <strong class="ingreso-registro-importe">$ {% if tipo == 'reserva' %}{{ registro.total|floatformat:"2g" }}{% else %}{{ registro.precio_aplicado|floatformat:"2g" }}{% endif %}</strong>
+                        {% if devolucion %}<span>{% if tipo == 'reserva' %}{{ registro.evento.get_estado_display }}{% else %}{{ registro.get_estado_display }}{% endif %}</span>{% endif %}
                         {% if tipo == 'reserva' %}<span class="ingreso-registro-lugar">{{ registro.evento.turno.cancha.nombre }}<small>{{ registro.evento.turno.cancha.sede.nombre }}</small></span>{% endif %}
                     </label>
-                {% empty %}<p class="texto-secundario">{% if busqueda %}No hay registros que coincidan con la búsqueda.{% else %}No hay registros disponibles para cobrar en esta categoría.{% endif %}</p>{% endfor %}
+                {% empty %}<p class="texto-secundario">{% if busqueda %}No hay registros que coincidan con la búsqueda.{% else %}No hay registros disponibles en esta categoría.{% endif %}</p>{% endfor %}
             </fieldset>
             {% if registros.has_other_pages %}<nav class="ingreso-paginacion" aria-label="Páginas de registros">
                 {% if registros.has_previous %}<button class="enlace-boton" name="pagina_origen" value="{{ registros.previous_page_number }}" formnovalidate>Anterior</button>{% endif %}
@@ -36,10 +37,10 @@
             <div class="acciones-formulario"><button class="boton boton-secundario" name="paso" value="volver_tipo" formnovalidate>Volver</button><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>{% if registros %}<button class="boton boton-primario" name="paso" value="datos">Siguiente</button>{% endif %}</div>
         </form>
     {% else %}
-        <form method="post" action="{% url 'caja:ingreso_crear' sesion.pk %}">
+        <form method="post" action="{% if devolucion %}{% url 'caja:devolucion_crear' sesion.pk %}{% else %}{% url 'caja:ingreso_crear' sesion.pk %}{% endif %}">
             {% csrf_token %}
             {% for nombre, valor in borrador.items %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
-            <fieldset class="ingreso-opciones"><legend class="ingreso-seccion-titulo">¿Qué cobro vas a registrar?</legend>
+            <fieldset class="ingreso-opciones"><legend class="ingreso-seccion-titulo">{% if devolucion %}¿A qué operación corresponde la devolución?{% else %}¿Qué cobro vas a registrar?{% endif %}</legend>
                 {% for valor, nombre, descripcion in opciones_origen %}
                     <label class="ingreso-opcion">
                         <input type="radio" name="tipo" value="{{ valor }}" required{% if tipo_previo == valor %} checked{% endif %}>

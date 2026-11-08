@@ -8,9 +8,10 @@
 {% for campo in formulario %}
 {% if campo.is_hidden %}{{ campo }}{{ campo.errors }}
 {% elif campo.name == 'destinatario' %}<details{% if campo.value or campo.errors %} open{% endif %}><summary>Agregar destinatario</summary><div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div></details>
-{% else %}<div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
+{% else %}{% if campo.name == "concepto" and clase == "egreso" %}<div data-devolucion-vinculo{% if formulario.categoria_egreso.value != "devoluciones" %} hidden{% endif %}><p><button class="boton boton-secundario boton-chico" name="paso" value="vincular_devolucion" formnovalidate>Vincular operación</button></p><p class="texto-secundario">La devolución vinculada se limita al neto recibido de la reserva o contratación.</p></div>{% endif %}<div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
 {% if campo.name == 'verificado' %}<label>{{ campo }} {{ campo.label }}</label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}{{ campo.errors }}{% if campo.help_text %}<small>{{ campo.help_text }}</small>{% endif %}
 </div>{% endif %}{% endfor %}
+{% if clase == "egreso" %}<noscript><button class="boton boton-secundario" name="paso" value="actualizar_categoria" formnovalidate>Actualizar opciones de categoría</button></noscript>{% endif %}
 <div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a><button class="boton boton-primario">Registrar movimiento</button></div>
 </form></section>
 {% endblock %}
