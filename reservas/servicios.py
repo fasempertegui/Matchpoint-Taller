@@ -105,7 +105,7 @@ def anular_reserva(anulado_por, reserva_id, motivo, *, motivo_bloqueo=None):
     reserva.anulada_por_organizador = not es_administrador
     if reserva.es_con_membresia:
         inicio = timezone.make_aware(datetime.combine(reserva.evento.turno.fecha, reserva.evento.turno.hora_inicio))
-        reserva.computa_hora_membresia = not es_administrador and inicio - ahora <= timedelta(hours=6)
+        reserva.computa_hora_membresia = not es_administrador and inicio - ahora <= timedelta(hours=2)
     reserva.save(update_fields=["anulada_por_organizador", "computa_hora_membresia"])
     return reserva
 

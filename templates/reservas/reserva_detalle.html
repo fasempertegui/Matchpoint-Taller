@@ -129,11 +129,11 @@
                     <details class="perfil-desplegable" id="anulacion"{% if formulario_anulacion.is_bound %} open{% endif %}>
                         <summary class="boton boton-peligro boton-chico">Anular reserva</summary>
                         <form class="perfil-formulario" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}"
-                              data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? {% if es_administrador %}Se libera la hora de membresía.{% elif reserva.es_con_membresia %}Más de seis horas libera la hora; seis horas o menos conserva el consumo.{% endif %}"
+                              data-confirmar="¿Confirmás la anulación de la reserva {{ reserva.numero }}? {% if reserva.es_con_membresia %}{% if es_administrador %}Se liberan las horas del organizador y de los invitados.{% else %}Más de dos horas libera la hora del organizador; dos horas o menos conserva su consumo. Las horas de invitados se liberan siempre.{% endif %}{% endif %} No se devuelve dinero automáticamente."
                               data-confirmar-titulo="Anular reserva" data-confirmar-boton="Anular reserva">
                             {% csrf_token %}
                             {% if not es_administrador %}
-                                <p class="perfil-descripcion">Podés cancelar antes del inicio. Con membresía, más de seis horas libera la hora; seis horas o menos conserva su consumo.</p>
+                                <p class="perfil-descripcion">Podés cancelar antes del inicio.{% if reserva.es_con_membresia %} Más de dos horas libera tu hora de organizador; dos horas o menos conserva su consumo. Las horas de invitados se liberan siempre.{% endif %} La devolución de dinero se decide por separado.</p>
                             {% endif %}
                             <div class="grupo-campo">
                                 <label for="{{ formulario_anulacion.motivo.id_for_label }}">{{ formulario_anulacion.motivo.label }} <span aria-hidden="true">*</span></label>

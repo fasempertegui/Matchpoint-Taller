@@ -27,6 +27,7 @@
                 {% if parametros_operacion.operacion == 'bloquear' %}<span>{{ previa.bloqueos_a_crear }} bloqueo{{ previa.bloqueos_a_crear|pluralize }} a crear</span>{% endif %}
                 <span>{{ previa.conservados|length }} evento{{ previa.conservados|length|pluralize }} sin cambios</span>
             </div>
+            {% if previa.reservas_a_anular %}<p class="agenda-impedimento">La cancelación administrativa libera las horas de membresía del organizador y de los invitados. No modifica cobros ni devuelve dinero automáticamente.</p>{% endif %}
             {% if previa.acciones %}
                 <details class="operacion-desglose">
                     <summary>Ver acciones ({{ previa.acciones|length }})</summary>
