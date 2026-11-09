@@ -406,7 +406,7 @@ Volver a editar conserva datos. La confirmación identifica actor, parámetros y
 
 Una reserva ocupa una hora. Se admite desde hoy hasta el tercer día calendario siguiente inclusive, hasta el último turno habilitado de ese día, siempre con inicio futuro. Cada persona puede integrar como máximo dos reservas con evento Programado, sumando organización e invitaciones vigentes Pendientes o Aceptadas, entre todas las sedes. Un turno terminado sigue contando si el evento continúa Programado.
 
-La disponibilidad personal rechaza coincidencias con otra reserva organizada, invitación vigente Pendiente/Aceptada, participación activa de clase en Asistirá o No asistirá o docencia vigente. Las invitaciones de reserva Rechazadas o retiradas no impiden otra actividad. El aviso No asistirá conserva la ocupación. La ocupación de cancha y la disponibilidad personal son controles diferentes y no se pueden exceptuar con una advertencia.
+La disponibilidad personal rechaza coincidencias con otra reserva organizada, invitación vigente Pendiente/Aceptada, participación activa de clase en Asistirá o docencia vigente. Las invitaciones de reserva Rechazadas o retiradas no impiden otra actividad. El aviso No asistirá libera disponibilidad personal. La ocupación de cancha y la disponibilidad personal son controles diferentes y no se pueden exceptuar con una advertencia.
 
 El recorrido parte del turno libre de Agenda:
 
@@ -521,9 +521,9 @@ Crear una clase puntual parte de un turno libre y utiliza Profesores → Partici
 
 La edición administrativa permite observaciones y asignaciones en clases Programadas; cambiar cancha o anular exige inicio futuro. Cambiar cancha conserva día y hora. Cambiar día u horario requiere anular y crear otra clase independiente, sin vínculo de reprogramación de clases. Las Finalizadas conservan asignaciones y permiten asistencia al autorizado; las Anuladas conservan historia.
 
-Cada fila de participante muestra Asistirá o No asistirá. El titular despliega No asisto o Asisto, según corresponda, antes del inicio de una clase Programada y con asignación activa. El formulario sólo se muestra bajo demanda; permite registrar o retirar el aviso sin límite y sin revalidar disponibilidad. El texto explica que el horario sigue ocupado y que la asistencia real se registra por separado. No se solicita confirmación de participación ni se muestra Sin respuesta.
+Cada fila de participante muestra Asistirá o No asistirá. El titular puede desplegar No asisto antes del inicio de una clase Programada, con asignación activa y sin aviso registrado. Antes de confirmar se advierte: «Este aviso libera tu disponibilidad para este horario y no se puede modificar. Si más adelante cambiás de opinión, comunicate con tu profesor.». El formulario se muestra sólo bajo demanda. Después de confirmar se oculta la acción y queda disponible bajo demanda la explicación de que una presencia efectiva se registra en asistencia real sin modificar el aviso. No existe acción Asisto ni se solicita confirmación de participación.
 
-No asistirá conserva la ocupación del horario y no retira asignación, responde otras clases ni modifica plantilla o asistencia. Profesores no responden por docencia; una imposibilidad se resuelve con reemplazo de asignación, conservando historial. Administración no responde por los participantes.
+No asistirá libera disponibilidad personal sin retirar la asignación ni modificar otras clases, plantilla o asistencia real. Profesores no responden por docencia; una imposibilidad se resuelve con reemplazo de asignación, conservando historial. Administración no responde por los participantes ni revierte el aviso.
 
 ### 8.4 Asistencia compacta
 

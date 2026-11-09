@@ -424,7 +424,7 @@ La clave primaria compuesta `(clase_id, usuario_id)` impide repetir una asignaci
 
 `estado` representa la vigencia de la asignación. `recordatorio_enviado` es una marca por participante y clase, no por clase completa; permite representar envíos independientes. `observaciones` y las fechas de auditoría pertenecen al vínculo.
 
-`respuesta` admite `asistira` (Asistirá, valor por defecto) y `no_asistira` (No asistirá). `respondido_por_id` y `respondido_en` conservan el titular y momento de la última modificación. Ambos pueden estar vacíos sólo en Asistirá; en cualquier modificación se informan juntos y el responsable coincide con `usuario_id`. El servicio exige titular habilitado, asignación activa, clase Programada e inicio futuro. Los cambios no tienen límite ni revalidan disponibilidad: ambos valores conservan la ocupación. La auditoría mantiene todas las modificaciones y sus registros históricos. Reactivar conserva identidad y aviso. La asistencia real, los profesores y la plantilla permanecen separados.
+`respuesta` admite `asistira` (Asistirá, valor por defecto) y `no_asistira` (No asistirá). `respondido_por_id` y `respondido_en` conservan titular y momento de la decisión. Ambos pueden estar vacíos sólo en Asistirá; cuando están informados, el responsable coincide con `usuario_id`. El servicio permite únicamente registrar No asistirá, con titular habilitado, asignación activa, clase Programada e inicio futuro. Repetir el aviso no genera cambios. No permite volver a Asistirá. Asistirá ocupa disponibilidad personal; No asistirá no la ocupa. La auditoría conserva la historia y reactivar mantiene el aviso. La asistencia real, los profesores y la plantilla permanecen separados.
 
 ### 4.18 `asistencias`
 

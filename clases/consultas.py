@@ -102,7 +102,7 @@ def consultar_clase(usuario, clase_id):
             for asistencia in asistencias
         ],
         "mi_respuesta": participantes.filter(usuario=usuario).first(),
-        "puede_responder": programada and ahora < inicio and participantes.filter(usuario=usuario, estado="activo").exists(),
+        "puede_responder": programada and ahora < inicio and participantes.filter(usuario=usuario, estado="activo", respuesta=ClaseAlumno.Respuesta.ASISTIRA).exists(),
         "es_administrador": es_administrador,
         "es_profesor_asignado": es_profesor,
         "puede_editar": es_administrador and programada,

@@ -21,12 +21,12 @@ def responder_clase(actor, clase_id, respuesta):
     if relacion is None:
         raise PermissionDenied
     if relacion.estado != "activo" or clase.evento.estado != Evento.Estado.PROGRAMADO:
-        raise ValidationError("Sólo podés cambiar el aviso con una asignación activa en una clase Programada.")
+        raise ValidationError("Sólo podés registrar el aviso con una asignación activa en una clase Programada.")
     inicio = timezone.make_aware(datetime.combine(clase.evento.turno.fecha, clase.evento.turno.hora_inicio))
-    if respuesta not in ClaseAlumno.Respuesta.values:
-        raise ValidationError("Elegí Asistirá o No asistirá.")
+    if respuesta != ClaseAlumno.Respuesta.NO_ASISTIRA:
+        raise ValidationError("El aviso de no asistencia no se puede modificar.")
     if timezone.now() >= inicio:
-        raise ValidationError("Sólo podés cambiar el aviso antes del inicio de la clase.")
+        raise ValidationError("Sólo podés registrar el aviso antes del inicio de la clase.")
     if relacion.respuesta != respuesta:
         relacion.respuesta = respuesta
         relacion.respondido_por = usuario

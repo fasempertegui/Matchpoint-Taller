@@ -65,6 +65,11 @@ def validar_usuarios_clase(
 
 def validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, fecha, hora_inicio, clase_id=None):
     from common.disponibilidad import validar_disponibilidad
+    if clase_id is not None:
+        participantes_con_aviso = set(ClaseAlumno.objects.filter(
+            clase_id=clase_id, respuesta=ClaseAlumno.Respuesta.NO_ASISTIRA,
+        ).values_list("usuario_id", flat=True))
+        participantes_ids = participantes_ids - participantes_con_aviso
     validar_disponibilidad(profesores_ids | participantes_ids, fecha, hora_inicio, clase_id=clase_id)
 
 

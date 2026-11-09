@@ -92,7 +92,7 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Reservas | FL-70 | Actualizar socios de una reserva |
 | Reservas | FL-71 | Registrar o corregir el resultado de una reserva |
 | Participación | FL-72 | Responder una invitación a reserva |
-| Participación | FL-73 | Registrar o retirar aviso de no asistencia |
+| Participación | FL-73 | Registrar aviso de no asistencia |
 | Consultas | FL-53 | Consultar el uso de una membresía |
 | Consultas | FL-54 | Consultar actividad de clases de un usuario |
 | Reservas | FL-55 | Consultar reservas |
@@ -1224,7 +1224,7 @@ Las operaciones se rigen por criterios, 2.0, 2.1 y 2.12. La creación exige inic
 
 Profesores nuevos o reactivados requieren cuenta activa y rol Profesor. Los participantes nuevos o reactivados requieren cuenta activa, sin exigir Alumno, contratación ni cobro. La selección propone Alumno por defecto y permite buscar cualquier usuario activo. Cada clase conserva al menos una asignación activa de profesor. La clase admite varios participantes sin un máximo bloqueante.
 
-La disponibilidad personal aplica criterios 2.2: docencia vigente, participación de clase activa en Asistirá o No asistirá, organización de reserva e invitación vigente Pendiente o Aceptada impiden otra actividad simultánea. Una persona tampoco puede dictar y participar en la misma clase. Invitaciones de reserva Rechazadas, relaciones inactivas y actividades Anuladas no impiden coincidencias. El aviso No asistirá mantiene ocupado el horario.
+La disponibilidad personal aplica criterios 2.2: docencia vigente, participación de clase activa en Asistirá, organización de reserva e invitación vigente Pendiente o Aceptada impiden otra actividad simultánea. Una persona tampoco puede dictar y participar en la misma clase. Invitaciones de reserva Rechazadas, relaciones inactivas y actividades Anuladas no impiden coincidencias. El aviso No asistirá libera disponibilidad personal.
 
 Las coincidencias personales con reservas se rechazan, sin confirmación que las habilite. La revisión se vincula al actor y al conjunto validado; si cambia, exige nueva revisión. Las altas y reactivaciones conservan la identidad y respuestas de las relaciones concretas.
 
@@ -1246,7 +1246,7 @@ Alternativas:
 
 - Un turno ocupado obliga a elegir otro; el evento existente no se desplaza.
 - La clase puede crearse sin alumnos, pero debe tener al menos un profesor activo.
-- Una asignación docente activa o de participante en Asistirá o No asistirá a otra clase no Anulada impide confirmar en la misma fecha y hora, sin importar sede, cancha o función. El aviso No asistirá conserva la ocupación del horario.
+- Una asignación docente activa o de participante en Asistirá a otra clase no Anulada impide confirmar en la misma fecha y hora, sin importar sede, cancha o función. El aviso No asistirá libera disponibilidad personal.
 - Las coincidencias personales con reservas se rechazan para profesores y participantes según criterios 2.2, sin excepciones confirmables.
 - Un turno fuera del horario de funcionamiento de la sede impide crear la clase, sin excepciones administrativas.
 - Las clases generadas desde la planilla se crean mediante **FL-28**, no mediante este flujo; esa generación notifica una sola vez por profesor y por corrida, no clase por clase. Una clase creada por este flujo queda marcada como no generada por planilla.
@@ -2063,7 +2063,7 @@ flowchart TD
     F --> G
 ```
 
-#### FL-73. Registrar o retirar aviso de no asistencia
+#### FL-73. Registrar aviso de no asistencia
 
 - **Objetivo:** comunicar la intención de asistencia a una clase concreta.
 - **Actor:** titular autenticado y habilitado.
@@ -2072,14 +2072,14 @@ flowchart TD
 Recorrido:
 
 1. Consulta su clase, que muestra Asistirá por defecto o No asistirá si existe aviso.
-2. Despliega No asisto o Asisto según corresponda y confirma la acción.
+2. Si no registró el aviso, despliega No asisto, lee la advertencia de irreversibilidad y confirma. Si cambia de opinión después, debe comunicarse con su profesor; una presencia efectiva se registra por asistencia real.
 3. En una transacción bloquea a la persona, turno, evento, clase y relación. Revalida acceso, titularidad, asignación activa, clase Programada e inicio futuro.
 4. Guarda el aviso y su última modificación con responsable, momento y auditoría. Revalida el inicio antes de guardar.
 
 Alternativas:
 
-- Puede registrar y retirar el aviso sin límite antes del inicio. Repetir el mismo valor no genera una modificación.
-- Ambos valores mantienen ocupado el horario; no se revalida disponibilidad al modificar el aviso.
+- El aviso es irreversible. Repetir No asistirá no genera una modificación ni cambia el titular o momento del aviso. Retirar y reactivar la asignación conserva la decisión.
+- Asistirá ocupa disponibilidad personal; No asistirá la libera. Registrar el aviso no exige revalidar disponibilidad porque sólo libera ese compromiso.
 - El aviso corresponde sólo a esa clase, sin cambiar plantilla, asignaciones ni asistencia real. Estar Presente no modifica No asistirá.
 - Administración no actúa por el titular. Los profesores no tienen este circuito por docencia.
 - Al inicio se conserva Asistirá o No asistirá y se ocultan las acciones.

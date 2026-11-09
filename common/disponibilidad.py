@@ -20,7 +20,7 @@ def personas_ocupadas(usuarios_ids, fecha, hora, *, clase_id=None, reserva_id=No
     profesores = ClaseProfesor.objects.filter(profesor_id__in=usuarios_ids, **filtros).exclude(
         clase__evento__estado=Evento.Estado.ANULADO,
     ).exclude(clase_id=clase_id)
-    alumnos = ClaseAlumno.objects.filter(usuario_id__in=usuarios_ids, **filtros).exclude(
+    alumnos = ClaseAlumno.objects.filter(usuario_id__in=usuarios_ids, respuesta=ClaseAlumno.Respuesta.ASISTIRA, **filtros).exclude(
         clase__evento__estado=Evento.Estado.ANULADO,
     ).exclude(clase_id=clase_id)
     reservas = Reserva.objects.filter(

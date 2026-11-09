@@ -57,13 +57,20 @@
                 <h2 id="clase-acciones-titulo">Acciones</h2>
                 {% if clase.puede_responder %}
                 <details>
-                    <summary>{% if clase.mi_respuesta.respuesta == 'no_asistira' %}Asisto{% else %}No asisto{% endif %}</summary>
+                    <summary>No asisto</summary>
                     <form method="post" action="{% url 'clases:clase_responder' clase.id %}">
                         {% csrf_token %}
-                        <p>El aviso corresponde sólo a esta clase y mantiene ocupado tu horario. Podés cambiarlo antes del inicio. La asistencia se registra por separado.</p>
-                        <input type="hidden" name="respuesta" value="{% if clase.mi_respuesta.respuesta == 'no_asistira' %}asistira{% else %}no_asistira{% endif %}">
-                        <button class="boton boton-secundario" type="submit">{% if clase.mi_respuesta.respuesta == 'no_asistira' %}Asisto{% else %}No asisto{% endif %}</button>
+                        <p>Este aviso libera tu disponibilidad para este horario y no se puede modificar. Si más adelante cambiás de opinión, comunicate con tu profesor.</p>
+                        <input type="hidden" name="respuesta" value="no_asistira">
+                        <button class="boton boton-secundario" type="submit">No asisto</button>
                     </form>
+                </details>
+                {% endif %}
+                {% if clase.mi_respuesta.respuesta == 'no_asistira' %}
+                <details>
+                    <summary>Sobre tu aviso de no asistencia</summary>
+                    <p>Este aviso libera tu disponibilidad para este horario y no se puede modificar. Si más adelante cambiás de opinión, comunicate con tu profesor.</p>
+                    <p>Si finalmente asistís, tu presencia se registra en la asistencia sin modificar este aviso.</p>
                 </details>
                 {% endif %}
                 <div class="perfil-acciones perfil-acciones-botones">
