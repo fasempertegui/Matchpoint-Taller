@@ -30,6 +30,8 @@ La semana de clases se representa en una tabla donde cada **columna** correspond
 
 La tabla representa una **semana tipo vigente por sede**, con días, horarios, canchas y personas asignadas. La administración la modifica para organizar futuras clases; no conserva versiones mensuales. El mes o período se elige al generar las clases concretas, que conservan sus propias fechas e historia. Modificar la plantilla no altera clases ya generadas.
 
+Cada alumno asignado figura como Asistirá. Puede avisar No asistirá o retirar ese aviso antes del inicio, sin límite de cambios y sin liberar el horario.
+
 Además de tener alumnos asignados, en cada clase se registra la asistencia efectiva. Esto permite diferenciar entre los alumnos que forman parte habitual de una clase y quienes efectivamente asistieron en una fecha determinada.
 
 Los horarios operativos pueden variar según la sede, la disponibilidad de canchas, la disponibilidad de profesores y las decisiones administrativas de la academia.

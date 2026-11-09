@@ -413,12 +413,9 @@ Representa la asignación prevista de una persona para asistir a una clase concr
 | PK, FK | `usuario_id` | `bigint` | | | `1` |
 | | `observaciones` | `text` | Sí | | `Se suma sólo por octubre` |
 | | `estado` | `varchar(10)` | | | `activo` (o `inactivo`) |
-| | `respuesta` | `varchar(10)` | | | `pendiente` |
-| | `respuesta_inicial` | `varchar(10)` | Sí | | `NULL` |
+| | `respuesta` | `varchar(11)` | | | `asistira` |
 | FK | `respondido_por_id` | `bigint` | Sí | | `NULL` |
 | | `respondido_en` | `timestamptz` | Sí | | `NULL` |
-| FK | `respuesta_modificada_por_id` | `bigint` | Sí | | `NULL` |
-| | `respuesta_modificada_en` | `timestamptz` | Sí | | `NULL` |
 | | `recordatorio_enviado` | `boolean` | | | `false` |
 | | `creado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
@@ -427,7 +424,7 @@ La clave primaria compuesta `(clase_id, usuario_id)` impide repetir una asignaci
 
 `estado` representa la vigencia de la asignación. `recordatorio_enviado` es una marca por participante y clase, no por clase completa; permite representar envíos independientes. `observaciones` y las fechas de auditoría pertenecen al vínculo.
 
-Respuesta admite pendiente, afirmativa o negativa. La primera decisión conserva respuesta inicial, titular y momento; el único cambio conserva responsable y momento sin borrar la primera decisión. Los campos de cada operación se informan juntos; Pendiente no tiene primera decisión ni modificación y no se restaura después de responder. El actor de respuesta es el titular de la relación. El servicio rechaza cambios después del inicio, nuevas modificaciones y reaceptación incompatible con disponibilidad personal. Sin respuesta es una presentación calculada al iniciar con Pendiente. La identidad compuesta preserva la historia al reactivar y la auditoría conserva los cambios. La respuesta se mantiene separada del estado de asignación y de asistencia; profesores y plantilla no incorporan estos campos.
+`respuesta` admite `asistira` (Asistirá, valor por defecto) y `no_asistira` (No asistirá). `respondido_por_id` y `respondido_en` conservan el titular y momento de la última modificación. Ambos pueden estar vacíos sólo en Asistirá; en cualquier modificación se informan juntos y el responsable coincide con `usuario_id`. El servicio exige titular habilitado, asignación activa, clase Programada e inicio futuro. Los cambios no tienen límite ni revalidan disponibilidad: ambos valores conservan la ocupación. La auditoría mantiene todas las modificaciones y sus registros históricos. Reactivar conserva identidad y aviso. La asistencia real, los profesores y la plantilla permanecen separados.
 
 ### 4.18 `asistencias`
 

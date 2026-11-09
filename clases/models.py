@@ -2,7 +2,6 @@ from datetime import time
 
 from django.conf import settings
 from django.db import models
-from common.models import RespuestaActividad
 
 
 class Feriado(models.Model):
@@ -182,7 +181,17 @@ class ClaseProfesor(models.Model):
         return f"{self.clase} - {self.profesor}"
 
 
-class ClaseAlumno(RespuestaActividad):
+class ClaseAlumno(models.Model):
+    class Respuesta(models.TextChoices):
+        ASISTIRA = "asistira", "Asistirá"
+        NO_ASISTIRA = "no_asistira", "No asistirá"
+
+    respuesta = models.CharField(max_length=11, choices=Respuesta.choices, default=Respuesta.ASISTIRA)
+    respondido_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", null=True, blank=True,
+    )
+    respondido_en = models.DateTimeField(null=True, blank=True)
+
     class Estado(models.TextChoices):
         ACTIVO = "activo", "Activo"
         INACTIVO = "inactivo", "Inactivo"
@@ -205,7 +214,17 @@ class ClaseAlumno(RespuestaActividad):
         ordering = ("clase_id", "usuario_id")
         default_permissions = ()
         constraints = [
-            *RespuestaActividad.Meta.constraints,
+            models.CheckConstraint(
+                condition=(
+                    models.Q(respuesta="asistira", respondido_por__isnull=True, respondido_en__isnull=True)
+                    | models.Q(
+                        respuesta__in=("asistira", "no_asistira"),
+                        respondido_por=models.F("usuario"),
+                        respondido_por__isnull=False, respondido_en__isnull=False,
+                    )
+                ),
+                name="clase_alumno_aviso_coherente",
+            ),
             models.CheckConstraint(
                 condition=models.Q(estado__in=("activo", "inactivo")),
                 name="clase_alumno_estado_valido",

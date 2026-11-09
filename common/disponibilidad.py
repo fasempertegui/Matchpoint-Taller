@@ -22,7 +22,7 @@ def personas_ocupadas(usuarios_ids, fecha, hora, *, clase_id=None, reserva_id=No
     ).exclude(clase_id=clase_id)
     alumnos = ClaseAlumno.objects.filter(usuario_id__in=usuarios_ids, **filtros).exclude(
         clase__evento__estado=Evento.Estado.ANULADO,
-    ).exclude(respuesta="negativa").exclude(clase_id=clase_id)
+    ).exclude(clase_id=clase_id)
     reservas = Reserva.objects.filter(
         organizador_id__in=usuarios_ids, evento__turno__fecha=fecha, evento__turno__hora_inicio=hora,
     ).exclude(evento__estado=Evento.Estado.ANULADO).exclude(pk=reserva_id)

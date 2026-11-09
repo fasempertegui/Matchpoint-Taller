@@ -5,8 +5,6 @@ from django.db import transaction
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
-from common.disponibilidad import validar_disponibilidad
-from common.respuestas import aplicar_respuesta
 from reservas.models import Evento
 
 from .models import ClaseAlumno
@@ -23,14 +21,19 @@ def responder_clase(actor, clase_id, respuesta):
     if relacion is None:
         raise PermissionDenied
     if relacion.estado != "activo" or clase.evento.estado != Evento.Estado.PROGRAMADO:
-        raise ValidationError("Sólo se responde una participación activa en una clase Programada.")
+        raise ValidationError("Sólo podés cambiar el aviso con una asignación activa en una clase Programada.")
     inicio = timezone.make_aware(datetime.combine(clase.evento.turno.fecha, clase.evento.turno.hora_inicio))
-    if aplicar_respuesta(relacion, usuario, respuesta, inicio):
-        if respuesta == "afirmativa":
-            validar_disponibilidad({usuario.pk}, clase.evento.turno.fecha, clase.evento.turno.hora_inicio, clase_id=clase.pk)
-        if timezone.now() >= inicio:
-            raise ValidationError("La clase alcanzó su inicio. No se modificó la respuesta.")
+    if respuesta not in ClaseAlumno.Respuesta.values:
+        raise ValidationError("Elegí Asistirá o No asistirá.")
+    if timezone.now() >= inicio:
+        raise ValidationError("Sólo podés cambiar el aviso antes del inicio de la clase.")
+    if relacion.respuesta != respuesta:
+        relacion.respuesta = respuesta
+        relacion.respondido_por = usuario
+        relacion.respondido_en = timezone.now()
         with contexto_auditoria(usuario):
             relacion.full_clean()
+            if timezone.now() >= inicio:
+                raise ValidationError("La clase alcanzó su inicio. No se modificó el aviso.")
             relacion.save()
     return relacion

@@ -546,5 +546,5 @@ def clase_responder(request, pk):
         for mensaje in error.messages:
             messages.error(request, mensaje)
     else:
-        messages.success(request, "Tu respuesta de participación fue registrada.")
+        messages.success(request, "Tu aviso de asistencia fue registrado.")
     return redirect("clases:clase_detalle", pk=pk)

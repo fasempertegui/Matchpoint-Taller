@@ -55,8 +55,17 @@
             {% endif %}
             <section class="perfil-seccion" aria-labelledby="clase-acciones-titulo">
                 <h2 id="clase-acciones-titulo">Acciones</h2>
-                {% if clase.mi_respuesta.respondido_en %}<details><summary>Historia de mi respuesta</summary><p>Primera decisión: {{ clase.mi_respuesta.respuesta_inicial_texto }} · {{ clase.mi_respuesta.respondido_en|date:"d/m/Y H:i" }}{% if clase.mi_respuesta.respuesta_modificada_en %}<br>Único cambio: {{ clase.mi_respuesta.get_respuesta_display }} · {{ clase.mi_respuesta.respuesta_modificada_en|date:"d/m/Y H:i" }}{% endif %}</p></details>{% endif %}
-                {% if clase.puede_responder %}<details><summary>Responder participación</summary><form method="post" action="{% url 'clases:clase_responder' clase.id %}">{% csrf_token %}<p>Podés elegir una respuesta y cambiarla una sola vez antes del inicio. La asistencia se registra por separado.</p><select name="respuesta" class="form-control"><option value="afirmativa">Voy a asistir</option><option value="negativa">No voy a asistir</option></select><button class="boton boton-secundario" type="submit">Guardar respuesta</button></form></details>{% endif %}
+                {% if clase.puede_responder %}
+                <details>
+                    <summary>{% if clase.mi_respuesta.respuesta == 'no_asistira' %}Asisto{% else %}No asisto{% endif %}</summary>
+                    <form method="post" action="{% url 'clases:clase_responder' clase.id %}">
+                        {% csrf_token %}
+                        <p>El aviso corresponde sólo a esta clase y mantiene ocupado tu horario. Podés cambiarlo antes del inicio. La asistencia se registra por separado.</p>
+                        <input type="hidden" name="respuesta" value="{% if clase.mi_respuesta.respuesta == 'no_asistira' %}asistira{% else %}no_asistira{% endif %}">
+                        <button class="boton boton-secundario" type="submit">{% if clase.mi_respuesta.respuesta == 'no_asistira' %}Asisto{% else %}No asisto{% endif %}</button>
+                    </form>
+                </details>
+                {% endif %}
                 <div class="perfil-acciones perfil-acciones-botones">
                     {% if clase.puede_registrar_asistencia or clase.puede_finalizar %}<a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_asistencia' clase.id %}">{% if clase.puede_finalizar %}Finalizar y registrar asistencia{% elif hay_asistencia %}Revisar asistencia{% else %}Registrar asistencia{% endif %}</a>{% endif %}
                     {% if clase.puede_finalizar %}{% include "clases/_finalizar_clase.html" with clase_id=clase.id %}{% endif %}

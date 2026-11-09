@@ -92,7 +92,7 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Reservas | FL-70 | Actualizar socios de una reserva |
 | Reservas | FL-71 | Registrar o corregir el resultado de una reserva |
 | Participación | FL-72 | Responder una invitación a reserva |
-| Participación | FL-73 | Responder participación en una clase |
+| Participación | FL-73 | Registrar o retirar aviso de no asistencia |
 | Consultas | FL-53 | Consultar el uso de una membresía |
 | Consultas | FL-54 | Consultar actividad de clases de un usuario |
 | Reservas | FL-55 | Consultar reservas |
@@ -1092,7 +1092,7 @@ Recorrido:
 4. Presenta las clases a crear, cada candidata omitida con su motivo. Las coincidencias personales con reservas también omiten la candidata completa, según criterios 2.2.
 5. Solicita dos confirmaciones explícitas y sucesivas: la generación no admite deshacer ni eliminación física de clases. Las generadas por error pueden anularse antes de su inicio desde su detalle mediante **FL-37** o desde Acciones del día o del mes, conservando su historia.
 6. Al confirmar, bloquea usuarios en orden de identificador y coordina sede, canchas y calendario de feriados. Obtiene o crea los turnos concretos, los bloquea y vuelve a evaluar el conjunto revisado. Si cambia, revierte y exige una nueva revisión.
-7. Comprueba el inicio futuro al guardar y al terminar la operación; si un turno alcanza su inicio, revierte todo y exige una nueva revisión. Crea en una transacción los eventos Programados de tipo clase, sus especializaciones con `es_generada = true`, y sus asignaciones con respuesta Pendiente para participantes y sin respuesta para profesores. Las observaciones se copian al evento.
+7. Comprueba el inicio futuro al guardar y al terminar la operación; si un turno alcanza su inicio, revierte todo y exige una nueva revisión. Crea en una transacción los eventos Programados de tipo clase, sus especializaciones con `es_generada = true`, y sus asignaciones con Asistirá para participantes y sin respuesta para profesores. Las observaciones se copian al evento.
 8. La notificación por email a profesores se describe en el proceso 4.2.
 
 Alternativas:
@@ -1224,7 +1224,7 @@ Las operaciones se rigen por criterios, 2.0, 2.1 y 2.12. La creación exige inic
 
 Profesores nuevos o reactivados requieren cuenta activa y rol Profesor. Los participantes nuevos o reactivados requieren cuenta activa, sin exigir Alumno, contratación ni cobro. La selección propone Alumno por defecto y permite buscar cualquier usuario activo. Cada clase conserva al menos una asignación activa de profesor. La clase admite varios participantes sin un máximo bloqueante.
 
-La disponibilidad personal aplica criterios 2.2: docencia vigente, participación de clase activa con respuesta Pendiente o Afirmativa, organización de reserva e invitación vigente Pendiente o Aceptada impiden otra actividad simultánea. Una persona tampoco puede dictar y participar en la misma clase. Respuestas negativas, relaciones inactivas y actividades Anuladas no impiden coincidencias.
+La disponibilidad personal aplica criterios 2.2: docencia vigente, participación de clase activa en Asistirá o No asistirá, organización de reserva e invitación vigente Pendiente o Aceptada impiden otra actividad simultánea. Una persona tampoco puede dictar y participar en la misma clase. Invitaciones de reserva Rechazadas, relaciones inactivas y actividades Anuladas no impiden coincidencias. El aviso No asistirá mantiene ocupado el horario.
 
 Las coincidencias personales con reservas se rechazan, sin confirmación que las habilite. La revisión se vincula al actor y al conjunto validado; si cambia, exige nueva revisión. Las altas y reactivaciones conservan la identidad y respuestas de las relaciones concretas.
 
@@ -1239,14 +1239,14 @@ Recorrido:
 1. El administrador selecciona un turno libre en Agenda y solicita Crear clase. Completa tres pasos dentro del panel lateral: Profesores, Participantes y Resumen. Profesores exige al menos uno; Participantes es opcional y permite agregar observaciones al final. Ambos selectores muestran título, buscador y asignaciones, en ese orden. Atrás conserva los datos y la tarjeta del turno permanece visible durante el recorrido.
 2. El sistema calcula la hora de fin exactamente una hora después del inicio.
 3. Valida calendario, profesores, participantes, disponibilidad personal frente a clases y reservas e instalaciones activas. Exige que el turno quede íntegramente dentro de una franja de funcionamiento (**FL-57**); no hay excepciones. El paso Resumen presenta turno, profesores, participantes, observaciones y las condiciones de disponibilidad personal. La confirmación se realiza dentro del panel.
-4. Al confirmar, bloquea usuarios en orden de identificador, sede y cancha; obtiene o crea el turno concreto, lo bloquea y revalida acceso, asignaciones, disponibilidad personal y ocupación. En una transacción crea el evento Programado, clase y asignaciones con respuesta Pendiente para participantes y sin respuesta para profesores; las observaciones pertenecen al evento. Una revisión que cambió exige nueva confirmación y no deja cambios parciales.
+4. Al confirmar, bloquea usuarios en orden de identificador, sede y cancha; obtiene o crea el turno concreto, lo bloquea y revalida acceso, asignaciones, disponibilidad personal y ocupación. En una transacción crea el evento Programado, clase y asignaciones con Asistirá para participantes y sin respuesta para profesores; las observaciones pertenecen al evento. Una revisión que cambió exige nueva confirmación y no deja cambios parciales.
 5. Actualiza la grilla y el panel sin salir de Agenda ni recargar la página. Envía una notificación por email a cada profesor asignado (ver 4.2).
 
 Alternativas:
 
 - Un turno ocupado obliga a elegir otro; el evento existente no se desplaza.
 - La clase puede crearse sin alumnos, pero debe tener al menos un profesor activo.
-- Una asignación docente activa o de participante con respuesta Pendiente o Afirmativa a otra clase no Anulada impide confirmar en la misma fecha y hora, sin importar sede, cancha o función. La respuesta negativa libera disponibilidad.
+- Una asignación docente activa o de participante en Asistirá o No asistirá a otra clase no Anulada impide confirmar en la misma fecha y hora, sin importar sede, cancha o función. El aviso No asistirá conserva la ocupación del horario.
 - Las coincidencias personales con reservas se rechazan para profesores y participantes según criterios 2.2, sin excepciones confirmables.
 - Un turno fuera del horario de funcionamiento de la sede impide crear la clase, sin excepciones administrativas.
 - Las clases generadas desde la planilla se crean mediante **FL-28**, no mediante este flujo; esa generación notifica una sola vez por profesor y por corrida, no clase por clase. Una clase creada por este flujo queda marcada como no generada por planilla.
@@ -1288,7 +1288,7 @@ Alternativas:
 - Un cambio de cancha que ubique el turno fuera del horario de funcionamiento de la sede impide guardar, igual que en **FL-34**.
 - Una clase cancelada o completada conserva su historia y no se edita mediante este flujo.
 - Quitar un profesor o un alumno no genera notificación.
-- Reactivar la asignación de un alumno que estaba inactiva establece en `false` su marca de recordatorio enviado (ver 4.6), para que reciba el recordatorio si la clase sigue programada para el día siguiente. La respuesta, su primera decisión y el único cambio permitido se conservan.
+- Reactivar la asignación de un alumno que estaba inactiva establece en `false` su marca de recordatorio enviado (ver 4.6), para que reciba el recordatorio si la clase sigue programada para el día siguiente. El aviso de asistencia y su historia se conservan.
 
 - **Resultado:** datos, participantes y, si correspondía, cancha actualizados, con el mismo día y horario.
 - **Datos:** clases, eventos, turnos, profesores y usuarios asignados, y horarios de sede.
@@ -2063,37 +2063,35 @@ flowchart TD
     F --> G
 ```
 
-#### FL-73. Responder participación en una clase
+#### FL-73. Registrar o retirar aviso de no asistencia
 
-- **Objetivo:** registrar la decisión propia sobre una clase concreta.
-- **Actor:** participante titular de la asignación, autenticado y con acceso vigente.
-- **Entradas y precondiciones:** asignación activa en clase no Anulada antes del inicio; Voy a asistir o No voy a asistir.
+- **Objetivo:** comunicar la intención de asistencia a una clase concreta.
+- **Actor:** titular autenticado y habilitado.
+- **Entradas y precondiciones:** asignación activa en clase Programada antes del inicio.
 
 Recorrido:
 
-1. Abre su clase y solicita responder o cambiar su decisión.
-2. En una transacción bloquea a la persona y su relación con la clase según criterios 2.12. Comprueba titularidad, asignación activa, inicio futuro y primera decisión o único cambio disponible.
-3. Si vuelve de negativa a afirmativa, revalida disponibilidad frente a clases y reservas.
-4. Guarda la primera decisión o el único cambio con responsable, momento e historia.
+1. Consulta su clase, que muestra Asistirá por defecto o No asistirá si existe aviso.
+2. Despliega No asisto o Asisto según corresponda y confirma la acción.
+3. En una transacción bloquea a la persona, turno, evento, clase y relación. Revalida acceso, titularidad, asignación activa, clase Programada e inicio futuro.
+4. Guarda el aviso y su última modificación con responsable, momento y auditoría. Revalida el inicio antes de guardar.
 
 Alternativas:
 
-- La primera respuesta no utiliza el cambio; no se vuelve a Pendiente. Reactivar conserva historia y no permite un segundo cambio.
-- No voy a asistir libera disponibilidad personal sin retirar asignación ni modificar plantilla o asistencia. Una asistencia posterior Presente no reescribe la respuesta.
-- Pendiente al comenzar se presenta como Sin respuesta. No crea un estado persistido ni presume asistencia.
-- Administración no responde por el titular. Profesores no tienen este circuito por docencia; sus reemplazos se gestionan por asignaciones.
+- Puede registrar y retirar el aviso sin límite antes del inicio. Repetir el mismo valor no genera una modificación.
+- Ambos valores mantienen ocupado el horario; no se revalida disponibilidad al modificar el aviso.
+- El aviso corresponde sólo a esa clase, sin cambiar plantilla, asignaciones ni asistencia real. Estar Presente no modifica No asistirá.
+- Administración no actúa por el titular. Los profesores no tienen este circuito por docencia.
+- Al inicio se conserva Asistirá o No asistirá y se ocultan las acciones.
 
-- **Resultado:** decisión del participante conservada por clase concreta.
+- **Resultado:** intención de asistencia conservada por clase concreta.
 - **Datos:** usuarios, clases, clases_alumnos, eventos y turnos.
 
 ```mermaid
 flowchart TD
-    A[Consultar clase propia] --> B[Elegir decisión]
-    B --> C[Revalidar titularidad inicio e historia]
-    C --> D{Vuelve a afirmar}
-    D -->|Sí| E[Revalidar disponibilidad]
-    D -->|No| F[Guardar respuesta y auditoría]
-    E --> F
+    A[Consultar clase propia] --> B[Desplegar y confirmar aviso]
+    B --> C[Revalidar titularidad estado e inicio]
+    C --> D[Guardar intención y auditoría]
 ```
 
 ### 3.15 Consultas operativas

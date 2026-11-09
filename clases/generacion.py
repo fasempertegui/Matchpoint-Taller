@@ -64,7 +64,7 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     ).order_by("clase_id", "profesor_id"))
     participantes_ocupados = list(ClaseAlumno.objects.filter(
         usuario_id__in=usuarios_ids, **filtros_asignacion,
-    ).exclude(respuesta="negativa").exclude(clase__evento__estado=Evento.Estado.ANULADO).values_list(
+    ).exclude(clase__evento__estado=Evento.Estado.ANULADO).values_list(
         "clase_id", "usuario_id", "clase__evento__turno__fecha", "clase__evento__turno__hora_inicio",
     ).order_by("clase_id", "usuario_id"))
     asignaciones_ocupadas = {
