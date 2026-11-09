@@ -1,0 +1,5 @@
+{% extends "comunicaciones/email/base.html" %}
+{% block contenido %}
+{% include "comunicaciones/email/bloque.html" with bloque=contenido only %}
+{% for apartado in apartados %}{% include "comunicaciones/email/bloque.html" with bloque=apartado only %}{% endfor %}
+{% endblock %}

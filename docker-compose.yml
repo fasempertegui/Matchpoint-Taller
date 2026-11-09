@@ -17,6 +17,17 @@ services:
       DB_HOST: db
       DB_PORT: "5432"
       CELERY_BROKER_URL: redis://redis:6379/0
+      EMAILS_HABILITADOS: "${EMAILS_HABILITADOS:-0}"
+      EMAILS_ENTREGA_EXTERNA_HABILITADA: "${EMAILS_ENTREGA_EXTERNA_HABILITADA:-0}"
+      EMAILS_URL_PUBLICA: "${EMAILS_URL_PUBLICA:-http://localhost:8000}"
+      EMAIL_BACKEND: "${EMAIL_BACKEND:-django.core.mail.backends.locmem.EmailBackend}"
+      DEFAULT_FROM_EMAIL: "${DEFAULT_FROM_EMAIL:-Academia TM <academia@localhost>}"
+      EMAIL_HOST: "${EMAIL_HOST:-localhost}"
+      EMAIL_PORT: "${EMAIL_PORT:-587}"
+      EMAIL_HOST_USER: "${EMAIL_HOST_USER:-}"
+      EMAIL_HOST_PASSWORD: "${EMAIL_HOST_PASSWORD:-}"
+      EMAIL_USE_TLS: "${EMAIL_USE_TLS:-1}"
+      EMAIL_USE_SSL: "${EMAIL_USE_SSL:-0}"
     ports:
       - "8000:8000"
     volumes:

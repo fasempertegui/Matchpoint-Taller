@@ -313,13 +313,29 @@ Las operaciones Anuladas muestran movimientos y neto sin exigir completar el imp
 
 ### 2.6 Notificaciones
 
-El sistema enviará notificaciones automáticas por email en los siguientes casos: confirmación de alta de cuenta, recuperación de contraseña, confirmación de una reserva propia, incluida una nueva reserva independiente después de una cancelación, invitación a una reserva normal o con membresía, cancelación de una reserva o clase que afecta al usuario, vencimiento próximo de una contratación, recordatorio de la próxima clase asignada, asignación de participantes o profesores a clases y de profesores a turnos programados.
+Los emails de bienvenida y verificación, seguridad de cuenta, clases, reservas, contrataciones, ajustes, movimientos vinculados y continuidad se describen dentro de sus flujos de origen. Los destinatarios y exclusiones se rigen por el [borrador aprobado de emails](<PENDIENTE borrador_emails_automaticos.md>), cuya integración funcional se organiza por etapas. No hay una bandeja de notificaciones para usuarios ni seguimiento de lectura.
 
-Las notificaciones se enviarán únicamente por email; no habrá una bandeja de notificaciones dentro del sistema. Las comunicaciones no cubiertas por estos casos seguirán realizándose por fuera del sistema.
+#### Persistencia y entrega
 
-El aviso de vencimiento se evalúa diariamente para contrataciones Activas cuyo fin esté dentro de los próximos tres días. Cada contratación conserva una marca de envío para evitar repetir el aviso.
+La operación guarda su email en `envios_email` dentro de la misma transacción. Si se revierte la operación, tampoco queda el aviso. Cada aviso tiene una clave única por hecho efectivo y destinatario; reintentar una solicitud sin otro cambio no crea un segundo envío. La clave no se reutiliza para contenido o destinatario diferente. Pedir expresamente otro enlace constituye otra solicitud y respeta su límite funcional.
 
-El recordatorio diario selecciona las clases Programadas de mañana y sus participantes con asignación activa, sin exigir Alumno. El envío y su marca se resuelven por participante y clase, sin depender de los demás. Reactivar una asignación restablece su marca de recordatorio a no enviado.
+El correo se entrega en segundo plano mediante Celery. Después del commit sólo se intenta despertar al trabajador; si Redis no está disponible, la operación permanece confirmada y el aviso sigue pendiente. Un barrido técnico cada sesenta segundos recupera pendientes cuyo próximo intento ya llegó y reservas de procesamiento abandonadas. Ese barrido no selecciona clases, reservas ni campañas: sus procedimientos funcionales tienen sus propios horarios.
+
+Los estados son Pendiente, En proceso, Enviado, Fallido y Descartado. El trabajador reclama un aviso mediante bloqueo de fila y una reserva de cinco minutos con identificador propio. La llamada al proveedor ocurre fuera de las transacciones de base y tiene un timeout de treinta segundos. Dos trabajadores no reclaman simultáneamente el mismo pendiente. Si la reserva vence sin resultado, se registra la interrupción y se aplica la política de fallo; una confirmación del trabajador anterior no puede sobrescribir una reserva nueva.
+
+Un fallo programa reintentos a los 5, 15 y 60 minutos después del fallo correspondiente. Tras cuatro intentos fallidos queda Fallido. Los avisos que pierden vigencia quedan Descartados, sin reintento. El error resumido no incorpora el texto devuelto por el proveedor ni contiene contraseñas, tokens o enlaces. Enviado significa aceptación por el servicio de correo, no llegada a la bandeja de entrada. Si el proveedor acepta pero se pierde la confirmación local, puede repetirse una entrega al reintentar; la unicidad local no elimina ese límite del transporte.
+
+Los enlaces se preparan en el primer intento, guardando la emisión. Vencen a los quince minutos, incluido el extremo final, y los reintentos conservan ese plazo. No se persisten enlaces completos ni tokens firmados en los datos de la cola. Las solicitudes sustituidas y los enlaces vencidos se descartan. Las direcciones y datos mínimos necesarios se capturan al confirmar el hecho; antes de entregar se comprueban cuenta, solicitud, participación y vigencia según el tipo. Los recordatorios no se entregan si la actividad empezó o dejó de estar Programada. No asisto excluye recordatorio de clase; una invitación Rechazada excluye posteriores avisos de esa reserva. Una nueva participación se distingue de otra retirada mediante su identidad y fecha de creación.
+
+Los avisos de retirada conservan evidencia de la asignación eliminada y no exigen que siga existiendo. Anulación y retirada pueden entregarse después de la hora de la actividad. El aviso de deshabilitación admite la cuenta ya deshabilitada, y los cambios de correo utilizan las direcciones del recorrido confirmado. Estos mensajes no restauran permisos ni asignaciones.
+
+#### Presentación y consulta
+
+Todos los tipos usan una base HTML compartida de Academia TM, con logo, violeta `#4B176D`, acento `#B6D532`, tipografía Arial con alternativas sans-serif, encabezado, datos, acciones y pie. Cada mensaje tiene una versión de texto simple con igual información y enlaces, legible sin imágenes. Los apartados agrupan únicamente información autorizada para su destinatario. Las fechas usan `dd/mm/aaaa`, las horas `HH:MM` y los importes `ARS` con dos decimales. Los estilos son propios del email y no dependen de CSS o JavaScript del sitio.
+
+Los enlaces usan exclusivamente el origen público configurado y rutas internas; no se construyen desde el Host de una solicitud. Remitente, backend, servidor y credenciales se configuran por entorno. La entrega está desactivada por defecto; la salida a servicios externos requiere habilitación explícita adicional. El transporte de pruebas permanece en memoria. Activar infraestructura no autoriza desplegar recorridos funcionales incompletos.
+
+Administración consulta los envíos en una tabla compacta de veinticinco filas por página, con fecha, tipo, destinatario y estado. Los filtros por estado, tipo y destinatario aparecen al pedirlos. Cada fila permite desplegar intentos, fechas de entrega y error resumido. No se muestran datos de preparación, claves de aviso, tokens ni enlaces de acceso. La consulta exige cuenta activa, sin cambio obligatorio de contraseña y rol Administrador, y sólo admite GET. No ofrece reenvío manual ni edición del registro técnico.
 
 ### 2.7 Portal de usuarios
 

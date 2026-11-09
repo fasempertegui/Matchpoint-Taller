@@ -102,6 +102,11 @@ def navegacion(request):
             "nombre": "Oferta de la academia", "descripcion": oferta["descripcion"],
             "destino": oferta, "boton": "Ver oferta",
         })
+    if administrador:
+        administracion.append(enlace(
+            "Envíos de email", "comunicaciones:envios_lista", namespace == "comunicaciones",
+            "Consulta de entregas y fallos de los emails de la academia.",
+        ))
     if auditoria:
         modulos_inicio.append({"nombre": "Auditoría", "descripcion": auditoria["descripcion"], "destino": auditoria})
         administracion.append(auditoria)

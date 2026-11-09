@@ -1,0 +1,4 @@
+{% if bloque.titulo %}<h2 style="margin:24px 0 12px;color:#4b176d;font-size:19px">{{ bloque.titulo }}</h2>{% endif %}
+{% for parrafo in bloque.parrafos %}<p style="margin:0 0 16px">{{ parrafo }}</p>{% endfor %}
+{% if bloque.datos %}<table role="presentation" style="width:100%;border-collapse:collapse;margin:16px 0">{% for dato in bloque.datos %}<tr><td style="padding:8px;border-bottom:1px solid #d9dee5;color:#596474">{{ dato.etiqueta }}</td><td style="padding:8px;border-bottom:1px solid #d9dee5">{{ dato.valor }}</td></tr>{% endfor %}</table>{% endif %}
+{% for accion in bloque.acciones %}<p style="margin:20px 0"><a href="{{ accion.url }}" style="display:inline-block;padding:12px 20px;background:#4b176d;color:#ffffff;border-radius:8px;text-decoration:none">{{ accion.texto }}</a></p>{% endfor %}

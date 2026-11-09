@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "agenda.apps.AgendaConfig",
     "membresias.apps.MembresiasConfig",
     "caja.apps.CajaConfig",
+    "comunicaciones.apps.ComunicacionesConfig",
 ]
 
 MIDDLEWARE = [
@@ -175,3 +176,22 @@ AUTH_USER_MODEL = "usuarios.Usuario"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "inicio"
 LOGOUT_REDIRECT_URL = "login"
+
+EMAILS_HABILITADOS = os.environ.get("EMAILS_HABILITADOS", "0") == "1"
+EMAILS_ENTREGA_EXTERNA_HABILITADA = os.environ.get("EMAILS_ENTREGA_EXTERNA_HABILITADA", "0") == "1"
+EMAILS_URL_PUBLICA = os.environ.get("EMAILS_URL_PUBLICA", "http://localhost:8000")
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.locmem.EmailBackend")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Academia TM <academia@localhost>")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
+EMAIL_TIMEOUT = 30
+
+if EMAILS_HABILITADOS:
+    CELERY_BEAT_SCHEDULE["recuperar-emails-pendientes"] = {
+        "task": "comunicaciones.tasks.barrer_emails_pendientes",
+        "schedule": 60.0,
+    }

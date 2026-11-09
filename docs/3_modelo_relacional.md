@@ -13,7 +13,7 @@ Las reglas de negocio, permisos, validaciones de operaciones, confirmaciones y p
 ### 2.1 Nombres e identificadores
 
 - Tablas y columnas utilizan `snake_case`; los nombres de tablas están en plural.
-- Las claves primarias simples son `bigint GENERATED ALWAYS AS IDENTITY`.
+- Las claves primarias simples son `bigint GENERATED ALWAYS AS IDENTITY`, salvo `envios_email`, que identifica cada aviso mediante `uuid`.
 - Las tablas de relación utilizan claves primarias compuestas cuando corresponde.
 - Las claves foráneas terminan en `_id`.
 
@@ -698,6 +698,37 @@ Las FK protegen contratación, administrador y ajuste original contra eliminaci�
 Una reversión es otro movimiento de igual cantidad y operación inversa, misma contratación y rol, con referencia única al original, motivo propio y administrador responsable. No puede apuntarse a sí misma ni revertir una reversión; el servicio valida coherencia bajo bloqueo y la unicidad impide dobles reversiones. Ambos registros permanecen en la suma y el historial. El movimiento y su reversión conservan motivo, responsable y fecha como evidencia administrativa. Un trigger impide UPDATE, DELETE y TRUNCATE de estos movimientos; no se edita un saldo ni se borra el original. La tabla declara el trigger común de auditoría y las altas conservan sus datos de creación sin agregar entradas a log_auditoria, según criterios 2.14.
 
 El servicio sólo admite ajustes y reversiones para contrataciones Activas del período vigente o programadas para un período futuro. Bloquea titular y contratación en el orden común con reservas e invitaciones. Recalcula por rol `cupo + otorgadas − descontadas − comprometidas − consumidas` y rechaza descuentos o reversiones que dejen disponibilidad negativa. No modifica participaciones existentes ni genera penalizaciones pendientes, cambios de precio o movimientos monetarios. Los cupos aplicados y los movimientos explican la disponibilidad sin almacenar saldo mutable.
+
+
+### 4.29 `envios_email`
+
+Registro persistente de emails preparados por las operaciones. Redis transporta tareas y no es la fuente del seguimiento. La operación y su aviso se guardan en la misma transacción. La tabla no registra lectura ni sirve como bandeja del usuario.
+
+| Clave | Columna | Tipo de dato | Nullable | Unique | Descripción |
+|---|---|---|---|---|---|
+| PK | `id` | `uuid` | | | Identidad del envío. |
+| | `clave` | `varchar(250)` | | Sí | Hecho efectivo y destinatario, sin secretos. |
+| | `tipo` | `varchar(32)` | | | Tipo funcional de email. |
+| | `destinatario` | `varchar(254)` | | | Dirección capturada para ese recorrido. |
+| | `datos` | `jsonb` | | | Contenido mínimo, referencias de vigencia y preparación del enlace. |
+| | `estado` | `varchar(12)` | | | pendiente, en_proceso, enviado, fallido o descartado. |
+| | `creado_en` | `timestamptz` | | | Creación junto con la operación. |
+| | `proximo_intento_en` | `timestamptz` | | | Instante desde el que puede reclamarse. |
+| | `intentos` | `smallint` | | | De cero a cuatro. |
+| | `ultimo_intento_en` | `timestamptz` | Sí | | Última reclamación para entrega. |
+| | `enlace_emitido_en` | `timestamptz` | Sí | | Primera emisión, conservada durante reintentos. |
+| | `reserva_token` | `uuid` | Sí | | Identidad privada de la reserva de procesamiento. |
+| | `reservado_hasta` | `timestamptz` | Sí | | Fin de la reserva de cinco minutos. |
+| | `aceptado_en` | `timestamptz` | Sí | | Confirmación de aceptación por el proveedor. |
+| | `error_resumido` | `varchar(200)` | | | Resultado técnico sin texto sensible del proveedor. |
+
+`envio_estado_valido` restringe los cinco estados y `envio_intentos_validos` limita a cuatro intentos. `envio_reserva_coherente` exige identificador y fecha de reserva únicamente En proceso. `envio_aceptacion_coherente` exige fecha de aceptación únicamente Enviado. La clave única evita duplicar registros por llamadas concurrentes. Índices por estado/próximo intento y estado/fin de reserva permiten recuperar pendientes y procesamientos interrumpidos.
+
+`datos` contiene tres bloques acotados: `mensaje`, con párrafos, pares etiqueta/valor, acciones internas y apartados; `vigencia`, con referencias de cuenta, actividad, participación, solicitud y vencimiento aplicables; y `enlace`, cuando se prepara una confirmación firmada. No se almacenan contraseñas, tokens ni URLs completas de acceso. El token se construye con la identidad del aviso y su emisión persistida. La recuperación de contraseña utiliza sus mecanismos nativos de Django en el flujo de cuenta.
+
+Las referencias técnicas de `datos` no son FK y no conceden acceso: la entrega vuelve a consultar los registros actuales. Así se conserva la evidencia mínima de una retirada aunque su vínculo ya no exista, sin impedir la limpieza de una cuenta inicial. La identidad de una participación incluye su creación para distinguir borrado y nueva asignación con la misma clave compuesta. El registro de envío es la fuente técnica de entrega; la auditoría de la operación conserva sus propias reglas y no copia cuerpos, enlaces o errores sensibles de emails.
+
+Las transiciones de entrega bloquean el registro sólo mientras se reclama o se confirma el resultado. El proveedor se invoca fuera de la transacción. El identificador de reserva impide que un trabajador interrumpido confirme sobre otra reserva. Vencer una reserva cuenta como interrupción y aplica el siguiente plazo de fallo. Los reintentos son 5, 15 y 60 minutos desde cada fallo; un enlace vence a los quince minutos de su emisión sin extenderse al reintentar. Enviado no representa confirmación de lectura o recepción final y admite el límite de duplicación por aceptación remota sin confirmación local.
 
 
 ## 5. Dependencias referenciales y eliminación

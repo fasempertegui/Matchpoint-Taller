@@ -1,0 +1,16 @@
+{% autoescape off %}Academia TM · Salta
+{{ titulo }}
+
+{% for parrafo in contenido.parrafos %}{{ parrafo }}
+
+{% endfor %}{% for dato in contenido.datos %}{{ dato.etiqueta }}: {{ dato.valor }}
+{% endfor %}{% for accion in contenido.acciones %}
+{{ accion.texto }}: {{ accion.url }}
+{% endfor %}{% for apartado in apartados %}
+{{ apartado.titulo }}
+{% for parrafo in apartado.parrafos %}{{ parrafo }}
+{% endfor %}{% for dato in apartado.datos %}{{ dato.etiqueta }}: {{ dato.valor }}
+{% endfor %}{% for accion in apartado.acciones %}{{ accion.texto }}: {{ accion.url }}
+{% endfor %}{% endfor %}
+Consultá tus actividades y contrataciones desde tu cuenta.
+{% endautoescape %}
