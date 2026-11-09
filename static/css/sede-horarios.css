@@ -12,32 +12,9 @@
     --horario-violeta-suave: var(--primario-suave);
     --horario-control-atenuado: var(--fondo);
     --horario-vacio: #a1a8b3;
-    --horario-alto-control: 36px;
-    --horario-ancho-etiqueta: 110px;
+    --horario-alto-control: 44px;
+    --horario-ancho-etiqueta: 120px;
     --horario-ancho-hora: 110px;
-}
-
-.horario-encabezado {
-    margin-bottom: var(--horario-espacio-24);
-}
-
-.horario-encabezado p {
-    margin: var(--horario-espacio-8) 0 0;
-}
-
-.horario-distribucion {
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    align-items: stretch;
-    gap: var(--horario-espacio-24);
-}
-
-.horario-distribucion > .tarjeta {
-    min-width: 0;
-    padding: var(--horario-espacio-24);
-    border: 1px solid var(--horario-borde);
-    border-radius: var(--horario-espacio-12);
-    background: var(--horario-fondo);
 }
 
 .horario-tarjeta-encabezado {
@@ -50,7 +27,7 @@
     font-size: 13px;
     font-weight: 400;
     line-height: 1.5;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .horario-dias,
@@ -92,7 +69,7 @@
     min-width: 0;
     height: var(--horario-alto-control);
     border: 1px solid var(--horario-borde);
-    border-radius: var(--horario-espacio-8);
+    border-radius: 10px;
     background: var(--horario-fondo);
     color: var(--horario-secundario);
     font-size: 13px;
@@ -210,7 +187,7 @@
     position: relative;
     height: var(--horario-alto-control);
     border: 1px solid var(--horario-borde);
-    border-radius: var(--horario-espacio-8);
+    border-radius: 10px;
     background: var(--horario-fondo);
     font-variant-numeric: tabular-nums;
 }
@@ -251,15 +228,6 @@
     border-color: var(--peligro);
 }
 
-.horario-segunda-controles:disabled .horario-hora {
-    background: var(--horario-control-atenuado);
-}
-
-.horario-segunda-controles:disabled .form-control {
-    color: var(--horario-secundario);
-    opacity: 0.65;
-}
-
 .horario-hasta {
     display: flex;
     align-items: center;
@@ -268,47 +236,23 @@
     font-size: 13px;
 }
 
+.horario-introduccion {
+    margin: 0 0 20px;
+    color: var(--horario-secundario);
+}
+
 .horario-acciones {
-    display: flex;
-    gap: var(--horario-espacio-8);
+    flex-wrap: wrap;
 }
 
-.horario-acciones .boton {
-    min-width: 0;
-    height: 40px;
-    min-height: 40px;
-    padding: var(--horario-espacio-4) var(--horario-espacio-12);
-    border-radius: var(--horario-espacio-8);
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 16px;
-    text-align: center;
-}
-
-.horario-aplicar {
-    flex: 1;
-    background: var(--horario-violeta);
-    color: var(--horario-fondo);
-}
-
-.horario-aplicar:hover {
-    background: var(--primario-hover);
-}
-
-.horario-cerrar {
-    flex: 1.5;
-    border-color: var(--horario-borde);
-    background: var(--horario-fondo);
-    color: var(--horario-texto);
-}
-
-.horario-cerrar:hover {
-    background: var(--horario-control-atenuado);
+.horario-semana .horario-nota {
+    margin-top: 16px;
+    font-size: 0.875rem;
 }
 
 .horario-semana .tabla-contenedor {
     border: 1px solid var(--horario-borde);
-    border-radius: var(--horario-espacio-8);
+    border-radius: 10px;
 }
 
 .horario-semana tr {
@@ -362,17 +306,7 @@
     display: none;
 }
 
-@media (max-width: 899px) {
-    .horario-distribucion {
-        grid-template-columns: minmax(0, 1fr);
-    }
-}
-
 @media (max-width: 480px) {
-    .horario-distribucion > .tarjeta {
-        padding: var(--horario-espacio-16);
-    }
-
     .horario-atajos {
         gap: var(--horario-espacio-8);
         overflow-x: auto;
@@ -380,7 +314,11 @@
     }
 
     .horario-franja {
-        grid-template-columns: 96px minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .horario-segunda-controles {
+        grid-column: 1;
     }
 
     .horario-franja-controles {

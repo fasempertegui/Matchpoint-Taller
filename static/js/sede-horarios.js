@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
     var horarioSegundaFranja = formulario.querySelector("[data-segunda-franja]");
     var aplicar = formulario.querySelector("[data-aplicar-horarios]");
 
+    segundaFranja.setAttribute("aria-controls", "horario-segunda-franja");
+
     function actualizarDias() {
         var cantidad = dias.filter(function (dia) { return dia.checked; }).length;
         aplicar.textContent = cantidad ? "Aplicar a " + cantidad + (cantidad === 1 ? " día" : " días") : "Aplicar horarios";
@@ -14,6 +16,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function actualizarSegundaFranja() {
         horarioSegundaFranja.disabled = !segundaFranja.checked;
+        horarioSegundaFranja.hidden = !segundaFranja.checked;
+        segundaFranja.setAttribute("aria-expanded", String(segundaFranja.checked));
     }
 
     formulario.querySelector("[data-atajos-dias]").hidden = false;
