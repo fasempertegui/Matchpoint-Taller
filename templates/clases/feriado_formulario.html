@@ -4,11 +4,13 @@
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
 <link rel="stylesheet" href="{% static 'css/clases.css' %}">
+<link rel="stylesheet" href="{% static 'css/feriado-formulario.css' %}">
 {% endblock %}
 {% block contenido %}
-<header class="clase-encabezado"><h1>{% if revision %}Revisar feriado{% else %}Registrar feriado{% endif %}</h1></header>
-<section class="tarjeta{% if not revision %} tarjeta-formulario{% endif %}">
-    <form method="post" novalidate>
+<div class="feriado-formulario{% if not revision %} formulario-guiado-distribucion{% endif %}">
+<section class="tarjeta formulario-guiado{% if revision %} feriado-revision{% else %} tarjeta-formulario{% endif %}">
+    <form method="post" novalidate aria-labelledby="feriado-titulo">
+        <h1 id="feriado-titulo">{% if revision %}Revisar feriado{% else %}Registrar feriado{% endif %}</h1>
         {% csrf_token %}
         {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
         {% if revision %}
@@ -19,11 +21,11 @@
                 <div class="perfil-fila"><dt>Fecha</dt><dd>{{ revision.fecha|date:"d/m/Y" }}</dd></div>
                 <div class="perfil-fila"><dt>Descripción</dt><dd>{{ revision.descripcion }}</dd></div>
             </dl>
-            <section class="perfil-seccion" aria-labelledby="clases-titulo">
+            <section class="feriado-revision-clases" aria-labelledby="clases-titulo">
                 {% if revision.anula_clases %}
                     <h2 id="clases-titulo">Clases que se anularán ({{ clases|length }})</h2>
                     {% if clases %}
-                        <p>Se anularán estas clases Programadas, incluidas las creadas manualmente, con el motivo «Clase anulada por registro de feriado». Sus turnos quedarán libres y se conservarán sus asignaciones e historia.</p>
+                        <p class="nota-campo feriado-advertencia">Se anularán las clases de esta lista, incluidas las creadas manualmente, con el motivo «Clase anulada por registro de feriado». Sus turnos quedarán libres y se conservarán sus asignaciones e historia</p>
                         <div class="tabla-contenedor">
                             <table>
                                 <caption class="clase-etiqueta-oculta">Clases que se anularán el {{ revision.fecha|date:"d/m/Y" }} en todas las sedes</caption>
@@ -44,21 +46,31 @@
                     <h2 id="clases-titulo">Clases existentes</h2>
                     <p>Registrar un feriado de hoy o de una fecha pasada no modifica las clases existentes.</p>
                 {% endif %}
-                <p class="nota-campo">Las reservas y los bloqueos se conservan.</p>
+                <p class="feriado-conservacion">Las reservas y los bloqueos se conservan.</p>
             </section>
-            <div class="acciones-formulario clase-revision-acciones">
+            <div class="acciones-formulario">
+                <button class="boton {% if clases %}boton-confirmar-peligro{% else %}boton-primario{% endif %}" name="paso" value="confirmar" type="submit">Registrar feriado{% if clases %} y anular clases{% endif %}</button>
                 <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a editar</button>
-                <button class="boton {% if clases %}boton-confirmar-peligro{% else %}boton-primario{% endif %}" name="paso" value="confirmar" type="submit">Confirmar</button>
+                <a class="boton boton-secundario" href="{% url 'clases:feriado_lista' %}">Cancelar</a>
             </div>
         {% else %}
             {% for campo in formulario %}
                 <div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
             {% endfor %}
             <div class="acciones-formulario">
-                <a class="boton boton-secundario" href="{% url 'clases:feriado_lista' %}">Cancelar</a>
                 <button class="boton boton-primario" name="paso" value="revisar" type="submit">Revisar feriado</button>
+                <a class="boton boton-secundario" href="{% url 'clases:feriado_lista' %}">Cancelar</a>
             </div>
         {% endif %}
     </form>
 </section>
+{% if not revision %}
+<aside class="formulario-guiado-ayuda" aria-labelledby="feriado-ayuda-titulo">
+    <h2 id="feriado-ayuda-titulo">Cómo se aplica</h2>
+    <img class="formulario-guiado-ilustracion" src="{% static 'img/geometria-ritmo.svg' %}" alt="" width="600" height="300">
+    <p class="feriado-ayuda-detalle">Los feriados afectan a todas las sedes y previenen la creación de clases a través de la planilla.</p>
+    <p class="feriado-ayuda-detalle">Es posible anular clases programadas generadas a través de la planilla en un feriado.</p>
+</aside>
+{% endif %}
+</div>
 {% endblock %}

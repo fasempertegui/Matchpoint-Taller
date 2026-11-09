@@ -217,11 +217,11 @@ class ActividadClasesForm(forms.Form):
 class FeriadoForm(forms.Form):
     fecha = forms.DateField(
         label="Fecha", input_formats=["%Y-%m-%d"],
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date", "autofocus": True}),
     )
     descripcion = forms.CharField(
         label="Descripción", max_length=150,
-        widget=forms.TextInput(attrs={"class": "form-control"}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ej.: Día de la Independencia"}),
     )
 
     def __init__(self, *args, **kwargs):

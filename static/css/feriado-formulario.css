@@ -1,0 +1,42 @@
+.feriado-advertencia {
+    border-color: #fcd34d;
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.formulario-guiado-ayuda .feriado-advertencia,
+.formulario-guiado-ayuda .feriado-ayuda-detalle {
+    margin-top: 16px;
+}
+
+.feriado-formulario .acciones-formulario {
+    flex-wrap: wrap;
+}
+
+.feriado-revision-clases {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--borde);
+}
+
+.feriado-revision-clases h2 {
+    margin: 0 0 12px;
+    font-size: 1.15rem;
+}
+
+.feriado-revision-clases p {
+    margin: 0;
+}
+
+.feriado-revision-clases .nota-campo,
+.feriado-revision-clases .tabla-contenedor {
+    margin-top: 16px;
+}
+
+.feriado-revision-clases h2 + .nota-campo {
+    margin-top: 0;
+}
+
+.feriado-revision-clases .feriado-conservacion {
+    margin-top: 16px;
+}
