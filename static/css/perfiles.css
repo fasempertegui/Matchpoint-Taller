@@ -372,7 +372,7 @@
     display: none;
 }
 
-.restablecer-persona {
+.perfil-persona {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -382,7 +382,7 @@
     background: var(--primario-suave);
 }
 
-.restablecer-avatar {
+.perfil-persona-avatar {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -396,7 +396,7 @@
     font-weight: 700;
 }
 
-.restablecer-identidad {
+.perfil-persona-identidad {
     display: grid;
     gap: 2px;
     min-width: 0;
@@ -413,12 +413,12 @@
     color: #92400e;
 }
 
-[data-modal-restablecer],
-[data-modal-restablecer] .boton {
+.perfil-modal,
+.perfil-modal .boton {
     border-radius: 10px;
 }
 
-[data-modal-restablecer] .modal-confirmacion-acciones {
+.perfil-modal .modal-confirmacion-acciones {
     justify-content: flex-start;
 }
 
@@ -464,4 +464,18 @@
 
 .restablecer-copiar [data-icono-copiado] {
     color: #287044;
+}
+
+
+.perfil-modal .form-control {
+    border-radius: 10px;
+}
+
+.perfil-modal .perfil-modal-bloque {
+    margin-top: 16px;
+}
+
+.perfil-modal [hidden],
+[data-correo-guardado][hidden] {
+    display: none;
 }

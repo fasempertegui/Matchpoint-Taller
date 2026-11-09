@@ -1,17 +1,11 @@
-<dialog class="modal-confirmacion" data-modal-restablecer aria-labelledby="restablecer-titulo">
+<dialog class="modal-confirmacion perfil-modal" data-modal-restablecer aria-labelledby="restablecer-titulo">
     <form class="modal-confirmacion-formulario" method="post" action="{% url 'usuarios:usuario_restablecer_contrasena' usuario_obj.pk %}" data-restablecer-formulario>
         {% csrf_token %}
         <header class="modal-confirmacion-cabecera">
             <h2 id="restablecer-titulo" data-restablecer-titulo>Restablecer contraseña</h2>
         </header>
         <div class="modal-confirmacion-contenido">
-            <div class="restablecer-persona">
-                <span class="restablecer-avatar" aria-hidden="true">{{ usuario_obj.first_name|default:usuario_obj.username|slice:":1"|upper }}{{ usuario_obj.last_name|slice:":1"|upper }}</span>
-                <div class="restablecer-identidad">
-                    <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>
-                    <small class="texto-secundario">@{{ usuario_obj.username }}</small>
-                </div>
-            </div>
+            {% include "usuarios/_tarjeta_identidad.html" %}
             <div class="restablecer-explicacion" data-restablecer-confirmacion>
                 <p class="nota-campo restablecer-advertencia">La contraseña actual dejará de funcionar</p>
                 <p class="restablecer-explicacion">Se generará una contraseña provisoria que deberá reemplazarse en el próximo inicio de sesión</p>

@@ -383,7 +383,7 @@ class UsuarioEditarForm(forms.ModelForm):
     class Meta:
         model = Usuario
         fields = ("email",)
-        labels = {"email": "Email"}
+        labels = {"email": "Correo electrónico"}
         widgets = {
             "email": forms.EmailInput(
                 attrs={"class": "form-control", "placeholder": "ejemplo@dominio.com"}

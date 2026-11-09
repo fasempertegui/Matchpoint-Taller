@@ -19,6 +19,7 @@
         </div>
     </header>
 
+    <p class="mensaje mensaje-success" data-correo-guardado role="status" hidden></p>
     <div class="perfil-cuerpo">
         <div class="perfil-datos">
             <section class="perfil-seccion" aria-labelledby="datos-titulo">
@@ -27,9 +28,9 @@
                     <div class="perfil-fila">
                         <dt>Correo electrónico</dt>
                         <dd class="perfil-valor-accion">
-                            <span>{{ usuario_obj.email|default:"Sin informar" }}</span>
+                            <span data-correo-actual>{{ usuario_obj.email|default:"Sin informar" }}</span>
                             {% if perms.usuarios.change_usuario %}
-                                <a class="boton boton-secundario boton-chico" href="{% url 'usuarios:usuario_editar' usuario_obj.pk %}">Modificar correo</a>
+                                <button class="boton boton-secundario boton-chico" type="button" data-abrir-correo>Modificar correo</button>
                             {% endif %}
                         </dd>
                     </div>
@@ -157,6 +158,10 @@
 {% if perms.usuarios.change_usuario and request.user.pk != usuario_obj.pk %}
     {% include "usuarios/_modal_restablecer_contrasena.html" %}
     <script src="{% static 'js/usuario-restablecer-contrasena.js' %}" defer></script>
+{% endif %}
+{% if formulario_correo %}
+    {% include "usuarios/_modal_modificar_correo.html" %}
+    <script src="{% static 'js/usuario-correo.js' %}" defer></script>
 {% endif %}
 <script src="{% static 'js/usuario-perfil.js' %}" defer></script>
 {% endblock %}

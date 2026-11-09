@@ -1,0 +1,7 @@
+<div class="perfil-persona">
+    <span class="perfil-persona-avatar" aria-hidden="true">{{ usuario_obj.first_name|default:usuario_obj.username|slice:":1"|upper }}{{ usuario_obj.last_name|slice:":1"|upper }}</span>
+    <div class="perfil-persona-identidad">
+        <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>
+        <small class="texto-secundario">@{{ usuario_obj.username }}</small>
+    </div>
+</div>

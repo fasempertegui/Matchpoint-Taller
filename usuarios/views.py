@@ -84,6 +84,7 @@ def usuario_detalle(request, pk):
         "usuarios/usuario_detalle.html",
         {
             "usuario_obj": usuario,
+            "formulario_correo": UsuarioEditarForm(instance=usuario) if request.user.has_perm("usuarios.change_usuario") else None,
             "roles_asignados": roles_asignados,
             "puede_consultar_actividad": request.user.pk == usuario.pk or request.user.tiene_rol(Rol.ADMINISTRADOR),
             "roles_gestionables": [
@@ -133,24 +134,14 @@ def usuario_sugerir_contrasena(request):
 
 @login_required
 @permission_required("usuarios.change_usuario", raise_exception=True)
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["POST"])
 def usuario_editar(request, pk):
     usuario = get_object_or_404(Usuario, pk=pk)
-    formulario = UsuarioEditarForm(request.POST or None, instance=usuario)
-
-    if request.method == "POST" and formulario.is_valid():
-        formulario.save()
-        messages.success(request, f'El correo de "{usuario}" fue actualizado.')
-        return redirect("usuarios:usuario_detalle", pk=usuario.pk)
-
-    return render(
-        request,
-        "usuarios/usuario_editar.html",
-        {
-            "formulario": formulario,
-            "usuario_obj": usuario,
-        },
-    )
+    formulario = UsuarioEditarForm(request.POST, instance=usuario)
+    if not formulario.is_valid():
+        return JsonResponse({"errores": formulario.errors}, status=400)
+    formulario.save()
+    return JsonResponse({"email": usuario.email})
 
 
 @login_required
