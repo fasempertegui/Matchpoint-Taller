@@ -10,6 +10,7 @@ class SedeForm(forms.ModelForm):
     class Meta:
         model = Sede
         fields = ("nombre", "direccion", "observaciones")
+        labels = {"direccion": "Dirección"}
         widgets = {
             "nombre": forms.TextInput(
                 attrs={
@@ -27,7 +28,7 @@ class SedeForm(forms.ModelForm):
             "observaciones": forms.Textarea(
                 attrs={
                     "class": "form-control",
-                    "rows": 4,
+                    "rows": 3,
                     "placeholder": "Información adicional sobre la sede",
                 }
             ),

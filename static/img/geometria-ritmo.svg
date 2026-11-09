@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300" fill="none">
+  <defs>
+    <clipPath id="marco"><rect width="600" height="300" rx="20"/></clipPath>
+    <pattern id="trama" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+      <path d="M0 0V16" stroke="#6D3B8D" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <g clip-path="url(#marco)">
+    <path fill="#F0E7F7" d="M0 0h600v300H0z"/>
+    <path d="M-24 300V174a106 106 0 0 1 212 0v126z" fill="#6D3B8D"/>
+    <path d="M14 300V174a68 68 0 0 1 136 0v126z" fill="#4B176D"/>
+    <path d="M52 300V174a30 30 0 0 1 60 0v126z" fill="#F0E7F7"/>
+    <g transform="translate(318 150) rotate(24)">
+      <rect x="-98" y="-96" width="42" height="192" rx="21" fill="#4B176D"/>
+      <rect x="-26" y="-66" width="42" height="132" rx="21" fill="#6D3B8D"/>
+      <rect x="46" y="-110" width="42" height="220" rx="21" fill="#4B176D"/>
+      <path d="M-77-72V72M67-86V86" stroke="#F0E7F7" stroke-width="2"/>
+      <circle cx="-5" cy="-104" r="21" fill="#B6D532"/>
+    </g>
+    <path d="M470-20v66a58 58 0 0 0 58 58h90M486-20v66a42 42 0 0 0 42 42h90M502-20v66a26 26 0 0 0 26 26h90" stroke="#6D3B8D" stroke-width="2"/>
+    <circle cx="522" cy="246" r="49" fill="url(#trama)"/>
+    <circle cx="447" cy="199" r="14" fill="#B6D532"/>
+    <path d="m182 42 7 7-7 7-7-7z" fill="#6D3B8D"/>
+  </g>
+</svg>

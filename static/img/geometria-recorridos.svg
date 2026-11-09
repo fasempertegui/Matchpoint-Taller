@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300" fill="none">
+  <defs>
+    <clipPath id="marco"><rect width="600" height="300" rx="20"/></clipPath>
+    <pattern id="trama" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+      <path d="M0 0V16" stroke="#6D3B8D" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <g clip-path="url(#marco)">
+    <path fill="#F0E7F7" d="M0 0h600v300H0z"/>
+    <circle cx="570" cy="24" r="110" fill="#6D3B8D"/>
+    <circle cx="570" cy="24" r="72" fill="#4B176D"/>
+    <circle cx="570" cy="24" r="34" fill="#F0E7F7"/>
+    <path d="M-30 240H110a72 72 0 0 0 72-72V132a72 72 0 0 1 72-72H394" stroke="#4B176D" stroke-width="48"/>
+    <path d="M-30 240H110a72 72 0 0 0 72-72V132a72 72 0 0 1 72-72H394" stroke="#F0E7F7" stroke-width="2" stroke-dasharray="5 9"/>
+    <circle cx="394" cy="60" r="24" fill="#B6D532"/>
+    <circle cx="394" cy="60" r="8" fill="#4B176D"/>
+    <path d="M270 202h80a46 46 0 0 1 46 46v66M270 186h80a62 62 0 0 1 62 62v66M270 170h80a78 78 0 0 1 78 78v66" stroke="#6D3B8D" stroke-width="2"/>
+    <circle cx="70" cy="58" r="33" fill="url(#trama)"/>
+    <path d="m470 209 16-16 16 16-16 16z" fill="#B6D532"/>
+    <circle cx="545" cy="258" r="7" fill="#6D3B8D"/>
+  </g>
+</svg>

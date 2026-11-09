@@ -2,7 +2,7 @@
     --fuente-interfaz: "Hanken Grotesk", Arial, sans-serif;
     --fuente-titulos: "Bricolage Grotesque", Arial, sans-serif;
     --fuente-detalles: var(--fuente-interfaz);
-    --fondo: #f4f6f8;
+    --fondo: #ffffff;
     --superficie: #ffffff;
     --texto: #1a2028;
     --texto-suave: #596474;
@@ -275,6 +275,122 @@ h2 {
 .tarjeta-formulario {
     max-width: 680px;
     margin-inline: auto;
+}
+
+.sede-formulario-distribucion {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 32px;
+}
+
+.sede-formulario-ayuda {
+    align-self: start;
+    padding: 20px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--primario-suave);
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.sede-formulario-ayuda h2 {
+    margin: 0 0 12px;
+    font-size: 1.15rem;
+}
+
+.sede-formulario-ilustracion {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-bottom: 24px;
+    border-radius: 8px;
+}
+
+.sede-formulario-pasos {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sede-formulario-pasos li {
+    position: relative;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 12px;
+    padding-bottom: 20px;
+}
+
+.sede-formulario-pasos li:last-child {
+    padding-bottom: 0;
+}
+
+.sede-formulario-pasos li:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    top: 24px;
+    bottom: 0;
+    left: 11.5px;
+    width: 1px;
+    background: var(--primario);
+    opacity: 0.25;
+}
+
+.sede-paso-numero {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primario);
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.sede-paso-detalle {
+    display: block;
+    margin-top: 2px;
+    color: var(--texto-suave);
+    font-size: 0.875rem;
+}
+
+@media (max-width: 760px) {
+    .sede-formulario-distribucion {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+}
+
+.sede-formulario {
+    width: 100%;
+    min-width: 0;
+    border-radius: 10px;
+    background: var(--primario-suave);
+}
+
+.sede-formulario h1 {
+    margin-bottom: 24px;
+}
+
+.sede-formulario .grupo-campo {
+    margin-bottom: 20px;
+}
+
+.sede-formulario .acciones-formulario {
+    justify-content: flex-start;
+    margin-top: 24px;
+    margin-inline: -20px;
+    margin-bottom: -20px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--borde);
+    border-radius: 0 0 9px 9px;
+}
+
+.sede-formulario .boton,
+.sede-formulario .form-control {
+    border-radius: 10px;
 }
 
 .tarjeta-busqueda {

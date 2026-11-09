@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" viewBox="0 0 600 300" fill="none">
+  <defs>
+    <clipPath id="marco"><rect width="600" height="300" rx="20"/></clipPath>
+    <pattern id="trama" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+      <path d="M0 0V16" stroke="#6D3B8D" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <g clip-path="url(#marco)">
+    <path fill="#F0E7F7" d="M0 0h600v300H0z"/>
+    <circle cx="618" cy="274" r="126" fill="#6D3B8D"/>
+    <circle cx="618" cy="274" r="90" fill="#4B176D"/>
+    <circle cx="618" cy="274" r="54" fill="#F0E7F7"/>
+    <g transform="translate(298 154) rotate(-12)">
+      <path d="M-112 76H112V102H-112z" fill="#4B176D"/>
+      <path d="M-72 58V-8a72 72 0 0 1 144 0v66z" fill="#6D3B8D"/>
+      <path d="M-40 58V-8a40 40 0 0 1 80 0v66z" fill="#F0E7F7"/>
+      <path d="M-56 58V-8a56 56 0 0 1 112 0v66" stroke="#F0E7F7" stroke-width="2"/>
+      <circle cx="0" cy="-110" r="27" fill="#B6D532"/>
+      <path d="M-19-129a38 38 0 0 1 38 38" stroke="#283400" stroke-width="1.5"/>
+    </g>
+    <path d="M-20 54h96a52 52 0 0 1 52 52v54M-20 70h96a36 36 0 0 1 36 36v54M-20 86h96a20 20 0 0 1 20 20v54" stroke="#4B176D" stroke-width="2"/>
+    <circle cx="507" cy="52" r="44" fill="url(#trama)"/>
+    <path d="m92 240 16-16 16 16-16 16z" fill="#B6D532"/>
+    <circle cx="424" cy="128" r="7" fill="#6D3B8D"/>
+  </g>
+</svg>

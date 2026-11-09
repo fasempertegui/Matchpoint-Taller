@@ -1,11 +1,13 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1>{{ titulo }}</h1>
-    <form method="post" novalidate>
+<div class="sede-formulario-distribucion">
+<section class="tarjeta tarjeta-formulario sede-formulario">
+    <form method="post" novalidate aria-labelledby="formulario-titulo">
+        <h1 id="formulario-titulo">{{ titulo }}</h1>
         {% csrf_token %}
 
         {% if formulario.non_field_errors %}
@@ -21,7 +23,6 @@
                 <div class="grupo-campo">
                     <label for="{{ campo.id_for_label }}">
                         {{ campo.label }}
-                        {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
                     </label>
                     {{ campo }}
                     {% if campo.help_text %}
@@ -35,11 +36,34 @@
         {% endfor %}
 
         <div class="acciones-formulario">
+            <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
             <a class="boton boton-secundario" href="{% url 'instalaciones:sede_lista' %}">
                 Cancelar
             </a>
-            <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
         </div>
     </form>
 </section>
+<aside class="sede-formulario-ayuda" aria-label="Ayuda para registrar una sede">
+    <section aria-labelledby="sede-ayuda-titulo">
+        <h2 id="sede-ayuda-titulo">{% if sede %}Datos de la sede{% else %}Qué sigue{% endif %}</h2>
+        <img class="sede-formulario-ilustracion" src="{% static 'img/sedes-geometria.svg' %}" alt="" width="600" height="300">
+        {% if not sede %}
+            <ol class="sede-formulario-pasos" role="list">
+                <li>
+                    <span class="sede-paso-numero" aria-hidden="true">1</span>
+                    <div><strong>Creás la sede</strong><span class="sede-paso-detalle">Nombre y dirección</span></div>
+                </li>
+                <li>
+                    <span class="sede-paso-numero" aria-hidden="true">2</span>
+                    <div><strong>Agregás canchas</strong><span class="sede-paso-detalle">Desde su detalle</span></div>
+                </li>
+                <li>
+                    <span class="sede-paso-numero" aria-hidden="true">3</span>
+                    <div><strong>Definís horarios</strong><span class="sede-paso-detalle">Y el precio por turno</span></div>
+                </li>
+            </ol>
+        {% endif %}
+    </section>
+</aside>
+</div>
 {% endblock %}
