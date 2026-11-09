@@ -1,11 +1,16 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1>{{ titulo }}</h1>
-    <form method="post" novalidate>
+<div class="formulario-guiado-distribucion">
+<section class="tarjeta tarjeta-formulario formulario-guiado">
+    <form method="post" novalidate aria-labelledby="formulario-titulo">
+        <header class="formulario-guiado-encabezado">
+            <h1 id="formulario-titulo">{{ titulo }}</h1>
+            <h2>{{ sede.nombre }}</h2>
+        </header>
         {% csrf_token %}
 
         {% if formulario.non_field_errors %}
@@ -21,7 +26,6 @@
                 <div class="grupo-campo">
                     <label for="{{ campo.id_for_label }}">
                         {{ campo.label }}
-                        {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
                     </label>
                     {{ campo }}
                     {% if campo.help_text %}
@@ -35,11 +39,34 @@
         {% endfor %}
 
         <div class="acciones-formulario">
+            <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
             <a class="boton boton-secundario" href="{% url 'instalaciones:sede_detalle' sede.pk %}">
                 Cancelar
             </a>
-            <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
         </div>
     </form>
 </section>
+<aside class="formulario-guiado-ayuda" aria-label="Ayuda para registrar una cancha">
+    <section aria-labelledby="cancha-ayuda-titulo">
+        <h2 id="cancha-ayuda-titulo">{% if cancha %}Datos de la cancha{% else %}Qué sigue{% endif %}</h2>
+        <img class="formulario-guiado-ilustracion" src="{% static 'img/geometria-recorridos.svg' %}" alt="" width="600" height="300">
+        {% if not cancha %}
+            <ol class="formulario-guiado-pasos" role="list">
+                <li>
+                    <span class="formulario-paso-numero" aria-hidden="true">1</span>
+                    <div><strong>Creás la cancha</strong><span class="formulario-paso-detalle">Nombre y superficie</span></div>
+                </li>
+                <li>
+                    <span class="formulario-paso-numero" aria-hidden="true">2</span>
+                    <div><strong>Revisás la sede</strong><span class="formulario-paso-detalle">Horarios y precio por turno compartidos</span></div>
+                </li>
+                <li>
+                    <span class="formulario-paso-numero" aria-hidden="true">3</span>
+                    <div><strong>Consultás la agenda</strong><span class="formulario-paso-detalle">Turnos de la cancha</span></div>
+                </li>
+            </ol>
+        {% endif %}
+    </section>
+</aside>
+</div>
 {% endblock %}

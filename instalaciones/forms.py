@@ -77,7 +77,7 @@ class CanchaForm(forms.ModelForm):
             "observaciones": forms.Textarea(
                 attrs={
                     "class": "form-control",
-                    "rows": 4,
+                    "rows": 3,
                     "placeholder": "Información adicional sobre la cancha",
                 }
             ),
@@ -86,6 +86,10 @@ class CanchaForm(forms.ModelForm):
     def __init__(self, *args, sede, **kwargs):
         self.sede = sede
         super().__init__(*args, **kwargs)
+        self.fields["superficie"].choices = [
+            ("", "Seleccioná una superficie"),
+            *Cancha.Superficie.choices,
+        ]
 
     def clean_nombre(self):
         nombre = self.cleaned_data["nombre"].strip()

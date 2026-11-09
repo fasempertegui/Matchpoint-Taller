@@ -324,7 +324,7 @@ def cancha_crear(request, sede_pk):
         {
             "formulario": formulario,
             "sede": sede,
-            "titulo": f"Nueva cancha en {sede.nombre}",
+            "titulo": "Nueva cancha",
             "texto_boton": "Crear cancha",
         },
     )
