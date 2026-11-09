@@ -280,7 +280,7 @@ h2 {
 .formulario-guiado-distribucion {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    align-items: stretch;
+    align-items: start;
     gap: 32px;
 }
 
@@ -297,6 +297,11 @@ h2 {
 .formulario-guiado-ayuda h2 {
     margin: 0 0 12px;
     font-size: 1.15rem;
+}
+
+.formulario-guiado-ayuda p {
+    margin: 0;
+    color: var(--texto-suave);
 }
 
 .formulario-guiado-ilustracion {
