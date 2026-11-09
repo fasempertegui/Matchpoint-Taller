@@ -7,7 +7,7 @@
         <div class="modal-confirmacion-contenido">
             {% include "usuarios/_tarjeta_identidad.html" %}
             <div class="restablecer-explicacion" data-restablecer-confirmacion>
-                <p class="nota-campo restablecer-advertencia">La contraseña actual dejará de funcionar</p>
+                <p class="nota-campo perfil-modal-advertencia">La contraseña actual dejará de funcionar</p>
                 <p class="restablecer-explicacion">Se generará una contraseña provisoria que deberá reemplazarse en el próximo inicio de sesión</p>
             </div>
             <div class="restablecer-explicacion" data-restablecer-resultado hidden>
@@ -19,7 +19,7 @@
                         <span data-icono-copiado hidden>{% include "componentes/iconoir/check.html" %}</span>
                     </button>
                 </div>
-                <p class="nota-campo restablecer-advertencia">¡Cuidado! Esta contraseña no vuelve a mostrarse</p>
+                <p class="nota-campo perfil-modal-advertencia">¡Cuidado! Esta contraseña no vuelve a mostrarse</p>
             </div>
             <p class="error-campo restablecer-explicacion" data-restablecer-error role="alert" hidden></p>
         </div>

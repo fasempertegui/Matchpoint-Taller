@@ -139,15 +139,9 @@
                             <a class="boton boton-secundario boton-chico" href="{% url 'password_change' %}">Cambiar mi contraseña</a>
                         {% else %}
                             <button class="boton boton-secundario boton-chico" type="button" data-abrir-restablecimiento>Restablecer contraseña</button>
-                            <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_cambiar_estado' usuario_obj.pk %}"
-                                      data-confirmar="{% if usuario_obj.is_active %}¿Desactivar la cuenta de {{ usuario_obj.get_full_name|default:usuario_obj.username }}? No va a poder iniciar sesión hasta que se reactive su cuenta.{% else %}¿Activar la cuenta de {{ usuario_obj.get_full_name|default:usuario_obj.username }}? Va a poder iniciar sesión de nuevo.{% endif %}"
-                                      data-confirmar-titulo="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta"
-                                      data-confirmar-boton="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta">
-                                    {% csrf_token %}
-                                    <button class="boton boton-chico {% if usuario_obj.is_active %}boton-peligro{% else %}boton-secundario{% endif %}" type="submit">
-                                        {% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta
-                                    </button>
-                                </form>
+                            <button class="boton boton-chico {% if usuario_obj.is_active %}boton-peligro{% else %}boton-activar{% endif %}" type="button" data-abrir-estado>
+                                {% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta
+                            </button>
                         {% endif %}
                     </div>
                 </section>
@@ -157,6 +151,7 @@
 </article>
 {% if perms.usuarios.change_usuario and request.user.pk != usuario_obj.pk %}
     {% include "usuarios/_modal_restablecer_contrasena.html" %}
+    {% include "usuarios/_modal_cambiar_estado.html" %}
     <script src="{% static 'js/usuario-restablecer-contrasena.js' %}" defer></script>
 {% endif %}
 {% if formulario_correo %}

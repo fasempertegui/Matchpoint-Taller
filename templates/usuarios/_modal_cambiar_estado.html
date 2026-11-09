@@ -1,0 +1,28 @@
+<dialog class="modal-confirmacion perfil-modal" data-modal-estado aria-labelledby="estado-titulo">
+    <form class="modal-confirmacion-formulario" method="post" action="{% url 'usuarios:usuario_cambiar_estado' usuario_obj.pk %}" data-estado-formulario>
+        {% csrf_token %}
+        <header class="modal-confirmacion-cabecera">
+            <h2 id="estado-titulo">{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta</h2>
+        </header>
+        <div class="modal-confirmacion-contenido">
+            {% include "usuarios/_tarjeta_identidad.html" %}
+            {% if usuario_obj.is_active %}
+                <div class="perfil-estado-advertencia perfil-modal-bloque">
+                    <ul class="perfil-modal-lista">
+                        <li>No podrá iniciar sesión</li>
+                        <li>No podrá participar de nuevas clases ni reservas</li>
+                        <li>Sus roles, contrataciones e historial se mantienen</li>
+                        <li>Sus clases, reservas e invitaciones conservan su estado</li>
+                    </ul>
+                </div>
+                <p class="nota-campo perfil-modal-bloque">Podés reactivar la cuenta desde este perfil</p>
+            {% else %}
+                <p class="perfil-modal-bloque">La persona podrá volver a iniciar sesión</p>
+            {% endif %}
+        </div>
+        <footer class="modal-confirmacion-acciones">
+            <button class="boton {% if usuario_obj.is_active %}boton-peligro{% else %}boton-activar{% endif %}" type="submit" data-estado-confirmar>{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %}</button>
+            <button class="boton boton-secundario" type="button" data-estado-cancelar autofocus>Cancelar</button>
+        </footer>
+    </form>
+</dialog>
