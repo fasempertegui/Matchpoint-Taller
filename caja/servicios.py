@@ -1,3 +1,5 @@
+from common.validaciones import validar_motivo
+
 from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
@@ -64,8 +66,8 @@ def abrir_caja(actor, *, efectivo_inicial, motivo_apertura="", revision):
     if datos != _referencia_apertura(actor, cierre):
         raise ValidationError("Cambió el último cierre. Revisá su contado antes de abrir caja.")
     motivo = motivo_apertura.strip() if cierre and inicial != cierre.efectivo_contado else ""
-    if cierre and inicial != cierre.efectivo_contado and not motivo:
-        raise ValidationError("El inicial difiere del último contado. Explicá el motivo de apertura.")
+    if cierre and inicial != cierre.efectivo_contado:
+        validar_motivo(motivo)
     sesion = SesionCaja(responsable=actor, efectivo_inicial=inicial, motivo_apertura=motivo)
     try:
         with transaction.atomic(), contexto_auditoria(actor):
@@ -92,8 +94,8 @@ def cerrar_caja(actor, sesion_id, *, efectivo_contado, motivo_diferencia=""):
     esperado = efectivo_esperado(sesion)
     diferencia = contado - esperado
     motivo = motivo_diferencia.strip() if diferencia else ""
-    if diferencia and not motivo:
-        raise ValidationError("El contado difiere del esperado. Explicá la diferencia para cerrar.")
+    if diferencia:
+        validar_motivo(motivo)
     sesion.estado = SesionCaja.Estado.CERRADA
     sesion.cerrada_en = timezone.now()
     sesion.efectivo_esperado = esperado

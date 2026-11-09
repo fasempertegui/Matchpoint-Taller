@@ -113,7 +113,7 @@ La administración decide si corresponde devolver dinero y cuánto, independient
 
 Tanto las clases como las reservas de cancha pueden cancelarse por estos motivos. Anular una reserva libera su único turno.
 
-Las clases grupales suelen manejar un máximo de **6 alumnos**. En la práctica ese límite puede flexibilizarse por decisión administrativa.
+Las clases grupales tienen una referencia de **6 alumnos**. Se puede superar esa cantidad: se avisa, pero no se bloquea la incorporación ni se exige una autorización adicional. La cantidad es una referencia organizacional, no un cupo obligatorio controlado por el sistema.
 
 Las reservas son independientes: no existe restauración ni reprogramación vinculada, ni traslado de horas, ajustes o movimientos financieros. Administración registra el resultado Realizada o No realizada después de finalizar, con una única corrección con motivo; ese resultado no devuelve horas ni acredita asistencia individual.
 
@@ -156,4 +156,4 @@ Administración otorga o quita horas enteras positivas por contratación y rol, 
 
 La consulta de cada rol distingue cupo contratado, horas otorgadas y descontadas por ajustes, comprometidas, consumidas y disponibles. Los usos conservados del titular y mes cuentan aunque provengan de contrataciones Anuladas.
 
-Reservas y contrataciones muestran importe acordado, ingresos Vigentes, devoluciones Vigentes y neto recibido. Las no anuladas indican Falta cobrar, Cubierto o Excedente por resolver. Las anuladas muestran movimientos y neto sin exigir completar el precio ni presumir devolución. Anular un ingreso erróneo exige motivo y auditoría y puede revelar un neto negativo; conserva devoluciones, mantiene las validaciones de caja e informa la diferencia para revisión administrativa.
+Reservas y contrataciones presentan una única situación financiera con importe acordado, cobros vigentes, devoluciones vigentes y neto recibido (ingresos menos devoluciones). Una devolución reduce el neto sin modificar los cobros originales ni el importe acordado. Modificar ese importe requiere una operación autorizada y auditada. Las no anuladas indican Diferencia por cubrir, Cubierto o Excedente por resolver. La diferencia por cubrir no implica por sí sola una deuda exigible. Las anuladas muestran movimientos y neto sin exigir completar el precio ni presumir devolución. Anular un ingreso erróneo exige motivo y auditoría y puede revelar un neto negativo; conserva devoluciones, mantiene las validaciones de caja e informa la diferencia para revisión administrativa.

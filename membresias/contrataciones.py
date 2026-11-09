@@ -1,3 +1,5 @@
+from common.validaciones import validar_motivo
+
 from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
@@ -216,8 +218,7 @@ def _anular_contratacion(actor, contratacion_id, *, modelo, tipo, motivo, versio
         ).exists():
             raise ValidationError("La membresía está aplicada en una reserva Programada como organizador o invitado socio.")
     motivo = motivo.strip()
-    if not motivo:
-        raise ValidationError("Indicá el motivo de la anulación.")
+    validar_motivo(motivo)
     contratacion.estado = modelo.Estado.ANULADO
     contratacion.motivo_anulacion = motivo
     contratacion.anulado_por = actor

@@ -12,11 +12,11 @@ from .disponibilidad import validar_fecha_reserva
 class ReservaAnulacionForm(forms.Form):
     motivo = forms.CharField(
         label="Motivo de anulación",
-        min_length=25,
-        help_text="Mínimo 25 caracteres",
+        min_length=5,
+        help_text="Mínimo 5 caracteres",
         error_messages={
             "required": "Indicá el motivo de la anulación.",
-            "min_length": "El motivo de anulación debe tener al menos 25 caracteres.",
+            "min_length": "El motivo de anulación debe tener al menos 5 caracteres.",
         },
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     )
@@ -80,7 +80,7 @@ class InvitadosReservaForm(forms.Form):
 
 class ResultadoReservaForm(forms.Form):
     resultado = forms.ChoiceField(label="Resultado", choices=(("realizada", "Realizada"), ("no_realizada", "No realizada")), widget=forms.Select(attrs={"class": "form-control"}))
-    motivo = forms.CharField(label="Motivo de corrección", required=False, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    motivo = forms.CharField(min_length=5, label="Motivo de corrección", required=False, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
     version = forms.CharField(widget=forms.HiddenInput())
 
     def __init__(self, *args, reserva, **kwargs):

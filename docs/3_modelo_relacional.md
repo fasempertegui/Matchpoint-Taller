@@ -49,7 +49,7 @@ La programación semanal se representa con `turnos_planilla` y sus asignaciones.
 
 Planes y membresías se modelan como catálogos independientes, con tablas separadas de contrataciones. Las contrataciones de membresía conservan cupos independientes de organizador e invitado; `ajustes_horas_membresia` registra otorgamientos, descuentos y reversiones por rol. Los precios aplicados se conservan en las contrataciones y reservas; la única fuente monetaria es `movimientos_fondos`. Sus movimientos Ingreso y Egreso de categoría Devoluciones pueden referenciar una contratación concreta o reserva, o conservar solo el concepto. `sesiones_caja` agrupa movimientos y controla el efectivo. Los medios son efectivo, transferencia, tarjeta y QR y la fecha monetaria es la de registro del servidor.
 
-Se admiten pagos parciales mediante varios movimientos Ingreso por origen. La situación financiera se deriva de ingresos y devoluciones Vigentes y del importe acordado, sin almacenar saldos ni estados de pago mutables. Indica Falta cobrar, Cubierto o Excedente por resolver en operaciones no Anuladas y muestra diferencias negativas para revisión administrativa. Los pagos se registran manualmente.
+Se admiten pagos parciales mediante varios movimientos Ingreso por origen. La situación financiera se deriva de ingresos y devoluciones Vigentes y del importe acordado, sin almacenar saldos ni estados de pago mutables. Indica Diferencia por cubrir, Cubierto o Excedente por resolver en operaciones no Anuladas y muestra diferencias negativas para revisión administrativa. Los pagos se registran manualmente.
 
 El alta propia y administrativa utiliza las mismas tablas de contratación. La renovación registra otra contratación del mismo producto para el mes siguiente al de referencia, sin una entidad adicional de intención o solicitud. El seguimiento de plantilla consulta las contrataciones por titular y mes sin almacenar un estado de renovación o pago.
 
@@ -68,8 +68,8 @@ Representa a las personas gestionadas por la academia y sus credenciales, datos 
 | | `last_login` | `timestamptz` | Sí | | `2026-10-12 09:30:00-03` |
 | | `is_superuser` | `boolean` | | | `false` |
 | | `username` | `varchar(150)` | | Sí | `gomezm` |
-| | `first_name` | `varchar(150)` | | | `Martina` |
-| | `last_name` | `varchar(150)` | | | `Gómez` |
+| | `first_name` | `varchar(100)` | | | `Martina` |
+| | `last_name` | `varchar(100)` | | | `Gómez` |
 | | `email` | `varchar(254)` | | Sí | `martina.gomez@gmail.com` |
 | | `is_staff` | `boolean` | | | `false` |
 | | `is_active` | `boolean` | | | `true` |
@@ -85,7 +85,7 @@ Representa a las personas gestionadas por la academia y sus credenciales, datos 
 
 `date_joined` identifica el momento de alta; `actualizado_en`, la última modificación; `last_login`, el último acceso. `fecha_baja` es nula para una cuenta activa y contiene el momento de inactivación para una cuenta inactiva. `debe_cambiar_contrasena` representa la condición de contraseña provisoria.
 
-`email` y `username` tienen unicidad sin distinción de mayúsculas mediante restricciones funcionales sobre `LOWER(email)` y `LOWER(username)`. `celular_contacto` no es único y contiene la representación internacional E.164. Las columnas heredadas de nombre y apellido admiten 150 caracteres. `observaciones` admite cadena vacía, sin `NULL`.
+`email` y `username` tienen unicidad sin distinción de mayúsculas mediante restricciones funcionales sobre `LOWER(email)` y `LOWER(username)`. `celular_contacto` no es único y contiene la representación internacional E.164. Las columnas de nombre y apellido admiten hasta 100 caracteres cada una. `observaciones` admite cadena vacía, sin `NULL`.
 
 `is_superuser` es la representación técnica de los permisos de Administrador; el rol funcional se almacena en `usuarios_roles`. `is_staff` permanece en `false`, garantizado por `usuarios_is_staff_false`.
 
@@ -598,7 +598,7 @@ Los servicios validan dominios, importes, referencias y coherencia de campos den
 
 Anular invalida la carga y no representa un reintegro. En sesión abierta recalcula el esperado y no puede dejarlo negativo; en sesión cerrada no modifica los resultados guardados. Corregir requiere una nueva carga independiente en la sesión actual; si corresponde a efectivo, tiene efecto ordinario y puede producir una diferencia explicada aunque no haya movimiento físico presente. No existe un vínculo entre el movimiento anulado y la nueva carga.
 
-La consulta comercial suma ingresos Vigentes y devoluciones Vigentes por cada origen y obtiene el neto recibido, sin reasignar movimientos. Compara ese neto con el importe acordado sólo en operaciones no Anuladas para indicar Falta cobrar, Cubierto o Excedente por resolver. Anular un ingreso puede revelar neto negativo sin anular devoluciones; se conserva la validación de efectivo y se muestra la diferencia para revisión administrativa. El resumen histórico de una sesión cerrada incluye los movimientos con `anulado_en IS NULL OR anulado_en > cerrada_en`; los anulados antes o al cerrar no suman. Una anulación posterior no modifica los importes guardados del cierre. La comparación comercial no modifica los importes guardados del cierre.
+La consulta comercial presenta una única situación financiera por origen: importe acordado, cobros vigentes (suma de ingresos Vigentes), devoluciones vigentes (suma de devoluciones Vigentes) y neto recibido (ingresos menos devoluciones), sin reasignar movimientos ni almacenar saldos o estados de pago mutables. Una devolución reduce el neto sin modificar ingresos originales ni el importe acordado. Modificar ese importe requiere una operación autorizada y auditada. Compara ese neto con el importe acordado sólo en operaciones no Anuladas para indicar Diferencia por cubrir, Cubierto o Excedente por resolver. La diferencia por cubrir no implica por sí sola una deuda exigible. Las operaciones Anuladas muestran importes, movimientos y neto sin esos estados ni devolución automática. Anular un ingreso puede revelar neto negativo sin anular devoluciones; se conserva la validación de efectivo y se muestra la diferencia para revisión administrativa. El resumen histórico de una sesión cerrada incluye los movimientos con `anulado_en IS NULL OR anulado_en > cerrada_en`; los anulados antes o al cerrar no suman. Una anulación posterior no modifica los importes guardados del cierre. La comparación comercial no modifica los importes guardados del cierre.
 
 La protección de datos originales y la inmutabilidad del cierre se validan en servicios; no hay triggers adicionales de inmutabilidad sobre las tablas de caja. El trigger común registra modificaciones y anulaciones dentro de la transacción y las altas conservan sus datos de creación sin agregar entradas al historial. Un error revierte la escritura y su auditoría. El registro de una escritura SQL no impide esa escritura. Las reglas operativas se detallan también en criterios, 2.5 y 2.12.
 

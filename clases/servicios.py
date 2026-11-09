@@ -1,3 +1,5 @@
+from common.validaciones import validar_motivo
+
 from datetime import datetime, timedelta
 
 from django.core import signing
@@ -485,8 +487,7 @@ def cambiar_cancha_clase(usuario, clase_id, cancha, *, confirmacion):
 @transaction.atomic
 def anular_clase(anulado_por, clase_id, motivo):
     anulado_por = exigir_administracion_clases(anulado_por)
-    if not isinstance(motivo, str) or not motivo.strip():
-        raise ValidationError("Indicá el motivo de la anulación.")
+    validar_motivo(motivo)
     motivo = motivo.strip()
     inicial = Clase.objects.select_related("evento__turno__cancha").get(pk=clase_id)
     profesores_ids = set(inicial.profesores.values_list("profesor_id", flat=True))

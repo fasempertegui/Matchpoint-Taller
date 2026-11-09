@@ -1,3 +1,5 @@
+from common.validaciones import validar_motivo
+
 from django.core import signing
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
@@ -37,8 +39,7 @@ def _preparar_ajuste(actor, contratacion_id, *, tipo_horas, operacion, cantidad,
     if not admite_ajustes(contratacion):
         raise ValidationError("Sólo se ajustan contrataciones Activas del mes vigente o de un período futuro.")
     motivo = motivo.strip() if isinstance(motivo, str) else ""
-    if not motivo:
-        raise ValidationError("Indicá un motivo. El titular podrá consultarlo.")
+    validar_motivo(motivo)
     original = None
     if reversion_de_id is not None:
         original = AjusteHorasMembresia.objects.filter(pk=reversion_de_id, membresia_usuario=contratacion).first()

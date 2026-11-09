@@ -140,9 +140,10 @@ class AgendaOperacionForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-control"}),
     )
     motivo_anulacion = forms.CharField(
+        min_length=5,
         label="Motivo de anulación *",
         required=False,
-        help_text="Mínimo 25 caracteres",
+        help_text="Mínimo 5 caracteres",
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     )
     observaciones = forms.CharField(
@@ -203,8 +204,8 @@ class AgendaOperacionForm(forms.Form):
         motivo = self.cleaned_data["motivo_anulacion"]
         if previa["anulaciones"] and not motivo:
             self.add_error("motivo_anulacion", "Indicá el motivo de la anulación.")
-        elif previa["reservas_a_anular"] and len(motivo) < 25:
-            self.add_error("motivo_anulacion", "El motivo de anulación debe tener al menos 25 caracteres.")
+        elif previa["anulaciones"] and len(motivo) < 5:
+            self.add_error("motivo_anulacion", "El motivo de anulación debe tener al menos 5 caracteres.")
         return not self.errors
 
     def parametros(self):

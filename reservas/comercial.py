@@ -1,3 +1,5 @@
+from common.validaciones import validar_motivo
+
 import hashlib
 import json
 from datetime import date, datetime, time
@@ -347,8 +349,7 @@ def registrar_resultado(actor, reserva_id, resultado, motivo="", *, version):
     if reserva.resultado_uso == "sin_registrar":
         reserva.resultado_registrado_por, reserva.resultado_registrado_en = actor, timezone.now()
     else:
-        if not motivo.strip():
-            raise ValidationError("Indicá el motivo de la corrección.")
+        validar_motivo(motivo)
         reserva.resultado_original = reserva.resultado_uso
         reserva.resultado_corregido_por, reserva.resultado_corregido_en = actor, timezone.now()
         reserva.motivo_correccion_resultado = motivo.strip()

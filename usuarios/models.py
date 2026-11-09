@@ -105,6 +105,8 @@ class Usuario(AbstractUser):
 
     id = models.BigAutoField(primary_key=True)
     objects = UsuarioManager()
+    first_name = models.CharField("nombre", max_length=100, blank=True)
+    last_name = models.CharField("apellido", max_length=100, blank=True)
     email = models.EmailField(
         "correo electrónico",
     )

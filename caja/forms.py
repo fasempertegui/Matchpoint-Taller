@@ -9,13 +9,13 @@ from .models import MovimientoFondo, SesionCaja
 
 class AperturaCajaForm(forms.Form):
     efectivo_inicial = forms.DecimalField(label="Efectivo inicial", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
-    motivo_apertura = forms.CharField(label="Motivo si difiere del último contado", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    motivo_apertura = forms.CharField(min_length=5, label="Motivo si difiere del último contado", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
     revision = forms.CharField(widget=forms.HiddenInput())
 
 
 class CierreCajaForm(forms.Form):
     efectivo_contado = forms.DecimalField(label="Efectivo contado", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
-    motivo_diferencia = forms.CharField(label="Motivo si hay diferencia", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    motivo_diferencia = forms.CharField(min_length=5, label="Motivo si hay diferencia", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
 
 
 class SeleccionOrigenMovimientoForm(forms.Form):
@@ -91,7 +91,7 @@ class DevolucionForm(MovimientoCajaForm):
 
 
 class AnulacionMovimientoForm(forms.Form):
-    motivo = forms.CharField(label="Motivo de anulación", strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    motivo = forms.CharField(min_length=5, label="Motivo de anulación", strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
     revision = forms.CharField(widget=forms.HiddenInput())
 
 

@@ -1,3 +1,5 @@
+from common.validaciones import validar_motivo
+
 from uuid import UUID
 
 from django.core import signing
@@ -147,8 +149,7 @@ def anular_movimiento(actor, movimiento_id, *, motivo, revision):
     if datos != {"actor": actor.pk, "movimiento": movimiento.pk, "operacion": str(movimiento.operacion_id), "sesion_actual": actual.pk}:
         raise ValidationError("Cambió la sesión o el movimiento. Revisá nuevamente antes de anular.")
     motivo = motivo.strip()
-    if not motivo:
-        raise ValidationError("Explicá el motivo de anulación.")
+    validar_motivo(motivo)
     origen = sesiones[movimiento.sesion_id]
     if origen.estado == "abierta" and efectivo_esperado(origen) - movimiento.efecto_efectivo < 0:
         raise ValidationError("Anular este movimiento dejaría el efectivo esperado negativo.")

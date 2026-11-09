@@ -98,6 +98,7 @@ class ContratacionPlanForm(forms.Form):
 class AnulacionContratacionForm(forms.Form):
     version = forms.CharField(widget=forms.HiddenInput())
     motivo = forms.CharField(
+        min_length=5,
         label="Motivo de anulación",
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3, "autofocus": True}),
         error_messages={"required": "Indicá el motivo de la anulación."},
@@ -195,7 +196,7 @@ class AjusteHorasForm(forms.Form):
                                  widget=forms.Select(attrs={"class": "form-control"}))
     cantidad = forms.IntegerField(label="Cantidad de horas", min_value=1, max_value=32767,
                                   widget=forms.NumberInput(attrs={"class": "form-control", "min": 1, "step": 1}))
-    motivo = forms.CharField(label="Motivo", help_text="El titular podrá consultar este motivo.",
+    motivo = forms.CharField(min_length=5, label="Motivo", help_text="El titular podrá consultar este motivo.",
                              widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
 
     def __init__(self, *args, reversion=False, **kwargs):

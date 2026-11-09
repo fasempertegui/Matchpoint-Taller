@@ -236,8 +236,8 @@ def ejecutar_operacion(usuario, sede_id, fecha, parametros, huella, fecha_hasta=
     motivo = Bloqueo.Motivo(parametros["motivo_bloqueo"]).label if bloquear else parametros["motivo_anulacion"].strip()
     if previa["anulaciones"] and not motivo:
         raise ValidationError("Indicá el motivo de la anulación.")
-    if not bloquear and previa["reservas_a_anular"] and len(motivo) < 25:
-        raise ValidationError("El motivo de anulación debe tener al menos 25 caracteres.")
+    if previa["anulaciones"] and len(motivo) < 5:
+        raise ValidationError("El motivo de anulación debe tener al menos 5 caracteres.")
 
     with contexto_auditoria(usuario):
         for fila in previa["acciones"]:

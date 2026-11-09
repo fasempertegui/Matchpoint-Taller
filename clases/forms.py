@@ -131,6 +131,7 @@ class ClaseCanchaForm(forms.Form):
 
 class ClaseAnulacionForm(forms.Form):
     motivo = forms.CharField(
+        min_length=5,
         label="Motivo de anulación",
         error_messages={"required": "Indicá el motivo de la anulación."},
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),

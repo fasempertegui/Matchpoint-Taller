@@ -22,6 +22,8 @@ Las clases y reservas previamente agendadas deberán respetarse. El sistema impe
 
 Cada sede tendrá su propio horario de funcionamiento, definido por día de la semana y con hasta dos franjas horarias por día (por ejemplo, de 8 a 12 y de 16 a 22). El inicio y el fin de cada franja deberán ser en punto y, si se configuran dos franjas, deberá haber al menos una hora sin funcionamiento entre ellas. Un día sin franjas configuradas significa que esa sede no funciona ese día. Toda reserva, clase o bloqueo debe quedar contenido íntegramente en una única franja habilitada. Esta condición rige para el portal, la administración, la planilla, la generación de clases y las operaciones masivas, sin excepciones confirmables. Un día sin franjas no admite nuevas actividades. Configurar o quitar franjas se rechaza si deja fuera una reserva, clase o bloqueo Programado cuyo turno aún no terminó. Los registros Anulados, Finalizados o con turno terminado se conservan como historia y no impiden actualizar el horario.
 
+Todo motivo ingresado como texto libre requiere al menos cinco caracteres, sin contar espacios al principio y al final. La regla se aplica en formularios y servidor a anulaciones individuales y masivas, correcciones, ajustes y reversiones de horas, y justificaciones de diferencias de caja. Los motivos clasificados de bloqueo se seleccionan del catálogo y no requieren texto libre adicional.
+
 ### 2.0 Límites temporales y calendario operativo
 
 La historia operativa administrada por el sistema comienza el **1 de agosto de 2026**. Ninguna clase, reserva, bloqueo, contratación de plan o membresía, fecha de alta, feriado ni ingreso puede registrarse antes de esa fecha. Esta fecha mínima es absoluta para la consulta y las correcciones históricas permitidas. La creación de eventos exige además un inicio estrictamente futuro.
@@ -45,6 +47,8 @@ Todos estos límites se validan en el servidor y se exponen además en los contr
 El sistema incluirá la gestión de clases de la academia.
 
 Cada clase y cada horario de planilla registran ubicación, horario, profesores, participantes y observaciones. Crear o editar un horario de planilla exige al menos un profesor activo con rol Profesor; no se permite guardar una selección sin profesores. La modalidad individual o grupal es una característica comercial de los planes.
+
+La referencia organizacional para las clases grupales es de seis alumnos. Al superar esa cantidad se informa mediante un aviso, sin bloquear asignaciones, guardado ni generación de clases y sin exigir autorización adicional. El sistema no impone un cupo obligatorio de seis alumnos.
 
 La gestión incluirá:
 
@@ -127,7 +131,7 @@ Actualizar socios actúa sólo sobre invitaciones Aceptadas con adicional, antes
 
 #### Cancelación y consumo
 
-El organizador cancela su propia reserva antes del inicio con motivo libre de al menos 25 caracteres sin espacios extremos. Con membresía, más de dos horas de antelación libera la hora; con dos horas o menos conserva el consumo. El reloj del servidor determina el plazo al confirmar, con precisión completa.
+El organizador cancela su propia reserva antes del inicio con motivo libre de al menos 5 caracteres sin espacios extremos. Con membresía, más de dos horas de antelación libera la hora; con dos horas o menos conserva el consumo. El reloj del servidor determina el plazo al confirmar, con precisión completa.
 
 Administración cancela por causas de la academia, con motivo, y siempre libera la hora de organizador y las horas comprometidas de invitados. Esto rige también al bloquear, desactivar instalaciones y anular por día o mes. Los pedidos del organizador se resuelven por su recorrido propio. Ninguna cancelación afecta un turno iniciado. Toda cancelación libera cancha y cupo Programado, aunque una cancelación propia conserve consumo. Las reservas normales no tienen penalización por cancelación tardía ni resultado No realizada.
 
@@ -139,7 +143,7 @@ Una reserva Anulada permanece Anulada, sin restauración ni vínculo a otra rese
 
 La tarea horaria finaliza eventos terminados; administración dispone de finalización manual alternativa sin depender de Celery ni Redis. Ninguna presume realización, asistencia ni pago. Después de Finalizado, administración registra Realizada o No realizada; antes se presenta Sin registrar. Se admite una sola corrección, con resultado distinto y motivo obligatorio, sin plazo límite. Se conservan resultado original, responsables y momentos de carga y corrección. No realizada y su corrección conservan el consumo y los invitados.
 
-Cada reserva dispone de comprobante autorizado para administración y organizador, con sus importes aplicados; no acredita pago. El invitado consulta su participación y responde sin acceder a cobros, comprobantes ni datos financieros ajenos. Se muestran importe acordado, ingresos Vigentes, devoluciones Vigentes y neto recibido según 2.5.5. Cancelar, retirar, rechazar o actualizar socios no modifica cobros ni genera devoluciones. Si corresponde devolver dinero, se registra un Egreso independiente de categoría devoluciones. Una reserva Anulada no recibe nuevos ingresos.
+Cada reserva dispone de comprobante autorizado para administración y organizador, con sus importes aplicados; no acredita pago. El invitado consulta su participación y responde sin acceder a cobros, comprobantes ni datos financieros ajenos. Se muestran importe acordado, ingresos Vigentes, devoluciones Vigentes y neto recibido según 2.5.6. Cancelar, retirar, rechazar o actualizar socios no modifica cobros ni genera devoluciones. Si corresponde devolver dinero, se registra un Egreso independiente de categoría devoluciones. Una reserva Anulada no recibe nuevos ingresos.
 
 ### 2.3 Usuarios y roles
 
@@ -228,7 +232,7 @@ Al registrar una reserva normal, el servidor valida y copia el precio vigente de
 
 Planes y membresías aplican el precio mensual vigente completo al confirmar y lo conservan en `precio_aplicado`, sin importe negociado al registrar ni descuentos o recargos por fecha de pago. El servidor determina el precio y exige nueva revisión si cambió desde el resumen. El pago posterior y los aumentos del catálogo no modifican la contratación. Renovar otro mes crea otra operación con el precio vigente en su propia confirmación. La membresía no tiene prorrateo; las altas tardías de planes se coordinan administrativamente.
 
-Al registrar un ingreso vinculado se muestran producto, mes, precio aplicado y cobros Vigentes anteriores. El concepto explica pagos parciales o acuerdos excepcionales sobre el dinero recibido, sin cambiar el precio confirmado. Una contratación de ARS 40.000 puede recibir ARS 35.000 con esa explicación; la comparación con el neto indica Falta cobrar según 2.5.5, sin modificar el importe acordado ni registrar descuentos. Las observaciones comerciales conservan acuerdos generales sin representar dinero recibido. Una contratación Vencida admite cobros posteriores; una Anulada no.
+Al registrar un ingreso vinculado se muestran producto, mes, precio aplicado y cobros Vigentes anteriores. El concepto explica pagos parciales o acuerdos excepcionales sobre el dinero recibido, sin cambiar el precio confirmado. Una contratación de ARS 40.000 puede recibir ARS 35.000 con esa explicación; la comparación con el neto indica Diferencia por cubrir según 2.5.6, sin modificar el importe acordado ni registrar descuentos. Las observaciones comerciales conservan acuerdos generales sin representar dinero recibido. Una contratación Vencida admite cobros posteriores; una Anulada no.
 
 La membresía cubre el mes calendario completo, sin prorrateo, con cupo completo menos los usos conservados del titular y mes. No acumula horas ni tiene variantes por día o límites diarios. Los precios pueden cambiar para nuevas operaciones; las horas mensuales no se modifican si el producto tiene cualquier contratación histórica. La oferta inicial de diez horas de organizador y diez de invitado, ARS 40.000 mensuales y ARS 12.500 por invitado no socio es configurable en catálogo.
 
@@ -246,7 +250,7 @@ Los ajustes son movimientos inmutables con efecto firmado. Corregir exige revers
 
 ### 2.5 Caja y movimientos
 
-El sistema administra una única caja para toda la academia y como máximo una sesión abierta. `movimientos_fondos` es la fuente única de cobros y registra las clases Ingreso, Egreso, Aporte y Retiro. Los cobros se cargan manualmente; no hay pasarela ni confirmación automática de pagos. Se admiten pagos parciales mediante varios ingresos vinculados al mismo origen. Las reservas confirmadas admiten señas o adelantos como ingresos vinculados, sin exigirlos para confirmar la reserva. La situación comercial se deriva del importe acordado y el neto recibido según 2.5.5; no altera la contratación ni exige cobro previo para utilizar beneficios.
+El sistema administra una única caja para toda la academia y como máximo una sesión abierta. `movimientos_fondos` es la fuente única de cobros y registra las clases Ingreso, Egreso, Aporte y Retiro. Los cobros se cargan manualmente; no hay pasarela ni confirmación automática de pagos. Se admiten pagos parciales mediante varios ingresos vinculados al mismo origen. Las reservas confirmadas admiten señas o adelantos como ingresos vinculados, sin exigirlos para confirmar la reserva. La situación comercial se deriva del importe acordado y el neto recibido según 2.5.6; no altera la contratación ni exige cobro previo para utilizar beneficios.
 
 #### 2.5.1 Acceso y sesión
 
@@ -290,7 +294,7 @@ El servicio impide modificar, borrar o reabrir una sesión Cerrada y agregarle m
 
 #### 2.5.5 Consultas, auditoría y consistencia
 
-La consulta comercial de una contratación o reserva usa movimientos Ingreso vinculados en estado Vigente y excluye toda anulación, sin calcular deuda. Ese criterio es distinto del resumen histórico de una sesión cerrada. Los egresos por devoluciones se consultan como salidas y no alteran automáticamente la consulta comercial de cobros.
+La consulta comercial de una contratación o reserva presenta una única situación financiera según 2.5.6. Usa ingresos y devoluciones vinculados en estado Vigente y excluye movimientos Anulados. Este criterio es distinto del resumen histórico de una sesión cerrada.
 
 Caja ofrece resumen de sesión por clase y medio, historial por fecha de apertura y estado, y movimientos filtrados por fecha de registro, sesión, clase, categoría, medio y estado. Los ingresos se resumen también por categoría. El detalle muestra datos de creación, referencia, vínculo comercial y anulación cuando corresponde. Los datos se muestran primero; apertura, carga, anulación y cierre se revelan mediante disparadores explícitos. Las listas usan filas compactas y un menú por movimiento, sin formularios permanentes por fila. El estado vacío tiene un texto breve y una acción principal; solo se ofrecen acciones válidas para el estado y los permisos.
 
@@ -300,11 +304,11 @@ El UUID de movimiento se conserva al reenviar el formulario. Un reintento con el
 
 Ambas tablas participan de la auditoría transversal de 2.14: el cierre es una modificación y la invalidación de un movimiento es una anulación. Las altas conservan sus campos de creación sin generar entradas de alta en el historial. La inmutabilidad de caja se garantiza en servicios; no hay triggers adicionales que impidan modificar sus tablas por SQL. Los triggers de auditoría registran esos cambios, pero no los impiden.
 
-#### 2.5.5 Situación financiera por operación
+#### 2.5.6 Situación financiera por operación
 
-Reservas y contrataciones distinguen importe acordado, suma de ingresos Vigentes, suma de devoluciones Vigentes y neto recibido (`ingresos − devoluciones`). Para operaciones no anuladas, neto menor al importe indica Falta cobrar; igual, Cubierto; mayor, Excedente por resolver. El excedente no genera devolución automática. Un neto negativo muestra además una diferencia para revisión administrativa.
+Reservas y contrataciones presentan una única situación financiera en su detalle, con importe acordado, cobros vigentes (suma de ingresos Vigentes), devoluciones vigentes (suma de devoluciones Vigentes) y neto recibido (`ingresos − devoluciones`). Los saldos y estados se calculan a partir de esos datos, sin almacenarlos como valores mutables. Para operaciones no anuladas, neto menor al importe indica Diferencia por cubrir; igual, Cubierto; mayor, Excedente por resolver. Diferencia por cubrir expresa la diferencia entre el importe acordado y el neto recibido, sin afirmar por sí sola una deuda exigible. El excedente no genera devolución automática. Un neto negativo muestra además una diferencia para revisión administrativa.
 
-Las operaciones Anuladas muestran movimientos y neto sin exigir completar el importe original ni presumir obligación de devolución. Cada movimiento permanece en su operación; no se reasigna ni compensa automáticamente con una nueva reserva o contratación. Una devolución efectiva se registra en la sesión abierta sin modificar ingresos originales ni cierres históricos. Administración y titular consultan su situación y movimientos autorizados; los invitados no acceden a información financiera ajena.
+Las operaciones Anuladas muestran movimientos y neto sin exigir completar el importe original ni presumir obligación de devolución. Cada movimiento permanece en su operación; no se reasigna ni compensa automáticamente con una nueva reserva o contratación. Una devolución efectiva se registra en la sesión abierta y reduce el neto recibido sin borrar ni modificar los ingresos originales, el importe acordado o los cierres históricos. Devolver dinero y modificar el precio son decisiones distintas: cualquier modificación del importe acordado requiere una operación autorizada y auditada; registrar una devolución no realiza ese ajuste. Administración y titular consultan su situación y movimientos autorizados; los invitados no acceden a información financiera ajena.
 
 
 ### 2.6 Notificaciones
@@ -362,7 +366,7 @@ Los turnos vacíos cuyo horario ya terminó no ofrecen acciones sobre su estado 
 
 ### 2.9 Apariencia de la web
 
-La navegación, identidad visual, temas, dimensiones, componentes, presentación por estado, privacidad e interacción de administración y portal se definen en [Diseño de interfaces](5_diseno_de_interfaces.md). Sus reglas abarcan el sistema completo y conservan lectura primero, acciones bajo demanda y edición compacta por fila.
+Las interfaces de administración y portal mantienen lectura primero, acciones bajo demanda y edición compacta por fila en todo el sistema.
 
 Los permisos, estados y validaciones funcionales de este documento se aplican también a las consultas y escrituras de la interfaz. Ocultar controles no sustituye la autorización del servidor y ninguna confirmación permite ignorar una prohibición de negocio.
 
@@ -399,7 +403,7 @@ La cabecera de Agenda ofrece la acción administrativa Acciones del mes. Abre el
 
 El horario elegido se aplica a cada día del mes. Las horas de inicio y fin se ofrecen según los turnos habilitados en los horarios semanales de la sede; los días con distintas franjas comparten la selección horaria, sin exigir que todos funcionen a la misma hora. Las actividades existentes dentro del intervalo pueden anularse aunque queden fuera del horario de funcionamiento vigente, con las mismas reglas que Anular y liberar del día.
 
-Los días pasados y los turnos de hoy ya iniciados no se modifican. Los eventos iniciados, Finalizados y de tipos excluidos se muestran como conservados; los Anulados no se procesan. La vista previa muestra cantidades y listados desplegables con fecha, cancha, hora y acción o motivo de conservación. Los turnos libres no requieren acción. El motivo es obligatorio si hay anulaciones y exige al menos 25 caracteres cuando se incluyen reservas.
+Los días pasados y los turnos de hoy ya iniciados no se modifican. Los eventos iniciados, Finalizados y de tipos excluidos se muestran como conservados; los Anulados no se procesan. La vista previa muestra cantidades y listados desplegables con fecha, cancha, hora y acción o motivo de conservación. Los turnos libres no requieren acción. El motivo es obligatorio si hay anulaciones y exige al menos 5 caracteres para cualquier tipo de actividad.
 
 Editar selección y confirmar utilizan el mismo recorrido de Acciones del día. La confirmación firma usuario, sede, mes, parámetros y conjunto revisado y vence a los quince minutos. El servidor sólo admite Anular y liberar para el alcance mensual. El mes completo se confirma en una única transacción: bloquea usuarios, sede, canchas, turnos y eventos, vuelve a validar el conjunto y revierte todo ante un cambio o si un turno alcanza su inicio. Conserva los datos y la auditoría de cada actividad.
 

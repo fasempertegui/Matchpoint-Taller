@@ -1,3 +1,5 @@
+from common.validaciones import validar_motivo
+
 from datetime import datetime, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -86,10 +88,7 @@ def anular_reserva(anulado_por, reserva_id, motivo, *, motivo_bloqueo=None):
             raise ValidationError("Elegí un motivo de bloqueo válido.")
         motivo = Bloqueo.Motivo(motivo_bloqueo).label
     motivo = motivo.strip()
-    if not motivo:
-        raise ValidationError("Indicá el motivo de la anulación.")
-    if motivo_bloqueo is None and len(motivo) < 25:
-        raise ValidationError("El motivo de anulación debe tener al menos 25 caracteres.")
+    validar_motivo(motivo)
 
     if not es_administrador and reserva.organizador_id != anulado_por.pk:
         raise PermissionDenied

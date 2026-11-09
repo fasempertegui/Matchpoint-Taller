@@ -2187,7 +2187,7 @@ flowchart TD
 - **Objetivo:** cancelar una reserva propia, sin ofrecer reprogramación.
 - **Actor:** usuario con rol Reservas, sobre su propia reserva.
 - **Precondición:** reserva propia en estado **Programada**, localizada mediante **FL-55**, cuyo turno todavía no comenzó.
-- **Entrada:** motivo obligatorio en texto libre de al menos 25 caracteres, sin contar los espacios al principio y al final. El formulario y el servidor validan ese mínimo.
+- **Entrada:** motivo obligatorio en texto libre de al menos 5 caracteres, sin contar los espacios al principio y al final. El formulario y el servidor validan ese mínimo.
 
 Recorrido:
 
@@ -2224,7 +2224,7 @@ flowchart TD
 - **Objetivo:** cancelar la reserva de cualquier usuario por una causa de la academia, liberando las horas de ambos roles.
 - **Actor:** administrador.
 - **Precondición:** reserva en estado **Programada**, localizada mediante **FL-55**, cuyo turno todavía no comenzó.
-- **Entrada:** motivo obligatorio en texto libre de al menos 25 caracteres, sin contar los espacios al principio y al final, siempre una causa ajena al organizador. El formulario y el servidor validan ese mínimo.
+- **Entrada:** motivo obligatorio en texto libre de al menos 5 caracteres, sin contar los espacios al principio y al final, siempre una causa ajena al organizador. El formulario y el servidor validan ese mínimo.
 
 Recorrido:
 
@@ -2272,7 +2272,7 @@ Toda reserva anulada por estos recorridos queda anulada administrativamente y de
 Recorrido:
 
 1. Selecciona el turno y el motivo. La vista previa muestra su ocupación y las acciones propuestas.
-2. Si lo ocupa una reserva o clase, confirma su anulación y la creación del bloqueo. Se respetan los requisitos del motivo de anulación, incluido el mínimo de 25 caracteres para reservas.
+2. Si lo ocupa una reserva o clase, confirma su anulación y la creación del bloqueo. Se respetan los requisitos del motivo de anulación, incluido el mínimo de 5 caracteres para todo motivo libre.
 3. Dentro de una transacción, bloquea el turno y el evento existente, valida permisos, instalaciones, calendario, inicio futuro y alcance confirmado. Si corresponde, anula la actividad y libera el turno conservando su referencia histórica.
 4. Comprueba que el turno esté libre y crea un evento Programado de tipo bloqueo que lo referencia, su fila en `bloqueos` y su único origen si se anuló una actividad. Un fallo revierte también la anulación.
 5. Envía la notificación de cancelación de la reserva o clase después de confirmar la transacción.
@@ -2372,7 +2372,7 @@ Recorrido:
 
 1. Desde Acciones del día o Acciones del mes de Agenda, elige alcance, exclusiones y motivo. En el alcance mensual conserva la sede de Agenda y elige el mes completo dentro del mismo panel lateral, con el mes de la fecha consultada por defecto si está habilitado y el actual en caso contrario; sólo se ofrecen el mes actual y los dos siguientes. Elegir mes, revisar y editar mantienen la grilla visible. El horario se aplica a cada día y no se ofrece crear bloqueos. Un corte a las 18:30 selecciona desde las 19:00; a la hora exacta de inicio el turno ya se considera iniciado.
 2. La vista previa muestra las reservas, clases y bloqueos a anular y los eventos excluidos, iniciados o Finalizados que se conservan. Los turnos libres y los eventos Anulados no requieren acción.
-3. Confirma las acciones. Se exigen los motivos y condiciones de cada tipo, incluido el mínimo de 25 caracteres para reservas. Conservar actividades ofrece casillas independientes para clases creadas manualmente, clases generadas desde la planilla, reservas y bloqueos. Las categorías marcadas se conservan; las no marcadas se incluyen si son elegibles. Para seleccionar sólo bloqueos se marcan ambas categorías de clases y reservas. La vista previa identifica el origen de cada clase.
+3. Confirma las acciones. Se exigen los motivos y condiciones de cada tipo, incluido el mínimo de 5 caracteres para todo motivo libre. Conservar actividades ofrece casillas independientes para clases creadas manualmente, clases generadas desde la planilla, reservas y bloqueos. Las categorías marcadas se conservan; las no marcadas se incluyen si son elegibles. Para seleccionar sólo bloqueos se marcan ambas categorías de clases y reservas. La vista previa identifica el origen de cada clase.
 4. En una transacción, bloquea los turnos y eventos afectados en orden estable y vuelve a validar acceso, estado, inicio futuro y alcance confirmado. Anula cada evento efectivo y registra su auditoría, conservando referencias, orígenes, importes y movimientos monetarios.
 5. Confirma todo el lote y envía las notificaciones de cancelación de reservas y clases. Los bloqueos no generan avisos.
 
@@ -2553,9 +2553,9 @@ flowchart TD
 
 - **Actor:** Administrador o titular sobre sus reservas y contrataciones; los invitados no acceden a finanzas ajenas.
 
-1. Desde el detalle consulta importe acordado, ingresos Vigentes, devoluciones Vigentes y neto recibido.
-2. Si no está Anulada, compara neto e importe: Falta cobrar, Cubierto o Excedente por resolver. Si está Anulada, muestra movimientos y neto sin exigir completar el precio ni presumir devolución.
-3. Un neto negativo muestra una diferencia para revisión administrativa y sus movimientos explicativos.
+1. Desde el detalle consulta una única situación financiera con importe acordado, cobros vigentes (suma de ingresos Vigentes), devoluciones vigentes y neto recibido (ingresos menos devoluciones). Los importes y el estado se calculan sin almacenar saldos ni estados de pago mutables.
+2. Si no está Anulada, compara neto e importe: Diferencia por cubrir, Cubierto o Excedente por resolver. La diferencia por cubrir no implica por sí sola una deuda exigible. Si está Anulada, muestra importes, movimientos y neto sin esos estados, sin exigir completar el precio ni presumir devolución.
+3. Una devolución reduce el neto sin modificar los cobros originales ni el importe acordado. Modificar el importe acordado requiere una operación autorizada y auditada, independiente de la devolución. Un neto negativo muestra una diferencia para revisión administrativa y sus movimientos explicativos.
 4. Despliega movimientos bajo demanda, incluidos los Anulados, y consulta concepto, medio, referencia y motivo de anulación. El titular ve los detalles dentro de su operación; el administrador puede abrir el movimiento en caja y volver a su origen. El historial se pagina de a 25 registros. Ninguna consulta genera cobros, devoluciones o compensaciones.
 
 #### FL-80. Registrar una devolución vinculada

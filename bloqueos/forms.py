@@ -18,6 +18,7 @@ class BloqueoForm(forms.Form):
 class BloqueoAnulacionForm(forms.Form):
     bloqueo = forms.IntegerField(min_value=1, widget=forms.HiddenInput())
     motivo = forms.CharField(
+        min_length=5,
         label="Motivo de anulación",
         error_messages={"required": "Indicá el motivo de la anulación."},
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),

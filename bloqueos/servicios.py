@@ -1,3 +1,5 @@
+from common.validaciones import validar_motivo
+
 from datetime import datetime, time, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -131,8 +133,7 @@ def anular_bloqueo(anulado_por, bloqueo_id, motivo, cancha, fecha, hora):
     if not exigir_acceso_reservas(anulado_por):
         raise PermissionDenied
     motivo = motivo.strip()
-    if not motivo:
-        raise ValidationError("Indicá el motivo de la anulación.")
+    validar_motivo(motivo)
     bloqueo = Bloqueo.objects.select_related("evento").filter(pk=bloqueo_id).first()
     if bloqueo is None:
         raise ValidationError("El bloqueo ya no está disponible. Revisá la agenda.")
