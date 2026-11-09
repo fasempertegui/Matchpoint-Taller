@@ -75,7 +75,7 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         organizador_id__in=usuarios_ids, evento__turno__fecha__range=(fecha_desde, fecha_hasta),
     ).exclude(evento__estado=Evento.Estado.ANULADO).values_list("organizador_id", "evento__turno__fecha", "evento__turno__hora_inicio"))
     invitados_ocupados = list(ReservaInvitado.objects.filter(
-        usuario_id__in=usuarios_ids, estado="vigente", respuesta__in=("pendiente", "afirmativa"),
+        usuario_id__in=usuarios_ids, respuesta="afirmativa",
         reserva__evento__turno__fecha__range=(fecha_desde, fecha_hasta),
     ).exclude(reserva__evento__estado=Evento.Estado.ANULADO).values_list("usuario_id", "reserva__evento__turno__fecha", "reserva__evento__turno__hora_inicio"))
     asignaciones_ocupadas.update((fecha, hora, pk) for pk, fecha, hora in reservas_ocupadas + invitados_ocupados)

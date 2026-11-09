@@ -19,7 +19,7 @@ from usuarios.models import Rol, Usuario
 
 from .comercial import (
     _leer, actualizar_socios, coberturas, confirmar_reserva, gestionar_invitados,
-    inicio_reserva, preparar_reserva, registrar_resultado, responder_invitacion, version_resultado,
+    inicio_reserva, preparar_reserva, preparar_respuesta_invitacion, registrar_resultado, responder_invitacion, version_resultado,
 )
 from .forms import InvitadosReservaForm, OrganizadorReservaForm, ResultadoReservaForm, TurnoReservaForm, UsoMembresiaForm
 from .horas import horas_disponibles_organizador, resumen_horas_del_mes
@@ -161,13 +161,13 @@ def reserva_invitados(request, pk):
         messages.error(request, "Sólo se gestionan invitados antes del inicio de una reserva Programada.")
         return redirect("reservas:reserva_detalle", pk=pk)
     datos = request.POST if request.method == "POST" else None
-    seleccion = list(reserva.invitados.filter(estado="vigente").exclude(respuesta="negativa").values_list("usuario_id", flat=True))
+    seleccion = list(reserva.invitados.all().values_list("usuario_id", flat=True))
     formulario = InvitadosReservaForm(datos, organizador_id=reserva.organizador_id, reserva=reserva, initial={"invitados": seleccion})
     contexto = {"reserva": reserva, "formulario": formulario, "titulo": "Gestionar invitados"}
     contexto["advertencias_invitados"] = [
-        "Retirar o reincorporar a una persona conserva su respuesta e historia"
-        + ("; agregar invitados es opcional y no modifica el precio del turno" if not reserva.es_con_membresia else ""),
-        "Las invitaciones rechazadas no se vuelven a enviar",
+        "Quitar elimina la invitación. Volver a invitar requiere una nueva respuesta del titular.",
+        "Las nuevas invitaciones comienzan Pendientes y no comprometen disponibilidad ni horas."
+        if reserva.es_con_membresia else "Agregar invitados es opcional y no modifica el precio del turno.",
     ]
     valores = formulario["invitados"].value() or []
     contexto["invitados_seleccionados"] = formulario.fields["invitados"].queryset.filter(
@@ -211,13 +211,18 @@ def reserva_socios(request, pk):
 @never_cache
 @require_POST
 def reserva_responder(request, pk):
+    respuesta = request.POST.get("respuesta")
+    version = request.POST.get("version", "")
     try:
-        responder_invitacion(request.user, pk, request.POST.get("respuesta"))
+        if request.POST.get("confirmacion"):
+            responder_invitacion(request.user, pk, respuesta, version=version, confirmacion=request.POST["confirmacion"])
+            messages.success(request, "Tu respuesta fue registrada.")
+        else:
+            revision = preparar_respuesta_invitacion(request.user, pk, respuesta, version=version)
+            return render(request, "reservas/reserva_respuesta_revision.html", {"revision": revision})
     except ValidationError as error:
         for mensaje in error.messages:
             messages.error(request, mensaje)
-    else:
-        messages.success(request, "Tu respuesta fue registrada.")
     return redirect("reservas:reserva_detalle", pk=pk)
 
 
@@ -281,6 +286,6 @@ def uso_membresia(request):
             mes = mes_siguiente(mes)
         reservas = Reserva.objects.filter(organizador=titular, membresia_usuario__isnull=False, evento__turno__fecha__range=(desde, hasta)).select_related("evento__turno__cancha__sede").order_by("evento__turno__fecha", "evento__turno__hora_inicio")
         invitaciones = ReservaInvitado.objects.filter(usuario=titular, reserva__evento__turno__fecha__range=(desde, hasta)).select_related("reserva__evento__turno__cancha__sede")
-        participaciones = [{"invitacion": i, "respuesta_texto": i.respuesta_visible(inicio_reserva(i.reserva))} for i in invitaciones]
+        participaciones = [{"invitacion": i, "respuesta_texto": i.get_respuesta_display()} for i in invitaciones]
         contexto.update({"titular": titular, "meses": meses, "reservas": reservas, "invitaciones": participaciones})
     return render(request, "reservas/uso_membresia.html", contexto)

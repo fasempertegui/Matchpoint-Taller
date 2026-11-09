@@ -251,7 +251,7 @@ Representa una contratación concreta de membresía por un usuario para un mes c
 
 Utiliza la misma representación de mes cubierto, fecha efectiva, importe aplicado, auditoría y estados que 4.7, con referencia obligatoria a `membresias.id`. El responsable de registro puede ser el titular que contrata para sí mismo o el administrador, sin exigir Alumno. Tiene su propia restricción única parcial sobre `(usuario_id, mes_cubierto)` entre Activos o Vencidos; no comparte esa restricción con `planes_usuarios`.
 
-El precio aplicado es no negativo y se conserva independiente del catálogo. La contratación conserva el precio mensual vigente completo al confirmar, sin prorrateo ni importe negociado. La cobertura se evalúa por estado y mes para la fecha del turno. Las referencias de organizador e invitado socio pertenecen a reservas e invitados. Ambos cupos aplicados son positivos y se copian del producto al confirmar; no se modifican por cambios posteriores del catálogo. El saldo de cada rol se deriva del cupo conservado, ajustes y usos del titular y mes, incluidos los vinculados a contrataciones Anuladas. Las reservas normales no computan horas de ningún rol. La anulación se rechaza si existe aplicación en una reserva Programada como organizador o invitado socio vigente Pendiente o Aceptado. Los vínculos históricos Rechazados o retirados no bloquean.
+El precio aplicado es no negativo y se conserva independiente del catálogo. La contratación conserva el precio mensual vigente completo al confirmar, sin prorrateo ni importe negociado. La cobertura se evalúa por estado y mes para la fecha del turno. Las referencias de organizador e invitado socio pertenecen a reservas e invitados. Ambos cupos aplicados son positivos y se copian del producto al confirmar; no se modifican por cambios posteriores del catálogo. El saldo de cada rol se deriva del cupo conservado, ajustes y usos del titular y mes, incluidos los vinculados a contrataciones Anuladas. Las reservas normales no computan horas de ningún rol. La anulación se rechaza si existe aplicación en una reserva Programada como organizador o invitado socio Aceptado. Las invitaciones Pendientes o Rechazadas no bloquean.
 
 ### 4.9 Precios vigentes e importes aplicados
 
@@ -475,7 +475,7 @@ Las restricciones de modalidad exigen exactamente una alternativa:
 
 La reserva con membresía nace con cómputo verdadero; Programada compromete la hora y Finalizada la consume. La anulación propia conserva el cómputo con dos horas o menos y lo quita con más de dos; la administrativa siempre lo quita. La hora pertenece al mes del turno. El cómputo es un resultado comercial de la reserva, no un saldo mutable. Se cuentan usos de todas las contrataciones del titular y mes, incluidas Anuladas, y los ajustes netos por rol. La cancelación libera siempre las horas comprometidas de invitados.
 
-El total no se almacena: normal utiliza su tarifa; con membresía multiplica el adicional aplicado por los invitados sin beneficio vigentes Pendientes o Aceptados, tanto no socios como socios con cupo agotado. La cantidad de participantes se deriva de esas relaciones; no existe cantidad total declarada. En normal los invitados son opcionales y no alteran la tarifa.
+El total no se almacena: normal utiliza su tarifa; con membresía multiplica el adicional unitario por las participaciones computables sin beneficio, tanto no socios como socios con cupo agotado. La aceptación aplica la condición comercial; al comenzar el turno se conserva su efecto sin recalcular usos o importes históricos. La cantidad de participantes se deriva de esas relaciones; no existe cantidad total declarada. En normal los invitados son opcionales y no alteran la tarifa.
 
 Resultado admite `sin_registrar`, `realizada` o `no_realizada`. Sin registrar exige datos iniciales nulos y ausencia de corrección. Registrar después de Finalizado exige responsable y momento. La única corrección exige un resultado distinto, original conservado, responsable, momento y motivo no vacío; los campos de corrección se informan juntos. El servicio bloquea la reserva e impide una segunda corrección. El resultado no modifica horas ni invitados.
 
@@ -484,33 +484,29 @@ Resultado admite `sin_registrar`, `realizada` o `no_realizada`. Sin registrar ex
 
 ### 4.20 `reservas_invitados`
 
-Representa invitados identificados de ambas modalidades y conserva la identidad de cada relación, incluso después de rechazar o retirar.
+Representa una invitación existente. Quitar al invitado elimina la relación y conserva su historia mediante auditoría.
 
 | Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
 |---|---|---|---|---|---|
 | PK, FK | `reserva_id` | `bigint` | | | `1200` |
 | PK, FK | `usuario_id` | `bigint` | | | `9` |
-| FK | `membresia_usuario_id` | `bigint` | Sí | | `340` |
-| | `condicion_aplicada` | `varchar(20)` | | | `socio` |
-| | `estado` | `varchar(10)` | | | `vigente` |
-| FK | `retirado_por_id` | `bigint` | Sí | | `NULL` |
-| | `retirado_en` | `timestamptz` | Sí | | `NULL` |
+| FK | `membresia_usuario_id` | `bigint` | Sí | | `NULL` |
+| | `condicion_aplicada` | `varchar(20)` | | | `sin_aplicar` |
 | | `respuesta` | `varchar(10)` | | | `pendiente` |
-| | `respuesta_inicial` | `varchar(10)` | Sí | | `NULL` |
 | FK | `respondido_por_id` | `bigint` | Sí | | `NULL` |
 | | `respondido_en` | `timestamptz` | Sí | | `NULL` |
-| FK | `respuesta_modificada_por_id` | `bigint` | Sí | | `NULL` |
-| | `respuesta_modificada_en` | `timestamptz` | Sí | | `NULL` |
-| | `creado_en` | `timestamptz` | | | `2026-11-02 17:00:00-03` |
-| | `actualizado_en` | `timestamptz` | | | `2026-11-02 17:00:00-03` |
+| | `creado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
+| | `actualizado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
 
-La clave compuesta impide duplicados y el usuario es distinto del organizador. Estado admite vigente o retirado, con responsable y momento para el retiro. Retirar y reincorporar conserva la identidad, respuesta y su único cambio. Sólo se retiran invitaciones Pendientes o Aceptadas; las Rechazadas permanecen visibles sin acción de retiro ni reenvío.
+La clave compuesta impide duplicados y el usuario es distinto del organizador. No hay estado de retiro. Volver a invitar después de eliminar crea una invitación Pendiente. Las revisiones de respuesta identifican al titular y las fechas de creación y modificación de la invitación; una solicitud anterior a su eliminación no modifica una relación creada nuevamente.
 
-Condición admite `socio`, `no_socio`, `cupo_agotado` o `reserva_normal`. En membresía, `socio` exige contratación del invitado con cobertura y hora disponible al aplicar el beneficio; compromete una hora de invitado desde Pendiente. `no_socio` no tiene contratación aplicada; `cupo_agotado` conserva la contratación cuya cobertura existe pero cuyo cupo disponible está agotado. Ambos generan el mismo adicional. En normal se usa `reserva_normal`, sin contratación ni consumo de membresía. Sólo los vigentes Pendientes o Aceptados de reservas no Anuladas intervienen en compromisos; al inicio consumen aun sin respuesta. Rechazar, retirar o cancelar antes del inicio libera el compromiso. Las referencias históricas se conservan.
+Respuesta admite `pendiente`, `afirmativa` y `negativa`, presentadas como Pendiente, Aceptada y Rechazada. Pendiente exige responsable y momento nulos; Aceptada o Rechazada exige ambos informados y responsable igual a `usuario_id`. Estos campos conservan la última decisión; la auditoría conserva todas. Los servicios permiten cambios sin límite antes del inicio, no permiten volver a Pendiente y comprueban titularidad, acceso y estado Programado. Repetir la decisión no modifica los datos.
 
-Respuesta admite pendiente, afirmativa o negativa; se presenta como Aceptada o Rechazada. Los campos de respuesta inicial, responsable y momento se informan juntos; Pendiente no tiene datos de decisión ni modificación. El actor de respuesta es el titular de la relación. La primera decisión informa respuesta inicial, titular y momento; un único cambio informa juntos su responsable y momento y conserva la primera decisión. No se vuelve a Pendiente. Sin respuesta se calcula cuando comienza el turno con respuesta Pendiente. Los servicios validan titularidad, inicio futuro y vigencia, y revalidan cupos, coincidencias y condición comercial al volver a aceptar.
+Condición admite `sin_aplicar`, `socio`, `no_socio`, `cupo_agotado` o `reserva_normal`. Sin aplicar es el valor inicial y no tiene contratación aplicada. Aceptar una reserva normal aplica `reserva_normal`, sin membresía, horas ni adicional. En membresía se evalúa cobertura y horas al aceptar: `socio` exige contratación con cobertura y horas de invitado disponibles; `cupo_agotado` conserva la contratación cuya cobertura existe pero no tiene saldo; `no_socio` no tiene contratación. Los dos últimos generan el adicional unitario conservado en la reserva. Rechazar antes del inicio libera la aplicación y vuelve a sin aplicar, sin borrar la historia de auditoría.
 
-«Actualizar socios» evalúa las contrataciones de los vigentes Pendientes o Aceptados antes del inicio. Exige cobertura y disponibilidad de invitado y compromete una hora al quitar el adicional. Guarda la condición y contratación aplicadas y su historia mediante auditoría, con actor y momento, sin alterar respuestas ni el precio unitario de la reserva. Editar otros invitados no recalcula condiciones de quienes permanecen. Los cobros son independientes.
+La disponibilidad personal depende exclusivamente de la respuesta Aceptada y es un requisito independiente del beneficio comercial. Horas, total y cantidad computable derivan de la condición efectivamente aplicada y la respuesta. La condición comercial de un turno comenzado se conserva sin recalcular importes o consumos. La anulación del evento excluye los usos de invitado; no borra sus referencias.
+
+Actualizar socios evalúa sólo Aceptadas con adicional antes del inicio. Exige cobertura y horas de invitado disponibles, conserva precio unitario, respuestas y cobros y registra el cambio en auditoría. Los bloqueos comunes coordinan aceptación, eliminación, clases, reservas, ajustes y anulaciones de contrataciones.
 
 ### 4.21 `sesiones_caja`
 

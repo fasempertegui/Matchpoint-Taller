@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Revisar respuesta · {{ revision.reserva.numero }} | Academia TM{% endblock %}
+{% block contenido %}
+<section class="tarjeta tarjeta-formulario">
+    <h1>{% if revision.respuesta == 'afirmativa' %}Aceptar invitación{% else %}Rechazar invitación{% endif %}</h1>
+    <p>{{ revision.reserva.numero }} · {{ revision.reserva.organizador }}<br>{{ revision.reserva.evento.turno.fecha|date:"d/m/Y" }} {{ revision.reserva.evento.turno.hora_inicio|time:"H:i" }} · {{ revision.reserva.evento.turno.cancha }}</p>
+    {% if revision.respuesta == 'afirmativa' %}
+        <p>Tu participación ocupa este horario. La disponibilidad se comprueba al confirmar.</p>
+        {% if revision.condicion == 'socio' %}<p>Se compromete una hora de tu cupo de invitado para el mes del turno.</p>
+        {% elif revision.adicional != None %}<p>{% if revision.condicion == 'cupo_agotado' %}No tenés horas de invitado disponibles.{% else %}No tenés membresía con cobertura para este turno.{% endif %} Tu participación genera un adicional de <strong>$ {{ revision.adicional|floatformat:"2g" }}</strong> en la reserva.</p>
+        {% else %}<p>Reserva normal: tu participación no utiliza horas de membresía ni genera adicional.</p>{% endif %}
+    {% else %}<p>Esta invitación no ocupará tu horario, comprometerá horas ni generará adicional. No se devuelve dinero automáticamente.</p>{% endif %}
+    <form method="post" action="{% url 'reservas:reserva_responder' revision.reserva.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="respuesta" value="{{ revision.respuesta }}">
+        <input type="hidden" name="version" value="{{ revision.version }}">
+        <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+        <div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' revision.reserva.pk %}">Volver a la invitación</a><button class="boton boton-primario" type="submit">{% if revision.respuesta == 'afirmativa' %}Aceptar{% else %}Rechazar{% endif %}</button></div>
+    </form>
+</section>
+{% endblock %}

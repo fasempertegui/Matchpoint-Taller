@@ -6,7 +6,6 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from common.fechas import validar_inicio_evento
-from common.models import RespuestaActividad
 
 
 class Turno(models.Model):
@@ -211,27 +210,38 @@ class Reserva(models.Model):
         return self.membresia_usuario_id is not None
 
     @property
+    def cantidad_participantes(self):
+        return 1 + sum(invitado.participacion_computable for invitado in self.invitados.all())
+
+    @property
     def total(self):
         if not self.es_con_membresia:
             return self.precio_por_turno_aplicado
         return self.precio_invitado_aplicado * sum(
-            invitado.estado == "vigente" and invitado.respuesta != "negativa" and invitado.genera_adicional
+            invitado.participacion_computable and invitado.genera_adicional
             for invitado in self.invitados.all()
         )
 
 
-class ReservaInvitado(RespuestaActividad):
+class ReservaInvitado(models.Model):
+    class Respuesta(models.TextChoices):
+        PENDIENTE = "pendiente", "Pendiente"
+        AFIRMATIVA = "afirmativa", "Aceptada"
+        NEGATIVA = "negativa", "Rechazada"
+
+    respuesta = models.CharField(max_length=10, choices=Respuesta.choices, default=Respuesta.PENDIENTE)
+    respondido_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", null=True, blank=True)
+    respondido_en = models.DateTimeField(null=True, blank=True)
+
     pk = models.CompositePrimaryKey("reserva_id", "usuario_id")
     reserva = models.ForeignKey(Reserva, on_delete=models.PROTECT, related_name="invitados")
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="invitaciones_reserva")
     membresia_usuario = models.ForeignKey("membresias.MembresiaUsuario", on_delete=models.PROTECT, related_name="invitaciones_aplicadas", null=True, blank=True)
-    condicion_aplicada = models.CharField(max_length=20, choices=(
+    condicion_aplicada = models.CharField(max_length=20, default="sin_aplicar", choices=(
+        ("sin_aplicar", "Sin aplicar"),
         ("socio", "Socio con beneficio"), ("no_socio", "No socio"),
         ("cupo_agotado", "Socio con cupo de invitado agotado"), ("reserva_normal", "Reserva normal"),
     ))
-    estado = models.CharField(max_length=10, choices=(("vigente", "Vigente"), ("retirado", "Retirado")), default="vigente")
-    retirado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", null=True, blank=True)
-    retirado_en = models.DateTimeField(null=True, blank=True)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
@@ -240,14 +250,14 @@ class ReservaInvitado(RespuestaActividad):
         ordering = ("creado_en", "usuario_id")
         default_permissions = ()
         constraints = [
-            *RespuestaActividad.Meta.constraints,
             models.CheckConstraint(condition=(
-                models.Q(estado="vigente", retirado_por__isnull=True, retirado_en__isnull=True)
-                | models.Q(estado="retirado", retirado_por__isnull=False, retirado_en__isnull=False)
-            ), name="invitado_retiro_coherente"),
+                models.Q(respuesta="pendiente", respondido_por__isnull=True, respondido_en__isnull=True)
+                | models.Q(respuesta__in=("afirmativa", "negativa"), respondido_por=models.F("usuario"),
+                           respondido_por__isnull=False, respondido_en__isnull=False)
+            ), name="invitado_respuesta_coherente"),
             models.CheckConstraint(condition=(
                 models.Q(condicion_aplicada__in=("socio", "cupo_agotado"), membresia_usuario__isnull=False)
-                | models.Q(condicion_aplicada__in=("no_socio", "reserva_normal"), membresia_usuario__isnull=True)
+                | models.Q(condicion_aplicada__in=("no_socio", "reserva_normal", "sin_aplicar"), membresia_usuario__isnull=True)
             ), name="invitado_condicion_coherente"),
         ]
         verbose_name = "invitación de reserva"
@@ -261,8 +271,5 @@ class ReservaInvitado(RespuestaActividad):
         return self.condicion_aplicada in ("no_socio", "cupo_agotado")
 
     @property
-    def respuesta_inicial_texto(self):
-        return {"afirmativa": "Aceptada", "negativa": "Rechazada"}.get(self.respuesta_inicial, "")
-
-    def get_respuesta_display(self):
-        return {"pendiente": "Pendiente", "afirmativa": "Aceptada", "negativa": "Rechazada"}[self.respuesta]
+    def participacion_computable(self):
+        return self.respuesta in (self.Respuesta.PENDIENTE, self.Respuesta.AFIRMATIVA) and self.condicion_aplicada != "sin_aplicar"

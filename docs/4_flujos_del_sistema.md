@@ -897,7 +897,7 @@ Recorrido:
 
 1. Revisa titular, producto, período, importe y efectos de la anulación, junto con los usos e ingresos de la contratación.
 2. Ingresa el motivo y confirma en la página de revisión. Si los datos cambiaron, vuelve a revisarlos antes de confirmar.
-3. En una transacción, bloquea al usuario y la fila de contratación, verifica estado Activo y, en membresías, ausencia de aplicaciones en reservas Programadas como organizador o invitado socio vigente Pendiente o Aceptado; sólo entonces establece Anulado.
+3. En una transacción, bloquea al usuario y la fila de contratación, verifica estado Activo y, en membresías, ausencia de aplicaciones en reservas Programadas como organizador o invitado socio Aceptado; sólo entonces establece Anulado.
 4. Registra administrador, momento y motivo de anulación, actualizando la fecha de modificación.
 
 Alternativas:
@@ -906,7 +906,7 @@ Alternativas:
 - No anula automáticamente clases, reservas, cobros o condiciones de socio registradas ni devuelve dinero. Si corresponde reintegrar, la administración registra un Egreso de categoría devoluciones mediante FL-43.
 - Una contratación de membresía Anulada no cubre aplicaciones nuevas.
 - No se retira Alumno automáticamente.
-- El registro Anulado permite contratar un reemplazo para ese mes, conservando ambos. En membresías se descuentan del nuevo cupo los usos conservados del titular y período; no se reinician horas. Los vínculos Rechazados o retirados, y las reservas Anuladas o Finalizadas, no bloquean anulación.
+- El registro Anulado permite contratar un reemplazo para ese mes, conservando ambos. En membresías se descuentan del nuevo cupo los usos conservados del titular y período; no se reinician horas. Las invitaciones Pendientes o Rechazadas, y las reservas Anuladas o Finalizadas, no bloquean anulación.
 - Repetir una anulación no sobrescribe su auditoría.
 
 - **Resultado:** contratación Anulada.
@@ -1224,7 +1224,7 @@ Las operaciones se rigen por criterios, 2.0, 2.1 y 2.12. La creación exige inic
 
 Profesores nuevos o reactivados requieren cuenta activa y rol Profesor. Los participantes nuevos o reactivados requieren cuenta activa, sin exigir Alumno, contratación ni cobro. La selección propone Alumno por defecto y permite buscar cualquier usuario activo. Cada clase conserva al menos una asignación activa de profesor. La clase admite varios participantes sin un máximo bloqueante.
 
-La disponibilidad personal aplica criterios 2.2: docencia vigente, participación de clase activa en Asistirá, organización de reserva e invitación vigente Pendiente o Aceptada impiden otra actividad simultánea. Una persona tampoco puede dictar y participar en la misma clase. Invitaciones de reserva Rechazadas, relaciones inactivas y actividades Anuladas no impiden coincidencias. El aviso No asistirá libera disponibilidad personal.
+La disponibilidad personal aplica criterios 2.2: docencia vigente, participación de clase activa en Asistirá, organización de reserva e invitación Aceptada impiden otra actividad simultánea. Una persona tampoco puede dictar y participar en la misma clase. Invitaciones de reserva Rechazadas, relaciones inactivas y actividades Anuladas no impiden coincidencias. El aviso No asistirá libera disponibilidad personal.
 
 Las coincidencias personales con reservas se rechazan, sin confirmación que las habilite. La revisión se vincula al actor y al conjunto validado; si cambia, exige nueva revisión. Las altas y reactivaciones conservan la identidad y respuestas de las relaciones concretas.
 
@@ -1436,7 +1436,7 @@ Recorrido:
 
 1. Elige en Agenda un turno futuro desde hoy hasta el tercer día calendario siguiente inclusive, dentro del funcionamiento de una instalación activa. El organizador es el titular autenticado.
 2. Si existe membresía que cubre la fecha del turno, muestra Reserva normal y Reserva con membresía; en otro caso sólo Reserva normal. Cada opción abre su propio recorrido.
-3. Normal aplica tarifa positiva de sede y admite invitados opcionales. Con membresía exige horas disponibles del mes, identifica a todos los invitados y evalúa su condición de socios para la fecha del turno, comprometiendo una hora de invitado si tienen cobertura y saldo; sin cobertura o con cupo agotado participan con el mismo adicional, distinguiendo su motivo.
+3. Normal aplica tarifa positiva de sede y admite invitados opcionales, sin consultar membresías ni aplicar horas o adicionales. Con membresía exige cobertura y horas de organizador disponibles y conserva el adicional unitario. Los invitados se registran Pendientes, sin comprobar su disponibilidad personal ni aplicar condiciones comerciales.
 4. Presenta turno, modalidad, participantes, tarifa o contratación aplicada, adicional unitario y total para confirmar. Los invitados sin beneficio generan adicional sólo con membresía, incluidos socios con cupo de invitado agotado.
 5. En una transacción bloquea personas en orden estable, instalaciones, turno, evento y contrataciones involucradas conforme a criterios 2.12. Revalida acceso, máximo de dos Programadas por organizador, coincidencias personales, calendario, ocupación, cobertura y precios.
 6. Registra evento Programado, reserva e invitados Pendientes juntos. Con membresía compromete una hora del organizador y conserva el adicional unitario. Normal conserva la tarifa. Envía confirmación e invitaciones por el proceso de email.
@@ -1446,7 +1446,7 @@ Alternativas:
 - No se selecciona otro organizador ni se crean usuarios o roles en este flujo.
 - Sin tarifa no se confirma normal; con membresía no se exige tarifa de sede. Sin horas no se confirma con membresía, aunque la modalidad normal sigue disponible.
 - El organizador no puede repetirse como invitado. Todos los invitados registrados son cuentas activas habilitadas; se rechazan duplicados, el máximo de reservas organizadas para el organizador y coincidencias con reservas o clases.
-- El beneficio de invitado exige cobertura y horas disponibles: la invitación Pendiente compromete una hora y Aceptar no la descuenta nuevamente. Al inicio, Pendiente o Aceptada vigente consume esa hora; no responder no la libera. Rechazar o retirar antes del inicio la libera. Las reservas normales no utilizan cupos de membresía de ningún participante. La cantidad y el total se derivan de relaciones vigentes Pendientes o Aceptadas.
+- El beneficio de invitado se evalúa al aceptar, siempre con disponibilidad personal. Pendiente no ocupa horario ni compromete horas o adicional. Aceptada con beneficio compromete una hora y la consume al inicio; sin beneficio genera adicional. Rechazar o quitar libera la aplicación. Cada nueva aceptación revalida las condiciones. Las reservas normales no utilizan horas ni adicionales de invitados.
 - Un cambio de selección, cobertura, precio o disponibilidad exige una nueva revisión, sin escrituras parciales. Cancelar la revisión no registra nada.
 - No hay reservas recurrentes. El portal no cobra; pagos y devoluciones corresponden a caja como operaciones independientes.
 
@@ -1935,36 +1935,19 @@ flowchart TD
 
 #### FL-52. Modificar invitados de una reserva
 
-- **Objetivo:** Modificar invitados conservando respuestas, historia y condiciones comerciales.
 - **Actor:** organizador o Administrador.
-- **Entradas y precondiciones:** Reserva Programada, inicio futuro y usuario que se desea agregar, retirar o reincorporar.
+- **Precondiciones:** reserva Programada e inicio futuro.
 
-Recorrido:
+1. Desde el detalle solicita Gestionar invitados y revisa la selección existente, incluidas las Rechazadas.
+2. Agrega cuentas habilitadas o quita invitaciones de cualquiera de los tres estados. Las altas comienzan Pendientes, sin comprobar disponibilidad personal del invitado ni aplicar condiciones comerciales.
+3. Revisa altas, eliminaciones y total resultante. No se recalculan respuestas ni condiciones de quienes permanecen.
+4. Al confirmar bloquea y revalida personas, reserva, estado, inicio y conjunto revisado. Elimina las relaciones quitadas y crea las nuevas invitaciones juntas, con auditoría.
+5. Muestra participantes confirmados, respuestas y total derivado, con cobros separados. Notifica las nuevas invitaciones según el proceso de email.
 
-1. Abre el detalle informativo y solicita gestionar invitados. Muestra filas compactas con respuesta y condición comercial y una acción por fila.
-2. Agrega una cuenta habilitada, retira una invitación Pendiente o Aceptada, o reincorpora una relación retirada conservando su historia.
-3. Para incorporaciones evalúa disponibilidad personal y condición comercial, sin aplicar el máximo de reservas organizadas al invitado para la fecha. En normal no aplica membresías; con membresía identifica a todos y compromete una hora de invitado cuando aplica el beneficio o calcula el adicional si falta cobertura o saldo. Reincorporar revalida estas condiciones sin reiniciar respuestas.
-4. Revisa el nuevo total y confirma. En una transacción bloquea y revalida las condiciones y guarda las relaciones y auditoría. Conserva respuestas e historia al reincorporar.
-5. Muestra participantes, total derivado y cobros vigentes separados. Notifica las nuevas invitaciones según el proceso de email.
+Quitar libera disponibilidad, horas o adicional según corresponda. La invitación deja de existir; no admite respuestas ni reincorporación. Volver a invitar crea una relación Pendiente con una nueva identidad de revisión. Un cambio de grupo exige otra revisión y no deja efectos parciales. Los invitados no tienen límite de reservas organizadas. No se edita organizador, modalidad, turno ni precio unitario. Reconocer una membresía contratada después de aceptar utiliza FL-70.
 
-Alternativas:
-
-- Rechazadas permanecen visibles sin acción de retiro ni reenvío. Retiradas no permiten responder. El único cambio de respuesta nunca se reinicia.
-- Editar otro invitado conserva la condición de quienes permanecen. Para reconocer membresías contratadas después se utiliza FL-70.
-- Retirar libera la hora de invitado comprometida o elimina el adicional de quien participa sin beneficio, incluso dentro de dos horas; no altera cobros ni la hora del organizador.
-- No se edita organizador, modalidad, turno ni precio unitario. Anuladas, Finalizadas e iniciadas no admiten cambios de invitados.
-
-- **Resultado:** Invitados y total derivados actualizados con su historia preservada.
-- **Datos:** reservas, eventos, turnos, usuarios, reservas_invitados, membresias_usuarios y movimientos_fondos.
-
-```mermaid
-flowchart TD
-    A[Solicitar gestionar invitados]
-    A --> B[Agregar retirar o reincorporar]
-    B --> C[Revisar participantes y nuevo total]
-    C --> D[Revalidar inicio cupos e historia]
-    D --> E[Guardar relaciones conservando cobros]
-```
+- **Resultado:** conjunto revisado de invitaciones confirmado.
+- **Datos:** usuarios, reservas, reservas_invitados, eventos y turnos.
 
 #### FL-70. Actualizar socios de una reserva
 
@@ -1975,14 +1958,14 @@ flowchart TD
 Recorrido:
 
 1. Solicita Actualizar socios desde el detalle, bajo demanda.
-2. Evalúa contrataciones que cubran la fecha del turno de invitados vigentes Pendientes o Aceptados. Un invitado que contrató después de ser invitado deja de generar adicional al acreditarse como socio, si tiene cobertura y horas de invitado disponibles. La confirmación compromete una hora y elimina el adicional; sin saldo se mantiene el cargo.
+2. Evalúa contrataciones que cubran la fecha del turno de invitados Aceptados. Un invitado que contrató después de ser invitado deja de generar adicional al acreditarse como socio, si tiene cobertura y horas de invitado disponibles. La confirmación compromete una hora y elimina el adicional; sin saldo se mantiene el cargo.
 3. Muestra cambios de condición y total resultante con el adicional unitario conservado y solicita confirmación.
 4. Bloquea personas, reserva, relaciones y contrataciones de forma consistente; revalida permisos, inicio, cobertura y conjunto revisado. Un cambio exige nueva revisión.
 5. Guarda condiciones aplicadas y auditoría juntas. Conserva historia comercial, respuestas, horas del organizador y cobros.
 
 Alternativas:
 
-- No modifica invitaciones Rechazadas ni retiradas y no las reincorpora.
+- No responde ni modifica invitaciones Pendientes o Rechazadas.
 - No se ofrece en reservas normales o iniciadas. Sin cambios no produce modificaciones ni auditoría artificial.
 - No actualiza el precio unitario a la tarifa vigente ni registra devoluciones.
 
@@ -1992,7 +1975,7 @@ Alternativas:
 ```mermaid
 flowchart TD
     A[Solicitar Actualizar socios]
-    A --> B[Evaluar membresías de invitados vigentes]
+    A --> B[Evaluar membresías de invitados Aceptados]
     B --> C[Revisar cambios y nuevo total]
     C --> D[Revalidar cobertura e inicio al confirmar]
     D --> E[Guardar condiciones e historia sin alterar cobros]
@@ -2030,38 +2013,19 @@ flowchart TD
 
 #### FL-72. Responder una invitación a reserva
 
-- **Objetivo:** registrar la decisión propia del invitado y conservar su único cambio.
-- **Actor:** titular de la invitación, autenticado y con acceso vigente.
-- **Entradas y precondiciones:** invitación vigente de una reserva no Anulada, antes del inicio; Aceptar o Rechazar.
+- **Actor:** titular autenticado, habilitado y con invitación existente.
+- **Precondiciones:** reserva Programada e inicio futuro.
 
-Recorrido:
+1. Consulta Pendiente, Aceptada o Rechazada. Pendiente ofrece Aceptar y Rechazar; Aceptada sólo Rechazar; Rechazada sólo Aceptar, bajo demanda.
+2. Revisa la decisión. Aceptar comprueba disponibilidad personal; una coincidencia impide continuar sin cambiar datos. En normal no consulta membresías. Con membresía evalúa cobertura y horas de invitado: con beneficio compromete una hora; sin cobertura o con cupo agotado informa el adicional unitario conservado.
+3. Confirma una revisión firmada vinculada al actor, la invitación concreta, su versión y la condición comercial informada, con vigencia de quince minutos.
+4. Bajo bloqueos comunes revalida acceso, titularidad, existencia, versión, estado, inicio y, al aceptar, disponibilidad y condición comercial. Un cambio de beneficio o importe exige nueva revisión.
+5. Guarda la decisión y la aplicación comercial con titular, momento y auditoría. Rechazar libera la aplicación. Repetir la decisión no cambia datos ni duplica usos. Puede cambiar sin límite antes del inicio, sin volver a Pendiente.
 
-1. Consulta su participación y solicita responder o modificar su decisión bajo demanda.
-2. Revisa la decisión; la primera respuesta no utiliza el único cambio permitido.
-3. En una transacción bloquea las personas involucradas, la reserva, la relación y las contrataciones aplicadas según criterios 2.12. Revalida titularidad, vigencia, inicio futuro y ausencia de un cambio previo cuando corresponde.
-4. Al pasar de Rechazada a Aceptada comprueba disponibilidad y condición de socio para la fecha. En una reserva con membresía revalida cobertura y horas de invitado disponibles: con beneficio compromete una hora; sin cobertura o con cupo agotado genera el mismo adicional con el precio unitario conservado, distinguiendo el motivo y conservando la historia comercial. Aceptar desde Pendiente conserva la condición comercial aplicada y mantiene el compromiso sin duplicarlo; reconocer una membresía contratada después se realiza mediante Actualizar socios. Una contratación Anulada no se vuelve a aplicar.
-5. Guarda respuesta, primera decisión o único cambio, responsables y momentos junto con la auditoría. El rechazo libera la hora de invitado comprometida y deja de contar para coincidencias, adicionales y bloqueo de anulación de membresía.
+Quitar la invitación impide toda respuesta, incluida una solicitud emitida antes de su eliminación. Volver a invitar requiere una nueva revisión y aceptación. Administración y organizador no responden por el titular. Después del inicio se conserva el estado, incluida Pendiente, y no se ofrecen acciones. No modifica horas del organizador ni cobros y no acredita asistencia real.
 
-Alternativas:
-
-- Administración y organizador no responden en nombre del invitado. No se vuelve a Pendiente ni se reinicia la historia retirando y reincorporando.
-- Las Rechazadas siguen visibles sin retiro ni reenvío. Una invitación retirada no permite responder mientras esté retirada.
-- Después del inicio no se responde; Pendiente se presenta como Sin respuesta y conserva sus efectos mientras la relación esté vigente.
-- No modifica la hora del organizador, el estado de reserva ni los cobros. Una respuesta repetida no consume otro cambio ni sobrescribe auditoría.
-
-- **Resultado:** respuesta propia e historia conservadas con sus efectos de participación.
-- **Datos:** usuarios, reservas, eventos, turnos, reservas_invitados y membresias_usuarios.
-
-```mermaid
-flowchart TD
-    A[Revisar invitación propia] --> B[Elegir respuesta]
-    B --> C{Inicio vigencia y cambio válidos}
-    C -->|No| D[Rechazar sin cambios]
-    C -->|Sí| E{Vuelve a aceptar}
-    E -->|Sí| F[Validar disponibilidad y condición comercial]
-    E -->|No| G[Guardar decisión e historia]
-    F --> G
-```
+- **Resultado:** decisión del titular y sus compromisos confirmados en una transacción.
+- **Datos:** usuarios, reservas, reservas_invitados, eventos, turnos y membresias_usuarios.
 
 #### FL-73. Registrar aviso de no asistencia
 
@@ -2105,7 +2069,7 @@ flowchart TD
 Recorrido:
 
 1. Limita la consulta al titular autorizado y obtiene contrataciones y reservas del período.
-2. Cuenta por separado horas de organizador e invitado. El organizador usa computa_hora_membresia; los invitados con beneficio vigente Pendiente o Aceptado comprometen antes del inicio y consumen desde el inicio. Las cancelaciones liberan invitados; una propia tardía conserva consumo de organizador.
+2. Cuenta por separado horas de organizador e invitado. El organizador usa computa_hora_membresia; los invitados Aceptados con beneficio comprometen antes del inicio y consumen desde el inicio. Las cancelaciones liberan invitados; una propia tardía conserva consumo de organizador.
 3. Para cada rol y mes calcula cupo aplicado más otorgadas menos descontadas, comprometidas y consumidas, incluyendo usos conservados del titular de contrataciones Anuladas. Los ajustes y sus reversiones explican cada efecto. Si los usos conservados agotan el cupo del reemplazo, no hay horas disponibles.
 4. Muestra por rol cupo, otorgadas, descontadas, comprometidas, consumidas y disponibles, detalle de usos y contratación concreta e historial de ajustes con motivo visible al titular. Incluye reservas Anuladas que conservan cómputo de organizador.
 

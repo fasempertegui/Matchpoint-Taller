@@ -42,8 +42,8 @@
                 <ul class="reserva-invitados-resumen">
                     {% for nombre, estado, condicion in revision.cambios %}
                         <li>
-                            <span>{{ nombre }}{% if reserva.es_con_membresia %}<small class="reserva-gestion-condicion">{% if condicion == 'socio' %}Socio con beneficio{% elif condicion == 'cupo_agotado' %}Socio con cupo de invitado agotado{% else %}No socio{% endif %}</small>{% endif %}</span>
-                            <span class="reserva-invitado-condicion {% if estado == 'vigente' %}reserva-invitado-socio{% else %}reserva-invitado-no-socio{% endif %}">{% if estado == 'vigente' %}Agregar{% else %}Retirar{% endif %}</span>
+                            <span>{{ nombre }}{% if reserva.es_con_membresia %}<small class="reserva-gestion-condicion">{% if condicion == 'sin_aplicar' %}Sin aplicar hasta aceptar{% elif condicion == 'socio' %}Socio con beneficio{% elif condicion == 'cupo_agotado' %}Socio con cupo de invitado agotado{% else %}No socio{% endif %}</small>{% endif %}</span>
+                            <span class="reserva-invitado-condicion {% if estado == 'agregar' %}reserva-invitado-socio{% else %}reserva-invitado-no-socio{% endif %}">{% if estado == 'agregar' %}Agregar{% else %}Quitar{% endif %}</span>
                         </li>
                     {% endfor %}
                 </ul>

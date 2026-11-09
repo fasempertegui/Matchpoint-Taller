@@ -15,7 +15,7 @@ def usos_del_mes(usuario_id, mes):
 
 def usos_invitado_del_mes(usuario_id, mes):
     return ReservaInvitado.objects.filter(
-        usuario_id=usuario_id, condicion_aplicada="socio", estado="vigente",
+        usuario_id=usuario_id, condicion_aplicada="socio",
         respuesta__in=("pendiente", "afirmativa"), reserva__membresia_usuario__isnull=False,
         reserva__evento__turno__fecha__year=mes.year, reserva__evento__turno__fecha__month=mes.month,
     ).exclude(reserva__evento__estado=Evento.Estado.ANULADO)

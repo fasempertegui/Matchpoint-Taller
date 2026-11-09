@@ -184,13 +184,13 @@ Los bordes de esta tabla son decorativos. No se usan como única señal ni como 
 
 | Significado del dato | Presentación |
 |---|---|
-| Programada; respuesta Pendiente; Sin respuesta | Neutra, con su etiqueta literal |
+| Programada; respuesta Pendiente | Neutra, con su etiqueta literal |
 | Finalizada | Información, check y texto; no significa pago ni asistencia |
 | Anulada | Inactivo, X y texto |
 | Activo; Presente; respuesta afirmativa | Éxito y texto; check cuando corresponda |
 | Inactivo; Vencido | Inactivo y texto; Vencido no lleva X de anulación |
 | Ausente; Sin registrar | Neutros con etiquetas distintas |
-| Respuesta negativa; invitación retirada | Inactivo con la etiqueta correspondiente; no son estados de la reserva |
+| Respuesta Rechazada | Inactivo con la etiqueta correspondiente; no son estados de la reserva |
 | Caja Abierta/Cerrada; movimiento Vigente | Neutros; no implican acreditación ni pago completo |
 | Realizada/No realizada | Resultado de uso con su etiqueta, separado de Finalizada; sin inferir asistencia individual |
 
@@ -406,7 +406,7 @@ Volver a editar conserva datos. La confirmación identifica actor, parámetros y
 
 Una reserva ocupa una hora. Se admite desde hoy hasta el tercer día calendario siguiente inclusive, hasta el último turno habilitado de ese día, siempre con inicio futuro. Cada persona puede organizar como máximo dos reservas con evento Programado, sumando ambas modalidades y todas las sedes. Las invitaciones no cuentan para ese máximo. Un turno terminado sigue contando si el evento continúa Programado.
 
-La disponibilidad personal rechaza coincidencias con otra reserva organizada, invitación vigente Pendiente/Aceptada, participación activa de clase en Asistirá o docencia vigente. Las invitaciones de reserva Rechazadas o retiradas no impiden otra actividad. El aviso No asistirá libera disponibilidad personal. La ocupación de cancha y la disponibilidad personal son controles diferentes y no se pueden exceptuar con una advertencia.
+La disponibilidad personal rechaza coincidencias con otra reserva organizada, invitación Aceptada, participación activa de clase en Asistirá o docencia vigente. Las invitaciones de reserva Pendientes o Rechazadas no impiden otra actividad. El aviso No asistirá libera disponibilidad personal. La ocupación de cancha y la disponibilidad personal son controles diferentes y no se pueden exceptuar con una advertencia.
 
 El recorrido parte del turno libre de Agenda:
 
@@ -422,11 +422,11 @@ Con el organizador identificado, se comprueba si es socio para la fecha del turn
 | Normal | Tarifa por turno de sede, invitados opcionales y observaciones opcionales; su identidad no altera la tarifa |
 | Con membresía | Contratación del organizador para la fecha, horas mensuales disponibles e identificación de todos los invitados; condición socio/no socio y adicional unitario aplicado |
 
-El recorrido con membresía exige una hora disponible y no exige tarifa normal configurada. El organizador compromete una hora de su cupo y cada invitado con beneficio compromete una hora de invitado desde Pendiente. Aceptar conserva ese compromiso; al inicio consume aun sin respuesta. Sin membresía o con cupo de invitado agotado aplica el mismo adicional, con etiquetas que explican el motivo. En normal no se utilizan horas de ningún participante.
+El recorrido con membresía exige una hora de organizador disponible y no exige tarifa normal. Cada invitación comienza Pendiente, sin ocupar disponibilidad ni aplicar beneficio o adicional. El titular acepta con disponibilidad personal; con cobertura y horas de invitado compromete una hora, sin cobertura o saldo genera el adicional conservado. Al inicio sólo las Aceptadas con beneficio consumen horas. En normal no se utilizan horas ni adicionales de invitados.
 
 La creación presenta progreso por pasos: organizador cuando lo elige administración, modalidad, invitados y revisión. Dos tarjetas contiguas con fondo violeta oscuro y texto claro resumen el turno: una destaca la cancha y muestra la sede; la otra destaca la hora y muestra la fecha. El organizador se presenta en una tercera tarjeta debajo del turno, con fondo claro y texto violeta. Desde el paso de invitados, la modalidad elegida se presenta en una tarjeta contigua a la del organizador, ambas con fondo violeta claro y texto violeta oscuro. En el paso de modalidad, la tarjeta del organizador ocupa todo el ancho. La selección de modalidad presenta dos opciones contiguas con una explicación y su tarifa o disponibilidad. La opción seleccionada se identifica con un check en la esquina superior derecha y el botón «Siguiente» permite avanzar. Las opciones no disponibles se muestran atenuadas, sin acción y con el motivo visible. Los invitados se agregan mediante un buscador por nombre, apellido o usuario, abierto con un botón circular «+» junto a «Invitados», que cambia a «×» para cerrarlo; el buscador aparece antes de los seleccionados, y se muestran en filas compactas con una acción para quitarlos. Al volver se conservan los invitados y las observaciones.
 
-Los precios se presentan en el resumen: turno, organizador, modalidad, tarifa o membresía aplicada, invitados, adicional unitario cuando corresponda y total. La cantidad participante y el total se derivan de relaciones vigentes Pendientes o Aceptadas; no hay cantidad total declarada ni invitados anónimos en modalidad con membresía.
+Los precios se presentan en el resumen: turno, organizador, modalidad, tarifa o membresía aplicada, invitados, adicional unitario cuando corresponda y total. La cantidad confirmada y el total se derivan de las participaciones Aceptadas con su condición aplicada; no hay cantidad total declarada ni invitados anónimos en modalidad con membresía.
 
 Atrás conserva datos; Cancelar abandona sin crear. La confirmación revalida cuentas, roles, calendario, instalaciones, cupos, disponibilidad, ocupación, contrataciones e importes bajo bloqueos coordinados. Un precio o cobertura que cambió exige una revisión nueva. No se comunica confirmación antes de guardar evento, reserva e invitados juntos. Después se informa el número y se ofrece comprobante al autorizado. El pago se registra aparte en la sede.
 
@@ -434,27 +434,29 @@ Atrás conserva datos; Cancelar abandona sin crear. La confirmación revalida cu
 
 El detalle prioriza número, turno, ubicación, estado y modalidad. Organizador y administración ven condiciones comerciales y total derivado; los cobros se consultan en una sección separada. Los invitados son filas con nombre, respuesta, condición comercial y una acción compacta cuando corresponde.
 
-Gestionar invitados se revela al organizador o administración sólo en una reserva Programada antes del inicio. El formulario presenta dos pasos, Invitados y Revisar cambios, con el turno en tarjetas oscuras y el organizador y modalidad en tarjetas claras. El botón circular «+» abre el buscador antes de los seleccionados y cambia a «×» para cerrarlo. La revisión presenta filas compactas con nombre, condición comercial cuando aplica y acción Agregar o Retirar, junto al total resultante. Volver conserva la selección y la confirmación aplica el conjunto revisado. Agregar busca cuentas activas con Reservas o Administrador, distintas del organizador y sin duplicados. Retirar y reincorporar conservan identidad y respuesta de la relación. Se revalidan disponibilidad y condición comercial al incorporar, sin aplicar el límite de reservas organizadas al invitado.
+Gestionar invitados se revela al organizador o administración sólo en una reserva Programada antes del inicio. Presenta Invitados y Revisar cambios, conservando el turno, organizador y modalidad. La revisión muestra filas compactas con Agregar o Quitar y total resultante. Las altas son Pendientes, sin validar disponibilidad del invitado ni aplicar condición comercial. Se muestran también las Rechazadas y todas se pueden quitar. Confirmar revalida el conjunto bajo bloqueos sin cambiar a quienes permanecen.
 
-Sólo se retiran invitaciones Pendientes o Aceptadas. Las Rechazadas permanecen visibles con su respuesta, sin Retirar ni Reenviar. Una retirada muestra su condición histórica y no permite responder mientras esté retirada. Editar a otro invitado conserva las condiciones comerciales de quienes permanecen.
+Quitar elimina la invitación y libera sus compromisos. No existe estado Retirada ni reincorporación; la auditoría conserva la historia. Volver a invitar crea una nueva invitación Pendiente. Las solicitudes antiguas no responden sobre una invitación creada nuevamente.
 
 La revisión muestra participantes y nuevo total con el adicional unitario conservado. Retirar un no socio elimina su adicional incluso dentro de las dos horas. Nada de esto modifica cobros ni horas del organizador. No se editan organizador, modalidad, turno ni precio unitario; cambiar turno requiere cancelar y crear otra reserva.
 
 ### 7.3 Actualizar socios
 
-«Actualizar socios» es una acción bajo demanda del organizador o administración, sólo en reservas con membresía Programadas antes del inicio. Revisa membresías que cubren la fecha del turno de los invitados vigentes Pendientes o Aceptados.
+«Actualizar socios» es una acción bajo demanda del organizador o administración, sólo en reservas con membresía Programadas antes del inicio. Revisa membresías que cubren la fecha del turno de los invitados Aceptados.
 
 La vista previa presenta únicamente los cambios de condición y el total resultante. Si un invitado contrató una membresía después de ser invitado, se acredita como socio y deja de generar adicional, si tiene cobertura y horas de invitado disponibles. Confirmar compromete una hora; sin saldo el adicional se mantiene. Sin cambios se informa que la condición de socios está actualizada, sin simular una modificación.
 
-Confirmar revalida inicio, permisos, relaciones, contrataciones y saldo disponible bajo los bloqueos comunes con invitaciones y ajustes. Si cambió el conjunto revisado se exige otra revisión. Se conserva el adicional unitario original, la historia comercial, respuestas, horas del organizador y cobros. No modifica Rechazadas ni retiradas ni reincorpora personas.
+Confirmar revalida inicio, permisos, relaciones, contrataciones y saldo disponible bajo los bloqueos comunes con invitaciones y ajustes. Si cambió el conjunto revisado se exige otra revisión. Se conserva el adicional unitario original, la historia comercial, respuestas, horas del organizador y cobros. No responde invitaciones Pendientes o Rechazadas ni crea invitaciones.
 
 ### 7.4 Respuesta del invitado
 
-El invitado titular solicita Responder invitación y elige Aceptar o Rechazar antes del inicio. Después de la primera respuesta puede usar Cambiar respuesta una sola vez, sin volver a Pendiente. El detalle muestra decisión, primera respuesta y disponibilidad del cambio sin abrir controles por defecto.
+El titular despliega Responder invitación: Pendiente ofrece Aceptar o Rechazar; Aceptada ofrece Rechazar; Rechazada ofrece Aceptar. No existe límite de cambios antes del inicio ni vuelta a Pendiente. La última decisión muestra fecha y estado bajo demanda; la auditoría conserva la historia.
 
-Rechazar libera hora de invitado comprometida, disponibilidad y adicional; conserva relación e historia. Volver a aceptar revalida disponibilidad y condición de socio con sus horas de invitado para la fecha; si falta cobertura o saldo de invitado y la reserva utiliza la membresía del organizador, participa con adicional, distinguiendo no socio de cupo agotado, con el importe unitario conservado. La respuesta no cancela la reserva ni devuelve la hora del organizador.
+Antes de confirmar se revisa el turno y el efecto: aceptar requiere disponibilidad personal, independiente de horas o adicional. En normal se informa que no utiliza membresía ni cambia la tarifa. En membresía se indica una hora de invitado o el adicional y su motivo. La confirmación revalida la versión y las condiciones; un cambio de beneficio o importe exige revisar otra vez. Rechazar libera horario y aplicación comercial, sin devolución automática.
 
-Al comenzar, Pendiente se presenta como Sin respuesta, sin nueva transición almacenada y sin presumir asistencia. Ya no se ofrecen Responder ni Cambiar respuesta. Organizador y administración no responden por el titular y no reinician su único cambio mediante retiros o reincorporaciones.
+Al comenzar se conserva Pendiente, Aceptada o Rechazada y se ocultan las acciones. Una invitación eliminada no tiene pantalla ni acciones de respuesta; una nueva invitación comienza Pendiente y requiere una nueva decisión.
+
+
 
 ### 7.5 Cancelación, nueva reserva y resultado
 
@@ -490,7 +492,7 @@ Finalizar no presume realización. No realizada y una corrección del resultado 
 | Cobros y sus datos | Vigentes vinculados a su reserva | Sin acceso ni indicación de existencia/cantidad | Consulta autorizada |
 | Contacto, responsables, observaciones y motivo libre de anulación | Sólo los datos propios y operativos autorizados | Ocultos | Visibles según función |
 | Cancelar reserva, gestionar invitados y Actualizar socios | Según estado y plazo | Sin acceso | Según operación y estado |
-| Responder invitación | No responde por terceros | Su propia decisión y único cambio | No responde por terceros |
+| Responder invitación | No responde por terceros | Su propia decisión antes del inicio | No responde por terceros |
 | Comprobante, impresión y guardado | Permitidos | Denegados, también por URL directa | Permitidos |
 
 El comprobante acredita la reserva, no el pago. Presenta número, estado, turno, duración, sede, cancha, organizador y los importes aplicados según modalidad. No toma precios vigentes del catálogo para reemplazar los registrados. La vista de pantalla respeta tema; impresión y guardado del navegador usan blanco y tinta. No existe una versión parcial del comprobante para invitados.
@@ -573,7 +575,7 @@ Planes y membresías tienen precio mensual fijo: al confirmar se copia el vigent
 
 Registrar un plan Activo puede otorgar Alumno al titular no administrativo; Profesor no contrata plan mientras conserve ese rol. Contratar membresía no otorga Alumno y se admite para profesores. No genera clases, asignaciones ni consumos.
 
-Anular sólo se ofrece para Activas y abre revisión de página completa con motivo. Una membresía aplicada como organizador o invitado socio vigente Pendiente/Aceptado en reserva Programada impide anular y se explica el vínculo. Rechazadas, retiradas y reservas Anuladas o Finalizadas no bloquean. Se conserva historia, cobros y roles. El reemplazo del mismo titular y mes descuenta usos conservados, aunque cambie el producto o cupo.
+Anular sólo se ofrece para Activas y abre revisión de página completa con motivo. Una membresía aplicada como organizador o invitado socio Aceptado en reserva Programada impide anular y se explica el vínculo. Pendientes, Rechazadas y reservas Anuladas o Finalizadas no bloquean. Se conserva historia, cobros y roles. El reemplazo del mismo titular y mes descuenta usos conservados, aunque cambie el producto o cupo.
 
 ### 9.3 Consulta propia y comprobante
 
@@ -585,7 +587,7 @@ El comprobante presenta contratación, producto, período y condiciones e import
 
 La consulta propia o administrativa selecciona mes o rango de hasta 366 días. Presenta por rol el cupo aplicado, horas otorgadas y descontadas, comprometidas, consumidas y disponibles derivadas, con detalle de reserva y contratación concreta. Los usos del mismo titular y mes de contrataciones Anuladas se conservan al calcular el cupo del reemplazo. Si alcanzan o superan el cupo nuevo no se muestran horas disponibles negativas: se informa que no quedan horas.
 
-Las reservas Anuladas que computan por cancelación propia tardía se incluyen; las canceladas administrativamente no consumen. Las participaciones con beneficio de invitado se muestran en su cupo: comprometen desde Pendiente y consumen desde el inicio, aun sin respuesta. Las de reservas normales y las que tienen adicional no usan horas. No hay saldo editable, reinicio mensual manual ni arrastre al mes siguiente.
+Las reservas Anuladas que computan por cancelación propia tardía se incluyen; las canceladas administrativamente no consumen. Las participaciones con beneficio de invitado se muestran en su cupo: comprometen al aceptar y consumen desde el inicio. Las Pendientes y Rechazadas no comprometen horas ni generan adicional. Las de reservas normales y las que tienen adicional no usan horas. No hay saldo editable, reinicio mensual manual ni arrastre al mes siguiente.
 
 ## 10. Contratación propia y seguimiento de planes
 

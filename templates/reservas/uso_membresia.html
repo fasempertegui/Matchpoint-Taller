@@ -11,7 +11,7 @@
 {% if titular %}
 <section class="tarjeta">
     <h2>{{ titular }} · Resumen por meses completos</h2>
-    <p>Los cupos de organizador e invitado son independientes. Las invitaciones con beneficio comprometen una hora desde Pendiente y la consumen al comenzar el turno, aunque no se respondan. El saldo incluye usos conservados de contrataciones Anuladas.</p>
+    <p>Los cupos de organizador e invitado son independientes. Aceptar una invitación con beneficio compromete una hora de invitado y la consume al comenzar el turno. Las Pendientes y Rechazadas no comprometen horas ni generan adicional. El saldo incluye usos conservados de contrataciones Anuladas.</p>
     <div class="tabla-contenedor"><table>
         <thead><tr><th>Mes</th><th>Tipo de horas</th><th>Cupo</th><th>Otorgadas</th><th>Descontadas</th><th>Comprometidas</th><th>Consumidas</th><th>Disponibles</th></tr></thead>
         <tbody>{% for fila in meses %}<tr><td>{{ fila.mes|date:"F Y" }}</td><td>{{ fila.rol }}</td><td>{{ fila.cupo }}</td><td>{{ fila.otorgadas }}</td><td>{{ fila.descontadas }}</td><td>{{ fila.comprometidas }}</td><td>{{ fila.consumidas }}</td><td>{{ fila.disponibles }}</td></tr>{% endfor %}</tbody>
@@ -25,7 +25,7 @@
         <tbody>{% for fila in invitaciones %}{% with invitacion=fila.invitacion %}<tr>
             <td>{% if request.user.puede_reservar %}<a href="{% url 'reservas:reserva_detalle' invitacion.reserva_id %}">{{ invitacion.reserva.numero }}</a>{% else %}{{ invitacion.reserva.numero }}{% endif %}</td>
             <td>{{ invitacion.reserva.evento.turno.fecha|date:"d/m/Y" }} {{ invitacion.reserva.evento.turno.hora_inicio|time:"H:i" }}</td>
-            <td>{{ invitacion.reserva.evento.get_estado_display }}</td><td>{{ invitacion.get_estado_display }} · {{ fila.respuesta_texto }}</td>
+            <td>{{ invitacion.reserva.evento.get_estado_display }}</td><td>{{ fila.respuesta_texto }}</td>
             <td>{{ invitacion.get_condicion_aplicada_display }}</td>
         </tr>{% endwith %}{% empty %}<tr><td colspan="5">No hay invitaciones en el período.</td></tr>{% endfor %}</tbody>
     </table></div>

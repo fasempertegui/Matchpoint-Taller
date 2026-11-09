@@ -211,7 +211,7 @@ def _anular_contratacion(actor, contratacion_id, *, modelo, tipo, motivo, versio
         from reservas.models import Reserva
         if Reserva.objects.filter(
             Q(membresia_usuario=contratacion) | Q(invitados__membresia_usuario=contratacion, invitados__condicion_aplicada="socio",
-                invitados__estado="vigente", invitados__respuesta__in=("pendiente", "afirmativa")),
+                invitados__respuesta__in=("pendiente", "afirmativa")),
             evento__estado="programado",
         ).exists():
             raise ValidationError("La membresía está aplicada en una reserva Programada como organizador o invitado socio.")

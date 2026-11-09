@@ -23,13 +23,13 @@ from .servicios import (
 @require_http_methods(["GET"])
 def reserva_detalle(request, pk):
     reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk)
-    from .comercial import inicio_reserva
+    from .comercial import inicio_reserva, version_invitacion
     if not es_administrador and reserva.organizador_id != request.user.pk:
         invitacion = reserva.invitados.get(usuario=request.user)
         return render(request, "reservas/reserva_invitacion.html", {
-            "reserva": reserva, "invitacion": invitacion, "respuesta_texto": invitacion.respuesta_visible(inicio_reserva(reserva)),
-            "puede_responder": invitacion.estado == "vigente" and invitacion.respuesta_modificada_en is None
-                and reserva.evento.estado == Evento.Estado.PROGRAMADO and timezone.now() < inicio_reserva(reserva),
+            "reserva": reserva, "invitacion": invitacion, "respuesta_texto": invitacion.get_respuesta_display(),
+            "version": version_invitacion(request.user, invitacion),
+            "puede_responder": reserva.evento.estado == Evento.Estado.PROGRAMADO and timezone.now() < inicio_reserva(reserva),
         })
     return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador, usuario=request.user, parametros=request.GET))
 
@@ -56,7 +56,7 @@ def _obtener_reserva_para_consulta(usuario, pk, *, solo_organizador=False):
 
 
 def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=None, *, usuario, parametros):
-    from .comercial import inicio_reserva
+    from .comercial import inicio_reserva, version_invitacion
     ahora = timezone.localtime()
     try:
         validar_anulacion_reserva(reserva, es_administrador, ahora)
@@ -74,12 +74,17 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
             pass
         else:
             puede_finalizar = True
+    mi_invitacion = reserva.invitados.filter(usuario=usuario).first()
     return {
+        "mi_invitacion": mi_invitacion,
+        "version": version_invitacion(usuario, mi_invitacion) if mi_invitacion else None,
+        "respuesta_texto": mi_invitacion.get_respuesta_display() if mi_invitacion else None,
+        "puede_responder": mi_invitacion is not None and reserva.evento.estado == Evento.Estado.PROGRAMADO and ahora < inicio_reserva(reserva),
         **contexto_financiero(usuario, "reserva", reserva, parametros),
         "reserva": reserva,
         "turno": reserva.evento.turno,
         "total": reserva.total,
-        "invitados": [{"invitado": i, "respuesta_texto": i.respuesta_visible(inicio_reserva(reserva))} for i in reserva.invitados.select_related("usuario").order_by("usuario__last_name", "usuario__first_name")],
+        "invitados": [{"invitado": i, "respuesta_texto": i.get_respuesta_display()} for i in reserva.invitados.select_related("usuario").order_by("usuario__last_name", "usuario__first_name")],
         "puede_gestionar": reserva.evento.estado == Evento.Estado.PROGRAMADO and ahora < inicio_reserva(reserva),
         "puede_anular": puede_anular,
         "puede_finalizar": puede_finalizar,

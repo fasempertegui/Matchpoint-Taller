@@ -1,0 +1,16 @@
+    <p><strong>{{ respuesta_texto }}</strong></p>
+    {% if invitacion.participacion_computable %}
+        <p>{{ invitacion.get_condicion_aplicada_display }}{% if invitacion.condicion_aplicada == 'socio' and reserva.evento.estado != 'anulado' %} · Una hora de tu cupo de invitado{% elif invitacion.genera_adicional %} · Adicional: $ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}{% endif %}</p>
+    {% else %}<p>Esta invitación no compromete tu disponibilidad ni tus horas y no genera adicional.</p>{% endif %}
+    {% if invitacion.respondido_en %}<details><summary>Última decisión</summary><p>{{ invitacion.get_respuesta_display }} · {{ invitacion.respondido_en|date:"d/m/Y H:i" }}</p></details>{% endif %}
+    {% if puede_responder %}
+        <details>
+            <summary>Responder invitación</summary>
+            <form method="post" action="{% url 'reservas:reserva_responder' reserva.pk %}">
+                {% csrf_token %}<input type="hidden" name="version" value="{{ version }}">
+                <p>Aceptar exige tener este horario disponible. Podés cambiar de decisión antes del inicio. La condición comercial se revisa antes de confirmar.</p>
+                {% if invitacion.respuesta != 'afirmativa' %}<button class="boton boton-secundario" type="submit" name="respuesta" value="afirmativa">Aceptar</button>{% endif %}
+                {% if invitacion.respuesta != 'negativa' %}<button class="boton boton-secundario" type="submit" name="respuesta" value="negativa">Rechazar</button>{% endif %}
+            </form>
+        </details>
+    {% endif %}

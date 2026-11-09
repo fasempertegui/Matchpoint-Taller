@@ -6,8 +6,7 @@ def reservas_personales(usuario_id, *, excluir=None):
     from reservas.models import Evento, Reserva
     consulta = Reserva.objects.filter(
         Q(organizador_id=usuario_id) | Q(
-            invitados__usuario_id=usuario_id, invitados__estado="vigente",
-            invitados__respuesta__in=("pendiente", "afirmativa"),
+            invitados__usuario_id=usuario_id, invitados__respuesta__in=("pendiente", "afirmativa"),
         ), evento__estado=Evento.Estado.PROGRAMADO,
     ).distinct()
     return consulta.exclude(pk=excluir) if excluir is not None else consulta
@@ -27,7 +26,7 @@ def personas_ocupadas(usuarios_ids, fecha, hora, *, clase_id=None, reserva_id=No
         organizador_id__in=usuarios_ids, evento__turno__fecha=fecha, evento__turno__hora_inicio=hora,
     ).exclude(evento__estado=Evento.Estado.ANULADO).exclude(pk=reserva_id)
     invitados = ReservaInvitado.objects.filter(
-        usuario_id__in=usuarios_ids, estado="vigente", respuesta__in=("pendiente", "afirmativa"),
+        usuario_id__in=usuarios_ids, respuesta="afirmativa",
         reserva__evento__turno__fecha=fecha, reserva__evento__turno__hora_inicio=hora,
     ).exclude(reserva__evento__estado=Evento.Estado.ANULADO).exclude(reserva_id=reserva_id)
     return set(profesores.values_list("profesor_id", flat=True)) | set(alumnos.values_list("usuario_id", flat=True)) | set(

@@ -14,7 +14,7 @@
             {{ formulario.non_field_errors }}
             {% for campo in formulario.hidden_fields %}{{ campo }}{{ campo.errors }}{% endfor %}
             {% for campo in formulario.visible_fields %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}{% if campo.help_text %}<small>{{ campo.help_text }}</small>{% endif %}</div>{% endfor %}
-            {% if not resultado %}<p class="texto-secundario">Se retiran quienes dejes sin seleccionar. Las invitaciones Rechazadas conservan su historia y no se vuelven a enviar.</p>{% endif %}
+            {% if not resultado %}<p class="texto-secundario">Se eliminan las invitaciones de quienes dejes sin seleccionar.</p>{% endif %}
         {% endif %}
         <div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' reserva.pk %}">Volver a la reserva</a>{% if revision.cambios %}<button class="boton boton-primario" name="paso" value="confirmar">Confirmar cambios</button>{% elif not revision %}<button class="boton boton-primario" name="paso" value="revisar">{% if resultado %}Guardar resultado{% else %}Revisar invitados{% endif %}</button>{% endif %}</div>
     </form>

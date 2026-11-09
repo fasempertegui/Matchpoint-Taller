@@ -11,7 +11,6 @@ from auditoria.contexto import contexto_auditoria
 from clases.servicios import bloquear_usuarios_clase
 from common.disponibilidad import validar_disponibilidad, validar_limite_reservas_organizadas
 from common.fechas import validar_inicio_evento
-from common.respuestas import aplicar_respuesta
 from instalaciones.models import Cancha, Sede
 from membresias.models import Membresia, MembresiaUsuario
 from usuarios.models import Rol
@@ -108,9 +107,9 @@ def _contexto_creacion(actor, datos):
         raise ValidationError("El turno está ocupado. Seleccioná otro en Agenda.")
     if timezone.make_aware(datetime.combine(fecha, hora)) <= timezone.now():
         raise ValidationError("El turno ya comenzó.")
-    validar_disponibilidad(invitados_ids | {organizador_id}, fecha, hora)
+    validar_disponibilidad({organizador_id}, fecha, hora)
     validar_limite_reservas_organizadas(organizador_id)
-    contratos = coberturas(invitados_ids | {organizador_id}, fecha, bloquear=True)
+    contratos = coberturas({organizador_id}, fecha, bloquear=True) if modalidad == "membresia" else {}
     contrato = contratos.get(organizador_id) if modalidad == "membresia" else None
     if modalidad == "membresia" and contrato is None:
         raise ValidationError("El organizador necesita una membresía Activa que cubra la fecha del turno.")
@@ -124,9 +123,7 @@ def _contexto_creacion(actor, datos):
         computa_hora_membresia=contrato is not None,
     )
     invitados = [ReservaInvitado(reserva=reserva, usuario=usuarios[pk]) for pk in sorted(invitados_ids)]
-    for invitado in invitados:
-        invitado.condicion_aplicada, invitado.membresia_usuario = _condicion(reserva, invitado.usuario_id, contratos)
-    total = reserva.precio_por_turno_aplicado if contrato is None else reserva.precio_invitado_aplicado * sum(i.genera_adicional for i in invitados)
+    total = reserva.precio_por_turno_aplicado if contrato is None else 0
     huella = _huella({
         "datos": datos, "turno": turno.pk, "tarifa": reserva.precio_por_turno_aplicado,
         "cuentas": [[u.pk, u.is_active, u.debe_cambiar_contrasena, u.actualizado_en, sorted(v.rol.codigo for v in u.roles.all())] for u in usuarios.values()],
@@ -199,7 +196,7 @@ def _validar_edicion(actor, administrador, reserva):
 def instantanea_reserva(reserva, invitados):
     return _huella({
         "reserva": [reserva.pk, reserva.evento.estado, reserva.evento.actualizado_en, reserva.membresia_usuario_id, reserva.precio_invitado_aplicado],
-        "invitados": [[i.usuario_id, i.estado, i.respuesta, i.actualizado_en, i.membresia_usuario_id, i.condicion_aplicada] for i in invitados],
+        "invitados": [[i.usuario_id, i.respuesta, i.actualizado_en, i.membresia_usuario_id, i.condicion_aplicada] for i in invitados],
     })
 
 
@@ -211,66 +208,94 @@ def gestionar_invitados(actor, reserva_id, invitados_ids, *, confirmacion=None):
     if reserva.organizador_id in invitados_ids:
         raise ValidationError("El organizador no puede aparecer como invitado.")
     anteriores = {i.usuario_id: i for i in relaciones}
-    nuevos = {pk for pk in invitados_ids if pk not in anteriores or anteriores[pk].estado == "retirado"}
-    if any(i.respuesta == "negativa" for i in relaciones if i.usuario_id in invitados_ids):
-        raise ValidationError("Una invitación Rechazada no se retira ni se vuelve a enviar.")
-    contratos = coberturas(nuevos, reserva.evento.turno.fecha, bloquear=True)
-    propuestas = []
+    nuevos = invitados_ids - anteriores.keys()
+    quitados = anteriores.keys() - invitados_ids
     for pk in sorted(nuevos):
         _validar_persona(usuarios.get(pk))
-        validar_disponibilidad({pk}, reserva.evento.turno.fecha, reserva.evento.turno.hora_inicio, reserva_id=reserva.pk)
-        relacion = anteriores.get(pk) or ReservaInvitado(reserva=reserva, usuario=usuarios[pk])
-        condicion, contrato = _condicion(reserva, pk, contratos)
-        propuestas.append((relacion, "vigente", condicion, contrato))
-    for relacion in relaciones:
-        if relacion.estado == "vigente" and relacion.respuesta != "negativa" and relacion.usuario_id not in invitados_ids:
-            propuestas.append((relacion, "retirado", relacion.condicion_aplicada, relacion.membresia_usuario))
     datos = {"reserva": reserva.pk, "invitados": sorted(invitados_ids)}
-    huella = _huella([instantanea_reserva(reserva, relaciones), [[i.usuario_id, estado, condicion, c.pk if c else None, c.actualizado_en if c else None] for i, estado, condicion, c in propuestas]])
-    total = reserva.total
-    if reserva.es_con_membresia:
-        estados = {i.usuario_id: (i.estado, i.condicion_aplicada, i.respuesta) for i in relaciones}
-        for i, estado, condicion, _ in propuestas:
-            estados[i.usuario_id] = (estado, condicion, i.respuesta)
-        total = reserva.precio_invitado_aplicado * sum(estado == "vigente" and condicion in ("no_socio", "cupo_agotado") and respuesta != "negativa" for estado, condicion, respuesta in estados.values())
+    huella = instantanea_reserva(reserva, relaciones)
+    total = reserva.precio_por_turno_aplicado if not reserva.es_con_membresia else reserva.precio_invitado_aplicado * sum(
+        i.participacion_computable and i.genera_adicional for i in relaciones if i.usuario_id in invitados_ids
+    )
     if confirmacion is None:
-        return {"reserva": reserva, "total": total, "cambios": [(str(i.usuario), estado, condicion) for i, estado, condicion, _ in propuestas], "confirmacion": _firmar(actor, "invitados", datos, huella)}
+        cambios = [(str(usuarios[pk]), "agregar", "sin_aplicar") for pk in sorted(nuevos)]
+        cambios += [(str(anteriores[pk].usuario), "quitar", anteriores[pk].condicion_aplicada) for pk in sorted(quitados)]
+        return {"reserva": reserva, "total": total, "cambios": cambios,
+                "confirmacion": _firmar(actor, "invitados", datos, huella)}
     firmado = _leer(actor, confirmacion, "invitados")
     if firmado["datos"] != datos or firmado["huella"] != huella:
         raise ValidationError("Los invitados o sus condiciones cambiaron. Revisá nuevamente.")
     _validar_edicion(actor, administrador, reserva)
     with contexto_auditoria(actor):
-        for relacion, estado, condicion, contrato in propuestas:
-            relacion.estado, relacion.condicion_aplicada, relacion.membresia_usuario = estado, condicion, contrato
-            relacion.retirado_por = actor if estado == "retirado" else None
-            relacion.retirado_en = timezone.now() if estado == "retirado" else None
+        for pk in sorted(quitados):
+            anteriores[pk].delete()
+        for pk in sorted(nuevos):
+            relacion = ReservaInvitado(reserva=reserva, usuario=usuarios[pk])
             relacion.full_clean()
             relacion.save()
+        _validar_edicion(actor, administrador, reserva)
     return reserva
 
 
-@transaction.atomic
-def responder_invitacion(actor, reserva_id, respuesta):
+def version_invitacion(actor, invitacion):
+    return signing.dumps({"actor": actor.pk, "reserva": invitacion.reserva_id,
+                          "creada": invitacion.creado_en.isoformat(), "actualizada": invitacion.actualizado_en.isoformat()},
+                         salt="reservas.invitacion", compress=True)
+
+
+def _contexto_respuesta(actor, reserva_id, respuesta, version):
     actor, _, reserva, relaciones, _ = bloquear_reserva_personas(actor, reserva_id)
     relacion = next((i for i in relaciones if i.usuario_id == actor.pk), None)
     if relacion is None:
         raise PermissionDenied
-    if relacion.estado != "vigente" or reserva.evento.estado != Evento.Estado.PROGRAMADO:
-        raise ValidationError("La invitación no admite respuestas en su estado actual.")
-    respuesta_anterior = relacion.respuesta
-    cambio = aplicar_respuesta(relacion, actor, respuesta, inicio_reserva(reserva))
-    if not cambio:
+    try:
+        anterior = signing.loads(version, salt="reservas.invitacion", max_age=900)
+        actual = signing.loads(version_invitacion(actor, relacion), salt="reservas.invitacion")
+        if anterior != actual:
+            raise signing.BadSignature
+    except (signing.BadSignature, TypeError):
+        raise ValidationError("La invitación cambió. Volvé a abrir su detalle.") from None
+    if reserva.evento.estado != Evento.Estado.PROGRAMADO or timezone.now() >= inicio_reserva(reserva):
+        raise ValidationError("Sólo podés responder antes del inicio de una reserva Programada.")
+    if respuesta not in (ReservaInvitado.Respuesta.AFIRMATIVA, ReservaInvitado.Respuesta.NEGATIVA):
+        raise ValidationError("Elegí Aceptar o Rechazar.")
+    condicion, contrato = relacion.condicion_aplicada, relacion.membresia_usuario
+    if relacion.respuesta != respuesta:
+        condicion, contrato = "sin_aplicar", None
+        if respuesta == ReservaInvitado.Respuesta.AFIRMATIVA:
+            _validar_persona(actor)
+            turno = reserva.evento.turno
+            validar_disponibilidad({actor.pk}, turno.fecha, turno.hora_inicio, reserva_id=reserva.pk)
+            contratos = coberturas({actor.pk}, turno.fecha, bloquear=True) if reserva.es_con_membresia else {}
+            condicion, contrato = _condicion(reserva, actor.pk, contratos)
+    datos = {"reserva": reserva.pk, "respuesta": respuesta, "version": version}
+    huella = _huella([instantanea_reserva(reserva, relaciones), condicion, contrato.pk if contrato else None,
+                     contrato.actualizado_en if contrato else None])
+    return actor, reserva, relacion, condicion, contrato, datos, huella
+
+
+@transaction.atomic
+def preparar_respuesta_invitacion(actor, reserva_id, respuesta, *, version):
+    actor, reserva, relacion, condicion, contrato, datos, huella = _contexto_respuesta(actor, reserva_id, respuesta, version)
+    return {"reserva": reserva, "invitacion": relacion, "respuesta": respuesta, "condicion": condicion,
+            "adicional": reserva.precio_invitado_aplicado if condicion in ("no_socio", "cupo_agotado") else None,
+            "version": version, "confirmacion": _firmar(actor, "respuesta", datos, huella)}
+
+
+@transaction.atomic
+def responder_invitacion(actor, reserva_id, respuesta, *, version, confirmacion):
+    actor, reserva, relacion, condicion, contrato, datos, huella = _contexto_respuesta(actor, reserva_id, respuesta, version)
+    firmado = _leer(actor, confirmacion, "respuesta")
+    if firmado["datos"] != datos or firmado["huella"] != huella:
+        raise ValidationError("La disponibilidad o la condición comercial cambió. Revisá nuevamente antes de confirmar.")
+    if relacion.respuesta == respuesta:
         return relacion
-    if respuesta == "afirmativa":
-        _validar_persona(actor)
-        validar_disponibilidad({actor.pk}, reserva.evento.turno.fecha, reserva.evento.turno.hora_inicio, reserva_id=reserva.pk)
-        if respuesta_anterior == "negativa":
-            contratos = coberturas({actor.pk}, reserva.evento.turno.fecha, bloquear=True)
-            relacion.condicion_aplicada, relacion.membresia_usuario = _condicion(reserva, actor.pk, contratos)
-    if timezone.now() >= inicio_reserva(reserva):
-        raise ValidationError("La reserva alcanzó su inicio. No se modificó la respuesta.")
+    relacion.respuesta, relacion.condicion_aplicada, relacion.membresia_usuario = respuesta, condicion, contrato
+    relacion.respondido_por, relacion.respondido_en = actor, timezone.now()
     with contexto_auditoria(actor):
         relacion.full_clean()
+        if timezone.now() >= inicio_reserva(reserva):
+            raise ValidationError("La reserva alcanzó su inicio. No se modificó la respuesta.")
         relacion.save()
     return relacion
 
@@ -281,7 +306,7 @@ def actualizar_socios(actor, reserva_id, *, confirmacion=None):
     _validar_edicion(actor, administrador, reserva)
     if not reserva.es_con_membresia:
         raise ValidationError("Actualizar socios sólo corresponde a reservas con membresía.")
-    candidatos = [i for i in relaciones if i.estado == "vigente" and i.respuesta != "negativa" and i.genera_adicional]
+    candidatos = [i for i in relaciones if i.respuesta == "afirmativa" and i.genera_adicional]
     contratos = coberturas({i.usuario_id for i in candidatos}, reserva.evento.turno.fecha, bloquear=True)
     cambios = [(i, contratos[i.usuario_id]) for i in candidatos
                if i.usuario_id in contratos and horas_disponibles_invitado(contratos[i.usuario_id]) > 0]

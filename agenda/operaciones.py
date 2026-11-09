@@ -146,7 +146,7 @@ def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
             }
             for fila in filas if fila["clase"] is not None
         ],
-        "invitados": [list(fila["reserva"].invitados.order_by("usuario_id").values_list("usuario_id", "estado", "respuesta", "actualizado_en")) for fila in filas if fila["reserva"]],
+        "invitados": [list(fila["reserva"].invitados.order_by("usuario_id").values_list("usuario_id", "respuesta", "actualizado_en")) for fila in filas if fila["reserva"]],
         "filas": [
             [fila["cancha"].pk, fila["hora"].isoformat(), fila["accion"], fila["conservado"],
              fila["evento"].pk if fila["evento"] else None,

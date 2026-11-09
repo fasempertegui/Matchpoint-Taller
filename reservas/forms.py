@@ -69,13 +69,11 @@ class InvitadosReservaForm(forms.Form):
     def __init__(self, *args, organizador_id, reserva=None, **kwargs):
         super().__init__(*args, **kwargs)
         actuales = set()
-        rechazados = set()
         if reserva is not None:
-            actuales = set(reserva.invitados.filter(estado="vigente").exclude(respuesta="negativa").values_list("usuario_id", flat=True))
-            rechazados = set(reserva.invitados.filter(respuesta="negativa").values_list("usuario_id", flat=True))
+            actuales = set(reserva.invitados.all().values_list("usuario_id", flat=True))
         self.fields["invitados"].queryset = Usuario.objects.filter(
             Q(pk__in=actuales) | Q(is_active=True, roles__rol__codigo__in=(Rol.RESERVAS, Rol.ADMINISTRADOR)),
-        ).exclude(pk=organizador_id).exclude(pk__in=rechazados).distinct().order_by("last_name", "first_name", "username")
+        ).exclude(pk=organizador_id).distinct().order_by("last_name", "first_name", "username")
         if reserva is not None:
             self.fields.pop("observaciones")
 
