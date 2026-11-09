@@ -39,6 +39,18 @@ class InicioSesionForm(AuthenticationForm):
 
 
 class CambioContrasenaForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["old_password"].label = "Contraseña actual"
+        self.fields["new_password1"].label = "Nueva contraseña"
+        self.fields["new_password2"].label = "Confirmá la nueva contraseña"
+        self.fields["new_password1"].help_text = ""
+        self.fields["new_password1"].widget.attrs["aria-describedby"] = "contrasena-reglas"
+        self.fields["new_password2"].help_text = ""
+        for campo in self.fields.values():
+            campo.widget.attrs["class"] = "form-control"
+        self.fields["old_password"].widget.attrs["autofocus"] = True
+
     def clean_new_password1(self):
         contrasena = self.cleaned_data["new_password1"]
         if self.user.check_password(contrasena):

@@ -1,0 +1,145 @@
+.contrasena-control {
+    position: relative;
+}
+
+.contrasena-control .form-control {
+    padding-right: 48px;
+}
+
+.contrasena-visibilidad {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 0 10px 10px 0;
+    background: transparent;
+    color: var(--texto-suave);
+    cursor: pointer;
+}
+
+.contrasena-visibilidad:hover {
+    color: var(--primario);
+}
+
+.contrasena-visibilidad:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: -4px;
+}
+
+.contrasena-visibilidad span {
+    display: flex;
+}
+
+.contrasena-control [hidden] {
+    display: none;
+}
+
+
+.contrasena-reglas {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--texto-suave);
+    font-size: 0.875rem;
+}
+
+.contrasena-reglas li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.contrasena-regla-estado {
+    display: flex;
+    flex-shrink: 0;
+    color: var(--peligro);
+}
+
+.contrasena-regla-estado svg,
+.contrasena-regla-info svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.contrasena-reglas [data-cumple="true"] .contrasena-regla-estado {
+    color: #287044;
+}
+
+.contrasena-regla-ayuda {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.contrasena-regla-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--primario);
+    cursor: help;
+}
+
+.contrasena-regla-info:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: 3px;
+}
+
+.contrasena-regla-tooltip {
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    right: 0;
+    width: min(260px, 75vw);
+    box-sizing: border-box;
+    padding: 14px 16px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: var(--superficie);
+    color: var(--texto);
+    box-shadow: 0 6px 20px #00000018;
+    visibility: hidden;
+    opacity: 0;
+}
+
+.contrasena-regla-ayuda:hover .contrasena-regla-tooltip,
+.contrasena-regla-ayuda:focus-within .contrasena-regla-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.contrasena-reglas [hidden] {
+    display: none;
+}
+
+.contrasena-solo-lectores {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.contrasena-reglas-separador {
+    border-top: 1px solid var(--borde);
+}
+
+[data-cambio-contrasena] .boton-primario:disabled {
+    background: var(--primario);
+    opacity: 0.5;
+    cursor: not-allowed;
+}

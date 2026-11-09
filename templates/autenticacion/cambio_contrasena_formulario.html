@@ -1,25 +1,77 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}Cambiar mi contraseña | Academia TM{% endblock %}
 
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/cambio-contrasena.css' %}">
+{% endblock %}
+
 {% block contenido %}
-<section class="tarjeta tarjeta-angosta">
-    <h1>Cambiar mi contraseña</h1>
-    {% if request.user.debe_cambiar_contrasena %}
-        <div class="mensaje mensaje-warning">
-            Tenés que reemplazar la contraseña provisoria antes de continuar.
-        </div>
-    {% endif %}
-    <p>Ingresá tu contraseña actual y elegí una nueva. Tu sesión actual se mantendrá abierta; las otras sesiones deberán iniciar sesión nuevamente.</p>
-    <form method="post">
-        {% csrf_token %}
-        {% include "autenticacion/campos_formulario.html" %}
-        <div class="acciones-formulario">
-            {% if not request.user.debe_cambiar_contrasena %}
-                <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Cancelar</a>
+<div class="formulario-guiado-distribucion">
+    <section class="tarjeta tarjeta-formulario formulario-guiado">
+        <form method="post" novalidate aria-labelledby="contrasena-titulo" data-cambio-contrasena>
+            <h1 id="contrasena-titulo">Cambiar mi contraseña</h1>
+            {% if request.user.debe_cambiar_contrasena %}
+                <div class="mensaje mensaje-warning" role="status">
+                    Tenés que reemplazar la contraseña provisoria antes de continuar.
+                </div>
             {% endif %}
-            <button class="boton boton-primario" type="submit">Guardar contraseña</button>
-        </div>
-    </form>
-</section>
+            {% csrf_token %}
+            {% include "autenticacion/campos_formulario.html" with mostrar_contrasena_por_campo=True %}
+            <div class="acciones-formulario">
+                <button class="boton boton-primario" type="submit">Guardar contraseña</button>
+                {% if not request.user.debe_cambiar_contrasena %}
+                    <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Cancelar</a>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+    <aside class="formulario-guiado-ayuda" aria-labelledby="contrasena-ayuda-titulo">
+        <h2 id="contrasena-ayuda-titulo">Requisitos de la contraseña</h2>
+        <img class="formulario-guiado-ilustracion" src="{% static 'img/geometria-orbitas.svg' %}" alt="" width="600" height="300">
+        <ul class="contrasena-reglas" id="contrasena-reglas">
+            <li data-regla-contrasena="longitud">
+                <span>Al menos 8 caracteres</span>
+                <span class="contrasena-regla-estado" hidden>
+                    <span data-regla-check hidden>{% include "componentes/iconoir/check.html" %}</span>
+                    <span data-regla-cruz>{% include "componentes/iconoir/cruz.html" %}</span>
+                    <span class="contrasena-solo-lectores" data-regla-resultado></span>
+                </span>
+            </li>
+            <li data-regla-contrasena="numeros">
+                <span>No puede estar compuesta sólo por números</span>
+                <span class="contrasena-regla-estado" hidden>
+                    <span data-regla-check hidden>{% include "componentes/iconoir/check.html" %}</span>
+                    <span data-regla-cruz>{% include "componentes/iconoir/cruz.html" %}</span>
+                    <span class="contrasena-solo-lectores" data-regla-resultado></span>
+                </span>
+            </li>
+            <li data-regla-contrasena="coincidencia">
+                <span>Las contraseñas deben coincidir</span>
+                <span class="contrasena-regla-estado" hidden>
+                    <span data-regla-check hidden>{% include "componentes/iconoir/check.html" %}</span>
+                    <span data-regla-cruz>{% include "componentes/iconoir/cruz.html" %}</span>
+                    <span class="contrasena-solo-lectores" data-regla-resultado></span>
+                </span>
+            </li>
+            <li class="contrasena-reglas-separador" role="separator"></li>
+            <li>
+                <span>No debe parecerse a tus datos personales</span>
+                <span class="contrasena-regla-ayuda">
+                    <button class="contrasena-regla-info" type="button" aria-label="Información sobre datos personales" aria-describedby="contrasena-datos-tooltip">{% include "componentes/iconoir/informacion.html" %}</button>
+                    <span class="contrasena-regla-tooltip" id="contrasena-datos-tooltip" role="tooltip">Evitá contraseñas muy parecidas a tu nombre, apellido, nombre de usuario o correo electrónico</span>
+                </span>
+            </li>
+            <li>
+                <span>No puede ser una contraseña común</span>
+                <span class="contrasena-regla-ayuda">
+                    <button class="contrasena-regla-info" type="button" aria-label="Información sobre contraseñas comunes" aria-describedby="contrasena-comun-tooltip">{% include "componentes/iconoir/informacion.html" %}</button>
+                    <span class="contrasena-regla-tooltip" id="contrasena-comun-tooltip" role="tooltip">Evitá claves muy usadas y fáciles de adivinar, como «password» o «12345678»</span>
+                </span>
+            </li>
+        </ul>
+    </aside>
+</div>
+<script src="{% static 'js/cambio-contrasena.js' %}" defer></script>
 {% endblock %}

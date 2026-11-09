@@ -4,7 +4,18 @@
 {% for campo in form %}
     <div class="grupo-campo">
         <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-        {{ campo }}
+        {% if mostrar_contrasena_por_campo %}
+            <div class="contrasena-control">
+                {{ campo }}
+                <button class="contrasena-visibilidad" type="button" tabindex="-1" data-mostrar-contrasena
+                        aria-controls="{{ campo.id_for_label }}" aria-label="Mostrar {{ campo.label|lower }}" hidden>
+                    <span data-icono-mostrar>{% include "componentes/iconoir/ojo.html" %}</span>
+                    <span data-icono-ocultar hidden>{% include "componentes/iconoir/ojo-cerrado.html" %}</span>
+                </button>
+            </div>
+        {% else %}
+            {{ campo }}
+        {% endif %}
         {% if campo.help_text %}
             <div class="texto-secundario" id="{{ campo.auto_id }}_helptext">{{ campo.help_text|safe }}</div>
         {% endif %}
