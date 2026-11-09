@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
 from clases.servicios import bloquear_usuarios_clase
-from common.disponibilidad import validar_disponibilidad
+from common.disponibilidad import validar_disponibilidad, validar_limite_reservas_organizadas
 from common.fechas import validar_inicio_evento
 from common.respuestas import aplicar_respuesta
 from instalaciones.models import Cancha, Sede
@@ -108,7 +108,8 @@ def _contexto_creacion(actor, datos):
         raise ValidationError("El turno está ocupado. Seleccioná otro en Agenda.")
     if timezone.make_aware(datetime.combine(fecha, hora)) <= timezone.now():
         raise ValidationError("El turno ya comenzó.")
-    validar_disponibilidad(invitados_ids | {organizador_id}, fecha, hora, controlar_cupo=True)
+    validar_disponibilidad(invitados_ids | {organizador_id}, fecha, hora)
+    validar_limite_reservas_organizadas(organizador_id)
     contratos = coberturas(invitados_ids | {organizador_id}, fecha, bloquear=True)
     contrato = contratos.get(organizador_id) if modalidad == "membresia" else None
     if modalidad == "membresia" and contrato is None:
@@ -217,7 +218,7 @@ def gestionar_invitados(actor, reserva_id, invitados_ids, *, confirmacion=None):
     propuestas = []
     for pk in sorted(nuevos):
         _validar_persona(usuarios.get(pk))
-        validar_disponibilidad({pk}, reserva.evento.turno.fecha, reserva.evento.turno.hora_inicio, reserva_id=reserva.pk, controlar_cupo=True)
+        validar_disponibilidad({pk}, reserva.evento.turno.fecha, reserva.evento.turno.hora_inicio, reserva_id=reserva.pk)
         relacion = anteriores.get(pk) or ReservaInvitado(reserva=reserva, usuario=usuarios[pk])
         condicion, contrato = _condicion(reserva, pk, contratos)
         propuestas.append((relacion, "vigente", condicion, contrato))
@@ -262,7 +263,7 @@ def responder_invitacion(actor, reserva_id, respuesta):
         return relacion
     if respuesta == "afirmativa":
         _validar_persona(actor)
-        validar_disponibilidad({actor.pk}, reserva.evento.turno.fecha, reserva.evento.turno.hora_inicio, reserva_id=reserva.pk, controlar_cupo=True)
+        validar_disponibilidad({actor.pk}, reserva.evento.turno.fecha, reserva.evento.turno.hora_inicio, reserva_id=reserva.pk)
         if respuesta_anterior == "negativa":
             contratos = coberturas({actor.pk}, reserva.evento.turno.fecha, bloquear=True)
             relacion.condicion_aplicada, relacion.membresia_usuario = _condicion(reserva, actor.pk, contratos)

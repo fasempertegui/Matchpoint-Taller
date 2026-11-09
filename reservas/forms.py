@@ -2,7 +2,7 @@ from calendar import monthrange
 
 from django import forms
 from django.db.models import Q
-from common.disponibilidad import validar_disponibilidad
+from common.disponibilidad import validar_disponibilidad, validar_limite_reservas_organizadas
 from common.fechas import FECHA_INICIO_OPERACIONES
 from instalaciones.models import Cancha
 from usuarios.models import Rol, Usuario
@@ -45,8 +45,9 @@ class OrganizadorReservaForm(forms.Form):
         organizador = datos.get("organizador")
         if organizador is not None:
             try:
+                validar_limite_reservas_organizadas(organizador.pk)
                 validar_disponibilidad(
-                    {organizador.pk}, self.fecha, self.hora, controlar_cupo=True,
+                    {organizador.pk}, self.fecha, self.hora,
                 )
             except forms.ValidationError as error:
                 if error.code == "persona_ocupada":

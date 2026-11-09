@@ -89,7 +89,7 @@ La **reserva normal** conserva la tarifa por turno de la sede. Puede organizarla
 
 La **reserva con membresía** aplica una contratación que cubre la fecha del turno y exige horas de organizador disponibles. Se identifican todos los invitados. El adicional unitario se conserva al crear la reserva. «Actualizar socios» exige cobertura y horas de invitado disponibles para comprometer una hora y quitar el adicional, sin cambiar respuestas ni registrar dinero.
 
-Cada persona puede integrar hasta **dos reservas Programadas**, sumando las que organiza y las invitaciones vigentes Pendientes o Aceptadas. Se admite reservar desde hoy hasta el tercer día calendario siguiente inclusive, con inicio futuro. La disponibilidad personal impide coincidencias entre reservas y clases según los criterios del sistema.
+Cada persona puede organizar hasta **dos reservas Programadas**, sumando ambas modalidades y todas las sedes. Las invitaciones no cuentan para este límite. Se admite reservar desde hoy hasta el tercer día calendario siguiente inclusive, con inicio futuro. La disponibilidad personal impide coincidencias entre reservas y clases según los criterios del sistema.
 
 ## 4. Combinación de planes, membresías y reservas
 

@@ -35,10 +35,12 @@ def personas_ocupadas(usuarios_ids, fecha, hora, *, clase_id=None, reserva_id=No
     ) | set(invitados.values_list("usuario_id", flat=True))
 
 
-def validar_disponibilidad(usuarios_ids, fecha, hora, *, clase_id=None, reserva_id=None, controlar_cupo=False):
+def validar_disponibilidad(usuarios_ids, fecha, hora, *, clase_id=None, reserva_id=None):
     if personas_ocupadas(usuarios_ids, fecha, hora, clase_id=clase_id, reserva_id=reserva_id):
         raise ValidationError("Una persona ya participa en otra reserva o clase en esa fecha y hora.", code="persona_ocupada")
-    if controlar_cupo:
-        for usuario_id in sorted(usuarios_ids):
-            if reservas_personales(usuario_id, excluir=reserva_id).count() >= 2:
-                raise ValidationError("Cada persona puede integrar como máximo dos reservas Programadas.")
+
+
+def validar_limite_reservas_organizadas(organizador_id):
+    from reservas.models import Evento, Reserva
+    if Reserva.objects.filter(organizador_id=organizador_id, evento__estado=Evento.Estado.PROGRAMADO).count() >= 2:
+        raise ValidationError("Cada organizador puede tener como máximo dos reservas Programadas.")

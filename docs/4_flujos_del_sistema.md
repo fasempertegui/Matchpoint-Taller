@@ -1438,14 +1438,14 @@ Recorrido:
 2. Si existe membresía que cubre la fecha del turno, muestra Reserva normal y Reserva con membresía; en otro caso sólo Reserva normal. Cada opción abre su propio recorrido.
 3. Normal aplica tarifa positiva de sede y admite invitados opcionales. Con membresía exige horas disponibles del mes, identifica a todos los invitados y evalúa su condición de socios para la fecha del turno, comprometiendo una hora de invitado si tienen cobertura y saldo; sin cobertura o con cupo agotado participan con el mismo adicional, distinguiendo su motivo.
 4. Presenta turno, modalidad, participantes, tarifa o contratación aplicada, adicional unitario y total para confirmar. Los invitados sin beneficio generan adicional sólo con membresía, incluidos socios con cupo de invitado agotado.
-5. En una transacción bloquea personas en orden estable, instalaciones, turno, evento y contrataciones involucradas conforme a criterios 2.12. Revalida acceso, cupo conjunto de dos Programadas, coincidencias personales, calendario, ocupación, cobertura y precios.
+5. En una transacción bloquea personas en orden estable, instalaciones, turno, evento y contrataciones involucradas conforme a criterios 2.12. Revalida acceso, máximo de dos Programadas por organizador, coincidencias personales, calendario, ocupación, cobertura y precios.
 6. Registra evento Programado, reserva e invitados Pendientes juntos. Con membresía compromete una hora del organizador y conserva el adicional unitario. Normal conserva la tarifa. Envía confirmación e invitaciones por el proceso de email.
 
 Alternativas:
 
 - No se selecciona otro organizador ni se crean usuarios o roles en este flujo.
 - Sin tarifa no se confirma normal; con membresía no se exige tarifa de sede. Sin horas no se confirma con membresía, aunque la modalidad normal sigue disponible.
-- El organizador no puede repetirse como invitado. Todos los invitados registrados son cuentas activas habilitadas; se rechazan duplicados, cupos completos y coincidencias con reservas o clases.
+- El organizador no puede repetirse como invitado. Todos los invitados registrados son cuentas activas habilitadas; se rechazan duplicados, el máximo de reservas organizadas para el organizador y coincidencias con reservas o clases.
 - El beneficio de invitado exige cobertura y horas disponibles: la invitación Pendiente compromete una hora y Aceptar no la descuenta nuevamente. Al inicio, Pendiente o Aceptada vigente consume esa hora; no responder no la libera. Rechazar o retirar antes del inicio la libera. Las reservas normales no utilizan cupos de membresía de ningún participante. La cantidad y el total se derivan de relaciones vigentes Pendientes o Aceptadas.
 - Un cambio de selección, cobertura, precio o disponibilidad exige una nueva revisión, sin escrituras parciales. Cancelar la revisión no registra nada.
 - No hay reservas recurrentes. El portal no cobra; pagos y devoluciones corresponden a caja como operaciones independientes.
@@ -1943,7 +1943,7 @@ Recorrido:
 
 1. Abre el detalle informativo y solicita gestionar invitados. Muestra filas compactas con respuesta y condición comercial y una acción por fila.
 2. Agrega una cuenta habilitada, retira una invitación Pendiente o Aceptada, o reincorpora una relación retirada conservando su historia.
-3. Para incorporaciones evalúa cupo de dos, disponibilidad personal y condición comercial para la fecha. En normal no aplica membresías; con membresía identifica a todos y compromete una hora de invitado cuando aplica el beneficio o calcula el adicional si falta cobertura o saldo. Reincorporar revalida estas condiciones sin reiniciar respuestas.
+3. Para incorporaciones evalúa disponibilidad personal y condición comercial, sin aplicar el máximo de reservas organizadas al invitado para la fecha. En normal no aplica membresías; con membresía identifica a todos y compromete una hora de invitado cuando aplica el beneficio o calcula el adicional si falta cobertura o saldo. Reincorporar revalida estas condiciones sin reiniciar respuestas.
 4. Revisa el nuevo total y confirma. En una transacción bloquea y revalida las condiciones y guarda las relaciones y auditoría. Conserva respuestas e historia al reincorporar.
 5. Muestra participantes, total derivado y cobros vigentes separados. Notifica las nuevas invitaciones según el proceso de email.
 
@@ -2039,8 +2039,8 @@ Recorrido:
 1. Consulta su participación y solicita responder o modificar su decisión bajo demanda.
 2. Revisa la decisión; la primera respuesta no utiliza el único cambio permitido.
 3. En una transacción bloquea las personas involucradas, la reserva, la relación y las contrataciones aplicadas según criterios 2.12. Revalida titularidad, vigencia, inicio futuro y ausencia de un cambio previo cuando corresponde.
-4. Al pasar de Rechazada a Aceptada comprueba cupo personal, disponibilidad y condición de socio para la fecha. En una reserva con membresía revalida cobertura y horas de invitado disponibles: con beneficio compromete una hora; sin cobertura o con cupo agotado genera el mismo adicional con el precio unitario conservado, distinguiendo el motivo y conservando la historia comercial. Aceptar desde Pendiente conserva la condición comercial aplicada y mantiene el compromiso sin duplicarlo; reconocer una membresía contratada después se realiza mediante Actualizar socios. Una contratación Anulada no se vuelve a aplicar.
-5. Guarda respuesta, primera decisión o único cambio, responsables y momentos junto con la auditoría. El rechazo libera la hora de invitado comprometida y deja de contar para cupo personal, coincidencias, adicionales y bloqueo de anulación de membresía.
+4. Al pasar de Rechazada a Aceptada comprueba disponibilidad y condición de socio para la fecha. En una reserva con membresía revalida cobertura y horas de invitado disponibles: con beneficio compromete una hora; sin cobertura o con cupo agotado genera el mismo adicional con el precio unitario conservado, distinguiendo el motivo y conservando la historia comercial. Aceptar desde Pendiente conserva la condición comercial aplicada y mantiene el compromiso sin duplicarlo; reconocer una membresía contratada después se realiza mediante Actualizar socios. Una contratación Anulada no se vuelve a aplicar.
+5. Guarda respuesta, primera decisión o único cambio, responsables y momentos junto con la auditoría. El rechazo libera la hora de invitado comprometida y deja de contar para coincidencias, adicionales y bloqueo de anulación de membresía.
 
 Alternativas:
 
@@ -2058,7 +2058,7 @@ flowchart TD
     B --> C{Inicio vigencia y cambio válidos}
     C -->|No| D[Rechazar sin cambios]
     C -->|Sí| E{Vuelve a aceptar}
-    E -->|Sí| F[Validar cupo disponibilidad y condición comercial]
+    E -->|Sí| F[Validar disponibilidad y condición comercial]
     E -->|No| G[Guardar decisión e historia]
     F --> G
 ```

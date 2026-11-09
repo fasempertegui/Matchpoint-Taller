@@ -277,7 +277,7 @@ Los selectores de personas comparten búsqueda remota, espera breve para evitar 
 | Estado de candidato a invitado | Presentación y operación |
 |---|---|
 | No elegible | Motivo junto al resultado: cuenta inactiva, rol insuficiente, organizador o duplicado; sin Agregar |
-| Cupo completo | Explica el límite de dos Programadas por persona; impide incorporar |
+| Límite de reservas organizadas | Explica el máximo de dos Programadas por organizador; impide crear otra reserva, sin limitar invitaciones |
 | Coincidencia personal | Explica la incompatibilidad de horario con otra actividad sin revelar datos ajenos; impide incorporar |
 | Elegible | Nombre y condición comercial autorizada; una acción compacta Agregar |
 
@@ -404,7 +404,7 @@ Volver a editar conserva datos. La confirmación identifica actor, parámetros y
 
 ### 7.1 Creación y modalidades
 
-Una reserva ocupa una hora. Se admite desde hoy hasta el tercer día calendario siguiente inclusive, hasta el último turno habilitado de ese día, siempre con inicio futuro. Cada persona puede integrar como máximo dos reservas con evento Programado, sumando organización e invitaciones vigentes Pendientes o Aceptadas, entre todas las sedes. Un turno terminado sigue contando si el evento continúa Programado.
+Una reserva ocupa una hora. Se admite desde hoy hasta el tercer día calendario siguiente inclusive, hasta el último turno habilitado de ese día, siempre con inicio futuro. Cada persona puede organizar como máximo dos reservas con evento Programado, sumando ambas modalidades y todas las sedes. Las invitaciones no cuentan para ese máximo. Un turno terminado sigue contando si el evento continúa Programado.
 
 La disponibilidad personal rechaza coincidencias con otra reserva organizada, invitación vigente Pendiente/Aceptada, participación activa de clase en Asistirá o docencia vigente. Las invitaciones de reserva Rechazadas o retiradas no impiden otra actividad. El aviso No asistirá libera disponibilidad personal. La ocupación de cancha y la disponibilidad personal son controles diferentes y no se pueden exceptuar con una advertencia.
 
@@ -434,7 +434,7 @@ Atrás conserva datos; Cancelar abandona sin crear. La confirmación revalida cu
 
 El detalle prioriza número, turno, ubicación, estado y modalidad. Organizador y administración ven condiciones comerciales y total derivado; los cobros se consultan en una sección separada. Los invitados son filas con nombre, respuesta, condición comercial y una acción compacta cuando corresponde.
 
-Gestionar invitados se revela al organizador o administración sólo en una reserva Programada antes del inicio. El formulario presenta dos pasos, Invitados y Revisar cambios, con el turno en tarjetas oscuras y el organizador y modalidad en tarjetas claras. El botón circular «+» abre el buscador antes de los seleccionados y cambia a «×» para cerrarlo. La revisión presenta filas compactas con nombre, condición comercial cuando aplica y acción Agregar o Retirar, junto al total resultante. Volver conserva la selección y la confirmación aplica el conjunto revisado. Agregar busca cuentas activas con Reservas o Administrador, distintas del organizador y sin duplicados. Retirar y reincorporar conservan identidad y respuesta de la relación. Se revalidan cupo, disponibilidad y condición comercial al incorporar.
+Gestionar invitados se revela al organizador o administración sólo en una reserva Programada antes del inicio. El formulario presenta dos pasos, Invitados y Revisar cambios, con el turno en tarjetas oscuras y el organizador y modalidad en tarjetas claras. El botón circular «+» abre el buscador antes de los seleccionados y cambia a «×» para cerrarlo. La revisión presenta filas compactas con nombre, condición comercial cuando aplica y acción Agregar o Retirar, junto al total resultante. Volver conserva la selección y la confirmación aplica el conjunto revisado. Agregar busca cuentas activas con Reservas o Administrador, distintas del organizador y sin duplicados. Retirar y reincorporar conservan identidad y respuesta de la relación. Se revalidan disponibilidad y condición comercial al incorporar, sin aplicar el límite de reservas organizadas al invitado.
 
 Sólo se retiran invitaciones Pendientes o Aceptadas. Las Rechazadas permanecen visibles con su respuesta, sin Retirar ni Reenviar. Una retirada muestra su condición histórica y no permite responder mientras esté retirada. Editar a otro invitado conserva las condiciones comerciales de quienes permanecen.
 
@@ -452,7 +452,7 @@ Confirmar revalida inicio, permisos, relaciones, contrataciones y saldo disponib
 
 El invitado titular solicita Responder invitación y elige Aceptar o Rechazar antes del inicio. Después de la primera respuesta puede usar Cambiar respuesta una sola vez, sin volver a Pendiente. El detalle muestra decisión, primera respuesta y disponibilidad del cambio sin abrir controles por defecto.
 
-Rechazar libera hora de invitado comprometida, cupo personal, disponibilidad y adicional; conserva relación e historia. Volver a aceptar revalida disponibilidad, cupo y condición de socio para la fecha; si falta cobertura o saldo de invitado y la reserva utiliza la membresía del organizador, participa con adicional, distinguiendo no socio de cupo agotado, con el importe unitario conservado. La respuesta no cancela la reserva ni devuelve la hora del organizador.
+Rechazar libera hora de invitado comprometida, disponibilidad y adicional; conserva relación e historia. Volver a aceptar revalida disponibilidad y condición de socio con sus horas de invitado para la fecha; si falta cobertura o saldo de invitado y la reserva utiliza la membresía del organizador, participa con adicional, distinguiendo no socio de cupo agotado, con el importe unitario conservado. La respuesta no cancela la reserva ni devuelve la hora del organizador.
 
 Al comenzar, Pendiente se presenta como Sin respuesta, sin nueva transición almacenada y sin presumir asistencia. Ya no se ofrecen Responder ni Cambiar respuesta. Organizador y administración no responden por el titular y no reinician su único cambio mediante retiros o reincorporaciones.
 
