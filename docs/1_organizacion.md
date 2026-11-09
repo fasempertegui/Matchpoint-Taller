@@ -113,22 +113,13 @@ La administración decide si corresponde devolver dinero y cuánto, independient
 
 Tanto las clases como las reservas de cancha pueden cancelarse por estos motivos. Anular una reserva libera su único turno.
 
-Pueden recuperar clases los alumnos que hayan faltado a una clase o que estaban asignados a una clase cancelada. Los alumnos no eligen libremente cuándo recuperar; la recuperación se coordina con la administración.
-
-Para clases grupales, la recuperación puede resolverse de las siguientes formas:
-
-- El alumno asiste a una clase grupal ya programada pero no asignada a él, previo acuerdo con la administración.
-- Si no se puede recuperar de esa forma, se abre una clase puntual para ese fin.
-
-Para clases individuales, la recuperación puede requerir abrir una nueva clase individual.
-
 Las clases grupales suelen manejar un máximo de **6 alumnos**. En la práctica ese límite puede flexibilizarse por decisión administrativa.
 
 Las reservas son independientes: no existe restauración ni reprogramación vinculada, ni traslado de horas, ajustes o movimientos financieros. Administración registra el resultado Realizada o No realizada después de finalizar, con una única corrección con motivo; ese resultado no devuelve horas ni acredita asistencia individual.
 
 ### 5.2 Pagos
 
-No se registran señas ni adelantos vinculados a reservas.
+Se admiten señas o adelantos vinculados a reservas confirmadas, sin exigirlos para confirmar la reserva. Se registran como pagos parciales de esa reserva.
 
 Los pagos de la academia pueden realizarse mediante:
 
@@ -142,11 +133,9 @@ Las devoluciones son egresos efectivos de categoría Devoluciones, con vínculo 
 
 Actualmente, los administradores registran ingresos y egresos de la academia. Los ingresos pueden provenir de planes, membresías de socios, reservas u otros conceptos. Los egresos incluyen conceptos como alquiler, luz, pago a profesores, publicidad y otros gastos operativos.
 
-### 5.3 Profesores y permanencia de alumnos
+### 5.3 Profesores y participantes
 
 Una clase puede estar a cargo de más de un profesor. La academia también organiza clases especiales y capacitaciones a las que pueden asistir profesores u otras personas, además de sus alumnos habituales. Dictar una clase y asistir a ella son funciones diferentes.
-
-La academia puede expulsar alumnos cuando corresponda según sus criterios internos o normas de convivencia. En esos casos, la expulsión no genera derecho automático a devolución de importes ya abonados.
 
 ### 5.4 Contratación propia y organización del mes
 

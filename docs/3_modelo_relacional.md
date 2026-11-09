@@ -295,7 +295,7 @@ Representa una celda de la programación semanal vigente de una cancha.
 
 La combinación `cancha_id, dia_semana, hora_inicio` es única. `dia_semana` utiliza valores de uno a siete y `hora_inicio` contiene una hora en punto. La sede se obtiene de la cancha.
 
-No existe una entidad de planilla por mes ni una tabla de versiones: las asignaciones previstas utilizan `turnos_planilla_profesores` y `turnos_planilla_alumnos`. La referencia opcional de una clase a esta celda indica procedencia, no una copia histórica de la programación.
+No existe una entidad de planilla por mes ni una tabla de versiones: las asignaciones previstas utilizan `turnos_planilla_profesores` y `turnos_planilla_alumnos`. Las clases concretas no referencian esta celda; `clases.es_generada` identifica si se generaron desde la planilla y cada clase conserva sus propias asignaciones.
 
 ### 4.12 `turnos_planilla_profesores`
 
@@ -368,7 +368,7 @@ La coherencia de estado y auditoría es:
 
 - `programado`: sin responsable, momento o motivo de anulación ni momento de finalización.
 - `anulado`: con responsable, momento y motivo de anulación; sin momento de finalización.
-- `finalizado`: con momento de finalización y sin datos de anulación; sólo corresponde a reservas y clases.
+- `finalizado`: con momento de finalización y sin datos de anulación; corresponde a reservas, clases y bloqueos.
 
 `observaciones` y `motivo_anulacion` admiten cadena vacía, sin `NULL`. Las referencias a usuarios identifican responsables de registro y anulación. La responsabilidad de finalización manual de una clase se representa en `clases.finalizado_por_id`; no hay una columna equivalente para reservas.
 
@@ -584,7 +584,7 @@ Representa ingresos, egresos, aportes y retiros registrados manualmente en una s
 
 `monto` es positivo y se calcula con Decimal, sin floats. `concepto` siempre contiene texto no vacío. Los medios no efectivos requieren `referencia`. Ingreso exige `categoria_ingreso`: `reservas`, `planes`, `membresias` u `otros`. Se determina por el tipo de origen: Reservas, Planes y Membresías requieren su vínculo correspondiente; sin vínculo, la categoría es Otros. Egreso exige `categoria_egreso`: `alquiler`, `servicios`, `profesores`, `insumos`, `mantenimiento`, `publicidad`, `otros` o `devoluciones`; `destinatario` es texto opcional. Cada categoría queda vacía fuera de su clase. El destinatario queda vacío fuera de Egreso. Aporte y Retiro solo admiten efectivo y no se contabilizan como cobros o gastos operativos.
 
-Ingreso y Egreso de categoría `devoluciones` admiten referencias comerciales y como máximo una de las tres está informada. Una restricción de base de datos impide esos vínculos en otros egresos, aportes y retiros; un ingreso sin vínculo se identifica por su concepto obligatorio. `plan_usuario_id` referencia `planes_usuarios.id`, `membresia_usuario_id` referencia `membresias_usuarios.id` y `reserva_id` referencia `reservas.id`. No apuntan a productos del catálogo. Se admiten varios ingresos por origen, con comparación informativa del neto con el importe acordado. El registro muestra el importe conservado de la contratación y sus ingresos Vigentes; el concepto explica pagos parciales o acuerdos excepcionales, sin representar descuentos ni alterar importes comerciales. El origen debe existir y estar confirmado; no admite nuevos ingresos si la contratación está Anulada o el evento de la reserva está Anulado. No se crea ni renueva un origen al registrar el cobro.
+Ingreso y Egreso de categoría `devoluciones` admiten referencias comerciales y como máximo una de las tres está informada. Una restricción de base de datos impide esos vínculos en otros egresos, aportes y retiros; un ingreso sin vínculo se identifica por su concepto obligatorio. `plan_usuario_id` referencia `planes_usuarios.id`, `membresia_usuario_id` referencia `membresias_usuarios.id` y `reserva_id` referencia `reservas.id`. No apuntan a productos del catálogo. Se admiten varios ingresos por origen, con comparación informativa del neto con el importe acordado. Las señas o adelantos opcionales de reservas confirmadas se representan mediante estos mismos ingresos vinculados, sin una tabla ni un estado de pago propios. El registro muestra el importe conservado de la contratación y sus ingresos Vigentes; el concepto explica pagos parciales o acuerdos excepcionales, sin representar descuentos ni alterar importes comerciales. El origen debe existir y estar confirmado; no admite nuevos ingresos si la contratación está Anulada o el evento de la reserva está Anulado. No se crea ni renueva un origen al registrar el cobro.
 
 `sesion_id` referencia `sesiones_caja.id`; `registrado_por_id` y `anulado_por_id` referencian `usuarios.id`. Estas relaciones y los vínculos comerciales protegen a sus registros referenciados contra la eliminación. La reserva o contratación y su cobro se confirman como operaciones independientes: un error monetario no revierte el origen comercial.
 
@@ -708,7 +708,7 @@ El servicio sólo admite ajustes y reversiones para contrataciones Activas del p
 - `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
 - Las clases concretas son independientes de las celdas de planilla. Eliminar una celda no modifica las clases ni su indicador de origen.
 - `eventos.turno_id` protege al turno. Las especializaciones `reservas`, `clases` y `bloqueos` protegen su evento.
-- Las relaciones de invitados protegen reserva, usuario y contratación aplicada; retirar o rechazar no elimina la relación. Las respuestas de alumnos conservan su identidad al reactivar.
+- Las relaciones de invitados protegen reserva, usuario y contratación aplicada; quitar un invitado elimina la relación y conserva su historia en auditoría, mientras que rechazar conserva la relación con su respuesta. Las respuestas de alumnos conservan su identidad al reactivar.
 - `bloqueos.evento_origen_id` protege al evento de origen mientras exista la referencia de trazabilidad.
 - `log_auditoria.usuario_id` protege la cuenta del actor; el historial no admite modificación ni eliminación.
 - `intentos_auditoria.usuario_id` protege la cuenta del actor autenticado; el historial de intentos tampoco admite modificación, eliminación ni vaciado.
