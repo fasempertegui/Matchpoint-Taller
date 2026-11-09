@@ -353,3 +353,115 @@
 
 .perfil-info { display: inline-flex; vertical-align: middle; margin-left: 4px; color: var(--texto-suave); cursor: help; }
 .perfil-info:focus-visible { outline: 2px solid var(--primario); outline-offset: 3px; border-radius: 50%; }
+
+[data-modal-restablecer] .restablecer-explicacion {
+    margin-top: 16px;
+}
+
+[data-modal-restablecer] .restablecer-clave {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--primario);
+    font-family: var(--fuente-interfaz);
+    font-size: 1.25rem;
+    font-weight: 700;
+    user-select: all;
+}
+
+[data-modal-restablecer] [hidden] {
+    display: none;
+}
+
+.restablecer-persona {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--primario-suave);
+}
+
+.restablecer-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--primario);
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.restablecer-identidad {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+[data-modal-restablecer] [data-restablecer-resultado] .restablecer-advertencia {
+    margin-top: 16px;
+}
+
+[data-modal-restablecer] .restablecer-advertencia {
+    border-color: #fcd34d;
+    background: #fef3c7;
+    color: #92400e;
+}
+
+[data-modal-restablecer],
+[data-modal-restablecer] .boton {
+    border-radius: 10px;
+}
+
+[data-modal-restablecer] .modal-confirmacion-acciones {
+    justify-content: flex-start;
+}
+
+
+.restablecer-credencial {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 8px 12px 16px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--fondo);
+}
+
+.restablecer-copiar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--texto-suave);
+    cursor: pointer;
+}
+
+.restablecer-copiar:hover {
+    color: var(--primario);
+}
+
+.restablecer-copiar:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: 2px;
+}
+
+.restablecer-copiar span {
+    display: flex;
+}
+
+.restablecer-copiar [data-icono-copiado] {
+    color: #287044;
+}

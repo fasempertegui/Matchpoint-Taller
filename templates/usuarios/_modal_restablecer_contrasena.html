@@ -1,0 +1,37 @@
+<dialog class="modal-confirmacion" data-modal-restablecer aria-labelledby="restablecer-titulo">
+    <form class="modal-confirmacion-formulario" method="post" action="{% url 'usuarios:usuario_restablecer_contrasena' usuario_obj.pk %}" data-restablecer-formulario>
+        {% csrf_token %}
+        <header class="modal-confirmacion-cabecera">
+            <h2 id="restablecer-titulo" data-restablecer-titulo>Restablecer contraseña</h2>
+        </header>
+        <div class="modal-confirmacion-contenido">
+            <div class="restablecer-persona">
+                <span class="restablecer-avatar" aria-hidden="true">{{ usuario_obj.first_name|default:usuario_obj.username|slice:":1"|upper }}{{ usuario_obj.last_name|slice:":1"|upper }}</span>
+                <div class="restablecer-identidad">
+                    <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>
+                    <small class="texto-secundario">@{{ usuario_obj.username }}</small>
+                </div>
+            </div>
+            <div class="restablecer-explicacion" data-restablecer-confirmacion>
+                <p class="nota-campo restablecer-advertencia">La contraseña actual dejará de funcionar</p>
+                <p class="restablecer-explicacion">Se generará una contraseña provisoria que deberá reemplazarse en el próximo inicio de sesión</p>
+            </div>
+            <div class="restablecer-explicacion" data-restablecer-resultado hidden>
+                <p class="restablecer-explicacion">La contraseña se restableció con éxito y es la siguiente:</p>
+                <div class="restablecer-credencial restablecer-explicacion">
+                    <code class="restablecer-clave" data-restablecer-clave></code>
+                    <button class="restablecer-copiar" type="button" data-restablecer-copiar aria-label="Copiar contraseña">
+                        <span data-icono-copiar>{% include "componentes/iconoir/copiar.html" %}</span>
+                        <span data-icono-copiado hidden>{% include "componentes/iconoir/check.html" %}</span>
+                    </button>
+                </div>
+                <p class="nota-campo restablecer-advertencia">¡Cuidado! Esta contraseña no vuelve a mostrarse</p>
+            </div>
+            <p class="error-campo restablecer-explicacion" data-restablecer-error role="alert" hidden></p>
+        </div>
+        <footer class="modal-confirmacion-acciones">
+            <button class="boton boton-primario" type="submit" data-restablecer-confirmar>Restablecer</button>
+            <button class="boton boton-secundario" type="button" data-restablecer-cerrar autofocus>Cancelar</button>
+        </footer>
+    </form>
+</dialog>

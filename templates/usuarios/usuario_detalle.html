@@ -132,14 +132,12 @@
             {% if request.user.pk == usuario_obj.pk or perms.usuarios.change_usuario %}
                 <section class="perfil-seccion" aria-labelledby="acceso-titulo">
                     <h2 id="acceso-titulo">Acceso y seguridad</h2>
-                    {% if usuario_obj.debe_cambiar_contrasena %}
-                        <p class="perfil-aviso-acceso">Cambio de contraseña pendiente.</p>
-                    {% endif %}
+                    <p class="perfil-aviso-acceso" data-cambio-pendiente{% if not usuario_obj.debe_cambiar_contrasena %} hidden{% endif %}>Cambio de contraseña pendiente</p>
                     <div class="perfil-acciones perfil-acciones-botones">
                         {% if request.user.pk == usuario_obj.pk %}
                             <a class="boton boton-secundario boton-chico" href="{% url 'password_change' %}">Cambiar mi contraseña</a>
                         {% else %}
-                            <a class="boton boton-secundario boton-chico" href="{% url 'usuarios:usuario_restablecer_contrasena' usuario_obj.pk %}">Restablecer contraseña</a>
+                            <button class="boton boton-secundario boton-chico" type="button" data-abrir-restablecimiento>Restablecer contraseña</button>
                             <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_cambiar_estado' usuario_obj.pk %}"
                                       data-confirmar="{% if usuario_obj.is_active %}¿Desactivar la cuenta de {{ usuario_obj.get_full_name|default:usuario_obj.username }}? No va a poder iniciar sesión hasta que se reactive su cuenta.{% else %}¿Activar la cuenta de {{ usuario_obj.get_full_name|default:usuario_obj.username }}? Va a poder iniciar sesión de nuevo.{% endif %}"
                                       data-confirmar-titulo="{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta"
@@ -156,5 +154,9 @@
         </aside>
     </div>
 </article>
+{% if perms.usuarios.change_usuario and request.user.pk != usuario_obj.pk %}
+    {% include "usuarios/_modal_restablecer_contrasena.html" %}
+    <script src="{% static 'js/usuario-restablecer-contrasena.js' %}" defer></script>
+{% endif %}
 <script src="{% static 'js/usuario-perfil.js' %}" defer></script>
 {% endblock %}

@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from auditoria.contexto import contexto_auditoria
@@ -154,18 +155,18 @@ def usuario_editar(request, pk):
 
 @login_required
 @permission_required("usuarios.change_usuario", raise_exception=True)
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["POST"])
+@never_cache
 def usuario_restablecer_contrasena(request, pk):
     usuario = get_object_or_404(Usuario, pk=pk)
-
     if usuario.pk == request.user.pk:
-        messages.error(
-            request,
-            "No podés restablecer tu propia contraseña. Usá la opción para cambiarla.",
+        return JsonResponse(
+            {"error": "No podés restablecer tu propia contraseña. Usá la opción para cambiarla."},
+            status=400,
         )
-        return redirect("usuarios:usuario_detalle", pk=usuario.pk)
 
-    if request.method == "POST":
+    with transaction.atomic():
+        usuario = Usuario.objects.select_for_update().get(pk=usuario.pk)
         with contexto_auditoria(request.user, accion=LogAuditoria.Accion.RESTABLECIMIENTO_CONTRASENA):
             contrasena = generar_contrasena_valida(usuario)
             usuario.set_password(contrasena)
@@ -174,22 +175,7 @@ def usuario_restablecer_contrasena(request, pk):
                 update_fields=["password", "debe_cambiar_contrasena", "actualizado_en"]
             )
 
-        return render(
-            request,
-            "usuarios/usuario_contrasena_restablecida.html",
-            {
-                "usuario_obj": usuario,
-                "contrasena": contrasena,
-            },
-        )
-
-    return render(
-        request,
-        "usuarios/usuario_restablecer_contrasena.html",
-        {
-            "usuario_obj": usuario,
-        },
-    )
+    return JsonResponse({"contrasena": contrasena})
 
 
 @login_required
