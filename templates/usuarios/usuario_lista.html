@@ -44,7 +44,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for usuario_obj in usuarios %}
+            {% for usuario_obj in pagina %}
             <tr>
                 <td>
                     <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>
@@ -75,5 +75,12 @@
         </tbody>
     </table>
 </section>
+{% if pagina.has_other_pages %}
+<nav class="acciones" aria-label="Páginas de usuarios">
+    {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?{% if parametros %}{{ parametros }}&amp;{% endif %}pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+    <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+    {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?{% if parametros %}{{ parametros }}&amp;{% endif %}pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+</nav>
+{% endif %}
 <script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Q
 from django.http import JsonResponse
@@ -40,7 +41,7 @@ def usuario_lista(request):
                 rol__codigo=Rol.ADMINISTRADOR,
             )
         )
-    ).order_by("first_name", "last_name")
+    ).order_by("first_name", "last_name", "pk")
 
     if formulario_busqueda.is_valid():
         q = formulario_busqueda.cleaned_data.get("q")
@@ -58,11 +59,14 @@ def usuario_lista(request):
         if estado:
             usuarios = usuarios.filter(is_active=estado == "activo")
 
+    parametros = request.GET.copy()
+    parametros.pop("pagina", None)
     return render(
         request,
         "usuarios/usuario_lista.html",
         {
-            "usuarios": usuarios,
+            "pagina": Paginator(usuarios, 25).get_page(request.GET.get("pagina")),
+            "parametros": parametros.urlencode(),
             "formulario_busqueda": formulario_busqueda,
         },
     )
