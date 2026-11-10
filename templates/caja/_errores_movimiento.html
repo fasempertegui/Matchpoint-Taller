@@ -1,0 +1,9 @@
+{% if formulario.errors %}
+    <div class="mensaje mensaje-error" role="alert"><div>
+        <p>Revisá los siguientes datos para continuar:</p>
+        <ul>
+            {% for error in formulario.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+            {% for campo in formulario %}{% for error in campo.errors %}<li>{{ campo.label }}: {{ error }}</li>{% endfor %}{% endfor %}
+        </ul>
+    </div></div>
+{% endif %}

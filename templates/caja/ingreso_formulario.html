@@ -8,8 +8,8 @@
     <form method="post" action="?tipo={{ tipo }}" data-ingreso-formulario novalidate>
         {% csrf_token %}
         {% if origen %}<input type="hidden" name="origen" value="{{ origen.pk }}">{% endif %}
-        {% for campo in formulario.hidden_fields %}{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
-        {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert"><div>{% for error in formulario.non_field_errors %}<p class="ingreso-error">{{ error }}</p>{% endfor %}</div></div>{% endif %}
+        {% for campo in formulario.hidden_fields %}{{ campo }}{% endfor %}
+        {% include "caja/_errores_movimiento.html" %}
         <h2 class="ingreso-seccion-titulo">Datos del cobro</h2>
         {% for campo in formulario.visible_fields %}
             <div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>

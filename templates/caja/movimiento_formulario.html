@@ -4,7 +4,8 @@
 {% block contenido %}
 <section class="tarjeta tarjeta-formulario"><h1>{{ titulo }}</h1><p>{{ sesion.numero }} · Efectivo disponible: <strong>$ {{ disponible|floatformat:"2g" }}</strong></p>
 {% if clase == 'egreso' %}<p>Registrá el pago realizado. Para devolver dinero a un cliente, elegí Devoluciones.</p>{% else %}<p>Este movimiento es exclusivamente en efectivo y se identifica por separado de los cobros y gastos operativos.</p>{% endif %}
-<form method="post"{% if clase == 'egreso' %} data-ingreso-formulario{% endif %}>{% csrf_token %}{{ formulario.non_field_errors }}
+<form method="post"{% if clase == 'egreso' %} data-ingreso-formulario{% endif %} novalidate>{% csrf_token %}
+{% include "caja/_errores_movimiento.html" %}
 {% for campo in formulario %}
 {% if campo.is_hidden %}{{ campo }}{{ campo.errors }}
 {% elif campo.name == 'destinatario' %}<details{% if campo.value or campo.errors %} open{% endif %}><summary>Agregar destinatario</summary><div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div></details>
