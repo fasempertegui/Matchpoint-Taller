@@ -32,15 +32,3 @@ def validar_mes_contratacion(mes):
 def validar_fecha_alta(fecha):
     if not FECHA_INICIO_OPERACIONES <= fecha <= timezone.localdate():
         raise ValidationError("La fecha efectiva de alta debe estar entre el 01/08/2026 y hoy.")
-
-
-def meses_contratables_propios():
-    inicio_mes = timezone.localdate().replace(day=1)
-    return [mes for mes in meses_contratables() if mes >= inicio_mes]
-
-
-def validar_mes_contratacion_propia(mes):
-    if mes not in meses_contratables_propios():
-        raise ValidationError(
-            "Elegí el mes actual o el siguiente habilitado desde el día 25 inclusive."
-        )

@@ -16,7 +16,7 @@ Lo que el sistema hace por sí solo, sin que ningún actor lo pida en el momento
 
 ## Criterio temporal común
 
-Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; todas las altas de eventos tienen como límite el último día del segundo mes calendario siguiente al actual; ningún evento de reserva, clase o bloqueo admite creación histórica ni sobre un turno ya iniciado; todos exigen inicio estrictamente futuro y ninguna anulación puede afectar un turno iniciado; las reservas nuevas exigen inicio futuro y fecha entre hoy y tres días después, inclusive; la generación de clases selecciona un mes completo por defecto, omite los días pasados y turnos iniciados y admite períodos internos de hasta 62 días; las consultas de actividad de clases y uso de membresías, hasta 366 días; las contrataciones administrativas llegan desde el inicio operativo hasta el mes siguiente, que se habilita el día 25 para toda alta propia o administrativa; el portal no contrata meses históricos; los movimientos de caja usan únicamente fecha de registro del servidor; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
+Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; todas las altas de eventos tienen como límite el último día del segundo mes calendario siguiente al actual; ningún evento de reserva, clase o bloqueo admite creación histórica ni sobre un turno ya iniciado; todos exigen inicio estrictamente futuro y ninguna anulación puede afectar un turno iniciado; las reservas nuevas exigen inicio futuro y fecha entre hoy y tres días después, inclusive; la generación de clases selecciona un mes completo por defecto, omite los días pasados y turnos iniciados y admite períodos internos de hasta 62 días; las consultas de actividad de clases y uso de membresías, hasta 366 días; las contrataciones administrativas llegan desde el inicio operativo hasta el mes siguiente, que se habilita el día 25 para las altas administrativas; el portal no registra contrataciones ni renovaciones; los movimientos de caja usan únicamente fecha de registro del servidor; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
 
 ---
 
@@ -103,9 +103,9 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Bloqueos | FL-65 | Liberar un bloqueo |
 | Bloqueos | FL-66 | Anular y liberar eventos en lote |
 | Bloqueos | FL-67 | Consultar bloqueos |
-| Contrataciones | FL-74 | Contratar una membresía propia |
-| Contrataciones | FL-75 | Renovar el mismo plan propio |
 | Clases | FL-76 | Consultar contrataciones de alumnos de la plantilla |
+| Contrataciones | FL-81 | Responder o cambiar respuesta de continuidad |
+| Contrataciones | FL-82 | Consultar continuidad de planes y membresías |
 | Membresías | FL-77 | Ajustar horas de una contratación |
 | Membresías | FL-78 | Revertir un ajuste de horas |
 | Consulta comercial | FL-79 | Consultar situación financiera |
@@ -779,7 +779,7 @@ Recorrido:
 Alternativas:
 
 - Consultar una membresía propia no exige Alumno.
-- El titular consulta únicamente sus contrataciones y solicita Contratar membresía o Renovar el mismo plan por FL-74/75 cuando corresponde. Las anulaciones y los cambios de producto son administrativos.
+- El titular consulta únicamente sus contratos, movimientos autorizados y comprobantes. Puede responder la encuesta mediante FL-81; las contrataciones, renovaciones, anulaciones y cambios de producto son administrativos.
 - Desde el detalle, administración y titular pueden abrir el comprobante autorizado e imprimirlo o guardarlo como PDF. Muestra el importe registrado y las condiciones del producto, acredita la contratación y no el pago, y aplica los mismos límites de información del detalle.
 - La consulta de cobros excluye movimientos Anulados, incluso si se anularon después del cierre de caja. Las contrataciones Anuladas conservan su consulta histórica. Muestra ingresos, devoluciones y neto, con la comparación comercial de FL-79, sin utilizar los totales históricos del cierre.
 - La consulta histórica utiliza la contratación concreta.
@@ -807,13 +807,14 @@ Recorrido:
 4. En una transacción, bloquea al usuario y al producto, verifica acceso, estado y configuración del producto, precio revisado y ausencia de otra contratación no Anulada del mismo tipo para ese mes.
 5. Registra una fila en `planes_usuarios` o `membresias_usuarios`, con su producto obligatorio, mes, importe aplicado y responsable. Si el mes terminó nace Vencida; en otro caso, Activa.
 6. Si registra un plan Activo, falta Alumno y el titular no es administrador, asigna el rol en la misma transacción.
+7. Guarda un único aviso al titular con producto, período, importe y acceso al detalle propio. No acredita pago; si la encuesta está abierta, incluye su plazo y acceso en el mismo email.
 
 Alternativas:
 
 - El formulario tiene dos pasos: selección de usuario y producto, y datos de contratación. Volver conserva la selección, el mes, la fecha de alta, el precio revisado y las observaciones; el importe no es editable. Cambiar de producto muestra su precio vigente; ambos tipos aplican siempre el precio vigente al confirmar. Cancelar abandona el proceso y sólo la confirmación final registra la contratación.
 - Puede combinar un plan y una membresía, pero no duplicar el mismo tipo en un mes, incluidos registros Vencidos.
 - El mes se encuentra entre agosto de 2026 y el siguiente al actual; ese mes siguiente sólo se habilita desde el día 25 inclusive. Las operaciones del mes vigente o históricas permitidas no dependen de esa apertura. La fecha efectiva de alta administrativa es independiente del mes cubierto y admite desde el inicio de operaciones hasta hoy, inclusive.
-- Renovar para otro mes crea una contratación nueva. La primera contratación de plan y los cambios son administrativos; el titular puede renovar el mismo producto por FL-75 sin habilitación adicional. Las asignaciones iniciales y modificaciones de horarios se gestionan por sus recorridos propios.
+- Renovar para otro mes crea una contratación nueva por administración. Las asignaciones y modificaciones de horarios se gestionan por sus propios recorridos.
 - Una membresía no otorga Alumno y su vigencia se verifica para cada fecha de uso.
 - El ingreso se registra por separado mediante **FL-43**; el importe aplicado no representa lo abonado.
 
@@ -2374,75 +2375,6 @@ flowchart TD
 
 ### 3.17 Contratación propia y seguimiento de planes
 
-#### FL-74. Contratar una membresía propia
-
-- **Objetivo:** confirmar una membresía mensual del titular con cobro independiente.
-- **Actor:** titular autenticado, activo y con contraseña regularizada.
-- **Entradas:** producto Activo, mes actual o siguiente habilitado y observaciones opcionales.
-
-Recorrido:
-
-1. Desde Mis contrataciones o el acceso autorizado en Oferta solicita Contratar membresía. La contratación corresponde al propio titular, sin selector de otra persona.
-2. Elige producto y mes. El siguiente se ofrece desde el día 25 inclusive; el actual cubre el mes completo, sin prorrateo.
-3. Revisa producto, horas, cobertura, precio vigente mensual y condiciones. La revisión informa que no registra un pago y que los cobros se gestionan en la sede.
-4. Confirma dentro de una transacción que bloquea al titular y el producto según criterios 2.12. Revalida acceso, producto Activo, importe revisado, calendario y ausencia de otra membresía no Anulada para ese mes.
-5. Registra `membresias_usuarios` con precio aplicado copiado del catálogo, fecha efectiva local del servidor y responsable igual al titular. No otorga Alumno ni crea un movimiento de caja.
-6. Muestra contratación, estado y acceso al comprobante propio. Los beneficios se aplican al mes contratado sin exigir un cobro previo.
-
-Alternativas:
-
-- Atrás conserva selección; Cancelar no guarda. Un cambio de precio, producto o elegibilidad exige otra revisión.
-- No permite titular ajeno, precio editable ni contratación histórica. Una cuenta con Profesor puede contratar membresía.
-- Un reenvío de la misma operación ofrece la contratación registrada; una colisión con otro producto no sobrescribe el registro ni se presenta como una confirmación propia exitosa.
-- La falta de cobros no suspende automáticamente beneficios. Anular o reemplazar corresponde a administración con sus guardas comerciales.
-
-- **Resultado:** membresía confirmada con importe conservado, sin cobro automático.
-- **Datos:** usuarios, membresias y membresias_usuarios.
-
-```mermaid
-flowchart TD
-    A[Solicitar Contratar membresía] --> B[Elegir producto y mes habilitado]
-    B --> C[Revisar cobertura e importe]
-    C --> D[Confirmar y revalidar bajo bloqueo]
-    D --> E[Registrar contratación del titular]
-    E --> F[Mostrar comprobante sin registrar cobro]
-```
-
-#### FL-75. Renovar el mismo plan propio
-
-- **Objetivo:** confirmar otro mes del mismo plan, sin habilitación administrativa adicional.
-- **Actor:** alumno titular autenticado, activo y con contraseña regularizada, sin incompatibilidad con Profesor.
-- **Entradas:** contratación no Anulada de referencia y observaciones opcionales.
-
-Recorrido:
-
-1. Desde Mis contrataciones solicita Renovar sobre su plan de referencia. Conserva producto y propone el mes calendario siguiente al de esa contratación.
-2. Comprueba que el mes propuesto no sea histórico y esté habilitado por calendario; si es el siguiente al actual sólo se abre desde el día 25 inclusive.
-3. Revisa producto, frecuencia, modalidad, duración, mes cubierto e importe vigente definitivo. La pantalla distingue contratación, horarios y cobro: renovar no modifica automáticamente clases ni plantilla.
-4. Confirma dentro de una transacción coordinada con el alta administrativa y anulaciones. Bloquea titular, producto y referencia en orden consistente; revalida permisos, cuenta habilitada, referencia no Anulada, mismo producto Activo, precio revisado y exclusividad de plan para el mes.
-5. Crea otra fila de `planes_usuarios` con precio vigente, fecha efectiva del servidor y responsable titular. Conserva origen, programación, cobros y roles según sus reglas.
-6. Muestra contratación y comprobante propio; el cobro se registra posteriormente como otra operación.
-
-Alternativas:
-
-- No hay una aprobación individual de renovación por administración ni estado Solicitud.
-- No permite elegir otro plan, modificar frecuencia o modalidad ni cargar meses históricos. Un producto Inactivo o una referencia anulada exige gestionar el caso con administración.
-- El alta inicial, cambios de producto, asignaciones iniciales y modificaciones de horarios son administrativos. Administración también registra renovaciones por FL-20.
-- Cambios en precio, referencia o período exigen nueva revisión. Reenvíos no duplican contratos; una contratación existente se consulta sin sobrescribirla.
-- Una ausencia de pago no cambia cobertura ni precio; no hay renovación automática del mes posterior.
-
-- **Resultado:** nuevo mes del mismo plan confirmado por el titular.
-- **Datos:** usuarios, roles, planes y planes_usuarios.
-
-```mermaid
-flowchart TD
-    A[Solicitar Renovar plan propio] --> B[Conservar producto y proponer mes siguiente]
-    B --> C[Revisar precio y condiciones]
-    C --> D[Revalidar referencia calendario y exclusividad]
-    D --> E[Registrar nueva contratación]
-    E --> F[Conservar horarios y cobros independientes]
-```
-
 #### FL-76. Consultar contrataciones de alumnos de la plantilla
 
 - **Objetivo:** identificar la situación comercial de las personas previstas en la plantilla para un mes.
@@ -2459,7 +2391,7 @@ Recorrido:
 Alternativas:
 
 - Sin contratación no se interpreta como baja, indecisión, deuda o ausencia de pago. Se conservan participaciones de prueba y acuerdos fuera de contratación.
-- No crea encuestas ni retira personas automáticamente. La consulta no tiene un botón para quitar en lote a quienes no contrataron.
+- Muestra la respuesta de continuidad del contrato consultado, sin inferirla desde el contrato siguiente. Enlaza a FL-82 para consultar planes y membresías, incluidos titulares sin planilla. No retira personas ni ofrece un botón para quitar en lote a quienes no contrataron.
 - Contratar o no contratar no modifica clases concretas, respuestas, asistencia, cobros ni plantilla. Las modificaciones se confirman por sus recorridos propios.
 - Un caso sin datos muestra texto breve, sin abrir un alta comercial por cada fila.
 
@@ -2473,6 +2405,36 @@ flowchart TD
     C --> D[Mostrar producto o Sin contratación]
     D --> E[Acceder a operaciones administrativas propias]
 ```
+
+#### FL-81. Responder o cambiar respuesta de continuidad
+
+- **Actor:** titular activo con correo verificado y contraseña regularizada; administración sólo consulta.
+- **Entrada:** Continuar con el mismo producto, Cambiar de producto, Todavía no sé o No continuar en la academia.
+
+1. En el detalle del contrato consulta su respuesta actual o Sin responder y el mes por el que se pregunta.
+2. Durante el plazo, Responder o Cambiar respuesta abre el formulario. Abrirlo no guarda nada.
+3. Mediante POST confirma una respuesta válida. Se bloquean titular y contrato, se revalidan identidad, habilitación, verificación, estado y ventana de Salta.
+4. Guarda respuesta y fecha en una sola actualización auditada. Repetir la misma respuesta no cambia fechas ni produce efectos.
+
+La ventana es desde el 25 del mes cubierto a las 00:00 hasta el 6 del siguiente a las 00:00, excluido. Vencido puede responder del 1 al 5; Anulado sólo permite consultar. No permite contratos ajenos ni vaciar una respuesta. Al cerrar queda sólo lectura. Cada contrato tiene su respuesta independiente; no se deduce del silencio ni de otro contrato. Responder no crea contratos, cobros, bajas, retiradas, modificaciones de planilla ni emails a administración.
+
+- **Resultado:** última intención del titular guardada y consultable.
+- **Datos:** planes_usuarios o membresias_usuarios y log_auditoria.
+
+#### FL-82. Consultar continuidad de planes y membresías
+
+- **Actor:** Administrador.
+- **Entradas:** mes cubierto, tipo de producto y respuesta, incluido Sin responder.
+
+1. Abre Continuidad desde Membresías o desde el seguimiento de la plantilla.
+2. Selecciona filtros y consulta todas las contrataciones del alcance elegido, incluso sin titular en planilla.
+3. Revisa titular, producto, mes, estado, respuesta y fecha en filas compactas y paginadas.
+4. Abre el detalle autorizado para consultar el contrato y su respuesta. Administración no responde por el titular.
+
+La consulta conserva los casos Anulados para leer respuestas previas. Indeciso es distinto de Sin responder. No crea contrataciones ni altera la programación. FL-76 conserva el seguimiento comercial de personas previstas en la plantilla y enlaza esta consulta general.
+
+- **Resultado:** intenciones consultadas sin cambios operativos.
+- **Datos:** usuarios, planes, membresias, planes_usuarios y membresias_usuarios.
 
 ### 3.18 Ajustes de horas y situación financiera
 
@@ -2569,7 +2531,7 @@ Recorrido:
 
 Alternativas:
 
-- Los tipos de evento contemplados son: confirmación de alta de cuenta (**FL-06**), recuperación de contraseña (**FL-46**), confirmación de una reserva propia (**FL-40**, **FL-51**), invitación a una reserva normal o con membresía (**FL-40**, **FL-51**, **FL-52**), cancelación de una reserva o clase que afecta al usuario (**FL-37**, **FL-60**, **FL-61**), vencimiento próximo de una contratación (ver 4.5), recordatorio de la próxima clase asignada (ver 4.6), y asignación de participantes o profesores a clases, y de profesores a turnos de planilla.
+- Los tipos de evento contemplados son: confirmación de alta de cuenta (**FL-06**), recuperación de contraseña (**FL-46**), confirmación de una reserva propia (**FL-40**, **FL-51**), invitación a una reserva normal o con membresía (**FL-40**, **FL-51**, **FL-52**), cancelación de una reserva o clase que afecta al usuario (**FL-37**, **FL-60**, **FL-61**), apertura y recordatorios de continuidad (ver 4.5), recordatorio de la próxima clase asignada (ver 4.6), y asignación de participantes o profesores a clases, y de profesores a turnos de planilla.
 - Si el envío falla, registra el error y no revierte la operación que lo originó; queda para reintento según la infraestructura de envío.
 - No existe una bandeja de notificaciones dentro del sistema: el email es el único canal.
 
@@ -2621,33 +2583,21 @@ flowchart TD
     H --> G
 ```
 
-### 4.5 Aviso de vencimiento próximo de una contratación
+### 4.5 Apertura y recordatorios de continuidad
 
-- **Objetivo:** avisar al titular que su plan o membresía está por vencer.
-- **Disparador:** tarea diaria de Celery.
+- **Objetivo:** solicitar la intención del titular para el mes siguiente de cada contratación.
+- **Disparador:** revisión diaria a las 09:00 de Salta en las fechas de campaña.
 
-Procedimiento:
+1. El 25 del mes cubierto selecciona encuestas disponibles de planes y membresías no Anulados.
+2. El último día del mes y el 5 del siguiente selecciona únicamente las encuestas Sin responder. Indeciso es una respuesta y no se incluye en estos recordatorios.
+3. Revalida cuenta habilitada, correo verificado, apertura de la encuesta, estado y respuesta. Vencido puede participar del 1 al 5; Anulado queda excluido.
+4. Agrupa por titular y fecha un email con los apartados y accesos correspondientes. Conserva seguimiento por contratación y fecha para evitar duplicados e intenta completar pendientes durante ese mismo día.
+5. El mensaje del último día del mes recuerda el plazo restante; el del día 5 destaca que el plazo termina hoy. Los enlaces llevan al detalle con autenticación y no guardan respuestas.
 
-1. Consulta por separado las contrataciones Activas de planes y membresías.
-2. Calcula el fin de cada mes cubierto y selecciona las que terminan dentro de los próximos tres días.
-3. Si `aviso_vencimiento_enviado` es falso, envía el email y conserva la marca para no repetirlo.
+Una contratación registrada con encuesta abierta recibe el acceso en su confirmación comercial, sin otro email de apertura. Tener otro contrato para el mes siguiente no responde la encuesta. La campaña no deduce bajas desde el silencio, no renueva, cobra, retira personas ni modifica la planilla. La última respuesta y su fecha se consultan mediante FL-81, FL-82 y el detalle de cada contrato.
 
-Condiciones:
-
-- No avisa contrataciones Anuladas o Vencidas.
-- No renueva, cobra ni cambia el estado de la contratación.
-- El aviso pertenece a la contratación concreta, no al producto del catálogo.
-
-- **Resultado:** avisos enviados y registrados.
-- **Datos:** usuarios, planes_usuarios y membresias_usuarios.
-
-```mermaid
-flowchart TD
-    A[Tarea diaria] --> B[Consultar Activos próximos a vencer en ambas tablas]
-    B --> C{Aviso pendiente}
-    C -->|No| D[Conservar marca]
-    C -->|Sí| E[Enviar email y registrar envío]
-```
+- **Resultado:** avisos de encuesta registrados por contratación y fecha.
+- **Datos:** usuarios, planes_usuarios, membresias_usuarios y envios_email.
 
 ### 4.6 Recordatorio de la próxima clase asignada
 

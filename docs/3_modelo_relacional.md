@@ -51,7 +51,7 @@ Planes y membresías se modelan como catálogos independientes, con tablas separ
 
 Se admiten pagos parciales mediante varios movimientos Ingreso por origen. La situación financiera se deriva de ingresos y devoluciones Vigentes y del importe acordado, sin almacenar saldos ni estados de pago mutables. Indica Diferencia por cubrir, Cubierto o Excedente por resolver en operaciones no Anuladas y muestra diferencias negativas para revisión administrativa. Los pagos se registran manualmente.
 
-El alta propia y administrativa utiliza las mismas tablas de contratación. La renovación registra otra contratación del mismo producto para el mes siguiente al de referencia, sin una entidad adicional de intención o solicitud. El seguimiento de plantilla consulta las contrataciones por titular y mes sin almacenar un estado de renovación o pago.
+Las altas y renovaciones son administrativas y utilizan las tablas de contratación. Cada contrato guarda su respuesta de continuidad y fecha, independientes de la existencia de otro contrato. El seguimiento consulta los contratos y respuestas por titular y mes sin almacenar un estado de pago.
 
 El historial transversal de cambios se conserva en `log_auditoria`, separado de los campos propios de creación, modificación y transición de cada entidad.
 
@@ -217,6 +217,8 @@ Representa una contratación concreta de un plan por un usuario para un mes cale
 | FK | `registrado_por_id` | `bigint` | | | `4` |
 | | `observaciones` | `text` | | | `Horario coordinado con administración` |
 | | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
+| | `respuesta_continuidad` | `varchar(12)` | | | `indeciso` |
+| | `continuidad_respondida_en` | `timestamptz` | Sí | | `2026-10-25 12:00:00-03` |
 | | `aviso_vencimiento_enviado` | `boolean` | | | `false` |
 | FK | `anulado_por_id` | `bigint` | Sí | | `NULL` |
 | | `anulado_en` | `timestamptz` | Sí | | `NULL` |
@@ -228,9 +230,9 @@ Representa una contratación concreta de un plan por un usuario para un mes cale
 
 `precio_aplicado` conserva el precio mensual vigente copiado al confirmar, no negativo y separado del dinero cobrado. No se edita ni recalcula por la fecha de pago o aumentos de catálogo. El servicio bloquea el producto y revalida el importe revisado; el usuario no lo introduce. El concepto de los ingresos explica pagos parciales o excepciones sin alterar ese precio. Una restricción única parcial sobre `(usuario_id, mes_cubierto)` para estados `activo` o `vencido` preserva la exclusividad del mes y admite conservar filas Anuladas.
 
-`registrado_por_id` referencia obligatoriamente al actor real: el titular en una renovación propia autorizada o el administrador que registra el alta. La titularidad y el permiso se validan en el servicio, conservando la incompatibilidad con Profesor. Los campos de anulación están informados sólo en estado `anulado`: responsable y momento no nulos y motivo no vacío. En los demás estados quedan nulos o vacíos, según su tipo. `observaciones` y `motivo_anulacion` admiten cadena vacía, sin `NULL`.
+`registrado_por_id` referencia obligatoriamente al actor real: el administrador que registra el alta o la renovación. La titularidad y el permiso se validan en el servicio, conservando la incompatibilidad con Profesor. Los campos de anulación están informados sólo en estado `anulado`: responsable y momento no nulos y motivo no vacío. En los demás estados quedan nulos o vacíos, según su tipo. `observaciones` y `motivo_anulacion` admiten cadena vacía, sin `NULL`.
 
-El portal asigna `fecha_alta` con la fecha local del servidor; administración puede informar la fecha efectiva permitida. El mes siguiente se habilita desde el día 25 para ambos actores. El servicio valida límites y, al renovar por el portal, una contratación no Anulada del mismo producto en el mes inmediatamente anterior al solicitado. No hace falta almacenar un estado de aprobación ni una copia de la contratación de referencia.
+Administración informa la fecha efectiva permitida y el mes siguiente se habilita desde el día 25. El servicio valida límites, producto, precio revisado y exclusividad mensual. Las renovaciones crean otro contrato; no exigen una referencia comercial del portal.
 
 `aviso_vencimiento_enviado` conserva la marca de envío de esa contratación. No se duplican en esta tabla asignaciones, asistencia ni importes cobrados.
 
@@ -251,6 +253,8 @@ Representa una contratación concreta de membresía por un usuario para un mes c
 | FK | `registrado_por_id` | `bigint` | | | `4` |
 | | `observaciones` | `text` | | | `Membresía contratada en sede` |
 | | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
+| | `respuesta_continuidad` | `varchar(12)` | | | `indeciso` |
+| | `continuidad_respondida_en` | `timestamptz` | Sí | | `2026-10-25 12:00:00-03` |
 | | `aviso_vencimiento_enviado` | `boolean` | | | `false` |
 | FK | `anulado_por_id` | `bigint` | Sí | | `NULL` |
 | | `anulado_en` | `timestamptz` | Sí | | `NULL` |
@@ -258,9 +262,11 @@ Representa una contratación concreta de membresía por un usuario para un mes c
 | | `creado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-01 11:00:00-03` |
 
-Utiliza la misma representación de mes cubierto, fecha efectiva, importe aplicado, auditoría y estados que 4.7, con referencia obligatoria a `membresias.id`. El responsable de registro puede ser el titular que contrata para sí mismo o el administrador, sin exigir Alumno. Tiene su propia restricción única parcial sobre `(usuario_id, mes_cubierto)` entre Activos o Vencidos; no comparte esa restricción con `planes_usuarios`.
+Utiliza la misma representación de mes cubierto, fecha efectiva, importe aplicado, auditoría y estados que 4.7, con referencia obligatoria a `membresias.id`. El responsable del registro es el administrador, sin exigir Alumno al titular. Tiene su propia restricción única parcial sobre `(usuario_id, mes_cubierto)` entre Activos o Vencidos; no comparte esa restricción con `planes_usuarios`.
 
 El precio aplicado es no negativo y se conserva independiente del catálogo. La contratación conserva el precio mensual vigente completo al confirmar, sin prorrateo ni importe negociado. La cobertura se evalúa por estado y mes para la fecha del turno. Las referencias de organizador e invitado socio pertenecen a reservas e invitados. Ambos cupos aplicados son positivos y se copian del producto al confirmar; no se modifican por cambios posteriores del catálogo. El saldo de cada rol se deriva del cupo conservado, ajustes y usos del titular y mes, incluidos los vinculados a contrataciones Anuladas. Las reservas normales no computan horas de ningún rol. La anulación se rechaza si existe aplicación en una reserva Programada como organizador o invitado socio Aceptado. Las invitaciones Pendientes o Rechazadas no bloquean.
+
+`respuesta_continuidad` y `continuidad_respondida_en` se guardan juntos: cadena vacía y fecha nula, o uno de `continuar`, `cambiar`, `indeciso`, `no_continuar` y fecha presente. Las restricciones `plan_continuidad_coherente` y `membresia_continuidad_coherente` exigen esa coherencia. No se deriva intención de otro contrato ni de la ausencia de respuesta. Los cambios participan del trigger común de auditoría. La ventana y el mes consultado se calculan desde `mes_cubierto`; Vencido no implica cierre y Anulado conserva su respuesta.
 
 ### 4.9 Precios vigentes e importes aplicados
 
@@ -738,7 +744,7 @@ Registro persistente de emails preparados por las operaciones. Redis transporta 
 
 `envio_estado_valido` restringe los cinco estados y `envio_intentos_validos` limita a cuatro intentos. `envio_reserva_coherente` exige identificador y fecha de reserva únicamente En proceso. `envio_aceptacion_coherente` exige fecha de aceptación únicamente Enviado. La clave única evita duplicar registros por llamadas concurrentes. Índices por estado/próximo intento y estado/fin de reserva permiten recuperar pendientes y procesamientos interrumpidos.
 
-`datos` contiene tres bloques acotados: `mensaje`, con párrafos, pares etiqueta/valor, acciones internas y apartados; `vigencia`, con referencias de cuenta, actividad, participación identificada por UUID, solicitud y vencimiento aplicables; y `enlace`, cuando se prepara una confirmación firmada. No se almacenan contraseñas, tokens ni URLs completas de acceso. El token se construye con la identidad del aviso y su emisión persistida. La recuperación de contraseña utiliza sus mecanismos nativos de Django en el flujo de cuenta.
+`datos` contiene tres bloques acotados: `mensaje`, con párrafos, pares etiqueta/valor, acciones internas y apartados; `vigencia`, con referencias de cuenta, actividad, participación identificada por UUID, contratación, solicitud y vencimiento aplicables; y `enlace`, cuando se prepara una confirmación firmada. No se almacenan contraseñas, tokens ni URLs completas de acceso. El token se construye con la identidad del aviso y su emisión persistida. La recuperación de contraseña utiliza sus mecanismos nativos de Django en el flujo de cuenta.
 
 Las referencias técnicas de `datos` no son FK y no conceden acceso: la entrega vuelve a consultar los registros actuales. Así se conserva la evidencia mínima de una retirada aunque su vínculo ya no exista, sin impedir la limpieza de una cuenta inicial. La identidad UUID de una participación distingue borrado y nueva asignación con la misma clave compuesta. El registro de envío es la fuente técnica de entrega; la auditoría de la operación conserva sus propias reglas y no copia cuerpos, enlaces o errores sensibles de emails.
 

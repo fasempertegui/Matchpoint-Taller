@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titulo %}Continuidad | Academia TM{% endblock %}
+{% block contenido %}
+<header class="tarjeta encabezado-pagina"><h1>Continuidad</h1><a class="boton boton-secundario" href="{% url 'clases:planilla_contrataciones' %}">Contrataciones de la plantilla</a></header>
+<form class="tarjeta tarjeta-busqueda filtros-compactos" method="get">
+    {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
+    <button class="boton boton-secundario" type="submit">Consultar</button>
+</form>
+{% if mes %}
+<section class="tarjeta">
+    <h2>Intención para {{ mes_consultado|date:"F Y" }}</h2>
+    <p class="texto-secundario">Encuestas de contrataciones de {{ mes|date:"F Y" }}. Sin responder no indica una baja. Las contrataciones y los pagos se consultan por separado.</p>
+    <div class="tabla-contenedor"><table>
+        <thead><tr><th scope="col">Titular</th><th scope="col">Producto</th><th scope="col">Mes cubierto</th><th scope="col">Estado</th><th scope="col">Respuesta</th><th scope="col">Respondida</th></tr></thead>
+        <tbody>{% for contrato in pagina %}<tr>
+            <td>{{ contrato.usuario }}</td><td><a href="{% url ruta_detalle contrato.pk %}">{{ contrato.producto.nombre }}</a></td>
+            <td>{{ contrato.mes_cubierto|date:"F Y" }}</td><td>{{ contrato.get_estado_display }}</td>
+            <td>{{ contrato.get_respuesta_continuidad_display|default:"Sin responder" }}</td><td>{{ contrato.continuidad_respondida_en|date:"d/m/Y H:i"|default:"—" }}</td>
+        </tr>{% empty %}<tr><td colspan="6" class="estado-vacio">No hay contrataciones que coincidan con la consulta.</td></tr>{% endfor %}</tbody>
+    </table></div>
+</section>
+{% if pagina.paginator.num_pages > 1 %}<nav class="acciones" aria-label="Páginas de continuidad">
+    {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?{{ consulta }}&amp;pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+    <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+    {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?{{ consulta }}&amp;pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+</nav>{% endif %}
+{% endif %}
+{% endblock %}

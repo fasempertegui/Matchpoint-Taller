@@ -42,7 +42,8 @@ class ContextoAuditoriaMiddleware:
                 "reservas:reserva_comprobante": (Reserva, "organizador_id"),
                 "membresias:mi_plan_comprobante": (PlanUsuario, "usuario_id"),
                 "membresias:mi_plan_contratado": (PlanUsuario, "usuario_id"),
-                "membresias:renovar_plan": (PlanUsuario, "usuario_id"),
+                "membresias:mi_plan_continuidad": (PlanUsuario, "usuario_id"),
+                "membresias:mi_membresia_continuidad": (MembresiaUsuario, "usuario_id"),
                 "membresias:mi_membresia_comprobante": (MembresiaUsuario, "usuario_id"),
                 "membresias:mi_membresia_contratado": (MembresiaUsuario, "usuario_id"),
             }

@@ -1,17 +1,18 @@
 from django.urls import path
 
-from . import vistas_ajustes, views, vistas_contrataciones, vistas_oferta, vistas_propias
+from . import vistas_ajustes, views, vistas_contrataciones, vistas_oferta, vistas_propias, vistas_continuidad
 
 app_name = "membresias"
 
 urlpatterns = [
     path("mis-contrataciones/", vistas_propias.mis_contrataciones, name="mis_contrataciones"),
-    path("mis-contrataciones/contratar-membresia/", vistas_propias.contratar_membresia, name="contratar_membresia"),
-    path("mis-contrataciones/planes/<int:pk>/renovar/", vistas_propias.renovar_plan, name="renovar_plan"),
     path("mis-contrataciones/planes/<int:pk>/", vistas_propias.contratacion_propia_detalle, name="mi_plan_contratado"),
     path("mis-contrataciones/planes/<int:pk>/comprobante/", vistas_propias.contratacion_propia_comprobante, name="mi_plan_comprobante"),
     path("mis-contrataciones/membresias/<int:pk>/", vistas_propias.contratacion_propia_detalle, {"tipo": "membresia"}, name="mi_membresia_contratado"),
     path("mis-contrataciones/membresias/<int:pk>/comprobante/", vistas_propias.contratacion_propia_comprobante, {"tipo": "membresia"}, name="mi_membresia_comprobante"),
+    path("mis-contrataciones/planes/<int:pk>/continuidad/", vistas_continuidad.responder, name="mi_plan_continuidad"),
+    path("mis-contrataciones/membresias/<int:pk>/continuidad/", vistas_continuidad.responder, {"tipo": "membresia"}, name="mi_membresia_continuidad"),
+    path("continuidad/", vistas_continuidad.lista, name="continuidad_lista"),
     path("oferta/", vistas_oferta.oferta, name="oferta"),
     path("oferta/planes/", vistas_oferta.oferta_planes, name="oferta_planes"),
     path("oferta/membresias/", vistas_oferta.oferta_membresias, name="oferta_membresias"),

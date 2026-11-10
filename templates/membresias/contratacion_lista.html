@@ -7,7 +7,6 @@
     {% if not propias %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
 {% if propias %}
     <div class="acciones">
-    <a class="boton boton-secundario boton-chico" href="{% url 'membresias:contratar_membresia' %}">Contratar membresía</a>
     <nav class="acciones" aria-label="Tipo de contratación">
         <a class="boton {% if tipo == 'plan' %}boton-primario{% else %}boton-secundario{% endif %} boton-chico" href="{% url 'membresias:mis_contrataciones' %}?tipo=plan"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
         <a class="boton {% if tipo == 'membresia' %}boton-primario{% else %}boton-secundario{% endif %} boton-chico" href="{% url 'membresias:mis_contrataciones' %}?tipo=membresia"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>

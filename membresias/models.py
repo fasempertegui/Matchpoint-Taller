@@ -129,6 +129,13 @@ class Membresia(models.Model):
         return self.nombre
 
 
+class RespuestaContinuidad(models.TextChoices):
+    CONTINUAR = "continuar", "Continuar con el mismo plan o membresía"
+    CAMBIAR = "cambiar", "Cambiar de plan o membresía"
+    INDECISO = "indeciso", "Todavía no sé"
+    NO_CONTINUAR = "no_continuar", "No continuar en la academia"
+
+
 class PlanUsuario(models.Model):
     class Estado(models.TextChoices):
         ACTIVO = "activo", "Activo"
@@ -148,6 +155,8 @@ class PlanUsuario(models.Model):
     )
     observaciones = models.TextField(blank=True, default="")
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
+    respuesta_continuidad = models.CharField(max_length=12, choices=RespuestaContinuidad.choices, blank=True, default="")
+    continuidad_respondida_en = models.DateTimeField(null=True, blank=True)
     aviso_vencimiento_enviado = models.BooleanField(default=False)
     anulado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contrataciones_plan_anuladas",
@@ -186,6 +195,13 @@ class PlanUsuario(models.Model):
                        & ~models.Q(estado="anulado"))
                 ),
                 name="plan_usuario_anulacion_coherente",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(respuesta_continuidad="", continuidad_respondida_en__isnull=True)
+                    | models.Q(respuesta_continuidad__in=RespuestaContinuidad.values, continuidad_respondida_en__isnull=False)
+                ),
+                name="plan_continuidad_coherente",
             ),
         ]
 
@@ -243,6 +259,8 @@ class MembresiaUsuario(models.Model):
     )
     observaciones = models.TextField(blank=True, default="")
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
+    respuesta_continuidad = models.CharField(max_length=12, choices=RespuestaContinuidad.choices, blank=True, default="")
+    continuidad_respondida_en = models.DateTimeField(null=True, blank=True)
     aviso_vencimiento_enviado = models.BooleanField(default=False)
     anulado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contrataciones_membresia_anuladas",
@@ -289,6 +307,13 @@ class MembresiaUsuario(models.Model):
                        & ~models.Q(estado="anulado"))
                 ),
                 name="membresia_usuario_anulacion_coherente",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(respuesta_continuidad="", continuidad_respondida_en__isnull=True)
+                    | models.Q(respuesta_continuidad__in=RespuestaContinuidad.values, continuidad_respondida_en__isnull=False)
+                ),
+                name="membresia_continuidad_coherente",
             ),
         ]
 

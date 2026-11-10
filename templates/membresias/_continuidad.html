@@ -1,0 +1,10 @@
+<section class="perfil-seccion" aria-labelledby="continuidad-titulo">
+    <h2 id="continuidad-titulo">Continuidad para {{ continuidad.mes_consultado|date:"F Y" }}</h2>
+    <dl class="perfil-lista">
+        <div class="perfil-fila"><dt>Respuesta</dt><dd>{{ continuidad.respuesta }}</dd></div>
+        {% if continuidad.respondida_en %}<div class="perfil-fila"><dt>Respondida</dt><dd>{{ continuidad.respondida_en|date:"d/m/Y H:i" }}</dd></div>{% endif %}
+        <div class="perfil-fila"><dt>Plazo</dt><dd>Del {{ continuidad.apertura|date:"d/m/Y" }} al {{ continuidad.ultimo_dia|date:"d/m/Y" }} inclusive.</dd></div>
+    </dl>
+    <p class="texto-secundario">La respuesta informa tu intención. Los cambios y las contrataciones se coordinan con administración.</p>
+    {% if continuidad.puede_responder %}<a class="boton boton-secundario boton-chico" href="{{ continuidad.url_responder }}">{% if contratacion.respuesta_continuidad %}Cambiar respuesta{% else %}Responder{% endif %}</a>{% endif %}
+</section>

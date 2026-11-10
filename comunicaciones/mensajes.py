@@ -78,7 +78,7 @@ def validar_datos(datos):
     mensaje = datos["mensaje"]
     _validar_bloque(mensaje, principal=True)
     vigencia = datos.get("vigencia", {})
-    if not isinstance(vigencia, dict) or set(vigencia) - {"usuario_id", "evento_id", "vencer_en", "solicitud", "participacion"}:
+    if not isinstance(vigencia, dict) or set(vigencia) - {"usuario_id", "evento_id", "vencer_en", "solicitud", "participacion", "contratacion"}:
         raise ValidationError("La vigencia del email no es válida.")
     for campo in ("usuario_id", "evento_id"):
         if campo in vigencia and (type(vigencia[campo]) is not int or vigencia[campo] <= 0):
@@ -93,6 +93,12 @@ def validar_datos(datos):
     solicitud = vigencia.get("solicitud")
     if solicitud is not None and (not isinstance(solicitud, dict) or set(solicitud) != {"campo", "valor"}):
         raise ValidationError("La solicitud del aviso no es válida.")
+    contratacion = vigencia.get("contratacion")
+    if contratacion is not None and (
+        not isinstance(contratacion, dict) or set(contratacion) != {"tipo", "id"}
+        or contratacion["tipo"] not in ("plan", "membresia") or type(contratacion["id"]) is not int or contratacion["id"] <= 0
+    ):
+        raise ValidationError("La contratación del aviso no es válida.")
     participacion = vigencia.get("participacion")
     if participacion is not None and (not isinstance(participacion, dict) or set(participacion) != {"tipo", "actividad_id", "identidad"}):
         raise ValidationError("La participación del aviso no es válida.")
@@ -160,6 +166,14 @@ def verificar_vigencia(envio):
         inicio = timezone.make_aware(datetime.combine(evento.turno.fecha, evento.turno.hora_inicio))
         if ahora >= inicio:
             raise DescartarEnvio("La actividad ya comenzó.")
+    referencia_contrato = vigencia.get("contratacion")
+    if referencia_contrato:
+        from membresias.continuidad import MODELOS_CONTINUIDAD
+
+        modelo = MODELOS_CONTINUIDAD[referencia_contrato["tipo"]]
+        contrato = modelo.objects.filter(pk=referencia_contrato["id"], usuario_id=vigencia.get("usuario_id")).first()
+        if contrato is None or contrato.estado == modelo.Estado.ANULADO:
+            raise DescartarEnvio("La contratación ya no está disponible.")
     participacion = vigencia.get("participacion")
     if participacion:
         from clases.models import ClaseAlumno, ClaseProfesor

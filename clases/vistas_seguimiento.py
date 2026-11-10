@@ -11,7 +11,7 @@ from django.views.decorators.http import require_GET
 
 from common.fechas import FECHA_INICIO_OPERACIONES
 from instalaciones.models import Sede
-from membresias.fechas import meses_contratables
+from membresias.fechas import mes_siguiente, meses_contratables
 from membresias.models import PlanUsuario
 from usuarios.models import Rol
 
@@ -90,6 +90,8 @@ def seguimiento_contrataciones(request):
         consulta["mes"] = mes.isoformat()
         contexto.update({
             "cancha": cancha, "mes": mes, "mes_anterior": anterior,
+            "mes_continuidad": mes_siguiente(mes),
+            "url_continuidad": reverse("membresias:continuidad_lista") + "?" + urlencode({"mes": mes.isoformat(), "tipo": "plan"}),
             "pagina": Paginator(filas, 25).get_page(request.GET.get("pagina")),
             "total_personas": len(personas), "sin_contratacion": sin_contratacion,
             "consulta": consulta.urlencode(),

@@ -5,10 +5,10 @@ from common.fechas import FECHA_INICIO_OPERACIONES
 from usuarios.models import Rol, Usuario
 
 from .fechas import (
-    meses_contratables, meses_contratables_propios, validar_fecha_alta,
-    validar_mes_contratacion, validar_mes_contratacion_propia,
+    meses_contratables, validar_fecha_alta,
+    validar_mes_contratacion,
 )
-from .models import AjusteHorasMembresia, Membresia, Plan
+from .models import RespuestaContinuidad, AjusteHorasMembresia, Membresia, Plan
 
 
 class PlanForm(forms.ModelForm):
@@ -150,45 +150,6 @@ class ContratacionMembresiaForm(ContratacionPlanForm):
     membresia = forms.IntegerField(widget=forms.HiddenInput())
 
 
-class ContratacionMembresiaPropiaForm(forms.Form):
-    membresia = forms.ModelChoiceField(
-        label="Membresía", queryset=Membresia.objects.none(), empty_label="Seleccioná una membresía",
-        widget=forms.Select(attrs={"class": "form-control"}),
-    )
-    mes_cubierto = forms.DateField(
-        label="Mes cubierto", widget=forms.Select(attrs={"class": "form-control"}),
-        help_text="El mes siguiente se habilita desde el día 25 inclusive. Se cubre el mes completo.",
-    )
-    observaciones = forms.CharField(
-        label="Observaciones", required=False,
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["membresia"].queryset = Membresia.objects.filter(estado=Membresia.Estado.ACTIVO)
-        self.fields["mes_cubierto"].widget.choices = [
-            (mes.isoformat(), formats.date_format(mes, "F Y").capitalize())
-            for mes in meses_contratables_propios()
-        ]
-
-    def clean_mes_cubierto(self):
-        mes = self.cleaned_data["mes_cubierto"]
-        validar_mes_contratacion_propia(mes)
-        return mes
-
-
-class RenovacionPlanPropioForm(forms.Form):
-    observaciones = forms.CharField(
-        label="Observaciones", required=False,
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-    )
-
-
-class ConfirmacionContratacionPropiaForm(forms.Form):
-    revision = forms.CharField(widget=forms.HiddenInput())
-
-
 class AjusteHorasForm(forms.Form):
     tipo_horas = forms.ChoiceField(label="Tipo de horas", choices=AjusteHorasMembresia.TipoHoras.choices,
                                   widget=forms.Select(attrs={"class": "form-control"}))
@@ -204,3 +165,34 @@ class AjusteHorasForm(forms.Form):
         if reversion:
             for campo in ("tipo_horas", "operacion", "cantidad"):
                 self.fields.pop(campo)
+
+
+class RespuestaContinuidadForm(forms.Form):
+    respuesta = forms.ChoiceField(
+        label="¿Qué pensás hacer el mes siguiente?", choices=RespuestaContinuidad.choices,
+        widget=forms.RadioSelect(),
+    )
+
+
+class ConsultaContinuidadForm(forms.Form):
+    mes = forms.DateField(label="Mes cubierto", widget=forms.Select(attrs={"class": "form-control"}))
+    tipo = forms.ChoiceField(label="Tipo de producto", choices=(("plan", "Planes"), ("membresia", "Membresías")),
+                             widget=forms.Select(attrs={"class": "form-control"}))
+    respuesta = forms.ChoiceField(
+        label="Respuesta", required=False,
+        choices=(("", "Todas"), ("sin_responder", "Sin responder"), *RespuestaContinuidad.choices),
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.meses = meses_contratables(incluir_mes_siguiente=True)
+        self.fields["mes"].widget.choices = [
+            (mes.isoformat(), formats.date_format(mes, "F Y").capitalize()) for mes in self.meses
+        ]
+
+    def clean_mes(self):
+        mes = self.cleaned_data["mes"]
+        if mes not in self.meses:
+            raise forms.ValidationError("Elegí un mes del calendario de contrataciones.")
+        return mes

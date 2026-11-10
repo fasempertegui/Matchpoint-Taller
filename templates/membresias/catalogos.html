@@ -4,6 +4,10 @@
 <header class="tarjeta encabezado-pagina"><h1>Membresías</h1></header>
 <section class="inicio-modulos" aria-label="Membresías">
     <article class="tarjeta inicio-modulo">
+        <h2>Continuidad</h2><p>Respuestas de titulares de planes y membresías sobre el mes siguiente.</p>
+        <a class="boton boton-secundario" href="{% url 'membresias:continuidad_lista' %}">Consultar continuidad</a>
+    </article>
+    <article class="tarjeta inicio-modulo">
         <h2>Contrataciones de planes</h2>
         <p>Registro y consulta de planes mensuales contratados por cada usuario.</p>
         <a class="boton boton-secundario" href="{% url 'membresias:contratacion_plan_lista' %}">Ver contrataciones</a>
