@@ -1,8 +1,11 @@
 import logging
 from datetime import timedelta
+from email.mime.image import MIMEImage
+from pathlib import Path
 from uuid import uuid4
 
 from django.conf import settings
+from django.contrib.staticfiles import finders
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.db import connection, models, transaction
@@ -131,6 +134,11 @@ def procesar_envios(*, envio_id=None, limite=100):
                 try:
                     mensaje = EmailMultiAlternatives(asunto, texto, settings.DEFAULT_FROM_EMAIL, [envio.destinatario])
                     mensaje.attach_alternative(html, "text/html")
+                    mensaje.mixed_subtype = "related"
+                    logo = MIMEImage(Path(finders.find("img/logo.png")).read_bytes(), _subtype="png")
+                    logo.add_header("Content-ID", "<academia-logo>")
+                    logo.add_header("Content-Disposition", "inline", filename="logo.png")
+                    mensaje.attach(logo)
                     if mensaje.send() != 1:
                         raise OSError
                 except Exception:

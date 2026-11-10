@@ -325,7 +325,7 @@ def renderizar_mensaje(envio, *, usuario=None):
     contexto = {
         "titulo": envio.get_tipo_display(), "contenido": preparar_bloque(contenido),
         "apartados": [preparar_bloque(bloque) for bloque in contenido.get("apartados", [])],
-        "logo_url": url_publica("/static/img/logo.png"),
+        "logo_url": "cid:academia-logo",
     }
     return (
         envio.get_tipo_display(),
