@@ -645,6 +645,8 @@ def registrar_asistencia(usuario, clase_id, registros, finalizar=False, *, versi
     registros = normalizar_registros_asistencia(registros)
     usuarios = bloquear_usuarios_clase(set(registros) | {usuario.pk})
     usuario = exigir_acceso_clases(usuarios.get(usuario.pk))
+    if any(usuarios[pk].correo_verificado_en is None for pk in registros if pk in usuarios):
+        raise ValidationError("La asistencia requiere cuentas con correo verificado.")
     if set(registros) - usuarios.keys():
         raise ValidationError("Todos los usuarios de la asistencia deben existir.")
     clase = _bloquear_clase(clase_id)

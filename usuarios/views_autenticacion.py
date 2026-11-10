@@ -12,6 +12,7 @@ from auditoria.contexto import contexto_auditoria
 from auditoria.intentos import registrar_intento
 from auditoria.models import IntentoAuditoria, LogAuditoria
 
+from .models import Rol
 from .forms import CambioContrasenaForm, InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario
 
 
@@ -60,6 +61,10 @@ class InicioSesionView(auth_views.LoginView):
             return super().post(request, *args, **kwargs)
 
     def get_success_url(self):
+        if self.request.user.correo_verificado_en is None:
+            if self.request.user.debe_cambiar_contrasena or self.request.user.tiene_rol(Rol.ADMINISTRADOR):
+                return reverse("estado_verificacion")
+            return reverse("inicio")
         if self.request.user.debe_cambiar_contrasena:
             return reverse("password_change")
         return super().get_success_url()

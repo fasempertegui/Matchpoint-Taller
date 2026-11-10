@@ -47,8 +47,8 @@ def _leer(actor, token, accion):
 
 
 def _validar_persona(usuario):
-    if usuario is None or not usuario.is_active or not usuario.puede_reservar:
-        raise ValidationError("Cada organizador e invitado debe tener cuenta activa y rol Reservas o Administrador.")
+    if usuario is None or not usuario.esta_habilitado or not usuario.puede_reservar:
+        raise ValidationError("Cada organizador e invitado debe tener cuenta activa, correo verificado y rol Reservas o Administrador.")
 
 
 def coberturas(usuarios_ids, fecha, *, bloquear=False):
@@ -128,7 +128,7 @@ def _contexto_creacion(actor, datos):
     total = reserva.precio_por_turno_aplicado if contrato is None else 0
     huella = _huella({
         "datos": datos, "turno": turno.pk, "tarifa": reserva.precio_por_turno_aplicado,
-        "cuentas": [[u.pk, u.is_active, u.debe_cambiar_contrasena, u.actualizado_en, sorted(v.rol.codigo for v in u.roles.all())] for u in usuarios.values()],
+        "cuentas": [[u.pk, u.is_active, u.correo_verificado_en, u.debe_cambiar_contrasena, u.actualizado_en, sorted(v.rol.codigo for v in u.roles.all())] for u in usuarios.values()],
         "contratos": [[c.pk, c.estado, c.actualizado_en, c.membresia.actualizado_en] for c in contratos.values()],
         "saldo_organizador": saldo_organizador,
         "invitados": [[i.usuario_id, i.condicion_aplicada, i.membresia_usuario_id] for i in invitados],

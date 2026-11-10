@@ -8,7 +8,7 @@ def navegacion(request):
     if not usuario.is_authenticated or not usuario.is_active or usuario.debe_cambiar_contrasena:
         return {"navegacion_app": {}}
     roles = set(usuario.roles.values_list("rol__codigo", flat=True))
-    administrador = Rol.ADMINISTRADOR in roles
+    administrador = Rol.ADMINISTRADOR in roles and usuario.esta_habilitado
     ruta = request.resolver_match
     namespace = ruta.namespace if ruta else ""
     nombre_vista = ruta.view_name if ruta else ""
@@ -35,6 +35,8 @@ def navegacion(request):
         "Consultá tus clases y los horarios de las sedes." if not administrador
         else "Consulta de clases, reservas, bloqueos y disponibilidad de las canchas.",
     )
+    if not usuario.esta_habilitado:
+        agenda = None
     oferta = enlace(
         "Oferta", "membresias:oferta", namespace == "membresias" and ruta.url_name.startswith("oferta"),
         "Planes de clases, membresías de socios y tarifas de reservas.",
@@ -42,22 +44,22 @@ def navegacion(request):
     mis_contrataciones = enlace(
         "Mis contrataciones", "membresias:mis_contrataciones", contrataciones_propias_activo,
         "Consultá tus planes y membresías contratados, sus períodos e importes.",
-    ) if not administrador else None
+    ) if usuario.esta_habilitado and not administrador else None
     clases = []
     if administrador:
         clases.append(enlace("Planilla semanal", "clases:planilla", clases_activo, "Programación habitual de clases."))
-    elif roles.intersection((Rol.PROFESOR, Rol.ALUMNO)):
+    elif usuario.esta_habilitado and roles.intersection((Rol.PROFESOR, Rol.ALUMNO)):
         clases.append(enlace(
             "Mis clases", "clases:actividad_clases", clases_activo,
             "Consulta de tus clases y su historial.", {"usuario_id": usuario.pk},
         ))
     administracion = []
-    if usuario.has_perm("usuarios.view_usuario"):
+    if usuario.esta_habilitado and usuario.has_perm("usuarios.view_usuario"):
         administracion.append(enlace(
             "Usuarios", "usuarios:usuario_lista", namespace == "usuarios" and not perfil_activo,
             "Alta, consulta y gestión de usuarios, roles y acceso al sistema.",
         ))
-    if usuario.has_perm("instalaciones.view_sede"):
+    if usuario.esta_habilitado and usuario.has_perm("instalaciones.view_sede"):
         administracion.append(enlace(
             "Sedes y canchas", "instalaciones:sede_lista", namespace == "instalaciones",
             "Consulta y gestión de sedes, canchas, horarios y precios.",
@@ -80,7 +82,7 @@ def navegacion(request):
         "Auditoría", "auditoria:auditoria_lista", namespace == "auditoria",
         "Historial de operaciones y consulta de sus valores anteriores y actuales.",
     ) if administrador else None
-    modulos_inicio = [{"nombre": "Agenda", "descripcion": agenda["descripcion"], "destino": agenda}]
+    modulos_inicio = [{"nombre": "Agenda", "descripcion": agenda["descripcion"], "destino": agenda}] if agenda else []
     modulos_inicio.extend(
         {"nombre": item["nombre"], "descripcion": item["descripcion"], "destino": item}
         for item in administracion if item["nombre"] not in ("Feriados", "Membresías")
@@ -111,6 +113,7 @@ def navegacion(request):
         modulos_inicio.append({"nombre": "Auditoría", "descripcion": auditoria["descripcion"], "destino": auditoria})
         administracion.append(auditoria)
     return {"navegacion_app": {
+        "mostrar_perfil": usuario.esta_habilitado or Rol.PUBLICO in roles,
         "inicio_activo": nombre_vista == "inicio", "agenda": agenda, "oferta": oferta,
         "mis_contrataciones": mis_contrataciones,
         "clases": clases, "clases_activo": clases_activo,

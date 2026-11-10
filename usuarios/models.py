@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser, UserManager
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models.functions import Lower
+from django.utils import timezone
 
 from common.fechas import validar_fecha_nacimiento
 
@@ -14,7 +15,7 @@ class Rol(models.Model):
     ALUMNO = "alumno"
     RESERVAS = "reservas"
     PUBLICO = "publico"
-    INICIALES = (PUBLICO, RESERVAS)
+    INICIALES = (PUBLICO,)
 
     id = models.BigAutoField(primary_key=True)
     codigo = models.SlugField(max_length=20, unique=True)
@@ -62,6 +63,8 @@ class UsuarioRol(models.Model):
         super().clean()
         if not self.usuario_id or not self.rol_id:
             return
+        if self.rol.codigo not in (Rol.PUBLICO, Rol.ADMINISTRADOR) and not self.usuario.esta_habilitado:
+            raise ValidationError("La asignación de roles requiere una cuenta activa con correo verificado.")
         otros_roles = self.usuario.roles.exclude(pk=self.pk)
         if self.rol.codigo == Rol.ADMINISTRADOR:
             if otros_roles.exists():
@@ -81,7 +84,13 @@ class UsuarioRol(models.Model):
 
 
 class UsuarioManager(UserManager):
+    def habilitados(self):
+        return self.filter(is_active=True, correo_verificado_en__isnull=False)
+
     def create_user(self, username, email=None, password=None, **extra_fields):
+        ahora = timezone.now()
+        extra_fields.setdefault("date_joined", ahora)
+        extra_fields["verificacion_solicitada_en"] = ahora
         with transaction.atomic():
             usuario = super().create_user(
                 username,
@@ -96,6 +105,9 @@ class UsuarioManager(UserManager):
                     usuario=usuario,
                     rol=rol,
                 )
+            from .verificacion import preparar_bienvenida
+
+            preparar_bienvenida(usuario)
         return usuario
 
     create_user.alters_data = True
@@ -122,6 +134,9 @@ class Usuario(AbstractUser):
     debe_cambiar_contrasena = models.BooleanField(
         default=False,
     )
+    correo_verificado_en = models.DateTimeField(null=True, blank=True)
+    verificacion_solicitada_en = models.DateTimeField(null=True, blank=True)
+    revision_correo = models.PositiveIntegerField(default=0)
     fecha_baja = models.DateTimeField(
         null=True,
         blank=True,
@@ -159,5 +174,21 @@ class Usuario(AbstractUser):
         return self.roles.filter(rol__codigo=rol).exists()
 
     @property
+    def esta_habilitado(self):
+        return self.is_active and self.correo_verificado_en is not None
+
+    @property
     def puede_reservar(self):
-        return self.roles.filter(rol__codigo__in=(Rol.ADMINISTRADOR, Rol.RESERVAS)).exists()
+        return self.esta_habilitado and self.roles.filter(rol__codigo__in=(Rol.ADMINISTRADOR, Rol.RESERVAS)).exists()
+
+
+class LimpiezaCuenta(models.Model):
+    usuario_eliminado_id = models.BigIntegerField()
+    procesado_en = models.DateTimeField()
+    resultado = models.CharField(max_length=15, choices=(("eliminada", "Eliminada"), ("inconsistente", "Inconsistente")))
+    detalle = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        db_table = "limpiezas_cuentas"
+        default_permissions = ()
+        ordering = ("-procesado_en", "-pk")

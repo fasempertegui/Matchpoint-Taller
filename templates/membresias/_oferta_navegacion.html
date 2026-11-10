@@ -1,4 +1,5 @@
 <nav class="oferta-navegacion" aria-label="Oferta de la academia">
+    <a href="{% url 'instalaciones:publico_sedes' %}"{% if tipo == 'sede' %} aria-current="page"{% endif %}>Sedes y canchas</a>
     <a href="{% url 'membresias:oferta_planes' %}"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
     <a href="{% url 'membresias:oferta_membresias' %}"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
     <a href="{% url 'membresias:oferta_tarifas' %}"{% if tipo == 'tarifa' %} aria-current="page"{% endif %}>Tarifas</a>

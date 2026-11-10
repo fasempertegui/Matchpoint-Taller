@@ -195,3 +195,10 @@ if EMAILS_HABILITADOS:
         "task": "comunicaciones.tasks.barrer_emails_pendientes",
         "schedule": 60.0,
     }
+
+CUENTAS_LIMPIEZA_HABILITADA = os.environ.get("CUENTAS_LIMPIEZA_HABILITADA", "0") == "1"
+if CUENTAS_LIMPIEZA_HABILITADA:
+    CELERY_BEAT_SCHEDULE["limpiar-cuentas-iniciales"] = {
+        "task": "usuarios.tasks.limpiar_cuentas_iniciales",
+        "schedule": crontab(minute=0),
+    }

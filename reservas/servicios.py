@@ -11,6 +11,7 @@ from auditoria.contexto import contexto_auditoria
 from bloqueos.models import Bloqueo
 from common.fechas import validar_inicio_evento
 from usuarios.models import Rol, Usuario
+from usuarios.acceso import exigir_acceso_operativo
 
 from .disponibilidad import consultar_disponibilidad
 from .models import Evento, Reserva, Turno
@@ -19,6 +20,7 @@ from .models import Evento, Reserva, Turno
 def exigir_acceso_reservas(usuario):
     if usuario is None or not usuario.is_authenticated:
         raise PermissionDenied
+    usuario = exigir_acceso_operativo(usuario)
     roles = set(usuario.roles.values_list("rol__codigo", flat=True))
     if (
         not usuario.is_active

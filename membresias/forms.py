@@ -56,7 +56,7 @@ class SeleccionContratacionPlanForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        usuarios = Usuario.objects.filter(is_active=True)
+        usuarios = Usuario.objects.habilitados()
         if not self.admite_profesor:
             usuarios = usuarios.exclude(roles__rol__codigo=Rol.PROFESOR)
         self.fields["usuario"].queryset = usuarios.order_by("last_name", "first_name", "username")

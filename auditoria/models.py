@@ -21,7 +21,7 @@ class IntentoAuditoria(models.Model):
     solicitud_id = models.UUIDField(default=uuid4, unique=True, editable=False)
     realizado_en = models.DateTimeField(default=timezone.now, editable=False)
     usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
+        settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING, db_constraint=False, null=True, blank=True,
         related_name="intentos_auditoria",
     )
     tipo = models.CharField(max_length=32, choices=Tipo.choices)
@@ -72,7 +72,7 @@ class LogAuditoria(models.Model):
     realizado_en = models.DateTimeField(default=timezone.now, editable=False)
     usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
+        on_delete=models.DO_NOTHING, db_constraint=False,
         related_name="registros_auditoria",
         null=True,
         blank=True,

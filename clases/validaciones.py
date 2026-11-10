@@ -55,8 +55,8 @@ def validar_usuarios_clase(
     nuevos_participantes = participantes_ids - participantes_actuales
     for usuario_id in sorted(nuevos_profesores | nuevos_participantes):
         usuario = usuarios.get(usuario_id)
-        if usuario is None or not usuario.is_active:
-            raise ValidationError("Todos los profesores y participantes deben tener una cuenta activa.")
+        if usuario is None or not usuario.esta_habilitado:
+            raise ValidationError("Todos los profesores y participantes deben tener una cuenta activa y correo verificado.")
         if usuario_id in profesores_ids and not any(
             asignacion.rol.codigo == Rol.PROFESOR for asignacion in usuario.roles.all()
         ):

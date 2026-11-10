@@ -21,8 +21,8 @@ def _bloquear_titular(actor, usuario_id, *, exigir_activo=True):
     usuarios = bloquear_usuarios({actor.pk, usuario_id})
     actor = exigir_administracion_membresias(actor)
     titular = usuarios.get(usuario_id)
-    if titular is None or (exigir_activo and not titular.is_active):
-        raise ValidationError("Elegí un usuario activo para registrar la contratación.")
+    if titular is None or (exigir_activo and not titular.esta_habilitado):
+        raise ValidationError("Elegí un usuario activo con correo verificado para registrar la contratación.")
     return actor, titular
 
 
@@ -66,7 +66,7 @@ def _bloquear_titular_propio(actor):
         raise PermissionDenied
     try:
         return Usuario.objects.select_for_update().get(
-            pk=actor.pk, is_active=True, debe_cambiar_contrasena=False,
+            pk=actor.pk, is_active=True, correo_verificado_en__isnull=False, debe_cambiar_contrasena=False,
         )
     except Usuario.DoesNotExist:
         raise PermissionDenied from None

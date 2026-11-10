@@ -72,7 +72,7 @@ def seguimiento_contrataciones(request):
             if formulario.cleaned_data["solo_sin"] and contrato is not None:
                 continue
             usuario = fila["usuario"]
-            puede_registrar = mes_habilitado and usuario.is_active and not any(
+            puede_registrar = mes_habilitado and usuario.esta_habilitado and not any(
                 vinculo.rol.codigo == Rol.PROFESOR for vinculo in usuario.roles.all()
             )
             fila.update({

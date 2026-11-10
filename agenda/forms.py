@@ -70,8 +70,7 @@ class AgendaFiltroForm(forms.Form):
 
 class AgendaReservaForm(forms.Form):
     organizador = forms.ModelChoiceField(
-        queryset=Usuario.objects.filter(
-            is_active=True,
+        queryset=Usuario.objects.habilitados().filter(
             roles__rol__codigo__in=(Rol.RESERVAS, Rol.ADMINISTRADOR),
         ).distinct().order_by("first_name", "last_name", "username"),
         widget=forms.HiddenInput(),

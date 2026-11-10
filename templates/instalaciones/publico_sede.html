@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block titulo %}{{ sede.nombre }} | Academia TM{% endblock %}
+{% block contenido %}<section class="tarjeta"><h1>{{ sede.nombre }}</h1><dl><dt>Ubicación</dt><dd>{{ sede.direccion }}</dd><dt>Precio de reserva por turno</dt><dd>{% if sede.precio_reserva_vigente %}ARS {{ sede.precio_reserva_vigente|floatformat:2 }}{% else %}Consultar{% endif %}</dd></dl><h2>Canchas</h2><ul>{% for cancha in canchas %}<li><a href="{% url 'instalaciones:publico_cancha' cancha.pk %}">{{ cancha.nombre }}</a> · {{ cancha.get_superficie_display }}</li>{% empty %}<li>No hay canchas disponibles.</li>{% endfor %}</ul><a href="{% url 'instalaciones:publico_sedes' %}">Ver sedes</a></section>{% endblock %}

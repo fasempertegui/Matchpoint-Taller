@@ -38,6 +38,8 @@
             <strong class="auditoria-usuario">
                 {% if fila.registro.usuario %}
                     {{ fila.registro.usuario }}
+                {% elif fila.registro.usuario_id %}
+                    Cuenta eliminada (#{{ fila.registro.usuario_id }})
                 {% elif fila.registro.origen == "tarea" %}
                     Proceso automático
                 {% else %}
@@ -71,7 +73,7 @@
             <p><strong>Clave del registro:</strong> <code>{{ fila.clave }}</code></p>
             <p><strong>Origen:</strong> {{ fila.registro.get_origen_display }}</p>
             {% if fila.registro.origen == "aplicacion" %}
-            <p><strong>Usuario de aplicación:</strong> {{ fila.registro.usuario }}</p>
+            <p><strong>Usuario de aplicación:</strong> {{ fila.registro.usuario|default:"Cuenta eliminada" }} (#{{ fila.registro.usuario_id }})</p>
             {% endif %}
             <p><strong>Usuario de PostgreSQL:</strong> {{ fila.registro.usuario_bd }}</p>
             <p><strong>Operación:</strong> <code>{{ fila.registro.operacion_id }}</code></p>

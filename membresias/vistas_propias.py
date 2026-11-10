@@ -33,7 +33,7 @@ def _exigir_titular(usuario):
     if not usuario.is_authenticated:
         raise PermissionDenied
     return get_object_or_404(
-        Usuario, pk=usuario.pk, is_active=True, debe_cambiar_contrasena=False,
+        Usuario, pk=usuario.pk, is_active=True, correo_verificado_en__isnull=False, debe_cambiar_contrasena=False,
     )
 
 

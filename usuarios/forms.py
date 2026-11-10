@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from common.fechas import fecha_minima_nacimiento, validar_fecha_nacimiento
 
-from .models import Rol, Usuario, UsuarioRol
+from .models import Rol, Usuario
 
 
 class InicioSesionForm(AuthenticationForm):
@@ -316,8 +316,6 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
         widget=forms.TextInput(attrs={"class": "form-control"}),
         help_text="La contraseña se muestra una sola vez: comunicásela a la persona",
     )
-    rol_profesor = forms.BooleanField(required=False, label="Profesor")
-    rol_alumno = forms.BooleanField(required=False, label="Alumno")
     observaciones = forms.CharField(
         required=False,
         widget=forms.Textarea(
@@ -353,12 +351,6 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
         validate_password(contrasena, candidato)
         return contrasena
 
-    def clean(self):
-        datos = super().clean()
-        if datos.get("rol_profesor") and datos.get("rol_alumno"):
-            self.add_error("rol_alumno", "Profesor y Alumno son roles incompatibles entre sí.")
-        return datos
-
     def guardar(self, *, exigir_cambio_contrasena=True, es_superusuario=False):
         with transaction.atomic():
             usuario = crear_usuario_con_nombre_generado(
@@ -372,10 +364,6 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
                 debe_cambiar_contrasena=exigir_cambio_contrasena,
                 is_superuser=es_superusuario,
             )
-            if not es_superusuario and self.cleaned_data.get("rol_profesor"):
-                UsuarioRol.objects.create(usuario=usuario, rol=Rol.objects.get(codigo=Rol.PROFESOR))
-            if not es_superusuario and self.cleaned_data.get("rol_alumno"):
-                UsuarioRol.objects.create(usuario=usuario, rol=Rol.objects.get(codigo=Rol.ALUMNO))
         return usuario
 
 
@@ -418,3 +406,11 @@ class UsuarioBusquedaForm(forms.Form):
         choices=(("", "Todos los estados"), ("activo", "Activo"), ("inactivo", "Inactivo")),
         widget=forms.Select(attrs={"class": "form-control"}),
     )
+
+
+class ReenvioVerificacionForm(forms.Form):
+    email = forms.EmailField(label="Correo electrónico", widget=forms.EmailInput(attrs={"class": "form-control"}))
+
+
+class CorregirCorreoForm(ReenvioVerificacionForm):
+    contrasena = forms.CharField(label="Contraseña actual", widget=forms.PasswordInput(attrs={"class": "form-control"}))

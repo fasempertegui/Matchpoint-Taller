@@ -9,5 +9,6 @@
     <p class="inicio-portal-descripcion">Bienvenido a la Academia de Tenis TM. Accedé a tu información y a las opciones disponibles para tu cuenta.</p>
 </section>
 
+{% if not request.user.correo_verificado_en %}<section class="tarjeta"><p>Podés consultar tu perfil y la oferta de la academia. Verificá tu correo para habilitar operaciones.</p><a href="{% url 'estado_verificacion' %}" class="boton boton-secundario">Verificar mi correo</a></section>{% endif %}
 {% include "componentes/inicio_modulos.html" %}
 {% endblock %}

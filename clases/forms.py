@@ -43,7 +43,7 @@ class ClaseForm(forms.Form):
     )
     participantes = forms.ModelMultipleChoiceField(
         queryset=Usuario.objects.none(), widget=forms.MultipleHiddenInput(), required=False,
-        error_messages={"invalid_choice": "Revisá los participantes seleccionados: alguno ya no está activo."},
+        error_messages={"invalid_choice": "Revisá los participantes seleccionados: alguno ya no está habilitado."},
     )
     buscar_todos = forms.BooleanField(required=False)
     observaciones = forms.CharField(
@@ -53,11 +53,11 @@ class ClaseForm(forms.Form):
     def __init__(self, *args, profesores_actuales=(), participantes_actuales=(), **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["profesores"].queryset = Usuario.objects.filter(
-            Q(is_active=True, roles__rol__codigo=Rol.PROFESOR) | Q(pk__in=profesores_actuales),
-        ).distinct()
+            Q(is_active=True, correo_verificado_en__isnull=False, roles__rol__codigo=Rol.PROFESOR) | Q(pk__in=profesores_actuales),
+        ).filter(correo_verificado_en__isnull=False).distinct()
         self.fields["participantes"].queryset = Usuario.objects.filter(
-            Q(is_active=True) | Q(pk__in=participantes_actuales),
-        )
+            Q(is_active=True, correo_verificado_en__isnull=False) | Q(pk__in=participantes_actuales),
+        ).filter(correo_verificado_en__isnull=False)
 
     def clean(self):
         datos = super().clean()
@@ -173,7 +173,7 @@ class AsistenciaBaseFormSet(forms.BaseFormSet):
         ids = [fila.cleaned_data["usuario"] for fila in self.forms if fila.cleaned_data]
         if len(ids) != len(set(ids)):
             raise forms.ValidationError("No se puede repetir una persona en la carga de asistencia.")
-        if Usuario.objects.filter(pk__in=ids).count() != len(ids):
+        if Usuario.objects.filter(pk__in=ids, correo_verificado_en__isnull=False).count() != len(ids):
             raise forms.ValidationError("Alguna persona ya no está disponible. Revisá la carga de asistencia.")
 
 

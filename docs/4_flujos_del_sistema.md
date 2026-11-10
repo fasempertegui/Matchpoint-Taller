@@ -112,6 +112,8 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Consulta comercial | FL-79 | Consultar situación financiera |
 | Caja | FL-80 | Registrar una devolución vinculada |
 
+Los recorridos de cuenta incluyen CU-01 (verificar correo) y CU-02 (reenviar/corregir correo inicial).
+
 Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de contrataciones de planes y membresías, 4.2 Notificaciones por email, 4.3 Finalización automática de clases y reservas vencidas, 4.5 Aviso de vencimiento próximo de una contratación, 4.6 Recordatorio de la próxima clase asignada.
 
 ---
@@ -157,49 +159,27 @@ flowchart TD
 
 ### 3.2 Usuarios
 
-No existe un flujo separado de "registrar usuario": las cuentas no administrativas gestionadas por la academia se registran mediante **FL-02**, con credenciales de acceso propias y con Público y Reservas otorgados automáticamente en la misma operación. Los roles Profesor y Alumno pueden asignarse ya en ese mismo alta o en cualquier momento posterior mediante **FL-07**; Alumno, además, puede otorgarse automáticamente (ver **FL-20**). Las cuentas administrativas se crean mediante `crear_administrador` y sólo reciben Administrador. Las asignaciones referencian el catálogo fijo `roles`, sin flujos para crear, modificar o eliminar sus cinco registros.
+Las cuentas no administrativas se crean mediante **FL-02** o **FL-06**, con Público como único rol inicial y correo sin verificar. Los roles operativos requieren verificación; ésta asigna Reservas una vez, mientras Profesor y Alumno se otorgan por sus operaciones autorizadas. `crear_administrador` crea únicamente Administrador, con correo sin verificar y contraseña provisoria. Todos los métodos de alta comparten la bienvenida con enlace y las mismas condiciones de acceso.
 
 El perfil propio permite consultar la información y cambiar únicamente la contraseña mediante **FL-59**. La edición administrativa de datos personales se limita al correo (**FL-04**); el restablecimiento de la contraseña de otra cuenta se realiza mediante **FL-69**. Nombre, apellido, nombre de usuario, celular, fecha de nacimiento y observaciones se cargan en el alta y no tienen un flujo de edición. El estado y los roles utilizan **FL-05** y **FL-07** por separado.
 
 #### FL-02. Registrar un usuario
 
-- **Objetivo:** crear un usuario activo con credenciales de acceso, Público y Reservas, y opcionalmente Profesor o Alumno.
-- **Actor:** administrador.
-- **Entradas:** nombre, apellido, celular, email y fecha de nacimiento obligatorios; contraseña ingresada o sugerida por el sistema; observaciones opcionales; rol adicional opcional (Profesor o Alumno, incompatibles entre sí). El nombre de usuario se genera automáticamente y no es editable.
+- **Objetivo:** crear una cuenta con Público, correo sin verificar y contraseña provisoria.
+- **Actor:** administración con acceso vigente y permiso de alta.
+- **Entradas:** nombre, apellido, celular, correo, fecha de nacimiento y contraseña provisoria; observaciones opcionales. El nombre de usuario se genera y no se edita.
 
 Recorrido:
 
-1. El administrador completa nombre, apellido, celular, email y fecha de nacimiento.
-2. Al escribir nombre y apellido, el sistema muestra el nombre de usuario formado por el apellido normalizado y la inicial del nombre. Consulta si ya existe y, si hace falta, agrega el primer número disponible desde `1`. El campo no se puede editar. El administrador puede pedir una contraseña alfanumérica aleatoria o ingresar una propia; en ambos casos se aplican los validadores de contraseña configurados en Django.
-3. El administrador puede marcar, opcionalmente, Profesor o Alumno para otorgar junto con el alta. Seleccionar ambos se rechaza por incompatibilidad.
-4. Al confirmar, el sistema valida los campos obligatorios, que la fecha de nacimiento esté dentro del rango permitido y que nombre y apellido no contengan números. Genera nuevamente el nombre de usuario disponible y comprueba la unicidad del email sin distinguir mayúsculas de minúsculas.
-5. Django genera el hash PBKDF2-SHA256 de la contraseña; la base nunca recibe la contraseña en texto plano.
-6. En una transacción, el sistema crea el usuario con estado **Activo** y `debe_cambiar_contrasena = true`, le asigna automáticamente **Público** y **Reservas** y, si se seleccionó, el rol Profesor o Alumno autorizado. Cada asignación guarda una clave foránea al catálogo `roles`.
-7. Muestra el nombre de usuario definitivo y la contraseña provisoria en texto plano una única vez, para que el administrador se los comunique a la persona.
+1. Administración completa los datos; la aplicación propone el nombre de usuario normalizado con sufijo si es necesario. Puede solicitar una contraseña sugerida y se aplican los validadores de Django.
+2. Al confirmar, se validan datos, unicidad de correo y usuario y se guarda el hash de contraseña. No se ofrecen ni se aceptan roles adicionales en el alta.
+3. En una transacción se crean cuenta activa, Público y `debe_cambiar_contrasena = true`, con verificación ausente, junto con la bienvenida pendiente de envío.
+4. La bienvenida contiene el enlace inicial de quince minutos desde emisión y explica el reemplazo de provisoria, sin incluir la contraseña. No se espera al proveedor para confirmar el alta.
+5. Se muestran usuario definitivo y contraseña provisoria una sola vez a administración. El titular verifica mediante **CU-01** y reemplaza la provisoria mediante **FL-68**; si no la conoce, después de verificar puede recuperarla mediante **FL-46**.
 
-Alternativas:
+El usuario debe existir antes de cualquier reserva, invitación, clase, planilla o contratación. No se crea dentro de esos trámites. El comando `crear_administrador` comparte validaciones y bienvenida, pero asigna sólo Administrador. Verificar y cambiar provisoria son requisitos independientes, también para el primer administrador.
 
-- El celular puede pertenecer a un tercero y no es único. El email y el nombre de usuario, en cambio, son siempre obligatorios y únicos sin distinguir mayúsculas de minúsculas. Si otro usuario ocupa el nombre mostrado antes de guardar, se asigna el siguiente sufijo disponible.
-- La persona debe reemplazar la contraseña provisoria en su primer inicio de sesión mediante **FL-68**. Si no la recuerda, puede establecer una propia mediante recuperación (**FL-46**).
-- Administrador, Público y Reservas no pueden elegirse en este paso: Administrador se crea mediante el comando de gestión `crear_administrador`; Público y Reservas se asignan automáticamente.
-- No marcar ningún rol adicional no impide asignarlo después mediante **FL-07**.
-- Si se cancela antes de confirmar, no se crea el usuario.
-- Este flujo es siempre un paso previo e independiente: ninguna otra operación (como crear una reserva o registrar una contratación de plan o membresía) lo invoca ni registra un usuario nuevo dentro de su propio trámite. El usuario debe existir antes.
-
-- **Resultado:** nuevo usuario activo con contraseña provisoria pendiente de reemplazo, Público, Reservas y los roles adicionales seleccionados.
-- **Datos:** usuarios, usuarios_roles.
-
-```mermaid
-flowchart TD
-    A[Ingresar nombre apellido celular email y fecha de nacimiento] --> B[Mostrar usuario y completar contraseña]
-    B --> D[Marcar roles adicionales opcionales]
-    D --> E{Datos válidos y únicos}
-    E -->|No| F[Solicitar corrección]
-    F --> A
-    E -->|Sí| G[Crear usuario activo con cambio obligatorio]
-    G --> H[Asignar Público, Reservas y roles adicionales]
-    H --> I[Mostrar usuario y contraseña provisoria]
-```
+- **Resultado:** cuenta sin verificar, roles iniciales y bienvenida persistidos atómicamente; no hay acceso operativo hasta cumplir las condiciones de cuenta.
 
 #### FL-03. Consultar un usuario
 
@@ -339,37 +319,38 @@ flowchart TD
 
 #### FL-06. Registrarse
 
-- **Objetivo:** crear una cuenta de usuario con credenciales propias, igual que **FL-02** pero autogestionada desde el portal.
-- **Actor:** público, sin cuenta previa.
-- **Entradas:** nombre, apellido, celular, email, fecha de nacimiento y contraseña, todos obligatorios. El nombre de usuario se genera automáticamente y no es editable.
+- **Objetivo:** crear una cuenta con contraseña elegida por el titular y Público como único rol inicial.
+- **Actor:** persona sin cuenta.
+- **Entradas:** nombre, apellido, celular, correo, fecha de nacimiento, contraseña y confirmación; usuario generado automáticamente.
 
 Recorrido:
 
-1. La persona completa sus datos personales y contraseña desde el portal. Al escribir nombre y apellido, ve el nombre de usuario generado según la regla de **FL-02**.
-2. Al confirmar, el sistema valida los campos obligatorios, que la fecha de nacimiento esté dentro del rango permitido y que nombre y apellido no contengan números. Genera nuevamente el nombre de usuario disponible y comprueba la unicidad del email sin distinguir mayúsculas de minúsculas.
-3. Django genera el hash PBKDF2-SHA256 de la contraseña.
-4. En una transacción, crea el usuario **Activo** y le asigna automáticamente **Público** y **Reservas**, igual que en **FL-02**.
-5. Envía la confirmación de alta por email (ver 4.2).
-6. Muestra el nombre de usuario definitivo para que la persona pueda iniciar sesión.
+1. La persona completa sus datos y confirma una contraseña válida. Se verifican unicidades y se determina el nombre de usuario definitivo.
+2. Una transacción crea cuenta activa, correo sin verificar, `debe_cambiar_contrasena = false`, Público y bienvenida pendiente. La contraseña sólo se persiste como hash.
+3. La bienvenida incluye el enlace inicial de quince minutos desde su emisión; una caída del transporte no revierte el registro.
+4. Se muestra el usuario definitivo. La persona puede iniciar sesión, consultar su perfil y la oferta activa sin ser obligada a verificar para esas lecturas.
+5. Se ofrece **CU-01** para habilitar operaciones; no se concede Reservas en el alta ni se envía una segunda bienvenida al verificar.
 
-Alternativas:
+Una cuenta existente no se duplica. Los errores de datos se corrigen antes de confirmar. El autorregistro no activa obligación de cambiar provisoria porque la contraseña ya fue elegida por el titular.
 
-- Si el email ya pertenece a un usuario existente (por ejemplo, registrado antes por la administración mediante **FL-02**), el alta se rechaza informando que la cuenta ya existe; la persona podrá iniciar sesión con esas credenciales o recuperar la contraseña (**FL-46**) en vez de registrarse de nuevo. Si otro usuario ocupa el nombre mostrado antes de guardar, se asigna el siguiente sufijo disponible.
-- La base nunca recibe la contraseña en texto plano.
-- El autorregistro guarda `debe_cambiar_contrasena = false`: la persona eligió y confirmó su propia contraseña, por lo que no debe reemplazarla en su primer inicio de sesión.
+- **Resultado:** cuenta con Público, lectura disponible y verificación pendiente.
 
-- **Resultado:** nuevo usuario activo con Público, Reservas y sesión iniciable.
-- **Datos:** usuarios, usuarios_roles.
+#### CU-01. Verificar el correo inicial
 
-```mermaid
-flowchart TD
-    A[Ingresar datos y contraseña] --> B{Email disponible y datos válidos}
-    B -->|No| C[Rechazar: la cuenta ya existe]
-    B -->|Sí| D[Crear usuario activo]
-    D --> E[Asignar Público y Reservas]
-    E --> F[Enviar email de confirmación]
-    F --> G[Mostrar nombre de usuario definitivo]
-```
+- **Actor:** titular que posee el enlace firmado, sin necesidad de una sesión previa.
+
+1. Al abrir el enlace se comprueba la firma y se muestra un botón de confirmación. El GET no modifica la cuenta.
+2. El POST con CSRF válido bloquea la cuenta y comprueba dirección e instante de emisión. A los quince minutos el enlace vence.
+3. Si sigue sin verificar, registra `correo_verificado_en` y asigna Reservas una única vez a una cuenta no administrativa, sin Alumno ni Profesor. Administrador conserva su exclusividad.
+4. Informa el resultado sin otro email. Verificar no reactiva ni retira la obligación provisoria.
+
+Un enlace usado informa “El correo ya está verificado” y no restituye un rol retirado. Un enlace vencido o de correo corregido permite solicitar otro. Si la cuenta ya fue eliminada informa indisponibilidad y ofrece iniciar un nuevo registro. Mientras exista y el enlace sea vigente puede verificarse aunque hayan pasado siete días. La escritura participa de auditoría sin contraseña, token o enlace.
+
+#### CU-02. Reenviar verificación y corregir el correo inicial
+
+La pantalla informativa muestra el estado y los disparadores; no presenta formularios abiertos. Reenviar solicita correo y devuelve idéntica respuesta exista o no la cuenta. Bajo bloqueo sólo crea otro aviso si sigue sin verificar y pasaron cinco minutos desde la solicitud anterior; los enlaces del mismo correo conservan sus plazos individuales.
+
+Corregir exige sesión y contraseña vigente al titular. Comprueba unicidad del correo bajo transacción, actualiza la dirección y registra otro email de verificación; los enlaces del correo anterior dejan de ser válidos. Administración utiliza esa misma corrección inicial para una cuenta sin verificar, con permiso de edición y sin pedir la contraseña del titular. El cambio de una cuenta ya verificada sigue **FL-04**. La corrección no cambia roles, habilitación, provisoria ni fecha de alta. Los formularios se muestran sólo al elegir su acción.
 
 #### FL-07. Asignar o quitar un rol a un usuario
 
@@ -382,14 +363,14 @@ Recorrido:
 
 1. El administrador localiza al usuario.
 2. El sistema muestra los roles vigentes del usuario.
-3. El administrador elige Reservas, Profesor o Alumno y confirma asignarlo o quitarlo.
+3. El administrador elige Reservas, Profesor o Alumno y confirma asignarlo o quitarlo. Una nueva asignación exige cuenta activa y correo verificado, revalidados bajo bloqueo; la provisoria pendiente no invalida la asignación administrativa.
 4. Si solicita quitarlo, comprueba que no existan relaciones que bloqueen el retiro: reservas propias Programadas para Reservas, contrataciones de planes Activas para Alumno o asignaciones activas como profesor en clases Programadas para Profesor.
 5. Si la operación está permitida, actualiza `usuarios_roles`. La comprobación y el retiro se realizan en una misma operación transaccional, coordinada con la creación o reactivación de las relaciones involucradas.
 
 Alternativas:
 
 - **Público no se puede quitar.** Se asigna automáticamente en el alta de cuentas no administrativas. Administrador se gestiona exclusivamente mediante comandos ejecutados por el desarrollador y no puede combinarse con otros roles. Su perfil no ofrece la modificación de roles y el servidor rechaza solicitudes sobre esas cuentas. Este flujo tampoco permite crear, renombrar ni eliminar registros del catálogo `roles`.
-- Reservas sigue asignándose automáticamente en el alta (**FL-02**, **FL-06**), pero puede retirarse si no hay reservas propias programadas y otorgarse nuevamente mediante este flujo.
+- Reservas se asigna al completar **CU-01**. Puede retirarse si no hay reservas propias Programadas y otorgarse por administración a una cuenta activa verificada; reutilizar el enlace no lo restituye.
 - Si el usuario tiene reservas programadas, se rechaza el retiro de Reservas. Si tiene un plan contratado Activo, se rechaza el retiro de Alumno; una membresía contratada no impide retirar ese rol. Si tiene clases programadas con una asignación activa como profesor, se rechaza el retiro de Profesor.
 - Ante un rechazo, se informa la causa, se conserva el rol y no se cancelan ni modifican las relaciones que lo bloquean. Los estados registrados determinan el bloqueo; una fecha pasada por sí sola no lo libera.
 - El rol Alumno también puede otorgarse automáticamente mediante **FL-20**, además de por este flujo; ambas vías conviven sin conflicto.
@@ -1676,7 +1657,7 @@ Recorrido:
 3. La aplicación verifica la contraseña contra el hash PBKDF2-SHA256 de Django almacenado.
 4. Comprueba que el usuario se encuentre activo.
 5. Comprueba que `debe_cambiar_contrasena` se encuentre en `false`.
-6. Establece la sesión autenticada con el identificador y todos los roles vigentes del usuario (ver **FL-02**, **FL-07**).
+6. Establece la sesión con los roles vigentes. Sin verificar, una cuenta con Público conserva sólo perfil y oferta activa; Administración no accede a gestión hasta verificar. Se aplican por separado la restricción provisoria y los permisos de cada operación.
 
 Alternativas:
 
@@ -2730,3 +2711,12 @@ flowchart TD
     C -->|No| D[Finalizar sin cambios]
     C -->|Sí| E[Enviar recordatorio y marcar la asignación como avisada]
 ```
+
+
+### 4.7 Limpieza de cuentas iniciales sin verificar
+
+Una revisión horaria en punto selecciona cuentas con siete días cumplidos desde `date_joined` y correo aún sin verificar. Bloquea cada cuenta, vuelve a comprobar verificación y fecha y revisa roles iniciales, permisos técnicos y referencias operativas. Si existe actividad, contrato, asignación u otra relación incompatible, conserva todo y registra Inconsistente en `limpiezas_cuentas` para revisión administrativa.
+
+Si sólo conserva sus roles iniciales, elimina cuenta y roles en una transacción y registra Eliminada. No borra ni actualiza auditoría: ésta conserva el identificador de actor y permite leerlo sin una cuenta vigente. No registra contraseñas, hashes o enlaces en el resultado técnico.
+
+La verificación usa el mismo bloqueo. Si se verifica primero, la limpieza la conserva; si se elimina primero, la confirmación informa que ya no está disponible. No se rechaza una verificación sólo por edad de la cuenta: hasta su eliminación puede confirmar un enlace vigente. Un reenvío, una corrección y un enlace vencido no reinician los siete días ni eliminan por sí solos la cuenta.

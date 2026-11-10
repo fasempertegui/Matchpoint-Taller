@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block titulo %}Sedes | Academia TM{% endblock %}
+{% block contenido %}{% include "membresias/_oferta_navegacion.html" with tipo="sede" only %}<section class="tarjeta"><h1>Sedes de la academia</h1><ul>{% for sede in sedes %}<li><a href="{% url 'instalaciones:publico_sede' sede.pk %}">{{ sede.nombre }}</a> · {{ sede.direccion }}</li>{% empty %}<li>No hay sedes disponibles.</li>{% endfor %}</ul></section>{% endblock %}

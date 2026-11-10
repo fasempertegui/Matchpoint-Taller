@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block contenido %}
+{% if request.user.pk == usuario_obj.pk and not usuario_obj.correo_verificado_en %}<section class="tarjeta"><p>Tu correo todavía no está verificado.</p><a href="{% url 'estado_verificacion' %}">Verificar mi correo</a></section>{% endif %}
 <article class="tarjeta perfil">
     <header class="perfil-cabecera">
         <div>

@@ -86,7 +86,7 @@ def usuario_detalle(request, pk):
             "usuario_obj": usuario,
             "formulario_correo": UsuarioEditarForm(instance=usuario) if request.user.has_perm("usuarios.change_usuario") else None,
             "roles_asignados": roles_asignados,
-            "puede_consultar_actividad": request.user.pk == usuario.pk or request.user.tiene_rol(Rol.ADMINISTRADOR),
+            "puede_consultar_actividad": request.user.esta_habilitado and (request.user.pk == usuario.pk or request.user.tiene_rol(Rol.ADMINISTRADOR)),
             "roles_gestionables": [
                 {"codigo": codigo, "nombre": nombre, "asignado": codigo in roles_actuales}
                 for codigo, nombre in (
@@ -94,7 +94,7 @@ def usuario_detalle(request, pk):
                     (Rol.PROFESOR, "Profesor"),
                     (Rol.ALUMNO, "Alumno"),
                 )
-            ] if not (usuario.is_superuser or Rol.ADMINISTRADOR in roles_actuales) else [],
+            ] if usuario.esta_habilitado and not (usuario.is_superuser or Rol.ADMINISTRADOR in roles_actuales) else [],
         },
     )
 
@@ -140,7 +140,15 @@ def usuario_editar(request, pk):
     formulario = UsuarioEditarForm(request.POST, instance=usuario)
     if not formulario.is_valid():
         return JsonResponse({"errores": formulario.errors}, status=400)
-    formulario.save()
+    if usuario.correo_verificado_en is None:
+        from .verificacion import corregir_correo_inicial_por_administracion
+
+        try:
+            usuario = corregir_correo_inicial_por_administracion(request.user, usuario.pk, formulario.cleaned_data["email"])
+        except ValidationError as error:
+            return JsonResponse({"errores": {"email": error.messages}}, status=400)
+    else:
+        formulario.save()
     return JsonResponse({"email": usuario.email})
 
 

@@ -15,7 +15,7 @@ def exigir_administracion_membresias(usuario, *, bloquear=False):
     if bloquear:
         usuarios = usuarios.select_for_update()
     try:
-        usuario = usuarios.get(pk=usuario.pk, is_active=True, debe_cambiar_contrasena=False)
+        usuario = usuarios.get(pk=usuario.pk, is_active=True, correo_verificado_en__isnull=False, debe_cambiar_contrasena=False)
     except Usuario.DoesNotExist:
         raise PermissionDenied from None
     if not usuario.tiene_rol(Rol.ADMINISTRADOR):

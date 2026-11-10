@@ -15,7 +15,7 @@ from .models import EnvioEmail
 @require_GET
 def envios_lista(request):
     if not Usuario.objects.filter(
-        pk=request.user.pk, is_active=True, debe_cambiar_contrasena=False,
+        pk=request.user.pk, is_active=True, correo_verificado_en__isnull=False, debe_cambiar_contrasena=False,
         roles__rol__codigo=Rol.ADMINISTRADOR,
     ).exists():
         raise PermissionDenied

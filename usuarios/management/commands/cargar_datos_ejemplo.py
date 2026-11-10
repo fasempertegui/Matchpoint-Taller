@@ -4,7 +4,7 @@ from django.db import connection, transaction
 
 
 class Command(BaseCommand):
-    help = "Carga sedes de ejemplo si no existen y agrega los usuarios de ejemplo que falten."
+    help = "Carga sedes de ejemplo si no existen y agrega los usuarios de ejemplo que falten, con correo verificado."
 
     def handle(self, *args, **options):
         script = (settings.BASE_DIR / "scripts" / "datos_ejemplo.sql").read_text(encoding="utf-8")

@@ -12,7 +12,7 @@ from .models import MovimientoFondo, SesionCaja
 
 
 def contexto_financiero(actor, tipo, origen, parametros):
-    if not actor.is_authenticated or not actor.is_active or actor.debe_cambiar_contrasena:
+    if not actor.is_authenticated or not actor.esta_habilitado or actor.debe_cambiar_contrasena:
         raise PermissionDenied
     administrador = actor.tiene_rol(Rol.ADMINISTRADOR)
     titular_id = origen.organizador_id if tipo == "reserva" else origen.usuario_id

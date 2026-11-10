@@ -16,7 +16,7 @@ def exigir_acceso_caja(actor, *, bloquear=False):
     if actor is None or not actor.is_authenticated:
         raise PermissionDenied
     consulta = Usuario.objects.select_for_update() if bloquear else Usuario.objects.all()
-    usuario = consulta.filter(pk=actor.pk, is_active=True, debe_cambiar_contrasena=False).first()
+    usuario = consulta.filter(pk=actor.pk, is_active=True, correo_verificado_en__isnull=False, debe_cambiar_contrasena=False).first()
     if usuario is None or not usuario.tiene_rol(Rol.ADMINISTRADOR):
         raise PermissionDenied
     return usuario

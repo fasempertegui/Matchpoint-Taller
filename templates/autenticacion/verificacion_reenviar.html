@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block titulo %}Reenviar verificación | Academia TM{% endblock %}
+{% block contenido %}<section class="tarjeta"><h1>Reenviar verificación</h1>
+{% if resultado %}<p>{{ resultado }}</p>{% else %}<form method="post">{% csrf_token %}{{ formulario.as_p }}<button class="boton boton-primario" type="submit">Solicitar enlace</button></form>{% endif %}
+<p><a href="{% url 'estado_verificacion' %}">Volver</a></p></section>{% endblock %}

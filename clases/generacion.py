@@ -141,7 +141,7 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         "reservas_ocupadas": reservas_ocupadas, "invitaciones_ocupadas": invitados_ocupados,
         "docencia_ocupada": profesores_ocupados, "participacion_ocupada": participantes_ocupados,
         "usuarios": [
-            [usuario.pk, str(usuario), usuario.is_active, sorted(v.rol.codigo for v in usuario.roles.all())]
+            [usuario.pk, str(usuario), usuario.is_active, usuario.correo_verificado_en.isoformat() if usuario.correo_verificado_en else None, sorted(v.rol.codigo for v in usuario.roles.all())]
             for usuario in sorted(usuarios.values(), key=lambda usuario: usuario.pk)
         ],
         "validas": validas, "omitidas": omitidas,

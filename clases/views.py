@@ -370,7 +370,7 @@ def buscar_personas_asistencia(request, pk):
     busqueda = request.GET.get("q", "").strip()[:100]
     if len(busqueda) < 2:
         return JsonResponse({"resultados": [], "hay_mas": False})
-    personas = Usuario.objects.all()
+    personas = Usuario.objects.filter(correo_verificado_en__isnull=False)
     for termino in busqueda.split():
         personas = personas.filter(Q(first_name__icontains=termino) | Q(last_name__icontains=termino) | Q(username__icontains=termino))
     excluidos = [int(valor) for valor in request.GET.getlist("excluir")[:200] if valor.isdecimal() and len(valor) < 19]

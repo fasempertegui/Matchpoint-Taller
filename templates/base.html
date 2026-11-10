@@ -42,7 +42,7 @@
                     <details class="navegacion-grupo navegacion-cuenta" data-navegacion-grupo>
                         <summary class="enlace-boton{% if navegacion_app.perfil_activo %} navegacion-activa{% endif %}" id="navegacion-cuenta" role="button" aria-expanded="false" aria-haspopup="true" aria-controls="navegacion-cuenta-items"><span class="navegacion-avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</span>{{ request.user.first_name|default:request.user.username }} <svg aria-hidden="true" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></summary>
                         <ul role="menu" id="navegacion-cuenta-items" aria-labelledby="navegacion-cuenta">
-                            <li><a role="menuitem" href="{% url 'usuarios:usuario_detalle' request.user.pk %}"{% if navegacion_app.perfil_activo %} class="navegacion-activa" aria-current="page"{% endif %}>Mi perfil</a></li>
+                            {% if navegacion_app.mostrar_perfil %}<li><a role="menuitem" href="{% url 'usuarios:usuario_detalle' request.user.pk %}"{% if navegacion_app.perfil_activo %} class="navegacion-activa" aria-current="page"{% endif %}>Mi perfil</a></li>{% endif %}
                             <li class="navegacion-salir"><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button role="menuitem" type="submit">Cerrar sesión</button></form></li>
                         </ul>
                     </details>

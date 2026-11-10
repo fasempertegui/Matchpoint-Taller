@@ -23,7 +23,7 @@
             {% for fila in filas %}
             <tr class="auditoria-registro">
                 <td><time datetime="{{ fila.registro.realizado_en|date:'c' }}">{{ fila.registro.realizado_en|date:"d/m/Y H:i:s" }}</time></td>
-                <td><strong>{% if fila.registro.usuario %}{{ fila.registro.usuario }}{% else %}No autenticado{% endif %}</strong></td>
+                <td><strong>{% if fila.registro.usuario %}{{ fila.registro.usuario }}{% elif fila.registro.usuario_id %}Cuenta eliminada (#{{ fila.registro.usuario_id }}){% else %}No autenticado{% endif %}</strong></td>
                 <td class="auditoria-accion">{{ fila.registro.get_tipo_display }}</td>
                 <td><span class="auditoria-referencia">{{ fila.destino }}</span></td>
                 <td>{{ fila.registro.get_motivo_display }}</td>

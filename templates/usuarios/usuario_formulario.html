@@ -18,29 +18,7 @@
         {% for campo in formulario %}
             {% if campo.name == "observaciones" %}
                 {% include "componentes/observaciones_opcionales.html" with campo=campo %}
-            {% elif campo.name == "rol_profesor" %}
-                <fieldset class="grupo-roles">
-                    <legend>Roles adicionales</legend>
-                    <div class="grupo-campo">
-                        <div class="campo-opcion">
-                            {{ formulario.rol_profesor }}
-                            <label for="{{ formulario.rol_profesor.id_for_label }}">{{ formulario.rol_profesor.label }}</label>
-                        </div>
-                        {% for error in formulario.rol_profesor.errors %}
-                            <p class="error-campo">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    <div class="grupo-campo">
-                        <div class="campo-opcion">
-                            {{ formulario.rol_alumno }}
-                            <label for="{{ formulario.rol_alumno.id_for_label }}">{{ formulario.rol_alumno.label }}</label>
-                        </div>
-                        {% for error in formulario.rol_alumno.errors %}
-                            <p class="error-campo">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                </fieldset>
-            {% elif campo.name != "rol_alumno" %}
+            {% else %}
                 <div class="grupo-campo">
                     <label for="{{ campo.id_for_label }}">
                         {{ campo.label }}

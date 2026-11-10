@@ -261,7 +261,7 @@ def mis_reservas(request):
 @never_cache
 @require_GET
 def uso_membresia(request):
-    usuario = get_object_or_404(Usuario, pk=request.user.pk, is_active=True, debe_cambiar_contrasena=False)
+    usuario = get_object_or_404(Usuario, pk=request.user.pk, is_active=True, correo_verificado_en__isnull=False, debe_cambiar_contrasena=False)
     administrador = usuario.tiene_rol(Rol.ADMINISTRADOR)
     hoy = timezone.localdate()
     parametros = request.GET.copy()

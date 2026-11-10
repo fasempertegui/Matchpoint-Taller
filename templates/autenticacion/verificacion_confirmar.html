@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block titulo %}Verificar correo | Academia TM{% endblock %}
+{% block contenido %}<section class="tarjeta"><h1>Verificar correo</h1>
+{% if confirmar %}<p>Confirmá que querés verificar el correo de tu cuenta.</p><form method="post" action="{% url 'confirmar_verificacion' %}">{% csrf_token %}<input type="hidden" name="token" value="{{ token }}"><button type="submit" class="boton boton-primario">Confirmar verificación</button></form>
+{% else %}<p>{{ resultado }}</p><a href="{% url 'estado_verificacion' %}">Consultar verificación</a> · <a href="{% url 'registro' %}">Crear cuenta</a>{% endif %}
+</section>{% endblock %}

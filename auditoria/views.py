@@ -12,7 +12,7 @@ from .presentacion import preparar_filas, preparar_intentos
 
 def _exigir_administrador(request):
     if (
-        not request.user.is_active
+        not request.user.esta_habilitado
         or request.user.debe_cambiar_contrasena
         or not request.user.tiene_rol(Rol.ADMINISTRADOR)
     ):

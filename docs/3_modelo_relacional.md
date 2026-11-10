@@ -75,6 +75,9 @@ Representa a las personas gestionadas por la academia y sus credenciales, datos 
 | | `is_active` | `boolean` | | | `true` |
 | | `fecha_baja` | `timestamptz` | Sí | | `NULL` |
 | | `debe_cambiar_contrasena` | `boolean` | | | `true` |
+| | `correo_verificado_en` | `timestamptz` | Sí | | `NULL` |
+| | `verificacion_solicitada_en` | `timestamptz` | Sí | | `2026-10-01 10:15:00-03` |
+| | `revision_correo` | `integer` no negativo | | | `0` |
 | | `date_joined` | `timestamptz` | | | `2026-10-01 10:15:00-03` |
 | | `fecha_nacimiento` | `date` | | | `1998-04-12` |
 | | `celular_contacto` | `varchar(30)` | | | `+5493875551234` |
@@ -83,7 +86,7 @@ Representa a las personas gestionadas por la academia y sus credenciales, datos 
 
 `Usuario` hereda de `AbstractUser`: `password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `is_staff`, `is_active` y `date_joined` son columnas físicas de esta tabla. Los atributos heredados `groups` y `user_permissions` son relaciones muchos a muchos almacenadas en `usuarios_groups` y `usuarios_user_permissions`, no columnas de `usuarios`.
 
-`date_joined` identifica el momento de alta; `actualizado_en`, la última modificación; `last_login`, el último acceso. `fecha_baja` es nula para una cuenta activa y contiene el momento de inactivación para una cuenta inactiva. `debe_cambiar_contrasena` representa la condición de contraseña provisoria.
+`date_joined` identifica el momento de alta; `actualizado_en`, la última modificación; `last_login`, el último acceso. `fecha_baja` es nula para una cuenta activa y contiene el momento de inactivación para una cuenta inactiva. `debe_cambiar_contrasena` representa la condición de contraseña provisoria. `correo_verificado_en` es nulo hasta confirmar el correo inicial y no modifica la habilitación ni la provisoria. `verificacion_solicitada_en` limita reenvíos a cinco minutos; `date_joined` determina los siete días para limpieza y no se reinicia con solicitudes o correcciones. `revision_correo` aumenta bajo bloqueo al corregir el correo inicial e identifica sus enlaces y envíos; volver a una dirección anterior no rehabilita enlaces de otra revisión. Un reenvío conserva la revisión vigente.
 
 `email` y `username` tienen unicidad sin distinción de mayúsculas mediante restricciones funcionales sobre `LOWER(email)` y `LOWER(username)`. `celular_contacto` no es único y contiene la representación internacional E.164. Las columnas de nombre y apellido admiten hasta 100 caracteres cada una. `observaciones` admite cadena vacía, sin `NULL`.
 
@@ -116,6 +119,8 @@ Representa la asociación entre un usuario y un rol del catálogo.
 | | `creado_en` | `timestamptz` | | | `2026-10-01 10:15:00-03` |
 
 `usuario_id` referencia `usuarios.id` y `rol_id` referencia `roles.id`. La restricción única `(usuario_id, rol_id)` impide duplicar la misma asignación. `asignado_por_id` referencia al responsable de una asignación administrativa y admite `NULL` para asignaciones automáticas.
+
+Las cuentas no administrativas nacen sólo con Público. Confirmar el correo inicial asigna Reservas una sola vez, bajo bloqueo de cuenta y con la unicidad del vínculo; una confirmación repetida no restaura un rol retirado. Administrador es exclusivo y requiere su propia verificación.
 
 Los permisos técnicos de Django se almacenan en sus tablas de autenticación. El modelo no incorpora una tabla `roles_permisos`.
 
@@ -639,15 +644,15 @@ Historial de modificaciones, anulaciones y eliminaciones permitidas capturado po
 | | `valores_anteriores` | `jsonb` | | | `{"estado": "programado"}` |
 | | `valores_actuales` | `jsonb` | | | `{"estado": "anulado"}` |
 | | `realizado_en` | `timestamptz` | | | `2026-10-06 15:00:00-03` |
-| FK | `usuario_id` | `bigint` | Sí | | `4` |
+| | `usuario_id` | `bigint` | Sí | | `4` |
 | | `usuario_bd` | `varchar(63)` | | | `atm` |
 | | `origen` | `varchar(10)` | | | `aplicacion` |
 
-La base valida las acciones `modificacion`, `anulacion`, `eliminacion`, `cambio_contrasena`, `restablecimiento_contrasena` y `actualizacion_hash`. Los orígenes son `aplicacion`, `tarea` y `sql`. El origen de aplicación exige un usuario; los demás exigen una referencia nula. La FK a `usuarios` protege al actor contra la eliminación física. `usuario_bd` contiene `session_user`, sin sustituir la identidad del usuario de la aplicación.
+La base valida las acciones `modificacion`, `anulacion`, `eliminacion`, `cambio_contrasena`, `restablecimiento_contrasena` y `actualizacion_hash`. Los orígenes son `aplicacion`, `tarea` y `sql`. El origen de aplicación exige un usuario; los demás exigen una referencia nula. `usuario_id` conserva el identificador del actor sin restricción FK a `usuarios`; la relación de lectura es opcional y no modifica el historial si una cuenta inicial se elimina. `usuario_bd` contiene `session_user`, sin sustituir la identidad del usuario de la aplicación.
 
 La combinación de tabla y clave identifica al registro sin una FK polimórfica. Las claves compuestas guardan todos sus componentes: por ejemplo `{"sede_id": 2, "dia_semana": 3}`. Los valores anteriores y actuales contienen los campos modificados; en las eliminaciones permitidas se conserva el registro anterior completo y un objeto vacío como valor actual. Los triggers no generan entradas de alta. Los ejemplos de esta tabla muestran sólo un subconjunto ilustrativo de una anulación. Las contraseñas y hashes no se almacenan ni se representan mediante marcas artificiales. Las acciones de contraseña identifican el evento y conservan sólo cambios reales no sensibles; si no existen otras diferencias relevantes, ambos objetos son vacíos. `actualizado_en` no se incluye en las instantáneas de estos eventos; el momento de la operación se conserva en `realizado_en`.
 
-`operacion_id` agrupa las entradas de una misma operación y no es único por fila ni constituye una cabecera de negocio. Existen índices por operación, por tabla y fecha descendente y por usuario y fecha descendente; la FK conserva además su índice propio.
+`operacion_id` agrupa las entradas de una misma operación y no es único por fila ni constituye una cabecera de negocio. Existen índices por operación, por tabla y fecha descendente y por usuario y fecha descendente; `usuario_id` conserva además su índice propio.
 
 La función `registrar_auditoria` recibe los nombres de los componentes de la PK mediante los argumentos del trigger. Cada tabla de negocio tiene un trigger de fila `AFTER UPDATE OR DELETE`, incluidas `sesiones_caja` y `movimientos_fondos`. El cierre es una modificación y la anulación de un movimiento se reconoce por su estado; no se agregan entradas de alta. La función usa `OLD` y `NEW`, descarta cambios sin diferencias funcionales, excluye secretos e inserta el historial dentro de la misma transacción. El actor, origen, UUID y acción específica se leen de configuración local; sin contexto se registra origen SQL y la base genera el UUID de la transacción. Un trigger independiente rechaza modificación, eliminación y vaciado de `log_auditoria`. Las reglas de contexto y consulta se definen en criterios, 2.14.
 
@@ -662,7 +667,7 @@ Registro inmutable de los tres tipos de intentos rechazados definidos en criteri
 | PK | `id` | `bigint` identity | | | `18` |
 | | `solicitud_id` | `uuid` | | Sí | `138adcdf-0ba0-4843-a43c-6e36819848e0` |
 | | `realizado_en` | `timestamptz` | | | `2026-11-04 08:00:00-03` |
-| FK | `usuario_id` | `bigint` | Sí | | `4` |
+| | `usuario_id` | `bigint` | Sí | | `4` |
 | | `tipo` | `varchar(32)` | | | `acceso_denegado` |
 | | `motivo` | `varchar(40)` | | | `permisos_insuficientes` |
 | | `identificador_ingresado` | `varchar(150)` | | | `mamanit` |
@@ -670,9 +675,9 @@ Registro inmutable de los tres tipos de intentos rechazados definidos en criteri
 | | `metodo` | `varchar(7)` | | | `GET` |
 | | `parametros_destino` | `jsonb` | | | `{"pk": 11}` |
 
-Los tipos permitidos son `inicio_sesion_fallido`, `cambio_contrasena_rechazado` y `acceso_denegado`. Una restricción valida los motivos correspondientes: credenciales inválidas o cuenta inactiva para login; contraseña actual incorrecta para cambio de contraseña; permisos insuficientes o registro ajeno para acceso. El login fallido exige usuario nulo; el cambio de contraseña exige usuario identificado. El identificador ingresado se guarda sólo para login y es una entrada declarada, no una identidad autenticada; en otros tipos es una cadena vacía. La FK protege al actor de eliminación física. Los valores anteriores y actuales pertenecen a `log_auditoria`, no a esta tabla.
+Los tipos permitidos son `inicio_sesion_fallido`, `cambio_contrasena_rechazado` y `acceso_denegado`. Una restricción valida los motivos correspondientes: credenciales inválidas o cuenta inactiva para login; contraseña actual incorrecta para cambio de contraseña; permisos insuficientes o registro ajeno para acceso. El login fallido exige usuario nulo; el cambio de contraseña exige usuario identificado. El identificador ingresado se guarda sólo para login y es una entrada declarada, no una identidad autenticada; en otros tipos es una cadena vacía. El identificador de actor se conserva sin restricción FK; eliminar una cuenta inicial no elimina ni actualiza el intento. Los valores anteriores y actuales pertenecen a `log_auditoria`, no a esta tabla.
 
-El UUID único evita duplicados de la misma solicitud. Hay un índice por usuario y fecha descendente; la FK conserva su índice propio. El identificador de fila se genera en PostgreSQL. Un trigger de sentencia rechaza modificación, eliminación y vaciado mediante la función común de protección del historial. Las inserciones no generan auditoría recursiva ni entradas de alta en `log_auditoria`.
+El UUID único evita duplicados de la misma solicitud. Hay un índice por usuario y fecha descendente; `usuario_id` conserva su índice propio. El identificador de fila se genera en PostgreSQL. Un trigger de sentencia rechaza modificación, eliminación y vaciado mediante la función común de protección del historial. Las inserciones no generan auditoría recursiva ni entradas de alta en `log_auditoria`.
 
 ---
 
@@ -731,6 +736,13 @@ Las referencias técnicas de `datos` no son FK y no conceden acceso: la entrega 
 Las transiciones de entrega bloquean el registro sólo mientras se reclama o se confirma el resultado. El proveedor se invoca fuera de la transacción. El identificador de reserva impide que un trabajador interrumpido confirme sobre otra reserva. Vencer una reserva cuenta como interrupción y aplica el siguiente plazo de fallo. Los reintentos son 5, 15 y 60 minutos desde cada fallo; un enlace vence a los quince minutos de su emisión sin extenderse al reintentar. Enviado no representa confirmación de lectura o recepción final y admite el límite de duplicación por aceptación remota sin confirmación local.
 
 
+### 4.30 `limpiezas_cuentas`
+
+Registro técnico del procesamiento de cuentas iniciales sin verificar: identificador propio `bigint`, `usuario_eliminado_id` (`bigint`, sin FK), `procesado_en` (`timestamptz`), `resultado` (`eliminada` o `inconsistente`) y `detalle` técnico breve sin credenciales ni enlaces. El identificador de cuenta se conserva también si la limpieza se rechaza. Una inconsistencia no autoriza eliminar relaciones operativas.
+
+La limpieza consulta y bloquea `usuarios`, comprueba `date_joined`, verificación, roles y relaciones protegidas; su eliminación y resultado técnico forman una transacción. No utiliza `is_active` para representar verificación. El historial de auditoría conserva sus actores como identificadores y no se edita para permitir la eliminación. `verificacion_solicitada_en` es seguimiento técnico y se excluye de las diferencias de actualización del trigger; email y verificación sí se auditan.
+
+
 ## 5. Dependencias referenciales y eliminación
 
 - Las referencias a usuarios, sedes, canchas, productos y contrataciones protegen los registros que tienen datos dependientes. Cada contratación referencia obligatoriamente a su usuario y producto.
@@ -741,8 +753,8 @@ Las transiciones de entrega bloquean el registro sólo mientras se reclama o se 
 - `eventos.turno_id` protege al turno. Las especializaciones `reservas`, `clases` y `bloqueos` protegen su evento.
 - Las relaciones de invitados protegen reserva, usuario y contratación aplicada; quitar un invitado elimina la relación y conserva su historia en auditoría, mientras que rechazar conserva la relación con su respuesta. Las respuestas de alumnos conservan su identidad al reactivar.
 - `bloqueos.evento_origen_id` protege al evento de origen mientras exista la referencia de trazabilidad.
-- `log_auditoria.usuario_id` protege la cuenta del actor; el historial no admite modificación ni eliminación.
-- `intentos_auditoria.usuario_id` protege la cuenta del actor autenticado; el historial de intentos tampoco admite modificación, eliminación ni vaciado.
+- `log_auditoria.usuario_id` conserva el identificador del actor sin FK, de modo que limpiar una cuenta inicial no obliga a borrar ni actualizar el historial inmutable.
+- `intentos_auditoria.usuario_id` conserva el identificador del actor autenticado sin FK; los intentos permanecen inmutables aunque esa cuenta inicial se elimine.
 - Las sesiones de caja protegen al responsable y los movimientos protegen su sesión, responsables y orígenes comerciales. No se ofrecen eliminaciones físicas. Los vínculos comerciales apuntan a las contrataciones concretas o a la reserva. La protección de historia se valida en servicios y ambas tablas participan de la auditoría transversal; no hay triggers adicionales de inmutabilidad sobre caja.
 
 Las clases manuales y generadas no admiten eliminación física desde la aplicación. La anulación conserva la clase, su evento y sus asignaciones conforme a criterios, 2.1 y 2.12. Los turnos pueden ser compartidos por eventos históricos.

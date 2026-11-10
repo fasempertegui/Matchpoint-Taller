@@ -1,6 +1,8 @@
 from django.contrib.auth import views
 from django.urls import path
 
+from . import vistas_verificacion
+
 from .views_autenticacion import (
     CambioContrasenaView,
     CambioContrasenaCompletadoView,
@@ -10,6 +12,10 @@ from .views_autenticacion import (
 )
 
 urlpatterns = [
+    path("verificacion/", vistas_verificacion.estado_verificacion, name="estado_verificacion"),
+    path("verificar/", vistas_verificacion.confirmar_verificacion, name="confirmar_verificacion"),
+    path("verificacion/reenviar/", vistas_verificacion.solicitar_verificacion, name="solicitar_verificacion"),
+    path("verificacion/corregir/", vistas_verificacion.corregir_correo, name="corregir_correo"),
     path("registro/", RegistroView.as_view(), name="registro"),
     path("nombre-usuario/", nombre_usuario_disponible, name="nombre_usuario_disponible"),
     path(

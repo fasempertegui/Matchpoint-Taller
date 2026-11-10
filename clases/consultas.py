@@ -129,13 +129,13 @@ def _buscar_usuarios(usuarios, busqueda):
 
 def consultar_profesores(usuario, busqueda=""):
     exigir_administracion_clases(usuario)
-    profesores = Usuario.objects.filter(is_active=True, roles__rol__codigo=Rol.PROFESOR)
+    profesores = Usuario.objects.habilitados().filter(roles__rol__codigo=Rol.PROFESOR)
     return _buscar_usuarios(profesores, busqueda)
 
 
 def consultar_participantes(usuario, busqueda="", incluir_todos=False):
     exigir_administracion_clases(usuario)
-    participantes = Usuario.objects.filter(is_active=True)
+    participantes = Usuario.objects.habilitados()
     if not incluir_todos:
         participantes = participantes.filter(roles__rol__codigo=Rol.ALUMNO)
     return _buscar_usuarios(participantes, busqueda)

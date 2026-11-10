@@ -35,8 +35,8 @@ class OrganizadorReservaForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fecha = fecha
         self.hora = hora
-        self.fields["organizador"].queryset = Usuario.objects.filter(
-            is_active=True, roles__rol__codigo__in=(Rol.RESERVAS, Rol.ADMINISTRADOR),
+        self.fields["organizador"].queryset = Usuario.objects.habilitados().filter(
+            roles__rol__codigo__in=(Rol.RESERVAS, Rol.ADMINISTRADOR),
         ).distinct().order_by("last_name", "first_name", "username")
 
 
@@ -72,8 +72,8 @@ class InvitadosReservaForm(forms.Form):
         if reserva is not None:
             actuales = set(reserva.invitados.all().values_list("usuario_id", flat=True))
         self.fields["invitados"].queryset = Usuario.objects.filter(
-            Q(pk__in=actuales) | Q(is_active=True, roles__rol__codigo__in=(Rol.RESERVAS, Rol.ADMINISTRADOR)),
-        ).exclude(pk=organizador_id).distinct().order_by("last_name", "first_name", "username")
+            Q(pk__in=actuales) | Q(is_active=True, correo_verificado_en__isnull=False, roles__rol__codigo__in=(Rol.RESERVAS, Rol.ADMINISTRADOR)),
+        ).filter(correo_verificado_en__isnull=False).exclude(pk=organizador_id).distinct().order_by("last_name", "first_name", "username")
         if reserva is not None:
             self.fields.pop("observaciones")
 

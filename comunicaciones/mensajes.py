@@ -128,7 +128,12 @@ def verificar_vigencia(envio):
         usuario = Usuario.objects.filter(pk=vigencia["usuario_id"]).first()
         if usuario is None:
             raise DescartarEnvio("La cuenta ya no está disponible.")
-        excepciones = {EnvioEmail.Tipo.ESTADO_CUENTA, EnvioEmail.Tipo.CORREO_CAMBIADO, EnvioEmail.Tipo.SOLICITUD_CORREO, EnvioEmail.Tipo.CONFIRMAR_CORREO}
+        if envio.tipo in (EnvioEmail.Tipo.BIENVENIDA, EnvioEmail.Tipo.VERIFICACION) and usuario.correo_verificado_en is not None:
+            raise DescartarEnvio("El correo ya está verificado.")
+        tipos_cuenta = {EnvioEmail.Tipo.BIENVENIDA, EnvioEmail.Tipo.VERIFICACION, EnvioEmail.Tipo.ESTADO_CUENTA, EnvioEmail.Tipo.CONTRASENA_CAMBIADA, EnvioEmail.Tipo.SOLICITUD_CORREO, EnvioEmail.Tipo.CONFIRMAR_CORREO, EnvioEmail.Tipo.CORREO_CAMBIADO}
+        if usuario.correo_verificado_en is None and envio.tipo not in tipos_cuenta:
+            raise DescartarEnvio("El correo no está verificado.")
+        excepciones = {EnvioEmail.Tipo.BIENVENIDA, EnvioEmail.Tipo.VERIFICACION, EnvioEmail.Tipo.ESTADO_CUENTA, EnvioEmail.Tipo.CORREO_CAMBIADO, EnvioEmail.Tipo.SOLICITUD_CORREO, EnvioEmail.Tipo.CONFIRMAR_CORREO}
         if not usuario.is_active and envio.tipo not in excepciones:
             raise DescartarEnvio("La cuenta está deshabilitada.")
         if envio.tipo not in excepciones and usuario.email.casefold() != envio.destinatario.casefold():
@@ -136,7 +141,7 @@ def verificar_vigencia(envio):
     solicitud = vigencia.get("solicitud")
     if solicitud:
         campos = {campo.name for campo in Usuario._meta.fields}
-        if usuario is None or solicitud.get("campo") not in {"email", "email_pendiente", "cambio_email_solicitado_en", "verificacion_solicitada_en"} & campos:
+        if usuario is None or solicitud.get("campo") not in {"email", "email_pendiente", "cambio_email_solicitado_en", "verificacion_solicitada_en", "revision_correo"} & campos:
             raise DescartarEnvio("La solicitud ya no está disponible.")
         valor = getattr(usuario, solicitud["campo"])
         valor = valor.isoformat() if isinstance(valor, datetime) else valor
