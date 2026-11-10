@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block contenido %}
+{% if usuario_obj.email_pendiente %}<p class="mensaje mensaje-info">Hay un cambio de correo pendiente de confirmación.</p>{% endif %}
 {% if request.user.pk == usuario_obj.pk and not usuario_obj.correo_verificado_en %}<section class="tarjeta"><p>Tu correo todavía no está verificado.</p><a href="{% url 'estado_verificacion' %}">Verificar mi correo</a></section>{% endif %}
 <article class="tarjeta perfil">
     <header class="perfil-cabecera">
@@ -139,7 +140,6 @@
                         {% if request.user.pk == usuario_obj.pk %}
                             <a class="boton boton-secundario boton-chico" href="{% url 'password_change' %}">Cambiar mi contraseña</a>
                         {% else %}
-                            <button class="boton boton-secundario boton-chico" type="button" data-abrir-restablecimiento>Restablecer contraseña</button>
                             <button class="boton boton-chico {% if usuario_obj.is_active %}boton-peligro{% else %}boton-activar{% endif %}" type="button" data-abrir-estado>
                                 {% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta
                             </button>
@@ -151,9 +151,7 @@
     </div>
 </article>
 {% if perms.usuarios.change_usuario and request.user.pk != usuario_obj.pk %}
-    {% include "usuarios/_modal_restablecer_contrasena.html" %}
     {% include "usuarios/_modal_cambiar_estado.html" %}
-    <script src="{% static 'js/usuario-restablecer-contrasena.js' %}" defer></script>
 {% endif %}
 {% if formulario_correo %}
     {% include "usuarios/_modal_modificar_correo.html" %}

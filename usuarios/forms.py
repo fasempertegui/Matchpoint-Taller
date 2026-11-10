@@ -5,8 +5,9 @@ import unicodedata
 
 import phonenumbers
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm, PasswordResetForm, SetPasswordForm
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.hashers import check_password
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
@@ -53,7 +54,7 @@ class CambioContrasenaForm(PasswordChangeForm):
 
     def clean_new_password1(self):
         contrasena = self.cleaned_data["new_password1"]
-        if self.user.check_password(contrasena):
+        if check_password(contrasena, self.user.password):
             raise forms.ValidationError(
                 "La nueva contraseña debe ser diferente de la actual.",
                 code="password_unchanged",
@@ -134,16 +135,6 @@ def generar_contrasena():
             *(secrets.choice(string.ascii_letters + string.digits) for _ in range(9)),
         )
     )
-
-
-def generar_contrasena_valida(usuario):
-    while True:
-        contrasena = generar_contrasena()
-        try:
-            validate_password(contrasena, usuario)
-        except forms.ValidationError:
-            continue
-        return contrasena
 
 
 def validar_celular_ar(valor):
@@ -414,3 +405,31 @@ class ReenvioVerificacionForm(forms.Form):
 
 class CorregirCorreoForm(ReenvioVerificacionForm):
     contrasena = forms.CharField(label="Contraseña actual", widget=forms.PasswordInput(attrs={"class": "form-control"}))
+
+
+class RecuperacionContrasenaForm(PasswordResetForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["email"].label = "Correo electrónico"
+        self.fields["email"].widget.attrs["class"] = "form-control"
+
+    def get_users(self, email):
+        return (usuario for usuario in super().get_users(email) if usuario.correo_verificado_en is not None)
+
+    def save(self, **kwargs):
+        from .contrasenas import solicitar_recuperacion
+
+        return solicitar_recuperacion(self.cleaned_data["email"])
+
+
+class EstablecerContrasenaForm(SetPasswordForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for campo in self.fields.values():
+            campo.widget.attrs["class"] = "form-control"
+
+    def clean_new_password1(self):
+        contrasena = self.cleaned_data["new_password1"]
+        if check_password(contrasena, self.user.password):
+            raise forms.ValidationError("La nueva contraseña debe ser diferente de la actual.")
+        return contrasena

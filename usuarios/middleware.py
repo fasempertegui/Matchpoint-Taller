@@ -6,7 +6,7 @@ from .models import Rol
 
 
 class CambioContrasenaObligatorioMiddleware:
-    urls_cuenta = {"login", "logout", "password_change", "password_change_done", "estado_verificacion", "confirmar_verificacion", "solicitar_verificacion", "corregir_correo"}
+    urls_cuenta = {"login", "logout", "password_change", "password_change_done", "estado_verificacion", "confirmar_verificacion", "solicitar_verificacion", "corregir_correo", "password_reset", "password_reset_done", "password_reset_confirm", "password_reset_complete", "confirmar_cambio_correo"}
 
     def __init__(self, get_response):
         self.get_response = get_response

@@ -4,6 +4,7 @@ from django.urls import path
 from . import vistas_verificacion
 
 from .views_autenticacion import (
+    RecuperacionContrasenaView, RecuperacionSolicitadaView, ConfirmarRecuperacionView, RecuperacionCompletadaView,
     CambioContrasenaView,
     CambioContrasenaCompletadoView,
     InicioSesionView,
@@ -12,6 +13,11 @@ from .views_autenticacion import (
 )
 
 urlpatterns = [
+    path("recuperar/", RecuperacionContrasenaView.as_view(), name="password_reset"),
+    path("recuperar/solicitada/", RecuperacionSolicitadaView.as_view(), name="password_reset_done"),
+    path("recuperar/completada/", RecuperacionCompletadaView.as_view(), name="password_reset_complete"),
+    path("recuperar/<uidb64>/<token>/", ConfirmarRecuperacionView.as_view(), name="password_reset_confirm"),
+    path("confirmar-correo/", vistas_verificacion.confirmar_cambio_correo, name="confirmar_cambio_correo"),
     path("verificacion/", vistas_verificacion.estado_verificacion, name="estado_verificacion"),
     path("verificar/", vistas_verificacion.confirmar_verificacion, name="confirmar_verificacion"),
     path("verificacion/reenviar/", vistas_verificacion.solicitar_verificacion, name="solicitar_verificacion"),

@@ -137,6 +137,8 @@ class Usuario(AbstractUser):
     correo_verificado_en = models.DateTimeField(null=True, blank=True)
     verificacion_solicitada_en = models.DateTimeField(null=True, blank=True)
     revision_correo = models.PositiveIntegerField(default=0)
+    email_pendiente = models.EmailField(blank=True, default="")
+    cambio_email_solicitado_en = models.DateTimeField(null=True, blank=True)
     fecha_baja = models.DateTimeField(
         null=True,
         blank=True,
@@ -148,6 +150,10 @@ class Usuario(AbstractUser):
     class Meta:
         db_table = "usuarios"
         constraints = [
+            models.CheckConstraint(condition=(
+                models.Q(email_pendiente="", cambio_email_solicitado_en__isnull=True)
+                | (~models.Q(email_pendiente="") & models.Q(cambio_email_solicitado_en__isnull=False))
+            ), name="usuario_cambio_email_coherente"),
             models.UniqueConstraint(
                 Lower("email"),
                 name="usuario_email_unico_sin_mayusculas",

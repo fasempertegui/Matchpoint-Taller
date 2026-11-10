@@ -100,7 +100,7 @@ def validar_datos(datos):
     if enlace is not None:
         if not isinstance(enlace, dict) or set(enlace) != {"ruta", "proposito", "datos"}:
             raise ValidationError("La preparación del enlace no es válida.")
-        if enlace["proposito"] not in ("verificacion", "cambio_correo"):
+        if enlace["proposito"] not in ("verificacion", "cambio_correo", "recuperacion"):
             raise ValidationError("El propósito del enlace no es válido.")
         _validar_ruta(enlace["ruta"])
         if urlsplit(enlace["ruta"]).query or urlsplit(enlace["ruta"]).fragment:
@@ -133,6 +133,11 @@ def verificar_vigencia(envio):
         tipos_cuenta = {EnvioEmail.Tipo.BIENVENIDA, EnvioEmail.Tipo.VERIFICACION, EnvioEmail.Tipo.ESTADO_CUENTA, EnvioEmail.Tipo.CONTRASENA_CAMBIADA, EnvioEmail.Tipo.SOLICITUD_CORREO, EnvioEmail.Tipo.CONFIRMAR_CORREO, EnvioEmail.Tipo.CORREO_CAMBIADO}
         if usuario.correo_verificado_en is None and envio.tipo not in tipos_cuenta:
             raise DescartarEnvio("El correo no está verificado.")
+        if envio.tipo == EnvioEmail.Tipo.RECUPERACION:
+            from usuarios.tokens import huella_recuperacion
+
+            if not usuario.has_usable_password() or envio.datos.get("enlace", {}).get("datos", {}).get("solicitud") != huella_recuperacion(usuario):
+                raise DescartarEnvio("La solicitud de recuperación ya no está vigente.")
         excepciones = {EnvioEmail.Tipo.BIENVENIDA, EnvioEmail.Tipo.VERIFICACION, EnvioEmail.Tipo.ESTADO_CUENTA, EnvioEmail.Tipo.CORREO_CAMBIADO, EnvioEmail.Tipo.SOLICITUD_CORREO, EnvioEmail.Tipo.CONFIRMAR_CORREO}
         if not usuario.is_active and envio.tipo not in excepciones:
             raise DescartarEnvio("La cuenta está deshabilitada.")
@@ -178,21 +183,35 @@ def verificar_vigencia(envio):
             if modelo == ClaseAlumno and envio.tipo == EnvioEmail.Tipo.RECORDATORIO_CLASE and relacion.respuesta == "no_asistira":
                 raise DescartarEnvio("La persona avisó que no asistirá.")
 
+    return usuario
+
 
 def preparar_mensaje(envio):
     validar_datos(envio.datos)
-    verificar_vigencia(envio)
-    return renderizar_mensaje(envio)
+    usuario = verificar_vigencia(envio)
+    return renderizar_mensaje(envio, usuario=usuario)
 
 
-def renderizar_mensaje(envio):
+def renderizar_mensaje(envio, *, usuario=None):
     validar_datos(envio.datos)
     enlace = envio.datos.get("enlace")
     url_acceso = ""
     if enlace:
-        contenido = {**enlace["datos"], "envio": str(envio.pk), "emitido_en": envio.enlace_emitido_en.isoformat()}
-        token = signing.Signer(salt=f"comunicaciones.{enlace['proposito']}").sign_object(contenido)
-        url_acceso = url_publica(enlace["ruta"]) + "?" + urlencode({"token": token})
+        if enlace["proposito"] == "recuperacion":
+            from django.urls import reverse
+            from django.utils.encoding import force_bytes
+            from django.utils.http import urlsafe_base64_encode
+            from usuarios.models import Usuario
+            from usuarios.tokens import TokenRecuperacion
+
+            usuario = usuario or Usuario.objects.get(pk=enlace["datos"]["usuario_id"])
+            token = TokenRecuperacion(emitido_en=envio.enlace_emitido_en).make_token(usuario)
+            url_acceso = url_publica(reverse("password_reset_confirm", kwargs={"uidb64": urlsafe_base64_encode(force_bytes(usuario.pk)), "token": token}))
+        else:
+            contenido = {**enlace["datos"], "envio": str(envio.pk), "emitido_en": envio.enlace_emitido_en.isoformat()}
+            token = signing.Signer(salt=f"comunicaciones.{enlace['proposito']}").sign_object(contenido)
+            url_acceso = url_publica(enlace["ruta"]) + "?" + urlencode({"token": token})
+
 
     def preparar_bloque(bloque):
         return {**bloque, "acciones": [

@@ -59,3 +59,22 @@ def corregir_correo(request):
             messages.success(request, "Enviamos la verificación al correo corregido.")
             return redirect("estado_verificacion")
     return render(request, "autenticacion/verificacion_corregir.html", {"formulario": formulario})
+
+
+@never_cache
+@require_http_methods(["GET", "POST"])
+def confirmar_cambio_correo(request):
+    from .correo import confirmar_cambio_correo as confirmar, consultar_cambio_correo
+
+    token = request.POST.get("token", "") if request.method == "POST" else request.GET.get("token", "")
+    resultado, puede_confirmar = "", False
+    try:
+        if request.method == "POST":
+            confirmar(token)
+            resultado = "Tu correo fue actualizado."
+        else:
+            consultar_cambio_correo(token)
+            puede_confirmar = True
+    except ValidationError as error:
+        resultado = error.messages[0]
+    return render(request, "autenticacion/cambio_correo_confirmar.html", {"resultado": resultado, "confirmar": puede_confirmar, "token": token if puede_confirmar else ""})

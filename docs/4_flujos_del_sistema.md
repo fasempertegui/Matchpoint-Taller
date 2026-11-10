@@ -26,7 +26,7 @@ Las operaciones aplican criterios, 2.14. Los triggers de PostgreSQL registran ca
 
 El cierre de `sesiones_caja` y las anulaciones en `movimientos_fondos` participan del mecanismo común. La inmutabilidad de caja se valida en servicios; los triggers de auditoría registran cambios, incluidas escrituras SQL, pero no impiden modificar esas tablas.
 
-Las altas, las consultas y las vistas previas sin cambios sobre registros existentes no agregan entradas. Preparar nuevos turnos tampoco genera auditoría. Los cambios y restablecimientos de contraseña tienen acciones de auditoría específicas, sin contraseñas, hashes ni indicadores artificiales. Se conservan únicamente diferencias reales no sensibles; los objetos pueden quedar vacíos. La actualización técnica del hash tiene su propia acción. El administrador consulta Auditoría desde la navegación o el inicio administrativo, recorre sus páginas y despliega los valores anteriores y actuales. El servidor valida el acceso y sólo admite GET; no hay operaciones de edición o eliminación del historial.
+Las altas, las consultas y las vistas previas sin cambios sobre registros existentes no agregan entradas. Preparar nuevos turnos tampoco genera auditoría. Los cambios de contraseña tienen su acción de auditoría específica, sin contraseñas, hashes ni indicadores artificiales. Se conservan únicamente diferencias reales no sensibles; los objetos pueden quedar vacíos. La actualización técnica del hash tiene su propia acción. El administrador consulta Auditoría desde la navegación o el inicio administrativo, recorre sus páginas y despliega los valores anteriores y actuales. El servidor valida el acceso y sólo admite GET; no hay operaciones de edición o eliminación del historial.
 
 Los intentos rechazados se consultan por separado dentro de Auditoría. Se registran exclusivamente los rechazos de autenticación, de contraseña actual en el cambio de contraseña y de autorización sobre información o acciones restringidas. Los puntos de validación identifican el tipo y un motivo de catálogo, sin conservar secretos ni formularios. Los accesos a registros ajenos que se ocultan con 404 conservan esa respuesta; se registran sólo cuando la pertenencia ajena está comprobada. Los 404 comunes, errores de formulario, cancelaciones y redirecciones al login quedan fuera.
 
@@ -41,7 +41,6 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Usuarios | FL-03 | Consultar un usuario |
 | Usuarios | FL-04 | Modificar el correo de un usuario |
 | Usuarios | FL-05 | Cambiar el estado de un usuario |
-| Usuarios | FL-69 | Restablecer la contraseña de un usuario |
 | Usuarios | FL-06 | Registrarse |
 | Usuarios | FL-07 | Asignar o quitar un rol a un usuario |
 | Sedes y canchas | FL-08 | Consultar sedes y canchas |
@@ -161,7 +160,7 @@ flowchart TD
 
 Las cuentas no administrativas se crean mediante **FL-02** o **FL-06**, con Público como único rol inicial y correo sin verificar. Los roles operativos requieren verificación; ésta asigna Reservas una vez, mientras Profesor y Alumno se otorgan por sus operaciones autorizadas. `crear_administrador` crea únicamente Administrador, con correo sin verificar y contraseña provisoria. Todos los métodos de alta comparten la bienvenida con enlace y las mismas condiciones de acceso.
 
-El perfil propio permite consultar la información y cambiar únicamente la contraseña mediante **FL-59**. La edición administrativa de datos personales se limita al correo (**FL-04**); el restablecimiento de la contraseña de otra cuenta se realiza mediante **FL-69**. Nombre, apellido, nombre de usuario, celular, fecha de nacimiento y observaciones se cargan en el alta y no tienen un flujo de edición. El estado y los roles utilizan **FL-05** y **FL-07** por separado.
+El perfil propio permite consultar la información y cambiar únicamente la contraseña mediante **FL-59**. La edición administrativa de datos personales se limita al correo (**FL-04**). Nombre, apellido, nombre de usuario, celular, fecha de nacimiento y observaciones se cargan en el alta y no tienen un flujo de edición. El estado y los roles utilizan **FL-05** y **FL-07** por separado.
 
 #### FL-02. Registrar un usuario
 
@@ -224,7 +223,9 @@ Recorrido:
 1. El sistema identifica al usuario mediante su nombre, apellido y nombre de usuario, y presenta el correo actual.
 2. El administrador ingresa el nuevo correo.
 3. El sistema valida el formato, que no quede vacío y que no pertenezca a otro usuario, sin distinguir mayúsculas de minúsculas.
-4. Guarda el correo y actualiza la fecha de última modificación.
+4. En una cuenta sin verificar, corrige el correo inicial e invalida sus enlaces anteriores.
+5. En una cuenta verificada, conserva el correo vigente y guarda el pendiente con su fecha y revisión. Notifica la solicitud al vigente y envía el enlace al nuevo.
+6. El titular abre el enlace de quince minutos y confirma mediante POST. Bajo bloqueo se revalida la unicidad, se actualiza el correo, se limpia el pendiente y se notifica a ambas direcciones sin incluir la otra en el texto. Los roles y la verificación se conservan.
 
 Alternativas:
 
@@ -232,7 +233,7 @@ Alternativas:
 - Si el correo no es válido o ya está registrado, se informa el error sin modificar la cuenta.
 - Cancelar la modificación conserva el correo anterior.
 
-- **Resultado:** usuario con el correo actualizado.
+- **Resultado:** solicitud pendiente o correo confirmado; una solicitud sustituida, vencida o usada no aplica cambios.
 - **Datos:** usuarios.
 
 ```mermaid
@@ -241,7 +242,7 @@ flowchart TD
     B --> C{Correo válido y disponible}
     C -->|No| D[Informar error]
     D --> B
-    C -->|Sí| E[Guardar correo y fecha de modificación]
+    C -->|Sí| E[Solicitar y confirmar el nuevo correo]
 ```
 
 #### FL-05. Cambiar el estado de un usuario
@@ -279,42 +280,6 @@ flowchart TD
     C -->|Sí| E{Cambio permitido}
     E -->|No| D
     E -->|Sí| F[Actualizar estado y fechas]
-```
-
-#### FL-69. Restablecer la contraseña de un usuario
-
-- **Objetivo:** reemplazar administrativamente una contraseña desconocida por una nueva contraseña provisoria.
-- **Actor:** administrador.
-- **Precondición:** usuario localizado mediante **FL-03**.
-- **Entrada:** confirmación del restablecimiento.
-
-Recorrido:
-
-1. El administrador solicita restablecer la contraseña desde el detalle del usuario.
-2. El sistema informa que la contraseña actual dejará de funcionar y solicita confirmación.
-3. Genera una contraseña alfanumérica aleatoria que cumple los validadores configurados.
-4. En una transacción, guarda solamente su hash PBKDF2-SHA256 de Django, activa `debe_cambiar_contrasena` y actualiza la fecha de última modificación.
-5. Muestra la contraseña provisoria en texto plano una única vez para que el administrador se la comunique a la persona.
-6. En el próximo inicio de sesión se ejecuta **FL-68**.
-
-Alternativas:
-
-- Cancelar la confirmación conserva la contraseña vigente.
-- Ningún administrador puede restablecer su propia contraseña. Para su cuenta debe utilizar **FL-59** o, si no puede iniciar sesión, **FL-46**.
-- La operación no modifica el correo, los datos personales, el estado ni los roles.
-- La contraseña provisoria no se almacena ni puede volver a consultarse en texto plano.
-
-- **Resultado:** contraseña restablecida y cambio obligatorio pendiente.
-- **Datos:** usuarios.
-
-```mermaid
-flowchart TD
-    A[Solicitar restablecimiento] --> B[Confirmar operación]
-    B --> C{Operación confirmada}
-    C -->|No| D[Conservar contraseña vigente]
-    C -->|Sí| E[Generar contraseña provisoria]
-    E --> F[Guardar hash y activar cambio obligatorio]
-    F --> G[Mostrar contraseña una vez]
 ```
 
 #### FL-06. Registrarse
@@ -1689,15 +1654,15 @@ flowchart TD
 Recorrido:
 
 1. El usuario solicita la recuperación indicando su email.
-2. Si existe un usuario activo con ese email, el sistema genera un enlace o código de un solo uso y lo envía por email (ver 4.2).
+2. Si existe un usuario activo con correo verificado y contraseña utilizable, el sistema encola un enlace nativo de Django de un solo uso (ver 4.2).
 3. El usuario abre el enlace e ingresa una nueva contraseña.
-4. En una transacción, la aplicación genera y guarda un nuevo hash PBKDF2-SHA256 de Django y establece `debe_cambiar_contrasena = false`.
+4. En una transacción y bajo bloqueo, revalida el token, guarda el nuevo hash y establece `debe_cambiar_contrasena = false`. Encola un único aviso «Cambiaste tu contraseña». No inicia sesión y las sesiones anteriores pierden validez.
 
 Alternativas:
 
 - Si el email no corresponde a ningún usuario o a un usuario inactivo, el sistema responde igual que si el envío se hubiera realizado, sin revelar la causa.
-- Se utilizan las vistas, formularios y tokens nativos de Django. El enlace vence después de una hora; al guardar la nueva contraseña queda invalidado, junto con los demás enlaces anteriores de la cuenta. No requiere una tabla de recuperaciones.
-- Para la demostración, el backend de correo de consola muestra el mensaje completo y el enlace en los logs del servicio `web`. No se entrega a una casilla real; el token y el cambio de contraseña sí son reales.
+- Se utilizan las vistas, formularios y tokens nativos de Django. El enlace vence a los quince minutos de su primera emisión; al guardar la nueva contraseña queda invalidado, junto con los demás enlaces anteriores de la cuenta. No requiere una tabla de recuperaciones.
+- El envío utiliza la cola transaccional. Los reintentos conservan la emisión y el token; la URL se construye desde la dirección pública configurada. No se guardan tokens ni contraseñas en la cola.
 - Un usuario que recuerda su contraseña y solo quiere reemplazarla, estando autenticado, usa **FL-59** en su lugar; este flujo es exclusivamente para cuando no puede iniciar sesión.
 
 - **Resultado:** usuario con contraseña renovada y sin cambio obligatorio pendiente.
@@ -1750,7 +1715,7 @@ flowchart TD
 #### FL-68. Iniciar sesión con cambio obligatorio de contraseña
 
 - **Objetivo:** exigir que una persona reemplace la contraseña provisoria antes de acceder a cualquier función de la aplicación.
-- **Actor:** usuario creado mediante un alta administrativa desde la aplicación o mediante `crear_administrador`, o cuya contraseña fue restablecida por un administrador.
+- **Actor:** usuario creado mediante un alta administrativa desde la aplicación o mediante `crear_administrador`, con contraseña provisoria.
 - **Precondición:** usuario activo con `debe_cambiar_contrasena = true`.
 - **Entradas:** nombre de usuario y contraseña provisoria; luego, contraseña provisoria actual, nueva contraseña personal y confirmación.
 
@@ -1758,8 +1723,8 @@ Recorrido:
 
 1. El usuario ingresa sus credenciales provisorias.
 2. El sistema localiza al usuario, verifica la contraseña contra el hash almacenado y comprueba que la cuenta esté activa.
-3. Al detectar `debe_cambiar_contrasena = true`, establece una sesión restringida y dirige al formulario obligatorio de cambio de contraseña, sin aplicar un destino solicitado previamente.
-4. Mientras la marca siga activa, toda solicitud a otra función vuelve al formulario. Solo permanecen disponibles el cambio y la recuperación de contraseña, los recursos visuales necesarios y el cierre de sesión.
+3. Al detectar `debe_cambiar_contrasena = true`, establece una sesión restringida. Si falta verificar el correo, dirige al estado de verificación; después dirige al cambio obligatorio, sin aplicar un destino operativo solicitado previamente.
+4. Mientras la marca siga activa, toda solicitud a otra función vuelve al formulario. Permanecen disponibles verificación, corrección inicial, reenvío, cambio y recuperación de contraseña, los recursos visuales necesarios y el cierre de sesión.
 5. El usuario ingresa la contraseña provisoria actual, elige una nueva contraseña personal y la confirma.
 6. La aplicación verifica la contraseña actual y valida que la nueva sea distinta, que coincida con su confirmación y que cumpla los validadores de Django.
 7. En una transacción, guarda el nuevo hash, establece `debe_cambiar_contrasena = false` y actualiza la fecha de última modificación, conservando la sesión actual.
@@ -1770,7 +1735,7 @@ Alternativas:
 - Si el usuario no existe o la contraseña es incorrecta, el sistema rechaza el acceso con un mensaje genérico. Si las credenciales son correctas pero la cuenta está inactiva, informa que debe contactar a un administrador.
 - Si la contraseña actual no coincide o la nueva contraseña no supera las validaciones, no se modifica la cuenta y la sesión continúa restringida.
 - Cerrar sesión no desactiva la obligación.
-- Si el usuario no recuerda la contraseña provisoria, puede ejecutar **FL-46**; la recuperación correcta establece su contraseña personal y desactiva la marca.
+- Si el usuario no recuerda la contraseña provisoria, verifica su correo y puede ejecutar **FL-46**; la recuperación correcta establece su contraseña personal y desactiva la marca.
 - El cambio no puede cancelarse ni postergarse.
 
 - **Resultado:** usuario autenticado con contraseña personal, `debe_cambiar_contrasena = false` y acceso según sus roles.

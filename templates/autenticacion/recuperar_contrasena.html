@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block titulo %}Recuperar contraseña | Academia TM{% endblock %}
+{% block contenido %}<section class="tarjeta tarjeta-formulario"><h1>Recuperar contraseña</h1><p>Ingresá el correo verificado de tu cuenta. El enlace dura quince minutos desde su emisión.</p><form method="post">{% csrf_token %}{{ form.as_p }}<button class="boton boton-primario" type="submit">Solicitar enlace</button></form><p><a href="{% url 'estado_verificacion' %}">Todavía no verifiqué mi correo</a></p><a href="{% url 'login' %}">Volver al acceso</a></section>{% endblock %}

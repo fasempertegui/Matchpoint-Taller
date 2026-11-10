@@ -2,10 +2,11 @@
     <form class="modal-confirmacion-formulario" method="post" action="{% url 'usuarios:usuario_editar' usuario_obj.pk %}" data-correo-formulario novalidate>
         {% csrf_token %}
         <header class="modal-confirmacion-cabecera">
-            <h2 id="correo-titulo">Modificar correo</h2>
+            <h2 id="correo-titulo">Solicitar cambio de correo</h2>
         </header>
         <div class="modal-confirmacion-contenido">
             {% include "usuarios/_tarjeta_identidad.html" %}
+            <p>Si el correo ya está verificado, se conserva hasta confirmar la nueva dirección. Si todavía no se verificó, se corrige y se envía la verificación inicial.</p>
             <p class="error-campo perfil-modal-bloque" data-correo-error-general role="alert" hidden></p>
             <div class="grupo-campo perfil-modal-bloque">
                 <label for="{{ formulario_correo.email.id_for_label }}">{{ formulario_correo.email.label }}</label>
@@ -14,7 +15,7 @@
             </div>
         </div>
         <footer class="modal-confirmacion-acciones">
-            <button class="boton boton-primario" type="submit" data-correo-guardar>Guardar cambios</button>
+            <button class="boton boton-primario" type="submit" data-correo-guardar>Solicitar cambio</button>
             <button class="boton boton-secundario" type="button" data-correo-cancelar>Cancelar</button>
         </footer>
     </form>

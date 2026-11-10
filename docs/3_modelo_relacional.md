@@ -77,6 +77,8 @@ Representa a las personas gestionadas por la academia y sus credenciales, datos 
 | | `debe_cambiar_contrasena` | `boolean` | | | `true` |
 | | `correo_verificado_en` | `timestamptz` | Sí | | `NULL` |
 | | `verificacion_solicitada_en` | `timestamptz` | Sí | | `2026-10-01 10:15:00-03` |
+| | `email_pendiente` | `varchar(254)` | | | `nuevo@example.com` |
+| | `cambio_email_solicitado_en` | `timestamptz` | Sí | | `2026-10-01 10:15:00-03` |
 | | `revision_correo` | `integer` no negativo | | | `0` |
 | | `date_joined` | `timestamptz` | | | `2026-10-01 10:15:00-03` |
 | | `fecha_nacimiento` | `date` | | | `1998-04-12` |
@@ -85,6 +87,8 @@ Representa a las personas gestionadas por la academia y sus credenciales, datos 
 | | `actualizado_en` | `timestamptz` | | | `2026-10-01 10:15:00-03` |
 
 `Usuario` hereda de `AbstractUser`: `password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `is_staff`, `is_active` y `date_joined` son columnas físicas de esta tabla. Los atributos heredados `groups` y `user_permissions` son relaciones muchos a muchos almacenadas en `usuarios_groups` y `usuarios_user_permissions`, no columnas de `usuarios`.
+
+El correo pendiente y su fecha se guardan juntos: ambos vacíos o ambos presentes. No reservan la dirección; la unicidad del correo vigente se comprueba al confirmar y queda protegida por su índice único sin distinción de mayúsculas. `revision_correo` identifica también cada solicitud de cambio de una cuenta verificada. La confirmación limpia el pendiente y aumenta la revisión.
 
 `date_joined` identifica el momento de alta; `actualizado_en`, la última modificación; `last_login`, el último acceso. `fecha_baja` es nula para una cuenta activa y contiene el momento de inactivación para una cuenta inactiva. `debe_cambiar_contrasena` representa la condición de contraseña provisoria. `correo_verificado_en` es nulo hasta confirmar el correo inicial y no modifica la habilitación ni la provisoria. `verificacion_solicitada_en` limita reenvíos a cinco minutos; `date_joined` determina los siete días para limpieza y no se reinicia con solicitudes o correcciones. `revision_correo` aumenta bajo bloqueo al corregir el correo inicial e identifica sus enlaces y envíos; volver a una dirección anterior no rehabilita enlaces de otra revisión. Un reenvío conserva la revisión vigente.
 
@@ -625,6 +629,8 @@ Representa un bloqueo de un turno y su vínculo opcional con la actividad anulad
 ### 4.25 Representación de la recuperación de contraseña
 
 La recuperación utiliza el mecanismo nativo de Django, sin tabla de solicitudes ni tokens persistidos. El enlace contiene el identificador codificado del usuario y un token autenticado mediante HMAC, derivado de la clave secreta, datos de la cuenta y una marca temporal. Su validez depende de los datos existentes de `usuarios`, no de una fila de recuperación.
+
+La recuperación utiliza tokens nativos con vigencia de 900 segundos desde la primera emisión. La cola conserva una huella HMAC de la credencial, el correo y el último acceso para descartar solicitudes que perdieron vigencia antes de entregar; no contiene el token ni el hash de contraseña.
 
 La vigencia y las condiciones de uso del enlace se definen en criterios, 2.3.
 

@@ -83,7 +83,7 @@ def reclamar_envio(envio_id=None):
     envio.intentos += 1
     envio.ultimo_intento_en = ahora
     if envio.datos.get("enlace") and envio.enlace_emitido_en is None:
-        envio.enlace_emitido_en = ahora
+        envio.enlace_emitido_en = ahora.replace(microsecond=0) if envio.datos["enlace"]["proposito"] == "recuperacion" else ahora
     envio.save(update_fields=("estado", "reserva_token", "reservado_hasta", "intentos", "ultimo_intento_en", "enlace_emitido_en"))
     return envio
 

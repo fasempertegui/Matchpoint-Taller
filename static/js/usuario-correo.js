@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (typeof datos.email !== "string") throw new Error("No se pudo confirmar el correo guardado");
             valorGuardado = datos.email;
             correoActual.textContent = valorGuardado || "Sin informar";
-            aviso.textContent = "El correo se actualizó correctamente";
+            aviso.textContent = datos.mensaje;
             aviso.hidden = false;
             modal.close();
         } catch (error) {

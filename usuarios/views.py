@@ -11,7 +11,6 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from auditoria.contexto import contexto_auditoria
-from auditoria.models import LogAuditoria
 from clases.validaciones import validar_retiro_rol_profesor
 from membresias.contrataciones import validar_retiro_rol_alumno
 from reservas.models import Evento
@@ -22,7 +21,6 @@ from .forms import (
     UsuarioCrearForm,
     UsuarioEditarForm,
     generar_contrasena,
-    generar_contrasena_valida,
 )
 from .models import Rol, Usuario, UsuarioRol
 
@@ -140,41 +138,16 @@ def usuario_editar(request, pk):
     formulario = UsuarioEditarForm(request.POST, instance=usuario)
     if not formulario.is_valid():
         return JsonResponse({"errores": formulario.errors}, status=400)
-    if usuario.correo_verificado_en is None:
-        from .verificacion import corregir_correo_inicial_por_administracion
+    from .correo import solicitar_cambio_correo
 
-        try:
-            usuario = corregir_correo_inicial_por_administracion(request.user, usuario.pk, formulario.cleaned_data["email"])
-        except ValidationError as error:
-            return JsonResponse({"errores": {"email": error.messages}}, status=400)
-    else:
-        formulario.save()
-    return JsonResponse({"email": usuario.email})
-
-
-@login_required
-@permission_required("usuarios.change_usuario", raise_exception=True)
-@require_http_methods(["POST"])
-@never_cache
-def usuario_restablecer_contrasena(request, pk):
-    usuario = get_object_or_404(Usuario, pk=pk)
-    if usuario.pk == request.user.pk:
-        return JsonResponse(
-            {"error": "No podés restablecer tu propia contraseña. Usá la opción para cambiarla."},
-            status=400,
-        )
-
-    with transaction.atomic():
-        usuario = Usuario.objects.select_for_update().get(pk=usuario.pk)
-        with contexto_auditoria(request.user, accion=LogAuditoria.Accion.RESTABLECIMIENTO_CONTRASENA):
-            contrasena = generar_contrasena_valida(usuario)
-            usuario.set_password(contrasena)
-            usuario.debe_cambiar_contrasena = True
-            usuario.save(
-                update_fields=["password", "debe_cambiar_contrasena", "actualizado_en"]
-            )
-
-    return JsonResponse({"contrasena": contrasena})
+    try:
+        usuario = solicitar_cambio_correo(request.user, usuario.pk, formulario.cleaned_data["email"])
+    except ValidationError as error:
+        return JsonResponse({"errores": {"email": error.messages}}, status=400)
+    return JsonResponse({
+        "email": usuario.email, "pendiente": bool(usuario.email_pendiente),
+        "mensaje": "Se solicitó el cambio. El correo vigente se conserva hasta confirmar la nueva dirección." if usuario.email_pendiente else "Se corrigió el correo y se envió la verificación inicial.",
+    })
 
 
 @login_required

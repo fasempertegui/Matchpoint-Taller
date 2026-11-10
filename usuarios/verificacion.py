@@ -93,8 +93,12 @@ def corregir_correo_inicial_por_administracion(actor, usuario_id, email):
 
 
 def leer_enlace_verificacion(token):
+    return leer_enlace_cuenta(token, "verificacion")
+
+
+def leer_enlace_cuenta(token, proposito):
     try:
-        datos = signing.Signer(salt="comunicaciones.verificacion").unsign_object(token)
+        datos = signing.Signer(salt=f"comunicaciones.{proposito}").unsign_object(token)
         if type(datos["usuario_id"]) is not int or not isinstance(datos["correo"], str):
             raise ValueError
         emision = datetime.fromisoformat(datos["emitido_en"])

@@ -54,7 +54,6 @@ class LogAuditoria(models.Model):
         ANULACION = "anulacion", "Anulación"
         ELIMINACION = "eliminacion", "Eliminación"
         CAMBIO_CONTRASENA = "cambio_contrasena", "Cambio de contraseña"
-        RESTABLECIMIENTO_CONTRASENA = "restablecimiento_contrasena", "Restablecimiento de contraseña"
         ACTUALIZACION_HASH = "actualizacion_hash", "Actualización de hash"
 
     class Origen(models.TextChoices):

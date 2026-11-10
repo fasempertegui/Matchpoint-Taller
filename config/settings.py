@@ -202,3 +202,5 @@ if CUENTAS_LIMPIEZA_HABILITADA:
         "task": "usuarios.tasks.limpiar_cuentas_iniciales",
         "schedule": crontab(minute=0),
     }
+
+PASSWORD_RESET_TIMEOUT = 900

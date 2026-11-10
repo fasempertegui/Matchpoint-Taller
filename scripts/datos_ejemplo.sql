@@ -68,11 +68,11 @@ BEGIN
         INSERT INTO usuarios (
             username, first_name, last_name, email, password, fecha_nacimiento,
             celular_contacto, observaciones, debe_cambiar_contrasena, is_active,
-            is_staff, is_superuser, correo_verificado_en, revision_correo, date_joined, actualizado_en
+            is_staff, is_superuser, correo_verificado_en, revision_correo, email_pendiente, date_joined, actualizado_en
         ) VALUES (
             persona.nombre_usuario, persona.nombre, persona.apellido,
             persona.nombre_usuario || '@gmail.com', 'pbkdf2_sha256$1000000$MADz0jnMdB1EMTXhPwKT1p$oXhQ34lgRo0xoKh+qoGnNhZWlqmUvkN/kAEHbEF22vM=', '2000-01-01'::date,
-            persona.telefono, '', false, true, false, false, now(), 0, now(), now()
+            persona.telefono, '', false, true, false, false, now(), 0, '', now(), now()
         ) RETURNING id INTO usuario_id;
 
         INSERT INTO usuarios_roles (usuario_id, rol_id, creado_en)
@@ -98,11 +98,11 @@ BEGIN
     INSERT INTO usuarios (
         username, first_name, last_name, email, password, fecha_nacimiento,
         celular_contacto, observaciones, debe_cambiar_contrasena, is_active,
-        is_staff, is_superuser, correo_verificado_en, revision_correo, date_joined, actualizado_en
+        is_staff, is_superuser, correo_verificado_en, revision_correo, email_pendiente, date_joined, actualizado_en
     ) VALUES (
         'mamanit', 'Tomas', 'Mamani', 'mamanit@gmail.com',
         'pbkdf2_sha256$1000000$9WAvFtHttzDUqul2SRNGyK$DSmxFyt8hCORkgwKQJNoPwhjXPneiLWArdTdqXfpUhM=', '2000-01-01'::date,
-        '3875001220', '', false, true, false, true, now(), 0, now(), now()
+        '3875001220', '', false, true, false, true, now(), 0, '', now(), now()
     ) RETURNING id INTO usuario_id;
 
     INSERT INTO usuarios_roles (usuario_id, rol_id, creado_en)

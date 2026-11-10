@@ -166,6 +166,8 @@ def _clave_legible(clave, modelo=None):
 
 
 def _accion_visible(registro):
+    if registro.accion == "restablecimiento_contrasena":
+        return "Restablecimiento de contraseña"
     if registro.accion != LogAuditoria.Accion.MODIFICACION:
         return registro.get_accion_display()
 

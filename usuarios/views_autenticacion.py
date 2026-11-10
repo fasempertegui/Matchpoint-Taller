@@ -13,7 +13,9 @@ from auditoria.intentos import registrar_intento
 from auditoria.models import IntentoAuditoria, LogAuditoria
 
 from .models import Rol
-from .forms import CambioContrasenaForm, InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario
+from .contrasenas import guardar_contrasena_propia
+from .tokens import TokenRecuperacion
+from .forms import CambioContrasenaForm, InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario, RecuperacionContrasenaForm, EstablecerContrasenaForm
 
 
 @require_GET
@@ -93,11 +95,14 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
             return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
-        with contexto_auditoria(self.request.user, accion=LogAuditoria.Accion.CAMBIO_CONTRASENA):
-            usuario = form.save(commit=False)
-            usuario.debe_cambiar_contrasena = False
-            usuario.save(update_fields=("password", "debe_cambiar_contrasena", "actualizado_en"))
-            update_session_auth_hash(self.request, usuario)
+        try:
+            usuario = guardar_contrasena_propia(
+                self.request.user.pk, form.cleaned_data["new_password1"], contrasena_actual=form.cleaned_data["old_password"],
+            )
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        update_session_auth_hash(self.request, usuario)
         return redirect(self.get_success_url())
 
     def form_invalid(self, form):
@@ -111,3 +116,40 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
 
 class CambioContrasenaCompletadoView(auth_views.PasswordChangeDoneView):
     template_name = "autenticacion/cambio_contrasena_completado.html"
+
+
+class RecuperacionContrasenaView(auth_views.PasswordResetView):
+    template_name = "autenticacion/recuperar_contrasena.html"
+    form_class = RecuperacionContrasenaForm
+    success_url = reverse_lazy("password_reset_done")
+
+
+class RecuperacionSolicitadaView(auth_views.PasswordResetDoneView):
+    template_name = "autenticacion/recuperacion_solicitada.html"
+
+
+class ConfirmarRecuperacionView(auth_views.PasswordResetConfirmView):
+    template_name = "autenticacion/recuperacion_confirmar.html"
+    form_class = EstablecerContrasenaForm
+    token_generator = TokenRecuperacion()
+    success_url = reverse_lazy("password_reset_complete")
+
+    def get_user(self, uidb64):
+        usuario = super().get_user(uidb64)
+        return usuario if usuario is not None and usuario.esta_habilitado else None
+
+    def form_valid(self, form):
+        from django.contrib.auth.views import INTERNAL_RESET_SESSION_TOKEN
+
+        token = self.request.session.get(INTERNAL_RESET_SESSION_TOKEN)
+        try:
+            guardar_contrasena_propia(self.user.pk, form.cleaned_data["new_password1"], token=token)
+        except ValidationError as error:
+            form.add_error(None, error)
+            return self.form_invalid(form)
+        self.request.session.pop(INTERNAL_RESET_SESSION_TOKEN, None)
+        return redirect(self.get_success_url())
+
+
+class RecuperacionCompletadaView(auth_views.PasswordResetCompleteView):
+    template_name = "autenticacion/recuperacion_completada.html"
