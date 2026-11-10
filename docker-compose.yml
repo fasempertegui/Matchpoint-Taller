@@ -19,6 +19,7 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CUENTAS_LIMPIEZA_HABILITADA: "${CUENTAS_LIMPIEZA_HABILITADA:-0}"
       EMAILS_TAREAS_PROGRAMADAS_HABILITADAS: "${EMAILS_TAREAS_PROGRAMADAS_HABILITADAS:-0}"
+      EMAILS_SIMULACION: "${EMAILS_SIMULACION:-1}"
       EMAILS_HABILITADOS: "${EMAILS_HABILITADOS:-0}"
       EMAILS_ENTREGA_EXTERNA_HABILITADA: "${EMAILS_ENTREGA_EXTERNA_HABILITADA:-0}"
       EMAILS_URL_PUBLICA: "${EMAILS_URL_PUBLICA:-http://localhost:8000}"
@@ -57,6 +58,17 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:v1.30.4
+    container_name: atm_mailpit
+    restart: unless-stopped
+    environment:
+      MP_DATABASE: /data/mailpit.db
+    ports:
+      - "127.0.0.1:8025:8025"
+    volumes:
+      - mailpit_data:/data
 
   redis:
     image: redis:8-alpine
@@ -134,6 +146,7 @@ services:
         condition: service_healthy
 
 volumes:
+  mailpit_data:
   postgres_data:
   redis_data:
   celery_schedule:

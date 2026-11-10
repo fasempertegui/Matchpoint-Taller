@@ -23,6 +23,12 @@ RESERVA_MINUTOS = 5
 def entrega_habilitada():
     return settings.EMAILS_HABILITADOS and (
         settings.EMAIL_BACKEND == "django.core.mail.backends.locmem.EmailBackend"
+        or (
+            settings.EMAILS_SIMULACION
+            and settings.EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend"
+            and settings.EMAIL_HOST == "mailpit"
+            and settings.EMAIL_PORT == 1025
+        )
         or settings.EMAILS_ENTREGA_EXTERNA_HABILITADA
     )
 

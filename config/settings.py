@@ -190,6 +190,18 @@ EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
 EMAIL_TIMEOUT = 30
 
+EMAILS_SIMULACION = os.environ.get("EMAILS_SIMULACION", "0") == "1"
+if EMAILS_SIMULACION:
+    EMAILS_HABILITADOS = True
+    EMAILS_ENTREGA_EXTERNA_HABILITADA = False
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "mailpit"
+    EMAIL_PORT = 1025
+    EMAIL_HOST_USER = ""
+    EMAIL_HOST_PASSWORD = ""
+    EMAIL_USE_TLS = False
+    EMAIL_USE_SSL = False
+
 if EMAILS_HABILITADOS:
     CELERY_BEAT_SCHEDULE["recuperar-emails-pendientes"] = {
         "task": "comunicaciones.tasks.barrer_emails_pendientes",
