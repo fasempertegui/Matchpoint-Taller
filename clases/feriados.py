@@ -40,8 +40,8 @@ def _revisar_feriado(fecha, descripcion):
             [clase.pk, clase.evento_id, clase.evento.turno_id,
              clase.evento.turno.cancha_id, clase.evento.turno.cancha.sede_id,
              clase.evento.turno.hora_inicio.isoformat(), clase.evento.actualizado_en.isoformat(),
-             sorted([v.profesor_id, v.estado, v.actualizado_en.isoformat()] for v in clase.profesores.all()),
-             sorted([v.usuario_id, v.estado, v.actualizado_en.isoformat()] for v in clase.alumnos.all())]
+             sorted([v.profesor_id, str(v.identidad), v.actualizado_en.isoformat()] for v in clase.profesores.all()),
+             sorted([v.usuario_id, str(v.identidad), v.actualizado_en.isoformat()] for v in clase.alumnos.all())]
             for clase in clases
         ],
     }

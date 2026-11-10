@@ -359,6 +359,12 @@ Los enlaces usan exclusivamente el origen público configurado y rutas internas;
 
 Administración consulta los envíos en una tabla compacta de veinticinco filas por página, con fecha, tipo, destinatario y estado. Los filtros por estado, tipo y destinatario aparecen al pedirlos. Cada fila permite desplegar intentos, fechas de entrega y error resumido. No se muestran datos de preparación, claves de aviso, tokens ni enlaces de acceso. La consulta exige cuenta activa, sin cambio obligatorio de contraseña y rol Administrador, y sólo admite GET. No ofrece reenvío manual ni edición del registro técnico.
 
+Los avisos se guardan dentro de la transacción de la operación confirmada, con claves por participación o cambio efectivo. Las llamadas anidadas de feriados, bloqueos y lotes utilizan la misma anulación individual y no multiplican mensajes. Revertir una operación revierte sus avisos; la entrega del proveedor ocurre fuera de la transacción.
+
+Antes de entregar se comprueban cuenta activa y verificada, dirección vigente, relación y permisos aplicables. La deshabilitación permite su propio aviso. Los cambios de correo conservan sus destinatarios especiales. Una invitación Rechazada queda fuera de posteriores avisos de reserva; No asistirá excluye recordatorio, no anulación. La retirada conserva evidencia mínima sin exigir el vínculo borrado. Los agrupados de generación eliminan sólo los apartados que perdieron vigencia.
+
+No generan emails cambios de roles, planilla u observaciones, vencimiento efectivo, movimientos sin vínculo, anulación de movimientos, liberación de bloqueos, finalización, asistencia ni resultado de uso. Los avisos de asignación dentro de la hora previa conservan cobertura de recordatorio por participación; las campañas horarias utilizan ese seguimiento.
+
 ### 2.7 Portal de usuarios
 
 El sistema tendrá un único portal de acceso externo, para cualquier persona que se registre como usuario, separado de la interfaz de gestión interna (ver intro de la sección 2).

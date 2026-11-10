@@ -58,8 +58,8 @@ def _revisar_desactivacion(sede, canchas, cancha_id):
         "invitados": [[evento.reserva.pk, list(evento.reserva.invitados.order_by("usuario_id").values_list("usuario_id", "estado", "respuesta", "actualizado_en"))] for evento in futuros if evento.tipo == Evento.Tipo.RESERVA],
         "asignaciones": [
             [evento.clase.pk,
-             sorted([v.profesor_id, v.estado, v.actualizado_en.isoformat()] for v in evento.clase.profesores.all()),
-             sorted([v.usuario_id, v.estado, v.actualizado_en.isoformat()] for v in evento.clase.alumnos.all())]
+             sorted([v.profesor_id, str(v.identidad), v.actualizado_en.isoformat()] for v in evento.clase.profesores.all()),
+             sorted([v.usuario_id, str(v.identidad), v.actualizado_en.isoformat()] for v in evento.clase.alumnos.all())]
             for evento in futuros if evento.tipo == Evento.Tipo.CLASE
         ],
     }

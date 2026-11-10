@@ -136,11 +136,11 @@ def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
             {
                 "id": fila["clase"].pk,
                 "profesores": sorted([
-                    [vinculo.profesor_id, vinculo.estado, vinculo.actualizado_en.isoformat()]
+                    [vinculo.profesor_id, str(vinculo.identidad), vinculo.actualizado_en.isoformat()]
                     for vinculo in fila["clase"].profesores.all()
                 ]),
                 "participantes": sorted([
-                    [vinculo.usuario_id, vinculo.estado, vinculo.actualizado_en.isoformat()]
+                    [vinculo.usuario_id, str(vinculo.identidad), vinculo.actualizado_en.isoformat()]
                     for vinculo in fila["clase"].alumnos.all()
                 ]),
             }

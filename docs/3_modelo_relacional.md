@@ -758,6 +758,8 @@ Registro técnico del procesamiento de cuentas iniciales sin verificar: identifi
 La limpieza consulta y bloquea `usuarios`, comprueba `date_joined`, verificación, roles y relaciones protegidas; su eliminación y resultado técnico forman una transacción. No utiliza `is_active` para representar verificación. El historial de auditoría conserva sus actores como identificadores y no se edita para permitir la eliminación. `verificacion_solicitada_en` es seguimiento técnico y se excluye de las diferencias de actualización del trigger; email y verificación sí se auditan.
 
 
+Los avisos de reserva guardan su referencia y los de invitados la identidad de participación. Los agrupados de generación conservan una referencia de clase e identidad docente por apartado; al entregar se filtran los apartados sin vigencia sin reescribir el contenido persistido. `cubre_recordatorio` registra que un aviso de creación o asignación se originó dentro de la hora previa, por participación; no sustituye el estado de entrega del aviso. Las claves de respuestas y cambios de cancha distinguen transiciones efectivas aunque compartan marca temporal.
+
 ## 5. Dependencias referenciales y eliminación
 
 - Las referencias a usuarios, sedes, canchas, productos y contrataciones protegen los registros que tienen datos dependientes. Cada contratación referencia obligatoriamente a su usuario y producto.

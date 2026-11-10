@@ -12,7 +12,7 @@ from usuarios.models import Rol, Usuario, UsuarioRol
 from .fechas import validar_fecha_alta, validar_mes_contratacion
 from .models import Membresia, MembresiaUsuario, Plan, PlanUsuario
 from .servicios import exigir_administracion_membresias
-from comunicaciones.contrataciones import avisar_contratacion
+from comunicaciones.contrataciones import avisar_contratacion, avisar_anulacion_contratacion
 
 
 def _bloquear_titular(actor, usuario_id, *, exigir_activo=True):
@@ -177,6 +177,7 @@ def _anular_contratacion(actor, contratacion_id, *, modelo, tipo, motivo, versio
         contratacion.save(update_fields=[
             "estado", "motivo_anulacion", "anulado_por", "anulado_en", "actualizado_en",
         ])
+        avisar_anulacion_contratacion(contratacion, tipo)
     return contratacion
 
 

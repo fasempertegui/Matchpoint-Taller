@@ -10,6 +10,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
+from comunicaciones.actividades import avisar_reserva
 from comunicaciones.retiradas import avisar_retirada_invitacion
 from clases.servicios import bloquear_usuarios_clase
 from common.disponibilidad import validar_disponibilidad, validar_limite_reservas_organizadas
@@ -165,6 +166,8 @@ def confirmar_reserva(actor, token, *, coordenadas=None):
             invitado.reserva = reserva
             invitado.full_clean()
             invitado.save()
+            avisar_reserva(reserva, "invitacion", invitado=invitado)
+        avisar_reserva(reserva, "reserva_creada")
     return reserva
 
 
@@ -237,6 +240,7 @@ def gestionar_invitados(actor, reserva_id, invitados_ids, *, confirmacion=None):
             relacion = ReservaInvitado(reserva=reserva, usuario=usuarios[pk])
             relacion.full_clean()
             relacion.save()
+            avisar_reserva(reserva, "invitacion", invitado=relacion)
         _validar_edicion(actor, administrador, reserva)
     return reserva
 
@@ -301,6 +305,7 @@ def responder_invitacion(actor, reserva_id, respuesta, *, version, confirmacion)
         if timezone.now() >= inicio_reserva(reserva):
             raise ValidationError("La reserva alcanzó su inicio. No se modificó la respuesta.")
         relacion.save()
+        avisar_reserva(reserva, "respuesta_invitacion", respuesta=relacion)
     return relacion
 
 

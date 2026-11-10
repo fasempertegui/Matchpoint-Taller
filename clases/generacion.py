@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from comunicaciones.actividades import avisar_generacion
 from auditoria.contexto import contexto_auditoria
 from common.fechas import validar_inicio_evento
 from instalaciones.models import Cancha, Sede
@@ -248,6 +249,7 @@ def generar_clases(usuario, confirmacion):
     turnos_por_coordenadas = {(turno.cancha_id, turno.fecha, turno.hora_inicio): turno for turno in turnos}
     with contexto_auditoria(usuario):
         clases = _crear_clases_generadas(usuario, revision["candidatas"], turnos_por_coordenadas)
+        avisar_generacion(clases)
         for fila in revision["candidatas"]:
             validar_inicio_evento(fila["fecha"], fila["hora_inicio"])
     return {

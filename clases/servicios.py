@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
 from common.fechas import validar_inicio_evento
+from comunicaciones.actividades import avisar_asignaciones, avisar_clase, avisar_anulacion_clase
 from comunicaciones.retiradas import avisar_retirada_clase
 from common.bloqueos import bloquear_usuarios as bloquear_usuarios_clase
 from instalaciones.models import Cancha, Sede
@@ -194,6 +195,7 @@ def registrar_clase(
         for usuario_id in sorted(participantes_ids)
     ])
     validar_inicio_evento(fecha, hora_inicio)
+    avisar_asignaciones(clase)
     return clase
 
 
@@ -442,6 +444,13 @@ def editar_clase(
             evento.turno = turnos[turno_destino.pk]
             campos_evento.append("turno")
         evento.save(update_fields=campos_evento)
+        clase.evento = evento
+        avisar_asignaciones(clase, profesores_ids - set(profesores), participantes_ids - set(participantes))
+        if cambia_cancha:
+            for relacion in clase.profesores.select_related("profesor"):
+                avisar_clase(clase, "cancha_cambiada", relacion, "profesor")
+            for relacion in clase.alumnos.select_related("usuario"):
+                avisar_clase(clase, "cancha_cambiada", relacion, "participante")
         if (cambia_cancha or cambia_asignacion) and timezone.localtime() >= inicio:
             raise ValidationError("El turno ya comenzó. No se guardaron los cambios de cancha o asignaciones.")
     clase.evento = evento
@@ -525,6 +534,7 @@ def anular_clase(anulado_por, clase_id, motivo):
         inicio = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))
         if timezone.localtime() >= inicio:
             raise ValidationError("El turno ya comenzó. No se guardó la anulación.")
+        avisar_anulacion_clase(clase)
     return clase
 
 

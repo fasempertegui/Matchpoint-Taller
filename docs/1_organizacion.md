@@ -99,6 +99,8 @@ Anular una contratación conserva su historia y permite un reemplazo para el mis
 
 ## 5. Funcionamiento operativo
 
+Las operaciones confirmadas guardan sus emails junto con la reserva, clase, contratación, ajuste o movimiento vinculado. La generación agrupa clases por profesor y corrida. Las anulaciones individuales y masivas notifican a las personas que siguen vinculadas, con las exclusiones de respuesta correspondientes; la retirada avisa a la persona quitada. La entrega respeta el acceso actual y no bloquea la operación cuando falla el correo.
+
 Las clases conservan al menos un profesor. Administración puede quitar profesores y participantes únicamente antes del inicio de una clase Programada: se elimina la asignación y se avisa a la persona retirada. La lista muestra a quienes siguen asignados; la auditoría identifica las retiradas y su responsable. Las asistencias se conservan independientemente de la asignación. Agregar nuevamente crea una participación nueva, con respuesta inicial Asistirá. Quitar un invitado de una reserva elimina su relación y le avisa; agregarlo de nuevo crea una invitación Pendiente. Cambiar la planilla no envía estos avisos ni modifica las clases concretas ya generadas.
 
 Cada clase, reserva o bloqueo ocupa exactamente un turno de una hora y se administra de manera independiente. Una operación administrativa puede actuar sobre varios eventos, sin agrupar sus estados ni su auditoría.

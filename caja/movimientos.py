@@ -7,6 +7,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from comunicaciones.movimientos import avisar_movimiento
 from auditoria.contexto import contexto_auditoria
 from common.bloqueos import bloquear_usuarios
 
@@ -103,6 +104,7 @@ def registrar_movimiento(actor, sesion_id, *, clase, operacion_id, concepto, mon
     try:
         with transaction.atomic(), contexto_auditoria(actor):
             movimiento.save()
+            avisar_movimiento(movimiento, origen, tipo_origen)
     except IntegrityError:
         anterior = MovimientoFondo.objects.filter(operacion_id=operacion).first()
         if anterior is None:

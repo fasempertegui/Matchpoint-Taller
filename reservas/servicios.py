@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from comunicaciones.actividades import avisar_reserva
 from auditoria.contexto import contexto_auditoria
 from bloqueos.models import Bloqueo
 from common.fechas import validar_inicio_evento
@@ -108,6 +109,9 @@ def anular_reserva(anulado_por, reserva_id, motivo, *, motivo_bloqueo=None):
         inicio = timezone.make_aware(datetime.combine(reserva.evento.turno.fecha, reserva.evento.turno.hora_inicio))
         reserva.computa_hora_membresia = not es_administrador and inicio - ahora <= timedelta(hours=2)
     reserva.save(update_fields=["anulada_por_organizador", "computa_hora_membresia"])
+    avisar_reserva(reserva, "reserva_anulada")
+    for invitado in reserva.invitados.exclude(respuesta="negativa").select_related("usuario"):
+        avisar_reserva(reserva, "reserva_anulada", invitado=invitado)
     return reserva
 
 

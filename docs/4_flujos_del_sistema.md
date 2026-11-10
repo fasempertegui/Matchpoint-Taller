@@ -10,7 +10,7 @@ Un flujo puede invocar otro por su identificador. Las decisiones internas se res
 
 Cada flujo indica objetivo, actor, entradas o precondiciones, recorrido, alternativas, resultado, datos involucrados y un diagrama resumido.
 
-Lo que el sistema hace por sí solo, sin que ningún actor lo pida en el momento (tareas periódicas de Celery, el envío de notificaciones), no es un flujo: nadie tiene la intención de "ejecutarlo" en ese instante, ocurre como consecuencia de otra cosa. Esos procesos se documentan aparte, en la sección 4, y se referencian desde los flujos que los disparan.
+Las tareas periódicas no son flujos de un actor y se describen en la sección 4. Los emails de una operación se detallan dentro de su flujo de origen, con destinatarios y contenido concretos. Las reglas técnicas comunes de entrega pertenecen a Criterios y Modelo.
 
 ---
 
@@ -113,7 +113,7 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 
 Los recorridos de cuenta incluyen CU-01 (verificar correo) y CU-02 (reenviar/corregir correo inicial).
 
-Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de contrataciones de planes y membresías, 4.2 Notificaciones por email, 4.3 Finalización automática de clases y reservas vencidas, 4.5 Aviso de vencimiento próximo de una contratación, 4.6 Recordatorio de la próxima clase asignada.
+Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de contrataciones de planes y membresías, 4.3 Finalización automática de clases y reservas vencidas, 4.5 Apertura y recordatorios de continuidad, 4.6 Recordatorio de la próxima clase asignada.
 
 ---
 
@@ -268,6 +268,8 @@ Alternativas:
 - Ningún usuario con permiso para cambiar estados puede desactivar su propia cuenta.
 - El último administrador activo no puede ser desactivado. Las filas de los administradores activos se bloquean durante la validación para que dos operaciones concurrentes no puedan eludir esta regla.
 - El estado ya aplicado no genera cambios.
+
+La habilitación o deshabilitación guarda un aviso al titular en la misma transacción. La deshabilitación no impide entregar su propio aviso. Cambios de roles no generan emails.
 
 - **Resultado:** usuario activo sin fecha de baja, o usuario inactivo con la fecha de baja registrada.
 - **Datos:** usuarios.
@@ -856,6 +858,8 @@ Alternativas:
 - El registro Anulado permite contratar un reemplazo para ese mes, conservando ambos. En membresías se descuentan del nuevo cupo los usos conservados del titular y período; no se reinician horas. Las invitaciones Pendientes o Rechazadas, y las reservas Anuladas o Finalizadas, no bloquean anulación.
 - Repetir una anulación no sobrescribe su auditoría.
 
+La anulación efectiva guarda un único aviso al titular, con producto, mes y enlace al detalle propio. No incluye motivos administrativos que ese detalle no permita consultar ni registra una devolución. Repetir una anulación aplicada no agrega mensajes.
+
 - **Resultado:** contratación Anulada.
 - **Datos:** planes_usuarios o membresias_usuarios, movimientos_fondos y reservas relacionadas.
 
@@ -1010,6 +1014,8 @@ Alternativas:
 - Generar omite las fechas feriadas. Se admite crear una clase manual después del registro del feriado, respetando disponibilidad y horarios; esa excepción permanece Programada.
 - El feriado no se limita a una sede. Una fecha duplicada se rechaza sin cambios.
 
+Al registrar el feriado, cada clase anulada guarda avisos a profesores y participantes todavía asignados. No asistirá no excluye ese aviso. El feriado y todos los avisos se confirman o revierten juntos; quitar el feriado no envía emails.
+
 - **Resultado:** calendario actualizado y, al registrar una fecha futura, clases revisadas Anuladas con historia preservada.
 - **Datos:** feriados, usuarios y roles del actor, clases, profesores, participantes, eventos, turnos y auditoría.
 
@@ -1040,7 +1046,7 @@ Recorrido:
 5. Solicita dos confirmaciones explícitas y sucesivas: la generación no admite deshacer ni eliminación física de clases. Las generadas por error pueden anularse antes de su inicio desde su detalle mediante **FL-37** o desde Acciones del día o del mes, conservando su historia.
 6. Al confirmar, bloquea usuarios en orden de identificador y coordina sede, canchas y calendario de feriados. Obtiene o crea los turnos concretos, los bloquea y vuelve a evaluar el conjunto revisado. Si cambia, revierte y exige una nueva revisión.
 7. Comprueba el inicio futuro al guardar y al terminar la operación; si un turno alcanza su inicio, revierte todo y exige una nueva revisión. Crea en una transacción los eventos Programados de tipo clase, sus especializaciones con `es_generada = true`, y sus asignaciones con Asistirá para participantes y sin respuesta para profesores. Las observaciones se copian al evento.
-8. La notificación por email a profesores se describe en el proceso 4.2.
+8. Guarda un aviso agrupado por profesor y corrida con sus clases, fechas, horarios y ubicaciones. Los participantes de clases creadas dentro de la hora previa reciben aviso inmediato; los demás quedan para el recordatorio. Antes de entregar el agrupado se excluyen apartados de clases anuladas o asignaciones retiradas.
 
 Alternativas:
 
@@ -1187,7 +1193,7 @@ Recorrido:
 2. El sistema calcula la hora de fin exactamente una hora después del inicio.
 3. Valida calendario, profesores, participantes, disponibilidad personal frente a clases y reservas e instalaciones activas. Exige que el turno quede íntegramente dentro de una franja de funcionamiento (**FL-57**); no hay excepciones. El paso Resumen presenta turno, profesores, participantes, observaciones y las condiciones de disponibilidad personal. La confirmación se realiza dentro del panel.
 4. Al confirmar, bloquea usuarios en orden de identificador, sede y cancha; obtiene o crea el turno concreto, lo bloquea y revalida acceso, asignaciones, disponibilidad personal y ocupación. En una transacción crea el evento Programado, clase y asignaciones con Asistirá para participantes y sin respuesta para profesores; las observaciones pertenecen al evento. Una revisión que cambió exige nueva confirmación y no deja cambios parciales.
-5. Actualiza la grilla y el panel sin salir de Agenda ni recargar la página. Envía una notificación por email a cada profesor asignado (ver 4.2).
+5. Actualiza la grilla y el panel sin salir de Agenda ni recargar la página. Envía una notificación por email a cada profesor asignado.
 
 Alternativas:
 
@@ -1197,6 +1203,8 @@ Alternativas:
 - Las coincidencias personales con reservas se rechazan para profesores y participantes según criterios 2.2, sin excepciones confirmables.
 - Un turno fuera del horario de funcionamiento de la sede impide crear la clase, sin excepciones administrativas.
 - Las clases generadas desde la planilla se crean mediante **FL-28**, no mediante este flujo; esa generación notifica una sola vez por profesor y por corrida, no clase por clase. Una clase creada por este flujo queda marcada como no generada por planilla.
+
+La confirmación guarda avisos a los profesores con fecha, horario, sede, cancha y acceso al detalle. Sólo los participantes asignados dentro de la hora previa reciben aviso inmediato, que cubre su recordatorio de esa participación. La revisión previa no encola mensajes.
 
 - **Resultado:** una clase concreta de una hora en estado **Programada**.
 - **Datos:** eventos, turnos, clases, horarios de sede, profesores y usuarios asignados.
@@ -1226,7 +1234,7 @@ Recorrido:
 3. Valida que quede al menos un profesor asignado y comprueba las condiciones de cada alta de profesor o participante. Rechaza participaciones simultáneas incompatibles según criterios 2.2 y personas en ambas funciones. Rechaza coincidencias personales con reservas según las reglas comunes.
 4. Si se indicó una nueva sede o cancha, exige que el turno original no haya comenzado, que las instalaciones de destino estén activas y que el turno de destino, con el mismo día y horario, esté disponible, excluyendo el evento actual de esa comprobación. Exige que el turno quede íntegramente dentro de una franja de funcionamiento de la sede (**FL-57**) para ese día; si no se cumple, rechaza la operación.
 5. Coordina los bloqueos de usuarios en orden de identificador, instalaciones, turnos y evento, y revalida permisos, estado, asignaciones y disponibilidad personal antes de guardar. Guarda las asignaciones en sus relaciones específicas y las observaciones en el evento. Si cambió la cancha, actualiza `eventos.turno_id` al turno de la nueva cancha en la misma fecha y hora; bloquea origen y destino, valida la disponibilidad y conserva el turno original. Actualiza la fecha de modificación del evento. Día y hora no cambian.
-6. Si se agregó un profesor que no estaba asignado antes, le envía una notificación por email (ver 4.2).
+6. Si se agregó un profesor que no estaba asignado antes, le envía una notificación por email.
 
 Alternativas:
 
@@ -1236,6 +1244,8 @@ Alternativas:
 - Una clase cancelada o completada conserva su historia y no se edita mediante este flujo.
 - Quitar profesores o participantes exige que la clase Programada no haya comenzado. Se captura el aviso, se elimina cada relación y se guarda el email en la misma transacción. La lista conserva sólo asignados; asistencia e historia de auditoría permanecen independientes.
 - Agregar nuevamente crea una relación con UUID nuevo y respuesta inicial Asistirá. No se recupera el aviso No asistirá ni se reutilizan sus claves de envío. Las versiones de edición y de respuesta distinguen cada participación.
+
+Los profesores nuevos reciben su aviso de asignación. Los participantes nuevos sólo reciben aviso inmediato dentro de la hora previa. Una retirada captura su aviso antes del borrado; cambiar de cancha avisa a quienes siguen asignados con la ubicación nueva. Cambiar únicamente observaciones no encola emails.
 
 - **Resultado:** datos, participantes y, si correspondía, cancha actualizados, con el mismo día y horario.
 - **Datos:** clases, eventos, turnos, profesores y usuarios asignados, y horarios de sede.
@@ -1271,13 +1281,15 @@ Recorrido:
 2. Ingresa el motivo y continúa. El servidor valida los datos y presenta un modal con sede, cancha, fecha, horario, motivo y efecto. Cancelar el modal conserva el formulario; confirmar utiliza la revisión firmada.
 3. Bloquea el turno y el evento, comprueba acceso, estado Programado e inicio futuro y registra estado Anulado, administrador, momento y motivo de cancelación en el evento.
 4. La cancelación libera el turno de la clase, conserva su referencia histórica al turno y no crea un bloqueo.
-5. Envía la notificación de cancelación a los alumnos asignados (ver 4.2).
+5. Envía la notificación de cancelación a los alumnos asignados.
 
 Alternativas:
 
 - Una clase iniciada o pasada no se anula, aunque siga Programada.
 - Cancelar no elimina la clase ni crea otra actividad o bloqueo.
 - Una clase completada no puede cancelarse: solo puede cancelarse una clase **Programada**, y una clase programada nunca tiene asistencia efectiva registrada (ver **FL-39**), así que la cancelación nunca compite con asistencia ya cargada.
+
+La anulación guarda un aviso por profesor y participante que siguen asignados, con el motivo consultable en el detalle autorizado. No asistirá no excluye la anulación; un retirado no es destinatario. La operación y sus avisos forman una transacción.
 
 - **Resultado:** clase cancelada con motivo e historia preservada y turno liberado.
 - **Datos:** eventos, turnos y clases.
@@ -1396,6 +1408,8 @@ Alternativas:
 - El beneficio de invitado se evalúa al aceptar, siempre con disponibilidad personal. Pendiente no ocupa horario ni compromete horas o adicional. Aceptada con beneficio compromete una hora y la consume al inicio; sin beneficio genera adicional. Rechazar o quitar libera la aplicación. Cada nueva aceptación revalida las condiciones. Las reservas normales no utilizan horas ni adicionales de invitados.
 - Un cambio de selección, cobertura, precio o disponibilidad exige una nueva revisión, sin escrituras parciales. Cancelar la revisión no registra nada.
 - No hay reservas recurrentes. El portal no cobra; pagos y devoluciones corresponden a caja como operaciones independientes.
+
+La reserva confirmada guarda un aviso al organizador y una invitación por invitado, con fecha, horario, ubicación y acceso autorizado. No se envían invitaciones durante la revisión ni antes de crear la reserva. Una creación dentro de la hora previa cubre el recordatorio correspondiente.
 
 - **Resultado:** Reserva propia Programada con sus importes aplicados e invitaciones Pendientes.
 - **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, membresias, membresias_usuarios y reservas_invitados.
@@ -1520,6 +1534,8 @@ Alternativas:
 - No se permite fecha editable, edición de datos originales ni eliminación. El UUID único se conserva al reenviar el formulario: con los mismos datos y actor devuelve el registro existente; con otro contenido o actor se rechaza. No se exige que coincida con el UUID del contexto de auditoría.
 - Reserva o contratación y cobro se confirman por separado. Si falla este registro, el origen permanece confirmado.
 - Los medios digitales no alteran el efectivo esperado. El módulo no verifica saldo bancario ni acreditaciones de tarjetas.
+
+Un Ingreso o Egreso vinculado, incluidas devoluciones, guarda un aviso al organizador o titular: tipo, importe, medio, concepto autorizado y referencia a su operación. El enlace lleva al detalle propio de reserva o contratación, nunca a Caja. Un movimiento general, aporte, retiro o anulación no genera este aviso. El reenvío del mismo identificador de operación no duplica el correo.
 
 - **Resultado:** movimiento Vigente en la sesión abierta.
 - **Datos:** sesiones_caja, movimientos_fondos, usuarios y origen comercial cuando corresponde.
@@ -1655,7 +1671,7 @@ flowchart TD
 Recorrido:
 
 1. El usuario solicita la recuperación indicando su email.
-2. Si existe un usuario activo con correo verificado y contraseña utilizable, el sistema encola un enlace nativo de Django de un solo uso (ver 4.2).
+2. Si existe un usuario activo con correo verificado y contraseña utilizable, el sistema encola un enlace nativo de Django de un solo uso.
 3. El usuario abre el enlace e ingresa una nueva contraseña.
 4. En una transacción y bajo bloqueo, revalida el token, guarda el nuevo hash y establece `debe_cambiar_contrasena = false`. Encola un único aviso «Cambiaste tu contraseña». No inicia sesión y las sesiones anteriores pierden validez.
 
@@ -1868,6 +1884,8 @@ Alternativas:
 - La reserva con membresía no exige tarifa normal. Los invitados con beneficio comprometen una hora de invitado y todos se identifican en esta modalidad.
 - Si falla el cobro posterior, la reserva conserva su existencia e importes; no hay reversión conjunta con caja.
 
+La creación administrativa guarda la confirmación al organizador y una invitación por invitado una vez creada la reserva, con fecha, horario y ubicación. Son avisos al titular, no al administrador que realizó el alta. Dentro de la hora previa cubren el recordatorio.
+
 - **Resultado:** Reserva Programada del organizador elegido, sin cobro automático.
 - **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, membresias_usuarios y reservas_invitados.
 
@@ -1892,6 +1910,8 @@ flowchart TD
 5. Muestra participantes confirmados, respuestas y total derivado, con cobros separados. Notifica las nuevas invitaciones según el proceso de email.
 
 Quitar libera disponibilidad, horas o adicional según corresponda. La invitación deja de existir; no admite respuestas ni reincorporación. Volver a invitar crea una relación Pendiente con una nueva identidad de revisión. Un cambio de grupo exige otra revisión y no deja efectos parciales. Los invitados no tienen límite de reservas organizadas. No se edita organizador, modalidad, turno ni precio unitario. Reconocer una membresía contratada después de aceptar utiliza FL-70.
+
+Sólo se encola invitación a cada nuevo invitado; los existentes no reciben otra. Cada invitación utiliza su identidad propia y empieza Pendiente. Las retiradas guardan su aviso antes del borrado y no repiten invitaciones a todo el grupo.
 
 - **Resultado:** conjunto revisado de invitaciones confirmado.
 - **Datos:** usuarios, reservas, reservas_invitados, eventos y turnos.
@@ -1973,6 +1993,8 @@ flowchart TD
 
 Quitar la invitación impide toda respuesta, incluida una solicitud emitida antes de su eliminación. Volver a invitar requiere una nueva revisión y aceptación. Administración y organizador no responden por el titular. Después del inicio se conserva el estado, incluida Pendiente, y no se ofrecen acciones. No modifica horas del organizador ni cobros y no acredita asistencia real.
 
+Cada cambio efectivo de respuesta guarda un aviso al organizador que identifica al invitado y su decisión Aceptada o Rechazada, con acceso al detalle de la reserva. La revisión y la repetición sin cambio no agregan avisos.
+
 - **Resultado:** decisión del titular y sus compromisos confirmados en una transacción.
 - **Datos:** usuarios, reservas, reservas_invitados, eventos, turnos y membresias_usuarios.
 
@@ -1996,6 +2018,8 @@ Alternativas:
 - El aviso corresponde sólo a esa clase, sin cambiar plantilla, asignaciones ni asistencia real. Estar Presente no modifica No asistirá.
 - Administración no actúa por el titular. Los profesores no tienen este circuito por docencia.
 - Al inicio se conserva Asistirá o No asistirá y se ocultan las acciones.
+
+El primer aviso No asisto guarda un email para los profesores asignados que pueden consultar el grupo. Identifica al participante y la clase; no se envía al resto de participantes. Repetir No asisto no genera otro envío. Antes de entregar se revalida el acceso docente.
 
 - **Resultado:** intención de asistencia conservada por clase concreta.
 - **Datos:** usuarios, clases, clases_alumnos, eventos y turnos.
@@ -2143,7 +2167,7 @@ Recorrido:
 1. El usuario localiza su reserva, solo entre las propias, y solicita cancelarla.
 2. Ingresa el motivo.
 3. Bloquea personas, contrataciones, turno y evento en orden común; revalida plazo y acceso, cambia el evento a Anulado y registra usuario, momento y motivo. Guarda `anulada_por_organizador = true` y aplica el cómputo de organizador según el umbral de dos horas. Libera siempre las horas comprometidas de invitados y el cupo Programado, conservando historia.
-4. Envía al organizador el aviso de cancelación (ver 4.2).
+4. Envía al organizador el aviso de cancelación.
 
 Alternativas:
 
@@ -2155,6 +2179,8 @@ Alternativas:
 - La reserva original no se elimina ni cambia de fecha, horario, duración o cancha.
 - La cancelación actúa sobre el evento completo; cada reserva corresponde a un único turno de una hora.
 - Una reserva cancelada o completada no puede cancelarse nuevamente.
+
+La cancelación guarda aviso al organizador y a invitados vinculados no rechazados. El texto del invitado identifica su condición sin revelar el motivo privado del organizador. Abrir el enlace exige los permisos actuales; un invitado que rechazó antes de entregar deja de ser destinatario.
 
 - **Resultado:** reserva propia cancelada, turno liberado.
 - **Datos:** reservas, eventos, turnos.
@@ -2181,7 +2207,7 @@ Recorrido:
 2. Ingresa el motivo.
 3. Bloquea el turno y el evento, valida nuevamente el plazo y el acceso, cambia el evento a Anulado y registra usuario, momento y motivo. En la reserva guarda `anulada_por_organizador = false` y `computa_hora_membresia = false`, liberando siempre la hora y el cupo Programado.
 4. La cancelación libera el turno de la actividad, conserva su referencia histórica y no crea un bloqueo.
-5. Libera las horas comprometidas de invitados y envía el aviso de cancelación (ver 4.2).
+5. Libera las horas comprometidas de invitados y envía el aviso de cancelación.
 
 Alternativas:
 
@@ -2193,6 +2219,8 @@ Alternativas:
 - La reserva original no se elimina ni cambia de fecha, horario, duración o cancha.
 - La cancelación actúa sobre el evento completo; cada reserva corresponde a un único turno de una hora.
 - Una reserva cancelada o completada no puede cancelarse nuevamente.
+
+La anulación guarda aviso al organizador y a invitados no rechazados, con datos de la reserva y acceso autorizado al detalle. Los mensajes no revelan información comercial ni motivos que el destinatario no pueda consultar.
 
 - **Resultado:** reserva cancelada, turno y horas de ambos roles liberados, historia y movimientos conservados.
 - **Datos:** reservas, eventos y turnos.
@@ -2233,6 +2261,8 @@ Alternativas:
 - Un bloqueo exige que el turno quede íntegramente dentro de una franja de funcionamiento de la sede; fuera de ella se rechaza, incluso si existe una actividad para anular.
 - Si cambia la ocupación o la elegibilidad desde la vista previa, se exige revisarla nuevamente; no se anulan actividades sin confirmar.
 
+Si el bloqueo anula una reserva o clase, sus servicios de anulación guardan los avisos a los destinatarios correspondientes una sola vez. El bloqueo no crea un segundo juego de mensajes; un turno libre bloqueado no notifica a usuarios.
+
 - **Resultado:** un bloqueo de una hora y, si corresponde, la actividad previa anulada con su historia conservada.
 - **Datos:** usuarios, eventos, turnos, reservas, clases y bloqueos con su evento de origen opcional.
 
@@ -2269,6 +2299,8 @@ Alternativas:
 - La confirmación identifica al actor y los parámetros revisados, con una validez de quince minutos. Una confirmación vencida o de otra selección exige preparar nuevamente la vista previa.
 - La vista previa no escribe datos. Si cambian la ocupación, el alcance o la elegibilidad, se revierte toda la operación y se exige revisarla nuevamente. Un error no deja anulaciones o bloqueos parciales.
 - Las actividades anuladas conservan sus datos comerciales. La operación no ofrece reprogramación ni modifica movimientos monetarios.
+
+El lote utiliza los servicios individuales de anulación para guardar avisos por evento y destinatario. No duplica mensajes desde el coordinador ni envía por bloqueos libres. Un fallo revierte el lote y todos sus avisos.
 
 - **Resultado:** un bloqueo independiente por turno efectivo, con las reservas o clases correspondientes anuladas y los eventos conservados informados.
 - **Datos:** usuarios, sedes, canchas, horarios de sedes, turnos, eventos, reservas, clases y bloqueos con su evento de origen opcional.
@@ -2332,6 +2364,8 @@ Alternativas:
 - Los tipos excluidos y eventos no elegibles se informan antes de confirmar. Si cambian el alcance, la ocupación o la elegibilidad, se exige revisar nuevamente y no se guarda ningún cambio.
 - La selección, vista previa, edición y confirmación utilizan el mismo recorrido de **FL-64**, con confirmación vinculada al actor y validez de quince minutos. En el alcance mensual, el token incluye el mes completo y los listados muestran la fecha de cada evento; los horarios ofrecidos combinan las franjas semanales de la sede. Todo el mes se confirma o revierte en una única transacción.
 - La operación no crea bloqueos, cobros, devoluciones ni transferencias de movimientos monetarios. Un fallo revierte todo el lote.
+
+Cada anulación del lote guarda sus avisos mediante el mismo servicio que la operación individual. No se agregan mensajes desde el coordinador, no se avisa por liberar bloqueos y no se entregan mensajes de una transacción revertida.
 
 - **Resultado:** eventos confirmados Anulados y sus turnos libres, con los eventos conservados informados.
 - **Datos:** usuarios, sedes, canchas, turnos, eventos, reservas, clases y bloqueos.
@@ -2449,6 +2483,8 @@ La consulta conserva los casos Anulados para leer respuestas previas. Indeciso e
 4. Al confirmar, bloquea titular y contratación en el orden común con reservas, invitaciones y ajustes; revalida estado, mes y saldo. Un descuento superior al disponible se rechaza indicando el máximo, sin penalización pendiente ni cambios de participaciones.
 5. Guarda el movimiento con administrador y fecha del servidor y muestra el saldo derivado y el historial. No cambia cupo base, precio, ingresos ni devoluciones.
 
+La confirmación del ajuste guarda un aviso al titular con producto, tipo de horas, operación, cantidad, motivo visible y acceso a sus horas. El email informa el ajuste y no acredita un pago.
+
 #### FL-78. Revertir un ajuste de horas
 
 - **Actor:** Administrador activo con acceso vigente.
@@ -2458,6 +2494,8 @@ La consulta conserva los casos Anulados para leer respuestas previas. Indeciso e
 2. Revisa tipo de horas, cantidad, efecto inverso y saldo resultante.
 3. Bajo los bloqueos comunes revalida elegibilidad, ausencia de reversión y disponibilidad no negativa.
 4. Registra un movimiento inverso vinculado al original, con motivo, responsable y fecha. Conserva ambos y rechaza una segunda reversión, sin editar ni borrar el ajuste.
+
+La reversión efectiva guarda otro aviso al titular que identifica su condición de reversión y el efecto sobre las horas, conservando los dos movimientos. Preparar o cancelar la revisión no envía mensajes.
 
 #### FL-79. Consultar situación financiera de una operación
 
@@ -2484,6 +2522,8 @@ La anulación de un ingreso por FL-44 conserva las devoluciones aunque revele ne
 ## 4. Procesos automáticos
 
 Estos procesos no son flujos: no representan la intención de un actor humano que busca completar una tarea, sino comportamiento que el sistema ejecuta por sí solo. Se documentan aparte, con el mismo nivel de detalle que un flujo, y se referencian desde los flujos que los disparan o que compiten con ellos; por ejemplo, **FL-38** para la finalización manual de clases que la 4.3 también puede hacer. Las reservas se finalizan automáticamente mediante 4.3 o por la acción administrativa de FL-42 cuando su turno terminó.
+
+La devolución vinculada guarda aviso al titular u organizador con tipo Egreso, importe, medio y concepto autorizado, y acceso al detalle propio. No expone Caja ni registros de terceros. Una devolución sin vínculo no genera ese aviso.
 
 ### 4.1 Vencimiento de contrataciones de planes y membresías
 
@@ -2514,34 +2554,6 @@ flowchart TD
     C -->|No| D[Terminar sin cambios]
     C -->|Sí| E[Marcar Vencidos y actualizar fecha]
     E --> F[Registrar cantidad]
-```
-
-### 4.2 Notificaciones por email
-
-- **Objetivo:** avisar por email a un usuario sobre un evento relevante de su cuenta.
-- **Disparador:** invocación desde otro flujo o desde un proceso automático (4.5, 4.6), nunca por iniciativa propia.
-- **Entradas:** usuario destinatario y tipo de evento.
-
-Recorrido:
-
-1. El flujo de origen invoca este proceso indicando el usuario destinatario y el tipo de evento.
-2. El sistema arma el contenido del email según el tipo de evento.
-3. En las operaciones que modifican datos, programa el envío para después de confirmar la transacción; los procesos periódicos bloquean y revalidan cada registro antes de enviarlo y marcarlo, para que dos ejecuciones simultáneas no dupliquen el aviso.
-4. Envía el email a la dirección registrada del usuario.
-
-Alternativas:
-
-- Los tipos de evento contemplados son: confirmación de alta de cuenta (**FL-06**), recuperación de contraseña (**FL-46**), confirmación de una reserva propia (**FL-40**, **FL-51**), invitación a una reserva normal o con membresía (**FL-40**, **FL-51**, **FL-52**), cancelación de una reserva o clase que afecta al usuario (**FL-37**, **FL-60**, **FL-61**), apertura y recordatorios de continuidad (ver 4.5), recordatorio de la próxima clase asignada (ver 4.6), y asignación de participantes o profesores a clases, y de profesores a turnos de planilla.
-- Si el envío falla, registra el error y no revierte la operación que lo originó; queda para reintento según la infraestructura de envío.
-- No existe una bandeja de notificaciones dentro del sistema: el email es el único canal.
-
-- **Resultado:** email enviado o encolado para envío.
-- **Datos:** usuarios, para obtener la dirección de email; no se persiste una tabla de notificaciones.
-
-```mermaid
-flowchart TD
-    A[Flujo de origen dispara el evento] --> B[Armar contenido según el tipo]
-    B --> C[Enviar email al usuario]
 ```
 
 ### 4.3 Finalización automática de clases, reservas y bloqueos vencidos
@@ -2608,7 +2620,7 @@ Recorrido:
 
 1. Celery Beat programa la ejecución diaria.
 2. El sistema localiza asignaciones de participantes a clases **Programadas** cuya fecha sea la del día siguiente y que todavía no recibieron este recordatorio.
-3. Envía el recordatorio a cada participante por su propia asignación (ver 4.2).
+3. Envía el recordatorio a cada participante por su propia asignación.
 4. Marca cada asignación avisada, para no repetir su envío en corridas posteriores.
 
 Alternativas:

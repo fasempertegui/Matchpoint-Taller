@@ -33,3 +33,27 @@ def avisar_contratacion(contratacion, tipo):
             },
         },
     )
+
+
+def avisar_anulacion_contratacion(contratacion, tipo):
+    return encolar_email(
+        clave=f"contratacion_anulada:{tipo}:{contratacion.pk}", tipo=EnvioEmail.Tipo.CONTRATACION_ANULADA,
+        destinatario=contratacion.usuario.email,
+        datos={"vigencia": {"usuario_id": contratacion.usuario_id, "contratacion": {"tipo": tipo, "id": contratacion.pk}},
+               "mensaje": {"parrafos": ["Tu contratación fue anulada. Esto no registra una devolución de dinero."],
+                           "datos": [{"etiqueta": "Producto", "valor": contratacion.producto.nombre}, dato_fecha("Mes cubierto", contratacion.mes_cubierto)],
+                           "acciones": [{"texto": "Ver contratación", "ruta": reverse(f"membresias:mi_{tipo}_contratado", args=[contratacion.pk])}]}})
+
+
+def avisar_ajuste(ajuste):
+    contrato = ajuste.membresia_usuario
+    return encolar_email(
+        clave=f"ajuste_horas:{ajuste.pk}", tipo=EnvioEmail.Tipo.AJUSTE_HORAS, destinatario=contrato.usuario.email,
+        datos={"vigencia": {"usuario_id": contrato.usuario_id}, "mensaje": {
+            "parrafos": ["Se registró una reversión de horas." if ajuste.reversion_de_id else "Se registró un ajuste de horas."],
+            "datos": [{"etiqueta": "Producto", "valor": contrato.producto.nombre},
+                      {"etiqueta": "Horas", "valor": ajuste.get_tipo_horas_display()},
+                      {"etiqueta": "Operación", "valor": ajuste.get_operacion_display()},
+                      {"etiqueta": "Cantidad", "valor": str(ajuste.cantidad)}, {"etiqueta": "Motivo", "valor": ajuste.motivo}],
+            "acciones": [{"texto": "Ver mis horas", "ruta": reverse("membresias:mi_membresia_contratado", args=[contrato.pk])}],
+        }})

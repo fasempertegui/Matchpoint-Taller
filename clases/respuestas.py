@@ -4,6 +4,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from comunicaciones.actividades import avisar_clase
 from auditoria.contexto import contexto_auditoria
 from reservas.models import Evento
 
@@ -38,4 +39,6 @@ def responder_clase(actor, clase_id, respuesta, *, identidad):
             if timezone.now() >= inicio:
                 raise ValidationError("La clase alcanzó su inicio. No se modificó el aviso.")
             relacion.save()
+            for profesor in clase.profesores.select_related("profesor"):
+                avisar_clase(clase, "no_asisto", profesor, "profesor", alumno=relacion)
     return relacion

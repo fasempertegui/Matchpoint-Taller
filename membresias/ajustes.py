@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.utils import timezone
 
+from comunicaciones.contrataciones import avisar_ajuste
 from auditoria.contexto import contexto_auditoria
 from common.bloqueos import bloquear_usuarios
 from reservas.horas import resumen_horas_del_mes, saldo_horas_contratacion
@@ -108,4 +109,5 @@ def confirmar_ajuste(actor, confirmacion, *, contratacion_id, reversion_de_id=No
         if not admite_ajustes(revision["contratacion"]):
             raise ValidationError("El período ya no admite ajustes. Revisá nuevamente la contratación.")
         ajuste.save()
+        avisar_ajuste(ajuste)
     return ajuste
