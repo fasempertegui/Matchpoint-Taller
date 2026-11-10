@@ -29,7 +29,7 @@ Las reglas de negocio, permisos, validaciones de operaciones, confirmaciones y p
 
 Los estados, modalidades, superficies y medios de pago tienen dominios cerrados, indicados en las tablas y representados mediante opciones de Django. Los roles tienen su propio catálogo, referenciado por clave foránea.
 
-Las tablas de actividades concentran `creado_en` y `actualizado_en` en `eventos`. Las entidades mutables y las asignaciones con estado conservan sus propias marcas; `actualizado_en` registra automáticamente la última modificación del registro. Los vínculos inmutables no requieren una fecha de modificación. Las referencias a responsables de registro, anulación y finalización son datos de auditoría separados de las asignaciones de participantes.
+Las tablas de actividades concentran `creado_en` y `actualizado_en` en `eventos`. Las entidades mutables y las asignaciones conservan sus propias marcas; `actualizado_en` registra automáticamente la última modificación del registro. Los vínculos inmutables no requieren una fecha de modificación. Las referencias a responsables de registro, anulación y finalización son datos de auditoría separados de las asignaciones de participantes.
 
 ### 2.4 Credenciales
 
@@ -406,11 +406,11 @@ Representa la asignación de una persona para dictar una clase concreta.
 |---|---|---|---|---|---|
 | PK, FK | `clase_id` | `bigint` | | | `700` |
 | PK, FK | `profesor_id` | `bigint` | | | `4` |
-| | `estado` | `varchar(10)` | | | `activo` (o `inactivo`) |
+| | `identidad` | `uuid` | | Sí | `a55a1660-22dc-40cc-a435-2864620c5800` |
 | | `creado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
 
-La clave primaria compuesta `(clase_id, profesor_id)` impide repetir una asignación. `profesor_id` referencia `usuarios.id`. El estado `activo` o `inactivo` pertenece al vínculo y es distinto del estado de la cuenta y del evento de la clase. Las marcas de creación y modificación corresponden a esa asignación.
+La clave primaria compuesta `(clase_id, profesor_id)` impide repetir una asignación. `profesor_id` referencia `usuarios.id`. La existencia del vínculo representa la asignación. `identidad` distingue cada alta para el seguimiento de emails y las versiones de edición. Retirar elimina la fila; agregar otra vez genera un UUID nuevo. Las marcas de creación y modificación corresponden a esa asignación.
 
 ### 4.17 `clases_alumnos`
 
@@ -421,7 +421,7 @@ Representa la asignación prevista de una persona para asistir a una clase concr
 | PK, FK | `clase_id` | `bigint` | | | `700` |
 | PK, FK | `usuario_id` | `bigint` | | | `1` |
 | | `observaciones` | `text` | Sí | | `Se suma sólo por octubre` |
-| | `estado` | `varchar(10)` | | | `activo` (o `inactivo`) |
+| | `identidad` | `uuid` | | Sí | `a55a1660-22dc-40cc-a435-2864620c5800` |
 | | `respuesta` | `varchar(11)` | | | `asistira` |
 | FK | `respondido_por_id` | `bigint` | Sí | | `NULL` |
 | | `respondido_en` | `timestamptz` | Sí | | `NULL` |
@@ -431,9 +431,9 @@ Representa la asignación prevista de una persona para asistir a una clase concr
 
 La clave primaria compuesta `(clase_id, usuario_id)` impide repetir una asignación. `usuario_id` referencia a la persona directamente, sin depender de su rol de cuenta ni de una contratación. Se mantiene separada de `clases_profesores` y de la asistencia efectiva.
 
-`estado` representa la vigencia de la asignación. `recordatorio_enviado` es una marca por participante y clase, no por clase completa; permite representar envíos independientes. `observaciones` y las fechas de auditoría pertenecen al vínculo.
+`identidad` es un UUID único por participación. Retirar elimina la fila; un nuevo agregado tiene identidad nueva y respuesta inicial Asistirá. `recordatorio_enviado` es una marca por participante y clase, no por clase completa; permite representar envíos independientes. `observaciones` y las fechas de auditoría pertenecen al vínculo.
 
-`respuesta` admite `asistira` (Asistirá, valor por defecto) y `no_asistira` (No asistirá). `respondido_por_id` y `respondido_en` conservan titular y momento de la decisión. Ambos pueden estar vacíos sólo en Asistirá; cuando están informados, el responsable coincide con `usuario_id`. El servicio permite únicamente registrar No asistirá, con titular habilitado, asignación activa, clase Programada e inicio futuro. Repetir el aviso no genera cambios. No permite volver a Asistirá. Asistirá ocupa disponibilidad personal; No asistirá no la ocupa. La auditoría conserva la historia y reactivar mantiene el aviso. La asistencia real, los profesores y la plantilla permanecen separados.
+`respuesta` admite `asistira` (Asistirá, valor por defecto) y `no_asistira` (No asistirá). `respondido_por_id` y `respondido_en` conservan titular y momento de la decisión. Ambos pueden estar vacíos sólo en Asistirá; cuando están informados, el responsable coincide con `usuario_id`. El servicio permite únicamente registrar No asistirá, con titular habilitado, asignación vigente, clase Programada e inicio futuro. Repetir el aviso no genera cambios. No permite volver a Asistirá. Asistirá ocupa disponibilidad personal; No asistirá no la ocupa. La auditoría conserva la historia de respuestas y retiradas; una nueva participación no recupera el aviso anterior. La asistencia real, los profesores y la plantilla permanecen separados.
 
 ### 4.18 `asistencias`
 
@@ -504,6 +504,7 @@ Representa una invitación existente. Quitar al invitado elimina la relación y 
 | | `respuesta` | `varchar(10)` | | | `pendiente` |
 | FK | `respondido_por_id` | `bigint` | Sí | | `NULL` |
 | | `respondido_en` | `timestamptz` | Sí | | `NULL` |
+| | `identidad` | `uuid` | | Sí | `a55a1660-22dc-40cc-a435-2864620c5800` |
 | | `creado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
 
@@ -516,6 +517,8 @@ Condición admite `sin_aplicar`, `socio`, `no_socio`, `cupo_agotado` o `reserva_
 La disponibilidad personal depende exclusivamente de la respuesta Aceptada y es un requisito independiente del beneficio comercial. Horas, total y cantidad computable derivan de la condición efectivamente aplicada y la respuesta. La condición comercial de un turno comenzado se conserva sin recalcular importes o consumos. La anulación del evento excluye los usos de invitado; no borra sus referencias.
 
 Actualizar socios evalúa sólo Aceptadas con adicional antes del inicio. Exige cobertura y horas de invitado disponibles, conserva precio unitario, respuestas y cobros y registra el cambio en auditoría. Los bloqueos comunes coordinan aceptación, eliminación, clases, reservas, ajustes y anulaciones de contrataciones.
+
+`identidad` distingue la invitación concreta para claves de aviso y formularios de respuesta. El borrado conserva su auditoría; volver a invitar crea otra identidad con respuesta Pendiente.
 
 ### 4.21 `sesiones_caja`
 
@@ -735,9 +738,9 @@ Registro persistente de emails preparados por las operaciones. Redis transporta 
 
 `envio_estado_valido` restringe los cinco estados y `envio_intentos_validos` limita a cuatro intentos. `envio_reserva_coherente` exige identificador y fecha de reserva únicamente En proceso. `envio_aceptacion_coherente` exige fecha de aceptación únicamente Enviado. La clave única evita duplicar registros por llamadas concurrentes. Índices por estado/próximo intento y estado/fin de reserva permiten recuperar pendientes y procesamientos interrumpidos.
 
-`datos` contiene tres bloques acotados: `mensaje`, con párrafos, pares etiqueta/valor, acciones internas y apartados; `vigencia`, con referencias de cuenta, actividad, participación, solicitud y vencimiento aplicables; y `enlace`, cuando se prepara una confirmación firmada. No se almacenan contraseñas, tokens ni URLs completas de acceso. El token se construye con la identidad del aviso y su emisión persistida. La recuperación de contraseña utiliza sus mecanismos nativos de Django en el flujo de cuenta.
+`datos` contiene tres bloques acotados: `mensaje`, con párrafos, pares etiqueta/valor, acciones internas y apartados; `vigencia`, con referencias de cuenta, actividad, participación identificada por UUID, solicitud y vencimiento aplicables; y `enlace`, cuando se prepara una confirmación firmada. No se almacenan contraseñas, tokens ni URLs completas de acceso. El token se construye con la identidad del aviso y su emisión persistida. La recuperación de contraseña utiliza sus mecanismos nativos de Django en el flujo de cuenta.
 
-Las referencias técnicas de `datos` no son FK y no conceden acceso: la entrega vuelve a consultar los registros actuales. Así se conserva la evidencia mínima de una retirada aunque su vínculo ya no exista, sin impedir la limpieza de una cuenta inicial. La identidad de una participación incluye su creación para distinguir borrado y nueva asignación con la misma clave compuesta. El registro de envío es la fuente técnica de entrega; la auditoría de la operación conserva sus propias reglas y no copia cuerpos, enlaces o errores sensibles de emails.
+Las referencias técnicas de `datos` no son FK y no conceden acceso: la entrega vuelve a consultar los registros actuales. Así se conserva la evidencia mínima de una retirada aunque su vínculo ya no exista, sin impedir la limpieza de una cuenta inicial. La identidad UUID de una participación distingue borrado y nueva asignación con la misma clave compuesta. El registro de envío es la fuente técnica de entrega; la auditoría de la operación conserva sus propias reglas y no copia cuerpos, enlaces o errores sensibles de emails.
 
 Las transiciones de entrega bloquean el registro sólo mientras se reclama o se confirma el resultado. El proveedor se invoca fuera de la transacción. El identificador de reserva impide que un trabajador interrumpido confirme sobre otra reserva. Vencer una reserva cuenta como interrupción y aplica el siguiente plazo de fallo. Los reintentos son 5, 15 y 60 minutos desde cada fallo; un enlace vence a los quince minutos de su emisión sin extenderse al reintentar. Enviado no representa confirmación de lectura o recepción final y admite el límite de duplicación por aceptación remota sin confirmación local.
 
@@ -757,7 +760,7 @@ La limpieza consulta y bloquea `usuarios`, comprueba `date_joined`, verificació
 - `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
 - Las clases concretas son independientes de las celdas de planilla. Eliminar una celda no modifica las clases ni su indicador de origen.
 - `eventos.turno_id` protege al turno. Las especializaciones `reservas`, `clases` y `bloqueos` protegen su evento.
-- Las relaciones de invitados protegen reserva, usuario y contratación aplicada; quitar un invitado elimina la relación y conserva su historia en auditoría, mientras que rechazar conserva la relación con su respuesta. Las respuestas de alumnos conservan su identidad al reactivar.
+- Las relaciones de invitados protegen reserva, usuario y contratación aplicada; quitar un invitado elimina la relación y conserva su historia en auditoría, mientras que rechazar conserva la relación con su respuesta. Agregar nuevamente un participante crea una identidad nueva y respuesta Asistirá.
 - `bloqueos.evento_origen_id` protege al evento de origen mientras exista la referencia de trazabilidad.
 - `log_auditoria.usuario_id` conserva el identificador del actor sin FK, de modo que limpiar una cuenta inicial no obliga a borrar ni actualizar el historial inmutable.
 - `intentos_auditoria.usuario_id` conserva el identificador del actor autenticado sin FK; los intentos permanecen inmutables aunque esa cuenta inicial se elimine.

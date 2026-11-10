@@ -99,6 +99,8 @@ Anular una contratación conserva su historia y permite un reemplazo para el mis
 
 ## 5. Funcionamiento operativo
 
+Las clases conservan al menos un profesor. Administración puede quitar profesores y participantes únicamente antes del inicio de una clase Programada: se elimina la asignación y se avisa a la persona retirada. La lista muestra a quienes siguen asignados; la auditoría identifica las retiradas y su responsable. Las asistencias se conservan independientemente de la asignación. Agregar nuevamente crea una participación nueva, con respuesta inicial Asistirá. Quitar un invitado de una reserva elimina su relación y le avisa; agregarlo de nuevo crea una invitación Pendiente. Cambiar la planilla no envía estos avisos ni modifica las clases concretas ya generadas.
+
 Cada clase, reserva o bloqueo ocupa exactamente un turno de una hora y se administra de manera independiente. Una operación administrativa puede actuar sobre varios eventos, sin agrupar sus estados ni su auditoría.
 
 La administración respeta lo que ya se encuentra ocupando un turno. Una clase o reserva previamente agendada conserva la cancha, fecha y horario asignados y no debe cancelarse para dar lugar a una nueva actividad. En consecuencia, una reserva existente impide programar una clase en el mismo turno y una clase existente impide registrar una reserva en ese turno.

@@ -1,4 +1,5 @@
 from datetime import time
+from uuid import uuid4
 
 from django.conf import settings
 from django.db import models
@@ -149,10 +150,6 @@ class Clase(models.Model):
 
 
 class ClaseProfesor(models.Model):
-    class Estado(models.TextChoices):
-        ACTIVO = "activo", "Activo"
-        INACTIVO = "inactivo", "Inactivo"
-
     pk = models.CompositePrimaryKey("clase_id", "profesor_id")
     clase = models.ForeignKey(Clase, on_delete=models.CASCADE, related_name="profesores")
     profesor = models.ForeignKey(
@@ -160,7 +157,7 @@ class ClaseProfesor(models.Model):
         on_delete=models.PROTECT,
         related_name="clases_como_profesor",
     )
-    estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
+    identidad = models.UUIDField(default=uuid4, unique=True, editable=False)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
@@ -168,12 +165,6 @@ class ClaseProfesor(models.Model):
         db_table = "clases_profesores"
         ordering = ("clase_id", "profesor_id")
         default_permissions = ()
-        constraints = [
-            models.CheckConstraint(
-                condition=models.Q(estado__in=("activo", "inactivo")),
-                name="clase_profesor_estado_valido",
-            ),
-        ]
         verbose_name = "profesor de clase"
         verbose_name_plural = "profesores de clases"
 
@@ -192,10 +183,6 @@ class ClaseAlumno(models.Model):
     )
     respondido_en = models.DateTimeField(null=True, blank=True)
 
-    class Estado(models.TextChoices):
-        ACTIVO = "activo", "Activo"
-        INACTIVO = "inactivo", "Inactivo"
-
     pk = models.CompositePrimaryKey("clase_id", "usuario_id")
     clase = models.ForeignKey(Clase, on_delete=models.CASCADE, related_name="alumnos")
     usuario = models.ForeignKey(
@@ -204,7 +191,7 @@ class ClaseAlumno(models.Model):
         related_name="clases_como_participante",
     )
     observaciones = models.TextField(blank=True, null=True)
-    estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
+    identidad = models.UUIDField(default=uuid4, unique=True, editable=False)
     recordatorio_enviado = models.BooleanField(default=False)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
@@ -224,10 +211,6 @@ class ClaseAlumno(models.Model):
                     )
                 ),
                 name="clase_alumno_aviso_coherente",
-            ),
-            models.CheckConstraint(
-                condition=models.Q(estado__in=("activo", "inactivo")),
-                name="clase_alumno_estado_valido",
             ),
         ]
         verbose_name = "participante de clase"

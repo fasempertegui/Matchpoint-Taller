@@ -68,9 +68,17 @@
                     <button class="boton boton-primario" name="paso" value="confirmar" type="submit">{% if editando %}Guardar cambios{% else %}Crear clase{% endif %}</button>
                 </div>
             {% else %}
+                {% if editando and not puede_editar_asignaciones %}
+                    <p class="nota-campo">La clase ya comenzó. Sus profesores y participantes se conservan.</p>
+                    <h2>Profesores ({{ profesores|length }})</h2>
+                    <ul class="clase-revision-nombres">{% for persona in profesores %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% endfor %}</ul>
+                    <h2>Participantes ({{ participantes|length }})</h2>
+                    <ul class="clase-revision-nombres">{% for persona in participantes %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% empty %}<li>Sin participantes.</li>{% endfor %}</ul>
+                {% else %}
                 <noscript><p class="mensaje mensaje-info">Para buscar y agregar personas necesitás habilitar JavaScript.</p></noscript>
                 {% include "clases/_selector_personas.html" with campo=formulario.profesores seleccionados=profesores titulo="Profesores" etiqueta="Agregar profesor" vacio="Todavía no agregaste profesores." only %}
                 {% include "clases/_selector_personas.html" with campo=formulario.participantes seleccionados=participantes titulo="Participantes" etiqueta="Agregar participante" vacio="Podés crear la clase sin participantes y agregarlos después." ampliar_busqueda=formulario.buscar_todos.value only %}
+                {% endif %}
                 {% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}
                 {% if not impedimento %}
                 <div class="acciones-formulario">

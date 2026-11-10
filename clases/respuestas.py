@@ -13,15 +13,17 @@ from .servicios import _bloquear_clase, bloquear_usuarios_clase
 
 
 @transaction.atomic
-def responder_clase(actor, clase_id, respuesta):
+def responder_clase(actor, clase_id, respuesta, *, identidad):
     usuario = bloquear_usuarios_clase({actor.pk}).get(actor.pk)
     usuario = exigir_acceso_clases(usuario)
     clase = _bloquear_clase(clase_id)
     relacion = ClaseAlumno.objects.select_for_update().filter(clase=clase, usuario=usuario).first()
     if relacion is None:
         raise PermissionDenied
-    if relacion.estado != "activo" or clase.evento.estado != Evento.Estado.PROGRAMADO:
-        raise ValidationError("Sólo podés registrar el aviso con una asignación activa en una clase Programada.")
+    if str(relacion.identidad) != str(identidad):
+        raise ValidationError("La asignación cambió. Volvé a abrir el detalle de la clase.")
+    if clase.evento.estado != Evento.Estado.PROGRAMADO:
+        raise ValidationError("Sólo podés registrar el aviso con una asignación en una clase Programada.")
     inicio = timezone.make_aware(datetime.combine(clase.evento.turno.fecha, clase.evento.turno.hora_inicio))
     if respuesta != ClaseAlumno.Respuesta.NO_ASISTIRA:
         raise ValidationError("El aviso de no asistencia no se puede modificar.")

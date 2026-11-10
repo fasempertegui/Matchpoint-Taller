@@ -26,10 +26,10 @@
                 </dl>
             </section>
             {% if puede_consultar_grupo or clase.profesores %}
-                {% include "clases/_asignaciones_clase.html" with identificador="profesores" titulo=titulo_profesores personas=clase.profesores vigentes=clase.profesores_vigentes retirados=clase.profesores_retirados vacio="Sin profesores en la clase" solo_propios=False only %}
+                {% include "clases/_asignaciones_clase.html" with identificador="profesores" titulo=titulo_profesores personas=clase.profesores vigentes=clase.profesores_vigentes vacio="Sin profesores en la clase" solo_propios=False only %}
             {% endif %}
             {% if puede_consultar_grupo or clase.participantes %}
-                {% include "clases/_asignaciones_clase.html" with identificador="participantes" titulo=titulo_participantes personas=clase.participantes vigentes=clase.participantes_vigentes retirados=clase.participantes_retirados vacio="Sin participantes en la clase" solo_propios=solo_propios mostrar_asistencia=mostrar_asistencia only %}
+                {% include "clases/_asignaciones_clase.html" with identificador="participantes" titulo=titulo_participantes personas=clase.participantes vigentes=clase.participantes_vigentes vacio="Sin participantes en la clase" solo_propios=solo_propios mostrar_asistencia=mostrar_asistencia only %}
             {% endif %}
             {% if clase.observaciones %}
                 <section class="perfil-seccion" aria-labelledby="clase-observaciones-titulo">
@@ -62,6 +62,7 @@
                         {% csrf_token %}
                         <p>Este aviso libera tu disponibilidad para este horario y no se puede modificar. Si más adelante cambiás de opinión, comunicate con tu profesor.</p>
                         <input type="hidden" name="respuesta" value="no_asistira">
+                        <input type="hidden" name="identidad" value="{{ clase.mi_respuesta.identidad }}">
                         <button class="boton boton-secundario" type="submit">No asisto</button>
                     </form>
                 </details>
@@ -85,5 +86,4 @@
         </aside>
     </div>
 </article>
-<script src="{% static 'js/clase-detalle.js' %}" defer></script>
 {% endblock %}

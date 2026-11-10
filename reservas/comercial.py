@@ -10,6 +10,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
+from comunicaciones.retiradas import avisar_retirada_invitacion
 from clases.servicios import bloquear_usuarios_clase
 from common.disponibilidad import validar_disponibilidad, validar_limite_reservas_organizadas
 from common.fechas import validar_inicio_evento
@@ -198,7 +199,7 @@ def _validar_edicion(actor, administrador, reserva):
 def instantanea_reserva(reserva, invitados):
     return _huella({
         "reserva": [reserva.pk, reserva.evento.estado, reserva.evento.actualizado_en, reserva.membresia_usuario_id, reserva.precio_invitado_aplicado],
-        "invitados": [[i.usuario_id, i.respuesta, i.actualizado_en, i.membresia_usuario_id, i.condicion_aplicada] for i in invitados],
+        "invitados": [[i.usuario_id, str(i.identidad), i.respuesta, i.actualizado_en, i.membresia_usuario_id, i.condicion_aplicada] for i in invitados],
     })
 
 
@@ -230,6 +231,7 @@ def gestionar_invitados(actor, reserva_id, invitados_ids, *, confirmacion=None):
     _validar_edicion(actor, administrador, reserva)
     with contexto_auditoria(actor):
         for pk in sorted(quitados):
+            avisar_retirada_invitacion(reserva, anteriores[pk])
             anteriores[pk].delete()
         for pk in sorted(nuevos):
             relacion = ReservaInvitado(reserva=reserva, usuario=usuarios[pk])
@@ -241,7 +243,7 @@ def gestionar_invitados(actor, reserva_id, invitados_ids, *, confirmacion=None):
 
 def version_invitacion(actor, invitacion):
     return signing.dumps({"actor": actor.pk, "reserva": invitacion.reserva_id,
-                          "creada": invitacion.creado_en.isoformat(), "actualizada": invitacion.actualizado_en.isoformat()},
+                          "identidad": str(invitacion.identidad), "actualizada": invitacion.actualizado_en.isoformat()},
                          salt="reservas.invitacion", compress=True)
 
 

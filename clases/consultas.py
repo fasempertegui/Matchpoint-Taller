@@ -31,7 +31,6 @@ def consultar_clase(usuario, clase_id):
         asistencias = asistencias.filter(usuario=usuario)
         if not (profesores.filter(profesor=usuario).exists() or participantes.exists() or asistencias.exists()):
             raise PermissionDenied
-        profesores = profesores.filter(Q(estado=ClaseProfesor.Estado.ACTIVO) | Q(profesor=usuario))
 
     turno = clase.evento.turno
     ahora = timezone.localtime()
@@ -74,7 +73,6 @@ def consultar_clase(usuario, clase_id):
             {
                 "usuario_id": asignacion.profesor_id,
                 "nombre": str(asignacion.profesor),
-                "estado": asignacion.estado,
             }
             for asignacion in profesores
         ],
@@ -82,7 +80,6 @@ def consultar_clase(usuario, clase_id):
             {
                 "usuario_id": asignacion.usuario_id,
                 "nombre": str(asignacion.usuario),
-                "estado": asignacion.estado,
                 "observaciones": asignacion.observaciones,
                 "respuesta_texto": asignacion.get_respuesta_display(),
                 "respuesta": asignacion.respuesta,
@@ -102,7 +99,7 @@ def consultar_clase(usuario, clase_id):
             for asistencia in asistencias
         ],
         "mi_respuesta": participantes.filter(usuario=usuario).first(),
-        "puede_responder": programada and ahora < inicio and participantes.filter(usuario=usuario, estado="activo", respuesta=ClaseAlumno.Respuesta.ASISTIRA).exists(),
+        "puede_responder": programada and ahora < inicio and participantes.filter(usuario=usuario, respuesta=ClaseAlumno.Respuesta.ASISTIRA).exists(),
         "es_administrador": es_administrador,
         "es_profesor_asignado": es_profesor,
         "puede_editar": es_administrador and programada,
@@ -188,8 +185,8 @@ def consultar_actividad_clases(usuario, fecha_desde, fecha_hasta, usuario_id=Non
         profesor = next(iter(clase.profesores_del_usuario), None)
         participante = next(iter(clase.participaciones_del_usuario), None)
         asistencia = next(iter(clase.asistencias_del_usuario), None)
-        profesor_activo = profesor is not None and profesor.estado == ClaseProfesor.Estado.ACTIVO
-        participante_activo = participante is not None and participante.estado == ClaseAlumno.Estado.ACTIVO
+        profesor_activo = profesor is not None
+        participante_activo = participante is not None
         estado_asistencia = None
         if asistencia is not None:
             estado_asistencia = asistencia.estado
@@ -206,8 +203,8 @@ def consultar_actividad_clases(usuario, fecha_desde, fecha_hasta, usuario_id=Non
             "estado": clase.evento.estado,
 
             "es_generada": clase.es_generada,
-            "asignacion_profesor": profesor.estado if profesor is not None else None,
-            "asignacion_participante": participante.estado if participante is not None else None,
+            "asignacion_profesor": profesor is not None,
+            "asignacion_participante": participante is not None,
             "respuesta_texto": participante.get_respuesta_display() if participante else None,
             "asistencia": estado_asistencia,
             "asistencia_cargada": clase.asistencia_cargada,

@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
 from common.fechas import validar_inicio_evento
+from comunicaciones.retiradas import avisar_retirada_clase
 from common.bloqueos import bloquear_usuarios as bloquear_usuarios_clase
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Reserva, Turno
@@ -203,11 +204,11 @@ def _version_edicion_clase(usuario, clase):
         "actualizado_en": clase.evento.actualizado_en.isoformat(),
         "observaciones": clase.evento.observaciones,
         "profesores": [
-            [fila.profesor_id, fila.estado, fila.actualizado_en.isoformat()]
+            [fila.profesor_id, str(fila.identidad), fila.actualizado_en.isoformat()]
             for fila in clase.profesores.order_by("profesor_id")
         ],
         "participantes": [
-            [fila.usuario_id, fila.estado, fila.actualizado_en.isoformat()]
+            [fila.usuario_id, str(fila.identidad), fila.actualizado_en.isoformat()]
             for fila in clase.alumnos.order_by("usuario_id")
         ],
     }
@@ -221,8 +222,8 @@ def consultar_edicion_clase(usuario, clase_id):
     version = _version_edicion_clase(usuario, clase)
     return {
         "clase": clase,
-        "profesores_ids": [pk for pk, estado, _ in version["profesores"] if estado == "activo"],
-        "participantes_ids": [pk for pk, estado, _ in version["participantes"] if estado == "activo"],
+        "profesores_ids": [pk for pk, _, _ in version["profesores"]],
+        "participantes_ids": [pk for pk, _, _ in version["participantes"]],
         "version": signing.dumps(version, salt="clases.edicion-inicial", compress=True),
     }
 
@@ -240,16 +241,16 @@ def _revision_edicion_clase(
     usuario, clase, destino, usuarios, profesores_ids, participantes_ids, observaciones,
 ):
     version = _version_edicion_clase(usuario, clase)
-    profesores_activos = {pk for pk, estado, _ in version["profesores"] if estado == "activo"}
-    participantes_activos = {pk for pk, estado, _ in version["participantes"] if estado == "activo"}
+    profesores_activos = {pk for pk, _, _ in version["profesores"]}
+    participantes_activos = {pk for pk, _, _ in version["participantes"]}
     nuevos = (profesores_ids - profesores_activos) | (participantes_ids - participantes_activos)
     cambios = []
-    for funcion, actuales, elegidos, historicos in (
-        ("profesor", profesores_activos, profesores_ids, {pk for pk, _, _ in version["profesores"]}),
-        ("participante", participantes_activos, participantes_ids, {pk for pk, _, _ in version["participantes"]}),
+    for funcion, actuales, elegidos in (
+        ("profesor", profesores_activos, profesores_ids),
+        ("participante", participantes_activos, participantes_ids),
     ):
         for pk in sorted(actuales ^ elegidos):
-            accion = "Retirar" if pk in actuales else ("Reincorporar" if pk in historicos else "Agregar")
+            accion = "Retirar" if pk in actuales else "Agregar"
             cambios.append({"nombre": str(usuarios[pk]), "funcion": funcion, "accion": accion})
     return {
         "cambios": cambios,
@@ -275,8 +276,8 @@ def preparar_edicion_clase(
     participantes_ids = normalizar_usuarios_clase(participantes_ids)
     turno = clase.evento.turno
     validar_datos_clase(turno.fecha, turno.hora_inicio, observaciones)
-    profesores_actuales = set(clase.profesores.filter(estado="activo").values_list("profesor_id", flat=True))
-    participantes_actuales = set(clase.alumnos.filter(estado="activo").values_list("usuario_id", flat=True))
+    profesores_actuales = set(clase.profesores.all().values_list("profesor_id", flat=True))
+    participantes_actuales = set(clase.alumnos.all().values_list("usuario_id", flat=True))
     usuarios = {
         persona.pk: persona for persona in Usuario.objects.filter(
             pk__in=profesores_ids | participantes_ids | profesores_actuales | participantes_actuales,
@@ -287,6 +288,10 @@ def preparar_edicion_clase(
         profesores_actuales=profesores_actuales, participantes_actuales=participantes_actuales,
     )
     validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, turno.fecha, turno.hora_inicio, clase_id=clase.pk)
+    if profesores_actuales != profesores_ids or participantes_actuales != participantes_ids:
+        inicio = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))
+        if timezone.localtime() >= inicio:
+            raise ValidationError("Sólo se pueden cambiar asignaciones antes del inicio de la clase.")
     destino = cancha if cancha is not None else turno.cancha
     if destino.pk != turno.cancha_id:
         inicio = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))
@@ -312,8 +317,8 @@ def editar_clase(
     profesores_ids = normalizar_usuarios_clase(profesores_ids)
     participantes_ids = normalizar_usuarios_clase(participantes_ids)
     inicial = Clase.objects.select_related("evento__turno__cancha").get(pk=clase_id)
-    profesores_iniciales = dict(inicial.profesores.values_list("profesor_id", "estado"))
-    participantes_iniciales = dict(inicial.alumnos.values_list("usuario_id", "estado"))
+    profesores_iniciales = dict(inicial.profesores.values_list("profesor_id", "identidad"))
+    participantes_iniciales = dict(inicial.alumnos.values_list("usuario_id", "identidad"))
     origen = inicial.evento.turno
     destino = cancha if cancha is not None else origen.cancha
     cambia_cancha = destino.pk != origen.cancha_id
@@ -362,8 +367,8 @@ def editar_clase(
     }
     evento = Evento.objects.select_for_update().get(pk=inicial.evento_id)
     clase = Clase.objects.select_for_update().get(pk=clase_id)
-    profesores = dict(clase.profesores.values_list("profesor_id", "estado"))
-    participantes = dict(clase.alumnos.values_list("usuario_id", "estado"))
+    profesores = dict(clase.profesores.values_list("profesor_id", "identidad"))
+    participantes = dict(clase.alumnos.values_list("usuario_id", "identidad"))
     if (
         clase.evento_id != inicial.evento_id or evento.turno_id != origen.pk
         or evento.actualizado_en != inicial.evento.actualizado_en
@@ -382,8 +387,11 @@ def editar_clase(
         ).exists():
             raise ValidationError("El turno de la cancha de destino está ocupado por otra actividad.")
 
-    profesores_activos = {pk for pk, estado in profesores.items() if estado == ClaseProfesor.Estado.ACTIVO}
-    participantes_activos = {pk for pk, estado in participantes.items() if estado == ClaseAlumno.Estado.ACTIVO}
+    profesores_activos = set(profesores)
+    participantes_activos = set(participantes)
+    cambia_asignacion = profesores_activos != profesores_ids or participantes_activos != participantes_ids
+    if cambia_asignacion and ahora >= inicio:
+        raise ValidationError("Sólo se pueden cambiar asignaciones antes del inicio de la clase.")
     validar_usuarios_clase(
         usuarios, profesores_ids, participantes_ids,
         profesores_actuales=profesores_activos, participantes_actuales=participantes_activos,
@@ -412,28 +420,20 @@ def editar_clase(
         return clase
 
     with contexto_auditoria(modificado_por):
-        if profesores_activos != profesores_ids:
-            clase.profesores.filter(estado=ClaseProfesor.Estado.ACTIVO).exclude(
-                profesor_id__in=profesores_ids,
-            ).update(estado=ClaseProfesor.Estado.INACTIVO, actualizado_en=ahora)
-            clase.profesores.filter(
-                estado=ClaseProfesor.Estado.INACTIVO, profesor_id__in=profesores_ids,
-            ).update(estado=ClaseProfesor.Estado.ACTIVO, actualizado_en=ahora)
-            ClaseProfesor.objects.bulk_create([
-                ClaseProfesor(clase=clase, profesor_id=pk)
-                for pk in sorted(profesores_ids - set(profesores))
-            ])
-        if participantes_activos != participantes_ids:
-            clase.alumnos.filter(estado=ClaseAlumno.Estado.ACTIVO).exclude(
-                usuario_id__in=participantes_ids,
-            ).update(estado=ClaseAlumno.Estado.INACTIVO, actualizado_en=ahora)
-            clase.alumnos.filter(
-                estado=ClaseAlumno.Estado.INACTIVO, usuario_id__in=participantes_ids,
-            ).update(estado=ClaseAlumno.Estado.ACTIVO, recordatorio_enviado=False, actualizado_en=ahora)
-            ClaseAlumno.objects.bulk_create([
-                ClaseAlumno(clase=clase, usuario_id=pk)
-                for pk in sorted(participantes_ids - set(participantes))
-            ])
+        for relacion in clase.profesores.select_related("profesor").exclude(profesor_id__in=profesores_ids):
+            avisar_retirada_clase(clase, relacion, "profesor")
+            relacion.delete()
+        for relacion in clase.alumnos.select_related("usuario").exclude(usuario_id__in=participantes_ids):
+            avisar_retirada_clase(clase, relacion, "participante")
+            relacion.delete()
+        ClaseProfesor.objects.bulk_create([
+            ClaseProfesor(clase=clase, profesor_id=pk)
+            for pk in sorted(profesores_ids - set(profesores))
+        ])
+        ClaseAlumno.objects.bulk_create([
+            ClaseAlumno(clase=clase, usuario_id=pk)
+            for pk in sorted(participantes_ids - set(participantes))
+        ])
         campos_evento = ["actualizado_en"]
         if evento.observaciones != observaciones:
             evento.observaciones = observaciones
@@ -442,8 +442,8 @@ def editar_clase(
             evento.turno = turnos[turno_destino.pk]
             campos_evento.append("turno")
         evento.save(update_fields=campos_evento)
-        if cambia_cancha and timezone.localtime() >= inicio:
-            raise ValidationError("El turno ya comenzó. No se guardó el cambio de cancha.")
+        if (cambia_cancha or cambia_asignacion) and timezone.localtime() >= inicio:
+            raise ValidationError("El turno ya comenzó. No se guardaron los cambios de cancha o asignaciones.")
     clase.evento = evento
     return clase
 
@@ -598,11 +598,11 @@ def _version_asistencia_clase(clase):
         "estado": clase.evento.estado, "actualizado_en": clase.evento.actualizado_en.isoformat(),
         "observaciones": clase.evento.observaciones,
         "profesores": [
-            [fila.profesor_id, fila.estado, fila.actualizado_en.isoformat()]
+            [fila.profesor_id, str(fila.identidad), fila.actualizado_en.isoformat()]
             for fila in clase.profesores.order_by("profesor_id")
         ],
         "participantes": [
-            [fila.usuario_id, fila.estado, fila.actualizado_en.isoformat()]
+            [fila.usuario_id, str(fila.identidad), fila.actualizado_en.isoformat()]
             for fila in clase.alumnos.order_by("usuario_id")
         ],
         "asistencias": [
@@ -622,7 +622,7 @@ def preparar_carga_asistencia(usuario, clase_id):
         }
         for fila in clase.asistencias.all()
     }
-    for asignacion in clase.alumnos.filter(estado=ClaseAlumno.Estado.ACTIVO):
+    for asignacion in clase.alumnos.all():
         registros.setdefault(asignacion.usuario_id, {
             "usuario": asignacion.usuario_id, "estado": Asistencia.Estado.SIN_REGISTRAR, "observaciones": "",
         })

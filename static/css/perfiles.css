@@ -347,10 +347,6 @@
 .perfil-asignaciones { table-layout: fixed; }
 .perfil-asignaciones td { overflow-wrap: anywhere; }
 
-.perfil-historial-asignaciones { margin-top: 16px; min-height: 40px; }
-.perfil-asignaciones-historial th,
-.perfil-asignaciones-historial td { padding: 8px 12px; }
-
 .perfil-info { display: inline-flex; vertical-align: middle; margin-left: 4px; color: var(--texto-suave); cursor: help; }
 .perfil-info:focus-visible { outline: 2px solid var(--primario); outline-offset: 3px; border-radius: 50%; }
 

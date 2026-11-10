@@ -54,7 +54,6 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     ).order_by("pk"))
     ocupados = {(evento[4], evento[5], evento[6]) for evento in eventos}
     filtros_asignacion = {
-        "estado": "activo",
         "clase__evento__turno__fecha__range": (fecha_desde, fecha_hasta),
     }
     profesores_ocupados = list(ClaseProfesor.objects.filter(

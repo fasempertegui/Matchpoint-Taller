@@ -94,7 +94,7 @@ def validar_datos(datos):
     if solicitud is not None and (not isinstance(solicitud, dict) or set(solicitud) != {"campo", "valor"}):
         raise ValidationError("La solicitud del aviso no es válida.")
     participacion = vigencia.get("participacion")
-    if participacion is not None and (not isinstance(participacion, dict) or set(participacion) != {"tipo", "actividad_id", "creado_en"}):
+    if participacion is not None and (not isinstance(participacion, dict) or set(participacion) != {"tipo", "actividad_id", "identidad"}):
         raise ValidationError("La participación del aviso no es válida.")
     enlace = datos.get("enlace")
     if enlace is not None:
@@ -174,9 +174,9 @@ def verificar_vigencia(envio):
         relacion = modelo.objects.filter(**{campo_persona: usuario.pk, campo_actividad: participacion.get("actividad_id")}).first()
         retiradas = {EnvioEmail.Tipo.RETIRADA_CLASE, EnvioEmail.Tipo.RETIRADA_INVITACION}
         if envio.tipo not in retiradas:
-            if relacion is None or (hasattr(relacion, "estado") and relacion.estado != "activo"):
+            if relacion is None:
                 raise DescartarEnvio("La persona ya no está asignada.")
-            if participacion.get("creado_en") != relacion.creado_en.isoformat():
+            if participacion.get("identidad") != str(relacion.identidad):
                 raise DescartarEnvio("La participación fue sustituida.")
             if modelo == ReservaInvitado and relacion.respuesta == "negativa":
                 raise DescartarEnvio("La invitación fue rechazada.")

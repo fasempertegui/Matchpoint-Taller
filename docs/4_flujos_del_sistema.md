@@ -330,7 +330,7 @@ Recorrido:
 2. El sistema muestra los roles vigentes del usuario.
 3. El administrador elige Reservas, Profesor o Alumno y confirma asignarlo o quitarlo. Una nueva asignación exige cuenta activa y correo verificado, revalidados bajo bloqueo; la provisoria pendiente no invalida la asignación administrativa.
 4. Si solicita quitarlo, comprueba que no existan relaciones que bloqueen el retiro: reservas propias Programadas para Reservas, contrataciones de planes Activas para Alumno o asignaciones activas como profesor en clases Programadas para Profesor.
-5. Si la operación está permitida, actualiza `usuarios_roles`. La comprobación y el retiro se realizan en una misma operación transaccional, coordinada con la creación o reactivación de las relaciones involucradas.
+5. Si la operación está permitida, actualiza `usuarios_roles`. La comprobación y el retiro se realizan en una misma operación transaccional, coordinada con la creación de las relaciones involucradas.
 
 Alternativas:
 
@@ -1044,7 +1044,7 @@ Recorrido:
 Alternativas:
 
 - Los usuarios inactivos, profesores sin rol Profesor, celdas sin profesor, asignaciones en ambas funciones, instalaciones inactivas y turnos fuera de horario originan omisiones informadas.
-- Las asignaciones inactivas y clases Anuladas no generan conflictos. Una clase Finalizada conserva la ocupación y las asignaciones que correspondan.
+- Las clases Anuladas no generan conflictos. Una clase Finalizada conserva la ocupación y las asignaciones que correspondan.
 - Las reservas no Anuladas ocupan su turno e impiden generar en él. La participación personal incompatible en una reserva, aunque sea en otra cancha, omite la candidata completa.
 - Una clase omitida no ocupa el turno ni reserva sus usuarios para las candidatas posteriores.
 - Volver a generar no duplica clases: los turnos ya ocupados se omiten.
@@ -1168,11 +1168,11 @@ flowchart TD
 
 Las operaciones se rigen por criterios, 2.0, 2.1 y 2.12. La creación exige inicio estrictamente futuro y fecha hasta el último día del segundo mes calendario siguiente al actual, en Salta. No admite fechas pasadas ni turnos de hoy que ya comenzaron. Las clases duran una hora y comienzan en punto entre 00:00 y 22:00. La consulta y las correcciones permitidas conservan el acceso a la historia desde el 01/08/2026.
 
-Profesores nuevos o reactivados requieren cuenta activa y rol Profesor. Los participantes nuevos o reactivados requieren cuenta activa, sin exigir Alumno, contratación ni cobro. La selección propone Alumno por defecto y permite buscar cualquier usuario activo. Cada clase conserva al menos una asignación activa de profesor. La clase admite varios participantes sin un máximo bloqueante.
+Profesores nuevos requieren cuenta activa, correo verificado y rol Profesor. Los participantes nuevos requieren cuenta activa y correo verificado, sin exigir Alumno, contratación ni cobro. La selección propone Alumno por defecto y permite buscar cualquier usuario activo. Cada clase conserva al menos un profesor asignado. La clase admite varios participantes sin un máximo bloqueante.
 
-La disponibilidad personal aplica criterios 2.2: docencia vigente, participación de clase activa en Asistirá, organización de reserva e invitación Aceptada impiden otra actividad simultánea. Una persona tampoco puede dictar y participar en la misma clase. Invitaciones de reserva Rechazadas, relaciones inactivas y actividades Anuladas no impiden coincidencias. El aviso No asistirá libera disponibilidad personal.
+La disponibilidad personal aplica criterios 2.2: docencia vigente, participación de clase en Asistirá, organización de reserva e invitación Aceptada impiden otra actividad simultánea. Una persona tampoco puede dictar y participar en la misma clase. Invitaciones de reserva Rechazadas y actividades Anuladas no impiden coincidencias. El aviso No asistirá libera disponibilidad personal.
 
-Las coincidencias personales con reservas se rechazan, sin confirmación que las habilite. La revisión se vincula al actor y al conjunto validado; si cambia, exige nueva revisión. Las altas y reactivaciones conservan la identidad y respuestas de las relaciones concretas.
+Las coincidencias personales con reservas se rechazan, sin confirmación que las habilite. La revisión se vincula al actor y al conjunto validado; si cambia, exige nueva revisión. Cada alta tiene una identidad de participación nueva y su respuesta inicial.
 
 #### FL-34. Crear una clase concreta
 
@@ -1222,7 +1222,7 @@ Recorrido:
 
 1. El sistema muestra datos, participantes y turno actuales.
 2. El administrador realiza cambios.
-3. Valida que quede al menos un profesor con asignación activa y comprueba las condiciones de cada alta o reactivación de profesor o participante. Rechaza participaciones simultáneas incompatibles según criterios 2.2 y personas en ambas funciones. Rechaza coincidencias personales con reservas según las reglas comunes.
+3. Valida que quede al menos un profesor asignado y comprueba las condiciones de cada alta de profesor o participante. Rechaza participaciones simultáneas incompatibles según criterios 2.2 y personas en ambas funciones. Rechaza coincidencias personales con reservas según las reglas comunes.
 4. Si se indicó una nueva sede o cancha, exige que el turno original no haya comenzado, que las instalaciones de destino estén activas y que el turno de destino, con el mismo día y horario, esté disponible, excluyendo el evento actual de esa comprobación. Exige que el turno quede íntegramente dentro de una franja de funcionamiento de la sede (**FL-57**) para ese día; si no se cumple, rechaza la operación.
 5. Coordina los bloqueos de usuarios en orden de identificador, instalaciones, turnos y evento, y revalida permisos, estado, asignaciones y disponibilidad personal antes de guardar. Guarda las asignaciones en sus relaciones específicas y las observaciones en el evento. Si cambió la cancha, actualiza `eventos.turno_id` al turno de la nueva cancha en la misma fecha y hora; bloquea origen y destino, valida la disponibilidad y conserva el turno original. Actualiza la fecha de modificación del evento. Día y hora no cambian.
 6. Si se agregó un profesor que no estaba asignado antes, le envía una notificación por email (ver 4.2).
@@ -1233,8 +1233,8 @@ Alternativas:
 - Un conflicto de cancha o instalaciones de destino inactivas rechaza el traslado. Un conflicto de asignaciones entre clases exige corregir las asignaciones; cambiar de cancha no lo resuelve. Ninguna actividad existente se desplaza.
 - Un cambio de cancha que ubique el turno fuera del horario de funcionamiento de la sede impide guardar, igual que en **FL-34**.
 - Una clase cancelada o completada conserva su historia y no se edita mediante este flujo.
-- Quitar un profesor o un alumno no genera notificación.
-- Reactivar la asignación de un alumno que estaba inactiva establece en `false` su marca de recordatorio enviado (ver 4.6), para que reciba el recordatorio si la clase sigue programada para el día siguiente. El aviso de asistencia y su historia se conservan.
+- Quitar profesores o participantes exige que la clase Programada no haya comenzado. Se captura el aviso, se elimina cada relación y se guarda el email en la misma transacción. La lista conserva sólo asignados; asistencia e historia de auditoría permanecen independientes.
+- Agregar nuevamente crea una relación con UUID nuevo y respuesta inicial Asistirá. No se recupera el aviso No asistirá ni se reutilizan sus claves de envío. Las versiones de edición y de respuesta distinguen cada participación.
 
 - **Resultado:** datos, participantes y, si correspondía, cancha actualizados, con el mismo día y horario.
 - **Datos:** clases, eventos, turnos, profesores y usuarios asignados, y horarios de sede.
@@ -1895,6 +1895,8 @@ Quitar libera disponibilidad, horas o adicional según corresponda. La invitaci�
 - **Resultado:** conjunto revisado de invitaciones confirmado.
 - **Datos:** usuarios, reservas, reservas_invitados, eventos y turnos.
 
+La retirada guarda el aviso al invitado antes de borrar su relación, dentro de la misma transacción, incluso si había rechazado. La auditoría registra persona y responsable. Agregarlo nuevamente crea una invitación Pendiente con UUID nuevo; los formularios y claves de envío de otra invitación no se reutilizan. La operación exige reserva Programada e inicio futuro y revalida ambas condiciones antes de confirmar.
+
 #### FL-70. Actualizar socios de una reserva
 
 - **Objetivo:** Reconocer la condición de socio de invitados antes del inicio.
@@ -1988,7 +1990,7 @@ Recorrido:
 
 Alternativas:
 
-- El aviso es irreversible. Repetir No asistirá no genera una modificación ni cambia el titular o momento del aviso. Retirar y reactivar la asignación conserva la decisión.
+- El aviso es irreversible. Repetir No asistirá no genera una modificación ni cambia el titular o momento del aviso. Retirar elimina la asignación. Agregar nuevamente crea una participación con respuesta Asistirá e identidad nueva; el formulario de la participación anterior no puede responder por ella.
 - Asistirá ocupa disponibilidad personal; No asistirá la libera. Registrar el aviso no exige revalidar disponibilidad porque sólo libera ese compromiso.
 - El aviso corresponde sólo a esa clase, sin cambiar plantilla, asignaciones ni asistencia real. Estar Presente no modifica No asistirá.
 - Administración no actúa por el titular. Los profesores no tienen este circuito por docencia.
@@ -2655,7 +2657,7 @@ flowchart TD
 Recorrido:
 
 1. Celery Beat programa la ejecución diaria.
-2. El sistema localiza asignaciones activas de participantes a clases **Programadas** cuya fecha sea la del día siguiente y que todavía no recibieron este recordatorio.
+2. El sistema localiza asignaciones de participantes a clases **Programadas** cuya fecha sea la del día siguiente y que todavía no recibieron este recordatorio.
 3. Envía el recordatorio a cada participante por su propia asignación (ver 4.2).
 4. Marca cada asignación avisada, para no repetir su envío en corridas posteriores.
 
@@ -2663,7 +2665,7 @@ Alternativas:
 
 - El aviso se envía una vez por asignación participante–clase, no una vez por clase: si el envío falla para un participante puntual, o se lo asigna después de una corrida, la siguiente corrida lo alcanza igual, sin depender del resto de la clase.
 - Una clase cancelada antes del envío queda fuera de esta tarea.
-- Reactivar una asignación inactiva resetea su recordatorio a `false`.
+- Agregar otra vez crea una participación nueva con seguimiento de envíos propio.
 - Sin asignaciones elegibles, la operación finaliza sin modificaciones.
 
 - **Resultado:** participantes con clase programada para el día siguiente notificados, cada uno por su propia asignación.

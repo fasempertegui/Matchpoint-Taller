@@ -1,5 +1,6 @@
 from datetime import datetime, time, timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
@@ -242,6 +243,7 @@ class ReservaInvitado(models.Model):
         ("socio", "Socio con beneficio"), ("no_socio", "No socio"),
         ("cupo_agotado", "Socio con cupo de invitado agotado"), ("reserva_normal", "Reserva normal"),
     ))
+    identidad = models.UUIDField(default=uuid4, unique=True, editable=False)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 

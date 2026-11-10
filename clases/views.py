@@ -51,18 +51,14 @@ def clase_detalle(request, pk):
         })
     asistencias = {fila["usuario_id"]: fila for fila in clase["asistencias"]}
     for participante in clase["participantes"]:
-        if participante["estado"] == "activo":
-            asistencia = asistencias.get(participante["usuario_id"], {"estado": Asistencia.Estado.SIN_REGISTRAR})
-            participante["asistencia_texto"] = Asistencia.Estado(asistencia["estado"]).label
-            participante["badge_asistencia"] = "activo" if asistencia["estado"] == Asistencia.Estado.PRESENTE else "inactivo"
-            participante["observaciones_asistencia"] = asistencia.get("observaciones")
+        asistencia = asistencias.get(participante["usuario_id"], {"estado": Asistencia.Estado.SIN_REGISTRAR})
+        participante["asistencia_texto"] = Asistencia.Estado(asistencia["estado"]).label
+        participante["badge_asistencia"] = "activo" if asistencia["estado"] == Asistencia.Estado.PRESENTE else "inactivo"
+        participante["observaciones_asistencia"] = asistencia.get("observaciones")
 
     for seccion in ("profesores", "participantes"):
-        clase[seccion].sort(key=lambda persona: (
-            persona["estado"] != "activo", persona["nombre"].casefold(), persona["usuario_id"],
-        ))
-        clase[f"{seccion}_vigentes"] = sum(persona["estado"] == "activo" for persona in clase[seccion])
-        clase[f"{seccion}_retirados"] = len(clase[seccion]) - clase[f"{seccion}_vigentes"]
+        clase[seccion].sort(key=lambda persona: (persona["nombre"].casefold(), persona["usuario_id"]))
+        clase[f"{seccion}_vigentes"] = len(clase[seccion])
 
     url_agenda = reverse("agenda:agenda") + "?" + urlencode({
         "sede": clase["sede"]["id"],
@@ -190,6 +186,10 @@ def clase_editar(request, pk):
         },
         profesores_actuales=datos["profesores_ids"], participantes_actuales=datos["participantes_ids"],
     )
+    puede_editar_asignaciones = timezone.localtime() < timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))
+    if not puede_editar_asignaciones:
+        formulario.fields["profesores"].disabled = True
+        formulario.fields["participantes"].disabled = True
     revision = None
     if request.method == "POST" and formulario.is_valid():
         paso = request.POST.get("paso")
@@ -206,6 +206,7 @@ def clase_editar(request, pk):
             formulario.add_error(None, error)
     return render(request, "clases/clase_formulario.html", {
         "editando": True, "clase_id": pk, "version": version,
+        "puede_editar_asignaciones": puede_editar_asignaciones,
         "formulario": formulario, "revision": revision,
         "profesores": formulario.seleccionados("profesores"),
         "participantes": formulario.seleccionados("participantes"),
@@ -475,16 +476,16 @@ def actividad_clases(request, usuario_id):
             campo_asignacion = None
         if campo_asignacion:
             actividad["proximas"] = [
-                fila for fila in actividad["proximas"] if fila[campo_asignacion] == "activo"
+                fila for fila in actividad["proximas"] if fila[campo_asignacion]
             ]
             for grupo in ("clases", "anuladas"):
                 actividad[grupo] = [
                     fila for fila in actividad[grupo]
-                    if fila[campo_asignacion] is not None or (es_alumno and fila["asistencia"] is not None)
+                    if fila[campo_asignacion] or (es_alumno and fila["asistencia"] is not None)
                 ]
         finalizadas = [fila for fila in actividad["clases"] if fila["estado"] == Evento.Estado.FINALIZADO]
         if es_profesor:
-            dictadas = [fila for fila in finalizadas if fila["asignacion_profesor"] == "activo"]
+            dictadas = [fila for fila in finalizadas if fila["asignacion_profesor"]]
             resumen = {
                 "dictadas": len(dictadas), "proximas": len(actividad["proximas"]),
                 "sin_cargar": sum(not fila["asistencia_cargada"] for fila in dictadas),
@@ -492,7 +493,7 @@ def actividad_clases(request, usuario_id):
         else:
             asistencias = [fila["asistencia"] for fila in finalizadas if fila["asistencia"] is not None]
             resumen = {
-                "clases": sum(fila["asignacion_participante"] == "activo" for fila in actividad["clases"]),
+                "clases": sum(fila["asignacion_participante"] for fila in actividad["clases"]),
                 "finalizadas": len(asistencias), "presentes": asistencias.count(Asistencia.Estado.PRESENTE),
                 "ausentes": asistencias.count(Asistencia.Estado.AUSENTE),
                 "sin_registrar": asistencias.count(Asistencia.Estado.SIN_REGISTRAR),
@@ -541,7 +542,7 @@ def actividad_clases(request, usuario_id):
 def clase_responder(request, pk):
     from .respuestas import responder_clase
     try:
-        responder_clase(request.user, pk, request.POST.get("respuesta"))
+        responder_clase(request.user, pk, request.POST.get("respuesta"), identidad=request.POST.get("identidad"))
     except ValidationError as error:
         for mensaje in error.messages:
             messages.error(request, mensaje)

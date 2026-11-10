@@ -21,7 +21,6 @@ def puede_dictar_clase(usuario, clase):
         return False
     return ClaseProfesor.objects.filter(
         clase=clase,
-        estado=ClaseProfesor.Estado.ACTIVO,
         profesor_id=usuario.pk,
         profesor__is_active=True,
         profesor__correo_verificado_en__isnull=False,

@@ -74,7 +74,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
     puede_reservar = usuario.puede_reservar
     profesores_agenda = Prefetch(
         "clase__profesores",
-        queryset=ClaseProfesor.objects.filter(estado="activo").select_related("profesor").order_by("profesor_id"),
+        queryset=ClaseProfesor.objects.all().select_related("profesor").order_by("profesor_id"),
         to_attr="profesores_agenda",
     )
     eventos = Evento.objects.none()
@@ -254,12 +254,8 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
     if detalle and detalle["clase"] is not None and not historial:
         datos_clase = consultar_clase(usuario, detalle["clase"].pk)
         detalle["datos_clase"] = datos_clase
-        detalle["profesores_activos"] = [
-            profesor for profesor in datos_clase["profesores"] if profesor["estado"] == "activo"
-        ]
-        detalle["cantidad_participantes"] = sum(
-            participante["estado"] == "activo" for participante in datos_clase["participantes"]
-        )
+        detalle["profesores_activos"] = datos_clase["profesores"]
+        detalle["cantidad_participantes"] = len(datos_clase["participantes"])
     for columna in columnas:
         columna["hoy"] = columna["fecha"] == ahora.date()
     salto = timedelta(days=1)

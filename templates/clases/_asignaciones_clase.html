@@ -7,33 +7,12 @@
             <tbody>
                 {% if not vigentes %}<tr><td{% if mostrar_asistencia %} colspan="2"{% endif %} class="texto-secundario">{{ vacio }}</td></tr>{% endif %}
                 {% for persona in personas %}
-                    {% if persona.estado == 'activo' %}
                         <tr>
                             <td>{{ persona.nombre }}{% if persona.respuesta_texto %} <span class="estado">{{ persona.respuesta_texto }}</span>{% endif %}{% if persona.observaciones %}<p class="texto-secundario">{{ persona.observaciones|linebreaksbr }}</p>{% endif %}</td>
                             {% if mostrar_asistencia %}<td>{% include "componentes/badge_estado.html" with estado=persona.badge_asistencia texto=persona.asistencia_texto only %}{% if persona.observaciones_asistencia %}<p class="texto-secundario perfil-observaciones">{{ persona.observaciones_asistencia|linebreaksbr }}</p>{% endif %}</td>{% endif %}
                         </tr>
-                    {% endif %}
                 {% endfor %}
             </tbody>
         </table>
     </div>
-    {% if retirados %}
-        <button class="boton boton-secundario boton-chico perfil-historial-asignaciones" type="button" data-historial-asignaciones aria-controls="historial-{{ identificador }}" aria-haspopup="dialog">Ver {{ retirados }} quitado{{ retirados|pluralize:"s" }}</button>
-        <dialog class="modal-confirmacion" id="historial-{{ identificador }}" aria-labelledby="historial-{{ identificador }}-titulo">
-            <form method="dialog" class="modal-confirmacion-formulario">
-                <header class="modal-confirmacion-cabecera"><h2 id="historial-{{ identificador }}-titulo">{% if identificador == 'profesores' %}Profesores quitados{% else %}Participantes quitados{% endif %}</h2></header>
-                <div class="modal-confirmacion-contenido">
-                    <div class="tabla-contenedor">
-                        <table class="perfil-asignaciones perfil-asignaciones-historial" aria-labelledby="historial-{{ identificador }}-titulo">
-                            <thead><tr><th scope="col">Nombre</th></tr></thead>
-                            <tbody>{% for persona in personas %}{% if persona.estado == 'inactivo' %}
-                                <tr><td>{{ persona.nombre }}{% if persona.observaciones %}<p class="texto-secundario">{{ persona.observaciones|linebreaksbr }}</p>{% endif %}</td></tr>
-                            {% endif %}{% endfor %}</tbody>
-                        </table>
-                    </div>
-                </div>
-                <footer class="modal-confirmacion-acciones"><button class="boton boton-secundario" type="submit" autofocus>Cerrar</button></footer>
-            </form>
-        </dialog>
-    {% endif %}
 </section>

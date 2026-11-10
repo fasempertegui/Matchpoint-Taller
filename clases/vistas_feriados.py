@@ -10,7 +10,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from .feriados import consultar_feriados, preparar_feriado, quitar_feriado, registrar_feriado
 from .forms import FeriadoForm
-from .models import ClaseAlumno, ClaseProfesor, Feriado
+from .models import Feriado
 from .permisos import exigir_administracion_clases
 
 
@@ -55,8 +55,8 @@ def feriado_registrar(request):
                     clases.append({
                         "id": clase.pk, "sede": turno.cancha.sede.nombre, "cancha": turno.cancha.nombre,
                         "hora": turno.hora_inicio, "hora_fin": turno.hora_fin,
-                        "profesores": [v.profesor for v in clase.profesores.all() if v.estado == ClaseProfesor.Estado.ACTIVO],
-                        "participantes": [v.usuario for v in clase.alumnos.all() if v.estado == ClaseAlumno.Estado.ACTIVO],
+                        "profesores": [v.profesor for v in clase.profesores.all()],
+                        "participantes": [v.usuario for v in clase.alumnos.all()],
                     })
             elif paso != "editar":
                 raise ValidationError("La acción solicitada no es válida.")

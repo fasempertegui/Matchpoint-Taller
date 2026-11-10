@@ -138,7 +138,6 @@ def validar_periodo_actividad_clases(fecha_desde, fecha_hasta):
 def validar_retiro_rol_profesor(usuario):
     if ClaseProfesor.objects.filter(
         profesor_id=usuario.pk,
-        estado=ClaseProfesor.Estado.ACTIVO,
         clase__evento__estado=Evento.Estado.PROGRAMADO,
     ).exists():
         raise ValidationError(

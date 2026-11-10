@@ -15,7 +15,7 @@ def reservas_personales(usuario_id, *, excluir=None):
 def personas_ocupadas(usuarios_ids, fecha, hora, *, clase_id=None, reserva_id=None):
     from clases.models import ClaseAlumno, ClaseProfesor
     from reservas.models import Evento, Reserva, ReservaInvitado
-    filtros = {"clase__evento__turno__fecha": fecha, "clase__evento__turno__hora_inicio": hora, "estado": "activo"}
+    filtros = {"clase__evento__turno__fecha": fecha, "clase__evento__turno__hora_inicio": hora}
     profesores = ClaseProfesor.objects.filter(profesor_id__in=usuarios_ids, **filtros).exclude(
         clase__evento__estado=Evento.Estado.ANULADO,
     ).exclude(clase_id=clase_id)
