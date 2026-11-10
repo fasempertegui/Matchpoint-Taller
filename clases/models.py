@@ -192,7 +192,6 @@ class ClaseAlumno(models.Model):
     )
     observaciones = models.TextField(blank=True, null=True)
     identidad = models.UUIDField(default=uuid4, unique=True, editable=False)
-    recordatorio_enviado = models.BooleanField(default=False)
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 

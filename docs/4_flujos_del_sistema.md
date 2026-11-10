@@ -113,7 +113,7 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 
 Los recorridos de cuenta incluyen CU-01 (verificar correo) y CU-02 (reenviar/corregir correo inicial).
 
-Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de contrataciones de planes y membresías, 4.3 Finalización automática de clases y reservas vencidas, 4.5 Apertura y recordatorios de continuidad, 4.6 Recordatorio de la próxima clase asignada.
+Procesos automáticos (no son flujos, ver sección 4): 4.1 Vencimiento de contrataciones de planes y membresías, 4.3 Finalización automática de clases y reservas vencidas, 4.5 Apertura y recordatorios de continuidad, 4.6 Recordatorios horarios de clases y 4.8 Recordatorios horarios de reservas.
 
 ---
 
@@ -2602,7 +2602,7 @@ flowchart TD
 
 1. El 25 del mes cubierto selecciona encuestas disponibles de planes y membresías no Anulados.
 2. El último día del mes y el 5 del siguiente selecciona únicamente las encuestas Sin responder. Indeciso es una respuesta y no se incluye en estos recordatorios.
-3. Revalida cuenta habilitada, correo verificado, apertura de la encuesta, estado y respuesta. Vencido puede participar del 1 al 5; Anulado queda excluido.
+3. Revalida cuenta habilitada, correo verificado, apertura de la encuesta, estado y respuesta. Si la tarea comienza después de las 09:00 procesa la campaña de ese mismo día; no recupera campañas de fechas anteriores. Vencido puede participar del 1 al 5; Anulado queda excluido.
 4. Agrupa por titular y fecha un email con los apartados y accesos correspondientes. Conserva seguimiento por contratación y fecha para evitar duplicados e intenta completar pendientes durante ese mismo día.
 5. El mensaje del último día del mes recuerda el plazo restante; el del día 5 destaca que el plazo termina hoy. Los enlaces llevan al detalle con autenticación y no guardan respuestas.
 
@@ -2611,36 +2611,19 @@ Una contratación registrada con encuesta abierta recibe el acceso en su confirm
 - **Resultado:** avisos de encuesta registrados por contratación y fecha.
 - **Datos:** usuarios, planes_usuarios, membresias_usuarios y envios_email.
 
-### 4.6 Recordatorio de la próxima clase asignada
+### 4.6 Recordatorios horarios de clases
 
-- **Objetivo:** recordarle a cada participante la clase que tiene programada, para reducir ausencias.
-- **Disparador:** tarea periódica de Celery, ejecución diaria.
+- **Disparador:** Celery Beat una vez por hora, en punto, en Salta.
 
-Recorrido:
+1. Selecciona clases Programadas cuyo inicio real aún es futuro y cuya hora de aviso ya llegó: desde una hora antes hasta el inicio, excluido. El cálculo incluye el cambio de fecha y recupera una ejecución demorada.
+2. Bloquea las personas involucradas y el evento y revalida estado y horario. Considera profesores y participantes que siguen asignados; excluye No asistirá y cuentas inactivas o sin verificar.
+3. Comprueba la clave de la participación y la cobertura de avisos de creación, asignación o generación dentro de la hora previa, incluidos los pendientes de entrega. No crea otro aviso paralelo cuando el primero debe reintentarse.
+4. Guarda un recordatorio por función e identidad de participación, con fecha, horario, sede, cancha y acceso al detalle. Un nuevo agregado después de una retirada tiene identidad distinta.
+5. Antes de entregar vuelve a comprobar actividad futura, asignación, cuenta y respuesta. Al iniciar o anular la clase se descarta el pendiente; un fallo de transporte conserva su propia política de reintento.
 
-1. Celery Beat programa la ejecución diaria.
-2. El sistema localiza asignaciones de participantes a clases **Programadas** cuya fecha sea la del día siguiente y que todavía no recibieron este recordatorio.
-3. Envía el recordatorio a cada participante por su propia asignación.
-4. Marca cada asignación avisada, para no repetir su envío en corridas posteriores.
+La cola es la fuente del seguimiento, sin marcas de recordatorio en el vínculo. No se agregan revisiones por minuto. La programación y ejecución de campañas se habilita por configuración y permanece apagada hasta la activación coordinada.
 
-Alternativas:
-
-- El aviso se envía una vez por asignación participante–clase, no una vez por clase: si el envío falla para un participante puntual, o se lo asigna después de una corrida, la siguiente corrida lo alcanza igual, sin depender del resto de la clase.
-- Una clase cancelada antes del envío queda fuera de esta tarea.
-- Agregar otra vez crea una participación nueva con seguimiento de envíos propio.
-- Sin asignaciones elegibles, la operación finaliza sin modificaciones.
-
-- **Resultado:** participantes con clase programada para el día siguiente notificados, cada uno por su propia asignación.
-- **Datos:** clases, asignaciones.
-
-```mermaid
-flowchart TD
-    A[Celery inicia tarea diaria] --> B[Buscar asignaciones activas de clases de mañana sin aviso]
-    B --> C{Hay coincidencias}
-    C -->|No| D[Finalizar sin cambios]
-    C -->|Sí| E[Enviar recordatorio y marcar la asignación como avisada]
-```
-
+- **Datos:** eventos, turnos, clases, clases_profesores, clases_alumnos y envios_email.
 
 ### 4.7 Limpieza de cuentas iniciales sin verificar
 
@@ -2649,3 +2632,17 @@ Una revisión horaria en punto selecciona cuentas con siete días cumplidos desd
 Si sólo conserva sus roles iniciales, elimina cuenta y roles en una transacción y registra Eliminada. No borra ni actualiza auditoría: ésta conserva el identificador de actor y permite leerlo sin una cuenta vigente. No registra contraseñas, hashes o enlaces en el resultado técnico.
 
 La verificación usa el mismo bloqueo. Si se verifica primero, la limpieza la conserva; si se elimina primero, la confirmación informa que ya no está disponible. No se rechaza una verificación sólo por edad de la cuenta: hasta su eliminación puede confirmar un enlace vigente. Un reenvío, una corrección y un enlace vencido no reinician los siete días ni eliminan por sí solos la cuenta.
+
+### 4.8 Recordatorios horarios de reservas
+
+- **Disparador:** Celery Beat una vez por hora, en punto, en Salta.
+
+1. Selecciona reservas Programadas con inicio futuro y hora de aviso cumplida, hasta una hora de anticipación. Usa la fecha y hora real del turno, también al cruzar medianoche o recuperar una tarea demorada.
+2. Bajo bloqueo revalida organizador e invitados vinculados. Incluye al organizador, invitados Aceptados e invitados Pendientes; excluye Rechazados, cuentas inactivas y correos sin verificar.
+3. Omite participaciones cubiertas por la confirmación o invitación creada dentro de la hora previa, aunque el aviso siga pendiente. Usa una única clave por organizador–reserva o identidad del invitado.
+4. Guarda un aviso de inicio al organizador y Aceptados, y uno de respuesta pendiente a quienes todavía no respondieron. Antes de entregar adapta el texto a la respuesta actual y revalida el vínculo y la actividad.
+5. Aceptar después de recibir el recordatorio de Pendiente no genera otro recordatorio. Rechazar, retirar o alcanzar el inicio descarta un pendiente. Volver a invitar crea una participación nueva con su propia cobertura.
+
+Los enlaces llevan al detalle autorizado de la reserva, sin exponer Caja ni información comercial ajena. No hay revisión por minuto ni marcas paralelas al registro de envíos.
+
+- **Datos:** eventos, turnos, reservas, reservas_invitados y envios_email.

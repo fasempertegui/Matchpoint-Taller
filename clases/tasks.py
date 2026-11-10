@@ -18,3 +18,12 @@ def finalizar_clases_vencidas():
     cantidad = servicios.finalizar_clases_vencidas()
     logger.info("Clases finalizadas automáticamente: %s", cantidad)
     return cantidad
+
+
+@shared_task(acks_late=True, reject_on_worker_lost=True, autoretry_for=(OperationalError,), retry_backoff=30, retry_kwargs={"max_retries": 5})
+def recordar_clases():
+    from django.conf import settings
+    if not settings.EMAILS_TAREAS_PROGRAMADAS_HABILITADAS:
+        return 0
+    from comunicaciones.recordatorios import encolar_recordatorios_clases
+    return encolar_recordatorios_clases()

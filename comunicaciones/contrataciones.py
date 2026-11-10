@@ -11,7 +11,8 @@ from .servicios import encolar_email
 
 def avisar_contratacion(contratacion, tipo):
     parrafos = ["Administración registró tu contratación. Esta confirmación no acredita un pago."]
-    if encuesta_abierta(contratacion):
+    incluye_encuesta = encuesta_abierta(contratacion)
+    if incluye_encuesta:
         _, cierre = ventana_continuidad(contratacion.mes_cubierto)
         parrafos.append(
             f"Ya podés responder la encuesta sobre {date_format(mes_siguiente(contratacion.mes_cubierto), 'F Y')}. "
@@ -21,7 +22,7 @@ def avisar_contratacion(contratacion, tipo):
         clave=f"contratacion:{tipo}:{contratacion.pk}", tipo=EnvioEmail.Tipo.CONTRATACION,
         destinatario=contratacion.usuario.email,
         datos={
-            "vigencia": {"usuario_id": contratacion.usuario_id, "contratacion": {"tipo": tipo, "id": contratacion.pk}},
+            "vigencia": {"usuario_id": contratacion.usuario_id, "contratacion": {"tipo": tipo, "id": contratacion.pk}, "incluye_encuesta": incluye_encuesta},
             "mensaje": {
                 "parrafos": parrafos,
                 "datos": [

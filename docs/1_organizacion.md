@@ -158,6 +158,8 @@ Administración consulta para el mes elegido quiénes de la plantilla semanal ti
 Los cobros menores al importe contratado pueden ser parciales o responder a acuerdos excepcionales aceptados administrativamente. El concepto del ingreso explica el cobro y las observaciones de la contratación conservan acuerdos generales. No se recalcula deuda ni se modifica el precio contratado a partir de esa explicación.
 
 
+Los recordatorios de clases y reservas se revisan por hora y se envían una hora antes, sin duplicar los avisos de altas tardías. Los pendientes de invitación reciben un recordatorio para responder; No asisto y las invitaciones Rechazadas no reciben recordatorio de inicio. Las encuestas se comunican el 25, último día del mes y 5 del siguiente a las 09:00 de Salta, agrupadas por persona; los dos recordatorios incluyen sólo las que siguen Sin responder.
+
 ### 5.5 Ajustes de horas y consulta comercial
 
 Administración otorga o quita horas enteras positivas por contratación y rol, con motivo obligatorio visible para el titular, responsable y fecha. Sólo se ajustan contrataciones Activas del mes vigente o programadas para meses futuros. Los movimientos preservan el cupo base; su reversión exige motivo, responsable y fecha, no borra el ajuste y sólo se admite una vez. Un descuento o reversión no puede dejar horas disponibles negativas ni afectar participaciones existentes. No hay penalizaciones pendientes ni movimientos automáticos de dinero.

@@ -219,7 +219,6 @@ Representa una contratación concreta de un plan por un usuario para un mes cale
 | | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
 | | `respuesta_continuidad` | `varchar(12)` | | | `indeciso` |
 | | `continuidad_respondida_en` | `timestamptz` | Sí | | `2026-10-25 12:00:00-03` |
-| | `aviso_vencimiento_enviado` | `boolean` | | | `false` |
 | FK | `anulado_por_id` | `bigint` | Sí | | `NULL` |
 | | `anulado_en` | `timestamptz` | Sí | | `NULL` |
 | | `motivo_anulacion` | `text` | | | `''` |
@@ -234,7 +233,7 @@ Representa una contratación concreta de un plan por un usuario para un mes cale
 
 Administración informa la fecha efectiva permitida y el mes siguiente se habilita desde el día 25. El servicio valida límites, producto, precio revisado y exclusividad mensual. Las renovaciones crean otro contrato; no exigen una referencia comercial del portal.
 
-`aviso_vencimiento_enviado` conserva la marca de envío de esa contratación. No se duplican en esta tabla asignaciones, asistencia ni importes cobrados.
+La cobertura de apertura y recordatorios de encuesta se conserva en `envios_email` por contratación y fecha de campaña. No se duplican en esta tabla asignaciones, asistencia ni importes cobrados.
 
 ### 4.8 `membresias_usuarios`
 
@@ -255,7 +254,6 @@ Representa una contratación concreta de membresía por un usuario para un mes c
 | | `estado` | `varchar(10)` | | | `activo` (o `anulado`, `vencido`) |
 | | `respuesta_continuidad` | `varchar(12)` | | | `indeciso` |
 | | `continuidad_respondida_en` | `timestamptz` | Sí | | `2026-10-25 12:00:00-03` |
-| | `aviso_vencimiento_enviado` | `boolean` | | | `false` |
 | FK | `anulado_por_id` | `bigint` | Sí | | `NULL` |
 | | `anulado_en` | `timestamptz` | Sí | | `NULL` |
 | | `motivo_anulacion` | `text` | | | `''` |
@@ -431,13 +429,12 @@ Representa la asignación prevista de una persona para asistir a una clase concr
 | | `respuesta` | `varchar(11)` | | | `asistira` |
 | FK | `respondido_por_id` | `bigint` | Sí | | `NULL` |
 | | `respondido_en` | `timestamptz` | Sí | | `NULL` |
-| | `recordatorio_enviado` | `boolean` | | | `false` |
 | | `creado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-02 10:00:00-03` |
 
 La clave primaria compuesta `(clase_id, usuario_id)` impide repetir una asignación. `usuario_id` referencia a la persona directamente, sin depender de su rol de cuenta ni de una contratación. Se mantiene separada de `clases_profesores` y de la asistencia efectiva.
 
-`identidad` es un UUID único por participación. Retirar elimina la fila; un nuevo agregado tiene identidad nueva y respuesta inicial Asistirá. `recordatorio_enviado` es una marca por participante y clase, no por clase completa; permite representar envíos independientes. `observaciones` y las fechas de auditoría pertenecen al vínculo.
+`identidad` es un UUID único por participación. Retirar elimina la fila; un nuevo agregado tiene identidad nueva y respuesta inicial Asistirá. La clave de recordatorio usa función e identidad de participación en `envios_email`, sin otra marca de entrega en esta tabla. `observaciones` y las fechas de auditoría pertenecen al vínculo.
 
 `respuesta` admite `asistira` (Asistirá, valor por defecto) y `no_asistira` (No asistirá). `respondido_por_id` y `respondido_en` conservan titular y momento de la decisión. Ambos pueden estar vacíos sólo en Asistirá; cuando están informados, el responsable coincide con `usuario_id`. El servicio permite únicamente registrar No asistirá, con titular habilitado, asignación vigente, clase Programada e inicio futuro. Repetir el aviso no genera cambios. No permite volver a Asistirá. Asistirá ocupa disponibilidad personal; No asistirá no la ocupa. La auditoría conserva la historia de respuestas y retiradas; una nueva participación no recupera el aviso anterior. La asistencia real, los profesores y la plantilla permanecen separados.
 
@@ -757,6 +754,10 @@ Registro técnico del procesamiento de cuentas iniciales sin verificar: identifi
 
 La limpieza consulta y bloquea `usuarios`, comprueba `date_joined`, verificación, roles y relaciones protegidas; su eliminación y resultado técnico forman una transacción. No utiliza `is_active` para representar verificación. El historial de auditoría conserva sus actores como identificadores y no se edita para permitir la eliminación. `verificacion_solicitada_en` es seguimiento técnico y se excluye de las diferencias de actualización del trigger; email y verificación sí se auditan.
 
+
+Los recordatorios de clase tienen clave por función y UUID de participación; los de reserva identifican al organizador por reserva y a cada invitado por su UUID. Aceptar una invitación no cambia esa identidad ni reinicia el recordatorio. Los avisos de alta con `cubre_recordatorio` y las referencias de generación aportan cobertura incluso mientras están pendientes o fallidos, con la política de reintento de la misma fila.
+
+Los emails de continuidad tienen clave por usuario y fecha de campaña. `vigencia.encuestas` conserva tipo, identificador de contratación y clase de aviso por apartado; `campana_fecha` y `vencer_en` acotan la entrega a ese día de Salta. La entrega filtra encuestas Anuladas, cerradas o respondidas cuando es un recordatorio, sin modificar la evidencia persistida. `incluye_encuesta` en la confirmación comercial cubre la apertura de una contratación tardía. No hay marcas paralelas en las contrataciones.
 
 Los avisos de reserva guardan su referencia y los de invitados la identidad de participación. Los agrupados de generación conservan una referencia de clase e identidad docente por apartado; al entregar se filtran los apartados sin vigencia sin reescribir el contenido persistido. `cubre_recordatorio` registra que un aviso de creación o asignación se originó dentro de la hora previa, por participación; no sustituye el estado de entrega del aviso. Las claves de respuestas y cambios de cancha distinguen transiciones efectivas aunque compartan marca temporal.
 

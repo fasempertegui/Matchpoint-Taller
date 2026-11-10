@@ -157,7 +157,6 @@ class PlanUsuario(models.Model):
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
     respuesta_continuidad = models.CharField(max_length=12, choices=RespuestaContinuidad.choices, blank=True, default="")
     continuidad_respondida_en = models.DateTimeField(null=True, blank=True)
-    aviso_vencimiento_enviado = models.BooleanField(default=False)
     anulado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contrataciones_plan_anuladas",
         null=True, blank=True,
@@ -261,7 +260,6 @@ class MembresiaUsuario(models.Model):
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
     respuesta_continuidad = models.CharField(max_length=12, choices=RespuestaContinuidad.choices, blank=True, default="")
     continuidad_respondida_en = models.DateTimeField(null=True, blank=True)
-    aviso_vencimiento_enviado = models.BooleanField(default=False)
     anulado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="contrataciones_membresia_anuladas",
         null=True, blank=True,

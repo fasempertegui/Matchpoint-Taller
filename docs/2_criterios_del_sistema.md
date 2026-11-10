@@ -365,6 +365,12 @@ Antes de entregar se comprueban cuenta activa y verificada, dirección vigente, 
 
 No generan emails cambios de roles, planilla u observaciones, vencimiento efectivo, movimientos sin vínculo, anulación de movimientos, liberación de bloqueos, finalización, asistencia ni resultado de uso. Los avisos de asignación dentro de la hora previa conservan cobertura de recordatorio por participación; las campañas horarias utilizan ese seguimiento.
 
+Los recordatorios se revisan una vez por hora, en punto de Salta. Se seleccionan inicios todavía futuros cuya hora de aviso ya llegó, sin exigir coincidencia exacta del minuto ni de la fecha. Un aviso de alta dentro de la hora previa cubre el recordatorio aun pendiente de entrega; el fallo se reintenta sobre el mismo envío. La identidad de participación distingue retiradas y nuevos agregados. Aceptar después del recordatorio de invitación Pendiente no produce otro aviso de inicio.
+
+Las campañas de encuesta se revisan a las 09:00: el 25 corresponde a apertura; el último día real del mes y el 5 siguiente son recordatorios sólo de Sin responder. El 5 usa el mes cubierto anterior y admite contratos Vencidos con encuesta abierta. Cada persona recibe un agrupado por fecha; antes de entregar se excluyen los apartados que perdieron vigencia o recibieron respuesta. El aviso vence al terminar ese día de Salta. La confirmación de una contratación tardía con encuesta abierta cubre su apertura, sin excluir recordatorios posteriores cuando falte responder.
+
+`EMAILS_TAREAS_PROGRAMADAS_HABILITADAS` controla la programación y ejecución de recordatorios y campañas, con valor desactivado por defecto e independiente de los interruptores de entrega. No se activan por aplicar migraciones. El seguimiento de envíos reemplaza las marcas individuales de recordatorio y vencimiento.
+
 ### 2.7 Portal de usuarios
 
 El sistema tendrá un único portal de acceso externo, para cualquier persona que se registre como usuario, separado de la interfaz de gestión interna (ver intro de la sección 2).

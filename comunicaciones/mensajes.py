@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from copy import copy, deepcopy
 from decimal import Decimal
 from urllib.parse import urlencode, urlsplit
@@ -79,7 +79,7 @@ def validar_datos(datos):
     mensaje = datos["mensaje"]
     _validar_bloque(mensaje, principal=True)
     vigencia = datos.get("vigencia", {})
-    if not isinstance(vigencia, dict) or set(vigencia) - {"usuario_id", "evento_id", "vencer_en", "solicitud", "participacion", "contratacion", "reserva_id", "cubre_recordatorio", "clases_generadas"}:
+    if not isinstance(vigencia, dict) or set(vigencia) - {"usuario_id", "evento_id", "vencer_en", "solicitud", "participacion", "contratacion", "reserva_id", "cubre_recordatorio", "clases_generadas", "encuestas", "campana_fecha", "incluye_encuesta"}:
         raise ValidationError("La vigencia del email no es válida.")
     for campo in ("usuario_id", "evento_id", "reserva_id"):
         if campo in vigencia and (type(vigencia[campo]) is not int or vigencia[campo] <= 0):
@@ -91,7 +91,7 @@ def validar_datos(datos):
                 raise ValueError
         except (TypeError, ValueError):
             raise ValidationError("El vencimiento debe incluir zona horaria.") from None
-    if "cubre_recordatorio" in vigencia and type(vigencia["cubre_recordatorio"]) is not bool:
+    if any(campo in vigencia and type(vigencia[campo]) is not bool for campo in ("cubre_recordatorio", "incluye_encuesta")):
         raise ValidationError("El seguimiento del recordatorio no es válido.")
     generadas = vigencia.get("clases_generadas")
     if generadas is not None and (
@@ -100,6 +100,18 @@ def validar_datos(datos):
                or type(fila["clase_id"]) is not int or not isinstance(fila["identidad"], str) or type(fila["cubre_recordatorio"]) is not bool for fila in generadas)
     ):
         raise ValidationError("Las clases del aviso no son válidas.")
+    encuestas = vigencia.get("encuestas")
+    if encuestas is not None:
+        if not isinstance(encuestas, list) or len(encuestas) != len(mensaje.get("apartados", [])) or any(
+            not isinstance(fila, dict) or set(fila) != {"tipo", "id", "aviso"}
+            or fila["tipo"] not in ("plan", "membresia") or type(fila["id"]) is not int or fila["id"] <= 0
+            or fila["aviso"] not in ("apertura", "recordatorio", "ultimo_dia") for fila in encuestas
+        ):
+            raise ValidationError("Las encuestas del aviso no son válidas.")
+        try:
+            date.fromisoformat(vigencia["campana_fecha"])
+        except (KeyError, TypeError, ValueError):
+            raise ValidationError("La fecha de campaña no es válida.") from None
     solicitud = vigencia.get("solicitud")
     if solicitud is not None and (not isinstance(solicitud, dict) or set(solicitud) != {"campo", "valor"}):
         raise ValidationError("La solicitud del aviso no es válida.")
@@ -249,6 +261,36 @@ def preparar_mensaje(envio):
             raise DescartarEnvio("Ya no hay clases vigentes para el profesor.")
         envio.datos["mensaje"]["apartados"] = apartados
         envio.datos["vigencia"]["clases_generadas"] = referencias
+    if envio.tipo == EnvioEmail.Tipo.CONTINUIDAD:
+        from .encuestas import campana_del_dia
+        from membresias.continuidad import MODELOS_CONTINUIDAD, encuesta_abierta
+        campana = campana_del_dia()
+        if campana is None or envio.datos["vigencia"].get("campana_fecha") != campana[0].isoformat():
+            raise DescartarEnvio("La fecha de la campaña terminó o aún no comenzó.")
+        envio = copy(envio)
+        envio.datos = deepcopy(envio.datos)
+        apartados, referencias = [], []
+        for referencia, apartado in zip(envio.datos["vigencia"].get("encuestas", []), envio.datos["mensaje"].get("apartados", [])):
+            contrato = MODELOS_CONTINUIDAD[referencia["tipo"]].objects.filter(
+                pk=referencia["id"], usuario=usuario, mes_cubierto=campana[1],
+            ).first()
+            if contrato is not None and encuesta_abierta(contrato) and referencia["aviso"] == campana[2] and (
+                referencia["aviso"] == "apertura" or not contrato.respuesta_continuidad
+            ):
+                apartados.append(apartado)
+                referencias.append(referencia)
+        if not apartados:
+            raise DescartarEnvio("Ya no hay encuestas pendientes para este aviso.")
+        envio.datos["mensaje"]["apartados"] = apartados
+        envio.datos["vigencia"]["encuestas"] = referencias
+    if envio.tipo == EnvioEmail.Tipo.RECORDATORIO_RESERVA and envio.datos.get("vigencia", {}).get("participacion", {}).get("tipo") == "invitado":
+        from reservas.models import ReservaInvitado
+        from .recordatorios import texto_recordatorio_invitado
+        referencia = envio.datos["vigencia"]["participacion"]
+        relacion = ReservaInvitado.objects.get(reserva_id=referencia["actividad_id"], usuario=usuario, identidad=referencia["identidad"])
+        envio = copy(envio)
+        envio.datos = deepcopy(envio.datos)
+        envio.datos["mensaje"]["parrafos"] = [texto_recordatorio_invitado(relacion.respuesta)]
     return renderizar_mensaje(envio, usuario=usuario)
 
 

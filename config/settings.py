@@ -196,6 +196,14 @@ if EMAILS_HABILITADOS:
         "schedule": 60.0,
     }
 
+EMAILS_TAREAS_PROGRAMADAS_HABILITADAS = os.environ.get("EMAILS_TAREAS_PROGRAMADAS_HABILITADAS", "0") == "1"
+if EMAILS_TAREAS_PROGRAMADAS_HABILITADAS:
+    CELERY_BEAT_SCHEDULE.update({
+        "recordar-clases-cada-hora": {"task": "clases.tasks.recordar_clases", "schedule": crontab(minute=0)},
+        "recordar-reservas-cada-hora": {"task": "reservas.tasks.recordar_reservas", "schedule": crontab(minute=0)},
+        "continuidad-cada-dia": {"task": "membresias.tasks.avisar_continuidad", "schedule": crontab(hour=9, minute=0)},
+    })
+
 CUENTAS_LIMPIEZA_HABILITADA = os.environ.get("CUENTAS_LIMPIEZA_HABILITADA", "0") == "1"
 if CUENTAS_LIMPIEZA_HABILITADA:
     CELERY_BEAT_SCHEDULE["limpiar-cuentas-iniciales"] = {
