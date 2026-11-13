@@ -359,6 +359,13 @@ class UsuarioCrearForm(NombreUsuarioAutomaticoMixin, forms.Form):
 
 
 class UsuarioEditarForm(forms.ModelForm):
+    contrasena = forms.CharField(
+        label="Tu contraseña",
+        strip=False,
+        widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "current-password"}),
+        help_text="Ingresá tu contraseña de administrador para solicitar el cambio de correo.",
+    )
+
     class Meta:
         model = Usuario
         fields = ("email",)

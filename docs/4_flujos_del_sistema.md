@@ -216,13 +216,13 @@ flowchart TD
 - **Objetivo:** modificar el correo de un usuario existente.
 - **Actor:** administrador.
 - **Precondición:** usuario localizado mediante **FL-03**.
-- **Entrada:** nuevo correo.
+- **Entrada:** nuevo correo y contraseña vigente del administrador que realiza la acción.
 
 Recorrido:
 
 1. El sistema identifica al usuario mediante su nombre, apellido y nombre de usuario, y presenta el correo actual.
-2. El administrador ingresa el nuevo correo.
-3. El sistema valida el formato, que no quede vacío y que no pertenezca a otro usuario, sin distinguir mayúsculas de minúsculas.
+2. El administrador ingresa el nuevo correo y su propia contraseña en el modal de cambio de correo.
+3. El sistema valida el formato, que no quede vacío y que no pertenezca a otro usuario, sin distinguir mayúsculas de minúsculas. Al confirmar bloquea la cuenta del administrador y comprueba su contraseña vigente antes de modificar datos o generar emails. Si es incorrecta, informa el error junto al campo sin aplicar la operación. La contraseña no se guarda ni se incluye en emails o auditoría.
 4. En una cuenta sin verificar, corrige el correo inicial e invalida sus enlaces anteriores.
 5. En una cuenta verificada, conserva el correo vigente y guarda el pendiente con su fecha y revisión. Notifica la solicitud al vigente y envía el enlace al nuevo.
 6. El titular abre el enlace de quince minutos y confirma mediante POST. Bajo bloqueo se revalida la unicidad, se actualiza el correo, se limpia el pendiente y se notifica a ambas direcciones sin incluir la otra en el texto. Los roles y la verificación se conservan.
@@ -317,7 +317,7 @@ Un enlace usado informa “El correo ya está verificado” y no restituye un ro
 
 La pantalla informativa muestra el estado y los disparadores; no presenta formularios abiertos. Reenviar solicita correo y devuelve idéntica respuesta exista o no la cuenta. Bajo bloqueo sólo crea otro aviso si sigue sin verificar y pasaron cinco minutos desde la solicitud anterior; los enlaces del mismo correo conservan sus plazos individuales.
 
-Corregir exige sesión y contraseña vigente al titular. Comprueba unicidad del correo bajo transacción, actualiza la dirección y registra otro email de verificación; los enlaces del correo anterior dejan de ser válidos. Administración utiliza esa misma corrección inicial para una cuenta sin verificar, con permiso de edición y sin pedir la contraseña del titular. El cambio de una cuenta ya verificada sigue **FL-04**. La corrección no cambia roles, habilitación, provisoria ni fecha de alta. Los formularios se muestran sólo al elegir su acción.
+Corregir exige sesión y contraseña vigente al titular. Comprueba unicidad del correo bajo transacción, actualiza la dirección y registra otro email de verificación; los enlaces del correo anterior dejan de ser válidos. Administración utiliza esa misma corrección inicial para una cuenta sin verificar, con permiso de edición y la contraseña vigente del administrador que realiza la acción, sin pedir la contraseña del titular. El cambio de una cuenta ya verificada sigue **FL-04**. La corrección no cambia roles, habilitación, provisoria ni fecha de alta. Los formularios se muestran sólo al elegir su acción.
 
 #### FL-07. Asignar o quitar un rol a un usuario
 

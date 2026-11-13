@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
+from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_GET, require_http_methods
 
 from auditoria.contexto import contexto_auditoria
@@ -139,6 +140,7 @@ def usuario_sugerir_contrasena(request):
 
 @login_required
 @permission_required("usuarios.change_usuario", raise_exception=True)
+@sensitive_post_parameters("contrasena")
 @require_http_methods(["POST"])
 def usuario_editar(request, pk):
     usuario = get_object_or_404(Usuario, pk=pk)
@@ -148,9 +150,12 @@ def usuario_editar(request, pk):
     from .correo import solicitar_cambio_correo
 
     try:
-        usuario = solicitar_cambio_correo(request.user, usuario.pk, formulario.cleaned_data["email"])
+        usuario = solicitar_cambio_correo(
+            request.user, usuario.pk, formulario.cleaned_data["email"],
+            contrasena=formulario.cleaned_data["contrasena"],
+        )
     except ValidationError as error:
-        return JsonResponse({"errores": {"email": error.messages}}, status=400)
+        return JsonResponse({"errores": error.message_dict if hasattr(error, "message_dict") else {"email": error.messages}}, status=400)
     return JsonResponse({
         "email": usuario.email, "pendiente": bool(usuario.email_pendiente),
         "mensaje": "Se solicitó el cambio. El correo vigente se conserva hasta confirmar la nueva dirección." if usuario.email_pendiente else "Se corrigió el correo y se envió la verificación inicial.",

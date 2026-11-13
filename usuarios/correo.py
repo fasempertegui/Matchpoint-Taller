@@ -26,12 +26,14 @@ def _aviso_correo(usuario, direccion, tipo, clave, texto, *, revision=None, conf
 
 
 @transaction.atomic
-def solicitar_cambio_correo(actor, usuario_id, email):
+def solicitar_cambio_correo(actor, usuario_id, email, *, contrasena):
     actor = exigir_acceso_operativo(actor)
     usuarios = bloquear_usuarios({actor.pk, usuario_id})
     actor = exigir_acceso_operativo(usuarios.get(actor.pk))
     if not actor.has_perm("usuarios.change_usuario"):
         raise PermissionDenied
+    if not actor.check_password(contrasena):
+        raise ValidationError({"contrasena": "La contraseña no es correcta."})
     usuario = usuarios.get(usuario_id)
     if usuario is None:
         raise ValidationError("La cuenta ya no está disponible.")

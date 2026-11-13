@@ -76,7 +76,7 @@ def _guardar_correccion(usuario, email, responsable):
 
 
 @transaction.atomic
-def corregir_correo_inicial_por_administracion(actor, usuario_id, email):
+def corregir_correo_inicial_por_administracion(actor, usuario_id, email, *, contrasena):
     from django.core.exceptions import PermissionDenied
     from common.bloqueos import bloquear_usuarios
     from .acceso import exigir_acceso_operativo
@@ -86,6 +86,8 @@ def corregir_correo_inicial_por_administracion(actor, usuario_id, email):
     actor = exigir_acceso_operativo(usuarios.get(actor.pk))
     if not actor.has_perm("usuarios.change_usuario"):
         raise PermissionDenied
+    if not actor.check_password(contrasena):
+        raise ValidationError({"contrasena": "La contraseña no es correcta."})
     usuario = usuarios.get(usuario_id)
     if usuario is None or usuario.correo_verificado_en is not None:
         raise ValidationError("La corrección inicial requiere una cuenta sin verificar.")

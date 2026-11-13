@@ -5,10 +5,12 @@ document.addEventListener("DOMContentLoaded", function () {
     var abrir = document.querySelector("[data-abrir-correo]");
     var formulario = modal.querySelector("[data-correo-formulario]");
     var campo = formulario.querySelector("[name='email']");
+    var contrasena = formulario.querySelector("[name='contrasena']");
     var correoActual = document.querySelector("[data-correo-actual]");
     var guardar = modal.querySelector("[data-correo-guardar]");
     var cancelar = modal.querySelector("[data-correo-cancelar]");
     var errorCampo = modal.querySelector("[data-correo-error]");
+    var errorContrasena = modal.querySelector("[data-correo-contrasena-error]");
     var errorGeneral = modal.querySelector("[data-correo-error-general]");
     var aviso = document.querySelector("[data-correo-guardado]");
     var valorGuardado = campo.value;
@@ -16,6 +18,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function limpiarErrores() {
         errorCampo.hidden = true;
+        errorContrasena.hidden = true;
+        contrasena.removeAttribute("aria-invalid");
+        contrasena.setAttribute("aria-describedby", "correo-contrasena-ayuda");
         errorGeneral.hidden = true;
         campo.removeAttribute("aria-invalid");
         campo.removeAttribute("aria-describedby");
@@ -23,6 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     abrir.addEventListener("click", function () {
         campo.value = valorGuardado;
+        contrasena.value = "";
         limpiarErrores();
         aviso.hidden = true;
         document.documentElement.classList.add("modal-abierto");
@@ -35,6 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (enviando) evento.preventDefault();
     });
     modal.addEventListener("close", function () {
+        contrasena.value = "";
         document.documentElement.classList.remove("modal-abierto");
         abrir.focus();
     });
@@ -47,6 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
         guardar.disabled = true;
         cancelar.disabled = true;
         campo.readOnly = true;
+        contrasena.readOnly = true;
         formulario.setAttribute("aria-busy", "true");
         try {
             var respuesta = await fetch(formulario.action, {
@@ -68,6 +76,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     campo.setAttribute("aria-invalid", "true");
                     campo.setAttribute("aria-describedby", errorCampo.id);
                 }
+                if (datos.errores.contrasena) {
+                    errorContrasena.textContent = datos.errores.contrasena.join(" ");
+                    errorContrasena.hidden = false;
+                    contrasena.setAttribute("aria-invalid", "true");
+                    contrasena.setAttribute("aria-describedby", "correo-contrasena-ayuda " + errorContrasena.id);
+                }
                 if (datos.errores.__all__) {
                     errorGeneral.textContent = datos.errores.__all__.join(" ");
                     errorGeneral.hidden = false;
@@ -88,8 +102,13 @@ document.addEventListener("DOMContentLoaded", function () {
             guardar.disabled = false;
             cancelar.disabled = false;
             campo.readOnly = false;
+            contrasena.readOnly = false;
+            contrasena.value = "";
             formulario.removeAttribute("aria-busy");
-            if (modal.open) campo.focus();
+            if (modal.open) {
+                if (!errorContrasena.hidden) contrasena.focus();
+                else campo.focus();
+            }
         }
     });
 });
