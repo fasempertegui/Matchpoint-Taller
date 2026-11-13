@@ -8,9 +8,9 @@
     {% if origen %}<p>{% if tipo == 'reserva' %}{{ origen.numero }} · {{ origen.organizador }} · {{ origen.evento.get_estado_display }}{% else %}{{ origen.producto.nombre }} · {{ origen.usuario }} · {{ origen.mes_cubierto|date:"F Y" }} · {{ origen.get_estado_display }}{% endif %}</p>
         <dl class="perfil-lista"><div class="perfil-fila"><dt>Ingresos vigentes</dt><dd>$ {{ situacion.ingresos|floatformat:"2g" }}</dd></div><div class="perfil-fila"><dt>Devoluciones vigentes</dt><dd>$ {{ situacion.devoluciones|floatformat:"2g" }}</dd></div><div class="perfil-fila"><dt>Máximo disponible para devolver</dt><dd><strong>$ {{ situacion.maximo_devolucion|floatformat:"2g" }}</strong></dd></div></dl>
     {% else %}<p>Devolución sin vínculo a una reserva o contratación. El concepto debe explicar el motivo.</p>{% endif %}
-    <form method="post" action="?tipo={{ tipo }}"{% if not revision %} data-ingreso-formulario{% endif %}>{% csrf_token %}
+    <form method="post" action="?tipo={{ tipo }}"{% if not revision %} data-ingreso-formulario{% endif %} novalidate>{% csrf_token %}
         {% if origen %}<input type="hidden" name="origen" value="{{ origen.pk }}">{% endif %}
-        {{ formulario.non_field_errors }}
+        {% include "caja/_errores_movimiento.html" %}
         {% if revision %}
             <h2>Revisar devolución</h2>
             <p>{{ revision.concepto|linebreaksbr }}</p><p><strong>$ {{ revision.monto|floatformat:"2g" }}</strong> · {{ medio_texto }}</p>

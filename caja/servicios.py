@@ -53,8 +53,10 @@ def efectivo_esperado(sesion):
 
 
 @transaction.atomic
-def abrir_caja(actor, *, efectivo_inicial, motivo_apertura="", revision):
+def abrir_caja(actor, *, efectivo_inicial, motivo_apertura="", revision, contrasena):
     actor = exigir_acceso_caja(actor, bloquear=True)
+    if not actor.check_password(contrasena):
+        raise ValidationError({"contrasena": "La contraseña no es correcta."})
     if SesionCaja.objects.filter(estado=SesionCaja.Estado.ABIERTA).exists():
         raise ValidationError("Ya existe una sesión de caja abierta. Consultala antes de continuar.")
     inicial = _validar_importe("efectivo_inicial", efectivo_inicial)
@@ -83,11 +85,13 @@ def abrir_caja(actor, *, efectivo_inicial, motivo_apertura="", revision):
 
 
 @transaction.atomic
-def cerrar_caja(actor, sesion_id, *, efectivo_contado, motivo_diferencia=""):
+def cerrar_caja(actor, sesion_id, *, efectivo_contado, motivo_diferencia="", contrasena):
     actor = exigir_acceso_caja(actor, bloquear=True)
     sesion = SesionCaja.objects.select_for_update().get(pk=sesion_id)
     if sesion.responsable_id != actor.pk:
         raise PermissionDenied
+    if not actor.check_password(contrasena):
+        raise ValidationError({"contrasena": "La contraseña no es correcta."})
     if sesion.estado != SesionCaja.Estado.ABIERTA:
         raise ValidationError("La sesión ya está cerrada y no admite modificaciones.")
     contado = _validar_importe("efectivo_contado", efectivo_contado)

@@ -11,11 +11,13 @@ class AperturaCajaForm(forms.Form):
     efectivo_inicial = forms.DecimalField(label="Efectivo inicial", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
     motivo_apertura = forms.CharField(min_length=5, label="Motivo si difiere del último contado", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
     revision = forms.CharField(widget=forms.HiddenInput())
+    contrasena = forms.CharField(label="Tu contraseña", strip=False, widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "current-password"}), help_text="Confirmá tu contraseña para abrir la caja.")
 
 
 class CierreCajaForm(forms.Form):
     efectivo_contado = forms.DecimalField(label="Efectivo contado", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
     motivo_diferencia = forms.CharField(min_length=5, label="Motivo si hay diferencia", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    contrasena = forms.CharField(label="Tu contraseña", strip=False, widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "current-password"}), help_text="Confirmá tu contraseña para cerrar la caja.")
 
 
 class SeleccionOrigenMovimientoForm(forms.Form):

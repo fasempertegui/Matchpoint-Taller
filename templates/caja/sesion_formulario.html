@@ -5,8 +5,9 @@
 {% if sesion %}<p>{{ sesion.numero }} · Efectivo esperado: <strong>$ {{ esperado|floatformat:"2g" }}</strong></p><p>Contá el efectivo disponible. Si difiere del esperado, explicá el motivo.</p>
 {% elif ultimo_cierre %}<p>Último cierre: {{ ultimo_cierre.numero }} · Contado: <strong>$ {{ ultimo_cierre.efectivo_contado|floatformat:"2g" }}</strong></p><p>Declará el efectivo inicial. Si difiere del último contado, explicá el motivo.</p>
 {% else %}<p>Declará el efectivo inicial para abrir la primera sesión.</p>{% endif %}
-<form method="post">{% csrf_token %}{{ formulario.non_field_errors }}
-{% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{{ campo.errors }}{% else %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endif %}{% endfor %}
+<form method="post" novalidate>{% csrf_token %}
+{% include "caja/_errores_movimiento.html" %}
+{% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{% else %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}
 <div class="acciones-formulario"><a class="boton boton-secundario" href="{% if sesion %}{% url 'caja:sesion_detalle' sesion.pk %}{% else %}{% url 'caja:caja_actual' %}{% endif %}">Cancelar</a><button class="boton boton-primario" type="submit">Confirmar {% if sesion %}cierre{% else %}apertura{% endif %}</button></div>
 </form></section>
 {% if sesion %}{% include "caja/_resumen.html" %}{% endif %}
