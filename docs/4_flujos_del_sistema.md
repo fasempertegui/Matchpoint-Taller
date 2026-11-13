@@ -1474,19 +1474,20 @@ Apertura, registro, anulación y cierre se confirman dentro de `transaction.atom
 
 - **Objetivo:** iniciar la sesión de la única caja.
 - **Actor:** Administrador con acceso vigente.
-- **Entrada:** efectivo inicial no negativo y motivo de apertura cuando difiere del último contado.
+- **Entrada:** efectivo inicial no negativo, motivo de apertura cuando difiere del último contado y contraseña vigente del administrador que abre la caja.
 - **Precondición:** ninguna sesión abierta.
 
 Recorrido:
 
 1. Solicita Abrir caja y consulta el contado del último cierre como referencia.
 2. Declara efectivo inicial. Si difiere, se muestra un aviso y solicita explicación breve; si coincide o es la primera apertura, el motivo queda vacío.
-3. Al confirmar, el servicio verifica acceso, importe, último cierre y motivo, e intenta crear la sesión en una transacción.
+3. Ingresa su contraseña. Al confirmar, el servicio verifica acceso, contraseña vigente del administrador, importe, último cierre y motivo, e intenta crear la sesión en una transacción. La contraseña no se guarda en la sesión de caja ni en la auditoría.
 4. Guarda responsable fijo, momento del servidor, inicial y motivo y muestra la sesión abierta.
 
 Alternativas:
 
 - El índice único parcial impide aperturas simultáneas; si otra solicitud abrió primero, se informa la sesión existente.
+- Si falta la contraseña o es incorrecta, se indica el error en el formulario y no se abre la caja. La contraseña debe ingresarse nuevamente al corregir los datos.
 - No se pide saldo bancario ni se crea un ingreso por el fondo inicial.
 - La sesión puede atravesar medianoche y no se cierra automáticamente. Cancelar no crea registros.
 
@@ -1498,9 +1499,9 @@ flowchart TD
     A[Solicitar apertura] --> B[Declarar efectivo inicial]
     B --> C{Difiere del último contado}
     C -->|Sí| D[Explicar diferencia]
-    C -->|No o primera apertura| E[Confirmar]
+    C -->|No o primera apertura| E[Ingresar contraseña y confirmar]
     D --> E
-    E --> F{Datos válidos y sin sesión abierta}
+    E --> F{Contraseña y datos válidos y sin sesión abierta}
     F -->|Sí| G[Crear sesión con responsable fijo]
     F -->|No| H[Informar y conservar formulario]
 ```
@@ -1590,19 +1591,20 @@ flowchart TD
 
 - **Objetivo:** comparar el efectivo contado con el esperado y cerrar la sesión.
 - **Actor:** responsable de la sesión abierta.
-- **Entradas:** efectivo contado no negativo y motivo si la diferencia no es cero.
+- **Entradas:** efectivo contado no negativo, motivo si la diferencia no es cero y contraseña vigente del responsable que abrió la sesión.
 
 Recorrido:
 
 1. Solicita Cerrar caja y revisa el resumen por clase y medio.
-2. Declara contado y explica la diferencia cuando corresponde.
-3. Al confirmar, el servicio bloquea la sesión y recalcula esperado: `efectivo_inicial + ingresos en efectivo + aportes − egresos en efectivo − retiros`, considerando solo movimientos Vigentes. Los egresos por devoluciones en efectivo restan; los medios digitales no intervienen.
+2. Declara contado, explica la diferencia cuando corresponde e ingresa su contraseña.
+3. Al confirmar, el servicio verifica el acceso y la contraseña vigente del responsable, bloquea la sesión y recalcula esperado: `efectivo_inicial + ingresos en efectivo + aportes − egresos en efectivo − retiros`, considerando solo movimientos Vigentes. Los egresos por devoluciones en efectivo restan; los medios digitales no intervienen. La contraseña no se guarda en la sesión de caja ni en la auditoría.
 4. Calcula `diferencia = contado − esperado`, positiva para sobrante y negativa para faltante. Valida contado y motivo y guarda esperado, contado, diferencia, motivo y momento del servidor; cambia a Cerrada.
 5. Muestra el cierre confirmado. El cambio participa de la auditoría transversal.
 
 Alternativas:
 
 - Si el cálculo definitivo detecta diferencia sin motivo, solicita revisar y completar; cancelar mantiene Abierta.
+- Si falta la contraseña o es incorrecta, se indica el error en el formulario y la sesión permanece Abierta. La contraseña debe ingresarse nuevamente al corregir los datos. Conocer la contraseña de otro administrador no permite cerrar su sesión.
 - No genera movimientos por diferencias ni admite reapertura o modificación del cierre desde el servicio.
 - El resumen histórico incluye movimientos con `anulado_en IS NULL OR anulado_en > cerrada_en`. No suma los anulados con `anulado_en <= cerrada_en`. Las anulaciones posteriores se identifican sin cambiar los resultados guardados.
 - El servicio impide modificar, borrar o reabrir una sesión Cerrada y agregarle movimientos. La tabla participa de auditoría; no tiene triggers adicionales de inmutabilidad en PostgreSQL.
@@ -1612,8 +1614,8 @@ Alternativas:
 
 ```mermaid
 flowchart TD
-    A[Solicitar cierre] --> B[Revisar resumen y declarar contado]
-    B --> C[Bloquear sesión y recalcular esperado]
+    A[Solicitar cierre] --> B[Revisar resumen, declarar contado e ingresar contraseña]
+    B --> C[Validar contraseña del responsable, bloquear sesión y recalcular esperado]
     C --> D{Diferencia distinta de cero}
     D -->|Sí| E[Exigir explicación]
     D -->|No| F[Validar y cerrar]

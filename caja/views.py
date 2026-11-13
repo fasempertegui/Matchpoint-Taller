@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.debug import sensitive_post_parameters
 
 from .forms import (
     AnulacionMovimientoForm, AperturaCajaForm, CierreCajaForm, HistorialMovimientosForm,
@@ -35,6 +36,7 @@ def caja_actual(request):
 @login_required
 @never_cache
 @require_http_methods(["GET", "POST"])
+@sensitive_post_parameters("contrasena")
 def caja_abrir(request):
     actor = exigir_acceso_caja(request.user)
     sesion = SesionCaja.objects.filter(estado=SesionCaja.Estado.ABIERTA).first()
@@ -47,7 +49,7 @@ def caja_abrir(request):
         try:
             sesion = abrir_caja(actor, **formulario.cleaned_data)
         except ValidationError as error:
-            formulario.add_error(None, error.messages)
+            formulario.add_error(None, error)
             datos = formulario.data.copy()
             datos["revision"] = revision_apertura(actor, ultimo_cierre())
             formulario.data = datos
@@ -78,6 +80,7 @@ def sesion_detalle(request, pk):
 @login_required
 @never_cache
 @require_http_methods(["GET", "POST"])
+@sensitive_post_parameters("contrasena")
 def caja_cerrar(request, pk):
     actor = exigir_acceso_caja(request.user)
     sesion = get_object_or_404(SesionCaja, pk=pk)
@@ -91,7 +94,7 @@ def caja_cerrar(request, pk):
         try:
             cerrar_caja(actor, pk, **formulario.cleaned_data)
         except ValidationError as error:
-            formulario.add_error(None, error.messages)
+            formulario.add_error(None, error)
         else:
             messages.success(request, f"La caja {sesion.numero} fue cerrada.")
             return redirect("caja:sesion_detalle", pk=pk)
