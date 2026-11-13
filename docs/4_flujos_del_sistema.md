@@ -306,12 +306,12 @@ Una cuenta existente no se duplica. Los errores de datos se corrigen antes de co
 
 - **Actor:** titular que posee el enlace firmado, sin necesidad de una sesión previa.
 
-1. Al abrir el enlace se comprueba la firma y se muestra un botón de confirmación. El GET no modifica la cuenta.
-2. El POST con CSRF válido bloquea la cuenta y comprueba dirección e instante de emisión. A los quince minutos el enlace vence.
+1. Al abrir el enlace mediante GET se comprueba la firma y se verifica automáticamente el correo, sin solicitar otra confirmación.
+2. La operación bloquea la cuenta y comprueba dirección, revisión del correo e instante de emisión. A los quince minutos el enlace vence.
 3. Si sigue sin verificar, registra `correo_verificado_en` y asigna Reservas una única vez a una cuenta no administrativa, sin Alumno ni Profesor. Administrador conserva su exclusividad.
-4. Informa el resultado sin otro email. Verificar no reactiva ni retira la obligación provisoria.
+4. Informa el resultado sin otro email y ofrece ir a Inicio si hay sesión o iniciar sesión si no la hay. La barra superior contiene únicamente el enlace del título y logo, sin navegación ni menú de cuenta. Verificar no reactiva ni retira la obligación provisoria.
 
-Un enlace usado informa “El correo ya está verificado” y no restituye un rol retirado. Un enlace vencido o de correo corregido permite solicitar otro. Si la cuenta ya fue eliminada informa indisponibilidad y ofrece iniciar un nuevo registro. Mientras exista y el enlace sea vigente puede verificarse aunque hayan pasado siete días. La escritura participa de auditoría sin contraseña, token o enlace.
+Un enlace usado informa “El correo ya está verificado” y no restituye un rol retirado. Un enlace vencido o de correo corregido informa que se debe solicitar otro. Si la cuenta ya fue eliminada informa indisponibilidad y la posibilidad de iniciar un nuevo registro. La pantalla conserva una única acción de salida según la sesión. Mientras exista y el enlace sea vigente puede verificarse aunque hayan pasado siete días. La escritura participa de auditoría sin contraseña, token o enlace.
 
 #### CU-02. Reenviar verificación y corregir el correo inicial
 

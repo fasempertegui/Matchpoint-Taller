@@ -6,7 +6,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .forms import CorregirCorreoForm, ReenvioVerificacionForm
-from .verificacion import consultar_verificacion, corregir_correo_inicial, reenviar_verificacion, verificar_correo
+from .verificacion import corregir_correo_inicial, reenviar_verificacion, verificar_correo
 
 
 @never_cache
@@ -16,20 +16,13 @@ def estado_verificacion(request):
 
 
 @never_cache
-@require_http_methods(["GET", "POST"])
+@require_GET
 def confirmar_verificacion(request):
-    token = request.POST.get("token", "") if request.method == "POST" else request.GET.get("token", "")
-    resultado = ""
-    confirmar = False
     try:
-        if request.method == "POST":
-            resultado = verificar_correo(token)
-        else:
-            resultado = consultar_verificacion(token)
-            confirmar = not resultado
+        resultado = verificar_correo(request.GET.get("token", ""))
     except ValidationError as error:
         resultado = error.messages[0]
-    return render(request, "autenticacion/verificacion_confirmar.html", {"resultado": resultado, "confirmar": confirmar, "token": token if confirmar else ""})
+    return render(request, "autenticacion/verificacion_confirmar.html", {"resultado": resultado})
 
 
 @never_cache

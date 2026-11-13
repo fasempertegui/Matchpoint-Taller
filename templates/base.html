@@ -25,6 +25,7 @@
                 <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="44" height="44">
                 <span>Academia TM</span>
             </a>
+            {% block navegacion %}
             {% if request.user.is_authenticated %}
                 <nav aria-label="Navegación principal">
                     <div class="navegacion-destinos">
@@ -48,6 +49,7 @@
                     </details>
                 </nav>
             {% endif %}
+            {% endblock %}
         </div>
     </header>
 
