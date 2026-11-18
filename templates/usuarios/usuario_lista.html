@@ -56,7 +56,7 @@
                 <td>
                     <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>
                     {% if usuario_obj.es_administrador_listado %}
-                        <span role="img" aria-label="Administrador" title="Administrador">⭐</span>
+                        <span role="img" tabindex="0" aria-label="Administrador" data-tooltip="Administrador">⭐</span>
                     {% endif %}
                 </td>
                 <td>{{ usuario_obj.username }}</td>

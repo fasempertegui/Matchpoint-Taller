@@ -12,13 +12,13 @@
         <span data-asistencia-estado="sin_registrar"{% if fila.formulario.estado.value == 'presente' or fila.formulario.estado.value == 'ausente' %} hidden{% endif %}>{% indicador_estado "asistencia" "sin_registrar" %}</span>
     </td>
     <td class="acciones-columna"><div class="asistencia-fila-acciones">
-        <button class="asistencia-marcar asistencia-marcar-presente" type="button" data-marcar-asistencia="presente" data-estado-tooltip="Marcar presente" aria-label="Marcar presente" aria-pressed="{% if fila.formulario.estado.value == 'presente' %}true{% else %}false{% endif %}">
+        <button class="asistencia-marcar asistencia-marcar-presente" type="button" data-marcar-asistencia="presente" data-tooltip="Marcar presente" aria-label="Marcar presente" aria-pressed="{% if fila.formulario.estado.value == 'presente' %}true{% else %}false{% endif %}">
             <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
         </button>
-        <button class="asistencia-marcar asistencia-marcar-ausente" type="button" data-marcar-asistencia="ausente" data-estado-tooltip="Marcar ausente" aria-label="Marcar ausente" aria-pressed="{% if fila.formulario.estado.value == 'ausente' %}true{% else %}false{% endif %}">
+        <button class="asistencia-marcar asistencia-marcar-ausente" type="button" data-marcar-asistencia="ausente" data-tooltip="Marcar ausente" aria-label="Marcar ausente" aria-pressed="{% if fila.formulario.estado.value == 'ausente' %}true{% else %}false{% endif %}">
             <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg>
         </button>
-        <button class="asistencia-marcar asistencia-observaciones-boton" type="button" data-editar-asistencia data-estado-tooltip="Observaciones" aria-label="Observaciones de {{ fila.persona }}">
+        <button class="asistencia-marcar asistencia-observaciones-boton" type="button" data-editar-asistencia data-tooltip="Observaciones" aria-label="Observaciones de {{ fila.persona }}">
             <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
         </button></div></td>
 </tr>

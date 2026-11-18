@@ -1,5 +1,5 @@
 {% load static %}
-<a class="sidebar-enlace{% if item.activo %} sidebar-enlace-activo{% endif %}" href="{{ item.url }}" title="{{ item.nombre }}" aria-label="{{ item.nombre }}"{% if item.actual %} aria-current="page"{% elif item.activo %} aria-current="location"{% endif %}>
+<a class="sidebar-enlace{% if item.activo %} sidebar-enlace-activo{% endif %}" href="{{ item.url }}" data-tooltip="{{ item.nombre }}" aria-label="{{ item.nombre }}"{% if item.actual %} aria-current="page"{% elif item.activo %} aria-current="location"{% endif %}>
     <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#{{ item.icono }}"/></svg>
     <span class="sidebar-texto">{{ item.nombre }}</span>
 </a>

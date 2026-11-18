@@ -8,11 +8,8 @@
 .indicador-estado-negativo { color: var(--peligro); }
 .indicador-estado:focus-visible { outline: 2px solid var(--primario); outline-offset: 3px; border-radius: 50%; }
 .indicador-estado-impresion { display: none; }
-.estado-tooltip { position: fixed; z-index: 1000; max-width: min(280px, calc(100vw - 16px)); padding: 10px 14px; border: 1px solid var(--borde); border-radius: 8px; background: var(--superficie); color: var(--texto); box-shadow: 0 6px 20px #00000018; font-size: .875rem; line-height: 1.5; }
-.estado-tooltip[hidden] { display: none; }
 .estado-identidad { display: inline-flex; align-items: center; gap: 8px; }
 @media print {
-    .estado-tooltip { display: none !important; }
     .indicador-estado { width: auto; height: auto; gap: 6px; }
     .indicador-estado-impresion { display: inline; color: var(--texto); }
 }

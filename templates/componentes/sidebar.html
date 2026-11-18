@@ -9,7 +9,7 @@
 <aside class="sidebar" id="sidebar" aria-label="Navegación de Academia TM">
     <div class="sidebar-cabecera">
         <a class="sidebar-marca" href="{% url 'inicio' %}" aria-label="Academia TM · Inicio"><img src="{% static 'img/logo.png' %}" width="36" height="36" alt=""><span class="sidebar-texto">Academia TM</span></a>
-        <button type="button" class="sidebar-boton-icono sidebar-plegar" id="sidebar-plegar" aria-label="Contraer barra lateral" aria-expanded="true" aria-controls="sidebar-contenido" title="Contraer barra lateral">
+        <button type="button" class="sidebar-boton-icono sidebar-plegar" id="sidebar-plegar" aria-label="Contraer barra lateral" aria-expanded="true" aria-controls="sidebar-contenido" data-tooltip="Contraer barra lateral">
             <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#plegar"/></svg>
         </button>
         <button type="button" class="sidebar-boton-icono sidebar-cerrar" id="sidebar-cerrar" aria-label="Cerrar navegación">
@@ -18,7 +18,7 @@
     </div>
     <div class="sidebar-contenido" id="sidebar-contenido">
         {% if navegacion_app.mostrar_perfil %}
-            <a class="sidebar-perfil{% if navegacion_app.perfil_activo %} sidebar-perfil-activo{% endif %}" href="{% url 'usuarios:usuario_detalle' request.user.pk %}" title="Mi perfil"{% if navegacion_app.perfil_activo %} aria-current="page"{% endif %}>
+            <a class="sidebar-perfil{% if navegacion_app.perfil_activo %} sidebar-perfil-activo{% endif %}" href="{% url 'usuarios:usuario_detalle' request.user.pk %}" data-tooltip="Mi perfil"{% if navegacion_app.perfil_activo %} aria-current="page"{% endif %}>
                 <span class="sidebar-avatar" aria-hidden="true">{{ request.user.first_name|default:request.user.username|slice:':1'|upper }}{{ request.user.last_name|slice:':1'|upper }}</span>
                 <span class="sidebar-perfil-datos sidebar-texto"><strong>{{ request.user.get_full_name|default:request.user.username }}</strong><small>@{{ request.user.username }}</small></span>
                 <svg class="sidebar-icono sidebar-perfil-chevron" aria-hidden="true" width="16" height="16"><use href="{% static 'img/navegacion.svg' %}#chevron"/></svg>
@@ -37,7 +37,7 @@
     </div>
     <form class="sidebar-sesion" method="post" action="{% url 'logout' %}">
         {% csrf_token %}
-        <button class="sidebar-enlace" type="submit" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <button class="sidebar-enlace" type="submit" data-tooltip="Cerrar sesión" aria-label="Cerrar sesión">
             <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#salir"/></svg>
             <span class="sidebar-texto">Cerrar sesión</span>
         </button>

@@ -27,8 +27,9 @@
                     <legend>Días a modificar</legend>
                     <div class="horario-seleccion-dias">
                         {% for opcion in formulario.dias %}
-                            <label class="horario-dia" title="{{ opcion.choice_label }}">
-                                {{ opcion.tag }}<span>{{ opcion.choice_label|slice:":3" }}</span>
+                            <label class="horario-dia" data-tooltip="{{ opcion.choice_label }}">
+                                {{ opcion.tag }}<span aria-hidden="true">{{ opcion.choice_label|slice:":3" }}</span>
+                                <span class="horario-solo-lectores">{{ opcion.choice_label }}</span>
                             </label>
                         {% endfor %}
                     </div>

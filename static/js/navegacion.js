@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
         plegar.setAttribute("aria-expanded", String(!compacta));
         var etiqueta = compacta ? "Expandir barra lateral" : "Contraer barra lateral";
         plegar.setAttribute("aria-label", etiqueta);
-        plegar.title = etiqueta;
+        plegar.dataset.tooltip = etiqueta;
     }
 
     abrir.addEventListener("click", function () {
