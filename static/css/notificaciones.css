@@ -5,18 +5,8 @@
 .sidebar-notificaciones { position: relative; margin-top: 12px; }
 .sidebar-notificaciones .notificaciones-contador { flex-shrink: 0; margin-left: auto; }
 .sidebar-compacta .sidebar-notificaciones .notificaciones-contador { position: absolute; top: 0; right: 0; min-width: 18px; height: 18px; padding-inline: 4px; font-size: 10px; }
-.contenido-notificaciones > .notificaciones-encabezado { align-items: center; gap: 16px; border-top: 3px solid var(--primario-medio); border-bottom: 0; }
-.notificaciones-encabezado h1 { margin: 0; }
-.notificaciones-ultima-modificacion {
-    display: grid;
-    gap: 2px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    background: var(--primario-suave);
-    color: var(--primario);
-    font-size: .875rem;
-}
-.notificaciones-ultima-modificacion time { font-weight: 700; }
+.reglas-notificacion-titulo { justify-content: flex-start; gap: 8px; }
+.reglas-notificacion-titulo .ayuda-contextual { color: var(--primario); }
 .notificaciones-acciones { flex-shrink: 0; }
 .notificaciones-acciones form { margin-top: 10px; }
 .notificaciones-bandeja { padding: 0; overflow: hidden; }
@@ -36,7 +26,6 @@
 @media (max-width: 600px) {
     .notificacion-fila { align-items: flex-start; gap: 12px; padding: 16px; flex-wrap: wrap; }
     .notificacion-contenido { flex-basis: 100%; }
-    .contenido-notificaciones > .notificaciones-encabezado { align-items: flex-start; flex-direction: column; }
 }
 @media print {
     .notificaciones-acceso, .notificaciones-acciones, .notificaciones-filtros, .notificacion-fila > form, .notificacion-fila > a, .notificacion-regla-accion, .notificacion-regla-formulario { display: none !important; }

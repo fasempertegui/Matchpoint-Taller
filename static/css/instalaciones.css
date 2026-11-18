@@ -11,11 +11,6 @@ body > .contenido-principal.contenido-instalaciones {
     border-radius: 10px;
 }
 
-.contenido-instalaciones > .encabezado-pagina {
-    border: 0;
-    border-top: 3px solid var(--primario-medio);
-}
-
 .contenido-instalaciones .tarjeta-busqueda {
     margin-block: 24px;
     padding: 20px;

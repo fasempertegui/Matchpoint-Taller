@@ -4,11 +4,13 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/reportes.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-reportes{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-ondas">
-    <h1>{{ reporte.titulo }}</h1>
-    <div class="acciones">{% if totales_tabla %}<a class="boton boton-primario" href="{% url 'reportes:pdf' tipo %}?{{ parametros }}">Descargar PDF</a>{% endif %}<a class="boton boton-secundario" href="{% url 'reportes:inicio' %}">Ver reportes</a></div>
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
+    <div class="encabezado-fila">
+        <h1>{{ reporte.titulo }}</h1>
+        <div class="acciones">{% if totales_tabla %}<a class="boton boton-primario" href="{% url 'reportes:pdf' tipo %}?{{ parametros }}">Descargar PDF</a>{% endif %}<a class="boton boton-secundario" href="{% url 'reportes:inicio' %}">Ver reportes</a></div>
+    </div>
+    <p class="encabezado-descripcion">{{ reporte.descripcion }}</p>
 </header>
-<p class="tarjeta descripcion-seccion">{{ reporte.descripcion }}</p>
 <section class="tarjeta reporte-alcance" aria-label="Alcance del reporte">
     <div class="reporte-consulta-actual"><h2>Consulta actual</h2>
         {% if filtros_aplicados %}<ul class="reporte-filtros-aplicados">{% for filtro in filtros_aplicados %}<li>{{ filtro }}</li>{% endfor %}</ul>{% else %}<p class="texto-secundario">Sin filtros adicionales</p>{% endif %}

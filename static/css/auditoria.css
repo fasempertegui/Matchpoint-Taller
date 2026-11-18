@@ -84,12 +84,6 @@ body > .contenido-principal.contenido-auditoria {
 }
 .contenido-auditoria .tarjeta,
 .contenido-auditoria .boton { border-radius: 10px; }
-.contenido-auditoria > .auditoria-encabezado {
-    display: block;
-    border: 0;
-    border-top: 3px solid var(--primario-medio);
-}
-.auditoria-encabezado p { margin: 12px 0 0; }
 .auditoria-tabla { min-width: 0; width: 100%; table-layout: fixed; }
 .auditoria-tabla > thead th:first-child { width: 16%; }
 .auditoria-tabla > thead th:nth-child(2) { width: 17%; }

@@ -1,8 +1,5 @@
 body > .contenido-principal.contenido-reportes { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
 .contenido-reportes .tarjeta, .contenido-reportes .boton, .contenido-reportes .form-control { border-radius: 10px; }
-.contenido-reportes > .encabezado-pagina { border: 0; border-top: 3px solid var(--primario-medio); }
-.contenido-reportes > .encabezado-pagina h1 { min-width: 0; flex: 1 1 500px; }
-.contenido-reportes > .encabezado-pagina .acciones { flex-shrink: 0; }
 .reportes-catalogo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .reporte-opcion { display: flex; flex-direction: column; min-width: 0; padding: 0; background-image: linear-gradient(to top, #4b176d12, transparent 55%); }
 .reporte-opcion h2 { margin: 0; padding: 24px 24px 0; font-size: 1.2rem; line-height: 1.35; }

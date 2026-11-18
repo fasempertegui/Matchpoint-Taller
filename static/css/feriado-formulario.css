@@ -76,11 +76,7 @@ body > .contenido-principal.contenido-feriados {
     border-radius: 0 0 10px 10px;
 }
 
-.listado-feriados > .encabezado-pagina {
-    border: 0;
-    border-top: 3px solid var(--primario-medio);
-    margin-bottom: 24px;
-}
+.contenido-feriados > .tarjeta-informativa { margin-bottom: 20px; }
 
 .feriados-lista {
     padding: 0;

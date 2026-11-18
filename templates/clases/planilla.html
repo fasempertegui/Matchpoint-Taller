@@ -3,13 +3,15 @@
 {% block titulo %}Planilla semanal | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/planilla.css' %}">{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina planilla-encabezado encabezado-separado encabezado-geometrico encabezado-geometrico-reticula">
-    <h1>Planilla semanal</h1>
-    {% if cancha %}<div class="acciones">
-        <a class="boton boton-primario" href="{% url 'clases:generacion_clases' %}?sede={{ cancha.sede_id }}&amp;cancha={{ cancha.pk }}">Generar clases</a>
-    </div>{% endif %}
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-reticula">
+    <div class="encabezado-fila">
+        <h1>Planilla semanal</h1>
+        {% if cancha %}<div class="acciones">
+            <a class="boton boton-primario" href="{% url 'clases:generacion_clases' %}?sede={{ cancha.sede_id }}&amp;cancha={{ cancha.pk }}">Generar clases</a>
+        </div>{% endif %}
+    </div>
+    <p class="encabezado-descripcion">Organizá los horarios habituales de clases, profesores y participantes de cada cancha. Luego, generá las clases para que aparezcan en la agenda.</p>
 </header>
-<p class="tarjeta descripcion-seccion">Organizá los horarios habituales de clases, profesores y participantes de cada cancha. Luego, generá las clases para que aparezcan en la agenda.</p>
 {% if hay_sedes %}
     <div class="planilla-contexto">
     <section class="tarjeta planilla-filtros-tarjeta">
@@ -18,7 +20,7 @@
             <noscript><button class="boton boton-secundario" type="submit">Aplicar filtros</button></noscript>
         </form>
     </section>
-    <aside class="tarjeta planilla-informacion">
+    <aside class="tarjeta tarjeta-informativa">
         {% include "componentes/iconoir/informacion.html" %}
         <p>Cada cancha tiene su propia planilla semanal. La generación de clases incluye las planillas de todas las canchas de la sede elegida.</p>
     </aside>

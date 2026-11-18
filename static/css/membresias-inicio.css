@@ -8,17 +8,6 @@ body > .contenido-principal.contenido-membresias-inicio {
     border-radius: 10px;
 }
 
-.membresias-encabezado {
-    border: 0;
-    border-top: 3px solid var(--primario-medio);
-    margin-bottom: 24px;
-}
-
-.membresias-encabezado p {
-    margin: 12px 0 0;
-    color: var(--texto-suave);
-}
-
 .membresias-grupos {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

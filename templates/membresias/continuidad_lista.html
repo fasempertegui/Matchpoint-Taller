@@ -7,12 +7,12 @@
 {% endblock %}
 {% block clase_contenido %}contenido-membresias-configuracion catalogo-listado{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-orbitas">
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
     <h1>Continuidad</h1>
+    <p class="encabezado-descripcion">
+        Consultá las respuestas de los titulares sobre la continuidad de sus planes y membresías el mes siguiente. Sin responder no indica una baja.
+    </p>
 </header>
-<p class="tarjeta descripcion-seccion">
-    Consultá las respuestas de los titulares sobre la continuidad de sus planes y membresías el mes siguiente. Sin responder no indica una baja.
-</p>
 <form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos aria-label="Filtros de continuidad">
     {% if formulario.non_field_errors %}<div class="mensaje mensaje-error">{{ formulario.non_field_errors }}</div>{% endif %}
     {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}

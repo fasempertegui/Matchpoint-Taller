@@ -5,8 +5,10 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
-<header class="tarjeta caja-encabezado encabezado-separado encabezado-geometrico encabezado-geometrico-ondas"><h1>{{ titulo }}</h1></header>
-<p class="tarjeta descripcion-seccion">{% if sesiones %}Consultá las aperturas, los cierres y el efectivo contado de cada sesión.{% else %}Consultá los ingresos, egresos, aportes y retiros registrados en caja.{% endif %}</p>
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
+    <h1>{{ titulo }}</h1>
+    <p class="encabezado-descripcion">{% if sesiones %}Consultá las aperturas, los cierres y el efectivo contado de cada sesión.{% else %}Consultá los ingresos, egresos, aportes y retiros registrados en caja.{% endif %}</p>
+</header>
 {% if sesiones %}{% include "caja/navegacion.html" with seccion="sesiones" only %}{% else %}{% include "caja/navegacion.html" with seccion="movimientos" only %}{% endif %}
 <form method="get" class="tarjeta caja-filtros tarjeta-busqueda filtros-compactos{% if sesiones %} caja-filtros-sesiones{% else %} caja-filtros-movimientos{% endif %}" data-filtros-automaticos aria-label="Filtros de caja">
     {% if formulario.non_field_errors %}<div class="mensaje mensaje-error">{{ formulario.non_field_errors }}</div>{% endif %}

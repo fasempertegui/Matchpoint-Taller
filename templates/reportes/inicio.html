@@ -4,8 +4,10 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/reportes.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-reportes{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-ondas"><h1>Reportes</h1></header>
-<p class="tarjeta descripcion-seccion">Consultá información consolidada de contrataciones, clases, reservas y caja. Cada reporte permite filtrar los datos y descargar el resultado completo en PDF.</p>
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
+    <h1>Reportes</h1>
+    <p class="encabezado-descripcion">Consultá información consolidada de contrataciones, clases, reservas y caja. Cada reporte permite filtrar los datos y descargar el resultado completo en PDF.</p>
+</header>
 <section class="reportes-catalogo" aria-label="Reportes administrativos">
     {% for tipo, reporte in reportes %}
     <article class="tarjeta reporte-opcion">

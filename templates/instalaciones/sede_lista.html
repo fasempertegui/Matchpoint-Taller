@@ -9,15 +9,17 @@
 {% block clase_contenido %}contenido-instalaciones{% endblock %}
 
 {% block contenido %}
-<div class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-ondas">
-    <h1>Sedes</h1>
-    {% if perms.instalaciones.add_sede %}
-        <a class="boton boton-primario" href="{% url 'instalaciones:sede_crear' %}">
-            Nueva sede
-        </a>
-    {% endif %}
-</div>
-<p class="tarjeta descripcion-seccion">Consultá y administrá las sedes de la academia y sus canchas.</p>
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
+    <div class="encabezado-fila">
+        <h1>Sedes</h1>
+        {% if perms.instalaciones.add_sede %}
+            <a class="boton boton-primario" href="{% url 'instalaciones:sede_crear' %}">
+                Nueva sede
+            </a>
+        {% endif %}
+    </div>
+    <p class="encabezado-descripcion">Consultá y administrá las sedes de la academia y sus canchas.</p>
+</header>
 
 <form method="get" action="{% url 'instalaciones:sede_lista' %}" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
     <div class="grupo-campo">

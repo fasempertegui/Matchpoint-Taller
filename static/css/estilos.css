@@ -278,6 +278,20 @@ h2 {
     background: var(--superficie);
 }
 
+.tarjeta-informativa {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-color: #e0e8ba;
+    background: var(--acento-suave);
+    color: var(--acento-texto);
+    font-size: .9rem;
+}
+
+.tarjeta-informativa > svg { flex-shrink: 0; }
+.tarjeta-informativa p { margin: 0; }
+
 .tarjeta-angosta,
 .tarjeta-formulario {
     max-width: 680px;

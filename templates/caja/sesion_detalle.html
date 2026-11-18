@@ -4,11 +4,13 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina caja-encabezado encabezado-separado encabezado-geometrico encabezado-geometrico-ondas">
-    <h1>Caja</h1>
-    {% if puede_cerrar %}<a class="boton boton-primario" href="{% url 'caja:movimiento_crear' sesion.pk %}">Registrar movimiento</a>{% endif %}
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
+    <div class="encabezado-fila">
+        <h1>Caja</h1>
+        {% if puede_cerrar %}<a class="boton boton-primario" href="{% url 'caja:movimiento_crear' sesion.pk %}">Registrar movimiento</a>{% endif %}
+    </div>
+    <p class="encabezado-descripcion">Consultá el efectivo y los movimientos de cada sesión.</p>
 </header>
-<p class="tarjeta descripcion-seccion">Consultá el efectivo y los movimientos de cada sesión.</p>
 {% if sesion.estado == 'abierta' %}{% include "caja/navegacion.html" with seccion="actual" only %}{% else %}{% include "caja/navegacion.html" only %}{% endif %}
 <section class="tarjeta caja-sesion" aria-labelledby="sesion-titulo">
     <div class="caja-sesion-cabecera">

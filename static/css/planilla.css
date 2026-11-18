@@ -70,23 +70,6 @@ button.planilla-celda-seleccionada { background: var(--primario-suave); color: v
 
 .planilla-tabla .planilla-pausa td { padding: 6px; border-left: 0; text-align: center; color: var(--advertencia); font-size: .75rem; background: var(--advertencia-suave); }
 
-.planilla-encabezado {
-    border: 0;
-    border-top: 3px solid var(--primario-medio);
-    border-radius: 10px;
-    margin-bottom: 20px;
-    align-items: flex-end;
-}
-
-.planilla-encabezado p {
-    margin: 12px 0 0;
-    color: var(--texto-suave);
-    font-size: .95rem;
-}
-
-.planilla-encabezado .acciones { flex-shrink: 0; }
-.planilla-encabezado .boton { border-radius: 10px; }
-
 .planilla-filtros-tarjeta {
     border: 1px solid var(--borde);
     border-radius: 10px;
@@ -145,9 +128,6 @@ button.planilla-celda-ocupada { background: var(--primario-suave); color: var(--
 .planilla-seleccion-separador { align-self: stretch; flex: 0 0 1px; background: var(--borde); }
 
 .planilla-contexto { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; }
-.planilla-informacion { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e0e8ba; border-radius: 10px; background: var(--acento-suave); }
-.planilla-informacion > svg { flex-shrink: 0; color: var(--acento-texto); }
-.planilla-informacion p { margin: 0; color: var(--acento-texto); font-size: .9rem; }
 @media (max-width: 900px) {
     .planilla-contexto { grid-template-columns: minmax(0, 1fr); }
 }

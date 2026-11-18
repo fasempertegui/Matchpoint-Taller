@@ -5,8 +5,6 @@ body > .contenido-principal.contenido-caja {
 .contenido-caja .tarjeta,
 .contenido-caja .boton,
 .contenido-caja .form-control { border-radius: 10px; }
-.caja-encabezado { border: 0; border-top: 3px solid var(--primario-medio); }
-.caja-encabezado p { margin: 12px 0 0; color: var(--texto-suave); }
 .caja-sesion { margin-bottom: 24px; }
 .caja-sesion-cabecera { display: flex; align-items: center; gap: 16px; }
 .caja-sesion h2, .caja-listado h2, .caja-sin-sesion h2 { margin: 0; font-size: 1.25rem; }
@@ -45,7 +43,6 @@ body > .contenido-principal.contenido-caja {
 .caja-sin-sesion p { color: var(--texto-suave); }
 .caja-sin-sesion .boton { margin-top: 12px; }
 @media (max-width: 1100px) {
-    .contenido-caja .encabezado-pagina { align-items: flex-start; flex-wrap: wrap; }
     .caja-importes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 

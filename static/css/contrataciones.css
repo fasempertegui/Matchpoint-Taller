@@ -75,12 +75,6 @@
     color: #ffffff;
 }
 
-.contratacion-introduccion {
-    margin: 12px 0 0;
-    color: var(--texto-suave);
-    font-size: .95rem;
-}
-
 .contratacion-estado {
     display: inline-flex;
     align-items: center;

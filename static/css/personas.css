@@ -121,14 +121,6 @@ body > .contenido-principal.contenido-usuarios {
     border-radius: 10px;
 }
 
-.listado-usuarios > .encabezado-pagina {
-    border: 0;
-}
-
-.listado-usuarios > .encabezado-pagina {
-    border-top: 3px solid var(--primario-medio);
-}
-
 .listado-usuarios > .tabla-contenedor {
     border-top: 1px solid var(--borde);
 }

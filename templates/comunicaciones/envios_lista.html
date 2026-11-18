@@ -5,10 +5,10 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/envios.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-envios{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina envios-encabezado encabezado-separado encabezado-geometrico">
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico">
     <h1>Envíos de email</h1>
+    <p class="encabezado-descripcion">Consultá los emails enviados por el sistema, su estado de entrega y los intentos realizados.</p>
 </header>
-<p class="tarjeta descripcion-seccion">Consultá los emails enviados por el sistema, su estado de entrega y los intentos realizados.</p>
 <form method="get" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos aria-label="Filtros de envíos">
     <div class="detalle-grid">
         <div class="grupo-campo"><label for="envios-estado">Estado</label><select id="envios-estado" name="estado" class="form-control"><option value="">Todos</option>{% for valor, texto in estados %}<option value="{{ valor }}"{% if valor == estado_actual %} selected{% endif %}>{{ texto }}</option>{% endfor %}</select></div>
