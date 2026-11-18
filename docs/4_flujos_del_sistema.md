@@ -16,7 +16,7 @@ Las tareas periódicas no son flujos de un actor y se describen en la sección 4
 
 ## Criterio temporal común
 
-Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; todas las altas de eventos tienen como límite el último día del segundo mes calendario siguiente al actual; ningún evento de reserva, clase o bloqueo admite creación histórica ni sobre un turno ya iniciado; todos exigen inicio estrictamente futuro y ninguna anulación puede afectar un turno iniciado; las reservas nuevas exigen inicio futuro y fecha entre hoy y tres días después, inclusive; la generación de clases selecciona un mes completo por defecto, omite los días pasados y turnos iniciados y admite períodos internos de hasta 62 días; las consultas de actividad de clases y uso de membresías, hasta 366 días; las contrataciones administrativas llegan desde el inicio operativo hasta el mes siguiente, que se habilita el día 25 para las altas administrativas; el portal no registra contrataciones ni renovaciones; los movimientos de caja usan únicamente fecha de registro del servidor; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
+Todos los flujos de este documento aplican los límites temporales definidos en `2_criterios_del_sistema.md`, sección 2.0. En síntesis: la operación comienza el **01/08/2026**; todas las altas de eventos tienen como límite el último día del segundo mes calendario siguiente al actual; ningún evento de reserva, clase o bloqueo admite creación histórica ni sobre un turno ya iniciado; todos exigen inicio estrictamente futuro y ninguna anulación puede afectar un turno iniciado; las reservas nuevas exigen inicio futuro y fecha entre hoy y tres días después, inclusive; la generación de clases selecciona un mes completo por defecto, omite los días pasados y turnos iniciados y admite períodos internos de hasta 62 días; la consulta administrativa de actividad de clases y la consulta de uso de membresías, hasta 366 días; las contrataciones administrativas llegan desde el inicio operativo hasta el mes siguiente, que se habilita el día 25 para las altas administrativas; el portal no registra contrataciones ni renovaciones; los movimientos de caja usan únicamente fecha de registro del servidor; los feriados llegan hasta cinco años; y una fecha de nacimiento debe corresponder a una persona de hasta 120 años. Las validaciones son de servidor y los límites visibles de los campos no las reemplazan.
 
 ---
 
@@ -2069,19 +2069,19 @@ flowchart TD
 
 - **Objetivo:** conocer a cuántas clases fue asignado un usuario y a cuántas asistió durante un período.
 - **Actores:** administrador; cualquier titular autenticado, limitado a su propia actividad desde el portal, sin exigir rol Alumno. El titular también consulta sus próximas clases como participante; los profesores consultan las clases que dictan según sus asignaciones.
-- **Entradas:** usuario, fecha inicial y fecha final. Para la consulta personal, el usuario es siempre el titular autenticado. Los rangos admiten hasta 366 días corridos inclusive dentro del calendario operativo; un período mayor se consulta por tramos.
+- **Entradas:** en administración, usuario, fecha inicial y fecha final. Los rangos admiten hasta 366 días corridos inclusive dentro del calendario operativo; un período mayor se consulta por tramos. En Mis clases, el usuario es siempre el titular autenticado y puede elegir un mes y año o todos los meses del calendario operativo. La consulta personal abre en el mes actual con todos los estados y permite filtrar por Finalizadas, Programadas o Anuladas.
 
 Recorrido:
 
 1. Valida acceso y período, y obtiene las clases donde el usuario autorizado posee asignación. En el portal no admite sustituir al titular por otro usuario.
 2. Obtiene las asistencias del usuario, incluso cuando no existió asignación previa.
-3. Calcula clases asignadas, presentes, ausentes y sin registro.
-4. Muestra totales y detalle de fecha, hora, cancha y estado de cada clase.
+3. Para la consulta administrativa, calcula clases asignadas, presentes, ausentes y sin registro, y muestra esos totales junto con el detalle.
+4. Mis clases muestra una tarjeta de filtros y una sola tabla paginada, ordenada por fecha y hora de la más reciente a la más antigua. El listado muestra la fecha, el horario, el lugar y el estado de cada clase, junto con la participación y la asistencia cuando corresponden. El selector de función de los profesores conserva el mes y el estado elegidos.
 
 Alternativas:
 
 - Una asistencia como presente sin asignación previa suma asistencia, pero no suma clase asignada.
-- Las clases canceladas se muestran separadas y no se consideran dictadas.
+- Las clases anuladas se pueden consultar por estado y no se consideran dictadas.
 - La consulta no intenta atribuir cada clase a un plan: los planes sólo dan derecho a participar.
 - El titular consulta su información en modo de sólo lectura, cualquiera sea su rol. Participar no concede permisos de docencia ni acceso a información personal ajena.
 
@@ -2092,8 +2092,9 @@ Alternativas:
 flowchart TD
     A[Elegir usuario y período] --> B[Buscar asignaciones]
     B --> C[Buscar asistencias]
-    C --> D[Calcular indicadores]
-    D --> E[Mostrar totales y detalle]
+    C --> D{Consulta administrativa}
+    D -->|Sí| E[Mostrar totales y detalle]
+    D -->|No| F[Mostrar listado filtrado]
 ```
 
 #### FL-55. Consultar reservas

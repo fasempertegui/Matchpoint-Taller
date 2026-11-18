@@ -56,8 +56,8 @@ def validar_inicio_evento(fecha, hora_inicio):
         raise ValidationError("El evento debe comenzar en un horario futuro. El turno ya comenzó.")
 
 
-def opciones_meses_agenda():
-    mes = max(FECHA_INICIO_OPERACIONES, timezone.localdate().replace(day=1))
+def opciones_meses_agenda(*, desde=None):
+    mes = desde or max(FECHA_INICIO_OPERACIONES, timezone.localdate().replace(day=1))
     maxima = fecha_maxima_eventos()
     opciones = []
     while mes.replace(day=monthrange(mes.year, mes.month)[1]) <= maxima:

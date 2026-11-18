@@ -20,8 +20,13 @@ from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
 from .anulaciones import confirmar_anulacion_clase, preparar_anulacion_clase, validar_accion_anulacion
-from .consultas import consultar_actividad_clases, consultar_clase, consultar_profesores, consultar_participantes
-from .forms import ActividadClasesForm, AsistenciaEditorForm, AsistenciaFilaForm, AsistenciaFormSet, ClaseAnulacionForm, ClaseCanchaForm, ClaseForm, ClaseTurnoForm
+from .consultas import (
+    consultar_actividad_clases, consultar_clase, consultar_mis_clases, consultar_participantes, consultar_profesores,
+)
+from .forms import (
+    ActividadClasesForm, AsistenciaEditorForm, AsistenciaFilaForm, AsistenciaFormSet,
+    ClaseAnulacionForm, ClaseCanchaForm, ClaseForm, ClaseTurnoForm, MisClasesFiltrosForm,
+)
 from .models import Asistencia, Clase
 from .permisos import exigir_acceso_clases, exigir_administracion_clases
 from .servicios import (
@@ -448,7 +453,8 @@ def clase_asistencia(request, pk):
 @require_GET
 def actividad_clases(request, usuario_id):
     usuario = exigir_acceso_clases(request.user)
-    if usuario.pk != usuario_id and not usuario.tiene_rol(Rol.ADMINISTRADOR):
+    consulta_administrativa = usuario.tiene_rol(Rol.ADMINISTRADOR)
+    if usuario.pk != usuario_id and not consulta_administrativa:
         raise PermissionDenied
     titular = get_object_or_404(Usuario, pk=usuario_id)
     roles = set(titular.roles.values_list("rol__codigo", flat=True))
@@ -459,6 +465,27 @@ def actividad_clases(request, usuario_id):
     ver_asistencia = es_alumno or (es_profesor and funcion == "participante")
     hoy = timezone.localdate()
     parametros = request.GET.copy()
+    if not consulta_administrativa:
+        mes_actual = max(hoy, FECHA_INICIO_OPERACIONES).strftime("%Y-%m")
+        parametros.setdefault("mes", mes_actual)
+        formulario = MisClasesFiltrosForm(parametros)
+        pagina = None
+        enlaces = {"funcion": funcion} if es_profesor else {}
+        url_limpiar = request.path + ("?" + urlencode(enlaces) if enlaces else "")
+        if formulario.is_valid():
+            filtros = formulario.cleaned_data
+            funcion_consulta = "profesor" if ver_docencia else "participante" if ver_asistencia else None
+            pagina = consultar_mis_clases(
+                usuario, **filtros, funcion=funcion_consulta, numero_pagina=request.GET.get("pagina"),
+            )
+            enlaces.update(filtros)
+        return render(request, "clases/actividad_clases.html", {
+            "titular": titular, "formulario": formulario, "pagina": pagina,
+            "es_profesor": es_profesor, "funcion": funcion, "ver_asistencia": ver_asistencia,
+            "url_limpiar": url_limpiar, "parametros_paginacion": urlencode(enlaces),
+            "mostrar_listado": pagina is not None, "mostrar_estado": True,
+        })
+
     parametros.setdefault("fecha_desde", max(hoy.replace(day=1), FECHA_INICIO_OPERACIONES).isoformat())
     parametros.setdefault("fecha_hasta", hoy.replace(day=monthrange(hoy.year, hoy.month)[1]).isoformat())
     parametros.setdefault("vista", "proximas")
@@ -522,11 +549,6 @@ def actividad_clases(request, usuario_id):
                 "url": request.path + "?" + urlencode({**enlaces, "vista": codigo}),
             })
         pagina = Paginator(grupos[filtros["vista"]], 10).get_page(request.GET.get("pagina"))
-        for fila in pagina:
-            fila["estado_texto"] = Evento.Estado(fila["estado"]).label
-            fila["asistencia_texto"] = None
-            if ver_asistencia and fila["estado"] == Evento.Estado.FINALIZADO and fila["asistencia"] is not None:
-                fila["asistencia_texto"] = Asistencia.Estado(fila["asistencia"]).label
         enlaces["vista"] = filtros["vista"]
     url_perfil = reverse("usuarios:usuario_detalle", args=[usuario_id])
     return render(request, "clases/actividad_clases.html", {
@@ -535,7 +557,8 @@ def actividad_clases(request, usuario_id):
         "ver_asistencia": ver_asistencia, "resumen": resumen,
         "vistas": vistas, "pagina": pagina,
         "parametros_paginacion": urlencode(enlaces) if actividad else "",
-        "url_perfil": url_perfil,
+        "url_perfil": url_perfil, "consulta_administrativa": True,
+        "mostrar_listado": pagina is not None, "mostrar_estado": formulario["vista"].value() != "anuladas",
     })
 
 

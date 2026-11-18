@@ -15,9 +15,14 @@
         <div class="acciones">
             {% if es_profesor %}
             <form class="actividad-selector-funcion" method="get" data-filtros-automaticos>
+                {% if consulta_administrativa %}
                 <input type="hidden" name="fecha_desde" value="{{ formulario.fecha_desde.value|default_if_none:'' }}">
                 <input type="hidden" name="fecha_hasta" value="{{ formulario.fecha_hasta.value|default_if_none:'' }}">
                 <input type="hidden" name="vista" value="{{ formulario.vista.value }}">
+                {% else %}
+                <input type="hidden" name="mes" value="{{ formulario.mes.value|default_if_none:'' }}">
+                <input type="hidden" name="estado" value="{{ formulario.estado.value|default_if_none:'' }}">
+                {% endif %}
                 <label class="clase-etiqueta-oculta" for="actividad-funcion">Función en la clase</label>
                 <select class="form-control" id="actividad-funcion" name="funcion">
                     <option value="profesor"{% if funcion == "profesor" %} selected{% endif %}>Profesor</option>
@@ -30,8 +35,9 @@
         </div>
         {% endif %}
     </div>
-    <p class="actividad-encabezado-descripcion">Consultá {% if request.user.pk == titular.pk %}tus próximas clases, el historial y las asistencias{% else %}las clases y asistencias de {{ titular }}{% endif %} en el período seleccionado.</p>
+    <p class="actividad-encabezado-descripcion">Consultá {% if request.user.pk == titular.pk %}tus clases y asistencias{% else %}las clases y asistencias de {{ titular }}{% endif %} en el período seleccionado.</p>
 </header>
+{% if consulta_administrativa %}
 <section class="tarjeta actividad-tarjeta-resumen" aria-label="Resumen del período">
     <div class="perfil-seccion">
     <div class="perfil-valor-accion">
@@ -70,21 +76,36 @@
     </div>
     {% endif %}
 </section>
-{% if actividad %}
+{% else %}
+<form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos aria-label="Filtros de clases">
+    {% if es_profesor %}<input type="hidden" name="funcion" value="{{ funcion }}">{% endif %}
+    {% for campo in formulario %}
+        <div class="grupo-campo">
+            {{ campo.label_tag }}{{ campo }}
+            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+    {% endfor %}
+    <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ url_limpiar }}" data-limpiar-filtros>Limpiar filtros</a></div>
+    <noscript><button class="boton boton-secundario" type="submit">Aplicar filtros</button></noscript>
+</form>
+{% endif %}
+{% if mostrar_listado %}
 <section class="tarjeta actividad-listado" aria-label="Clases del período">
+    {% if consulta_administrativa %}
     <nav class="pestanas actividad-vistas" aria-label="Secciones de actividad">
         {% for vista in vistas %}<a href="{{ vista.url }}"{% if vista.actual %} aria-current="page"{% endif %}>{{ vista.nombre }}</a>{% endfor %}
     </nav>
+    {% endif %}
     {% if pagina %}
     <div class="tabla-contenedor tabla-listado">
         <table>
             <caption class="clase-etiqueta-oculta">Clases de {{ titular }} en el período consultado</caption>
-            <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if formulario.vista.value != 'anuladas' %}<th scope="col">Estado de clase</th>{% endif %}{% if ver_asistencia %}<th scope="col">Participación</th><th scope="col">Asistencia</th>{% endif %}<th scope="col" class="acciones-columna">Acciones</th></tr></thead>
+            <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if mostrar_estado %}<th scope="col">Estado de clase</th>{% endif %}{% if ver_asistencia %}<th scope="col">Participación</th><th scope="col">Asistencia</th>{% endif %}<th scope="col" class="acciones-columna">Acciones</th></tr></thead>
             <tbody>{% for fila in pagina %}
                 <tr>
                     <td><strong>{{ fila.fecha|date:"d/m/Y" }}</strong><span class="actividad-secundario">{{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</span></td>
                     <td>{{ fila.sede.nombre }}<span class="actividad-secundario">{{ fila.cancha.nombre }}</span></td>
-                    {% if formulario.vista.value != 'anuladas' %}<td>{% indicador_estado "evento" fila.estado texto=fila.estado_texto %}</td>{% endif %}
+                    {% if mostrar_estado %}<td>{% indicador_estado "evento" fila.estado texto=fila.estado_texto %}</td>{% endif %}
                     {% if ver_asistencia %}<td>{% if fila.respuesta_texto %}{% indicador_estado "respuesta" fila.respuesta texto=fila.respuesta_texto %}{% else %}<span class="texto-secundario">—</span>{% endif %}</td><td>
                         {% if fila.asistencia_texto %}
                             {% indicador_estado "asistencia" fila.asistencia texto=fila.asistencia_texto %}
@@ -97,11 +118,11 @@
         </table>
     </div>
     {% else %}
-        <p class="estado-vacio">{% if formulario.vista.value == 'proximas' %}No hay próximas clases asignadas en este período.{% elif formulario.vista.value == 'anuladas' %}No hay clases anuladas en este período.{% else %}No hay clases en el historial de este período.{% endif %}</p>
+        <p class="estado-vacio">{% if not consulta_administrativa %}No hay clases para los filtros seleccionados.{% elif formulario.vista.value == 'proximas' %}No hay próximas clases asignadas en este período.{% elif formulario.vista.value == 'anuladas' %}No hay clases anuladas en este período.{% else %}No hay clases en el historial de este período.{% endif %}</p>
     {% endif %}
     {% include "componentes/paginacion.html" with pagina=pagina entidad="clases" parametros=parametros_paginacion only %}
 </section>
 {% endif %}
-<script src="{% static 'js/clase-actividad.js' %}" defer></script>
-{% if es_profesor %}<script src="{% static 'js/filtros.js' %}" defer></script>{% endif %}
+{% if consulta_administrativa %}<script src="{% static 'js/clase-actividad.js' %}" defer></script>{% endif %}
+{% if es_profesor or not consulta_administrativa %}<script src="{% static 'js/filtros.js' %}" defer></script>{% endif %}
 {% endblock %}

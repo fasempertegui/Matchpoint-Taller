@@ -213,6 +213,25 @@ class ActividadClasesForm(forms.Form):
         return datos
 
 
+class MisClasesFiltrosForm(forms.Form):
+    mes = forms.ChoiceField(label="Mes", required=False, widget=forms.Select(attrs={"class": "form-control"}))
+    estado = forms.ChoiceField(
+        required=False,
+        choices=(
+            ("", "Todos"),
+            (Evento.Estado.FINALIZADO, "Finalizadas"),
+            (Evento.Estado.PROGRAMADO, "Programadas"),
+            (Evento.Estado.ANULADO, "Anuladas"),
+        ),
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        meses = opciones_meses_agenda(desde=FECHA_INICIO_OPERACIONES)
+        self.fields["mes"].choices = [("", "Todos"), *reversed(meses)]
+
+
 class FeriadoForm(forms.Form):
     fecha = forms.DateField(
         label="Fecha", input_formats=["%Y-%m-%d"],
