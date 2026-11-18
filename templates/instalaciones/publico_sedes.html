@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
-{% block titulo %}Sedes y canchas | Academia TM{% endblock %}
+{% block titulo %}Sedes | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/oferta.css' %}"><link rel="stylesheet" href="{% static 'css/instalaciones.css' %}"><link rel="stylesheet" href="{% static 'css/instalaciones-publicas.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-instalaciones instalaciones-publicas contenido-oferta{% endblock %}
 {% block contenido %}
 {% include "membresias/_oferta_cabecera.html" with tipo="sede" only %}
-<header class="oferta-catalogo-encabezado"><h2>Sedes y canchas</h2></header>
+<header class="oferta-catalogo-encabezado"><h2>Sedes</h2></header>
 <section class="sedes-tarjetas" aria-label="Sedes disponibles">
     {% for sede in sedes %}
     <article class="tarjeta sede-tarjeta">
