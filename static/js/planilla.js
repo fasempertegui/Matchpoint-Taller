@@ -159,6 +159,7 @@ document.addEventListener("DOMContentLoaded", function () {
         arrastre = {
             pointerId: evento.pointerId, celda: celda,
             dia: Number(posicion.dataset.dia), hora: Number(posicion.dataset.hora),
+            ultimaPosicion: posicion,
             inicial: new Set(seleccion), tipoInicial: tipo, movido: false,
         };
         tipo = celda.dataset.tipoTurno;
@@ -168,10 +169,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!arrastre || evento.pointerId !== arrastre.pointerId) return;
         var destino = document.elementFromPoint(evento.clientX, evento.clientY);
         var posicion = destino && destino.closest("td[data-dia][data-hora]");
-        if (!posicion || !tabla.contains(posicion)) return;
+        if (!posicion || posicion === arrastre.ultimaPosicion || !tabla.contains(posicion)) return;
+        arrastre.ultimaPosicion = posicion;
         var dia = Number(posicion.dataset.dia);
         var hora = Number(posicion.dataset.hora);
-        if (dia === arrastre.dia && hora === arrastre.hora && !arrastre.movido) return;
         arrastre.movido = true;
         seleccion = new Set(arrastre.inicial);
         celdas.filter(compatible).forEach(function (celda) {

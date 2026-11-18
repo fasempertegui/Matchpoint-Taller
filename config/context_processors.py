@@ -10,6 +10,7 @@ DESTINOS_NAVEGACION = {
     "clases:planilla": ("planilla", "actividad"),
     "clases:actividad_clases": ("pelota", "actividad"),
     "reservas:mis_reservas": ("calendario", "actividad"),
+    "reservas:mis_invitaciones": ("correo", "actividad"),
     "membresias:mis_contrataciones": ("cartera", "actividad"),
     "usuarios:usuario_lista": ("usuarios", "gestion"),
     "membresias:catalogos": ("libro", "gestion"),
@@ -38,11 +39,15 @@ def navegacion(request):
     planilla_activa = namespace == "clases" and ruta.url_name.startswith(("planilla", "generacion_"))
     clases_concretas = namespace == "clases" and not feriados_activo and not planilla_activa
     clases_activo = planilla_activa if administrador else clases_concretas
-    reservas_propias_activo = not administrador and namespace == "reservas" and ruta.url_name in (
-        "mis_reservas", "reserva_detalle", "reserva_comprobante", "reserva_anular",
-        "reserva_invitados", "reserva_socios", "reserva_responder", "reserva_resultado",
+    invitaciones_propias_activo = not administrador and namespace == "reservas" and (
+        ruta.url_name in ("mis_invitaciones", "reserva_responder")
+        or getattr(request, "detalle_invitacion", False)
     )
-    agenda_activa = (namespace in ("agenda", "reservas") and not reservas_propias_activo) or (administrador and clases_concretas)
+    reservas_propias_activo = not administrador and not invitaciones_propias_activo and namespace == "reservas" and ruta.url_name in (
+        "mis_reservas", "reserva_detalle", "reserva_comprobante", "reserva_anular",
+        "reserva_invitados", "reserva_socios", "reserva_resultado",
+    )
+    agenda_activa = (namespace in ("agenda", "reservas") and not (reservas_propias_activo or invitaciones_propias_activo)) or (administrador and clases_concretas)
     perfil_activo = namespace == "usuarios" and ruta.kwargs.get("pk") == usuario.pk
     contrataciones_propias_activo = namespace == "membresias" and ruta.url_name in (
         "mis_contrataciones", "mi_plan_contratado", "mi_membresia_contratado",
@@ -76,7 +81,11 @@ def navegacion(request):
     ) if usuario.esta_habilitado and not administrador else None
     mis_reservas = enlace(
         "Mis reservas", "reservas:mis_reservas", reservas_propias_activo,
-        "Consultá tus reservas e invitaciones.",
+        "Consultá las reservas que organizaste.",
+    ) if usuario.puede_reservar and not administrador else None
+    mis_invitaciones = enlace(
+        "Mis invitaciones", "reservas:mis_invitaciones", invitaciones_propias_activo,
+        "Consultá las invitaciones a reservas que recibiste.",
     ) if usuario.puede_reservar and not administrador else None
     clases = []
     if administrador:
@@ -158,7 +167,7 @@ def navegacion(request):
         modulos_inicio.append({"nombre": "Auditoría", "descripcion": auditoria["descripcion"], "destino": auditoria})
         administracion.append(auditoria)
     inicio = enlace("Inicio", "inicio", nombre_vista == "inicio", "Inicio de la academia.")
-    destinos = [item for item in [inicio, agenda, *clases, mis_reservas, mis_contrataciones, oferta, *administracion] if item]
+    destinos = [item for item in [inicio, agenda, *clases, mis_reservas, mis_invitaciones, mis_contrataciones, oferta, *administracion] if item]
     grupos = []
     for codigo, titulo in (
         ("actividad", "Actividad" if administrador else "Mi actividad"),

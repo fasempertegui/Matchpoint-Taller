@@ -25,6 +25,7 @@ def reserva_detalle(request, pk):
     reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk)
     from .comercial import inicio_reserva, version_invitacion
     if not es_administrador and reserva.organizador_id != request.user.pk:
+        request.detalle_invitacion = True
         invitacion = reserva.invitados.get(usuario=request.user)
         return render(request, "reservas/reserva_invitacion.html", {
             "reserva": reserva, "invitacion": invitacion, "respuesta_texto": invitacion.get_respuesta_display(),

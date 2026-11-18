@@ -454,6 +454,9 @@ def actividad_clases(request, usuario_id):
     roles = set(titular.roles.values_list("rol__codigo", flat=True))
     es_profesor = Rol.PROFESOR in roles
     es_alumno = Rol.ALUMNO in roles
+    funcion = "participante" if es_profesor and request.GET.get("funcion") == "participante" else "profesor"
+    ver_docencia = es_profesor and funcion == "profesor"
+    ver_asistencia = es_alumno or (es_profesor and funcion == "participante")
     hoy = timezone.localdate()
     parametros = request.GET.copy()
     parametros.setdefault("fecha_desde", max(hoy.replace(day=1), FECHA_INICIO_OPERACIONES).isoformat())
@@ -469,9 +472,9 @@ def actividad_clases(request, usuario_id):
         actividad = consultar_actividad_clases(
             usuario, filtros["fecha_desde"], filtros["fecha_hasta"], usuario_id=usuario_id,
         )
-        if es_profesor:
+        if ver_docencia:
             campo_asignacion = "asignacion_profesor"
-        elif es_alumno:
+        elif ver_asistencia:
             campo_asignacion = "asignacion_participante"
         else:
             campo_asignacion = None
@@ -482,10 +485,10 @@ def actividad_clases(request, usuario_id):
             for grupo in ("clases", "anuladas"):
                 actividad[grupo] = [
                     fila for fila in actividad[grupo]
-                    if fila[campo_asignacion] or (es_alumno and fila["asistencia"] is not None)
+                    if fila[campo_asignacion] or (ver_asistencia and fila["asistencia"] is not None)
                 ]
         finalizadas = [fila for fila in actividad["clases"] if fila["estado"] == Evento.Estado.FINALIZADO]
-        if es_profesor:
+        if ver_docencia:
             dictadas = [fila for fila in finalizadas if fila["asignacion_profesor"]]
             resumen = {
                 "dictadas": len(dictadas), "proximas": len(actividad["proximas"]),
@@ -511,6 +514,8 @@ def actividad_clases(request, usuario_id):
             "fecha_desde": filtros["fecha_desde"].isoformat(),
             "fecha_hasta": filtros["fecha_hasta"].isoformat(),
         }
+        if es_profesor:
+            enlaces["funcion"] = funcion
         for codigo, nombre in formulario.fields["vista"].choices:
             vistas.append({
                 "nombre": nombre, "actual": codigo == filtros["vista"],
@@ -520,13 +525,14 @@ def actividad_clases(request, usuario_id):
         for fila in pagina:
             fila["estado_texto"] = Evento.Estado(fila["estado"]).label
             fila["asistencia_texto"] = None
-            if es_alumno and fila["estado"] == Evento.Estado.FINALIZADO and fila["asistencia"] is not None:
+            if ver_asistencia and fila["estado"] == Evento.Estado.FINALIZADO and fila["asistencia"] is not None:
                 fila["asistencia_texto"] = Asistencia.Estado(fila["asistencia"]).label
         enlaces["vista"] = filtros["vista"]
     url_perfil = reverse("usuarios:usuario_detalle", args=[usuario_id])
     return render(request, "clases/actividad_clases.html", {
         "titular": titular, "actividad": actividad, "formulario": formulario,
-        "es_profesor": es_profesor, "es_alumno": es_alumno, "resumen": resumen,
+        "es_profesor": es_profesor, "funcion": funcion, "ver_docencia": ver_docencia,
+        "ver_asistencia": ver_asistencia, "resumen": resumen,
         "vistas": vistas, "pagina": pagina,
         "parametros_paginacion": urlencode(enlaces) if actividad else "",
         "url_perfil": url_perfil,

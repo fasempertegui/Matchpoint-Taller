@@ -5,7 +5,7 @@
 {% block clase_contenido %}contenido-reservas reserva-perfil{% endblock %}
 {% block contenido %}
 <article class="tarjeta perfil">
-    <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-ondas"><div><p class="perfil-contexto">Mi invitación</p><div class="perfil-identidad"><h1>{{ reserva.numero }}</h1>{% include "componentes/badge_estado.html" with estado=reserva.evento.estado texto=reserva.evento.get_estado_display only %}</div></div><a class="boton boton-secundario" href="{% url 'reservas:mis_reservas' %}">Mis reservas</a></header>
+    <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-ondas"><div><p class="perfil-contexto">Mi invitación</p><div class="perfil-identidad"><h1>{{ reserva.numero }}</h1>{% include "componentes/badge_estado.html" with estado=reserva.evento.estado texto=reserva.evento.get_estado_display only %}</div></div><a class="boton boton-secundario" href="{% url 'reservas:mis_invitaciones' %}">Mis invitaciones</a></header>
     <div class="reserva-contenido">
         <section class="perfil-seccion"><h2>Datos de la reserva</h2>{% include "reservas/_datos_reserva.html" with reserva=reserva only %}</section>
         {% if reserva.evento.estado == 'anulado' %}<section class="perfil-seccion"><h2>Motivo de anulación</h2><p>{{ reserva.evento.motivo_anulacion|linebreaksbr }}</p></section>{% endif %}

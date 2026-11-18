@@ -10,6 +10,19 @@
 {% block contenido %}
 <header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-reticula">
     <h1>Actividad de clases</h1>
+    {% if es_profesor %}
+    <form class="actividad-selector-funcion" method="get" data-filtros-automaticos>
+        <input type="hidden" name="fecha_desde" value="{{ formulario.fecha_desde.value|default_if_none:'' }}">
+        <input type="hidden" name="fecha_hasta" value="{{ formulario.fecha_hasta.value|default_if_none:'' }}">
+        <input type="hidden" name="vista" value="{{ formulario.vista.value }}">
+        <label class="clase-etiqueta-oculta" for="actividad-funcion">Función en la clase</label>
+        <select class="form-control" id="actividad-funcion" name="funcion">
+            <option value="profesor"{% if funcion == "profesor" %} selected{% endif %}>Profesor</option>
+            <option value="participante"{% if funcion == "participante" %} selected{% endif %}>Participante</option>
+        </select>
+        <noscript><button class="boton boton-secundario boton-chico" type="submit">Aplicar</button></noscript>
+    </form>
+    {% endif %}
     {% if request.user.pk != titular.pk %}<a class="boton boton-secundario" href="{{ url_perfil }}">Ver perfil</a>{% endif %}
 </header>
 <p class="tarjeta descripcion-seccion">Consultá {% if request.user.pk == titular.pk %}tus próximas clases, el historial y las asistencias{% else %}las clases y asistencias de {{ titular }}{% endif %} en el período seleccionado.</p>
@@ -21,6 +34,7 @@
     </div>
         <form class="actividad-filtros filtros-compactos" id="actividad-periodo-formulario" method="get"{% if not formulario.errors %} hidden{% endif %}>
             {{ formulario.vista }}
+            {% if es_profesor %}<input type="hidden" name="funcion" value="{{ funcion }}">{% endif %}
             {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
             {% for error in formulario.vista.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
             <div class="detalle-grid">
@@ -28,19 +42,19 @@
                 <div class="grupo-campo"><label for="{{ formulario.fecha_hasta.id_for_label }}">Hasta</label>{{ formulario.fecha_hasta }}{% for error in formulario.fecha_hasta.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
             </div>
             <p class="texto-secundario">Podés consultar hasta 366 días por período.</p>
-            <div class="acciones-formulario"><a class="boton boton-secundario boton-chico" href="{% url 'clases:actividad_clases' titular.pk %}">Este mes</a><button class="boton boton-primario boton-chico" type="submit">Aplicar período</button></div>
+            <div class="acciones-formulario"><a class="boton boton-secundario boton-chico" href="{% url 'clases:actividad_clases' titular.pk %}{% if es_profesor %}?funcion={{ funcion }}{% endif %}">Este mes</a><button class="boton boton-primario boton-chico" type="submit">Aplicar período</button></div>
         </form>
     </div>
     {% if actividad %}
     <div class="perfil-seccion">
     <dl class="actividad-resumen">
-        {% if es_profesor %}
+        {% if ver_docencia %}
             <div><dt>Clases dictadas</dt><dd>{{ resumen.dictadas }}</dd></div>
             <div><dt>Próximas</dt><dd>{{ resumen.proximas }}</dd></div>
             {% if resumen.sin_cargar %}<div><dt>Asistencia sin cargar</dt><dd>{{ resumen.sin_cargar }}</dd></div>{% endif %}
         {% else %}
             <div><dt>Clases</dt><dd>{{ resumen.clases }}</dd></div>
-            {% if es_alumno %}
+            {% if ver_asistencia %}
                 <div><dt>Asistencia {% include "componentes/info.html" with texto="El resumen de asistencia corresponde solo a clases Finalizadas. Sin registrar no equivale a Ausente." only %}</dt><dd>{{ resumen.presentes }} de {{ resumen.finalizadas }}</dd></div>
                 {% if resumen.ausentes %}<div><dt>Ausentes</dt><dd>{{ resumen.ausentes }}</dd></div>{% endif %}
                 {% if resumen.sin_registrar %}<div><dt>Sin registrar</dt><dd>{{ resumen.sin_registrar }}</dd></div>{% endif %}
@@ -59,13 +73,13 @@
     <div class="tabla-contenedor{% if request.user.pk == titular.pk %} tabla-listado{% endif %}">
         <table>
             <caption class="clase-etiqueta-oculta">Clases de {{ titular }} en el período consultado</caption>
-            <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if formulario.vista.value != 'anuladas' %}<th scope="col">Estado de clase</th>{% endif %}{% if es_alumno %}<th scope="col">Participación</th><th scope="col">Asistencia</th>{% endif %}<th scope="col" class="acciones-columna">Acciones</th></tr></thead>
+            <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if formulario.vista.value != 'anuladas' %}<th scope="col">Estado de clase</th>{% endif %}{% if ver_asistencia %}<th scope="col">Participación</th><th scope="col">Asistencia</th>{% endif %}<th scope="col" class="acciones-columna">Acciones</th></tr></thead>
             <tbody>{% for fila in pagina %}
                 <tr>
                     <td><strong>{{ fila.fecha|date:"d/m/Y" }}</strong><span class="actividad-secundario">{{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</span></td>
                     <td>{{ fila.sede.nombre }}<span class="actividad-secundario">{{ fila.cancha.nombre }}</span></td>
                     {% if formulario.vista.value != 'anuladas' %}<td>{% indicador_estado "evento" fila.estado texto=fila.estado_texto %}</td>{% endif %}
-                    {% if es_alumno %}<td>{% if fila.respuesta_texto %}{% indicador_estado "respuesta" fila.respuesta texto=fila.respuesta_texto %}{% else %}<span class="texto-secundario">—</span>{% endif %}</td><td>
+                    {% if ver_asistencia %}<td>{% if fila.respuesta_texto %}{% indicador_estado "respuesta" fila.respuesta texto=fila.respuesta_texto %}{% else %}<span class="texto-secundario">—</span>{% endif %}</td><td>
                         {% if fila.asistencia_texto %}
                             {% indicador_estado "asistencia" fila.asistencia texto=fila.asistencia_texto %}
                             {% if fila.observaciones_asistencia %}<p class="actividad-nota texto-secundario">{{ fila.observaciones_asistencia|linebreaksbr }}</p>{% endif %}
@@ -83,4 +97,5 @@
 </section>
 {% endif %}
 <script src="{% static 'js/clase-actividad.js' %}" defer></script>
+{% if es_profesor %}<script src="{% static 'js/filtros.js' %}" defer></script>{% endif %}
 {% endblock %}

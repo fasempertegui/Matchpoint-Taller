@@ -253,7 +253,7 @@ def reserva_resultado(request, pk):
 @login_required
 @never_cache
 @require_GET
-def mis_reservas(request, usuario_id=None):
+def mis_reservas(request, usuario_id=None, *, solo_invitaciones=False):
     administrador = exigir_acceso_reservas(request.user)
     titular = request.user
     if usuario_id is not None:
@@ -265,7 +265,10 @@ def mis_reservas(request, usuario_id=None):
     ).distinct().select_related("evento__turno__cancha__sede").prefetch_related(
         Prefetch("invitados", queryset=ReservaInvitado.objects.filter(usuario=titular), to_attr="invitaciones_titular"),
     ).order_by("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
-    participacion = request.GET.get("participacion", "")
+    if usuario_id is not None:
+        participacion = request.GET.get("participacion", "")
+    else:
+        participacion = "invitado" if solo_invitaciones else "organizador"
     estado = request.GET.get("estado", "")
     if participacion == "organizador":
         consulta = consulta.filter(organizador=titular)
@@ -277,11 +280,15 @@ def mis_reservas(request, usuario_id=None):
         consulta = consulta.filter(evento__estado=estado)
     else:
         estado = ""
+    parametros = {"estado": estado}
+    if usuario_id is not None:
+        parametros["participacion"] = participacion
     return render(request, "reservas/mis_reservas.html", {
+        "solo_invitaciones": solo_invitaciones,
         "titular": titular, "consulta_administrativa": usuario_id is not None,
         "pagina": Paginator(consulta, 25).get_page(request.GET.get("pagina")),
         "participacion": participacion, "estado": estado, "estados": Evento.Estado.choices,
-        "parametros": urlencode({"participacion": participacion, "estado": estado}),
+        "parametros": urlencode(parametros),
     })
 
 

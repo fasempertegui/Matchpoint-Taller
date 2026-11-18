@@ -1,6 +1,13 @@
 body > .contenido-principal.contenido-actividad-clases { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
 .contenido-actividad-clases .tarjeta, .contenido-actividad-clases .boton, .contenido-actividad-clases .form-control { border-radius: 10px; }
 .contenido-actividad-clases > .encabezado-pagina { border: 0; border-top: 3px solid var(--primario-medio); }
+.contenido-actividad-clases .actividad-selector-funcion {
+    display: flex;
+    align-items: center;
+    margin-inline-start: auto;
+    gap: 8px;
+}
+.contenido-actividad-clases .actividad-selector-funcion .form-control { width: auto; }
 .contenido-actividad-clases .actividad-tarjeta-resumen { padding: 20px; }
 .contenido-actividad-clases .perfil-valor-accion { align-items: center; }
 .contenido-actividad-clases .perfil-lista dd { margin: 4px 0 0; font-size: 1rem; font-weight: 600; }
