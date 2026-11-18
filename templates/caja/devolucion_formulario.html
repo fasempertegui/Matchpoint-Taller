@@ -25,7 +25,7 @@
         {% else %}
             {% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{{ campo.errors }}
             {% elif campo.name == 'destinatario' %}<details{% if campo.value or campo.errors %} open{% endif %}><summary>Agregar destinatario</summary><div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div></details>
-            {% else %}<div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>{% if campo.name == 'verificado' %}<label>{{ campo }} {{ campo.label }}</label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}{{ campo.errors }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}
+            {% else %}<div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>{% if campo.name == 'verificado' or campo.name == 'sin_vinculo_confirmado' %}<label class="campo-opcion">{{ campo }}<span>{{ campo.label }}</span></label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}{{ campo.errors }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}
         {% endif %}
         <div class="acciones-formulario">
             {% if not origen or situacion.maximo_devolucion > 0 %}<button class="boton boton-primario" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar devolución{% else %}Revisar devolución{% endif %}</button>{% endif %}

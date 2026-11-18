@@ -44,7 +44,7 @@ body > .contenido-principal.contenido-acceso {
     padding: clamp(24px, 3vw, 40px);
     color: var(--texto);
     background: var(--superficie);
-    border-top: 4px solid var(--acento);
+    border-top: 4px solid var(--primario-medio);
     border-radius: 16px;
     box-shadow: 0 24px 70px #140a2640;
 }

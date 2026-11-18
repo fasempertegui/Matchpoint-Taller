@@ -90,6 +90,7 @@ def usuario_detalle(request, pk):
         "usuarios/usuario_detalle.html",
         {
             "usuario_obj": usuario,
+            "puede_consultar_actividad": request.user.tiene_rol(Rol.ADMINISTRADOR),
             "formulario_correo": UsuarioEditarForm(instance=usuario) if request.user.has_perm("usuarios.change_usuario") else None,
             "roles_asignados": roles_asignados,
             "roles_gestionables": [

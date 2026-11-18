@@ -1,13 +1,12 @@
 body > .contenido-principal.contenido-envios {
-    width: min(1120px, calc(100% - 96px));
+    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
     padding-block: 48px;
 }
 .contenido-envios .tarjeta,
 .contenido-envios .boton,
 .contenido-envios .form-control { border-radius: 10px; }
-.contenido-envios > .encabezado-pagina { border: 0; border-top: 3px solid var(--acento); }
+.contenido-envios > .encabezado-pagina { border: 0; border-top: 3px solid var(--primario-medio); }
 .contenido-envios .tarjeta-busqueda { margin-block: 24px; padding: 20px; }
-.contenido-envios .tabla-contenedor { border-bottom: 3px solid var(--acento); }
 .contenido-envios td { vertical-align: top; }
 .contenido-envios td:nth-child(2) { overflow-wrap: anywhere; }
 .envio-entrega[hidden] { display: none; }

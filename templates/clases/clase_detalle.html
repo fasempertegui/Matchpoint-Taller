@@ -7,9 +7,9 @@
 <article class="tarjeta perfil">
     <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-reticula">
         <div><p class="perfil-contexto">Detalle de clase</p><div class="perfil-identidad"><h1>Clase {{ clase.id }}</h1>{% include "componentes/badge_estado.html" with estado=clase.estado texto=clase.estado_texto only %}</div></div>
-        <details class="detalle-menu" data-menu-contextual>
+        <details class="perfil-menu" data-menu-contextual>
             <summary class="boton boton-secundario" aria-expanded="false" aria-controls="clase-acciones">Acciones <span aria-hidden="true">⋮</span></summary>
-            <div class="detalle-menu-opciones" id="clase-acciones">
+            <div class="perfil-menu-opciones" id="clase-acciones">
                 <a href="{{ url_agenda }}">Ver en agenda</a>
                 {% if clase.puede_registrar_asistencia or clase.puede_finalizar %}<a href="{% url 'clases:clase_asistencia' clase.id %}">{% if clase.puede_finalizar %}Finalizar y registrar asistencia{% elif hay_asistencia %}Revisar asistencia{% else %}Registrar asistencia{% endif %}</a>{% endif %}
                 {% if clase.puede_finalizar %}{% include "clases/_finalizar_clase.html" with clase_id=clase.id %}{% endif %}
@@ -20,39 +20,55 @@
                     {% csrf_token %}<input type="hidden" name="respuesta" value="no_asistira"><input type="hidden" name="identidad" value="{{ clase.mi_respuesta.identidad }}"><button type="submit">No asisto</button>
                 </form>
                 {% endif %}
-                {% if clase.puede_anular %}<a class="detalle-menu-peligro" href="{% url 'clases:clase_anular' clase.id %}">Anular y liberar</a>{% endif %}
-                {% if clase.puede_anular_bloquear %}<a class="detalle-menu-peligro" href="{% url 'clases:clase_anular_bloquear' clase.id %}">Anular y bloquear</a>{% endif %}
+                {% if clase.puede_anular %}<a class="perfil-menu-peligro" href="{% url 'clases:clase_anular' clase.id %}">Anular y liberar</a>{% endif %}
+                {% if clase.puede_anular_bloquear %}<a class="perfil-menu-peligro" href="{% url 'clases:clase_anular_bloquear' clase.id %}">Anular y bloquear</a>{% endif %}
             </div>
         </details>
     </header>
     <div class="clase-detalle-cuerpo">
         <section class="perfil-seccion" aria-labelledby="clase-datos-titulo">
-            <h2 id="clase-datos-titulo">Datos de la clase</h2>
-            <div class="tabla-contenedor detalle-datos-tabla"><table aria-labelledby="clase-datos-titulo"><tbody>
+            <div class="perfil-titulo-con-ayuda">
+                <h2 id="clase-datos-titulo">Datos de la clase</h2>
+                {% if registrado_por or clase.estado == 'finalizado' and puede_consultar_grupo %}
+                <div class="ayuda-contextual">
+                    <button type="button" class="ayuda-contextual-boton" aria-label="Datos del registro" aria-describedby="clase-datos-registro">
+                        {% include "componentes/iconoir/informacion.html" %}
+                    </button>
+                    <div class="ayuda-contextual-texto" id="clase-datos-registro" role="tooltip">
+                        <dl>
+                            {% if registrado_por %}
+                            <div><dt>Registrada por</dt><dd>{{ registrado_por }}</dd></div>
+                            <div><dt>Fecha de registro</dt><dd>{{ clase.creado_en|date:"d/m/Y H:i" }}</dd></div>
+                            {% endif %}
+                            {% if clase.estado == 'finalizado' and puede_consultar_grupo %}
+                            <div><dt>Finalizada por</dt><dd>{{ finalizado_por|default:"Finalización automática" }}</dd></div>
+                            <div><dt>Fecha de finalización</dt><dd>{{ clase.finalizado_en|date:"d/m/Y H:i" }}</dd></div>
+                            {% endif %}
+                            {% if clase.estado == 'anulado' and anulado_por %}
+                            <div><dt>Anulada por</dt><dd>{{ anulado_por }}</dd></div>
+                            <div><dt>Fecha de anulación</dt><dd>{{ clase.anulado_en|date:"d/m/Y H:i" }}</dd></div>
+                            {% endif %}
+                            <div><dt>Última modificación</dt><dd>{{ clase.actualizado_en|date:"d/m/Y H:i" }}</dd></div>
+                        </dl>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="tabla-contenedor tabla-datos"><table aria-labelledby="clase-datos-titulo"><tbody>
                 <tr><th scope="row">Sede</th><td>{{ clase.sede.nombre }}</td></tr>
                 <tr><th scope="row">Cancha</th><td>{{ clase.cancha.nombre }}</td></tr>
                 <tr><th scope="row">Fecha</th><td>{{ clase.fecha|date:"d/m/Y" }}</td></tr>
                 <tr><th scope="row">Horario</th><td>{{ clase.hora_inicio|time:"H:i" }} a {{ clase.hora_fin|time:"H:i" }}</td></tr>
                 {% if clase.es_administrador %}<tr><th scope="row">Origen</th><td>{% if clase.es_generada %}Generada desde la planilla{% else %}Creación manual{% endif %}</td></tr>{% endif %}
+                {% if clase.observaciones %}<tr><th scope="row">Observaciones</th><td>{{ clase.observaciones|linebreaksbr }}</td></tr>{% endif %}
+                {% if clase.estado == 'anulado' %}<tr><th scope="row">Motivo de anulación</th><td>{{ clase.motivo_anulacion|linebreaksbr }}</td></tr>{% endif %}
             </tbody></table></div>
         </section>
         {% if clase.mi_respuesta.respuesta == 'no_asistira' %}
         <section class="clase-detalle-aviso" aria-label="Tu aviso de no asistencia"><strong>Avisaste que no vas a asistir</strong><p>El aviso libera tu disponibilidad y no se puede modificar. Si cambiás de opinión, comunicate con tu profesor. Si finalmente asistís, tu presencia se registra sin modificar este aviso.</p></section>
         {% endif %}
-        {% if clase.observaciones %}<section class="perfil-seccion"><h2>Observaciones</h2><p class="perfil-observaciones">{{ clase.observaciones|linebreaksbr }}</p></section>{% endif %}
-        {% if clase.estado == 'anulado' %}<section class="perfil-seccion"><h2>Motivo de anulación</h2><p class="perfil-observaciones">{{ clase.motivo_anulacion|linebreaksbr }}</p></section>{% endif %}
         {% if puede_consultar_grupo or clase.profesores %}{% include "clases/_asignaciones_clase.html" with identificador="profesores" titulo=titulo_profesores personas=clase.profesores vigentes=clase.profesores_vigentes vacio="Sin profesores en la clase" solo_propios=False only %}{% endif %}
         {% if puede_consultar_grupo or clase.participantes %}{% include "clases/_asignaciones_clase.html" with identificador="participantes" titulo=titulo_participantes personas=clase.participantes vigentes=clase.participantes_vigentes vacio="Sin participantes en la clase" solo_propios=solo_propios mostrar_asistencia=mostrar_asistencia only %}{% endif %}
-        {% if registrado_por or clase.estado == 'finalizado' and puede_consultar_grupo %}
-        <details class="clase-detalle-registro"><summary>Datos del registro</summary>
-            <div class="tabla-contenedor detalle-datos-tabla"><table aria-label="Registro de la clase"><tbody>
-                {% if registrado_por %}<tr><th scope="row">Registrada por</th><td>{{ registrado_por }}</td></tr><tr><th scope="row">Fecha de registro</th><td>{{ clase.creado_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}
-                {% if clase.estado == 'finalizado' and puede_consultar_grupo %}<tr><th scope="row">Finalizada por</th><td>{{ finalizado_por|default:"Finalización automática" }}</td></tr><tr><th scope="row">Fecha de finalización</th><td>{{ clase.finalizado_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}
-                {% if clase.estado == 'anulado' and anulado_por %}<tr><th scope="row">Anulada por</th><td>{{ anulado_por }}</td></tr><tr><th scope="row">Fecha de anulación</th><td>{{ clase.anulado_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}
-                <tr><th scope="row">Última modificación</th><td>{{ clase.actualizado_en|date:"d/m/Y H:i" }}</td></tr>
-            </tbody></table></div>
-        </details>
-        {% endif %}
     </div>
 </article>
 <script src="{% static 'js/menu-contextual.js' %}" defer></script>

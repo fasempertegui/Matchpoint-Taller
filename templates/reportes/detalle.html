@@ -34,8 +34,7 @@
 {% if totales_tabla %}
 {% if indicadores %}<section class="tarjeta reporte-resumen" aria-label="Indicadores del reporte"><dl class="reporte-indicadores">{% for etiqueta, valor in indicadores %}<div><dt>{{ etiqueta }}</dt><dd>{{ valor }}</dd></div>{% endfor %}</dl></section>{% endif %}
 <section class="tarjeta reporte-resultados" aria-label="Resultado consolidado">
-    <header class="reporte-resultados-cabecera"><h2>Resultados</h2><dl><div><dt>Filas</dt><dd>{{ pagina.paginator.count }}</dd></div><div><dt>Consultado</dt><dd>{{ generado_en|date:"d/m/Y H:i" }}</dd></div></dl></header>
-    <div class="tabla-contenedor" role="region" aria-label="Tabla de {{ reporte.titulo }}" tabindex="0">
+    <div class="tabla-contenedor tabla-listado" role="region" aria-label="Tabla de {{ reporte.titulo }}" tabindex="0">
         <table class="reporte-tabla">
             <caption>{{ reporte.titulo }}</caption>
             <thead><tr>{% for clave, titulo, formato, peso in columnas %}<th scope="col"{% if clave == 'estado' %} class="reporte-estado"{% elif formato == 'dinero' or formato == 'entero' or formato == 'porcentaje' %} class="reporte-numero"{% endif %}>{{ titulo }}</th>{% endfor %}</tr></thead>

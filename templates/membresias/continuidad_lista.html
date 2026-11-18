@@ -4,16 +4,15 @@
 {% block titulo %}Continuidad | Academia TM{% endblock %}
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}">
-<link rel="stylesheet" href="{% static 'css/continuidad.css' %}">
 {% endblock %}
 {% block clase_contenido %}contenido-membresias-configuracion catalogo-listado{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina">
-    <div>
-        <h1>Continuidad</h1>
-        <p class="continuidad-introduccion">Consultá las respuestas de los titulares sobre la continuidad de sus planes y membresías el mes siguiente.</p>
-    </div>
+<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-orbitas">
+    <h1>Continuidad</h1>
 </header>
+<p class="tarjeta descripcion-seccion">
+    Consultá las respuestas de los titulares sobre la continuidad de sus planes y membresías el mes siguiente. Sin responder no indica una baja.
+</p>
 <form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos aria-label="Filtros de continuidad">
     {% if formulario.non_field_errors %}<div class="mensaje mensaje-error">{{ formulario.non_field_errors }}</div>{% endif %}
     {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
@@ -21,11 +20,7 @@
     <noscript><button class="boton boton-secundario" type="submit">Consultar</button></noscript>
 </form>
 {% if mes %}
-<section class="tarjeta tabla-contenedor continuidad-listado" aria-labelledby="continuidad-respuestas-titulo">
-    <header class="continuidad-listado-cabecera">
-        <h2 id="continuidad-respuestas-titulo">Continuidad para {{ mes_consultado|date:"F Y" }}</h2>
-        <p>Contrataciones de {{ mes|date:"F Y" }}. Sin responder no indica una baja. Las contrataciones y los pagos se consultan por separado.</p>
-    </header>
+<section class="tarjeta tabla-contenedor tabla-listado" aria-label="Continuidad para {{ mes_consultado|date:'F Y' }}">
     <table>
         <thead><tr><th scope="col">Titular</th><th scope="col">Producto</th><th scope="col">Contratación</th><th scope="col">Respuesta</th><th scope="col">Fecha de respuesta</th></tr></thead>
         <tbody>{% for contrato in pagina %}<tr>

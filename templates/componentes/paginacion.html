@@ -1,4 +1,4 @@
-{% if pagina.paginator.count %}
+{% if pagina.has_other_pages %}
 <nav class="paginacion" aria-label="Páginas de {{ entidad }}">
     <span class="paginacion-resumen"><strong>{{ pagina.start_index }}–{{ pagina.end_index }}</strong> de {{ pagina.paginator.count }} {{ entidad }}</span>
     <div class="paginacion-controles">

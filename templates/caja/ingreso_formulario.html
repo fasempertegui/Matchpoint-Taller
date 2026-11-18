@@ -16,8 +16,8 @@
         <h2 class="ingreso-seccion-titulo">Datos del cobro</h2>
         {% for campo in formulario.visible_fields %}
             <div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
-                {% if campo.name == 'verificado' %}
-                    <label class="ingreso-verificacion" for="{{ campo.id_for_label }}">{{ campo }}<span>Verifiqué la recepción o aprobación del pago</span></label>
+                {% if campo.name == 'verificado' or campo.name == 'sin_vinculo_confirmado' %}
+                    <label class="campo-opcion" for="{{ campo.id_for_label }}">{{ campo }}<span>{% if campo.name == 'verificado' %}Verifiqué la recepción o aprobación del pago{% else %}{{ campo.label }}{% endif %}</span></label>
                 {% else %}
                     <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
                     {{ campo }}

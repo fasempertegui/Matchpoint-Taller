@@ -17,22 +17,19 @@
 
 {% include "auditoria/navegacion.html" %}
 
-<section class="tarjeta tabla-contenedor auditoria-lista" aria-label="Registros de auditoría">
+<section class="tarjeta tabla-contenedor tabla-listado tabla-listado-sin-centrado auditoria-lista" aria-label="Registros de auditoría">
 <table class="auditoria-tabla auditoria-tabla-cambios">
     <thead>
         <tr>
-            <th scope="col">Fecha y hora</th>
             <th scope="col">Responsable</th>
             <th scope="col">Operación</th>
+            <th scope="col">Fecha y hora</th>
             <th scope="col">Detalle</th>
         </tr>
     </thead>
     <tbody>
 {% for fila in filas %}
     <tr class="auditoria-registro">
-        <td>
-            <time datetime="{{ fila.registro.realizado_en|date:'c' }}">{{ fila.registro.realizado_en|date:"d/m/Y H:i:s" }}</time>
-        </td>
         <td>
             <strong class="auditoria-usuario">
                 {% if fila.registro.usuario %}
@@ -62,6 +59,9 @@
             {% endif %}
         </td>
         <td>
+            <time datetime="{{ fila.registro.realizado_en|date:'c' }}">{{ fila.registro.realizado_en|date:"d/m/Y H:i:s" }}</time>
+        </td>
+        <td>
             <button type="button" class="boton boton-secundario boton-chico auditoria-desplegar"
                 aria-expanded="false" aria-controls="auditoria-detalle-{{ fila.registro.pk }}"
                 aria-label="Ver cambios del registro: {{ fila.referencia }}">
@@ -75,7 +75,7 @@
             {% if fila.registro.accion == "cambio_contrasena" or fila.registro.accion == "restablecimiento_contrasena" or fila.registro.accion == "actualizacion_hash" %}
             <p class="texto-secundario">Este evento no guarda la contraseña ni su hash.</p>
             {% endif %}
-            <div class="tabla-contenedor auditoria-metadatos">
+            <div class="tabla-contenedor tabla-listado tabla-listado-sin-centrado auditoria-metadatos">
                 <table>
                     <caption class="clase-etiqueta-oculta">Información técnica</caption>
                     <tbody>

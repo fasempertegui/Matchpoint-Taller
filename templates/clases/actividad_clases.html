@@ -52,11 +52,11 @@
 </section>
 {% if actividad %}
 <section class="tarjeta actividad-listado" aria-label="Clases del período">
-    <nav class="actividad-vistas" aria-label="Secciones de actividad">
+    <nav class="pestanas actividad-vistas" aria-label="Secciones de actividad">
         {% for vista in vistas %}<a href="{{ vista.url }}"{% if vista.actual %} aria-current="page"{% endif %}>{{ vista.nombre }}</a>{% endfor %}
     </nav>
     {% if pagina %}
-    <div class="tabla-contenedor">
+    <div class="tabla-contenedor{% if request.user.pk == titular.pk %} tabla-listado{% endif %}">
         <table>
             <caption class="clase-etiqueta-oculta">Clases de {{ titular }} en el período consultado</caption>
             <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if formulario.vista.value != 'anuladas' %}<th scope="col">Estado de clase</th>{% endif %}{% if es_alumno %}<th scope="col">Participación</th><th scope="col">Asistencia</th>{% endif %}<th scope="col" class="acciones-columna">Acciones</th></tr></thead>

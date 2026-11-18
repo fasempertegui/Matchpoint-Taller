@@ -1,4 +1,4 @@
-<div class="tabla-contenedor reserva-datos-tabla">
+<div class="tabla-contenedor tabla-datos">
     <table aria-label="Datos de la reserva">
         <tbody>
             <tr><th scope="row">Organizador</th><td>{{ reserva.organizador }}</td></tr>
@@ -7,6 +7,7 @@
             <tr><th scope="row">Fecha</th><td>{{ reserva.evento.turno.fecha|date:"d/m/Y" }}</td></tr>
             <tr><th scope="row">Horario</th><td>{{ reserva.evento.turno.hora_inicio|time:"H:i" }} a {{ reserva.evento.turno.hora_fin|time:"H:i" }}</td></tr>
             {% if mostrar_total %}<tr><th scope="row">Total</th><td><strong>$ {{ total|floatformat:"2g" }}</strong></td></tr>{% endif %}
+            {% if mostrar_observaciones and reserva.evento.observaciones %}<tr><th scope="row">Observaciones</th><td>{{ reserva.evento.observaciones|linebreaksbr }}</td></tr>{% endif %}
         </tbody>
     </table>
 </div>

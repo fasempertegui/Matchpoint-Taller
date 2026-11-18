@@ -252,49 +252,7 @@
     margin: 0;
 }
 
-.reserva-membresia-ayuda {
-    position: relative;
-    flex-shrink: 0;
-}
-
-.reserva-membresia-ayuda-boton {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--primario);
-    font: inherit;
-    font-size: .8rem;
-    font-weight: 600;
-    cursor: help;
-}
-
-.reserva-membresia-ayuda-boton:focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: 3px;
-}
-
-.reserva-membresia-tooltip {
-    position: absolute;
-    z-index: 10;
-    top: 100%;
-    right: 0;
-    width: min(260px, 75vw);
-    box-sizing: border-box;
-    padding: 14px 16px;
-    border: 1px solid var(--borde);
-    border-radius: 8px;
-    background: var(--superficie);
-    color: var(--texto);
-    box-shadow: 0 6px 20px #00000018;
-    visibility: hidden;
-    opacity: 0;
-}
+.reserva-membresia-ayuda { flex-shrink: 0; color: var(--primario); font-size: 18px; }
 
 .reserva-membresia-tooltip strong,
 .reserva-membresia-tooltip span,
@@ -318,11 +276,6 @@
     font-size: 1rem;
 }
 
-.reserva-membresia-ayuda:hover .reserva-membresia-tooltip,
-.reserva-membresia-ayuda:focus-within .reserva-membresia-tooltip {
-    visibility: visible;
-    opacity: 1;
-}
 
 .reserva-invitados-resumen li:last-child {
     border-bottom: 0;

@@ -1,18 +1,25 @@
-.notificaciones-cabecera { display: flex; justify-content: flex-end; width: min(1120px, calc(100% - 48px)); margin: 12px auto 0; }
 .notificaciones-acceso { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; color: var(--primario); text-decoration: none; font-size: 14px; }
 .notificaciones-acceso:hover, .notificaciones-acceso[aria-current] { background: var(--primario-suave); }
-.notificaciones-acceso:focus-visible, .notificaciones-filtros a:focus-visible { outline: 2px solid var(--primario); outline-offset: 3px; }
+.notificaciones-acceso:focus-visible { outline: 2px solid var(--primario); outline-offset: 3px; }
 .notificaciones-contador { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding-inline: 5px; border-radius: 20px; background: var(--primario); color: white; font-size: 12px; font-weight: 700; }
-.sidebar-cabecera-tablet .notificaciones-acceso { margin-left: auto; }
-.contenido-notificaciones > .notificaciones-encabezado { align-items: center; gap: 16px; border-top: 3px solid var(--acento); border-bottom: 0; }
+.sidebar-notificaciones { position: relative; margin-top: 12px; }
+.sidebar-notificaciones .notificaciones-contador { flex-shrink: 0; margin-left: auto; }
+.sidebar-compacta .sidebar-notificaciones .notificaciones-contador { position: absolute; top: 0; right: 0; min-width: 18px; height: 18px; padding-inline: 4px; font-size: 10px; }
+.contenido-notificaciones > .notificaciones-encabezado { align-items: center; gap: 16px; border-top: 3px solid var(--primario-medio); border-bottom: 0; }
 .notificaciones-encabezado h1 { margin: 0; }
 .notificaciones-encabezado p { margin-bottom: 0; }
+.notificaciones-ultima-modificacion {
+    display: grid;
+    gap: 2px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--primario-suave);
+    color: var(--primario);
+    font-size: .875rem;
+}
+.notificaciones-ultima-modificacion time { font-weight: 700; }
 .notificaciones-acciones { flex-shrink: 0; }
 .notificaciones-acciones form { margin-top: 10px; }
-.notificaciones-filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-block: 20px; }
-.notificaciones-filtros a { padding: 7px 12px; border-radius: 8px; color: var(--primario); text-decoration: none; }
-.notificaciones-filtros a:hover, .notificaciones-filtros a[aria-current] { background: var(--primario-suave); }
-.notificaciones-filtros a[aria-current] { font-weight: 700; box-shadow: inset 0 -2px var(--acento); }
 .notificaciones-bandeja { padding: 0; overflow: hidden; }
 .notificaciones-lista { list-style: none; margin: 0; padding: 0; }
 .notificacion-fila { display: flex; align-items: center; gap: 20px; padding: 18px 24px; border-bottom: 1px solid var(--borde); }
@@ -25,23 +32,13 @@
 .notificacion-fila > form, .notificacion-fila > a { flex-shrink: 0; }
 .notificacion-vacia { padding: 24px; color: var(--texto-suave); }
 .notificaciones-bandeja .paginacion { padding-inline: 24px; }
-.notificaciones-reglas { margin-bottom: 0; }
-.notificaciones-reglas > div { display: grid; grid-template-columns: minmax(150px, 1fr) 2fr auto; align-items: start; gap: 16px; padding-block: 12px; border-bottom: 1px solid var(--borde); scroll-margin-top: 80px; }
-.notificaciones-reglas > div:last-child { border-bottom: 0; }
-.notificaciones-reglas dt { color: var(--texto-suave); }
-.notificaciones-reglas dd { margin: 0; }
-.notificacion-regla-formulario { grid-column: 1 / -1; }
-.notificacion-regla-formulario form { max-width: 640px; }
-@media (max-width: 900px) {
-    .sidebar-inicializada .notificaciones-cabecera { display: none; }
-    .sidebar-cabecera-tablet .notificaciones-acceso-texto { display: none; }
-}
+.notificaciones-reglas tr[id] { scroll-margin-top: 80px; }
+.notificacion-regla-formulario form { max-width: 640px; margin-inline: auto; text-align: left; }
 @media (max-width: 600px) {
-    .notificaciones-reglas > div { grid-template-columns: 1fr; gap: 4px; }
     .notificacion-fila { align-items: flex-start; gap: 12px; padding: 16px; flex-wrap: wrap; }
     .notificacion-contenido { flex-basis: 100%; }
     .contenido-notificaciones > .notificaciones-encabezado { align-items: flex-start; flex-direction: column; }
 }
 @media print {
-    .notificaciones-cabecera, .notificaciones-acceso, .notificaciones-acciones, .notificaciones-filtros, .notificacion-fila > form, .notificacion-fila > a, .notificacion-regla-accion, .notificacion-regla-formulario { display: none !important; }
+    .notificaciones-acceso, .notificaciones-acciones, .notificaciones-filtros, .notificacion-fila > form, .notificacion-fila > a, .notificacion-regla-accion, .notificacion-regla-formulario { display: none !important; }
 }

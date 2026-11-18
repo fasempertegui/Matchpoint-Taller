@@ -1,7 +1,7 @@
 {% if navegacion_app.mostrar_notificaciones %}
-<a class="notificaciones-acceso" href="{% url 'comunicaciones:notificaciones_lista' %}" aria-label="Notificaciones{% if navegacion_app.notificaciones_no_leidas %}: {{ navegacion_app.notificaciones_no_leidas }} sin leer{% endif %}"{% if request.resolver_match.view_name == 'comunicaciones:notificaciones_lista' %} aria-current="page"{% endif %}>
+<a class="{% if en_sidebar %}sidebar-enlace sidebar-notificaciones{% if request.resolver_match.view_name == 'comunicaciones:notificaciones_lista' %} sidebar-enlace-activo{% endif %}{% else %}notificaciones-acceso{% endif %}" href="{% url 'comunicaciones:notificaciones_lista' %}" title="Notificaciones{% if navegacion_app.notificaciones_no_leidas %}: {{ navegacion_app.notificaciones_no_leidas }} sin leer{% endif %}" aria-label="Notificaciones{% if navegacion_app.notificaciones_no_leidas %}: {{ navegacion_app.notificaciones_no_leidas }} sin leer{% endif %}"{% if request.resolver_match.view_name == 'comunicaciones:notificaciones_lista' %} aria-current="page"{% endif %}>
     <svg class="sidebar-icono" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
-    <span class="notificaciones-acceso-texto">Notificaciones</span>
-    {% if navegacion_app.notificaciones_no_leidas %}<span class="notificaciones-contador" aria-hidden="true">{{ navegacion_app.notificaciones_no_leidas }}</span>{% endif %}
+    <span class="{% if en_sidebar %}sidebar-texto{% else %}notificaciones-acceso-texto{% endif %}">Notificaciones</span>
+    {% if navegacion_app.notificaciones_no_leidas %}<span class="notificaciones-contador" aria-hidden="true">{% if navegacion_app.notificaciones_no_leidas > 99 %}99+{% else %}{{ navegacion_app.notificaciones_no_leidas }}{% endif %}</span>{% endif %}
 </a>
 {% endif %}

@@ -1,12 +1,11 @@
-body > .contenido-principal.contenido-reservas { width: min(1120px, calc(100% - 96px)); padding-block: 48px; }
+body > .contenido-principal.contenido-reservas { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
 .contenido-reservas .tarjeta, .contenido-reservas .boton, .contenido-reservas .form-control { border-radius: 10px; }
-.reservas-listado > .encabezado-pagina { border: 0; border-top: 3px solid var(--acento); }
+.reservas-listado > .encabezado-pagina { border: 0; border-top: 3px solid var(--primario-medio); }
 .reservas-listado .tarjeta-busqueda { padding: 20px; margin-block: 20px; }
-.reservas-tabla { border-bottom: 3px solid var(--acento); }
 .reservas-tabla table { font-size: .9rem; }
 .reservas-tabla td { vertical-align: middle; }
 .reservas-tabla small { display: block; margin-top: 4px; color: var(--texto-suave); }
-.reserva-perfil > .perfil { border: 0; border-top: 3px solid var(--acento); }
+.reserva-perfil > .perfil { border: 0; border-top: 3px solid var(--primario-medio); }
 .reserva-perfil .perfil-cabecera { padding: 24px; border-radius: 8px 8px 0 0; }
 .reserva-contenido { padding: 24px; }
 .reserva-perfil .perfil-seccion + .perfil-seccion { margin-top: 24px; padding-top: 24px; }
@@ -15,37 +14,21 @@ body > .contenido-principal.contenido-reservas { width: min(1120px, calc(100% - 
 .reserva-perfil .perfil-fila { display: block; border: 0; padding: 0; }
 .reserva-perfil .perfil-fila dd { margin-top: 6px; font-size: 1rem; font-weight: 600; }
 .reserva-perfil .perfil-desplegable .grupo-campo { margin-bottom: 16px; }
-.reserva-seccion-cabecera { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.reserva-perfil .reserva-seccion-cabecera h2 { margin: 0; }
 .reserva-perfil table { font-size: .9rem; }
 .reserva-perfil td { vertical-align: middle; }
 .reserva-acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
-.reserva-desplegable { border-top: 1px solid var(--borde); margin-top: 24px; }
-.reserva-desplegable > summary { padding-block: 18px; color: var(--primario); font-weight: 600; cursor: pointer; }
-.reserva-desplegable-cuerpo { padding-bottom: 8px; }
-.reserva-desplegable-cuerpo > .perfil-seccion { margin: 0; padding: 0; border: 0; }
+.reserva-tabla-modalidad .ayuda-contextual { margin-left: 4px; }
+.reserva-tabla-invitados { border: 1px solid var(--borde); border-radius: 10px; }
+.perfil-seccion-desplegable-cuerpo > .perfil-seccion { margin: 0; padding: 0; border: 0; }
 .reserva-invitacion-respuesta > details { margin-top: 16px; }
 .reserva-invitacion-respuesta summary { color: var(--primario); font-weight: 600; cursor: pointer; }
 @media (max-width: 640px) { .reserva-perfil .perfil-lista { grid-template-columns: minmax(0, 1fr); } }
 
-.reserva-contenido > .reserva-desplegable + .perfil-seccion { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--borde); }
-
-.reserva-datos-tabla { border: 1px solid var(--borde); border-radius: 8px; }
-.reserva-datos-tabla th { width: 200px; background: #faf9fc; color: var(--texto-suave); font-size: .875rem; font-weight: 500; text-transform: none; letter-spacing: normal; }
-.reserva-datos-tabla td { font-size: 1rem; }
-.reserva-datos-tabla tr:last-child th, .reserva-datos-tabla tr:last-child td { border-bottom: 0; }
+.reserva-contenido > .perfil-seccion-desplegable + .perfil-seccion { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--borde); }
 
 
-.reserva-diferencia-pago { display: block; margin-top: 4px; color: var(--texto-suave); }
 
-.reserva-menu { position: relative; flex-shrink: 0; }
-.reserva-menu > summary { list-style: none; cursor: pointer; gap: 10px; }
-.reserva-menu > summary::-webkit-details-marker { display: none; }
-.reserva-menu-opciones { position: absolute; z-index: 30; right: 0; top: calc(100% + 8px); width: 240px; padding: 6px; border: 1px solid var(--borde); border-radius: 10px; background: var(--superficie); box-shadow: 0 6px 20px #00000018; }
-.reserva-menu-opciones a, .reserva-menu-opciones button { display: block; width: 100%; padding: 10px 12px; border: 0; border-radius: 6px; background: transparent; color: var(--texto); font: inherit; font-size: .9rem; text-align: left; text-decoration: none; cursor: pointer; }
-.reserva-menu-opciones a:hover, .reserva-menu-opciones button:hover { background: var(--primario-suave); color: var(--primario); }
-.reserva-menu-opciones a:focus-visible, .reserva-menu-opciones button:focus-visible, .reserva-menu > summary:focus-visible { outline: 2px solid var(--primario); outline-offset: -2px; }
-.reserva-menu-opciones .reserva-menu-peligro { color: var(--peligro); border-top: 1px solid var(--borde); border-radius: 0 0 6px 6px; }
+
 .reserva-menu-impedimento { margin: 0; padding: 10px 12px; border-top: 1px solid var(--borde); color: var(--texto-suave); font-size: .8rem; }
 .reserva-modal-anulacion { border-radius: 10px; }
 .reserva-modal-anulacion .grupo-campo { margin-block: 20px 0; }

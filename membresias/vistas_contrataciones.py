@@ -10,6 +10,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from caja.consultas import contexto_financiero
+from usuarios.models import Usuario
 
 from .contrataciones import (
     ContratacionExistente,
@@ -63,15 +64,30 @@ def _contexto(tipo):
 @login_required
 @never_cache
 @require_GET
-def contratacion_lista(request, tipo="plan"):
+def contratacion_lista(request, tipo="plan", usuario_id=None):
     exigir_administracion_membresias(request.user)
+    titular = None
+    if usuario_id is not None:
+        titular = get_object_or_404(Usuario, pk=usuario_id)
+        tipo = request.GET.get("tipo", "plan")
+        if tipo not in CONFIGURACION_CONTRATACIONES:
+            tipo = "plan"
     modelo = CONFIGURACION_CONTRATACIONES[tipo]["modelo"]
     contrataciones = modelo.objects.select_related("usuario", tipo)
+    contexto = _contexto(tipo)
     parametros = request.GET.copy()
     parametros.pop("pagina", None)
+    if titular is not None:
+        contrataciones = contrataciones.filter(usuario=titular)
+        parametros["tipo"] = tipo
+        contexto.update({
+            "titular": titular,
+            "titulo_lista": f"Contrataciones de {titular}",
+            "url_lista": f"{request.path}?tipo={tipo}",
+        })
     return render(request, "membresias/contratacion_lista.html", {
         "parametros": parametros.urlencode(),
-        **_contexto(tipo), **listar_contrataciones(contrataciones, request.GET, tipo=tipo),
+        **contexto, **listar_contrataciones(contrataciones, request.GET, tipo=tipo, buscar_usuario=titular is None),
     })
 
 

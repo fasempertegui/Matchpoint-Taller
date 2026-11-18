@@ -31,7 +31,7 @@
         </div>
         <div class="grupo-campo">
             <span class="agenda-etiqueta" id="agenda-vista-etiqueta">Vista</span>
-            <div class="agenda-vistas" role="group" aria-labelledby="agenda-vista-etiqueta">
+            <div class="pestanas agenda-vistas" role="group" aria-labelledby="agenda-vista-etiqueta">
                 <span aria-current="page">Día</span>
                 <button type="button" disabled>Semana</button>
             </div>
@@ -106,7 +106,7 @@
                                                                 <span>{% if celda.puede_reservar or celda.puede_bloquear %}<span class="agenda-mas" aria-hidden="true">＋ </span>{% endif %}Libre</span>
                                                             {% endif %}
                                                             {% if celda.anulados %}
-                                                                <span class="agenda-historial" role="img" aria-label="Hay eventos anulados" title="Hay eventos anulados">
+                                                                <span class="agenda-historial" role="img" aria-label="Hay eventos anulados" data-estado-tooltip="Hay eventos anulados">
                                                                     <svg width="18" height="18" viewBox="0 0 24 24" stroke-width="1.5" fill="none" aria-hidden="true" focusable="false">
                                                                         <path d="M13 21H5C3.89543 21 3 20.1046 3 19V10H21V13M15 4V2M15 4V6M15 4H10.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
                                                                         <path d="M3 10V6C3 4.89543 3.89543 4 5 4H7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>

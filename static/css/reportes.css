@@ -1,6 +1,6 @@
-body > .contenido-principal.contenido-reportes { width: min(1120px, calc(100% - 96px)); padding-block: 48px; }
+body > .contenido-principal.contenido-reportes { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
 .contenido-reportes .tarjeta, .contenido-reportes .boton, .contenido-reportes .form-control { border-radius: 10px; }
-.contenido-reportes > .encabezado-pagina { border: 0; border-top: 3px solid var(--acento); }
+.contenido-reportes > .encabezado-pagina { border: 0; border-top: 3px solid var(--primario-medio); }
 .contenido-reportes > .encabezado-pagina h1 { min-width: 0; flex: 1 1 500px; }
 .contenido-reportes > .encabezado-pagina .acciones { flex-shrink: 0; }
 .reportes-catalogo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
@@ -35,13 +35,7 @@ body > .contenido-principal.contenido-reportes { width: min(1120px, calc(100% - 
 .reporte-indicadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px 24px; margin: 0; }
 .reporte-indicadores dt { color: var(--texto-suave); font-size: .85rem; }
 .reporte-indicadores dd { margin: 6px 0 0; color: var(--primario); font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-.reporte-resultados { padding: 0; border-bottom: 3px solid var(--acento); }
-.reporte-resultados-cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 20px; border-bottom: 1px solid var(--borde); }
-.reporte-resultados-cabecera h2 { margin: 0; font-size: 1.2rem; }
-.reporte-resultados-cabecera dl { display: flex; flex-wrap: wrap; gap: 20px; margin: 0; }
-.reporte-resultados-cabecera dl > div { display: flex; gap: 8px; align-items: baseline; font-size: .85rem; }
-.reporte-resultados-cabecera dt { color: var(--texto-suave); }
-.reporte-resultados-cabecera dd { margin: 0; font-weight: 600; }
+.reporte-resultados { padding: 0; }
 .reporte-tabla { width: 100%; font-size: .875rem; }
 .reporte-tabla caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .reporte-tabla th, .reporte-tabla td { vertical-align: middle; padding: 12px 16px; }

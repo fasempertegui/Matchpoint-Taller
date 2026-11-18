@@ -9,31 +9,44 @@
 <article class="tarjeta perfil">
     <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-reticula">
         <div><p class="perfil-contexto">Reserva</p><div class="perfil-identidad"><h1>{{ reserva.numero }}</h1>{% include "componentes/badge_estado.html" with estado=reserva.evento.estado texto=reserva.evento.get_estado_display only %}</div></div>
-        <details class="reserva-menu" data-reserva-menu>
+        <details class="perfil-menu" data-reserva-menu>
     <summary class="boton boton-secundario" aria-expanded="false" aria-controls="reserva-menu-opciones">Acciones <span aria-hidden="true">⋮</span></summary>
-    <div class="reserva-menu-opciones" id="reserva-menu-opciones">
+    <div class="perfil-menu-opciones" id="reserva-menu-opciones">
+        {% if pagina_finanzas %}<button type="button" data-abrir-movimientos aria-haspopup="dialog" aria-controls="movimientos-financieros">Ver movimientos ({{ pagina_finanzas.paginator.count }})</button>{% endif %}
         <a href="{% url 'agenda:agenda' %}?sede={{ turno.cancha.sede_id }}&amp;cancha={{ turno.cancha_id }}&amp;fecha={{ turno.fecha|date:'Y-m-d' }}&amp;hora={{ turno.hora_inicio.hour }}">Ver turno en agenda</a>
         <a href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
         {% if puede_gestionar %}<a href="{% url 'reservas:reserva_invitados' reserva.pk %}">Gestionar invitados</a>{% if reserva.es_con_membresia %}<a href="{% url 'reservas:reserva_socios' reserva.pk %}">Actualizar socios</a>{% endif %}{% endif %}
         {% if es_administrador and reserva.es_con_membresia and reserva.evento.estado == 'finalizado' and not reserva.resultado_corregido_en %}<a href="{% url 'reservas:reserva_resultado' reserva.pk %}">{% if reserva.resultado_uso == 'sin_registrar' %}Registrar resultado{% else %}Corregir resultado{% endif %}</a>{% endif %}
         {% if puede_finalizar %}<form method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}" data-confirmar="¿Finalizar la reserva {{ reserva.numero }}? Se conservará su turno y su ocupación histórica." data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">{% csrf_token %}<button type="submit">Finalizar reserva</button></form>{% endif %}
-        {% if puede_anular %}<button class="reserva-menu-peligro" type="button" data-abrir-anulacion>Anular reserva</button>{% elif not es_administrador and reserva.evento.estado == 'programado' %}<p class="reserva-menu-impedimento">{{ impedimento_anulacion }}</p>{% endif %}
+        {% if puede_anular %}<button class="perfil-menu-peligro" type="button" data-abrir-anulacion>Anular reserva</button>{% elif not es_administrador and reserva.evento.estado == 'programado' %}<p class="reserva-menu-impedimento">{{ impedimento_anulacion }}</p>{% endif %}
     </div>
 </details>
     </header>
     <div class="reserva-contenido">
             <section class="perfil-seccion" aria-labelledby="reserva-datos-titulo">
-                <h2 id="reserva-datos-titulo">Datos de la reserva</h2>
-                {% include "reservas/_datos_reserva.html" with reserva=reserva total=total mostrar_total=True only %}
+                <div class="perfil-titulo-con-ayuda">
+                    <h2 id="reserva-datos-titulo">Datos de la reserva</h2>
+                    <div class="ayuda-contextual">
+                        <button type="button" class="ayuda-contextual-boton" aria-label="Datos del registro" aria-describedby="reserva-datos-registro">
+                            {% include "componentes/iconoir/informacion.html" %}
+                        </button>
+                        <div class="ayuda-contextual-texto" id="reserva-datos-registro" role="tooltip">
+                            <dl>
+                                <div><dt>Fecha de registro</dt><dd>{{ reserva.evento.creado_en|date:"d/m/Y H:i" }}</dd></div>
+                                <div><dt>Registrada por</dt><dd>{{ reserva.evento.registrado_por }}</dd></div>
+                                {% if reserva.evento.estado == "anulado" %}
+                                <div><dt>Fecha de anulación</dt><dd>{{ reserva.evento.anulado_en|date:"d/m/Y H:i" }}</dd></div>
+                                <div><dt>Anulada por</dt><dd>{{ reserva.evento.anulado_por }}</dd></div>
+                                {% elif reserva.evento.estado == "finalizado" %}
+                                <div><dt>Fecha de finalización</dt><dd>{{ reserva.evento.finalizado_en|date:"d/m/Y H:i" }}</dd></div>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                {% include "reservas/_datos_reserva.html" with reserva=reserva total=total mostrar_total=True mostrar_observaciones=True only %}
             </section>
 
-
-            {% if reserva.evento.observaciones %}
-                <section class="perfil-seccion" aria-labelledby="reserva-observaciones-titulo">
-                    <h2 id="reserva-observaciones-titulo">Observaciones</h2>
-                    <p class="perfil-observaciones">{{ reserva.evento.observaciones|linebreaksbr }}</p>
-                </section>
-            {% endif %}
 
             {% if reserva.evento.estado == "anulado" %}
                 <section class="perfil-seccion" aria-labelledby="reserva-motivo-titulo">
@@ -42,71 +55,71 @@
                 </section>
             {% endif %}
 
-        <section class="perfil-seccion" aria-labelledby="reserva-invitados-titulo">
-            <div class="reserva-seccion-cabecera"><h2 id="reserva-invitados-titulo">Invitados</h2><span class="texto-secundario">Participantes confirmados: {{ reserva.cantidad_participantes }}</span></div>
-            {% if invitados %}<div class="tabla-contenedor"><table><thead><tr><th scope="col">Persona</th><th scope="col">Respuesta</th><th scope="col">Condición aplicada</th></tr></thead><tbody>{% for fila in invitados %}<tr><td><strong>{{ fila.invitado.usuario }}</strong></td><td>{% indicador_estado "respuesta" fila.invitado.respuesta texto=fila.respuesta_texto %}</td><td>{{ fila.invitado.get_condicion_aplicada_display }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="texto-secundario">Sin invitados</p>{% endif %}
-
-        </section>
-        <details class="reserva-desplegable"{% if historial_financiero_abierto %} open{% endif %}><summary>Pagos y movimientos</summary><div class="reserva-desplegable-cuerpo">{% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True finanzas_en_tabla=True %}</div></details>
-        <details class="reserva-desplegable"><summary>Modalidad y uso</summary><div class="reserva-desplegable-cuerpo">
-            <div class="tabla-contenedor reserva-datos-tabla"><table><tbody>
+        <details class="perfil-seccion-desplegable">
+            <summary>Invitados{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
+            <div class="perfil-seccion-desplegable-cuerpo">
+                {% if invitados %}
+                <div class="tabla-contenedor tabla-listado tabla-listado-sin-centrado reserva-tabla-invitados">
+                    <table aria-label="Invitados de la reserva">
+                        <thead>
+                            <tr><th scope="col">Persona</th><th scope="col">Respuesta</th><th scope="col">Condición aplicada</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for fila in invitados %}
+                            <tr>
+                                <td><strong>{{ fila.invitado.usuario }}</strong></td>
+                                <td>{% indicador_estado "respuesta" fila.invitado.respuesta texto=fila.respuesta_texto %}</td>
+                                <td>{{ fila.invitado.get_condicion_aplicada_display }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}<p class="texto-secundario">Sin invitados</p>{% endif %}
+            </div>
+        </details>
+        <details class="perfil-seccion-desplegable"{% if historial_financiero_abierto %} open{% endif %}><summary>Pagos y movimientos{% include "componentes/iconoir/chevron-abajo.html" %}</summary><div class="perfil-seccion-desplegable-cuerpo">{% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True finanzas_en_tabla=True %}</div></details>
+        <details class="perfil-seccion-desplegable"><summary>Modalidad y uso{% include "componentes/iconoir/chevron-abajo.html" %}</summary><div class="perfil-seccion-desplegable-cuerpo">
+            <div class="tabla-contenedor tabla-datos reserva-tabla-modalidad"><table><tbody>
                 <tr><th scope="row">Modalidad</th><td>{% if reserva.es_con_membresia %}Con membresía{% else %}Reserva normal{% endif %}</td></tr>
                 {% if reserva.es_con_membresia %}
                 <tr><th scope="row">Membresía aplicada</th><td>{{ reserva.membresia_usuario.membresia.nombre }}</td></tr>
                 <tr><th scope="row">Consumo del mes</th><td>{% if reserva.computa_hora_membresia %}Computa una hora{% else %}No computa una hora{% endif %}</td></tr>
                 <tr><th scope="row">Adicional por invitado</th><td>$ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}</td></tr>
-                <tr><th scope="row">Resultado</th><td>{{ reserva.get_resultado_uso_display }}</td></tr>
+                <tr>
+                    <th scope="row">Resultado</th>
+                    <td>
+                        {{ reserva.get_resultado_uso_display }}
+                        {% if es_administrador and reserva.resultado_registrado_en %}
+                        <span class="ayuda-contextual">
+                            <button type="button" class="ayuda-contextual-boton" aria-label="Historia del resultado" aria-describedby="reserva-historia-resultado">
+                                {% include "componentes/iconoir/informacion.html" %}
+                            </button>
+                            <span class="ayuda-contextual-texto" id="reserva-historia-resultado" role="tooltip">
+                                <dl>
+                                    <div><dt>Registrado por</dt><dd>{{ reserva.resultado_registrado_por }}</dd></div>
+                                    <div><dt>Fecha de registro</dt><dd>{{ reserva.resultado_registrado_en|date:"d/m/Y H:i" }}</dd></div>
+                                    {% if reserva.resultado_original %}
+                                    <div><dt>Resultado original</dt><dd>{{ reserva.resultado_original_texto }}</dd></div>
+                                    <div><dt>Corregido por</dt><dd>{{ reserva.resultado_corregido_por }}</dd></div>
+                                    <div><dt>Fecha de corrección</dt><dd>{{ reserva.resultado_corregido_en|date:"d/m/Y H:i" }}</dd></div>
+                                    <div><dt>Motivo de corrección</dt><dd>{{ reserva.motivo_correccion_resultado|linebreaksbr }}</dd></div>
+                                    {% endif %}
+                                </dl>
+                            </span>
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
                 {% if reserva.resultado_original %}<tr><th scope="row">Resultado original</th><td>{{ reserva.resultado_original_texto }}</td></tr>{% endif %}
                 {% endif %}
             </tbody></table></div>
-            {% if es_administrador and reserva.resultado_registrado_en %}
-            <details class="reserva-desplegable"><summary>Historia del resultado</summary><div class="tabla-contenedor reserva-datos-tabla"><table><tbody>
-                <tr><th scope="row">Registrado por</th><td>{{ reserva.resultado_registrado_por }}</td></tr>
-                <tr><th scope="row">Fecha de registro</th><td>{{ reserva.resultado_registrado_en|date:"d/m/Y H:i" }}</td></tr>
-                {% if reserva.resultado_original %}
-                <tr><th scope="row">Resultado original</th><td>{{ reserva.resultado_original_texto }}</td></tr>
-                <tr><th scope="row">Corregido por</th><td>{{ reserva.resultado_corregido_por }}</td></tr>
-                <tr><th scope="row">Fecha de corrección</th><td>{{ reserva.resultado_corregido_en|date:"d/m/Y H:i" }}</td></tr>
-                <tr><th scope="row">Motivo de corrección</th><td>{{ reserva.motivo_correccion_resultado|linebreaksbr }}</td></tr>
-                {% endif %}
-            </tbody></table></div></details>
-            {% endif %}
-        </div></details>
-        <details class="reserva-desplegable"><summary id="reserva-registro-titulo">Datos del registro</summary><div class="reserva-desplegable-cuerpo">
-            <section class="perfil-seccion" aria-labelledby="reserva-registro-titulo">
-                <div class="tabla-contenedor reserva-datos-tabla"><table><tbody>
-                    <tr>
-                        <th scope="row">Fecha de registro</th>
-                        <td>{{ reserva.evento.creado_en|date:"d/m/Y H:i" }}</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Registrada por</th>
-                        <td>{{ reserva.evento.registrado_por }}</td>
-                    </tr>
-                    {% if reserva.evento.estado == "anulado" %}
-                        <tr>
-                            <th scope="row">Fecha de anulación</th>
-                            <td>{{ reserva.evento.anulado_en|date:"d/m/Y H:i" }}</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Anulada por</th>
-                            <td>{{ reserva.evento.anulado_por }}</td>
-                        </tr>
-                    {% elif reserva.evento.estado == "finalizado" %}
-                        <tr>
-                            <th scope="row">Fecha de finalización</th>
-                            <td>{{ reserva.evento.finalizado_en|date:"d/m/Y H:i" }}</td>
-                        </tr>
-                    {% endif %}
-                </tbody></table></div>
-            </section>
-
-
         </div></details>
         {% if mi_invitacion %}<section class="perfil-seccion"><h2>Tu participación</h2>{% include "reservas/_respuesta_invitacion.html" with invitacion=mi_invitacion %}</section>{% endif %}
 
     </div>
 </article>
+{% include "caja/_modal_movimientos.html" %}
 {% if puede_anular %}<dialog class="modal-confirmacion reserva-modal-anulacion" data-modal-anulacion{% if formulario_anulacion.is_bound %} data-abrir-inicialmente{% endif %} aria-labelledby="anular-reserva-titulo">
 <form class="modal-confirmacion-formulario" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}">
 <header class="modal-confirmacion-cabecera"><h2 id="anular-reserva-titulo">Anular reserva {{ reserva.numero }}</h2></header>

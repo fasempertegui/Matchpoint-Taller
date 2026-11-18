@@ -1,5 +1,5 @@
 body > .contenido-principal.contenido-membresias-configuracion {
-    width: min(1120px, calc(100% - 96px));
+    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
     padding-block: 48px;
 }
 
@@ -11,7 +11,7 @@ body > .contenido-principal.contenido-membresias-configuracion {
 
 .catalogo-listado > .encabezado-pagina {
     border: 0;
-    border-top: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
 }
 
 .catalogo-listado .tarjeta-busqueda {
@@ -19,19 +19,10 @@ body > .contenido-principal.contenido-membresias-configuracion {
     padding: 20px;
 }
 
-.catalogo-listado .tabla-contenedor {
-    border-bottom: 3px solid var(--acento);
-}
 
 .catalogo-listado table { font-size: .9rem; }
 .catalogo-listado td { vertical-align: middle; }
 .catalogo-listado .catalogo-importe { white-space: nowrap; font-variant-numeric: tabular-nums; }
-
-.catalogo-nombre-estado {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
 
 .catalogo-estado {
     width: 8px;
@@ -46,8 +37,7 @@ body > .contenido-principal.contenido-membresias-configuracion {
 .contenido-membresias-configuracion .tarjeta-formulario {
     width: 100%;
     max-width: none;
-    border-top: 3px solid var(--acento);
-    border-bottom: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
 }
 
 .catalogo-introduccion { margin: 0 0 24px; color: var(--texto-suave); }

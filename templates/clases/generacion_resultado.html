@@ -26,11 +26,13 @@
                 </tr>{% endfor %}</tbody>
             </table>
         </div>
+        {% if pagina.has_other_pages %}
         <nav class="acciones actividad-paginacion" aria-label="Páginas de clases creadas">
             {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
             <span>Mostrando {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
             {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
         </nav>
+        {% endif %}
     {% endif %}
     {% if omitidas %}
         <details class="perfil-desplegable"><summary>Clases omitidas ({{ omitidas|length }})</summary>

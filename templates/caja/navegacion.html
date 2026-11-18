@@ -1,4 +1,4 @@
-<nav class="caja-navegacion" aria-label="Secciones de caja">
+<nav class="pestanas" aria-label="Secciones de caja">
     <a href="{% url 'caja:caja_actual' %}"{% if seccion == 'actual' %} aria-current="page"{% endif %}>Caja actual</a>
     <a href="{% url 'caja:historial_sesiones' %}"{% if seccion == 'sesiones' %} aria-current="page"{% endif %}>Sesiones</a>
     <a href="{% url 'caja:movimiento_lista' %}"{% if seccion == 'movimientos' %} aria-current="page"{% endif %}>Movimientos</a>

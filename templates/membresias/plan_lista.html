@@ -25,20 +25,21 @@
         <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'membresias:plan_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
         <noscript><button class="boton boton-secundario" type="submit">Buscar</button></noscript>
     </form>
-    <section class="tarjeta tabla-contenedor" aria-label="Catálogo de planes">
+    <section class="tarjeta tabla-contenedor tabla-listado" aria-label="Catálogo de planes">
         <table>
-            <thead><tr><th scope="col">Nombre</th><th scope="col">Modalidad</th><th scope="col">Encuentros por semana</th><th scope="col">Duración</th><th scope="col">Precio mensual (ARS)</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
+            <thead><tr><th scope="col">Estado</th><th scope="col">Nombre</th><th scope="col">Modalidad</th><th scope="col">Encuentros por semana</th><th scope="col">Duración</th><th scope="col">Precio mensual (ARS)</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
             <tbody>
                 {% for plan in pagina %}
                     <tr>
-                        <td><span class="catalogo-nombre-estado">{% indicador_estado "habilitacion" plan.estado %}<strong>{{ plan.nombre }}</strong></span></td>
+                        <td>{% indicador_estado "habilitacion" plan.estado %}</td>
+                        <td><strong>{{ plan.nombre }}</strong></td>
                         <td>{{ plan.get_modalidad_display }}</td>
                         <td>{{ plan.frecuencia_semanal }}</td>
                         <td>{{ plan.get_cantidad_clases_por_encuentro_display }}</td>
                         <td class="catalogo-importe">$ {{ plan.precio_vigente|floatformat:"2g" }}</td>
                         <td><a class="boton boton-secundario boton-chico" href="{% url 'membresias:plan_detalle' plan.pk %}" aria-label="Ver detalle de {{ plan.nombre }}">Detalles</a></td>
                     </tr>
-                {% empty %}<tr><td class="estado-vacio" colspan="6">No hay planes que coincidan con los filtros.</td></tr>{% endfor %}
+                {% empty %}<tr><td class="estado-vacio" colspan="7">No hay planes que coincidan con los filtros.</td></tr>{% endfor %}
             </tbody>
         </table>
         {% include "componentes/paginacion.html" with pagina=pagina entidad="planes" parametros=parametros only %}

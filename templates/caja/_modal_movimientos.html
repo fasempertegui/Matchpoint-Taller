@@ -1,0 +1,55 @@
+{% load estados static %}
+{% if pagina_finanzas %}
+<dialog class="modal-confirmacion modal-movimientos" id="movimientos-financieros" aria-labelledby="movimientos-financieros-titulo"{% if request.GET.pagina_finanzas %} data-abrir-inicialmente{% endif %}>
+    <div class="modal-confirmacion-formulario">
+        <header class="modal-confirmacion-cabecera">
+            <h2 id="movimientos-financieros-titulo">Movimientos</h2>
+        </header>
+        <div class="modal-confirmacion-contenido">
+            <div class="tabla-contenedor tabla-listado">
+                <table aria-labelledby="movimientos-financieros-titulo">
+                    <thead>
+                        <tr>
+                            <th scope="col">Movimiento</th>
+                            <th scope="col">Monto</th>
+                            <th scope="col">Estado</th>
+                            {% if finanzas_administrativas %}<th scope="col">Acciones</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movimiento in pagina_finanzas %}
+                        <tr>
+                            <td>
+                                <strong>{% if movimiento.clase == 'ingreso' %}Ingreso{% else %}Devolución{% endif %} {{ movimiento.numero }}</strong>
+                                {% if not finanzas_administrativas %}
+                                <p>{{ movimiento.concepto|linebreaksbr }}</p>
+                                <p>{{ movimiento.get_medio_pago_display }}{% if movimiento.referencia %} · {{ movimiento.referencia }}{% endif %}</p>
+                                {% if movimiento.motivo_excedente %}<p>Motivo del excedente: {{ movimiento.motivo_excedente|linebreaksbr }}</p>{% endif %}
+                                {% if movimiento.estado == 'anulado' %}<p>Anulado el {{ movimiento.anulado_en|date:"d/m/Y H:i" }}. Motivo: {{ movimiento.motivo_anulacion|linebreaksbr }}</p>{% endif %}
+                                {% endif %}
+                            </td>
+                            <td class="modal-movimientos-importe">$ {{ movimiento.monto|floatformat:"2g" }}</td>
+                            <td>{% indicador_estado "movimiento" movimiento.estado %}</td>
+                            {% if finanzas_administrativas %}
+                            <td>
+                                <a class="boton boton-secundario boton-chico" href="{% url 'caja:movimiento_detalle' movimiento.pk %}" aria-label="Ver detalles de {{ movimiento.numero }}">Detalles</a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+{% if pagina_finanzas.has_other_pages %}<nav aria-label="Páginas de movimientos financieros">
+{% if pagina_finanzas.has_previous %}<a href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_finanzas={{ pagina_finanzas.previous_page_number }}">Anterior</a>{% endif %}
+<span>{{ pagina_finanzas.number }} de {{ pagina_finanzas.paginator.num_pages }}</span>
+{% if pagina_finanzas.has_next %}<a href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_finanzas={{ pagina_finanzas.next_page_number }}">Siguiente</a>{% endif %}
+</nav>{% endif %}
+        </div>
+        <form method="dialog" class="modal-confirmacion-acciones">
+            <button type="submit" class="boton boton-secundario" autofocus>Cerrar</button>
+        </form>
+    </div>
+</dialog>
+<script src="{% static 'js/modal-movimientos.js' %}" defer></script>
+{% endif %}

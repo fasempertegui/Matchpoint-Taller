@@ -1,5 +1,5 @@
 {% load estados %}
-<div class="tabla-contenedor"><table class="caja-movimientos">
+<div class="tabla-contenedor{% if tabla_listado %} tabla-listado tabla-listado-sin-centrado{% endif %}"><table class="caja-movimientos">
     <thead><tr><th scope="col">Movimiento</th><th scope="col">Concepto</th><th scope="col">Medio</th><th scope="col" class="caja-monto">Importe</th><th scope="col">Estado</th>{% if sesion.estado == 'cerrada' %}<th scope="col">Al cierre</th>{% endif %}</tr></thead>
     <tbody>{% for movimiento in pagina %}<tr>
         <td><a class="enlace-tabla" href="{% url 'caja:movimiento_detalle' movimiento.pk %}">{{ movimiento.numero }}</a><small>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</small></td>

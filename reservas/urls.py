@@ -8,6 +8,7 @@ urlpatterns = [
     path("buscar-invitados/", vistas_comerciales.buscar_invitados, name="buscar_invitados"),
     path("nueva/", vistas_comerciales.crear_reserva, name="crear_reserva"),
     path("mis-reservas/", vistas_comerciales.mis_reservas, name="mis_reservas"),
+    path("usuario/<int:usuario_id>/", vistas_comerciales.mis_reservas, name="reservas_usuario"),
     path("uso/", vistas_comerciales.uso_membresia, name="uso_membresia"),
     path("<int:pk>/invitados/", vistas_comerciales.reserva_invitados, name="reserva_invitados"),
     path("<int:pk>/socios/", vistas_comerciales.reserva_socios, name="reserva_socios"),

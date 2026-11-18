@@ -18,7 +18,7 @@
         {% else %}
             {% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{% else %}
             <div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
-                {% if campo.name == 'verificado' %}<label>{{ campo }} {{ campo.label }}</label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}{{ campo.errors }}
+                {% if campo.name == 'verificado' or campo.name == 'sin_vinculo_confirmado' %}<label class="campo-opcion">{{ campo }}<span>{{ campo.label }}</span></label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}{{ campo.errors }}
             </div>{% endif %}{% endfor %}
         {% endif %}
         <div class="acciones-formulario">

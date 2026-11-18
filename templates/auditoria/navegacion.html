@@ -1,6 +1,4 @@
-<nav class="auditoria-navegacion" aria-label="Historiales de auditoría">
-    <a class="auditoria-pestana"
-        href="{% url 'auditoria:auditoria_lista' %}"{% if historial_actual == 'cambios' %} aria-current="page"{% endif %}>Cambios realizados</a>
-    <a class="auditoria-pestana"
-        href="{% url 'auditoria:intentos_lista' %}"{% if historial_actual == 'intentos' %} aria-current="page"{% endif %}>Intentos rechazados</a>
+<nav class="pestanas" aria-label="Historiales de auditoría">
+    <a href="{% url 'auditoria:auditoria_lista' %}"{% if historial_actual == 'cambios' %} aria-current="page"{% endif %}>Cambios realizados</a>
+    <a href="{% url 'auditoria:intentos_lista' %}"{% if historial_actual == 'intentos' %} aria-current="page"{% endif %}>Intentos rechazados</a>
 </nav>

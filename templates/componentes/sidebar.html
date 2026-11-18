@@ -4,7 +4,6 @@
         <svg class="sidebar-icono" aria-hidden="true" width="22" height="22"><use href="{% static 'img/navegacion.svg' %}#menu"/></svg>
     </button>
     <a class="marca" href="{% url 'inicio' %}"><img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="36" height="36"><span>Academia TM</span></a>
-    {% include "componentes/notificaciones_acceso.html" %}
 </header>
 <button type="button" class="sidebar-fondo" id="sidebar-fondo" aria-label="Cerrar navegación" tabindex="-1" hidden></button>
 <aside class="sidebar" id="sidebar" aria-label="Navegación de Academia TM">
@@ -26,6 +25,7 @@
                 <span class="sidebar-solo-lector">Mi perfil</span>
             </a>
         {% endif %}
+        {% include "componentes/notificaciones_acceso.html" with en_sidebar=True %}
         <nav class="sidebar-destinos" aria-label="Navegación principal">
             {% for grupo in navegacion_app.grupos %}
                 <section class="sidebar-grupo" aria-labelledby="sidebar-grupo-{{ grupo.codigo }}">

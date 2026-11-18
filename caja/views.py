@@ -215,7 +215,7 @@ def movimiento_detalle(request, pk):
     actual = SesionCaja.objects.filter(estado="abierta", responsable=actor).first()
     return render(request, "caja/movimiento_detalle.html", {
         "finanzas": finanzas,
-        "movimiento": movimiento, "url_origen": url_origen,
+        "movimiento": movimiento, "url_origen": url_origen, "tipo_origen": tipo,
         "puede_anular": actual is not None and movimiento.estado == "vigente",
     })
 

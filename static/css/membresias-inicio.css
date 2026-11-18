@@ -1,5 +1,5 @@
 body > .contenido-principal.contenido-membresias-inicio {
-    width: min(1120px, calc(100% - 96px));
+    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
     padding-block: 48px;
 }
 
@@ -10,7 +10,7 @@ body > .contenido-principal.contenido-membresias-inicio {
 
 .membresias-encabezado {
     border: 0;
-    border-top: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
     margin-bottom: 24px;
 }
 
@@ -86,7 +86,6 @@ body > .contenido-principal.contenido-membresias-inicio {
 }
 
 .membresias-continuidad {
-    border-bottom: 3px solid var(--acento);
     display: flex;
     align-items: center;
     justify-content: space-between;

@@ -11,7 +11,7 @@
     </details>
     {% endif %}
 </header>
-<nav class="notificaciones-filtros" aria-label="Filtrar notificaciones">
+<nav class="pestanas notificaciones-filtros" aria-label="Filtrar notificaciones">
     <a href="{% url 'comunicaciones:notificaciones_lista' %}"{% if not estado_actual %} aria-current="page"{% endif %}>Todas</a>
     <a href="?estado=pendientes"{% if estado_actual == 'pendientes' %} aria-current="page"{% endif %}>Sin leer</a>
     <a href="?estado=leidas"{% if estado_actual == 'leidas' %} aria-current="page"{% endif %}>Leídas</a>

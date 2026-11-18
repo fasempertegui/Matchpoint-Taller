@@ -1,4 +1,4 @@
-<div class="tabla-contenedor reserva-datos-tabla">
+<div class="tabla-contenedor tabla-datos">
     <table aria-label="Tu participación en la reserva"><tbody>
         <tr><th scope="row">Respuesta</th><td><strong>{{ invitacion.get_respuesta_display }}</strong></td></tr>
         {% if invitacion.respondido_en %}<tr><th scope="row">Fecha de respuesta</th><td>{{ invitacion.respondido_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}

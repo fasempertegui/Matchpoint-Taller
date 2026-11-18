@@ -1,30 +1,3 @@
-.oferta-navegacion {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-bottom: 24px;
-    border-bottom: 1px solid var(--borde);
-}
-
-.oferta-navegacion a {
-    padding: 10px 16px;
-    border-bottom: 2px solid transparent;
-    color: var(--texto-suave);
-    text-decoration: none;
-    font-weight: 700;
-}
-
-.oferta-navegacion a:hover,
-.oferta-navegacion a[aria-current="page"] {
-    color: var(--primario);
-    border-bottom-color: var(--primario);
-}
-
-.oferta-navegacion a:focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: -2px;
-}
-
 .tarjeta.oferta-tarjeta {
     position: relative;
     min-width: 0;
@@ -290,9 +263,8 @@
 .tarjeta.oferta-tarifa { min-height: 0; }
 .oferta-tarifa .oferta-producto-beneficios { flex: none; }
 
-body > .contenido-principal.contenido-oferta { width: min(1120px, calc(100% - 96px)); padding-block: 48px; }
-.contenido-oferta > .oferta-encabezado { border: 0; border-top: 3px solid var(--acento); border-radius: 10px; }
-.contenido-oferta > .oferta-navegacion { margin-block: 20px; }
+body > .contenido-principal.contenido-oferta { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
+.contenido-oferta > .oferta-encabezado { border: 0; border-top: 3px solid var(--primario-medio); border-radius: 10px; }
 .contenido-oferta > .oferta-catalogo-encabezado { margin-bottom: 20px; }
 .contenido-oferta > .oferta-catalogo-encabezado h2 { margin: 0; font-size: 1.4rem; }
 

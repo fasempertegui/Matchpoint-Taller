@@ -1,16 +1,12 @@
 body > .contenido-principal.contenido-caja {
-    width: min(1120px, calc(100% - 96px));
+    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
     padding-block: 48px;
 }
 .contenido-caja .tarjeta,
 .contenido-caja .boton,
 .contenido-caja .form-control { border-radius: 10px; }
-.caja-encabezado { border: 0; border-top: 3px solid var(--acento); }
+.caja-encabezado { border: 0; border-top: 3px solid var(--primario-medio); }
 .caja-encabezado p { margin: 12px 0 0; color: var(--texto-suave); }
-.caja-navegacion { display: flex; gap: 24px; margin-block: 24px; border-bottom: 1px solid var(--borde); }
-.caja-navegacion a { padding: 12px 0; border-bottom: 3px solid transparent; color: var(--texto-suave); text-decoration: none; }
-.caja-navegacion a[aria-current] { color: var(--primario); font-weight: 700; border-bottom-color: var(--primario); }
-.caja-navegacion a:hover { color: var(--primario); }
 .caja-sesion { margin-bottom: 24px; }
 .caja-sesion-cabecera { display: flex; align-items: center; gap: 16px; }
 .caja-sesion h2, .caja-listado h2, .caja-sin-sesion h2 { margin: 0; font-size: 1.25rem; }
@@ -35,7 +31,7 @@ body > .contenido-principal.contenido-caja {
 .caja-importe-principal dd { color: var(--primario); font-size: 1.8rem; }
 .caja-sesion-pie { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px -20px -20px; padding: 16px 20px; border-top: 1px solid var(--borde); }
 .caja-sesion-pie > span, .caja-nota { font-size: .85rem; color: var(--texto-suave); }
-.caja-listado { padding: 0; border-bottom: 3px solid var(--acento); }
+.caja-listado { padding: 0; }
 .caja-listado-cabecera { padding: 20px; border-bottom: 1px solid var(--borde); }
 .caja-listado table { font-size: .9rem; }
 .caja-listado td { vertical-align: top; }
@@ -46,7 +42,6 @@ body > .contenido-principal.contenido-caja {
 .caja-filtros { margin-bottom: 24px; padding: 20px; }
 .caja-filtros .detalle-grid { flex-basis: 100%; }
 .caja-filtros .mensaje { width: 100%; }
-.caja-sin-sesion { border-bottom: 3px solid var(--acento); }
 .caja-sin-sesion p { color: var(--texto-suave); }
 .caja-sin-sesion .boton { margin-top: 12px; }
 @media (max-width: 1100px) {
@@ -59,8 +54,7 @@ body > .contenido-principal.contenido-caja {
 .contenido-caja .tarjeta-formulario {
     width: 100%;
     max-width: none;
-    border-top: 3px solid var(--acento);
-    border-bottom: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
 }
 .contenido-caja .tarjeta-formulario h1 { margin-bottom: 20px; }
 .contenido-caja .tarjeta-formulario .grupo-campo { margin-bottom: 20px; }

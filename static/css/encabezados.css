@@ -7,6 +7,11 @@
 .encabezado-geometrico-orbitas { --encabezado-geometria: url("../img/encabezado-geometria-orbitas.svg"); }
 .encabezado-geometrico-reticula { --encabezado-geometria: url("../img/encabezado-geometria-reticula.svg"); }
 .encabezado-geometrico-ondas { --encabezado-geometria: url("../img/encabezado-geometria-ondas.svg"); }
+.encabezado-geometrico-ondas-aero {
+    --encabezado-geometria: url("../img/encabezado-ondas-aero.png");
+    background-position: center;
+    background-size: 50% 100%;
+}
 
 .encabezado-geometrico.encabezado-separado {
     display: flex;

@@ -25,19 +25,20 @@
         <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'membresias:membresia_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
         <noscript><button class="boton boton-secundario" type="submit">Buscar</button></noscript>
     </form>
-    <section class="tarjeta tabla-contenedor" aria-label="Catálogo de membresías">
+    <section class="tarjeta tabla-contenedor tabla-listado" aria-label="Catálogo de membresías">
         <table>
-            <thead><tr><th scope="col">Nombre</th><th scope="col">Horas de organizador</th><th scope="col">Horas de invitado</th><th scope="col">Precio mensual (ARS)</th><th scope="col">Adicional por invitado sin beneficio (ARS)</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
+            <thead><tr><th scope="col">Estado</th><th scope="col">Nombre</th><th scope="col">Horas de organizador</th><th scope="col">Horas de invitado</th><th scope="col">Precio mensual (ARS)</th><th scope="col">Adicional por invitado sin beneficio (ARS)</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
             <tbody>
                 {% for membresia in pagina %}
                     <tr>
-                        <td><span class="catalogo-nombre-estado">{% indicador_estado "habilitacion" membresia.estado %}<strong>{{ membresia.nombre }}</strong></span></td>
+                        <td>{% indicador_estado "habilitacion" membresia.estado %}</td>
+                        <td><strong>{{ membresia.nombre }}</strong></td>
                         <td>{{ membresia.horas_organizador }}</td><td>{{ membresia.horas_invitado }}</td>
                         <td class="catalogo-importe">$ {{ membresia.precio_vigente|floatformat:"2g" }}</td>
                         <td class="catalogo-importe">$ {{ membresia.precio_invitado_vigente|floatformat:"2g" }}</td>
                         <td><a class="boton boton-secundario boton-chico" href="{% url 'membresias:membresia_detalle' membresia.pk %}" aria-label="Ver detalle de {{ membresia.nombre }}">Detalles</a></td>
                     </tr>
-                {% empty %}<tr><td class="estado-vacio" colspan="6">No hay membresías que coincidan con los filtros.</td></tr>{% endfor %}
+                {% empty %}<tr><td class="estado-vacio" colspan="7">No hay membresías que coincidan con los filtros.</td></tr>{% endfor %}
             </tbody>
         </table>
         {% include "componentes/paginacion.html" with pagina=pagina entidad="membresías" parametros=parametros only %}

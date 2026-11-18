@@ -18,9 +18,9 @@
             <div class="reserva-modalidad-encabezado">
                 <p>Modalidad</p>
                 {% if reserva.es_con_membresia %}
-                    <div class="reserva-membresia-ayuda">
-                        <button type="button" class="reserva-membresia-ayuda-boton" aria-label="Información de la membresía aplicada" aria-describedby="reserva-membresia-tooltip"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11.5V16.5M12 7.51L12.01 7.49889"/><circle cx="12" cy="12" r="10"/></svg></button>
-                        <div class="reserva-membresia-tooltip" id="reserva-membresia-tooltip" role="tooltip">
+                    <div class="ayuda-contextual reserva-membresia-ayuda">
+                        <button type="button" class="ayuda-contextual-boton" aria-label="Información de la membresía aplicada" aria-describedby="reserva-membresia-tooltip">{% include "componentes/iconoir/informacion.html" %}</button>
+                        <div class="ayuda-contextual-texto reserva-membresia-tooltip" id="reserva-membresia-tooltip" role="tooltip">
                             <strong>{{ reserva.membresia_usuario.membresia.nombre }}</strong>
                             <span>Adicional por invitado sin beneficio</span>
                             <b>$ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}</b>

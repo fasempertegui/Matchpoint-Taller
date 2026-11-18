@@ -11,9 +11,11 @@
 <div class="inicio-resumen">
     <section class="tarjeta inicio-actividad" aria-labelledby="inicio-actividad-titulo">
         <header class="inicio-seccion-cabecera"><h2 id="inicio-actividad-titulo">Actividad de hoy</h2></header>
-        <div class="inicio-cuerpo">
-            <p class="inicio-valor">{{ actividad.hoy }}</p>
-            <p class="inicio-descripcion">Eventos del día entre clases y reservas</p>
+        <div class="inicio-cuerpo inicio-actividad-resumen">
+            <div>
+                <p class="inicio-valor">{{ actividad.hoy }}</p>
+                <p class="inicio-descripcion">Eventos del día entre clases y reservas</p>
+            </div>
             <div class="inicio-proxima-hora">
                 <h3>En la próxima hora</h3>
                 <p>{% if actividad.clases or actividad.reservas %}<strong>{{ actividad.clases }}</strong> clase{{ actividad.clases|pluralize }} <span aria-hidden="true">·</span> <strong>{{ actividad.reservas }}</strong> reserva{{ actividad.reservas|pluralize }}{% else %}Sin eventos programados{% endif %}</p>
@@ -36,14 +38,16 @@
             <div class="inicio-metrica">
                 <p class="inicio-valor">{{ alumnos_con_plan }}</p>
                 <p class="inicio-descripcion">Alumnos con plan</p>
-                <a class="inicio-enlace" href="{% url 'membresias:contratacion_plan_lista' %}?mes={{ mes_actual|date:'Y-m-d' }}&amp;estado=activo">Ver planes</a>
             </div>
             <div class="inicio-metrica">
                 <p class="inicio-valor">{{ socios }}</p>
                 <p class="inicio-descripcion">Socios de la academia</p>
-                <a class="inicio-enlace" href="{% url 'membresias:contratacion_membresia_lista' %}?mes={{ mes_actual|date:'Y-m-d' }}&amp;estado=activo">Ver membresías</a>
             </div>
         </div>
+        <footer class="inicio-pie inicio-metricas">
+            <div class="inicio-metrica"><a class="inicio-enlace" href="{% url 'membresias:contratacion_plan_lista' %}?mes={{ mes_actual|date:'Y-m-d' }}&amp;estado=activo">Ver planes</a></div>
+            <div class="inicio-metrica"><a class="inicio-enlace" href="{% url 'membresias:contratacion_membresia_lista' %}?mes={{ mes_actual|date:'Y-m-d' }}&amp;estado=activo">Ver membresías</a></div>
+        </footer>
     </section>
     <section class="tarjeta inicio-continuidad" aria-labelledby="inicio-continuidad-titulo">
         <header class="inicio-seccion-cabecera"><h2 id="inicio-continuidad-titulo">Continuidad</h2><span class="inicio-estado{% if encuestas.abiertas %} inicio-estado-activo{% endif %}">{% if encuestas.abiertas %}Abierta{% else %}Cerrada{% endif %}</span></header>

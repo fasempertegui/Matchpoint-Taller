@@ -17,7 +17,7 @@
     </div>
     <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'comunicaciones:envios_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
 </form>
-<section class="tarjeta tabla-contenedor" aria-label="Seguimiento de envíos">
+<section class="tarjeta tabla-contenedor tabla-listado" aria-label="Seguimiento de envíos">
 <table><thead><tr><th scope="col">Tipo</th><th scope="col">Destinatario</th><th scope="col">Creado</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
 <tbody>{% for envio in pagina %}<tr>
 <td><strong>{{ envio.get_tipo_display }}</strong></td><td>{{ envio.destinatario }}</td><td>{{ envio.creado_en|date:"d/m/Y H:i" }}</td>
@@ -29,7 +29,7 @@
 {% if envio.estado == 'pendiente' %}<div><dt>Próximo intento</dt><dd>{{ envio.proximo_intento_en|date:"d/m/Y H:i" }}</dd></div>{% endif %}
 {% if envio.aceptado_en %}<div><dt>Aceptado por el servicio de correo</dt><dd>{{ envio.aceptado_en|date:"d/m/Y H:i" }}</dd></div>{% endif %}
 {% if envio.error_resumido %}<div><dt>Resultado del intento</dt><dd>{{ envio.error_resumido }}</dd></div>{% endif %}
-</dl></td></tr>{% empty %}<tr><td colspan="5">No hay envíos para esta consulta.</td></tr>{% endfor %}</tbody></table>
+</dl></td></tr>{% empty %}<tr><td colspan="5" class="estado-vacio">No hay envíos para esta consulta.</td></tr>{% endfor %}</tbody></table>
 {% include "componentes/paginacion.html" with pagina=pagina entidad="envíos" parametros=filtros only %}
 </section>
 <script src="{% static 'js/filtros.js' %}" defer></script>

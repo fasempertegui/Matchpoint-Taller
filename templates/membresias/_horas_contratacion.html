@@ -1,23 +1,26 @@
-<section class="perfil-seccion" aria-labelledby="contratacion-horas-titulo">
-    <h2 id="contratacion-horas-titulo">Horas de membresía</h2>
-    <div class="tabla-contenedor"><table>
-        <thead><tr><th>Tipo de horas</th><th>Cupo</th><th>Otorgadas</th><th>Descontadas</th><th>Comprometidas</th><th>Consumidas</th><th>Disponibles</th></tr></thead>
-        <tbody>{% for fila in resumen_horas %}<tr><td>{{ fila.rol }}</td><td>{{ fila.cupo }}</td><td>{{ fila.otorgadas }}</td><td>{{ fila.descontadas }}</td><td>{{ fila.comprometidas }}</td><td>{{ fila.consumidas }}</td><td>{{ fila.disponibles }}</td></tr>{% endfor %}</tbody>
-    </table></div>
-</section>
-<section class="perfil-seccion" id="ajustes-horas" aria-labelledby="contratacion-ajustes-titulo">
-    <h2 id="contratacion-ajustes-titulo">Ajustes de horas</h2>
-    {% if puede_ajustar_horas %}<p><a class="boton boton-secundario boton-chico" href="{% url 'membresias:ajustar_horas' contratacion.pk %}">Ajustar horas</a></p>{% endif %}
-    {% if ajustes_horas %}<div class="tabla-contenedor"><table>
-        <thead><tr><th>Fecha</th><th>Tipo de horas</th><th>Movimiento</th><th>Horas</th><th>Detalle</th></tr></thead>
-        <tbody>{% for ajuste in ajustes_horas %}<tr>
-            <td>{{ ajuste.creado_en|date:"d/m/Y H:i" }}</td><td>{{ ajuste.get_tipo_horas_display }}</td>
-            <td>{{ ajuste.get_operacion_display }}</td><td>{{ ajuste.cantidad }}</td>
-            <td><details><summary>Ver detalle</summary>
-                <p>Motivo: {{ ajuste.motivo|linebreaksbr }}</p><p>Registrado por {{ ajuste.registrado_por }}</p>
-            </details></td>
-        </tr>{% endfor %}</tbody>
-    </table></div>
-    {% if ajustes_horas.has_other_pages %}<nav aria-label="Páginas de ajustes de horas">{% if ajustes_horas.has_previous %}<a href="?pagina_ajustes={{ ajustes_horas.previous_page_number }}#ajustes-horas">Anterior</a>{% endif %} <span>Página {{ ajustes_horas.number }} de {{ ajustes_horas.paginator.num_pages }}</span> {% if ajustes_horas.has_next %}<a href="?pagina_ajustes={{ ajustes_horas.next_page_number }}#ajustes-horas">Siguiente</a>{% endif %}</nav>{% endif %}
-    {% else %}<p>No hay ajustes de horas registrados.</p>{% endif %}
-</section>
+<details class="perfil-seccion-desplegable">
+    <summary>Horas de membresía{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
+    <div class="perfil-seccion-desplegable-cuerpo">
+        <div class="tabla-contenedor tabla-listado"><table>
+            <thead><tr><th>Tipo de horas</th><th>Cupo</th><th>Otorgadas</th><th>Descontadas</th><th>Comprometidas</th><th>Consumidas</th><th>Disponibles</th></tr></thead>
+            <tbody>{% for fila in resumen_horas %}<tr><td>{{ fila.rol }}</td><td>{{ fila.cupo }}</td><td>{{ fila.otorgadas }}</td><td>{{ fila.descontadas }}</td><td>{{ fila.comprometidas }}</td><td>{{ fila.consumidas }}</td><td>{{ fila.disponibles }}</td></tr>{% endfor %}</tbody>
+        </table></div>
+    </div>
+</details>
+<details class="perfil-seccion-desplegable" id="ajustes-horas"{% if request.GET.pagina_ajustes %} open{% endif %}>
+    <summary>Ajustes de horas{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
+    <div class="perfil-seccion-desplegable-cuerpo">
+        {% if ajustes_horas %}<div class="tabla-contenedor tabla-listado"><table>
+            <thead><tr><th>Fecha</th><th>Tipo de horas</th><th>Movimiento</th><th>Horas</th><th>Detalle</th></tr></thead>
+            <tbody>{% for ajuste in ajustes_horas %}<tr>
+                <td>{{ ajuste.creado_en|date:"d/m/Y H:i" }}</td><td>{{ ajuste.get_tipo_horas_display }}</td>
+                <td>{{ ajuste.get_operacion_display }}</td><td>{{ ajuste.cantidad }}</td>
+                <td><details><summary>Ver detalle</summary>
+                    <p>Motivo: {{ ajuste.motivo|linebreaksbr }}</p><p>Registrado por {{ ajuste.registrado_por }}</p>
+                </details></td>
+            </tr>{% endfor %}</tbody>
+        </table></div>
+        {% if ajustes_horas.has_other_pages %}<nav aria-label="Páginas de ajustes de horas">{% if ajustes_horas.has_previous %}<a href="?pagina_ajustes={{ ajustes_horas.previous_page_number }}#ajustes-horas">Anterior</a>{% endif %} <span>Página {{ ajustes_horas.number }} de {{ ajustes_horas.paginator.num_pages }}</span> {% if ajustes_horas.has_next %}<a href="?pagina_ajustes={{ ajustes_horas.next_page_number }}#ajustes-horas">Siguiente</a>{% endif %}</nav>{% endif %}
+        {% else %}<p>No hay ajustes de horas registrados.</p>{% endif %}
+    </div>
+</details>

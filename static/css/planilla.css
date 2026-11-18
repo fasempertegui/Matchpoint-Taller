@@ -72,7 +72,7 @@ button.planilla-celda-seleccionada { background: var(--primario-suave); color: v
 
 .planilla-encabezado {
     border: 0;
-    border-top: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
     border-radius: 10px;
     margin-bottom: 20px;
     align-items: flex-end;

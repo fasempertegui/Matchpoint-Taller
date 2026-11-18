@@ -29,9 +29,6 @@
     {% block navegacion %}
         {% if navegacion_app.mostrar_sidebar %}
             {% include "componentes/sidebar.html" %}
-            {% if navegacion_app.mostrar_notificaciones %}
-            <header class="notificaciones-cabecera">{% include "componentes/notificaciones_acceso.html" %}</header>
-            {% endif %}
         {% else %}
             <header class="barra-superior">
                 <div class="contenedor cabecera-simple">
@@ -65,5 +62,6 @@
     {% include "componentes/modal_confirmacion.html" %}
     <script src="{% static 'js/observaciones.js' %}" defer></script>
 <script src="{% static 'js/estados.js' %}" defer></script>
+<script src="{% static 'js/ayuda-contextual.js' %}" defer></script>
 </body>
 </html>

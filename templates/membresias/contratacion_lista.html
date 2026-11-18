@@ -3,25 +3,25 @@
 {% load static %}
 {% block titulo %}{{ titulo_lista }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}"><link rel="stylesheet" href="{% static 'css/contrataciones.css' %}">{% endblock %}
-{% block clase_contenido %}contenido-membresias-configuracion catalogo-listado contratacion-listado{% if propias %} mis-contrataciones{% endif %}{% endblock %}
+{% block clase_contenido %}contenido-membresias-configuracion catalogo-listado contratacion-listado{% if propias or titular %} mis-contrataciones{% endif %}{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina{% if propias %} encabezado-separado encabezado-geometrico encabezado-geometrico-orbitas{% endif %}">
-    {% if not propias %}<div><h1>{{ titulo_lista }}</h1><p class="contratacion-introduccion">Consultá y registrá las contrataciones mensuales de {{ plural }} de cada usuario.</p></div>{% else %}<h1>{{ titulo_lista }}</h1>{% endif %}
-    {% if not propias %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
+<header class="tarjeta encabezado-pagina{% if propias or titular %} encabezado-separado encabezado-geometrico encabezado-geometrico-orbitas{% endif %}">
+    {% if not propias and not titular %}<div><h1>{{ titulo_lista }}</h1><p class="contratacion-introduccion">Consultá y registrá las contrataciones mensuales de {{ plural }} de cada usuario.</p></div>{% else %}<h1>{{ titulo_lista }}</h1>{% endif %}
+    {% if titular %}<a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>{% elif not propias %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
 </header>
-{% if propias %}
-<p class="tarjeta descripcion-seccion">Consultá tus planes y membresías contratados, sus períodos e importes.</p>
-<nav class="contrataciones-tipos" aria-label="Tipo de contratación">
-    <a href="{% url 'membresias:mis_contrataciones' %}?tipo=plan"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
-    <a href="{% url 'membresias:mis_contrataciones' %}?tipo=membresia"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
+{% if propias or titular %}
+<p class="tarjeta descripcion-seccion">{% if titular %}Consultá los planes y membresías contratados por este usuario, sus períodos e importes.{% else %}Consultá tus planes y membresías contratados, sus períodos e importes.{% endif %}</p>
+<nav class="pestanas" aria-label="Tipo de contratación">
+    <a href="{{ request.path }}?tipo=plan"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
+    <a href="{{ request.path }}?tipo=membresia"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
 </nav>
 {% endif %}
 {% if hay_contrataciones %}
     <form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos>
-        {% if propias %}<input type="hidden" name="tipo" value="{{ tipo }}">{% endif %}
+        {% if propias or titular %}<input type="hidden" name="tipo" value="{{ tipo }}">{% endif %}
         <div class="grupo-campo">
             <label for="contratacion-busqueda">Buscar</label>
-            <input class="form-control" type="search" id="contratacion-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="{% if propias %}Nombre del producto{% else %}Usuario o producto{% endif %}">
+            <input class="form-control" type="search" id="contratacion-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="{% if propias or titular %}Nombre del producto{% else %}Usuario o producto{% endif %}">
         </div>
         <div class="grupo-campo">
             <label for="contratacion-mes">Mes cubierto</label>
@@ -40,14 +40,14 @@
         <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ url_lista }}" data-limpiar-filtros>Limpiar filtros</a></div>
         <noscript><button class="boton boton-secundario" type="submit">Buscar</button></noscript>
     </form>
-    <section class="tarjeta tabla-contenedor" aria-label="Contrataciones de {{ plural }}">
+    <section class="tarjeta tabla-contenedor tabla-listado" aria-label="Contrataciones de {{ plural }}">
         <table>
-            <thead><tr>{% if not propias %}<th scope="col">Usuario</th>{% endif %}<th scope="col">{{ nombre_tipo|default:tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
+            <thead><tr>{% if not propias and not titular %}<th scope="col">Usuario</th>{% endif %}<th scope="col">{{ nombre_tipo|default:tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
             <tbody>
                 {% for contratacion in pagina %}
                     <tr>
-                        {% if not propias %}<td><strong>{{ contratacion.usuario }}</strong></td>{% endif %}
-                        <td>{% if propias %}<strong>{{ contratacion.producto.nombre }}</strong>{% else %}{{ contratacion.producto.nombre }}{% endif %}</td>
+                        {% if not propias and not titular %}<td><strong>{{ contratacion.usuario }}</strong></td>{% endif %}
+                        <td>{% if propias or titular %}<strong>{{ contratacion.producto.nombre }}</strong>{% else %}{{ contratacion.producto.nombre }}{% endif %}</td>
                         <td>{{ contratacion.mes_cubierto|date:"F Y" }}</td>
                         <td class="catalogo-importe">$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
                         <td>{% indicador_estado "contratacion" contratacion.estado %}</td>
@@ -55,11 +55,11 @@
                             {% if propias and tipo == 'membresia' %}<a class="boton boton-secundario boton-chico" href="{% url 'membresias:mi_membresia_uso' contratacion.pk %}">Ver uso</a>{% endif %}
                             <a class="boton boton-secundario boton-chico" href="{% url ruta_detalle contratacion.pk %}" aria-label="Ver contratación de {{ contratacion.usuario }} para {{ contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></div></td>
                     </tr>
-                {% empty %}<tr><td class="estado-vacio" colspan="{% if propias %}5{% else %}6{% endif %}">No hay contrataciones de {{ plural }} que coincidan con los filtros.</td></tr>{% endfor %}
+                {% empty %}<tr><td class="estado-vacio" colspan="{% if propias or titular %}5{% else %}6{% endif %}">No hay contrataciones de {{ plural }} que coincidan con los filtros.</td></tr>{% endfor %}
             </tbody>
         </table>
         {% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=parametros only %}
     </section>
-{% else %}<p class="tarjeta estado-vacio">{% if propias %}Todavía no tenés contrataciones de {{ plural }} registradas.{% else %}Todavía no hay contrataciones de {{ plural }} registradas.{% endif %}</p>{% endif %}
+{% else %}<p class="tarjeta estado-vacio">{% if propias %}Todavía no tenés contrataciones de {{ plural }} registradas.{% elif titular %}Este usuario todavía no tiene contrataciones de {{ plural }} registradas.{% else %}Todavía no hay contrataciones de {{ plural }} registradas.{% endif %}</p>{% endif %}
 <script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

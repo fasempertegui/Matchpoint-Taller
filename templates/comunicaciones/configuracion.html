@@ -2,17 +2,29 @@
 {% block titulo %}Reglas de notificación | Academia TM{% endblock %}
 {% block clase_contenido %}contenido-notificaciones{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina encabezado-geometrico notificaciones-encabezado">
-    <div><h1>Reglas de notificación</h1><p class="texto-secundario">Plazos de recordatorios y calendario de continuidad.</p></div>
+<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico notificaciones-encabezado">
+    <h1>Reglas de notificación</h1>
+    <div class="notificaciones-ultima-modificacion">
+        <span>Última modificación</span>
+        <time datetime="{{ configuracion.actualizado_en|date:'c' }}">{{ configuracion.actualizado_en|date:"d/m/Y H:i" }}</time>
+    </div>
 </header>
-<section class="tarjeta" aria-label="Reglas vigentes de notificación">
-    <dl class="notificaciones-reglas">
+<p class="tarjeta descripcion-seccion">Plazos de recordatorios y calendario de continuidad.</p>
+<section class="tarjeta tabla-contenedor tabla-listado tabla-listado-sin-centrado" aria-label="Reglas vigentes de notificación">
+    <table class="notificaciones-reglas">
+        <thead>
+            <tr><th scope="col">Regla</th><th scope="col">Valor vigente</th><th scope="col">Acciones</th></tr>
+        </thead>
+        <tbody>
         {% for regla in reglas %}
-        <div id="regla-{{ regla.campo }}">
-            <dt>{{ regla.titulo }}</dt>
-            <dd>{{ regla.valor }}</dd>
+        <tr id="regla-{{ regla.campo }}">
+            <td><strong>{{ regla.titulo }}</strong></td>
+            <td>{{ regla.valor }}</td>
             {% if regla.campo == regla_actual %}
-            <dd class="notificacion-regla-formulario">
+            <td>En edición</td>
+        </tr>
+        <tr class="notificacion-regla-formulario">
+            <td colspan="3">
                 <form method="post" novalidate aria-label="Modificar {{ regla.titulo }}">
                     {% csrf_token %}
                     <input type="hidden" name="regla" value="{{ regla.campo }}">
@@ -28,15 +40,16 @@
                     {% endfor %}
                     <div class="acciones-formulario"><button class="boton boton-primario boton-chico" type="submit">Guardar regla</button><a class="boton boton-secundario boton-chico" href="{% url 'comunicaciones:configuracion_notificaciones' %}#regla-{{ regla.campo }}">Cancelar</a></div>
                 </form>
-            </dd>
+            </td>
             {% else %}
-            <dd class="notificacion-regla-accion"><a class="boton boton-secundario boton-chico" href="?editar={{ regla.campo }}#regla-{{ regla.campo }}" aria-label="Modificar {{ regla.titulo }}">Modificar</a></dd>
+            <td class="notificacion-regla-accion"><a class="boton boton-secundario boton-chico" href="?editar={{ regla.campo }}#regla-{{ regla.campo }}" aria-label="Modificar {{ regla.titulo }}">Modificar</a></td>
             {% endif %}
-        </div>
+        </tr>
         {% endfor %}
-    </dl>
+        </tbody>
+    </table>
 </section>
-<p class="texto-secundario">Cada regla se guarda por separado. La confirmación o asignación dentro del plazo de recordatorio cubre el aviso de esa participación. Los recordatorios de continuidad incluyen sólo a quienes no respondieron; un día inexistente se ajusta al último del mes.</p>
+<p class="texto-secundario">La confirmación o asignación dentro del plazo de recordatorio cubre el aviso de esa participación. Los recordatorios de continuidad incluyen sólo a quienes no respondieron; un día inexistente se ajusta al último del mes.</p>
 <p class="texto-secundario">Los cambios se aplican en las próximas evaluaciones y a la ventana de respuesta de continuidad. Los avisos guardados conservan su texto y no se repiten por modificar estas reglas.</p>
-<p class="texto-secundario">Las reglas se revisan cada minuto. Última modificación: {{ configuracion.actualizado_en|date:"d/m/Y H:i" }}.</p>
+<p class="texto-secundario">Las reglas se revisan cada minuto.</p>
 {% endblock %}

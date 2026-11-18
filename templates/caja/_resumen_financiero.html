@@ -1,10 +1,16 @@
+{% if finanzas.operacion_anulada %}
+<p class="nota-campo nota-campo-ambar">
+    {% if mostrar_estado_origen != False %}<strong>Operación anulada.</strong>{% endif %}
+    El neto es lo cobrado menos lo devuelto. No hay saldo por cobrar y cualquier devolución se evalúa por separado.
+</p>
+{% endif %}
 {% if finanzas_en_tabla %}
-<div class="tabla-contenedor reserva-datos-tabla"><table aria-label="Resumen de pagos"><tbody>
+<div class="tabla-contenedor tabla-datos"><table aria-label="Resumen de pagos"><tbody>
     <tr><th scope="row">Importe acordado</th><td>$ {{ finanzas.importe_acordado|floatformat:"2g" }}</td></tr>
     <tr><th scope="row">Ingresos vigentes</th><td>$ {{ finanzas.ingresos|floatformat:"2g" }}</td></tr>
     <tr><th scope="row">Devoluciones vigentes</th><td>$ {{ finanzas.devoluciones|floatformat:"2g" }}</td></tr>
     <tr><th scope="row">Neto recibido</th><td><strong>$ {{ finanzas.neto_recibido|floatformat:"2g" }}</strong></td></tr>
-    {% if finanzas.estado_financiero %}<tr><th scope="row">Situación</th><td>{{ finanzas.estado_financiero }}{% if finanzas.diferencia_importe %}<span class="reserva-diferencia-pago">$ {{ finanzas.diferencia_importe|floatformat:"2g" }}</span>{% endif %}</td></tr>{% endif %}
+    {% if finanzas.estado_financiero %}<tr><th scope="row">Situación</th><td>{{ finanzas.estado_financiero }}{% if finanzas.diferencia_importe %}<span class="tabla-datos-nota">$ {{ finanzas.diferencia_importe|floatformat:"2g" }}</span>{% endif %}</td></tr>{% endif %}
 </tbody></table></div>
 {% else %}
 <dl class="perfil-lista">
@@ -15,6 +21,5 @@
     {% if finanzas.estado_financiero %}<div class="perfil-fila"><dt>Situación</dt><dd>{{ finanzas.estado_financiero }}{% if finanzas.diferencia_importe %} · $ {{ finanzas.diferencia_importe|floatformat:"2g" }}{% endif %}</dd></div>{% endif %}
 </dl>
 {% endif %}
-{% if finanzas.operacion_anulada %}<p class="texto-secundario">Operación anulada. El neto informa el dinero recibido menos las devoluciones; no exige completar el importe acordado ni determina una devolución pendiente.</p>{% endif %}
 {% if finanzas.diferencia_revision %}<p role="status">Diferencia para revisión administrativa: $ {{ finanzas.diferencia_revision|floatformat:"2g" }}. Las devoluciones vigentes superan los ingresos vigentes.</p>{% endif %}
 {% if finanzas.estado_financiero == 'Excedente por resolver' %}<p class="texto-secundario">El excedente requiere una decisión administrativa. No se devuelve ni se aplica a otra operación automáticamente.</p>{% endif %}

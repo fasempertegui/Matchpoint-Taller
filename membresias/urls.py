@@ -19,6 +19,7 @@ urlpatterns = [
     path("oferta/membresias/", vistas_oferta.oferta_membresias, name="oferta_membresias"),
     path("oferta/tarifas/", vistas_oferta.oferta_tarifas, name="oferta_tarifas"),
     path("", views.catalogos, name="catalogos"),
+    path("contrataciones/usuario/<int:usuario_id>/", vistas_contrataciones.contratacion_lista, name="contrataciones_usuario"),
     path("contrataciones/planes/", vistas_contrataciones.contratacion_lista, name="contratacion_plan_lista"),
     path("contrataciones/planes/buscar-usuarios/", vistas_contrataciones.buscar_usuarios_contratacion, name="contratacion_plan_buscar_usuarios"),
     path("contrataciones/planes/nueva/", vistas_contrataciones.contratacion_crear, name="contratacion_plan_crear"),

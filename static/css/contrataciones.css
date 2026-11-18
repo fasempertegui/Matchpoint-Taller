@@ -125,9 +125,4 @@
 .contratacion-importe dd { color: var(--primario); font-size: 1.4rem; font-variant-numeric: tabular-nums; }
 .contratacion-alta .acciones-formulario { flex-wrap: wrap; }
 
-.contrataciones-tipos { display: flex; gap: 24px; margin: 20px 0; border-bottom: 1px solid var(--borde); }
-.contrataciones-tipos a { padding: 10px 0; border-bottom: 3px solid transparent; color: var(--texto-suave); font-weight: 600; text-decoration: none; }
-.contrataciones-tipos a[aria-current] { color: var(--primario); border-bottom-color: var(--primario); }
-.contrataciones-tipos a:hover { color: var(--primario); }
-.contrataciones-tipos a:focus-visible { outline: 2px solid var(--primario); outline-offset: 3px; }
 .mis-contrataciones .tarjeta-busqueda { margin-block: 20px; }

@@ -22,7 +22,7 @@
     </header>
 
     <section class="sede-operaciones" data-pestanas aria-label="Información de la sede">
-        <div class="pestanas-botones" role="tablist" aria-label="Información de la sede">
+        <div class="pestanas" role="tablist" aria-label="Información de la sede">
             <button type="button" class="pestana-boton" id="sede-tab-detalles" role="tab" aria-controls="sede-panel-detalles" data-pestana="detalles" aria-selected="true">Detalles</button>
             <button type="button" class="pestana-boton" id="sede-tab-canchas" role="tab" aria-controls="sede-panel-canchas" data-pestana="canchas" aria-selected="false" tabindex="-1">Canchas</button>
             <button type="button" class="pestana-boton" id="sede-tab-horarios" role="tab" aria-controls="sede-panel-horarios" data-pestana="horarios" aria-selected="false" tabindex="-1">Horarios</button>
@@ -96,7 +96,7 @@
                 {% endif %}
             </div>
 
-            <section class="tarjeta tabla-contenedor">
+            <section class="tarjeta tabla-contenedor tabla-listado">
                 <table>
                     <thead>
                         <tr>
@@ -123,10 +123,10 @@
                                             <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:cancha_cambiar_estado' sede.pk cancha.pk %}"
                                                   data-confirmar="{% if cancha.estado == 'activa' %}¿Desactivar la cancha {{ cancha.nombre }}? No puede tener reservas Programadas. El historial se conserva.{% else %}¿Activar la cancha {{ cancha.nombre }}?{% endif %}"
                                                   data-confirmar-titulo="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha"
-                                                  data-confirmar-boton="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha">
+                                                  data-confirmar-boton="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha"{% if cancha.estado == 'activa' %} data-confirmar-peligro{% endif %}>
                                                 {% csrf_token %}
                                                 <input type="hidden" name="estado" value="{% if cancha.estado == 'activa' %}inactiva{% else %}activa{% endif %}">
-                                                <button class="boton boton-secundario boton-chico" type="submit">
+                                                <button class="boton boton-chico {% if cancha.estado == 'activa' %}boton-peligro{% else %}boton-secundario{% endif %}" type="submit">
                                                     {% if cancha.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
                                                 </button>
                                             </form>
@@ -152,7 +152,7 @@
                     <a class="boton boton-primario boton-chico" href="{% url 'instalaciones:sede_horarios_configurar' sede.pk %}">Configurar horarios</a>
                 {% endif %}
             </div>
-            <section class="tarjeta tabla-contenedor">
+            <section class="tarjeta tabla-contenedor tabla-listado">
                 <table>
                     <thead>
                         <tr>

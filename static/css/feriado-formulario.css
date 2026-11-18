@@ -42,7 +42,7 @@
 }
 
 body > .contenido-principal.contenido-feriados {
-    width: min(1120px, calc(100% - 96px));
+    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
     padding-top: 48px;
     padding-bottom: 48px;
 }
@@ -57,8 +57,7 @@ body > .contenido-principal.contenido-feriados {
     width: 100%;
     max-width: none;
     background: var(--superficie);
-    border-top: 3px solid var(--acento);
-    border-bottom: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
 }
 
 .feriado-introduccion {
@@ -79,12 +78,11 @@ body > .contenido-principal.contenido-feriados {
 
 .listado-feriados > .encabezado-pagina {
     border: 0;
-    border-top: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
     margin-bottom: 24px;
 }
 
 .feriados-lista {
     padding: 0;
-    border-bottom: 3px solid var(--acento);
     overflow: hidden;
 }

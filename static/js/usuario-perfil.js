@@ -1,19 +1,31 @@
 document.addEventListener("DOMContentLoaded", () => {
     const gestion = document.querySelector("[data-gestion-roles]");
-    if (gestion && window.location.hash === "#roles") {
-        gestion.open = true;
+    if (gestion) {
+        const abrirRoles = document.querySelector("[data-abrir-roles]");
+        const menuRoles = abrirRoles.closest("details");
+
+        abrirRoles.addEventListener("click", () => {
+            menuRoles.open = false;
+            gestion.showModal();
+        });
+        gestion.addEventListener("close", () => {
+            menuRoles.querySelector("summary").focus({ preventScroll: true });
+        });
+        if (window.location.hash === "#roles") gestion.showModal();
     }
 
     const modalEstado = document.querySelector("[data-modal-estado]");
     if (!modalEstado) return;
 
     const abrirEstado = document.querySelector("[data-abrir-estado]");
+    const menu = abrirEstado.closest("details");
     const formularioEstado = modalEstado.querySelector("[data-estado-formulario]");
     const confirmarEstado = modalEstado.querySelector("[data-estado-confirmar]");
     const cancelarEstado = modalEstado.querySelector("[data-estado-cancelar]");
     let enviandoEstado = false;
 
     abrirEstado.addEventListener("click", () => {
+        menu.open = false;
         document.documentElement.classList.add("modal-abierto");
         modalEstado.showModal();
     });
@@ -23,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     modalEstado.addEventListener("close", () => {
         document.documentElement.classList.remove("modal-abierto");
-        abrirEstado.focus();
+        menu.querySelector("summary").focus({ preventScroll: true });
     });
     formularioEstado.addEventListener("submit", (evento) => {
         if (enviandoEstado) {

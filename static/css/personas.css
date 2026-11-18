@@ -68,12 +68,11 @@
 
 .tarjeta-formulario-usuario {
     max-width: none;
-    border-top: 3px solid var(--acento);
-    border-bottom: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
 }
 
 body > .contenido-principal.contenido-usuarios {
-    width: min(1120px, calc(100% - 96px));
+    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
     padding-top: 48px;
     padding-bottom: 48px;
 }
@@ -106,8 +105,7 @@ body > .contenido-principal.contenido-usuarios {
 
 .listado-usuarios > .tarjeta {
     border-radius: 10px;
-    border-top: 3px solid var(--acento);
-    border-bottom: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
 }
 
 .listado-usuarios .tarjeta-busqueda {
@@ -128,17 +126,11 @@ body > .contenido-principal.contenido-usuarios {
 }
 
 .listado-usuarios > .encabezado-pagina {
-    border-top: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
 }
 
 .listado-usuarios > .tabla-contenedor {
     border-top: 1px solid var(--borde);
-}
-
-.usuario-nombre-estado {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
 }
 
 .usuario-estado-punto {
@@ -178,9 +170,13 @@ body > .contenido-principal.contenido-usuarios {
 .perfil-usuario .boton,
 .perfil-usuario .form-control,
 .perfil-usuario .perfil-roles li { border-radius: 10px; }
-.perfil-usuario > .perfil { border: 0; border-top: 3px solid var(--acento); }
+.perfil-usuario > .perfil { border: 0; border-top: 3px solid var(--primario-medio); }
 .perfil-usuario .perfil-cabecera { padding: 24px; border-radius: 8px 8px 0 0; }
-.perfil-usuario .perfil-datos,
-.perfil-usuario .perfil-lateral { padding: 24px; }
-.perfil-usuario .perfil-seccion + .perfil-seccion { margin-top: 24px; padding-top: 24px; }
+.perfil-usuario .perfil-datos { padding: 24px; }
 .perfil-usuario .perfil-seccion h2 { margin-bottom: 16px; }
+.perfil-usuario .perfil-roles li { border-color: transparent; font-weight: 600; }
+.perfil-usuario .perfil-rol-administrador { background: var(--primario-suave); color: var(--primario); }
+.perfil-usuario .perfil-rol-profesor { background: #e8f1fc; color: #244c79; }
+.perfil-usuario .perfil-rol-alumno { background: #e7f5ed; color: #245d40; }
+.perfil-usuario .perfil-rol-reservas { background: var(--advertencia-suave); color: var(--advertencia); }
+.perfil-usuario .perfil-rol-publico { background: var(--estado-inactivo-fondo); color: var(--estado-inactivo-texto); }

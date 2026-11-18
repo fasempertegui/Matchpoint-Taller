@@ -2,7 +2,7 @@
 <section class="perfil-seccion" aria-labelledby="clase-{{ identificador }}-titulo">
     <h2 id="clase-{{ identificador }}-titulo">{{ titulo }} ({{ vigentes }})</h2>
     {% if solo_propios %}<p class="perfil-descripcion">Sólo se muestra tu información personal.</p>{% endif %}
-    <div class="tabla-contenedor">
+    <div class="tabla-contenedor tabla-listado tabla-listado-sin-centrado">
         <table class="perfil-asignaciones" aria-labelledby="clase-{{ identificador }}-titulo">
             <thead><tr><th scope="col">Nombre</th>{% if identificador == "participantes" %}<th scope="col">Participación</th>{% endif %}{% if mostrar_asistencia %}<th scope="col">Asistencia</th>{% endif %}</tr></thead>
             <tbody>

@@ -1,12 +1,12 @@
 body > .contenido-principal.contenido-inicio {
-    width: min(1120px, calc(100% - 64px));
+    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 64px)));
     padding-block: 40px;
 }
 
 .inicio-cabecera {
     margin-bottom: 24px;
     border: 0;
-    border-top: 3px solid var(--acento);
+    border-top: 3px solid var(--primario-medio);
     border-radius: 10px;
     background-color: var(--superficie);
 }
@@ -14,8 +14,8 @@ body > .contenido-principal.contenido-inicio {
 
 .inicio-resumen {
     display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    grid-template-areas: "actividad usuarios" "mes continuidad";
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-areas: "actividad actividad actividad" "usuarios mes continuidad";
     gap: 24px;
 }
 
@@ -56,7 +56,10 @@ body > .contenido-principal.contenido-inicio {
 .inicio-descripcion { margin: 8px 0 0; color: var(--texto-suave); font-size: 1rem; }
 .inicio-periodo { color: var(--texto-suave); font-size: .875rem; }
 
-.inicio-proxima-hora { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--borde); }
+.inicio-actividad-resumen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; }
+.inicio-actividad-resumen > div { min-width: 0; }
+.inicio-actividad-resumen > div:first-child { padding-right: 24px; }
+.inicio-proxima-hora { padding-left: 24px; border-left: 1px solid var(--borde); }
 .inicio-proxima-hora h3,
 .inicio-datos dt { margin: 0; color: var(--texto-suave); font-size: .875rem; font-weight: 500; }
 .inicio-proxima-hora p { margin: 6px 0 0; }
@@ -75,10 +78,11 @@ body > .contenido-principal.contenido-inicio {
 .inicio-datos { margin: 0; }
 .inicio-datos dd { margin: 8px 0 0; font-size: 1rem; font-weight: 600; overflow-wrap: anywhere; }
 
-.inicio-metricas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.inicio-metricas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.inicio-metrica:first-child { padding-right: 24px; }
 .inicio-metrica + .inicio-metrica { padding-left: 24px; border-left: 1px solid var(--borde); }
-.inicio-metrica .inicio-enlace { display: inline-block; margin-top: 20px; }
 .inicio-pie { display: flex; justify-content: flex-end; padding: 14px 24px; border-top: 1px solid var(--borde); }
+.inicio-pie.inicio-metricas { display: grid; text-align: right; }
 .inicio-pie a,
 .inicio-enlace { color: var(--primario); font-size: .9rem; font-weight: 600; text-decoration: none; }
 .inicio-pie a:hover,
@@ -118,12 +122,18 @@ body > .contenido-principal.contenido-inicio {
     .inicio-resumen { grid-template-columns: minmax(0, 1fr); grid-template-areas: "actividad" "usuarios" "continuidad" "mes"; }
 }
 
+@media (max-width: 600px) {
+    .inicio-actividad-resumen { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .inicio-actividad-resumen > div:first-child { padding-right: 0; }
+    .inicio-proxima-hora { padding-left: 0; padding-top: 20px; border-left: 0; border-top: 1px solid var(--borde); }
+}
+
 @media (max-width: 480px) {
     body > .contenido-principal.contenido-inicio { width: calc(100% - 32px); padding-block: 24px; }
     .inicio-seccion-cabecera { padding: 20px 20px 0; }
     .inicio-cuerpo { padding: 20px; }
     .inicio-pie { padding-inline: 20px; }
-    .inicio-metricas { gap: 16px; }
+    .inicio-metrica:first-child { padding-right: 16px; }
     .inicio-metrica + .inicio-metrica { padding-left: 16px; }
 }
 

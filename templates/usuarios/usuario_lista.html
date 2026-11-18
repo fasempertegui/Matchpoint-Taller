@@ -37,30 +37,31 @@
     </div>
 </form>
 
-<section class="tarjeta tabla-contenedor">
+<section class="tarjeta tabla-contenedor tabla-listado">
     <table>
         <thead>
             <tr>
+                <th scope="col">Estado</th>
                 <th>Nombre</th>
                 <th>Nombre de usuario</th>
                 <th>Email</th>
+                <th scope="col">Último acceso</th>
                 <th class="acciones-columna">Acciones</th>
             </tr>
         </thead>
         <tbody>
             {% for usuario_obj in pagina %}
             <tr>
+                <td>{% indicador_estado "habilitacion" usuario_obj.is_active %}</td>
                 <td>
-                    <span class="usuario-nombre-estado">
-                        {% indicador_estado "habilitacion" usuario_obj.is_active %}
-                        <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>
-                    </span>
+                    <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>
                     {% if usuario_obj.es_administrador_listado %}
                         <span role="img" aria-label="Administrador" title="Administrador">⭐</span>
                     {% endif %}
                 </td>
                 <td>{{ usuario_obj.username }}</td>
                 <td>{{ usuario_obj.email }}</td>
+                <td>{{ usuario_obj.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</td>
                 <td>
                     <div class="acciones">
                         <a class="boton boton-secundario boton-chico"
@@ -72,7 +73,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td class="estado-vacio" colspan="4">
+                <td class="estado-vacio" colspan="6">
                     No se encontraron usuarios.
                 </td>
             </tr>

@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!modal) return;
 
     var abrir = document.querySelector("[data-abrir-correo]");
+    var menu = abrir.closest("details");
     var formulario = modal.querySelector("[data-correo-formulario]");
     var campo = formulario.querySelector("[name='email']");
     var contrasena = formulario.querySelector("[name='contrasena']");
@@ -27,6 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     abrir.addEventListener("click", function () {
+        menu.open = false;
         campo.value = valorGuardado;
         contrasena.value = "";
         limpiarErrores();
@@ -43,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
     modal.addEventListener("close", function () {
         contrasena.value = "";
         document.documentElement.classList.remove("modal-abierto");
-        abrir.focus();
+        menu.querySelector("summary").focus({ preventScroll: true });
     });
 
     formulario.addEventListener("submit", async function (evento) {

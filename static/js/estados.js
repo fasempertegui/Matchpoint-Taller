@@ -13,9 +13,10 @@
         if (actual) actual.removeAttribute("aria-describedby");
         actual = null;
         tooltip.hidden = true;
+        if (tooltip.parentElement !== document.body) document.body.append(tooltip);
     }
     function posicionar() {
-        if (!actual || !actual.isConnected) { cerrar(); return; }
+        if (!actual || !actual.getClientRects().length) { cerrar(); return; }
         var caja = actual.getBoundingClientRect();
         var ancho = tooltip.offsetWidth;
         var alto = tooltip.offsetHeight;
@@ -27,6 +28,8 @@
         window.clearTimeout(temporizador);
         if (actual !== indicador) cerrar();
         actual = indicador;
+        var contenedor = indicador.closest("dialog[open]") || document.body;
+        if (tooltip.parentElement !== contenedor) contenedor.append(tooltip);
         tooltip.textContent = indicador.dataset.estadoTooltip;
         indicador.setAttribute("aria-describedby", tooltip.id);
         tooltip.hidden = false;
@@ -63,6 +66,9 @@
         else if (!tooltip.contains(evento.target)) cerrar();
     });
     document.addEventListener("keydown", function (evento) { if (evento.key === "Escape") cerrar(); });
+    document.addEventListener("close", function (evento) {
+        if (tooltip.parentElement === evento.target) cerrar();
+    }, true);
     window.addEventListener("resize", cerrar);
     document.addEventListener("scroll", cerrar, true);
 }());

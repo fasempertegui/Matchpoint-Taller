@@ -253,19 +253,24 @@ def reserva_resultado(request, pk):
 @login_required
 @never_cache
 @require_GET
-def mis_reservas(request):
-    exigir_acceso_reservas(request.user)
+def mis_reservas(request, usuario_id=None):
+    administrador = exigir_acceso_reservas(request.user)
+    titular = request.user
+    if usuario_id is not None:
+        if not administrador:
+            raise PermissionDenied
+        titular = get_object_or_404(Usuario, pk=usuario_id)
     consulta = Reserva.objects.filter(
-        Q(organizador=request.user) | Q(invitados__usuario=request.user),
+        Q(organizador=titular) | Q(invitados__usuario=titular),
     ).distinct().select_related("evento__turno__cancha__sede").prefetch_related(
-        Prefetch("invitados", queryset=ReservaInvitado.objects.filter(usuario=request.user), to_attr="invitaciones_propias"),
+        Prefetch("invitados", queryset=ReservaInvitado.objects.filter(usuario=titular), to_attr="invitaciones_titular"),
     ).order_by("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
     participacion = request.GET.get("participacion", "")
     estado = request.GET.get("estado", "")
     if participacion == "organizador":
-        consulta = consulta.filter(organizador=request.user)
+        consulta = consulta.filter(organizador=titular)
     elif participacion == "invitado":
-        consulta = consulta.exclude(organizador=request.user)
+        consulta = consulta.exclude(organizador=titular)
     else:
         participacion = ""
     if estado in Evento.Estado.values:
@@ -273,6 +278,7 @@ def mis_reservas(request):
     else:
         estado = ""
     return render(request, "reservas/mis_reservas.html", {
+        "titular": titular, "consulta_administrativa": usuario_id is not None,
         "pagina": Paginator(consulta, 25).get_page(request.GET.get("pagina")),
         "participacion": participacion, "estado": estado, "estados": Evento.Estado.choices,
         "parametros": urlencode({"participacion": participacion, "estado": estado}),

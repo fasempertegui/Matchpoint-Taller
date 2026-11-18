@@ -21,118 +21,110 @@
                 {% include "componentes/badge_estado.html" with estado=usuario_obj.is_active|yesno:"activo,inactivo" texto=usuario_obj.is_active|yesno:"Activo,Inactivo" only %}
             </div>
         </div>
+        {% if request.user.pk == usuario_obj.pk or perms.usuarios.change_usuario or puede_consultar_actividad %}
+        <details class="perfil-menu" data-menu-contextual>
+            <summary class="boton boton-secundario" aria-expanded="false" aria-controls="usuario-acciones">Acciones <span aria-hidden="true">⋮</span></summary>
+            <div class="perfil-menu-opciones" id="usuario-acciones">
+                {% if puede_consultar_actividad %}
+                <a href="{% url 'clases:actividad_clases' usuario_obj.pk %}">Ver clases</a>
+                <a href="{% url 'reservas:reservas_usuario' usuario_obj.pk %}">Ver reservas</a>
+                <a href="{% url 'membresias:contrataciones_usuario' usuario_obj.pk %}">Ver contrataciones</a>
+                {% endif %}
+                {% if perms.usuarios.change_usuario %}<button type="button" data-abrir-correo>Modificar correo</button>{% endif %}
+                {% if perms.usuarios.change_usuario and roles_gestionables %}<button type="button" data-abrir-roles aria-haspopup="dialog" aria-controls="roles">Modificar roles</button>{% endif %}
+                {% if request.user.pk == usuario_obj.pk %}
+                <a href="{% url 'password_change' %}">Cambiar mi contraseña</a>
+                {% elif perms.usuarios.change_usuario %}
+                <button type="button" data-abrir-estado{% if usuario_obj.is_active %} class="perfil-menu-peligro"{% endif %}>
+                    {% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta
+                </button>
+                {% endif %}
+            </div>
+        </details>
+        {% endif %}
     </header>
 
     <p class="mensaje mensaje-success" data-correo-guardado role="status" hidden></p>
-    <div class="perfil-cuerpo">
-        <div class="perfil-datos">
-            <section class="perfil-seccion" aria-labelledby="datos-titulo">
-                <h2 id="datos-titulo">Datos personales</h2>
-                <dl class="perfil-lista">
-                    <div class="perfil-fila">
-                        <dt>Correo electrónico</dt>
-                        <dd class="perfil-valor-accion">
-                            <span data-correo-actual>{{ usuario_obj.email|default:"Sin informar" }}</span>
-                            {% if perms.usuarios.change_usuario %}
-                                <button class="boton boton-secundario boton-chico" type="button" data-abrir-correo>Modificar correo</button>
-                            {% endif %}
-                        </dd>
-                    </div>
-                    <div class="perfil-fila">
-                        <dt>Celular</dt>
-                        <dd>{{ usuario_obj.celular_contacto|default:"Sin informar" }}</dd>
-                    </div>
-                    <div class="perfil-fila">
-                        <dt>Fecha de nacimiento</dt>
-                        <dd>{{ usuario_obj.fecha_nacimiento|date:"d/m/Y"|default:"Sin informar" }}</dd>
-                    </div>
-                </dl>
-            </section>
-
-            <section class="perfil-seccion" id="roles" aria-labelledby="roles-titulo">
-                <h2 id="roles-titulo">Roles en la academia</h2>
-                {% if roles_asignados %}
-                    <ul class="perfil-roles" aria-label="Roles asignados">
-                        {% for rol in roles_asignados %}<li>{{ rol.nombre }}</li>{% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="texto-secundario">Sin roles asignados.</p>
-                {% endif %}
-
-                {% if perms.usuarios.change_usuario and roles_gestionables %}
-                    <details class="perfil-desplegable" data-gestion-roles>
-                        <summary class="boton boton-secundario boton-chico">Modificar roles</summary>
-                        <ul class="perfil-roles-opciones">
-                            {% for rol in roles_gestionables %}
-                                <li class="perfil-rol-opcion">
-                                    <div>
-                                        <strong>{{ rol.nombre }}</strong>
-                                        <small>{% if rol.asignado %}Asignado{% else %}Sin asignar{% endif %}</small>
-                                    </div>
-                                    <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_gestionar_rol' usuario_obj.pk rol.codigo %}"
-                                          data-confirmar="{% if rol.asignado %}¿Quitar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% else %}¿Asignar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% endif %}"
-                                          data-confirmar-titulo="{% if rol.asignado %}Quitar rol{% else %}Asignar rol{% endif %}"
-                                          data-confirmar-boton="{% if rol.asignado %}Quitar {{ rol.nombre }}{% else %}Asignar {{ rol.nombre }}{% endif %}">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="accion" value="{% if rol.asignado %}quitar{% else %}asignar{% endif %}">
-                                        <button class="boton boton-secundario boton-chico" type="submit">
-                                            {% if rol.asignado %}Quitar {{ rol.nombre }}{% else %}Asignar {{ rol.nombre }}{% endif %}
-                                        </button>
-                                    </form>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </details>
-                {% endif %}
-            </section>
-
-            {% if perms.usuarios.view_usuario %}
-                <section class="perfil-seccion" aria-labelledby="observaciones-titulo">
-                    <h2 id="observaciones-titulo">Observaciones</h2>
-                    <p class="perfil-observaciones{% if not usuario_obj.observaciones %} texto-secundario{% endif %}">{{ usuario_obj.observaciones|default:"Sin observaciones"|linebreaksbr }}</p>
-                </section>
-            {% endif %}
-        </div>
-
-        <aside class="perfil-lateral" aria-labelledby="cuenta-titulo">
-            <section class="perfil-seccion">
-                <h2 id="cuenta-titulo">Cuenta</h2>
-                <dl class="perfil-lista">
-                    <div class="perfil-fila">
-                        <dt>Nombre de usuario</dt>
-                        <dd>{{ usuario_obj.username }}</dd>
-                    </div>
-                    <div class="perfil-fila">
-                        <dt>Fecha de alta</dt>
-                        <dd>{{ usuario_obj.date_joined|date:"d/m/Y" }}</dd>
-                    </div>
-                    {% if usuario_obj.fecha_baja %}
-                        <div class="perfil-fila">
-                            <dt>Fecha de baja</dt>
-                            <dd>{{ usuario_obj.fecha_baja|date:"d/m/Y H:i" }}</dd>
-                        </div>
-                    {% endif %}
-                </dl>
-            </section>
-
-            {% if request.user.pk == usuario_obj.pk or perms.usuarios.change_usuario %}
-                <section class="perfil-seccion" aria-labelledby="acceso-titulo">
-                    <h2 id="acceso-titulo">Acceso y seguridad</h2>
-                    <p class="perfil-aviso-acceso" data-cambio-pendiente{% if not usuario_obj.debe_cambiar_contrasena %} hidden{% endif %}>Cambio de contraseña pendiente</p>
-                    <div class="perfil-acciones perfil-acciones-botones">
-                        {% if request.user.pk == usuario_obj.pk %}
-                            <a class="boton boton-secundario boton-chico" href="{% url 'password_change' %}">Cambiar mi contraseña</a>
-                        {% else %}
-                            <button class="boton boton-chico {% if usuario_obj.is_active %}boton-peligro{% else %}boton-activar{% endif %}" type="button" data-abrir-estado>
-                                {% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta
-                            </button>
+    <div class="perfil-datos">
+        <section class="perfil-seccion" aria-labelledby="datos-titulo">
+            <h2 id="datos-titulo">Datos personales</h2>
+            <div class="tabla-contenedor tabla-datos">
+                <table aria-labelledby="datos-titulo">
+                    <tbody>
+                        <tr><th scope="row">Correo electrónico</th><td data-correo-actual>{{ usuario_obj.email|default:"Sin informar" }}</td></tr>
+                        <tr><th scope="row">Celular</th><td>{{ usuario_obj.celular_contacto|default:"Sin informar" }}</td></tr>
+                        <tr><th scope="row">Fecha de nacimiento</th><td>{{ usuario_obj.fecha_nacimiento|date:"d/m/Y"|default:"Sin informar" }}</td></tr>
+                        {% if perms.usuarios.view_usuario and usuario_obj.observaciones %}
+                        <tr><th scope="row">Observaciones</th><td>{{ usuario_obj.observaciones|linebreaksbr }}</td></tr>
                         {% endif %}
-                    </div>
-                </section>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="perfil-seccion" aria-labelledby="cuenta-titulo">
+            <h2 id="cuenta-titulo">Datos de la cuenta</h2>
+            <div class="tabla-contenedor tabla-datos">
+                <table aria-labelledby="cuenta-titulo">
+                    <tbody>
+                        <tr><th scope="row">Nombre de usuario</th><td>{{ usuario_obj.username }}</td></tr>
+                        <tr><th scope="row">Fecha de alta</th><td>{{ usuario_obj.date_joined|date:"d/m/Y" }}</td></tr>
+                        {% if usuario_obj.fecha_baja %}
+                        <tr><th scope="row">Fecha de baja</th><td>{{ usuario_obj.fecha_baja|date:"d/m/Y H:i" }}</td></tr>
+                        {% endif %}
+                        <tr><th scope="row">Último inicio de sesión</th><td>{{ usuario_obj.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</td></tr>
+                        <tr>
+                            <th scope="row">Roles</th>
+                            <td>
+                                {% if roles_asignados %}
+                                <ul class="perfil-roles" aria-label="Roles asignados">
+                                    {% for rol in roles_asignados %}<li class="perfil-rol-{{ rol.codigo }}">{{ rol.nombre }}</li>{% endfor %}
+                                </ul>
+                                {% else %}Sin roles asignados{% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% if usuario_obj.debe_cambiar_contrasena %}
+                {% if request.user.pk == usuario_obj.pk or perms.usuarios.change_usuario %}
+                <p class="nota-campo nota-campo-ambar">Cambio de contraseña pendiente</p>
+                {% endif %}
             {% endif %}
-        </aside>
+        </section>
     </div>
 </article>
+{% if perms.usuarios.change_usuario and roles_gestionables %}
+<dialog class="modal-confirmacion" id="roles" aria-labelledby="roles-titulo" data-gestion-roles>
+    <div class="modal-confirmacion-formulario">
+        <header class="modal-confirmacion-cabecera"><h2 id="roles-titulo">Modificar roles</h2></header>
+        <div class="modal-confirmacion-contenido">
+            <ul class="perfil-roles-opciones">
+                {% for rol in roles_gestionables %}
+                    <li class="perfil-rol-opcion">
+                        <div>
+                            <strong>{{ rol.nombre }}</strong>
+                            <small>{% if rol.asignado %}Asignado{% else %}Sin asignar{% endif %}</small>
+                        </div>
+                        <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_gestionar_rol' usuario_obj.pk rol.codigo %}"
+                              data-confirmar="{% if rol.asignado %}¿Quitar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% else %}¿Asignar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% endif %}"
+                              data-confirmar-titulo="{% if rol.asignado %}Quitar rol{% else %}Asignar rol{% endif %}"
+                              data-confirmar-boton="{% if rol.asignado %}Quitar {{ rol.nombre }}{% else %}Asignar {{ rol.nombre }}{% endif %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="accion" value="{% if rol.asignado %}quitar{% else %}asignar{% endif %}">
+                            <button class="boton boton-secundario boton-chico" type="submit">
+                                {% if rol.asignado %}Quitar {{ rol.nombre }}{% else %}Asignar {{ rol.nombre }}{% endif %}
+                            </button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <form method="dialog" class="modal-confirmacion-acciones">
+            <button type="submit" class="boton boton-secundario" autofocus>Cerrar</button>
+        </form>
+    </div>
+</dialog>
+{% endif %}
 {% if perms.usuarios.change_usuario and request.user.pk != usuario_obj.pk %}
     {% include "usuarios/_modal_cambiar_estado.html" %}
 {% endif %}
@@ -140,5 +132,6 @@
     {% include "usuarios/_modal_modificar_correo.html" %}
     <script src="{% static 'js/usuario-correo.js' %}" defer></script>
 {% endif %}
+<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 <script src="{% static 'js/usuario-perfil.js' %}" defer></script>
 {% endblock %}
