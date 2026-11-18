@@ -971,13 +971,6 @@ button.agenda-opcion:hover {
     font-size: .85rem;
 }
 
-.agenda-encabezado {
-    margin-bottom: 20px;
-    border: 0;
-    border-top: 3px solid var(--primario-medio);
-    border-radius: 10px;
-}
-
 .agenda-encabezado .boton {
     border-radius: 10px;
 }

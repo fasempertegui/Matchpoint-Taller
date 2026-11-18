@@ -4,9 +4,9 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-inicio{% endblock %}
 {% block contenido %}
-<header class="tarjeta inicio-cabecera encabezado-geometrico">
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico">
     <h1>Inicio</h1>
-    <p>{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
+    <p class="encabezado-descripcion">{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
 </header>
 <div class="inicio-resumen">
     <section class="tarjeta inicio-actividad" aria-labelledby="inicio-actividad-titulo">

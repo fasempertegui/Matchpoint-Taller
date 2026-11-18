@@ -256,7 +256,6 @@
 
 
 body > .contenido-principal.contenido-oferta { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
-.contenido-oferta > .oferta-encabezado { border: 0; border-top: 3px solid var(--primario-medio); border-radius: 10px; }
 .contenido-oferta > .oferta-catalogo-encabezado { margin-bottom: 20px; }
 .contenido-oferta > .oferta-catalogo-encabezado h2 { margin: 0; font-size: 1.4rem; }
 

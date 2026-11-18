@@ -4,9 +4,9 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}"><link rel="stylesheet" href="{% static 'css/inicio-portal.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-inicio contenido-inicio-portal{% endblock %}
 {% block contenido %}
-<header class="tarjeta inicio-cabecera encabezado-geometrico encabezado-geometrico-orbitas">
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
     <h1>Hola, {{ request.user.first_name|default:request.user.username }}</h1>
-    <p>{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
+    <p class="encabezado-descripcion">{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
 </header>
 {% if not request.user.correo_verificado_en %}
 <section class="tarjeta portal-verificacion"><p>Verificá tu correo para acceder a tus actividades y reservas</p><a class="boton boton-primario" href="{% url 'estado_verificacion' %}">Verificar mi correo</a></section>

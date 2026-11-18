@@ -10,18 +10,20 @@
 {% endblock %}
 
 {% block contenido %}
-<header class="tarjeta encabezado-pagina agenda-encabezado encabezado-separado encabezado-geometrico encabezado-geometrico-ondas">
-    <h1>Agenda</h1>
-    {% if es_administrador and agenda.columnas %}
+<header class="tarjeta agenda-encabezado encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
+    <div class="encabezado-fila">
+        <h1>Agenda</h1>
+        {% if es_administrador and agenda.columnas %}
         <div class="acciones">
             {% if agenda.fecha >= agenda.hoy %}
                 <a class="boton boton-primario" data-agenda-acciones="dia" href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{% if panel_acciones and not panel_acciones_mes %}true{% else %}false{% endif %}">Acciones del día</a>
             {% endif %}
             <a class="boton boton-secundario" data-agenda-acciones="mes" href="{{ agenda.url_acciones_mes }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones_mes|yesno:'true,false' }}">Acciones del mes</a>
         </div>
-    {% endif %}
+        {% endif %}
+    </div>
+    <p class="encabezado-descripcion">Consultá las clases, reservas y bloqueos de cada sede y cancha.</p>
 </header>
-<p class="tarjeta descripcion-seccion">Consultá las clases, reservas y bloqueos de cada sede y cancha.</p>
 
 {% if hay_sedes %}
     <form class="tarjeta tarjeta-busqueda agenda-controles" method="get" data-agenda-filtros>

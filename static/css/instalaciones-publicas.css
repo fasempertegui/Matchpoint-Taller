@@ -1,5 +1,4 @@
 .instalaciones-publicas .tarjeta, .instalaciones-publicas .boton { border-radius: 10px; }
-.instalaciones-publicas > .encabezado-pagina { border: 0; border-top: 3px solid var(--primario-medio); }
 .instalaciones-publicas .sede-tarjeta h2 { margin: 0; font-size: 1.25rem; }
 .sede-oferta-precio { margin: 0 0 20px; }
 .sede-oferta-precio dt { color: var(--texto-suave); font-size: .875rem; }

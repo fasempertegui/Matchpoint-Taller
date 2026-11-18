@@ -7,7 +7,6 @@
 .sidebar-compacta .sidebar-notificaciones .notificaciones-contador { position: absolute; top: 0; right: 0; min-width: 18px; height: 18px; padding-inline: 4px; font-size: 10px; }
 .contenido-notificaciones > .notificaciones-encabezado { align-items: center; gap: 16px; border-top: 3px solid var(--primario-medio); border-bottom: 0; }
 .notificaciones-encabezado h1 { margin: 0; }
-.notificaciones-encabezado p { margin-bottom: 0; }
 .notificaciones-ultima-modificacion {
     display: grid;
     gap: 2px;

@@ -2,14 +2,17 @@
 {% block titulo %}Notificaciones | Academia TM{% endblock %}
 {% block clase_contenido %}contenido-notificaciones{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina encabezado-geometrico notificaciones-encabezado">
-    <div><h1>Notificaciones</h1><p class="texto-secundario">Avisos sobre tu cuenta y tu actividad en la academia.</p></div>
-    {% if navegacion_app.notificaciones_no_leidas %}
-    <details class="notificaciones-acciones">
-        <summary class="boton boton-secundario boton-chico">Acciones</summary>
-        <form method="post" action="{% url 'comunicaciones:notificaciones_leer_todas' %}">{% csrf_token %}<button class="boton boton-secundario boton-chico" type="submit">Marcar todas como leídas</button></form>
-    </details>
-    {% endif %}
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico">
+    <div class="encabezado-fila">
+        <h1>Notificaciones</h1>
+        {% if navegacion_app.notificaciones_no_leidas %}
+        <details class="notificaciones-acciones">
+            <summary class="boton boton-secundario boton-chico">Acciones</summary>
+            <form method="post" action="{% url 'comunicaciones:notificaciones_leer_todas' %}">{% csrf_token %}<button class="boton boton-secundario boton-chico" type="submit">Marcar todas como leídas</button></form>
+        </details>
+        {% endif %}
+    </div>
+    <p class="encabezado-descripcion">Avisos sobre tu cuenta y tu actividad en la academia.</p>
 </header>
 <nav class="pestanas notificaciones-filtros" aria-label="Filtrar notificaciones">
     <a href="{% url 'comunicaciones:notificaciones_lista' %}"{% if not estado_actual %} aria-current="page"{% endif %}>Todas</a>
