@@ -8,24 +8,30 @@
 {% block clase_contenido %}contenido-actividad-clases{% endblock %}
 
 {% block contenido %}
-<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-reticula">
-    <h1>Actividad de clases</h1>
-    {% if es_profesor %}
-    <form class="actividad-selector-funcion" method="get" data-filtros-automaticos>
-        <input type="hidden" name="fecha_desde" value="{{ formulario.fecha_desde.value|default_if_none:'' }}">
-        <input type="hidden" name="fecha_hasta" value="{{ formulario.fecha_hasta.value|default_if_none:'' }}">
-        <input type="hidden" name="vista" value="{{ formulario.vista.value }}">
-        <label class="clase-etiqueta-oculta" for="actividad-funcion">Función en la clase</label>
-        <select class="form-control" id="actividad-funcion" name="funcion">
-            <option value="profesor"{% if funcion == "profesor" %} selected{% endif %}>Profesor</option>
-            <option value="participante"{% if funcion == "participante" %} selected{% endif %}>Participante</option>
-        </select>
-        <noscript><button class="boton boton-secundario boton-chico" type="submit">Aplicar</button></noscript>
-    </form>
-    {% endif %}
-    {% if request.user.pk != titular.pk %}<a class="boton boton-secundario" href="{{ url_perfil }}">Ver perfil</a>{% endif %}
+<header class="tarjeta actividad-encabezado encabezado-geometrico encabezado-geometrico-orbitas">
+    <div class="actividad-encabezado-fila">
+        <h1>Actividad de clases</h1>
+        {% if es_profesor or request.user.pk != titular.pk %}
+        <div class="acciones">
+            {% if es_profesor %}
+            <form class="actividad-selector-funcion" method="get" data-filtros-automaticos>
+                <input type="hidden" name="fecha_desde" value="{{ formulario.fecha_desde.value|default_if_none:'' }}">
+                <input type="hidden" name="fecha_hasta" value="{{ formulario.fecha_hasta.value|default_if_none:'' }}">
+                <input type="hidden" name="vista" value="{{ formulario.vista.value }}">
+                <label class="clase-etiqueta-oculta" for="actividad-funcion">Función en la clase</label>
+                <select class="form-control" id="actividad-funcion" name="funcion">
+                    <option value="profesor"{% if funcion == "profesor" %} selected{% endif %}>Profesor</option>
+                    <option value="participante"{% if funcion == "participante" %} selected{% endif %}>Participante</option>
+                </select>
+                <noscript><button class="boton boton-secundario boton-chico" type="submit">Aplicar</button></noscript>
+            </form>
+            {% endif %}
+            {% if request.user.pk != titular.pk %}<a class="boton boton-secundario" href="{{ url_perfil }}">Ver perfil</a>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+    <p class="actividad-encabezado-descripcion">Consultá {% if request.user.pk == titular.pk %}tus próximas clases, el historial y las asistencias{% else %}las clases y asistencias de {{ titular }}{% endif %} en el período seleccionado.</p>
 </header>
-<p class="tarjeta descripcion-seccion">Consultá {% if request.user.pk == titular.pk %}tus próximas clases, el historial y las asistencias{% else %}las clases y asistencias de {{ titular }}{% endif %} en el período seleccionado.</p>
 <section class="tarjeta actividad-tarjeta-resumen" aria-label="Resumen del período">
     <div class="perfil-seccion">
     <div class="perfil-valor-accion">
