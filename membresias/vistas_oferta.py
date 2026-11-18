@@ -6,7 +6,6 @@ from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
-from instalaciones.models import Sede
 from usuarios.models import Rol, Usuario
 
 from .models import Membresia, Plan
@@ -25,7 +24,7 @@ def _exigir_acceso_oferta(usuario):
 @require_GET
 def oferta(request):
     _exigir_acceso_oferta(request.user)
-    return redirect("membresias:oferta_planes")
+    return redirect("oferta:sedes")
 
 
 def _lista_productos(request, modelo, tipo):
@@ -36,7 +35,7 @@ def _lista_productos(request, modelo, tipo):
         productos = productos.filter(Q(nombre__icontains=busqueda) | Q(descripcion__icontains=busqueda))
     return render(request, "membresias/oferta_lista.html", {
         "tipo": tipo, "titulo": "Planes de clases" if tipo == "plan" else "Membresías de socios",
-        "ruta_catalogo": f"membresias:oferta_{'planes' if tipo == 'plan' else 'membresias'}",
+        "ruta_catalogo": "oferta:planes" if tipo == "plan" else "oferta:membresias",
         "pagina": Paginator(productos, 25).get_page(request.GET.get("pagina")),
         "busqueda": busqueda,
     })
@@ -54,14 +53,3 @@ def oferta_planes(request):
 @require_GET
 def oferta_membresias(request):
     return _lista_productos(request, Membresia, "membresia")
-
-
-@login_required
-@never_cache
-@require_GET
-def oferta_tarifas(request):
-    _exigir_acceso_oferta(request.user)
-    sedes = Sede.objects.filter(estado=Sede.Estado.ACTIVA, precio_reserva_vigente__isnull=False)
-    return render(request, "membresias/oferta_tarifas.html", {
-        "sedes": sedes, "tipo": "tarifa",
-    })

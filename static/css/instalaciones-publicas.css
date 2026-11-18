@@ -1,15 +1,6 @@
 .instalaciones-publicas .tarjeta, .instalaciones-publicas .boton { border-radius: 10px; }
 .instalaciones-publicas > .encabezado-pagina { border: 0; border-top: 3px solid var(--primario-medio); }
 .instalaciones-publicas .sede-tarjeta h2 { margin: 0; font-size: 1.25rem; }
-.instalacion-publica-datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin: 0; }
-.instalacion-publica-datos dt { color: var(--texto-suave); font-size: .875rem; }
-.instalacion-publica-datos dd { margin: 6px 0 0; font-size: 1.05rem; font-weight: 600; overflow-wrap: anywhere; }
-.sede-publica-canchas { margin-top: 20px; padding: 0; }
-.sede-publica-canchas > header { padding: 20px; border-bottom: 1px solid var(--borde); }
-.sede-publica-canchas h2 { margin: 0; font-size: 1.15rem; }
-.sede-publica-canchas td { vertical-align: middle; }
-.instalacion-publica-pie { display: flex; justify-content: flex-end; margin: 20px -20px -20px; padding: 14px 20px; border-top: 1px solid var(--borde); }
-.instalacion-publica-pie a { color: var(--primario); font-size: .9rem; font-weight: 600; text-decoration: none; }
-
-.sede-publica-canchas .cancha-superficie-columna { width: 40%; }
-.cancha-superficie-imagen { display: block; width: 100%; height: 44px; object-fit: cover; object-position: center; border-radius: 8px; }
+.sede-oferta-precio { margin: 0 0 20px; }
+.sede-oferta-precio dt { color: var(--texto-suave); font-size: .875rem; }
+.sede-oferta-precio dd { margin: 4px 0 0; color: var(--primario); font-size: 1.15rem; font-weight: 700; }

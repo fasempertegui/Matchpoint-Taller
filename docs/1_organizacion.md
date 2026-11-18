@@ -173,7 +173,7 @@ Reservas y contrataciones presentan una única situación financiera con importe
 
 ## 6. Cuentas y acceso a la oferta
 
-Las personas se registran con correo sin verificar y sólo Público. Pueden iniciar sesión y consultar su perfil y la oferta activa: sedes, ubicación, precio de reserva, canchas, planes y membresías. Esa lectura no muestra participantes, ocupaciones identificadas, contrataciones ajenas, Caja ni observaciones internas de administración.
+Las personas se registran con correo sin verificar y sólo Público. Pueden iniciar sesión y consultar su perfil y la oferta activa de sedes con su ubicación y precio de reserva, planes y membresías. Las cuentas habilitadas consultan las canchas desde Agenda. Esa lectura no muestra participantes, ocupaciones identificadas, contrataciones ajenas, Caja ni observaciones internas de administración.
 
 La bienvenida incluye un enlace de verificación que vence quince minutos después de emitirse. Abrir el enlace verifica automáticamente el correo y asigna Reservas una única vez a cuentas no administrativas. La pantalla informa el resultado y ofrece ir a Inicio si hay sesión o iniciar sesión si no la hay; la barra superior muestra únicamente el enlace del título y logo. No otorga Alumno ni Profesor, no repite la bienvenida y no restaura roles retirados. Las cuentas administrativas conservan únicamente Administrador y también verifican su correo. Verificar no reactiva cuentas ni elimina una contraseña provisoria pendiente.
 

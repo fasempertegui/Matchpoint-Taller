@@ -114,8 +114,7 @@
     font-weight: 600;
 }
 
-.oferta-producto .oferta-descripcion-abrir,
-.oferta-producto .oferta-reserva-enlace {
+.oferta-producto .oferta-descripcion-abrir {
     width: 100%;
     align-self: stretch;
     margin-top: 0;
@@ -169,11 +168,6 @@
 .oferta-descripcion-modal .modal-confirmacion-contenido:focus-visible {
     outline: 2px solid var(--primario);
     outline-offset: -2px;
-}
-
-.oferta-reserva-enlace:focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: 4px;
 }
 
 .oferta-catalogo-encabezado {
@@ -260,8 +254,6 @@
     }
 }
 
-.tarjeta.oferta-tarifa { min-height: 0; }
-.oferta-tarifa .oferta-producto-beneficios { flex: none; }
 
 body > .contenido-principal.contenido-oferta { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
 .contenido-oferta > .oferta-encabezado { border: 0; border-top: 3px solid var(--primario-medio); border-radius: 10px; }

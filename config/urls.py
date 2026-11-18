@@ -30,5 +30,6 @@ urlpatterns = [
     path('auditoria/', include('auditoria.urls')),
     path('comunicaciones/', include('comunicaciones.urls')),
     path('membresias/', include('membresias.urls')),
+    path('oferta/', include('config.urls_oferta')),
     path('', views.inicio, name='inicio'),
 ]

@@ -17,7 +17,7 @@ DESTINOS_NAVEGACION = {
     "reportes:inicio": ("auditoria", "seguimiento"),
     "instalaciones:sede_lista": ("ubicacion", "academia"),
     "clases:feriado_lista": ("calendario", "academia"),
-    "membresias:oferta": ("libro", "academia"),
+    "oferta:inicio": ("libro", "academia"),
     "comunicaciones:envios_lista": ("correo", "seguimiento"),
     "comunicaciones:configuracion_notificaciones": ("correo", "seguimiento"),
     "auditoria:auditoria_lista": ("auditoria", "seguimiento"),
@@ -67,10 +67,8 @@ def navegacion(request):
     if not usuario.esta_habilitado:
         agenda = None
     oferta = enlace(
-        "Oferta", "membresias:oferta",
-        (namespace == "membresias" and ruta.url_name.startswith("oferta"))
-        or (namespace == "instalaciones" and ruta.url_name.startswith("publico_")),
-        "Planes de clases, membresías de socios y tarifas de reservas.",
+        "Oferta", "oferta:inicio", namespace == "oferta",
+        "Sedes y precios de reserva, planes de clases y membresías de socios.",
     ) if Rol.PUBLICO in roles else None
     mis_contrataciones = enlace(
         "Mis contrataciones", "membresias:mis_contrataciones", contrataciones_propias_activo,

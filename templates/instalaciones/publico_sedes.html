@@ -12,7 +12,13 @@
         {% include "instalaciones/_imagen_sede.html" with sede=sede only %}
         <h2>{{ sede.nombre }}</h2>
         <p>{{ sede.direccion|default:"Dirección sin informar" }}</p>
-        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:publico_sede' sede.pk %}">Ver sede</a>
+        <dl class="sede-oferta-precio">
+            <dt>Reserva por turno de 1 hora</dt>
+            <dd>{% if sede.precio_reserva_vigente is not None %}$ {{ sede.precio_reserva_vigente|floatformat:"2g" }}{% else %}Consultar{% endif %}</dd>
+        </dl>
+        {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
+        <a class="boton boton-secundario boton-chico" href="{% url 'agenda:agenda' %}?sede={{ sede.pk }}" aria-label="Ver agenda de {{ sede.nombre }}">Ver agenda</a>
+        {% endif %}
     </article>
     {% empty %}<p class="tarjeta estado-vacio">No hay sedes disponibles.</p>{% endfor %}
 </section>

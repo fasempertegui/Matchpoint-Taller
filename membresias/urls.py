@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import vistas_ajustes, views, vistas_contrataciones, vistas_oferta, vistas_propias, vistas_continuidad
+from . import vistas_ajustes, views, vistas_contrataciones, vistas_propias, vistas_continuidad
 
 app_name = "membresias"
 
@@ -14,10 +14,6 @@ urlpatterns = [
     path("mis-contrataciones/planes/<int:pk>/continuidad/", vistas_continuidad.responder, name="mi_plan_continuidad"),
     path("mis-contrataciones/membresias/<int:pk>/continuidad/", vistas_continuidad.responder, {"tipo": "membresia"}, name="mi_membresia_continuidad"),
     path("continuidad/", vistas_continuidad.lista, name="continuidad_lista"),
-    path("oferta/", vistas_oferta.oferta, name="oferta"),
-    path("oferta/planes/", vistas_oferta.oferta_planes, name="oferta_planes"),
-    path("oferta/membresias/", vistas_oferta.oferta_membresias, name="oferta_membresias"),
-    path("oferta/tarifas/", vistas_oferta.oferta_tarifas, name="oferta_tarifas"),
     path("", views.catalogos, name="catalogos"),
     path("contrataciones/usuario/<int:usuario_id>/", vistas_contrataciones.contratacion_lista, name="contrataciones_usuario"),
     path("contrataciones/planes/", vistas_contrataciones.contratacion_lista, name="contratacion_plan_lista"),
