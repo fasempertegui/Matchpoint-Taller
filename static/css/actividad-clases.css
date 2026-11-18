@@ -1,24 +1,5 @@
 body > .contenido-principal.contenido-actividad-clases { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
 .contenido-actividad-clases .tarjeta, .contenido-actividad-clases .boton, .contenido-actividad-clases .form-control { border-radius: 10px; }
-.contenido-actividad-clases > .actividad-encabezado {
-    margin-bottom: 20px;
-    border: 0;
-    border-top: 3px solid var(--primario-medio);
-}
-.actividad-encabezado-fila {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px 16px;
-}
-.actividad-encabezado-fila h1 { overflow-wrap: anywhere; }
-.actividad-encabezado-fila .acciones { align-items: center; flex-wrap: wrap; }
-.actividad-encabezado-descripcion {
-    margin: 10px 0 0;
-    color: var(--texto-suave);
-    font-size: .9rem;
-    line-height: 1.5;
-}
 .contenido-actividad-clases .actividad-selector-funcion {
     display: flex;
     align-items: center;

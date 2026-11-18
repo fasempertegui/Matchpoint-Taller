@@ -5,12 +5,24 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}"><link rel="stylesheet" href="{% static 'css/contrataciones.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-membresias-configuracion catalogo-listado contratacion-listado{% if propias or titular %} mis-contrataciones{% endif %}{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina{% if propias or titular %} encabezado-separado encabezado-geometrico encabezado-geometrico-orbitas{% endif %}">
-    {% if not propias and not titular %}<div><h1>{{ titulo_lista }}</h1><p class="contratacion-introduccion">Consultá y registrá las contrataciones mensuales de {{ plural }} de cada usuario.</p></div>{% else %}<h1>{{ titulo_lista }}</h1>{% endif %}
-    {% if titular %}<a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>{% elif not propias %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
+{% if propias %}
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
+    <h1>{{ titulo_lista }}</h1>
+    <p class="encabezado-descripcion">Consultá tus planes y membresías contratados, sus períodos e importes.</p>
 </header>
+{% elif titular %}
+<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-orbitas">
+    <h1>{{ titulo_lista }}</h1>
+    <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>
+</header>
+<p class="tarjeta descripcion-seccion">Consultá los planes y membresías contratados por este usuario, sus períodos e importes.</p>
+{% else %}
+<header class="tarjeta encabezado-pagina">
+    <div><h1>{{ titulo_lista }}</h1><p class="contratacion-introduccion">Consultá y registrá las contrataciones mensuales de {{ plural }} de cada usuario.</p></div>
+    <a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>
+</header>
+{% endif %}
 {% if propias or titular %}
-<p class="tarjeta descripcion-seccion">{% if titular %}Consultá los planes y membresías contratados por este usuario, sus períodos e importes.{% else %}Consultá tus planes y membresías contratados, sus períodos e importes.{% endif %}</p>
 <nav class="pestanas" aria-label="Tipo de contratación">
     <a href="{{ request.path }}?tipo=plan"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
     <a href="{{ request.path }}?tipo=membresia"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>

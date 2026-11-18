@@ -8,8 +8,8 @@
 {% block clase_contenido %}contenido-actividad-clases{% endblock %}
 
 {% block contenido %}
-<header class="tarjeta actividad-encabezado encabezado-geometrico encabezado-geometrico-orbitas">
-    <div class="actividad-encabezado-fila">
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
+    <div class="encabezado-fila">
         <h1>Actividad de clases</h1>
         {% if es_profesor or request.user.pk != titular.pk %}
         <div class="acciones">
@@ -35,7 +35,7 @@
         </div>
         {% endif %}
     </div>
-    <p class="actividad-encabezado-descripcion">Consultá {% if request.user.pk == titular.pk %}tus clases y asistencias{% else %}las clases y asistencias de {{ titular }}{% endif %} en el período seleccionado.</p>
+    <p class="encabezado-descripcion">Consultá {% if request.user.pk == titular.pk %}tus clases y asistencias{% else %}las clases y asistencias de {{ titular }}{% endif %} en el período seleccionado.</p>
 </header>
 {% if consulta_administrativa %}
 <section class="tarjeta actividad-tarjeta-resumen" aria-label="Resumen del período">

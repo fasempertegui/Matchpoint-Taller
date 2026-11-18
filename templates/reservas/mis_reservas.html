@@ -4,8 +4,21 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/reservas-portal.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-reservas reservas-listado{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-ondas"><h1>{% if consulta_administrativa %}Reservas de {{ titular }}{% elif solo_invitaciones %}Mis invitaciones{% else %}Mis reservas{% endif %}</h1>{% if consulta_administrativa %}<a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>{% else %}<a class="boton boton-primario" href="{% url 'agenda:agenda' %}">Ver agenda</a>{% endif %}</header>
-<p class="tarjeta descripcion-seccion">{% if consulta_administrativa %}Consultá las reservas que organizó este usuario y las invitaciones que recibió.{% elif solo_invitaciones %}Consultá las invitaciones a reservas que recibiste y tu respuesta.{% else %}Consultá las reservas que organizaste, su estado y el lugar de cada turno.{% endif %}</p>
+{% if consulta_administrativa %}
+<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-ondas">
+    <h1>Reservas de {{ titular }}</h1>
+    <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>
+</header>
+<p class="tarjeta descripcion-seccion">Consultá las reservas que organizó este usuario y las invitaciones que recibió.</p>
+{% else %}
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
+    <div class="encabezado-fila">
+        <h1>{% if solo_invitaciones %}Mis invitaciones{% else %}Mis reservas{% endif %}</h1>
+        <a class="boton boton-primario" href="{% url 'agenda:agenda' %}">Ver agenda</a>
+    </div>
+    <p class="encabezado-descripcion">{% if solo_invitaciones %}Consultá las invitaciones a reservas que recibiste y tu respuesta.{% else %}Consultá las reservas que organizaste, su estado y el lugar de cada turno.{% endif %}</p>
+</header>
+{% endif %}
 <form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos aria-label="Filtros de reservas">
     {% if consulta_administrativa %}
     <div class="grupo-campo"><label for="reservas-participacion">Participación</label><select class="form-control" name="participacion" id="reservas-participacion"><option value="">Todas</option><option value="organizador"{% if participacion == 'organizador' %} selected{% endif %}>Organizador</option><option value="invitado"{% if participacion == 'invitado' %} selected{% endif %}>Invitado</option></select></div>

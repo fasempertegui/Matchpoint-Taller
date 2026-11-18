@@ -21,6 +21,31 @@
     gap: 16px;
     margin-bottom: 12px;
 }
+
+.encabezado-con-descripcion {
+    margin-bottom: 20px;
+    border: 0;
+    border-top: 3px solid var(--primario-medio);
+}
+
+.encabezado-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+}
+
+.encabezado-fila h1 { overflow-wrap: anywhere; }
+.encabezado-fila .acciones { align-items: center; flex-wrap: wrap; }
+.encabezado-fila > .boton { text-align: center; }
+
+.encabezado-descripcion {
+    margin: 10px 0 0;
+    color: var(--texto-suave);
+    font-size: .9rem;
+    line-height: 1.5;
+}
+
 body > .contenido-principal > .tarjeta.descripcion-seccion {
     margin: 0 0 20px;
     padding: 10px 20px;
