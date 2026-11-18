@@ -2,7 +2,7 @@
 {% load static %}
 {% block titulo %}Clase {{ clase.id }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/clase-detalle.css' %}">{% endblock %}
-{% block clase_contenido %}contenido-clase-detalle{% endblock %}
+{% block clase_contenido %}contenido-detalle-evento{% endblock %}
 {% block contenido %}
 <article class="tarjeta perfil">
     <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-reticula">
@@ -25,7 +25,7 @@
             </div>
         </details>
     </header>
-    <div class="clase-detalle-cuerpo">
+    <div class="detalle-evento-cuerpo clase-detalle-cuerpo">
         <section class="perfil-seccion" aria-labelledby="clase-datos-titulo">
             <div class="perfil-titulo-con-ayuda">
                 <h2 id="clase-datos-titulo">Datos de la clase</h2>

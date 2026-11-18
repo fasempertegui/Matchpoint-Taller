@@ -1,14 +1,6 @@
-body > .contenido-principal.contenido-clase-detalle { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
-.contenido-clase-detalle .tarjeta, .contenido-clase-detalle .boton, .contenido-clase-detalle .form-control { border-radius: 10px; }
-.contenido-clase-detalle > .perfil { border: 0; border-top: 3px solid var(--primario-medio); }
-.contenido-clase-detalle .perfil-cabecera { padding: 24px; border-radius: 8px 8px 0 0; }
-.clase-detalle-cuerpo { padding: 24px; }
 .clase-detalle-cuerpo .perfil-seccion + .perfil-seccion { margin-top: 24px; padding-top: 24px; }
 .clase-detalle-cuerpo .perfil-seccion h2 { margin-bottom: 16px; }
 .clase-detalle-cuerpo .tabla-listado { border: 1px solid var(--borde); border-radius: 8px; }
-.clase-detalle-cuerpo table { font-size: .9rem; }
-.clase-detalle-cuerpo td { vertical-align: middle; }
-.clase-detalle-cuerpo tr:last-child td, .clase-detalle-cuerpo tr:last-child th { border-bottom: 0; }
 .clase-detalle-aviso { padding: 16px 20px; margin-top: 24px; border-radius: 10px; background: var(--primario-suave); color: var(--primario); }
 .clase-detalle-aviso p { margin: 8px 0 0; }
 .clase-detalle-aviso + .perfil-seccion { margin-top: 24px; }

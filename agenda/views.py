@@ -389,6 +389,8 @@ def bloqueo_detalle(request, pk):
         ),
         pk=pk, evento__tipo="bloqueo",
     )
+    turno = bloqueo.evento.turno
     return render(request, "agenda/bloqueo_detalle.html", {
-        "bloqueo": bloqueo,
+        "bloqueo": bloqueo, "turno": turno,
+        "url_agenda": enlace_agenda(turno.cancha.sede, turno.fecha, turno.cancha, turno.hora_inicio.hour),
     })
