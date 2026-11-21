@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 215 46" fill="none" role="img" aria-label="Academia TM">
+  <path d="M0,4 H31 L28.2,11.5 H18.5 V42 H9.5 V11.5 H0 Z" fill="#FAF6F0"/>
+  <path d="M32.5,4 H42 L50.75,23.5 L59.5,4 H69 V42 H60.5 V19.5 L53,35.5 H48.5 L41,19.5 V42 H32.5 Z" fill="#FAF6F0"/>
+  <rect x="78" y="10" width="1.5" height="26" rx="0.75" fill="#FAF6F0" fill-opacity="0.35"/>
+  <path fill-rule="evenodd" d="M93.85,14 H96.65 L102,32 H99.15 L97.75,27.2 H92.75 L91.35,32 H88.5 Z M95.25,18.2 L93.45,24.7 H97.05 Z" fill="#FAF6F0"/>
+  <path d="M120,16.1 A8.4,9 0 1,0 120,29.9 L118.33,27.9 A5.8,6.4 0 1,1 118.33,18.1 Z" fill="#FAF6F0"/>
+  <path fill-rule="evenodd" d="M129.15,14 H131.95 L137.3,32 H134.45 L133.05,27.2 H128.05 L126.65,32 H123.8 Z M130.55,18.2 L128.75,24.7 H132.35 Z" fill="#FAF6F0"/>
+  <path fill-rule="evenodd" d="M141.7,14 H146.1 A8.4,9 0 0,1 146.1,32 H141.7 Z M144.3,16.6 H146.1 A5.8,6.4 0 0,1 146.1,29.4 H144.3 Z" fill="#FAF6F0"/>
+  <path d="M158.9,14 H169.5 V16.6 H161.5 V21.7 H168.4 V24.3 H161.5 V29.4 H169.5 V32 H158.9 Z" fill="#FAF6F0"/>
+  <path d="M173.9,14 H176.8 L181.7,25.2 L186.6,14 H189.5 V32 H186.9 V19.5 L182.7,29 H180.7 L176.5,19.5 V32 H173.9 Z" fill="#FAF6F0"/>
+  <path d="M194.1,14 H196.8 V32 H194.1 Z" fill="#FAF6F0"/>
+  <path fill-rule="evenodd" d="M206.55,14 H209.35 L214.7,32 H211.85 L210.45,27.2 H205.45 L204.05,32 H201.2 Z M207.95,18.2 L206.15,24.7 H209.75 Z" fill="#FAF6F0"/>
+</svg>

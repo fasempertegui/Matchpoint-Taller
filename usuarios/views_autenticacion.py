@@ -1,18 +1,22 @@
-from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.contrib.auth import update_session_auth_hash
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
+from django.views import View
 from django.views.generic.edit import FormView
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
+from django.utils.decorators import method_decorator
 
 from auditoria.contexto import contexto_auditoria
 from auditoria.intentos import registrar_intento
 from auditoria.models import IntentoAuditoria, LogAuditoria
 
-from .models import Rol
+from .models import Rol, Usuario
 from .contrasenas import guardar_contrasena_propia
 from .tokens import TokenRecuperacion
 from .forms import CambioContrasenaForm, InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario, RecuperacionContrasenaForm, EstablecerContrasenaForm
@@ -37,7 +41,7 @@ def nombre_usuario_disponible(request):
 class RegistroView(FormView):
     template_name = "usuarios/registro_formulario.html"
     form_class = UsuarioRegistroForm
-    success_url = reverse_lazy("login")
+    success_url = reverse_lazy("registro_completo")
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -45,12 +49,24 @@ class RegistroView(FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        usuario = form.guardar()
-        messages.success(
-            self.request,
-            f"Tu cuenta fue creada. Tu nombre de usuario es {usuario.username}. Ya podés iniciar sesión.",
-        )
+        try:
+            usuario = form.guardar()
+        except IntegrityError:
+            if not Usuario.objects.filter(email__iexact=form.cleaned_data["email"]).exists():
+                raise
+            form.add_error("email", "Ya existe un usuario registrado con ese email.")
+            return self.form_invalid(form)
+        self.request.session["registro_usuario_creado"] = usuario.username
         return super().form_valid(form)
+
+
+@method_decorator(never_cache, name="dispatch")
+class RegistroCompletoView(View):
+    def get(self, request):
+        usuario_creado = request.session.pop("registro_usuario_creado", None)
+        if not usuario_creado:
+            return redirect("registro")
+        return render(request, "autenticacion/registro_completo.html", {"usuario_creado": usuario_creado})
 
 
 class InicioSesionView(auth_views.LoginView):
@@ -61,6 +77,12 @@ class InicioSesionView(auth_views.LoginView):
     def post(self, request, *args, **kwargs):
         with contexto_auditoria(origen="autenticacion", accion=LogAuditoria.Accion.ACTUALIZACION_HASH):
             return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        respuesta = super().form_valid(form)
+        recordar = form.cleaned_data.get("recordar_sesion")
+        self.request.session.set_expiry(settings.SESSION_COOKIE_AGE if recordar else 0)
+        return respuesta
 
     def get_success_url(self):
         if self.request.user.correo_verificado_en is None:

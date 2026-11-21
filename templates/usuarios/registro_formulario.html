@@ -1,57 +1,40 @@
 {% extends "autenticacion/base_acceso.html" %}
-{% load static %}
-
-{% block titulo %}Crear cuenta | Academia TM{% endblock %}
+{% block titulo %}Crear una cuenta | Academia TM{% endblock %}
+{% block clase_acceso %}acceso--dividido acceso--registro{% endblock %}
 
 {% block acceso_contenido %}
-<div class="acceso-composicion">
-    <section class="acceso-presentacion" aria-labelledby="acceso-titulo">
-        <h1 id="acceso-titulo">Sumate a<br>Academia TM<span class="acceso-punto">.</span></h1>
-        <p>Creá tu cuenta y conocé nuestra oferta<br>de clases, membresías y canchas.</p>
-    </section>
-    <section class="acceso-formulario registro-formulario" aria-labelledby="registro-titulo">
-        <h2 id="registro-titulo">Crear cuenta</h2>
+<p class="acceso-cuenta">¿Ya tenés una cuenta? <a href="{% url 'login' %}">Iniciá sesión</a></p>
+<h1 id="acceso-titulo">Crear una cuenta</h1>
+<p class="acceso-intro">Tu usuario se genera automáticamente y te lo mostramos al terminar.</p>
 
-        <form method="post" novalidate data-registro-pasos data-nombre-usuario-url="{% url 'nombre_usuario_disponible' %}">
-            {% csrf_token %}
+<form class="acceso-formulario" method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="acceso-error acceso-alerta" role="alert">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+    {% endif %}
 
-            {% if form.non_field_errors %}
-                <div class="mensaje mensaje-error" role="alert">
-                    {{ form.non_field_errors }}
-                </div>
-            {% endif %}
+    <div class="acceso-campos">
+        {% include "componentes/campo_acceso.html" with campo=form.nombre %}
+        {% include "componentes/campo_acceso.html" with campo=form.apellido %}
+        {% include "componentes/campo_acceso.html" with campo=form.fecha_nacimiento %}
+        {% include "componentes/campo_acceso.html" with campo=form.celular_contacto %}
+        {% include "componentes/campo_acceso.html" with campo=form.email ancho_completo=True %}
+        {% include "componentes/campo_acceso.html" with campo=form.contrasena %}
+        {% include "componentes/campo_acceso.html" with campo=form.confirmar_contrasena %}
+    </div>
 
-            {% for campo in form %}
-                {% if campo.name == "nombre" %}<fieldset data-registro-paso data-titulo="Datos personales"><legend>Datos personales</legend>{% endif %}
-                {% if campo.name == "email" %}<fieldset data-registro-paso data-titulo="Contacto"><legend>Contacto</legend>{% endif %}
-                {% if campo.name == "nombre_usuario" %}<fieldset data-registro-paso data-titulo="Acceso"><legend>Acceso</legend>{% endif %}
-                <div class="grupo-campo">
-                    <label for="{{ campo.id_for_label }}">
-                        {{ campo.label }}
-                        {% if campo.field.required %}<span aria-hidden="true">*</span>{% endif %}
-                    </label>
-                    {{ campo }}
-                    {% if campo.help_text %}
-                        <small class="nota-campo" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</small>
-                    {% endif %}
-                    {% for error in campo.errors %}
-                        <p class="error-campo" role="alert">{{ error }}</p>
-                    {% endfor %}
-                    {% if campo.name == "nombre_usuario" %}
-                        <p class="error-campo" data-error-nombre-usuario hidden></p>
-                    {% endif %}
-                </div>
-                {% if campo.name == "fecha_nacimiento" or campo.name == "celular_contacto" or campo.name == "confirmar_contrasena" %}</fieldset>{% endif %}
-            {% endfor %}
+    <div class="acceso-campo acceso-aceptacion{% if form.acepta_terminos.errors %} acceso-campo--error{% endif %}">
+        <label class="acceso-check">
+            {{ form.acepta_terminos }}
+            <span>Acepto la <a href="{% url 'privacidad' %}" target="_blank" rel="noopener">Política de privacidad</a> y los <a href="{% url 'terminos' %}" target="_blank" rel="noopener">Términos y condiciones</a>.</span>
+        </label>
+        {% for error in form.acepta_terminos.errors %}
+            <p class="acceso-error" id="acepta-terminos-error" role="alert">{{ error }}</p>
+        {% endfor %}
+    </div>
 
-            <div class="registro-acciones">
-                <button class="boton boton-primario" type="submit" data-registro-siguiente>Crear cuenta</button>
-                <button class="boton boton-secundario" type="button" data-registro-atras hidden>Volver</button>
-            </div>
-        </form>
-        <div class="acceso-registro"><a href="{% url 'login' %}">Volver a iniciar sesión</a></div>
-    </section>
-</div>
-<script src="{% static 'js/usuario-sugerencias.js' %}" defer></script>
-<script src="{% static 'js/registro-pasos.js' %}" defer></script>
+    <button class="button button--primary" type="submit">Registrarse</button>
+</form>
 {% endblock %}

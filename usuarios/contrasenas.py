@@ -26,7 +26,7 @@ def solicitar_recuperacion(email):
             datos={
                 "mensaje": {"parrafos": ["Solicitaste recuperar tu contraseña. El enlace vence a los quince minutos de su emisión. Si no lo solicitaste, podés ignorar este mensaje."], "acciones": [{"texto": "Elegir una contraseña", "enlace_acceso": True}]},
                 "vigencia": {"usuario_id": usuario.pk},
-                "enlace": {"ruta": "/cuentas/recuperar/", "proposito": "recuperacion", "datos": {"usuario_id": usuario.pk, "solicitud": huella_recuperacion(usuario)}},
+                "enlace": {"ruta": "/recuperacion/", "proposito": "recuperacion", "datos": {"usuario_id": usuario.pk, "solicitud": huella_recuperacion(usuario)}},
             },
         )
     return RESPUESTA_RECUPERACION
@@ -56,7 +56,7 @@ def guardar_contrasena_propia(usuario_id, nueva_contrasena, *, contrasena_actual
             clave=f"contrasena:{usuario.pk}:{uuid4()}", tipo="contrasena_cambiada", destinatario=usuario.email,
             datos={"vigencia": {"usuario_id": usuario.pk}, "mensaje": {
                 "parrafos": ["Cambiaste tu contraseña. Si no realizaste este cambio, recuperá el acceso a tu cuenta."],
-                "acciones": [{"texto": "Recuperar mi contraseña", "ruta": "/cuentas/recuperar/"}],
+                "acciones": [{"texto": "Recuperar mi contraseña", "ruta": "/recuperacion/"}],
             }},
         )
     return usuario

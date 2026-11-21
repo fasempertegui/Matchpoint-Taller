@@ -1,7 +1,10 @@
 {% extends "autenticacion/base_recuperacion.html" %}
 {% block titulo %}Revisá tu correo | Academia TM{% endblock %}
 {% block recuperacion_contenido %}
-<h1 id="recuperacion-titulo">Revisá tu correo</h1>
-<p class="recuperacion-descripcion">Si la cuenta está habilitada y su correo está verificado, recibirás un enlace para recuperar tu contraseña.</p>
-<div class="recuperacion-enlaces"><a href="{% url 'login' %}">Volver al acceso</a></div>
+<h1 id="acceso-titulo">Revisá tu correo</h1>
+<p>Si tu cuenta puede recuperar la contraseña, vas a recibir un enlace por correo. Si no lo encontrás, revisá la carpeta de spam.</p>
+<div class="acceso-acciones">
+    <a class="button button--primary" href="{% url 'login' %}">Iniciar sesión</a>
+    <a href="{% url 'landing' %}">Volver a la portada</a>
+</div>
 {% endblock %}

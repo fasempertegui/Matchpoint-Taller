@@ -1,0 +1,9 @@
+{% extends "autenticacion/base_acceso.html" %}
+{% block titulo %}{{ titulo }} | Academia TM{% endblock %}
+{% block acceso_contenido %}
+<h1 id="acceso-titulo">{{ titulo }}</h1>
+<p>{{ texto }}</p>
+<div class="acceso-acciones">
+    <a href="{% url 'landing' %}">Volver a la portada</a>
+</div>
+{% endblock %}

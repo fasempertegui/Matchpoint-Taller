@@ -1,0 +1,12 @@
+{% extends "autenticacion/base_acceso.html" %}
+{% block titulo %}Tu cuenta ya está creada | Academia TM{% endblock %}
+{% block clase_acceso %}acceso--dividido acceso--confirmacion{% endblock %}
+
+{% block acceso_contenido %}
+<h1 id="acceso-titulo">Tu cuenta ya está creada</h1>
+<p>Ya podés iniciar sesión con tu usuario <strong>{{ usuario_creado }}</strong>. Para acceder a las reservas, verificá tu correo con el enlace que te enviamos.</p>
+<div class="acceso-acciones">
+    <a class="button button--primary" href="{% url 'login' %}">Iniciar sesión</a>
+    <a href="{% url 'landing' %}">Volver a la portada</a>
+</div>
+{% endblock %}

@@ -19,7 +19,11 @@ from django.urls import include, path
 from . import views
 
 urlpatterns = [
-    path('cuentas/', include('usuarios.urls_autenticacion')),
+    path('', views.landing, name='landing'),
+    path('inicio/', views.inicio, name='inicio'),
+    path('privacidad/', views.privacidad, name='privacidad'),
+    path('terminos/', views.terminos, name='terminos'),
+    path('', include('usuarios.urls_autenticacion')),
     path('sedes/', include('instalaciones.urls')),
     path('usuarios/', include('usuarios.urls')),
     path('reservas/', include('reservas.urls')),
@@ -31,5 +35,4 @@ urlpatterns = [
     path('comunicaciones/', include('comunicaciones.urls')),
     path('membresias/', include('membresias.urls')),
     path('oferta/', include('config.urls_oferta')),
-    path('', views.inicio, name='inicio'),
 ]

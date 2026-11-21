@@ -1,10 +1,34 @@
 {% extends "autenticacion/base_recuperacion.html" %}
-{% block titulo %}Reenviar verificación | Academia TM{% endblock %}
+{% block titulo %}{% if resultado %}Revisá tu correo{% else %}Reenviar verificación{% endif %} | Academia TM{% endblock %}
 {% block recuperacion_contenido %}
-<h1 id="recuperacion-titulo">Reenviar verificación</h1>
-{% if resultado %}<p class="recuperacion-descripcion">{{ resultado }}</p>{% else %}
-    <p class="recuperacion-descripcion">Solicitá un nuevo enlace para verificar el correo de tu cuenta.</p>
-    <form method="post">{% csrf_token %}{% include "autenticacion/campos_formulario.html" with form=formulario %}<button class="boton boton-primario boton-bloque" type="submit">Solicitar enlace</button></form>
+{% if resultado %}
+    <h1 id="acceso-titulo">Revisá tu correo</h1>
+    <p>{{ resultado }}</p>
+    <div class="acceso-acciones">
+        {% if request.user.is_authenticated %}
+            <a class="button button--primary" href="{% url 'inicio' %}">Ir al inicio</a>
+        {% else %}
+            <a class="button button--primary" href="{% url 'login' %}">Iniciar sesión</a>
+        {% endif %}
+        <a href="{% url 'landing' %}">Volver a la portada</a>
+    </div>
+{% else %}
+    <h1 id="acceso-titulo">Reenviar verificación</h1>
+    <p>Ingresá el correo asociado a tu cuenta.</p>
+    <form class="acceso-formulario" method="post" novalidate>
+        {% csrf_token %}
+        {% if formulario.non_field_errors %}
+            <div class="acceso-error acceso-alerta" role="alert">
+                {% for error in formulario.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+        <div class="acceso-campos">
+            {% include "componentes/campo_acceso.html" with campo=formulario.email %}
+        </div>
+        <div class="acceso-acciones">
+            <button class="button button--primary" type="submit">Enviar</button>
+            <a href="{% url 'login' %}">Volver a iniciar sesión</a>
+        </div>
+    </form>
 {% endif %}
-<div class="recuperacion-enlaces"><a href="{% url 'estado_verificacion' %}">Volver a verificación</a></div>
 {% endblock %}

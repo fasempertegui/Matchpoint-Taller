@@ -17,11 +17,19 @@ from .models import Rol, Usuario
 
 
 class InicioSesionForm(AuthenticationForm):
+    recordar_sesion = forms.BooleanField(required=False, label="Recordar mi sesión")
     error_messages = {
         **AuthenticationForm.error_messages,
         "invalid_login": "El usuario o la contraseña no son correctos.",
         "inactive": "Tu cuenta está inactiva. Contactá a un administrador.",
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].label = "Usuario"
+        self.fields["username"].widget.attrs.update({"autocomplete": "username"})
+        self.fields["password"].label = "Contraseña"
+        self.fields["password"].widget.attrs.update({"autocomplete": "current-password"})
 
     def get_invalid_login_error(self):
         username = self.cleaned_data.get("username")
@@ -170,61 +178,49 @@ def validar_celular_ar(valor):
     return phonenumbers.format_number(numero, phonenumbers.PhoneNumberFormat.E164)
 
 
-class UsuarioRegistroForm(NombreUsuarioAutomaticoMixin, forms.Form):
+class UsuarioRegistroForm(forms.Form):
     nombre = forms.CharField(
+        label="Nombre",
         max_length=100,
         validators=[validar_nombre_sin_numeros],
-        widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "Juan", "autofocus": True}
-        ),
+        widget=forms.TextInput(attrs={"autocomplete": "given-name", "autofocus": True}),
     )
     apellido = forms.CharField(
+        label="Apellido",
         max_length=100,
         validators=[validar_nombre_sin_numeros],
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Pérez"}),
+        widget=forms.TextInput(attrs={"autocomplete": "family-name"}),
     )
-    email = forms.EmailField(
-        widget=forms.EmailInput(
-            attrs={"class": "form-control", "placeholder": "ejemplo@dominio.com"}
-        )
+    fecha_nacimiento = forms.DateField(
+        label="Fecha de nacimiento",
+        validators=[validar_fecha_nacimiento],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "autocomplete": "bday"}),
     )
     celular_contacto = forms.CharField(
         label="Celular",
         max_length=30,
-        widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "Ej: 3875551234"}
-        ),
+        widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}),
     )
-    fecha_nacimiento = forms.DateField(
-        validators=[validar_fecha_nacimiento],
-        widget=forms.DateInput(
-            format="%Y-%m-%d",
-            attrs={"class": "form-control", "type": "date"},
-        ),
-    )
-    nombre_usuario = forms.CharField(
-        label="Nombre de usuario",
-        max_length=150,
-        required=False,
-        disabled=True,
-        widget=forms.TextInput(attrs={"class": "form-control"}),
-        help_text="Se genera automáticamente con tu nombre y apellido",
+    email = forms.EmailField(
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={"autocomplete": "email"}),
     )
     contrasena = forms.CharField(
         label="Contraseña",
-        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+        help_text="Al menos 8 caracteres",
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
     )
     confirmar_contrasena = forms.CharField(
-        label="Confirmar contraseña",
-        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+        label="Confirmá la contraseña",
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+    )
+    acepta_terminos = forms.BooleanField(
+        required=True,
+        error_messages={"required": "Aceptá la política y los términos para registrarte."},
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.order_fields([
-            "nombre", "apellido", "fecha_nacimiento", "email", "celular_contacto",
-            "nombre_usuario", "contrasena", "confirmar_contrasena",
-        ])
         self.fields["fecha_nacimiento"].widget.attrs.update(
             min=fecha_minima_nacimiento().isoformat(), max=timezone.localdate().isoformat()
         )
@@ -243,11 +239,19 @@ class UsuarioRegistroForm(NombreUsuarioAutomaticoMixin, forms.Form):
         if contrasena and confirmar_contrasena and contrasena != confirmar_contrasena:
             self.add_error("confirmar_contrasena", "Las contraseñas no coinciden.")
         if contrasena:
+            nombre = datos.get("nombre", "")
+            apellido = datos.get("apellido", "")
+            nombre_usuario = ""
+            if nombre and apellido:
+                try:
+                    nombre_usuario = generar_nombre_usuario(nombre, apellido)
+                except forms.ValidationError:
+                    nombre_usuario = ""
             candidato = Usuario(
-                username=datos.get("nombre_usuario", ""),
+                username=nombre_usuario,
                 email=datos.get("email", ""),
-                first_name=datos.get("nombre", ""),
-                last_name=datos.get("apellido", ""),
+                first_name=nombre,
+                last_name=apellido,
             )
             try:
                 validate_password(contrasena, candidato)
@@ -411,18 +415,21 @@ class UsuarioBusquedaForm(forms.Form):
 
 
 class ReenvioVerificacionForm(forms.Form):
-    email = forms.EmailField(label="Correo electrónico", widget=forms.EmailInput(attrs={"class": "form-control"}))
+    email = forms.EmailField(label="Correo electrónico", widget=forms.EmailInput(attrs={"autocomplete": "email"}))
 
 
 class CorregirCorreoForm(ReenvioVerificacionForm):
-    contrasena = forms.CharField(label="Contraseña actual", widget=forms.PasswordInput(attrs={"class": "form-control"}))
+    contrasena = forms.CharField(
+        label="Contraseña actual",
+        widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}),
+    )
 
 
 class RecuperacionContrasenaForm(PasswordResetForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["email"].label = "Correo electrónico"
-        self.fields["email"].widget.attrs["class"] = "form-control"
+        self.fields["email"].widget.attrs["autocomplete"] = "email"
 
     def get_users(self, email):
         return (usuario for usuario in super().get_users(email) if usuario.correo_verificado_en is not None)
@@ -436,8 +443,12 @@ class RecuperacionContrasenaForm(PasswordResetForm):
 class EstablecerContrasenaForm(SetPasswordForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for campo in self.fields.values():
-            campo.widget.attrs["class"] = "form-control"
+        self.fields["new_password1"].label = "Nueva contraseña"
+        self.fields["new_password1"].help_text = "Al menos 8 caracteres"
+        self.fields["new_password1"].widget.attrs["autocomplete"] = "new-password"
+        self.fields["new_password2"].label = "Confirmá la contraseña"
+        self.fields["new_password2"].help_text = ""
+        self.fields["new_password2"].widget.attrs["autocomplete"] = "new-password"
 
     def clean_new_password1(self):
         contrasena = self.cleaned_data["new_password1"]

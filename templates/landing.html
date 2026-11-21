@@ -1,0 +1,100 @@
+{% extends "base_publica.html" %}
+{% load static %}
+
+{% block titulo %}Academia de Tenis TM · Salta{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/landing.css' %}">{% endblock %}
+
+{% block body %}
+<a class="skip-link" href="#contenido">Ir al contenido</a>
+<header class="site-header">
+    <div class="shell header-inner">
+        <a class="brand" href="{% url 'landing' %}">
+            {% include "componentes/logotipo.html" %}
+        </a>
+        <div class="header-actions">
+            {% if request.user.is_authenticated %}
+                <a class="button button--outline" href="{% url 'inicio' %}">Ir al inicio</a>
+            {% else %}
+                <a class="button button--outline" href="{% url 'login' %}">Ingresar</a>
+                <a class="button button--outline" href="{% url 'registro' %}">Registrarse</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+<main id="contenido" tabindex="-1">
+    <section class="hero" aria-labelledby="titulo">
+        <div class="shell">
+            <div class="hero-copy">
+                <h1 id="titulo">Nos vemos<br>en la cancha<span>.</span></h1>
+                <p>Entrená, reservá un turno o hacete socio.</p>
+                <div class="hero-actions">
+                    <a class="button button--primary" href="#sedes">Conocé las sedes</a>
+                    <a class="button button--outline" href="#jugar">Clases y reservas</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="venues shell" id="sedes" aria-labelledby="sedes-titulo">
+        <h2 id="sedes-titulo">Dos sedes en Salta</h2>
+        <div class="venue-grid">
+            {% for sede in sedes %}
+                <article class="venue">
+                    <div class="venue-art" aria-hidden="true">
+                        <img src="{% static sede.ilustracion %}" alt="" loading="lazy">
+                    </div>
+                    <div class="venue-details">
+                        <h3>{{ sede.nombre }}</h3>
+                        <p class="venue-address">{{ sede.direccion }}</p>
+                        <p class="venue-courts">{{ sede.canchas }}</p>
+                        <p class="venue-surface venue-surface--{{ sede.tipo_superficie }}">{{ sede.superficie }}</p>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="play-section" id="jugar" aria-labelledby="jugar-titulo">
+        <div class="shell">
+            <h2 id="jugar-titulo">Elegí cómo jugar</h2>
+            <div class="play-grid">
+                {% for item in modalidades %}
+                    <article>
+                        <h3>{{ item.titulo }}</h3>
+                        <p>{{ item.descripcion }}</p>
+                        <a class="play-link" href="{{ item.url }}">{{ item.enlace }}</a>
+                    </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="booking-section" id="reservar" aria-labelledby="reservar-titulo">
+        <div class="shell">
+            <h2 id="reservar-titulo">¿Listo para jugar?</h2>
+            <p>Elegí tu sede y nos vemos en la cancha.</p>
+            <a class="button button--primary" href="{{ url_reservar }}">Reservá tu turno</a>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="shell footer-inner">
+        <p class="footer-contact">
+            ¿Dudas? Escribinos
+            <a class="footer-whatsapp" href="https://wa.me/5493875901914" aria-label="WhatsApp 387 590 1914">
+                387 590 1914
+            </a>
+        </p>
+        <div class="footer-legal">
+            <a href="https://www.instagram.com/academiatenistm/">Instagram</a>
+            <a href="{% url 'privacidad' %}">Política de privacidad</a>
+            <a href="{% url 'terminos' %}">Términos y condiciones</a>
+        </div>
+    </div>
+</footer>
+<a class="back-to-top" href="#top" aria-label="Volver arriba">
+    <span aria-hidden="true">↑</span>
+</a>
+{% endblock %}

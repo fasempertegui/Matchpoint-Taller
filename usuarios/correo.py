@@ -20,7 +20,7 @@ def _aviso_correo(usuario, direccion, tipo, clave, texto, *, revision=None, conf
     if revision is not None:
         datos["vigencia"]["solicitud"] = {"campo": "revision_correo", "valor": revision}
     if confirmar:
-        datos["enlace"] = {"ruta": "/cuentas/confirmar-correo/", "proposito": "cambio_correo", "datos": {"usuario_id": usuario.pk, "correo": direccion, "solicitud": str(revision)}}
+        datos["enlace"] = {"ruta": "/verificacion/confirmar-correo/", "proposito": "cambio_correo", "datos": {"usuario_id": usuario.pk, "correo": direccion, "solicitud": str(revision)}}
         datos["mensaje"]["acciones"] = [{"texto": "Confirmar mi correo", "enlace_acceso": True}]
     return encolar_aviso(clave=clave, tipo=tipo, destinatario=direccion, datos=datos)
 

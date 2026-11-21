@@ -1,100 +1,156 @@
-body:has(.contenido-acceso) {
-    padding-left: 0;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    color: white;
-    background: #252034;
-    background-image: linear-gradient(90deg, rgb(35 10 52 / 85%) 0%, rgb(35 10 52 / 60%) 35%, rgb(35 10 52 / 15%) 60%, transparent 78%), url("../img/tenis-cancha-violeta.png");
-    background-position: center 53%;
-    background-size: cover;
+.acceso {
+  --espacio-controles: 1.25rem;
+  --espacio-bloque: 1.5rem;
+  --espacio-separador: 1.75rem;
+  min-height: 100svh;
+  padding-bottom: 3rem;
 }
 
-.acceso-barra {
-    width: min(1440px, 100%);
+.acceso--dividido {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  isolation: isolate;
+}
+
+.acceso--registro {
+  --formulario-ancho: 500px;
+  --scrim-medio: 48%;
+  --scrim-suave: 72%;
+  --scrim-fin: 88%;
+  padding-bottom: var(--espacio-bloque);
+}
+
+.acceso--dividido::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--fondo-cancha);
+  background-image:
+    linear-gradient(270deg, rgb(35 10 52 / 90%) 0%, rgb(35 10 52 / 72%) var(--scrim-medio, 40%), rgb(35 10 52 / 20%) var(--scrim-suave, 65%), transparent var(--scrim-fin, 82%)),
+    var(--foto-cancha);
+  background-position: center 53%;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.acceso-header {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  margin-bottom: clamp(.75rem, 5svh, 3rem);
+}
+
+.acceso-panel {
+  display: grid;
+  gap: var(--espacio-controles);
+  width: min(100%, 28rem);
+  margin-inline: auto;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border: 1px solid var(--borde-tarjeta);
+  border-radius: 16px;
+  background: var(--tarjeta);
+}
+
+.acceso--dividido .acceso-panel {
+  align-self: center;
+  width: min(100%, var(--formulario-ancho, 23rem));
+  margin-inline: auto 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.acceso--registro .acceso-header { margin-bottom: .75rem; }
+.acceso--registro :is(.acceso-panel, .acceso-formulario) { gap: 0; }
+.acceso--registro .acceso-panel h1 { margin-top: .75rem; }
+.acceso-intro { margin-block: .75rem var(--espacio-separador); }
+.acceso-cuenta { font-size: .9rem; }
+.acceso-panel h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.05; letter-spacing: -.045em; }
+.acceso-panel > p { color: var(--texto-secundario); line-height: 1.5; }
+.acceso-panel > p strong { color: var(--crema); }
+.acceso-formulario, .acceso-campos, .acceso-campo { display: grid; gap: .75rem; }
+.acceso-formulario { gap: var(--espacio-controles); }
+.acceso--registro .acceso-campos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--espacio-controles) 1rem; align-items: start; }
+.acceso-campo--completo { grid-column: 1 / -1; }
+.acceso-ayuda { color: var(--texto-secundario); font-size: .875rem; }
+.acceso-campo { gap: .375rem; }
+.acceso--registro .acceso-campo { gap: .4rem; }
+.acceso-aceptacion { margin-block: var(--espacio-controles) var(--espacio-bloque); }
+.acceso-campo label { font-weight: 700; }
+.acceso-etiqueta { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem .75rem; }
+.acceso-etiqueta a { font-size: .875rem; }
+.acceso-campo input {
+  width: 100%;
+  min-height: 44px;
+  padding: .625rem .75rem;
+  border: 1px solid rgb(255 255 255 / .35);
+  border-radius: 8px;
+  background: var(--violeta-oscuro);
+  color: var(--crema);
+  color-scheme: dark;
+}
+.acceso :is(input, button, .button):focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
+.acceso .button:focus-visible { border-color: var(--acento); }
+.acceso-campo input[aria-invalid="true"],
+.acceso-campo--error input { border-color: #ffc2c7; }
+.acceso-campo input:focus { border-color: var(--acento); }
+.acceso-campo input:focus-visible {
+  outline-color: transparent;
+  box-shadow: 0 0 0 3px rgba(181, 213, 50, .25);
+}
+.acceso-campo-sensible { position: relative; }
+.acceso-campo-sensible input { padding-inline-end: 3rem; }
+.acceso-visibilidad {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--texto-secundario);
+  cursor: pointer;
+}
+.acceso-visibilidad:hover { color: var(--acento); }
+.acceso-visibilidad svg { display: block; width: 20px; height: 20px; }
+.acceso-visibilidad [hidden] { display: none; }
+.acceso-check { display: flex; align-items: flex-start; gap: .5rem; cursor: pointer; }
+.acceso-formulario > .acceso-check { justify-self: start; font-size: .875rem; }
+.acceso-check input[type="checkbox"] { flex: none; width: 1.1rem; height: 1.1rem; min-height: 0; margin: .15rem 0 0; padding: 0; accent-color: var(--acento); }
+.acceso-check input[aria-invalid="true"],
+.acceso-campo--error .acceso-check input[type="checkbox"] { outline: 1px solid #ffc2c7; outline-offset: 2px; }
+.acceso--registro .acceso-check { font-size: .875rem; font-weight: 400; }
+.acceso-panel > .acceso-alternativa {
+  margin-top: .25rem;
+  padding-top: var(--espacio-bloque);
+  border-top: 1px solid rgb(255 255 255 / .2);
+  text-align: center;
+  color: var(--crema);
+}
+.acceso-error { color: #ffc2c7; font-size: .9rem; }
+.acceso-alerta { padding: .75rem 1rem; border: 1px solid currentColor; border-radius: 8px; }
+.acceso-alerta--exito { color: var(--acento); border-color: rgb(182 213 50 / .5); background: rgb(182 213 50 / .08); }
+.acceso--registro .acceso-alerta { margin-bottom: var(--espacio-controles); }
+.acceso-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; }
+.acceso-panel a:not(.button) { text-underline-offset: 4px; }
+.acceso-panel a:not(.button):hover { color: var(--acento); }
+.acceso-panel .button--primary { border-color: var(--acento); background: var(--acento); color: var(--violeta-oscuro); }
+.acceso-panel .button--primary:enabled:hover, .acceso-panel a.button--primary:hover { background: var(--crema); border-color: var(--crema); }
+
+@media (max-width: 800px) {
+  .acceso--dividido::before {
+    background-image:
+      linear-gradient(rgb(27 16 51 / .78), rgb(27 16 51 / .86)),
+      var(--foto-cancha);
+  }
+  .acceso--dividido .acceso-panel {
+    width: min(100%, var(--formulario-ancho, 100%));
     margin-inline: auto;
-    padding: 20px clamp(24px, 5vw, 80px);
-}
-.acceso-barra .marca { color: white; gap: 14px; text-decoration: none; }
-.acceso-barra .marca-logo { width: 48px; height: 48px; }
-
-body > .contenido-principal.contenido-acceso {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    width: min(1440px, 100%);
-    padding: 0 clamp(24px, 5vw, 80px) 16px;
-}
-.contenido-acceso > .mensajes { color: var(--texto); }
-.acceso-composicion {
-    flex: 1;
-    display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    align-items: center;
-    gap: clamp(32px, 6vw, 96px);
-    padding-block: 8px 24px;
-}
-.acceso-presentacion h1 { font-size: clamp(2.5rem, 4.1vw, 4.25rem); line-height: 1.09; letter-spacing: -.045em; }
-.acceso-presentacion p { margin: 24px 0 0; color: #eee6f3; font-size: 1.1875rem; line-height: 1.65; }
-
-.acceso-formulario {
-    width: 100%;
-    max-width: 420px;
-    justify-self: end;
-    padding: clamp(24px, 3vw, 40px);
-    color: var(--texto);
-    background: var(--superficie);
-    border-top: 4px solid var(--primario-medio);
-    border-radius: 16px;
-    box-shadow: 0 24px 70px #140a2640;
-}
-.acceso-formulario h2 { font-size: 1.75rem; }
-.acceso-formulario form { margin-top: 16px; }
-.acceso-formulario .grupo-campo { margin-bottom: 12px; }
-.acceso-formulario input { min-height: 38px; padding: 6px 12px; border-radius: 8px; }
-.acceso-formulario .boton { min-height: 38px; padding: 6px 16px; border-radius: 8px; }
-.acceso-formulario .mensaje p { margin: 0; }
-.acceso-formulario .error-campo { margin: 6px 0 0; font-size: .875rem; color: var(--peligro); }
-.acceso-recuperar { display: block; text-align: left; margin: -4px 0 16px; }
-.acceso-recuperar,
-.acceso-registro a { color: var(--primario); font-size: .9rem; font-weight: 600; text-decoration: none; }
-.acceso-registro { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--borde); text-align: center; }
-.acceso-pie { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; color: #e0d6e7; font-size: .75rem; }
-.acceso-pie a { text-underline-offset: 3px; }
-.acceso-barra a:focus-visible,
-.contenido-acceso a:focus-visible { outline: 2px solid var(--acento); outline-offset: 4px; }
-.acceso-formulario a:focus-visible { outline-color: var(--primario); }
-
-@media (max-width: 700px) {
-    .acceso-barra { padding-block: 20px; }
-    .acceso-composicion { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 8px 40px; }
-    .acceso-presentacion h1 { font-size: clamp(2rem, 6vw, 2.75rem); }
-    .acceso-presentacion br { display: none; }
-    .acceso-presentacion p { margin-top: 12px; font-size: 1rem; }
-    .acceso-formulario { justify-self: center; max-width: 460px; }
+  }
 }
 
-@media (min-width: 701px) and (max-height: 760px) {
-    .acceso-composicion { align-content: start; }
-    .acceso-formulario { padding: 24px 32px; }
+@media (max-width: 520px) {
+  .acceso--registro .acceso-campos { grid-template-columns: 1fr; }
 }
-
-.acceso-punto { color: var(--acento); }
-
-.acceso-composicion .acceso-registro { text-align: left; }
-
-[data-registro-paso] { margin: 0; padding: 0; border: 0; min-width: 0; }
-[data-registro-paso] legend { margin-bottom: 16px; font-size: .9rem; color: var(--texto-suave); }
-.registro-formulario {
-    border-top-color: transparent;
-    background-image: linear-gradient(to right, var(--acento) var(--registro-avance, 33.333%), var(--borde) var(--registro-avance, 33.333%)), linear-gradient(var(--superficie), var(--superficie));
-    background-origin: border-box, padding-box;
-    background-clip: border-box, padding-box;
-    background-size: 100% 4px, 100% 100%;
-    background-repeat: no-repeat;
-}
-.registro-acciones { display: flex; gap: 12px; }
-.registro-acciones > .boton-primario { flex: 1; }
-[data-registro-paso] .nota-campo { display: block; margin-top: 6px; color: var(--texto-suave); font-size: .8rem; }
-.registro-acciones > [hidden],
-[data-registro-paso][hidden] { display: none; }

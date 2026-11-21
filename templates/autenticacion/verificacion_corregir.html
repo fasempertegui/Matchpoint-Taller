@@ -1,9 +1,22 @@
 {% extends "autenticacion/base_recuperacion.html" %}
 {% block titulo %}Corregir correo | Academia TM{% endblock %}
 {% block recuperacion_contenido %}
-<h1 id="recuperacion-titulo">Corregir mi correo</h1>
-<p class="recuperacion-descripcion">Ingresá el correo correcto y tu contraseña actual.</p>
-<p class="recuperacion-nota">Esta corrección no extiende el plazo de siete días para verificar la cuenta.</p>
-<form method="post">{% csrf_token %}{% include "autenticacion/campos_formulario.html" with form=formulario %}<button class="boton boton-primario boton-bloque" type="submit">Corregir y enviar enlace</button></form>
-<div class="recuperacion-enlaces"><a href="{% url 'estado_verificacion' %}">Cancelar</a></div>
+<h1 id="acceso-titulo">Corregir mi correo</h1>
+<p>Ingresá el correo correcto y tu contraseña actual. Esta corrección no extiende el plazo de siete días para verificar la cuenta.</p>
+<form class="acceso-formulario" method="post" novalidate>
+    {% csrf_token %}
+    {% if formulario.non_field_errors %}
+        <div class="acceso-error acceso-alerta" role="alert">
+            {% for error in formulario.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+    {% endif %}
+    <div class="acceso-campos">
+        {% include "componentes/campo_acceso.html" with campo=formulario.email %}
+        {% include "componentes/campo_acceso.html" with campo=formulario.contrasena %}
+    </div>
+    <div class="acceso-acciones">
+        <button class="button button--primary" type="submit">Corregir y enviar enlace</button>
+        <a href="{% url 'estado_verificacion' %}">Cancelar</a>
+    </div>
+</form>
 {% endblock %}

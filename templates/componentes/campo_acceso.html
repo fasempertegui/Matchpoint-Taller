@@ -1,0 +1,30 @@
+<div class="acceso-campo{% if ancho_completo %} acceso-campo--completo{% endif %}{% if campo.errors %} acceso-campo--error{% endif %}">
+    <div class="acceso-etiqueta">
+        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+        {% if enlace_url %}<a href="{{ enlace_url }}">{{ enlace_texto }}</a>{% endif %}
+    </div>
+    {% if campo.field.widget.input_type == "password" %}
+        <div class="acceso-campo-sensible">
+            {{ campo }}
+            <button
+                class="acceso-visibilidad"
+                type="button"
+                data-toggle-password
+                data-etiqueta="{{ campo.label|lower }}"
+                aria-label="Mostrar {{ campo.label|lower }}"
+                aria-controls="{{ campo.id_for_label }}"
+            >
+                <span data-icono-mostrar>{% include "componentes/iconoir/ojo.html" %}</span>
+                <span data-icono-ocultar hidden>{% include "componentes/iconoir/ojo-cerrado.html" %}</span>
+            </button>
+        </div>
+    {% else %}
+        {{ campo }}
+    {% endif %}
+    {% if campo.help_text %}
+        <p class="acceso-ayuda" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</p>
+    {% endif %}
+    {% for error in campo.errors %}
+        <p class="acceso-error" id="{{ campo.auto_id }}_error" role="alert">{{ error }}</p>
+    {% endfor %}
+</div>

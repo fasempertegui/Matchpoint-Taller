@@ -1,3 +1,28 @@
-{% extends "base.html" %}
-{% block titulo %}Confirmar correo | Academia TM{% endblock %}
-{% block contenido %}<section class="tarjeta"><h1>Confirmar cambio de correo</h1>{% if confirmar %}<p>Confirmá que querés utilizar esta dirección para tu cuenta. Los roles y asignaciones se conservan.</p><form method="post" action="{% url 'confirmar_cambio_correo' %}">{% csrf_token %}<input type="hidden" name="token" value="{{ token }}"><button class="boton boton-primario" type="submit">Confirmar cambio</button></form>{% else %}<p>{{ resultado }}</p><a href="{% url 'login' %}">Volver al acceso</a>{% endif %}</section>{% endblock %}
+{% extends "autenticacion/base_acceso.html" %}
+{% block titulo %}Confirmar cambio de correo | Academia TM{% endblock %}
+{% block clase_acceso %}acceso--dividido acceso--confirmacion{% endblock %}
+
+{% block acceso_contenido %}
+<h1 id="acceso-titulo">Confirmar cambio de correo</h1>
+{% if confirmar %}
+    <p>Confirmá que querés utilizar esta dirección para tu cuenta. Los roles y asignaciones se conservan.</p>
+    <form class="acceso-formulario" method="post" action="{% url 'confirmar_cambio_correo' %}">
+        {% csrf_token %}
+        <input type="hidden" name="token" value="{{ token }}">
+        <div class="acceso-acciones">
+            <button class="button button--primary" type="submit">Confirmar cambio</button>
+            <a href="{% url 'landing' %}">Volver a la portada</a>
+        </div>
+    </form>
+{% else %}
+    <p>{{ resultado }}</p>
+    <div class="acceso-acciones">
+        {% if request.user.is_authenticated %}
+            <a class="button button--primary" href="{% url 'inicio' %}">Ir al inicio</a>
+        {% else %}
+            <a class="button button--primary" href="{% url 'login' %}">Iniciar sesión</a>
+        {% endif %}
+        <a href="{% url 'landing' %}">Volver a la portada</a>
+    </div>
+{% endif %}
+{% endblock %}

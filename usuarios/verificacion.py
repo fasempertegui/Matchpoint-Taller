@@ -24,7 +24,7 @@ def _encolar_verificacion(usuario, tipo, clave):
         datos={
             "mensaje": {"parrafos": parrafos, "acciones": [{"texto": "Verificar mi correo", "enlace_acceso": True}]},
             "vigencia": {"usuario_id": usuario.pk, "solicitud": {"campo": "revision_correo", "valor": usuario.revision_correo}},
-            "enlace": {"ruta": "/cuentas/verificar/", "proposito": "verificacion", "datos": {"usuario_id": usuario.pk, "correo": usuario.email, "solicitud": str(usuario.revision_correo)}},
+            "enlace": {"ruta": "/verificacion/confirmar/", "proposito": "verificacion", "datos": {"usuario_id": usuario.pk, "correo": usuario.email, "solicitud": str(usuario.revision_correo)}},
         },
     )
 

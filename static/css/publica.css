@@ -1,0 +1,87 @@
+:root {
+  --fondo: #ffffff;
+  --texto: #1a2028;
+  --texto-suave: #596474;
+  --borde: #d9dee5;
+  --primario: #4b176d;
+  --primario-hover: #391052;
+  --primario-suave: #f5eff9;
+  --primario-medio: #c9b9d3;
+  --acento: #b6d532;
+
+  --header-h: 65px;
+  --violeta-oscuro: #1b1033;
+  --fondo-cancha: #252034;
+  --crema: #faf6f0;
+  --tarjeta: #241846;
+  --texto-secundario: #d4ccdf;
+  --borde-tarjeta: rgb(255 255 255 / .08);
+  --foto-cancha: url("../img/tenis-cancha-violeta.png");
+
+  --fuente-interfaz: "DM Sans", "Segoe UI", sans-serif;
+  --fuente-titulos: "Bricolage Grotesque", var(--fuente-interfaz);
+
+  font-family: var(--fuente-interfaz);
+  font-synthesis: none;
+  background: var(--violeta-oscuro);
+  color: var(--crema);
+  scroll-padding-top: var(--header-h);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root { scroll-behavior: smooth; }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--violeta-oscuro); color: var(--crema); }
+h1, h2, h3, h4, h5, h6 { font-family: var(--fuente-titulos); font-weight: 700; }
+h1, h2, h3, p { margin: 0; }
+a { color: inherit; }
+a:focus-visible { outline: 3px solid var(--acento); outline-offset: 5px; }
+main:focus { outline: none; }
+button, input, select, textarea { font: inherit; }
+
+.shell { width: min(100% - 96px, 1320px); margin-inline: auto; }
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 11;
+  padding: 12px;
+  background: var(--tarjeta);
+  color: var(--crema);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: translateY(0); }
+
+.brand { display: inline-flex; align-items: center; color: var(--crema); text-decoration: none; }
+.logotipo-imagen { display: block; height: 28px; width: auto; }
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border: 1px solid var(--primario);
+  border-radius: 100px;
+  padding: 10px 22px;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.button--primary { color: var(--fondo); background: var(--primario); }
+.button--primary:hover { background: var(--primario-hover); }
+.button--outline { color: var(--crema); background: transparent; border-color: currentColor; }
+.button--outline:enabled:hover, a.button--outline:hover { color: var(--acento); }
+.button:disabled { opacity: .65; cursor: not-allowed; }
+
+@media (max-width: 800px) {
+  .shell { width: calc(100% - 40px); }
+}
+
+@media (max-width: 520px) {
+  .logotipo-imagen { height: 24px; }
+}

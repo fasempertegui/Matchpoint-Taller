@@ -1,17 +1,27 @@
 {% extends "autenticacion/base_recuperacion.html" %}
-{% block titulo %}Elegir contraseña | Academia TM{% endblock %}
+{% block titulo %}Elegí una contraseña nueva | Academia TM{% endblock %}
 {% block recuperacion_contenido %}
-<h1 id="recuperacion-titulo">Elegir una contraseña</h1>
 {% if validlink %}
-<p class="recuperacion-descripcion">Ingresá tu nueva contraseña y repetila para confirmar.</p>
-<form method="post">
-    {% csrf_token %}
-    {% include "autenticacion/campos_formulario.html" %}
-    <button class="boton boton-primario boton-bloque" type="submit">Guardar contraseña</button>
-</form>
+    <h1 id="acceso-titulo">Elegí una contraseña nueva</h1>
+    <form class="acceso-formulario" method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="acceso-error acceso-alerta" role="alert">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+        <div class="acceso-campos">
+            {% include "componentes/campo_acceso.html" with campo=form.new_password1 %}
+            {% include "componentes/campo_acceso.html" with campo=form.new_password2 %}
+        </div>
+        <button class="button button--primary" type="submit">Guardar contraseña</button>
+    </form>
 {% else %}
-<p class="recuperacion-descripcion">El enlace venció o ya no es válido.</p>
-<a class="boton boton-primario boton-bloque" href="{% url 'password_reset' %}">Solicitar otro enlace</a>
+    <h1 id="acceso-titulo">El enlace ya no es válido</h1>
+    <p>Solicitá un enlace nuevo para cambiar tu contraseña.</p>
+    <div class="acceso-acciones">
+        <a class="button button--primary" href="{% url 'password_reset' %}">Solicitar otro enlace</a>
+        <a href="{% url 'landing' %}">Volver a la portada</a>
+    </div>
 {% endif %}
-<div class="recuperacion-enlaces"><a href="{% url 'login' %}">Volver al acceso</a></div>
 {% endblock %}

@@ -1,17 +1,26 @@
-{% extends "base.html" %}
+{% extends "base_publica.html" %}
 {% load static %}
+
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/acceso.css' %}">{% endblock %}
-{% block clase_contenido %}contenido-acceso{% endblock %}
+{% block scripts %}<script src="{% static 'js/acceso.js' %}" defer></script>{% endblock %}
 
-{% block navegacion %}
-<header class="acceso-barra">
-    <a class="marca" href="{% url 'inicio' %}">
-        <img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="48" height="48">
-        <span>Academia TM</span>
-    </a>
-</header>
-{% endblock %}
-
-{% block contenido %}
-{% block acceso_contenido %}{% endblock %}
+{% block body %}
+<a class="skip-link" href="#contenido">Ir al contenido</a>
+<div class="shell acceso {% block clase_acceso %}{% endblock %}">
+    <header class="acceso-header">
+        <a class="brand" href="{% url 'landing' %}">
+            {% include "componentes/logotipo.html" %}
+        </a>
+    </header>
+    <main class="acceso-panel" id="contenido" tabindex="-1" aria-labelledby="acceso-titulo">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="acceso-alerta{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %} acceso-error{% else %} acceso-alerta--exito{% endif %}" role="{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}alert{% else %}status{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% block acceso_contenido %}{% endblock %}
+    </main>
+</div>
 {% endblock %}

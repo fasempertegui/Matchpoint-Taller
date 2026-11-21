@@ -18,11 +18,17 @@ def estado_verificacion(request):
 @never_cache
 @require_GET
 def confirmar_verificacion(request):
+    error_verificacion = False
     try:
         resultado = verificar_correo(request.GET.get("token", ""))
     except ValidationError as error:
         resultado = error.messages[0]
-    return render(request, "autenticacion/verificacion_confirmar.html", {"resultado": resultado})
+        error_verificacion = True
+    return render(
+        request,
+        "autenticacion/verificacion_confirmar.html",
+        {"resultado": resultado, "error_verificacion": error_verificacion},
+    )
 
 
 @never_cache

@@ -1,7 +1,26 @@
-{% extends "autenticacion/base_recuperacion.html" %}
-{% block titulo %}Verificar correo | Academia TM{% endblock %}
-{% block recuperacion_contenido %}
-<h1 id="recuperacion-titulo">Verificar correo</h1>
-<p class="recuperacion-descripcion">{{ resultado }}</p>
-{% if request.user.is_authenticated %}<a class="boton boton-primario boton-bloque" href="{% url 'inicio' %}">Ir a inicio</a>{% else %}<a class="boton boton-primario boton-bloque" href="{% url 'login' %}">Iniciar sesión</a>{% endif %}
+{% extends "autenticacion/base_acceso.html" %}
+{% block titulo %}{% if error_verificacion %}No pudimos verificar el correo{% else %}Correo verificado{% endif %} | Academia TM{% endblock %}
+{% block clase_acceso %}acceso--dividido acceso--confirmacion{% endblock %}
+
+{% block acceso_contenido %}
+{% if error_verificacion %}
+    <h1 id="acceso-titulo">No pudimos verificar el correo</h1>
+    <p>{{ resultado }}</p>
+    <div class="acceso-acciones">
+        <a class="button button--primary" href="{% url 'solicitar_verificacion' %}">Reenviar verificación</a>
+        <a href="{% url 'landing' %}">Volver a la portada</a>
+    </div>
+{% else %}
+    <h1 id="acceso-titulo">Correo verificado</h1>
+    <p>{{ resultado }} Ya podés acceder a las reservas.</p>
+    <p>Si ya tenés el portal abierto en otra pestaña, podés cerrar esta.</p>
+    <div class="acceso-acciones">
+        {% if request.user.is_authenticated %}
+            <a class="button button--primary" href="{% url 'inicio' %}">Ir al inicio</a>
+        {% else %}
+            <a class="button button--primary" href="{% url 'login' %}">Iniciar sesión</a>
+        {% endif %}
+        <a href="{% url 'landing' %}">Volver a la portada</a>
+    </div>
+{% endif %}
 {% endblock %}

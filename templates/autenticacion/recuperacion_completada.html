@@ -1,7 +1,10 @@
 {% extends "autenticacion/base_recuperacion.html" %}
 {% block titulo %}Contraseña actualizada | Academia TM{% endblock %}
 {% block recuperacion_contenido %}
-<h1 id="recuperacion-titulo">Contraseña actualizada</h1>
-<p class="recuperacion-descripcion">Ya podés iniciar sesión con tu nueva contraseña.</p>
-<a class="boton boton-primario boton-bloque" href="{% url 'login' %}">Iniciar sesión</a>
+<h1 id="acceso-titulo">Contraseña actualizada</h1>
+<p>Ya podés iniciar sesión con tu contraseña nueva.</p>
+<div class="acceso-acciones">
+    <a class="button button--primary" href="{% url 'login' %}">Iniciar sesión</a>
+    <a href="{% url 'landing' %}">Volver a la portada</a>
+</div>
 {% endblock %}

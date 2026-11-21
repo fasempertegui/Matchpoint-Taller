@@ -1,13 +1,21 @@
 {% extends "autenticacion/base_recuperacion.html" %}
 {% block titulo %}Recuperar contraseña | Academia TM{% endblock %}
 {% block recuperacion_contenido %}
-<h1 id="recuperacion-titulo">Recuperar contraseña</h1>
-<p class="recuperacion-descripcion">Ingresá el correo verificado de tu cuenta para recibir un enlace de recuperación.</p>
-<p class="recuperacion-nota">El enlace dura quince minutos desde su emisión.</p>
-<form method="post">
+<h1 id="acceso-titulo">Recuperar contraseña</h1>
+<p>Ingresá el correo asociado a tu cuenta.</p>
+<form class="acceso-formulario" method="post" novalidate>
     {% csrf_token %}
-    {% include "autenticacion/campos_formulario.html" %}
-    <button class="boton boton-primario boton-bloque" type="submit">Solicitar enlace</button>
+    {% if form.non_field_errors %}
+        <div class="acceso-error acceso-alerta" role="alert">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+    {% endif %}
+    <div class="acceso-campos">
+        {% include "componentes/campo_acceso.html" with campo=form.email %}
+    </div>
+    <div class="acceso-acciones">
+        <button class="button button--primary" type="submit">Enviar</button>
+        <a href="{% url 'login' %}">Volver a iniciar sesión</a>
+    </div>
 </form>
-<div class="recuperacion-enlaces"><a href="{% url 'estado_verificacion' %}">Todavía no verifiqué mi correo</a><a href="{% url 'login' %}">Volver al acceso</a></div>
 {% endblock %}

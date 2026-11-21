@@ -1,35 +1,27 @@
 {% extends "autenticacion/base_acceso.html" %}
-{% block titulo %}Academia TM | Tenis en Salta{% endblock %}
+{% block titulo %}Iniciar sesión | Academia TM{% endblock %}
+{% block clase_acceso %}acceso--dividido acceso--ingreso{% endblock %}
+
 {% block acceso_contenido %}
-<div class="acceso-composicion">
-    <section class="acceso-presentacion" aria-labelledby="acceso-titulo">
-        <h1 id="acceso-titulo">Tu próximo encuentro<br>te está esperando<span class="acceso-punto">.</span></h1>
-        <p>Consultá tus clases y reservas<br>y preparate para volver a la cancha.</p>
-    </section>
-    <section class="acceso-formulario" aria-labelledby="login-titulo">
-        <h2 id="login-titulo">Iniciar sesión</h2>
-        <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ next }}">
-            {% if form.non_field_errors %}
-                <div class="mensaje mensaje-error" role="alert">
-                    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
-                </div>
-            {% endif %}
-            <div class="grupo-campo">
-                <label for="{{ form.username.id_for_label }}">Usuario</label>
-                {{ form.username }}
-                {% for error in form.username.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-            </div>
-            <div class="grupo-campo">
-                <label for="{{ form.password.id_for_label }}">Contraseña</label>
-                {{ form.password }}
-                {% for error in form.password.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-            </div>
-            <a class="acceso-recuperar" href="{% url 'password_reset' %}">Olvidé mi contraseña</a>
-            <button class="boton boton-primario boton-bloque" type="submit">Ingresar</button>
-        </form>
-        <div class="acceso-registro"><a href="{% url 'registro' %}">Crear una cuenta</a></div>
-    </section>
-</div>
+<h1 id="acceso-titulo">Iniciar sesión</h1>
+<form class="acceso-formulario" method="post" novalidate>
+    {% csrf_token %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    {% if form.non_field_errors %}
+        <div class="acceso-error acceso-alerta" role="alert">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+    {% endif %}
+    <div class="acceso-campos">
+        {% include "componentes/campo_acceso.html" with campo=form.username %}
+        {% url 'password_reset' as url_recuperar %}
+        {% include "componentes/campo_acceso.html" with campo=form.password enlace_url=url_recuperar enlace_texto="Olvidé mi contraseña" %}
+    </div>
+    <label class="acceso-check">
+        {{ form.recordar_sesion }}
+        <span>Recordar mi sesión</span>
+    </label>
+    <button class="button button--primary" type="submit">Ingresar</button>
+</form>
+<p class="acceso-alternativa">¿Nuevo por acá? <a href="{% url 'registro' %}">Crear una cuenta</a></p>
 {% endblock %}
