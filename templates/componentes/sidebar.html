@@ -1,17 +1,29 @@
 {% load static %}
-<header class="sidebar-cabecera-tablet" id="sidebar-cabecera-tablet">
-    <button type="button" class="sidebar-boton-icono" id="sidebar-abrir" aria-label="Abrir navegación" aria-controls="sidebar" aria-expanded="false">
-        <svg class="sidebar-icono" aria-hidden="true" width="22" height="22"><use href="{% static 'img/navegacion.svg' %}#menu"/></svg>
-    </button>
-    <a class="marca" href="{% url 'inicio' %}"><img class="marca-logo" src="{% static 'img/logo.png' %}" alt="" width="36" height="36"><span>Academia TM</span></a>
+<header class="barra-app" id="barra-app">
+    <div class="barra-app-izquierda">
+        <button type="button" class="sidebar-boton-icono barra-app-alternar" id="sidebar-alternar" aria-label="Ocultar barra lateral" aria-controls="sidebar" aria-expanded="true" data-tooltip="Ocultar barra lateral">
+            <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#plegar"/></svg>
+        </button>
+        {% if navegacion_app.seccion_actual %}
+            <span class="barra-app-separador" aria-hidden="true"></span>
+            <span class="barra-app-titulo">{{ navegacion_app.seccion_actual }}</span>
+        {% endif %}
+    </div>
+    <div class="barra-app-derecha">
+        {% include "componentes/notificaciones_acceso.html" with en_barra=True %}
+        <form class="barra-app-salir" method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="barra-app-salir-boton" type="submit" aria-label="Cerrar sesión">
+                <svg class="sidebar-icono" aria-hidden="true" width="18" height="18"><use href="{% static 'img/navegacion.svg' %}#salir"/></svg>
+                <span>Cerrar sesión</span>
+            </button>
+        </form>
+    </div>
 </header>
 <button type="button" class="sidebar-fondo" id="sidebar-fondo" aria-label="Cerrar navegación" tabindex="-1" hidden></button>
 <aside class="sidebar" id="sidebar" aria-label="Navegación de Academia TM">
     <div class="sidebar-cabecera">
         <a class="sidebar-marca" href="{% url 'inicio' %}" aria-label="Academia TM · Inicio"><img src="{% static 'img/logo.png' %}" width="36" height="36" alt=""><span class="sidebar-texto">Academia TM</span></a>
-        <button type="button" class="sidebar-boton-icono sidebar-plegar" id="sidebar-plegar" aria-label="Contraer barra lateral" aria-expanded="true" aria-controls="sidebar-contenido" data-tooltip="Contraer barra lateral">
-            <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#plegar"/></svg>
-        </button>
         <button type="button" class="sidebar-boton-icono sidebar-cerrar" id="sidebar-cerrar" aria-label="Cerrar navegación">
             <svg class="sidebar-icono" aria-hidden="true" width="22" height="22"><use href="{% static 'img/navegacion.svg' %}#cerrar"/></svg>
         </button>
@@ -25,7 +37,6 @@
                 <span class="sidebar-solo-lector">Mi perfil</span>
             </a>
         {% endif %}
-        {% include "componentes/notificaciones_acceso.html" with en_sidebar=True %}
         <nav class="sidebar-destinos" aria-label="Navegación principal">
             {% for grupo in navegacion_app.grupos %}
                 <section class="sidebar-grupo" aria-labelledby="sidebar-grupo-{{ grupo.codigo }}">
@@ -35,11 +46,4 @@
             {% endfor %}
         </nav>
     </div>
-    <form class="sidebar-sesion" method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button class="sidebar-enlace" type="submit" data-tooltip="Cerrar sesión" aria-label="Cerrar sesión">
-            <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#salir"/></svg>
-            <span class="sidebar-texto">Cerrar sesión</span>
-        </button>
-    </form>
 </aside>

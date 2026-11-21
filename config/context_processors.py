@@ -168,6 +168,14 @@ def navegacion(request):
         administracion.append(auditoria)
     inicio = enlace("Inicio", "inicio", nombre_vista == "inicio", "Inicio de la academia.")
     destinos = [item for item in [inicio, agenda, *clases, mis_reservas, mis_invitaciones, mis_contrataciones, oferta, *administracion] if item]
+    seccion_actual = next((item["nombre"] for item in destinos if item["activo"]), "")
+    if not seccion_actual:
+        if perfil_activo:
+            seccion_actual = "Mi perfil"
+        elif nombre_vista == "comunicaciones:notificaciones_lista":
+            seccion_actual = "Notificaciones"
+        elif nombre_vista in ("password_change", "password_change_done"):
+            seccion_actual = "Cambiar contraseña"
     grupos = []
     for codigo, titulo in (
         ("actividad", "Actividad" if administrador else "Mi actividad"),
@@ -181,7 +189,7 @@ def navegacion(request):
         "notificaciones_no_leidas": Notificacion.objects.filter(destinatario=usuario, leida=False).count()
             if usuario.esta_habilitado and not solo_marca else 0,
         "mostrar_sidebar": not solo_marca and (usuario.esta_habilitado or Rol.PUBLICO in roles),
-        "solo_marca": solo_marca, "grupos": grupos,
+        "solo_marca": solo_marca, "grupos": grupos, "seccion_actual": seccion_actual,
         "mostrar_perfil": usuario.esta_habilitado or Rol.PUBLICO in roles,
         "inicio_activo": nombre_vista == "inicio", "agenda": agenda, "oferta": oferta,
         "mis_contrataciones": mis_contrataciones,

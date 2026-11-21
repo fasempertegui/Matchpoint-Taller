@@ -33,20 +33,19 @@
     font-weight: 700;
 }
 
-.sidebar-notificaciones {
+.barra-app-notificaciones {
     position: relative;
-    margin-top: 12px;
 }
 
-.sidebar-notificaciones .notificaciones-contador {
-    flex-shrink: 0;
-    margin-left: auto;
+.barra-app-notificaciones-activa {
+    background: var(--primario-suave);
+    color: var(--primario);
 }
 
-.sidebar-compacta .sidebar-notificaciones .notificaciones-contador {
+.barra-app-notificaciones .notificaciones-contador {
     position: absolute;
-    top: 2px;
-    right: 8px;
+    top: -2px;
+    right: -2px;
     min-width: 18px;
     height: 18px;
     padding-inline: 4px;

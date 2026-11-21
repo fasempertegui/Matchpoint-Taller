@@ -1,6 +1,6 @@
 (function () {
     const selector = "[data-tooltip], .ayuda-contextual-boton";
-    const contenedoresSinTooltip = "[inert], dialog:not([open]), body:not(.sidebar-compacta) .sidebar";
+    const contenedoresSinTooltip = "[inert], dialog:not([open]), .sidebar";
     const texto = document.createElement("div");
     texto.id = "tooltip-compartido";
     texto.setAttribute("role", "tooltip");
