@@ -1,0 +1,14 @@
+{% extends "autenticacion/base_recuperacion.html" %}
+{% block titulo %}Volvé a intentar | Academia TM{% endblock %}
+{% block recuperacion_contenido %}
+{% if servicio_no_disponible %}
+    <h1 id="acceso-titulo">Servicio temporalmente no disponible</h1>
+    <p>Volvé a intentar en unos instantes.</p>
+{% else %}
+    <h1 id="acceso-titulo">Demasiadas solicitudes</h1>
+    <p>Esperá un momento antes de volver a intentar.</p>
+{% endif %}
+<div class="acceso-acciones">
+    <a class="button button--primary" href="{{ request.path }}">Volver al formulario</a>
+</div>
+{% endblock %}

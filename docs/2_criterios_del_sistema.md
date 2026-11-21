@@ -211,6 +211,8 @@ El cambio administrado del correo de una cuenta verificada guarda `email_pendien
 
 La recuperación responde de forma genérica y sólo genera correo para una cuenta activa, verificada y con contraseña utilizable. El cambio propio y la recuperación guardan la credencial y retiran la obligación provisoria en una transacción, con un único aviso «Cambiaste tu contraseña». La recuperación no inicia sesión; las sesiones anteriores pierden validez. Los reintentos de entrega conservan el token y su vencimiento original.
 
+Los formularios de autenticación aplican cuotas a los POST antes de validar credenciales o solicitar correos. El inicio de sesión admite 30 solicitudes por minuto por IP y 10 por minuto por combinación de IP y nombre de usuario. La recuperación y el reenvío admiten cada uno cinco solicitudes cada diez minutos por IP. Al superar una cuota, el servidor devuelve HTTP 429 con `Retry-After` y un mensaje genérico. Si el contador compartido no está disponible, devuelve HTTP 503. Los GET de los formularios siguen disponibles.
+
 A fines prácticos, un usuario con rol Alumno se considera vigente en un período determinado cuando tiene actividad de clases en ese período, por ejemplo un plan activo. Esto es informativo, para reportes y consultas; no equivale al estado de la cuenta ni condiciona ninguna otra regla del sistema.
 
 La administración podrá asignar o quitar Profesor y Alumno, y volver a otorgar o quitar Reservas después del alta, únicamente a cuentas no administrativas. El retiro respeta las condiciones siguientes. Los perfiles de administradores no ofrecen modificación de roles y el servidor rechaza cualquier intento de asignarles otros.

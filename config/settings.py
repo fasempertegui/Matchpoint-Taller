@@ -139,6 +139,16 @@ TIME_ZONE = "America/Argentina/Salta"
 USE_I18N = True
 USE_TZ = True
 
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+    "limites_autenticacion": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.getenv("REDIS_LIMITES_URL", "redis://localhost:6379/1"),
+        "OPTIONS": {"socket_connect_timeout": 1, "socket_timeout": 1},
+    },
+}
+RATELIMIT_USE_CACHE = "limites_autenticacion"
+
 CELERY_BROKER_URL = os.environ["CELERY_BROKER_URL"]
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_ACCEPT_CONTENT = ["json"]

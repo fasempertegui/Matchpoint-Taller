@@ -6,6 +6,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .forms import CorregirCorreoForm, ReenvioVerificacionForm
+from .limites_autenticacion import limitar_solicitudes
 from .verificacion import corregir_correo_inicial, reenviar_verificacion, verificar_correo
 
 
@@ -33,6 +34,7 @@ def confirmar_verificacion(request):
 
 @never_cache
 @require_http_methods(["GET", "POST"])
+@limitar_solicitudes("reenvio_verificacion", ("ip", "5/10m"))
 def solicitar_verificacion(request):
     formulario = ReenvioVerificacionForm(request.POST or None)
     resultado = ""

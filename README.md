@@ -46,6 +46,10 @@ docker compose start
 
 Docker Compose habilita la simulación por defecto con `EMAILS_SIMULACION=1`. Todos los correos llegan a la bandeja local en <http://localhost:8025/>, independientemente del destinatario: nadie los recibe en su casilla real. Podés consultar el HTML, el texto y abrir los enlaces.
 
+## Límites de autenticación
+
+`REDIS_LIMITES_URL` configura la caché compartida para los contadores. Docker Compose usa la base 1 del servicio Redis y Celery usa la base 0. Los límites por IP usan `REMOTE_ADDR`. Si el despliegue incorpora un proxy, la integración con Django debe establecer ese valor a partir de una fuente confiable para que represente al cliente.
+
 ## Notificaciones internas
 
 Cada cuenta activa y verificada, con su contraseña personal, consulta sus avisos desde Notificaciones en la cabecera. El contador muestra los no leídos. La bandeja y la lectura funcionan independientemente de la entrega de emails. Los enlaces de verificación, confirmación de correo y recuperación se reciben exclusivamente por correo.

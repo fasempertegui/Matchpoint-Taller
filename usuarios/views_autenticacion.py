@@ -18,6 +18,7 @@ from auditoria.models import IntentoAuditoria, LogAuditoria
 
 from .models import Rol, Usuario
 from .contrasenas import guardar_contrasena_propia
+from .limites_autenticacion import ip_y_usuario, limitar_solicitudes
 from .tokens import TokenRecuperacion
 from .forms import CambioContrasenaForm, InicioSesionForm, UsuarioRegistroForm, generar_nombre_usuario, RecuperacionContrasenaForm, EstablecerContrasenaForm
 
@@ -69,6 +70,7 @@ class RegistroCompletoView(View):
         return render(request, "autenticacion/registro_completo.html", {"usuario_creado": usuario_creado})
 
 
+@method_decorator(limitar_solicitudes("login", ("ip", "30/m"), (ip_y_usuario, "10/m")), name="post")
 class InicioSesionView(auth_views.LoginView):
     template_name = "autenticacion/iniciar_sesion.html"
     authentication_form = InicioSesionForm
@@ -140,6 +142,7 @@ class CambioContrasenaCompletadoView(auth_views.PasswordChangeDoneView):
     template_name = "autenticacion/cambio_contrasena_completado.html"
 
 
+@method_decorator(limitar_solicitudes("recuperacion", ("ip", "5/10m")), name="post")
 class RecuperacionContrasenaView(auth_views.PasswordResetView):
     template_name = "autenticacion/recuperar_contrasena.html"
     form_class = RecuperacionContrasenaForm

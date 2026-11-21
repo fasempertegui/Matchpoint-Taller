@@ -17,6 +17,7 @@ services:
       DB_HOST: db
       DB_PORT: "5432"
       CELERY_BROKER_URL: redis://redis:6379/0
+      REDIS_LIMITES_URL: "${REDIS_LIMITES_URL:-redis://redis:6379/1}"
       CUENTAS_LIMPIEZA_HABILITADA: "${CUENTAS_LIMPIEZA_HABILITADA:-0}"
       NOTIFICACIONES_TAREAS_PROGRAMADAS_HABILITADAS: "${NOTIFICACIONES_TAREAS_PROGRAMADAS_HABILITADAS:-1}"
       EMAILS_SIMULACION: "${EMAILS_SIMULACION:-1}"
@@ -38,6 +39,8 @@ services:
     depends_on:
       inicializar:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
 
   inicializar:
     image: atm-app
