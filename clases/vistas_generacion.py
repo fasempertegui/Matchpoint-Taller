@@ -87,7 +87,7 @@ def generacion_clases(request):
             if paso == "generar":
                 resultado = generar_clases(usuario, request.POST.get("confirmacion", ""))
                 request.session["resultado_generacion_clases"] = {
-                    "sede": sede.pk, "desde": datos["fecha_desde"].isoformat(), "hasta": datos["fecha_hasta"].isoformat(),
+                    "sede": sede.pk, "desde": resultado["desde_efectivo"].isoformat(), "hasta": datos["fecha_hasta"].isoformat(),
                     "clases_ids": resultado["clases_ids"], "omitidas": len(resultado["omitidas"]),
                     "detalle_omitidas": [
                         {**fila, "fecha": fila["fecha"].isoformat(), "hora_inicio": fila["hora_inicio"].isoformat()}

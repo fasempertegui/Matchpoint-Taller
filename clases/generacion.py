@@ -26,24 +26,39 @@ def _fechas_del_periodo(fecha_desde, fecha_hasta):
 
 def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     validar_periodo_generacion(fecha_desde, fecha_hasta)
-    ahora = timezone.localtime()
+    ahora = timezone.now()
+    hoy = timezone.localdate(ahora)
+    desde_efectivo = max(fecha_desde, hoy)
+    fechas_por_dia = {}
+    for fecha in _fechas_del_periodo(desde_efectivo, fecha_hasta):
+        fechas_por_dia.setdefault(fecha.isoweekday(), []).append(fecha)
+
     sede = Sede.objects.get(pk=sede_id)
     canchas = list(Cancha.objects.filter(sede=sede).order_by("pk"))
-    celdas = list(TurnoPlanilla.objects.filter(cancha__sede=sede).select_related("cancha").prefetch_related(
+    celdas = TurnoPlanilla.objects.filter(
+        cancha__sede=sede, dia_semana__in=fechas_por_dia,
+    ).select_related("cancha").prefetch_related(
         "profesores", "alumnos",
-    ).order_by("hora_inicio", "cancha_id", "pk"))
-    dias_del_periodo = {fecha.isoweekday() for fecha in _fechas_del_periodo(fecha_desde, fecha_hasta)}
+    ).order_by("hora_inicio", "cancha_id", "pk")
+    fechas_por_celda = [
+        (celda, [
+            fecha for fecha in fechas_por_dia[celda.dia_semana]
+            if fecha > hoy or timezone.make_aware(datetime.combine(fecha, celda.hora_inicio)) > ahora
+        ])
+        for celda in celdas
+    ]
+    fechas_por_celda = [(celda, fechas) for celda, fechas in fechas_por_celda if fechas]
     sin_profesores = [
         f"Sin profesor: {sede.nombre} — {celda.cancha.nombre} — "
         f"{celda.get_dia_semana_display()} {celda.hora_inicio:%H:%M} a {time(celda.hora_inicio.hour + 1):%H:%M}."
-        for celda in celdas if celda.dia_semana in dias_del_periodo and not celda.profesores.all()
+        for celda, _ in fechas_por_celda if not celda.profesores.all()
     ]
     if sin_profesores:
         raise ValidationError([
             "Completá los profesores de la planilla antes de generar clases.", *sin_profesores,
         ])
     usuarios_ids = set()
-    for celda in celdas:
+    for celda, _ in fechas_por_celda:
         usuarios_ids.update(v.profesor_id for v in celda.profesores.all())
         usuarios_ids.update(v.usuario_id for v in celda.alumnos.all())
     usuarios = {
@@ -57,15 +72,16 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         ]
         for horario in sede.horarios.all()
     }
-    feriados = set(Feriado.objects.filter(fecha__range=(fecha_desde, fecha_hasta)).values_list("fecha", flat=True))
+    periodo_efectivo = (desde_efectivo, fecha_hasta)
+    feriados = set(Feriado.objects.filter(fecha__range=periodo_efectivo).values_list("fecha", flat=True))
     eventos = list(Evento.objects.filter(
-        turno__cancha__sede=sede, turno__fecha__range=(fecha_desde, fecha_hasta),
+        turno__cancha__sede=sede, turno__fecha__range=periodo_efectivo,
     ).exclude(estado=Evento.Estado.ANULADO).values_list(
         "pk", "tipo", "estado", "actualizado_en", "turno__cancha_id", "turno__fecha", "turno__hora_inicio",
     ).order_by("pk"))
     ocupados = {(evento[4], evento[5], evento[6]) for evento in eventos}
     filtros_asignacion = {
-        "clase__evento__turno__fecha__range": (fecha_desde, fecha_hasta),
+        "clase__evento__turno__fecha__range": periodo_efectivo,
     }
     profesores_ocupados = list(ClaseProfesor.objects.filter(
         profesor_id__in=usuarios_ids, **filtros_asignacion,
@@ -82,17 +98,17 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         for _, usuario_id, fecha, hora in profesores_ocupados + participantes_ocupados
     }
     reservas_ocupadas = list(Reserva.objects.filter(
-        organizador_id__in=usuarios_ids, evento__turno__fecha__range=(fecha_desde, fecha_hasta),
+        organizador_id__in=usuarios_ids, evento__turno__fecha__range=periodo_efectivo,
     ).exclude(evento__estado=Evento.Estado.ANULADO).values_list("organizador_id", "evento__turno__fecha", "evento__turno__hora_inicio"))
     invitados_ocupados = list(ReservaInvitado.objects.filter(
         usuario_id__in=usuarios_ids, respuesta="afirmativa",
-        reserva__evento__turno__fecha__range=(fecha_desde, fecha_hasta),
+        reserva__evento__turno__fecha__range=periodo_efectivo,
     ).exclude(reserva__evento__estado=Evento.Estado.ANULADO).values_list("usuario_id", "reserva__evento__turno__fecha", "reserva__evento__turno__hora_inicio"))
     asignaciones_ocupadas.update((fecha, hora, pk) for pk, fecha, hora in reservas_ocupadas + invitados_ocupados)
     candidatas = []
     omitidas = []
     planilla = []
-    for celda in celdas:
+    for celda, fechas in fechas_por_celda:
         profesores_ids = sorted(v.profesor_id for v in celda.profesores.all())
         participantes_ids = sorted(v.usuario_id for v in celda.alumnos.all())
         motivo_usuarios = ""
@@ -104,15 +120,14 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
             celda.pk, celda.cancha_id, celda.dia_semana, celda.hora_inicio,
             celda.observaciones, celda.actualizado_en, profesores_ids, participantes_ids,
         ])
-        for fecha in _fechas_del_periodo(fecha_desde, fecha_hasta):
-            if fecha.isoweekday() == celda.dia_semana:
-                candidatas.append({
-                    "cancha_id": celda.cancha_id,
-                    "fecha": fecha, "hora_inicio": celda.hora_inicio,
-                    "observaciones": celda.observaciones or "",
-                    "profesores_ids": profesores_ids, "participantes_ids": participantes_ids,
-                    "motivo_usuarios": motivo_usuarios, "cancha_activa": celda.cancha.estado == Cancha.Estado.ACTIVA,
-                })
+        for fecha in fechas:
+            candidatas.append({
+                "cancha_id": celda.cancha_id,
+                "fecha": fecha, "hora_inicio": celda.hora_inicio,
+                "observaciones": celda.observaciones or "",
+                "profesores_ids": profesores_ids, "participantes_ids": participantes_ids,
+                "motivo_usuarios": motivo_usuarios, "cancha_activa": celda.cancha.estado == Cancha.Estado.ACTIVA,
+            })
     candidatas.sort(key=lambda candidata: (
         candidata["fecha"], candidata["hora_inicio"], sede.pk, candidata["cancha_id"],
     ))
@@ -122,9 +137,7 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         hora = candidata["hora_inicio"]
         participantes = set(candidata["profesores_ids"]) | set(candidata["participantes_ids"])
         motivo = ""
-        if timezone.make_aware(datetime.combine(fecha, hora)) <= ahora:
-            motivo = "El turno ya comenzó."
-        elif fecha in feriados:
+        if fecha in feriados:
             motivo = "Feriado."
         elif sede.estado != Sede.Estado.ACTIVA or not candidata["cancha_activa"]:
             motivo = "La sede o la cancha están inactivas."
@@ -146,7 +159,7 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     instantanea = {
         "sede": [sede.pk, sede.nombre, sede.estado],
         "canchas": [[cancha.pk, cancha.nombre, cancha.estado] for cancha in canchas],
-        "desde": fecha_desde, "hasta": fecha_hasta, "planilla": planilla, "horarios": horarios,
+        "desde": desde_efectivo, "hasta": fecha_hasta, "planilla": planilla, "horarios": horarios,
         "feriados": sorted(feriados), "eventos": eventos,
         "reservas_ocupadas": reservas_ocupadas, "invitaciones_ocupadas": invitados_ocupados,
         "docencia_ocupada": profesores_ocupados, "participacion_ocupada": participantes_ocupados,
@@ -158,7 +171,7 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     }
     huella = hashlib.sha256(json.dumps(instantanea, sort_keys=True, default=str).encode()).hexdigest()
     return {
-        "sede_id": sede.pk, "fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta,
+        "sede_id": sede.pk, "fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta, "desde_efectivo": desde_efectivo,
         "candidatas": validas, "omitidas": omitidas, "usuarios_ids": sorted(usuarios_ids), "huella": huella,
         "irreversible": True, "confirmaciones_requeridas": 2,
     }
@@ -242,13 +255,13 @@ def generar_clases(usuario, confirmacion):
     seleccion = _leer_revision(usuario, confirmacion, "primera_confirmacion")
     usuarios = bloquear_usuarios_clase(set(seleccion["usuarios_ids"]) | {usuario.pk})
     usuario = exigir_administracion_clases(usuarios.get(usuario.pk))
-    for fecha in _fechas_del_periodo(seleccion["fecha_desde"], seleccion["fecha_hasta"]):
+    for fecha in _fechas_del_periodo(seleccion["desde_efectivo"], seleccion["fecha_hasta"]):
         bloquear_calendario_clases(fecha)
     sede = Sede.objects.select_for_update().get(pk=seleccion["sede_id"])
     list(Cancha.objects.select_for_update().filter(sede=sede).order_by("pk"))
     list(TurnoPlanilla.objects.select_for_update(of=("self",)).filter(cancha__sede=sede).order_by("pk"))
     turnos = list(Turno.objects.select_for_update(of=("self",)).filter(
-        cancha__sede=sede, fecha__range=(seleccion["fecha_desde"], seleccion["fecha_hasta"]),
+        cancha__sede=sede, fecha__range=(seleccion["desde_efectivo"], seleccion["fecha_hasta"]),
     ).order_by("pk"))
     list(Evento.objects.select_for_update().filter(turno__in=turnos).order_by("pk"))
     revision = _revisar_generacion(
@@ -264,5 +277,5 @@ def generar_clases(usuario, confirmacion):
             validar_inicio_evento(fila["fecha"], fila["hora_inicio"])
     return {
         "clases_creadas": len(clases), "clases_ids": [clase.pk for clase in clases],
-        "omitidas": revision["omitidas"],
+        "omitidas": revision["omitidas"], "desde_efectivo": revision["desde_efectivo"],
     }

@@ -20,6 +20,7 @@
                 <dl class="perfil-lista">
                     <div class="perfil-fila"><dt>Sede</dt><dd>{{ sede.nombre }}</dd></div>
                     <div class="perfil-fila"><dt>Mes</dt><dd>{{ revision.fecha_desde|date:"F Y"|capfirst }}</dd></div>
+                    <div class="perfil-fila"><dt>Período efectivo</dt><dd>{{ revision.desde_efectivo|date:"d/m/Y" }} – {{ revision.fecha_hasta|date:"d/m/Y" }}</dd></div>
                     <div class="perfil-fila"><dt>Clases a crear</dt><dd>{{ candidatas|length }}</dd></div>
                     <div class="perfil-fila"><dt>Clases omitidas</dt><dd>{{ omitidas|length }}</dd></div>
                 </dl>
@@ -29,7 +30,8 @@
                 <details class="perfil-desplegable"><summary>Clases a crear ({{ candidatas|length }})</summary>
                     {% include "clases/_generacion_tabla.html" with filas=candidatas mostrar_motivo=False only %}
                 </details>
-            {% else %}<p class="texto-secundario">No hay clases para generar en este período.</p>{% endif %}
+            {% elif omitidas %}<p class="texto-secundario">Todas las clases previstas quedaron omitidas.</p>
+            {% else %}<p class="texto-secundario">No quedan turnos futuros en la planilla para este período.</p>{% endif %}
             {% if omitidas %}
                 <details class="perfil-desplegable"><summary>Clases omitidas ({{ omitidas|length }})</summary>
                     {% include "clases/_generacion_tabla.html" with filas=omitidas mostrar_motivo=True only %}
@@ -53,7 +55,7 @@
                 <a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a>
             </div>
         {% else %}
-            <p class="texto-secundario">Elegí la sede y un mes completo. Se utilizará su programación habitual de todas las canchas. Los días pasados y los turnos de hoy que ya comenzaron se omiten automáticamente.</p>
+            <p class="texto-secundario">Elegí la sede y el mes. Se utilizará la planilla de todas las canchas para los turnos que todavía no comenzaron.</p>
             {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>{% endfor %}
             <div class="acciones-formulario"><a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a><button class="boton boton-primario" name="paso" value="revisar" type="submit">Revisar generación</button></div>
         {% endif %}
