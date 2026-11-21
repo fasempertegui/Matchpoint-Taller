@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function cerrarPanel(devolverFoco) {
         cuerpo.classList.remove("sidebar-abierta");
-        fondo.hidden = true;
+        fondo.inert = true;
         abrir.setAttribute("aria-expanded", "false");
         sidebar.removeAttribute("role");
         sidebar.removeAttribute("aria-modal");
@@ -36,8 +36,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     abrir.addEventListener("click", function () {
         sidebar.inert = false;
+        fondo.inert = false;
         cuerpo.classList.add("sidebar-abierta");
-        fondo.hidden = false;
         abrir.setAttribute("aria-expanded", "true");
         sidebar.setAttribute("role", "dialog");
         sidebar.setAttribute("aria-modal", "true");
@@ -69,6 +69,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
     tablet.addEventListener("change", actualizar);
+    fondo.hidden = false;
     cuerpo.classList.add("sidebar-inicializada");
     actualizar();
+    window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () {
+            cuerpo.classList.add("sidebar-animada");
+        });
+    });
 });
