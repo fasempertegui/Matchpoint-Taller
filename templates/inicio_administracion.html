@@ -2,60 +2,267 @@
 {% load static %}
 {% block titulo %}Inicio | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}">{% endblock %}
-{% block clase_contenido %}contenido-inicio{% endblock %}
+{% block clase_contenido %}contenido-inicio contenido-inicio-admin{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico">
-    <h1>Inicio</h1>
-    <p class="encabezado-descripcion">{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
-</header>
-<div class="inicio-resumen">
-    <section class="tarjeta inicio-actividad" aria-labelledby="inicio-actividad-titulo">
-        <header class="inicio-seccion-cabecera"><h2 id="inicio-actividad-titulo">Actividad de hoy</h2></header>
-        <div class="inicio-cuerpo inicio-actividad-resumen">
-            <div>
-                <p class="inicio-valor">{{ actividad.hoy }}</p>
-                <p class="inicio-descripcion">Eventos del día entre clases y reservas</p>
+<div class="dashboard-admin">
+    <header class="tarjeta dashboard-cabecera">
+        <div>
+            <p class="dashboard-fecha">{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
+            <h1>¡Hola, {{ request.user.first_name|default:request.user.username }}!</h1>
+        </div>
+        <div class="dashboard-estados">
+            {% if caja_abierta is not None %}
+                <a class="dashboard-pill" href="{% url 'caja:caja_actual' %}">
+                    <span class="dashboard-punto{% if caja_abierta %} dashboard-punto-activo{% endif %}" aria-hidden="true"></span>
+                    {% if caja_abierta %}Caja abierta{% else %}Caja cerrada{% endif %}
+                </a>
+            {% endif %}
+            <a class="dashboard-pill" href="{% url 'membresias:continuidad_lista' %}">
+                <span class="dashboard-punto{% if encuestas.abiertas %} dashboard-punto-primario{% endif %}" aria-hidden="true"></span>
+                {% if encuestas.abiertas %}Continuidad abierta{% else %}Continuidad cerrada{% endif %}
+            </a>
+        </div>
+    </header>
+
+    <section class="tarjeta dashboard-eventos" aria-labelledby="inicio-eventos-titulo">
+        <div class="dashboard-eventos-resumen">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="inicio-eventos-titulo">Eventos hoy</h2>
+                <a class="dashboard-enlace" href="{% url 'agenda:agenda' %}?fecha={{ hoy|date:'Y-m-d' }}">Ver agenda de hoy</a>
             </div>
-            <div class="inicio-proxima-hora">
-                <h3>En la próxima hora</h3>
-                <p>{% if actividad.clases or actividad.reservas %}<strong>{{ actividad.clases }}</strong> clase{{ actividad.clases|pluralize }} <span aria-hidden="true">·</span> <strong>{{ actividad.reservas }}</strong> reserva{{ actividad.reservas|pluralize }}{% else %}Sin eventos programados{% endif %}</p>
+
+            <div class="dashboard-total">
+                <p class="dashboard-valor-principal">{{ actividad.hoy }}</p>
+                <span class="dashboard-total-texto">turno{{ actividad.hoy|pluralize }} hoy</span>
+            </div>
+
+            <div class="dashboard-desglose">
+                <div>
+                    <span class="dashboard-subetiqueta">Clases hoy</span>
+                    <p class="dashboard-valor-secundario">{{ actividad.clases }}</p>
+                </div>
+                <div>
+                    <span class="dashboard-subetiqueta">Reservas hoy</span>
+                    <p class="dashboard-valor-secundario">{{ actividad.reservas }}</p>
+                </div>
             </div>
         </div>
-        <footer class="inicio-pie"><a href="{% url 'agenda:agenda' %}?fecha={{ hoy|date:'Y-m-d' }}">Ver agenda</a></footer>
+
+        <div class="dashboard-eventos-grafico">
+            <div class="dashboard-grafico-cabecera">
+                <h3 class="dashboard-grafico-titulo">Distribución por hora</h3>
+                <div class="dashboard-leyenda" aria-hidden="true">
+                    <span><i class="dashboard-muestra dashboard-muestra-clases"></i>Clases</span>
+                    <span><i class="dashboard-muestra dashboard-muestra-reservas"></i>Reservas</span>
+                    <span><i class="dashboard-muestra dashboard-muestra-actual"></i>Hora actual</span>
+                </div>
+            </div>
+
+            <div class="dashboard-grafico-marco" role="region" aria-label="Distribución de clases y reservas por hora">
+                <div class="dashboard-eje-y" aria-hidden="true">
+                    {% for guia in actividad.guias_y %}
+                        <span class="dashboard-eje-y-etiqueta" style="bottom: {{ guia.bottom }};">{{ guia.valor }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="dashboard-trazado">
+                    <div class="dashboard-guias" aria-hidden="true">
+                        {% for guia in actividad.guias_y %}
+                            <span class="dashboard-guia{% if guia.valor == 0 %} dashboard-guia-base{% endif %}" style="bottom: {{ guia.bottom }};"></span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="dashboard-barras" style="--cantidad-horas: {{ actividad.cantidad_horas }};">
+                        {% for item in actividad.horas %}
+                            <div class="dashboard-hora-grupo{% if item.es_actual %} dashboard-hora-actual{% endif %}"{% if item.total == 0 %} data-tooltip="{{ item.tooltip_vacio }}"{% endif %}>
+                                <div class="dashboard-hora-par">
+                                    {% if item.total > 0 %}
+                                        {% if item.clases > 0 %}
+                                            <span class="dashboard-barra dashboard-barra-clases" style="height: {{ item.alto_clases }};" tabindex="0" data-tooltip="{{ item.tooltip_clases }}" aria-label="{{ item.tooltip_clases }}"></span>
+                                        {% else %}
+                                            <span class="dashboard-barra-vacia" aria-hidden="true"></span>
+                                        {% endif %}
+                                        {% if item.reservas > 0 %}
+                                            <span class="dashboard-barra dashboard-barra-reservas" style="height: {{ item.alto_reservas }};" tabindex="0" data-tooltip="{{ item.tooltip_reservas }}" aria-label="{{ item.tooltip_reservas }}"></span>
+                                        {% else %}
+                                            <span class="dashboard-barra-vacia" aria-hidden="true"></span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                                <div class="dashboard-eje-x-celda">
+                                    {% if item.etiqueta %}
+                                        <span class="dashboard-eje-x-etiqueta">{{ item.etiqueta }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
-    <section class="tarjeta inicio-usuarios" aria-labelledby="inicio-usuarios-titulo">
-        <header class="inicio-seccion-cabecera"><h2 id="inicio-usuarios-titulo">Usuarios</h2></header>
-        <div class="inicio-cuerpo">
-            <p class="inicio-valor">{{ usuarios.total }}</p>
-            <p class="inicio-descripcion">Usuarios registrados</p>
-            <div class="inicio-nuevos"><strong>{{ usuarios.nuevos_hoy }}</strong> nuevo{{ usuarios.nuevos_hoy|pluralize }} hoy</div>
-        </div>
-        <footer class="inicio-pie"><a href="{% url 'usuarios:usuario_lista' %}">Ver usuarios</a></footer>
-    </section>
-    <section class="tarjeta inicio-mes" aria-labelledby="inicio-mes-titulo">
-        <header class="inicio-seccion-cabecera"><h2 id="inicio-mes-titulo">Este mes</h2><span class="inicio-periodo">{{ mes_actual|date:"F Y"|capfirst }}</span></header>
-        <div class="inicio-cuerpo inicio-metricas">
-            <div class="inicio-metrica">
-                <p class="inicio-valor">{{ alumnos_con_plan }}</p>
-                <p class="inicio-descripcion">Alumnos con plan</p>
+
+    <section class="dashboard-kpis" aria-label="Resumen general">
+        <article class="tarjeta dashboard-kpi" aria-labelledby="inicio-usuarios-titulo">
+            <div class="dashboard-kpi-encabezado">
+                <div class="dashboard-tarjeta-cabecera">
+                    <h2 class="dashboard-etiqueta" id="inicio-usuarios-titulo">Usuarios</h2>
+                    <a class="dashboard-enlace" href="{% url 'usuarios:usuario_lista' %}">Ver usuarios</a>
+                </div>
+                <div class="dashboard-kpi-cuerpo">
+                    <div class="dashboard-kpi-fila">
+                        <p class="dashboard-kpi-valor">{{ usuarios.total }}</p>
+                        <span class="dashboard-delta dashboard-delta-{{ usuarios.badge_clase }}">{{ usuarios.badge_texto }}</span>
+                    </div>
+                    <p class="dashboard-kpi-detalle">últimos 30 días</p>
+                </div>
             </div>
-            <div class="inicio-metrica">
-                <p class="inicio-valor">{{ socios }}</p>
-                <p class="inicio-descripcion">Socios de la academia</p>
+            <svg class="dashboard-sparkline" viewBox="0 0 360 72" data-sparkline aria-label="Evolución acumulada de usuarios en los últimos 30 días">
+                <defs>
+                    <linearGradient id="grad-usuarios" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#4b176d" stop-opacity="0.22"/>
+                        <stop offset="100%" stop-color="#4b176d" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <path d="{{ usuarios.sparkline.area_d }}" fill="url(#grad-usuarios)"/>
+                <path d="{{ usuarios.sparkline.linea_d }}" fill="none" stroke="#4b176d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle class="dashboard-spark-hover" r="4" fill="#ffffff" stroke="#4b176d" stroke-width="2" data-spark-punto/>
+                <circle cx="{{ usuarios.sparkline.ultimo_x }}" cy="{{ usuarios.sparkline.ultimo_y }}" r="7" fill="#4b176d" fill-opacity="0.14"/>
+                <circle cx="{{ usuarios.sparkline.ultimo_x }}" cy="{{ usuarios.sparkline.ultimo_y }}" r="3.8" fill="#4b176d" stroke="#ffffff" stroke-width="1.8"/>
+                {% for zona in usuarios.sparkline.zonas %}
+                    <rect class="dashboard-spark-zona" x="{{ zona.x }}" y="0" width="{{ zona.ancho }}" height="72" fill="transparent" data-tooltip="{{ zona.tooltip }}" data-cx="{{ zona.cx }}" data-cy="{{ zona.cy }}"{% if zona.es_ultimo %} data-ultimo="1"{% endif %}/>
+                {% endfor %}
+            </svg>
+        </article>
+
+        <article class="tarjeta dashboard-kpi" aria-labelledby="inicio-socios-titulo">
+            <div class="dashboard-kpi-encabezado">
+                <div class="dashboard-tarjeta-cabecera">
+                    <h2 class="dashboard-etiqueta" id="inicio-socios-titulo">Socios</h2>
+                    <a class="dashboard-enlace" href="{% url 'membresias:contratacion_membresia_lista' %}?mes={{ mes_actual|date:'Y-m-d' }}&amp;estado=activo">Ver membresías</a>
+                </div>
+                <div class="dashboard-kpi-cuerpo">
+                    <div class="dashboard-kpi-fila">
+                        <p class="dashboard-kpi-valor">{{ socios.actual }}</p>
+                        <span class="dashboard-delta dashboard-delta-{{ socios.variacion.clase }}">{{ socios.variacion.texto }}</span>
+                    </div>
+                    <p class="dashboard-kpi-detalle">vs. mes anterior</p>
+                </div>
             </div>
-        </div>
-        <footer class="inicio-pie inicio-metricas">
-            <div class="inicio-metrica"><a class="inicio-enlace" href="{% url 'membresias:contratacion_plan_lista' %}?mes={{ mes_actual|date:'Y-m-d' }}&amp;estado=activo">Ver planes</a></div>
-            <div class="inicio-metrica"><a class="inicio-enlace" href="{% url 'membresias:contratacion_membresia_lista' %}?mes={{ mes_actual|date:'Y-m-d' }}&amp;estado=activo">Ver membresías</a></div>
-        </footer>
+            <svg class="dashboard-sparkline" viewBox="0 0 360 72" data-sparkline aria-label="Evolución de socios activos en los últimos 6 meses">
+                <defs>
+                    <linearGradient id="grad-socios" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#4b176d" stop-opacity="0.22"/>
+                        <stop offset="100%" stop-color="#4b176d" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <path d="{{ socios.sparkline.area_d }}" fill="url(#grad-socios)"/>
+                <path d="{{ socios.sparkline.linea_d }}" fill="none" stroke="#4b176d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle class="dashboard-spark-hover" r="4" fill="#ffffff" stroke="#4b176d" stroke-width="2" data-spark-punto/>
+                <circle cx="{{ socios.sparkline.ultimo_x }}" cy="{{ socios.sparkline.ultimo_y }}" r="7" fill="#4b176d" fill-opacity="0.14"/>
+                <circle cx="{{ socios.sparkline.ultimo_x }}" cy="{{ socios.sparkline.ultimo_y }}" r="3.8" fill="#4b176d" stroke="#ffffff" stroke-width="1.8"/>
+                {% for zona in socios.sparkline.zonas %}
+                    <rect class="dashboard-spark-zona" x="{{ zona.x }}" y="0" width="{{ zona.ancho }}" height="72" fill="transparent" data-tooltip="{{ zona.tooltip }}" data-cx="{{ zona.cx }}" data-cy="{{ zona.cy }}"{% if zona.es_ultimo %} data-ultimo="1"{% endif %}/>
+                {% endfor %}
+            </svg>
+        </article>
+
+        <article class="tarjeta dashboard-kpi" aria-labelledby="inicio-planes-titulo">
+            <div class="dashboard-kpi-encabezado">
+                <div class="dashboard-tarjeta-cabecera">
+                    <h2 class="dashboard-etiqueta" id="inicio-planes-titulo">Alumnos con plan</h2>
+                    <a class="dashboard-enlace" href="{% url 'membresias:contratacion_plan_lista' %}?mes={{ mes_actual|date:'Y-m-d' }}&amp;estado=activo">Ver planes</a>
+                </div>
+                <div class="dashboard-kpi-cuerpo">
+                    <div class="dashboard-kpi-fila">
+                        <p class="dashboard-kpi-valor">{{ planes.actual }}</p>
+                        <span class="dashboard-delta dashboard-delta-{{ planes.variacion.clase }}">{{ planes.variacion.texto }}</span>
+                    </div>
+                    <p class="dashboard-kpi-detalle">vs. mes anterior</p>
+                </div>
+            </div>
+            <svg class="dashboard-sparkline" viewBox="0 0 360 72" data-sparkline aria-label="Evolución de alumnos con plan activo en los últimos 6 meses">
+                <defs>
+                    <linearGradient id="grad-planes" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#4b176d" stop-opacity="0.22"/>
+                        <stop offset="100%" stop-color="#4b176d" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <path d="{{ planes.sparkline.area_d }}" fill="url(#grad-planes)"/>
+                <path d="{{ planes.sparkline.linea_d }}" fill="none" stroke="#4b176d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle class="dashboard-spark-hover" r="4" fill="#ffffff" stroke="#4b176d" stroke-width="2" data-spark-punto/>
+                <circle cx="{{ planes.sparkline.ultimo_x }}" cy="{{ planes.sparkline.ultimo_y }}" r="7" fill="#4b176d" fill-opacity="0.14"/>
+                <circle cx="{{ planes.sparkline.ultimo_x }}" cy="{{ planes.sparkline.ultimo_y }}" r="3.8" fill="#4b176d" stroke="#ffffff" stroke-width="1.8"/>
+                {% for zona in planes.sparkline.zonas %}
+                    <rect class="dashboard-spark-zona" x="{{ zona.x }}" y="0" width="{{ zona.ancho }}" height="72" fill="transparent" data-tooltip="{{ zona.tooltip }}" data-cx="{{ zona.cx }}" data-cy="{{ zona.cy }}"{% if zona.es_ultimo %} data-ultimo="1"{% endif %}/>
+                {% endfor %}
+            </svg>
+        </article>
     </section>
-    <section class="tarjeta inicio-continuidad" aria-labelledby="inicio-continuidad-titulo">
-        <header class="inicio-seccion-cabecera"><h2 id="inicio-continuidad-titulo">Continuidad</h2><span class="inicio-estado{% if encuestas.abiertas %} inicio-estado-activo{% endif %}">{% if encuestas.abiertas %}Abierta{% else %}Cerrada{% endif %}</span></header>
-        <div class="inicio-cuerpo">
-            <p class="inicio-valor">{{ encuestas.dias }} <span>día{{ encuestas.dias|pluralize }}</span></p>
-            <p class="inicio-descripcion">Para {% if encuestas.abiertas %}el cierre{% else %}la apertura{% endif %} de las encuestas</p>
-        </div>
-        <footer class="inicio-pie"><a href="{% url 'membresias:continuidad_lista' %}">Ver continuidad</a></footer>
+
+    <section class="dashboard-fila-doble" aria-label="Ocupación y pendientes">
+        <article class="tarjeta dashboard-ocupacion" aria-labelledby="inicio-ocupacion-titulo">
+            <div class="dashboard-ocupacion-cabecera">
+                <h2 class="dashboard-etiqueta" id="inicio-ocupacion-titulo">Ocupación por día y hora</h2>
+                <div class="dashboard-ocupacion-controles">
+                    <select class="dashboard-select" id="dashboard-hm-sede" aria-label="Seleccionar sede">
+                        <option value="todas">Todas las sedes</option>
+                        {% for sede in ocupacion.sedes %}
+                            <option value="{{ sede.id }}">{{ sede.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="dashboard-filtro-seg" role="group" aria-label="Filtrar tipo de actividad">
+                        <button type="button" data-hm-tipo="todo" data-active="true">Todo</button>
+                        <button type="button" data-hm-tipo="clases" data-active="false">Clases</button>
+                        <button type="button" data-hm-tipo="reservas" data-active="false">Reservas</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-hm-grid" id="dashboard-hm-grid" aria-label="Mapa de calor de ocupación por día y hora"></div>
+
+            <div class="dashboard-hm-pie">
+                <div class="dashboard-hm-leyenda">
+                    <div class="dashboard-hm-escala">
+                        <span>Menos</span>
+                        <span class="dashboard-hm-muestra dashboard-hm-lvl-0" aria-hidden="true"></span>
+                        <span class="dashboard-hm-muestra dashboard-hm-lvl-1" aria-hidden="true"></span>
+                        <span class="dashboard-hm-muestra dashboard-hm-lvl-2" aria-hidden="true"></span>
+                        <span class="dashboard-hm-muestra dashboard-hm-lvl-3" aria-hidden="true"></span>
+                        <span class="dashboard-hm-muestra dashboard-hm-lvl-4" aria-hidden="true"></span>
+                        <span>Más ocupado</span>
+                    </div>
+                    <div class="dashboard-hm-escala">
+                        <span class="dashboard-hm-muestra dashboard-hm-cerrada" aria-hidden="true"></span>
+                        <span>Cerrada</span>
+                    </div>
+                </div>
+                <p class="dashboard-hm-nota">Últimas 4 semanas. Excluye bloqueos y feriados del cálculo.</p>
+            </div>
+        </article>
+
+        <article class="tarjeta dashboard-revisar" aria-labelledby="inicio-revisar-titulo">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="inicio-revisar-titulo">Para revisar</h2>
+                {% if para_revisar.todo_al_dia %}
+                    <span class="dashboard-delta dashboard-delta-sube">Todo al día</span>
+                {% endif %}
+            </div>
+
+            <ul class="dashboard-revisar-lista">
+                {% for fila in para_revisar.filas %}
+                    <li>
+                        <a class="dashboard-revisar-fila{% if fila.cantidad == 0 %} dashboard-revisar-vacia{% endif %}" href="{{ fila.url }}">
+                            <span class="dashboard-revisar-texto">{{ fila.texto }}</span>
+                            <span class="dashboard-delta dashboard-delta-{{ fila.badge_clase }} dashboard-revisar-contador">{{ fila.cantidad }}</span>
+                            <span class="dashboard-revisar-enlace">{{ fila.enlace_texto }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </article>
     </section>
 </div>
+{{ ocupacion.datos_json|json_script:"dashboard-ocupacion-datos" }}
+<script src="{% static 'js/inicio-admin.js' %}" defer></script>
 {% endblock %}
