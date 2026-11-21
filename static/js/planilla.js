@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     tabla.addEventListener("pointerdown", function (evento) {
         var celda = evento.target.closest("[data-seleccionar-turno]");
-        if (!celda || evento.button !== 0 || !evento.isPrimary) return;
+        if (arrastre || !celda || evento.button !== 0 || !evento.isPrimary) return;
         if (!compatible(celda)) {
             informar("No se pueden mezclar horarios libres y creados. Limpiá la selección para cambiar de tipo.");
             return;
@@ -160,9 +160,11 @@ document.addEventListener("DOMContentLoaded", function () {
             pointerId: evento.pointerId, celda: celda,
             dia: Number(posicion.dataset.dia), hora: Number(posicion.dataset.hora),
             ultimaPosicion: posicion,
-            inicial: new Set(seleccion), tipoInicial: tipo, movido: false,
+            inicial: new Set(seleccion), tipoInicial: tipo,
+            tipoGesto: celda.dataset.tipoTurno,
+            deseleccionando: seleccion.has(celda.dataset.seleccionarTurno),
+            movido: false,
         };
-        tipo = celda.dataset.tipoTurno;
     });
 
     document.addEventListener("pointermove", function (evento) {
@@ -171,18 +173,23 @@ document.addEventListener("DOMContentLoaded", function () {
         var posicion = destino && destino.closest("td[data-dia][data-hora]");
         if (!posicion || posicion === arrastre.ultimaPosicion || !tabla.contains(posicion)) return;
         arrastre.ultimaPosicion = posicion;
+        arrastre.movido = true;
         var dia = Number(posicion.dataset.dia);
         var hora = Number(posicion.dataset.hora);
-        arrastre.movido = true;
+        var diaMinimo = Math.min(dia, arrastre.dia);
+        var diaMaximo = Math.max(dia, arrastre.dia);
+        var horaMinima = Math.min(hora, arrastre.hora);
+        var horaMaxima = Math.max(hora, arrastre.hora);
         seleccion = new Set(arrastre.inicial);
-        celdas.filter(compatible).forEach(function (celda) {
+        tipo = arrastre.deseleccionando ? arrastre.tipoInicial : arrastre.tipoGesto;
+        celdas.forEach(function (celda) {
+            if (!arrastre.deseleccionando && !compatible(celda)) return;
             var ubicacion = celda.closest("td");
             var diaCelda = Number(ubicacion.dataset.dia);
             var horaCelda = Number(ubicacion.dataset.hora);
-            if (diaCelda >= Math.min(dia, arrastre.dia) && diaCelda <= Math.max(dia, arrastre.dia)
-                && horaCelda >= Math.min(hora, arrastre.hora) && horaCelda <= Math.max(hora, arrastre.hora)) {
-                seleccion.add(celda.dataset.seleccionarTurno);
-            }
+            if (diaCelda < diaMinimo || diaCelda > diaMaximo || horaCelda < horaMinima || horaCelda > horaMaxima) return;
+            if (arrastre.deseleccionando) seleccion.delete(celda.dataset.seleccionarTurno);
+            else seleccion.add(celda.dataset.seleccionarTurno);
         });
         actualizar();
     });

@@ -890,7 +890,7 @@ Recorrido:
 
 1. El administrador selecciona una sede y luego una de sus canchas activas.
 2. El sistema muestra la grilla semanal con los turnos vigentes: día, horario, profesores y alumnos previstos.
-3. El administrador selecciona celdas libres o horarios creados. La primera selección determina el tipo y no se permite mezclar ambos. El arrastre y la selección por hora incorporan sólo celdas del mismo tipo. Si una fila mezcla tipos y no hay selección inicial, debe elegirse primero una celda. Con un único horario creado seleccionado puede abrir su detalle; las celdas libres se crean mediante **FL-24**.
+3. El administrador selecciona celdas libres o horarios creados. La primera selección determina el tipo y no se permite mezclar ambos. Un arrastre desde una celda sin marcar suma celdas del mismo tipo. Desde una celda marcada, quita las seleccionadas dentro del rectángulo. En ambos casos el rectángulo abarca los días y las horas entre la celda de origen y la celda bajo el puntero. Al mover el puntero, el resultado se recalcula a partir de la selección inicial. Si se cancela el gesto, se restaura esa selección. El encabezado de hora suma celdas del mismo tipo y, si la fila mezcla tipos y no hay selección inicial, requiere elegir primero una celda. Con un único horario creado seleccionado puede abrir su detalle. Las celdas libres se crean mediante **FL-24**.
 
 Alternativas:
 
