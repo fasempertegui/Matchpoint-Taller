@@ -117,7 +117,8 @@
         if (!dentro(ancla, evento.target) && !dentro(globo, evento.target)) return;
         if (dentro(ancla, evento.relatedTarget) || dentro(globo, evento.relatedTarget)) return;
         window.clearTimeout(temporizador);
-        temporizador = window.setTimeout(cerrar, 180);
+        if (globo === texto) cerrar();
+        else temporizador = window.setTimeout(cerrar, 180);
     });
     document.addEventListener("focusin", function (evento) {
         const destino = evento.target;
@@ -137,7 +138,7 @@
     document.addEventListener("click", function (evento) {
         if (dentro(globo, evento.target)) return;
         const origen = evento.target.closest(selector);
-        if (origen) abrir(origen, evento.detail === 0);
+        if (origen && !origen.hasAttribute("data-tooltip")) abrir(origen, evento.detail === 0);
         else cerrar();
     }, true);
     document.addEventListener("keydown", function (evento) {

@@ -5,8 +5,10 @@
             <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#plegar"/></svg>
         </button>
         {% if navegacion_app.seccion_actual %}
-            <span class="barra-app-separador" aria-hidden="true"></span>
-            <span class="barra-app-titulo">{{ navegacion_app.seccion_actual }}</span>
+            <span class="barra-app-contexto">
+                <span class="barra-app-separador" aria-hidden="true"></span>
+                <span class="barra-app-titulo">{{ navegacion_app.seccion_actual }}</span>
+            </span>
         {% endif %}
     </div>
     <div class="barra-app-derecha">

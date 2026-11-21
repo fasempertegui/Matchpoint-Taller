@@ -33,6 +33,18 @@
     min-width: 0;
 }
 
+.barra-app-contexto {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(-6px);
+    pointer-events: none;
+}
+
 .barra-app-separador {
     flex-shrink: 0;
     width: 1px;
@@ -330,6 +342,10 @@
     transition: transform var(--dur-sidebar) var(--curva-sidebar);
 }
 
+.sidebar-animada .barra-app-contexto {
+    transition: opacity 200ms ease, transform var(--dur-sidebar) var(--curva-sidebar), max-width var(--dur-sidebar) var(--curva-sidebar);
+}
+
 .sidebar-oculta.con-sidebar {
     padding-left: 0;
 }
@@ -340,6 +356,13 @@
 
 .sidebar-oculta .barra-app-alternar svg {
     transform: rotate(180deg);
+}
+
+.sidebar-oculta .barra-app-contexto {
+    max-width: 360px;
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
 }
 
 .sidebar-fondo {
@@ -371,6 +394,13 @@
 
     .barra-app {
         padding-inline: 16px;
+    }
+
+    .sidebar-inicializada:not(.sidebar-abierta) .barra-app-contexto {
+        max-width: 360px;
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
     }
 
     .sidebar {
