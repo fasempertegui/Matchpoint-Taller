@@ -3,6 +3,7 @@
     --fuente-titulos: "Bricolage Grotesque", Arial, sans-serif;
     --fuente-detalles: var(--fuente-interfaz);
     --fondo: #ffffff;
+    --fondo-pagina: #f4f1f8;
     --superficie: #ffffff;
     --texto: #1a2028;
     --texto-suave: #596474;
@@ -27,7 +28,7 @@
 
 body {
     margin: 0;
-    background: var(--fondo);
+    background: var(--fondo-pagina);
     color: var(--texto);
     font-family: var(--fuente-interfaz);
     line-height: 1.5;

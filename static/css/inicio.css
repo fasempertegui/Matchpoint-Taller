@@ -58,10 +58,6 @@ body > .contenido-principal.contenido-inicio {
 }
 
 /* Dashboard de administración */
-body:has(.contenido-inicio-admin) {
-    background: #f4f1f8;
-}
-
 .dashboard-admin {
     display: grid;
     gap: 16px;
