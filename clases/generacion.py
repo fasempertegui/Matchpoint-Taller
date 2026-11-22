@@ -10,11 +10,12 @@ from django.utils import timezone
 from comunicaciones.actividades import avisar_generacion
 from auditoria.contexto import contexto_auditoria
 from common.fechas import validar_inicio_evento
+from instalaciones.horarios import horarios_efectivos
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Reserva, ReservaInvitado, Turno
 from usuarios.models import Usuario
 
-from .models import Clase, ClaseAlumno, ClaseProfesor, Feriado, TurnoPlanilla
+from .models import Clase, ClaseAlumno, ClaseProfesor, TurnoPlanilla
 from .permisos import exigir_administracion_clases
 from .servicios import bloquear_calendario_clases, bloquear_usuarios_clase
 from .validaciones import validar_periodo_generacion, validar_usuarios_clase
@@ -29,11 +30,14 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     ahora = timezone.now()
     hoy = timezone.localdate(ahora)
     desde_efectivo = max(fecha_desde, hoy)
+    periodo_efectivo = (desde_efectivo, fecha_hasta)
+    fechas = _fechas_del_periodo(*periodo_efectivo)
     fechas_por_dia = {}
-    for fecha in _fechas_del_periodo(desde_efectivo, fecha_hasta):
+    for fecha in fechas:
         fechas_por_dia.setdefault(fecha.isoweekday(), []).append(fecha)
 
     sede = Sede.objects.get(pk=sede_id)
+    horarios = horarios_efectivos(sede, fechas)
     canchas = list(Cancha.objects.filter(sede=sede).order_by("pk"))
     celdas = TurnoPlanilla.objects.filter(
         cancha__sede=sede, dia_semana__in=fechas_por_dia,
@@ -51,7 +55,12 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     sin_profesores = [
         f"Sin profesor: {sede.nombre} — {celda.cancha.nombre} — "
         f"{celda.get_dia_semana_display()} {celda.hora_inicio:%H:%M} a {time(celda.hora_inicio.hour + 1):%H:%M}."
-        for celda, _ in fechas_por_celda if not celda.profesores.all()
+        for celda, fechas in fechas_por_celda
+        if not celda.profesores.all() and any(
+            not horarios[fecha].feriado
+            and horarios[fecha].contiene(celda.hora_inicio, time(celda.hora_inicio.hour + 1))
+            for fecha in fechas
+        )
     ]
     if sin_profesores:
         raise ValidationError([
@@ -65,15 +74,6 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         usuario.pk: usuario
         for usuario in Usuario.objects.filter(pk__in=usuarios_ids).prefetch_related("roles__rol")
     }
-    horarios = {
-        horario.dia_semana: [
-            [horario.hora_inicio_1, horario.hora_fin_1],
-            *([[horario.hora_inicio_2, horario.hora_fin_2]] if horario.hora_inicio_2 is not None else []),
-        ]
-        for horario in sede.horarios.all()
-    }
-    periodo_efectivo = (desde_efectivo, fecha_hasta)
-    feriados = set(Feriado.objects.filter(fecha__range=periodo_efectivo).values_list("fecha", flat=True))
     eventos = list(Evento.objects.filter(
         turno__cancha__sede=sede, turno__fecha__range=periodo_efectivo,
     ).exclude(estado=Evento.Estado.ANULADO).values_list(
@@ -137,14 +137,14 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
         hora = candidata["hora_inicio"]
         participantes = set(candidata["profesores_ids"]) | set(candidata["participantes_ids"])
         motivo = ""
-        if fecha in feriados:
+        if horarios[fecha].feriado:
             motivo = "Feriado."
         elif sede.estado != Sede.Estado.ACTIVA or not candidata["cancha_activa"]:
             motivo = "La sede o la cancha están inactivas."
+        elif not horarios[fecha].contiene(hora, time(hora.hour + 1)):
+            motivo = "El turno está fuera del horario de funcionamiento."
         elif candidata["motivo_usuarios"]:
             motivo = candidata["motivo_usuarios"]
-        elif not any(hora >= inicio and time(hora.hour + 1) <= fin for inicio, fin in horarios.get(fecha.isoweekday(), [])):
-            motivo = "El turno está fuera del horario de funcionamiento."
         elif (candidata["cancha_id"], fecha, hora) in ocupados:
             motivo = "El turno está ocupado por una actividad no Anulada."
         elif any((fecha, hora, usuario_id) in asignaciones_ocupadas for usuario_id in participantes):
@@ -159,8 +159,11 @@ def _revisar_generacion(sede_id, fecha_desde, fecha_hasta):
     instantanea = {
         "sede": [sede.pk, sede.nombre, sede.estado],
         "canchas": [[cancha.pk, cancha.nombre, cancha.estado] for cancha in canchas],
-        "desde": desde_efectivo, "hasta": fecha_hasta, "planilla": planilla, "horarios": horarios,
-        "feriados": sorted(feriados), "eventos": eventos,
+        "desde": desde_efectivo, "hasta": fecha_hasta, "planilla": planilla, "horarios": [
+            [fecha, horario.franjas, horario.feriado.pk if horario.feriado else None]
+            for fecha, horario in sorted(horarios.items())
+        ],
+        "eventos": eventos,
         "reservas_ocupadas": reservas_ocupadas, "invitaciones_ocupadas": invitados_ocupados,
         "docencia_ocupada": profesores_ocupados, "participacion_ocupada": participantes_ocupados,
         "usuarios": [

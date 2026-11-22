@@ -1,5 +1,6 @@
 import hashlib
 import json
+from datetime import datetime
 
 from django.core import signing
 from django.core.exceptions import ValidationError
@@ -16,26 +17,23 @@ from .servicios import anular_clase, bloquear_calendario_clases, bloquear_usuari
 from .validaciones import validar_datos_feriado
 
 
-def consultar_feriados(usuario):
-    exigir_administracion_clases(usuario)
-    return list(Feriado.objects.order_by("fecha", "pk").values("id", "fecha", "descripcion", "creado_en"))
-
-
 def _revisar_feriado(fecha, descripcion):
-    anula_clases = fecha > timezone.localdate()
+    ahora = timezone.localtime()
     clases = []
-    if anula_clases:
-        clases = list(Clase.objects.filter(
+    if fecha >= ahora.date():
+        candidatas = Clase.objects.filter(
             evento__tipo=Evento.Tipo.CLASE,
             evento__estado=Evento.Estado.PROGRAMADO,
             evento__turno__fecha=fecha,
         ).select_related("evento__turno__cancha").prefetch_related(
             "profesores", "alumnos",
-        ).order_by("pk"))
+        ).order_by("pk")
+        if fecha == ahora.date():
+            candidatas = candidatas.filter(evento__turno__hora_inicio__gt=ahora.time())
+        clases = list(candidatas)
     instantanea = {
         "fecha": fecha.isoformat(),
         "descripcion": descripcion,
-        "anula_clases": anula_clases,
         "clases": [
             [clase.pk, clase.evento_id, clase.evento.turno_id,
              clase.evento.turno.cancha_id, clase.evento.turno.cancha.sede_id,
@@ -49,7 +47,7 @@ def _revisar_feriado(fecha, descripcion):
     return {
         "fecha": fecha,
         "descripcion": descripcion,
-        "anula_clases": anula_clases,
+        "anula_clases": bool(clases),
         "clases": clases,
         "huella": huella,
     }
@@ -103,7 +101,7 @@ def registrar_feriado(usuario, fecha, descripcion, confirmacion=None):
         if not confirmacion:
             raise ValidationError("Revisá las clases que se anularán antes de confirmar el feriado.")
         try:
-            revisado = signing.loads(confirmacion, salt="clases.registrar-feriado")
+            revisado = signing.loads(confirmacion, salt="clases.registrar-feriado", max_age=900)
         except signing.BadSignature:
             raise ValidationError("La confirmación del feriado no es válida. Revisá nuevamente las clases.") from None
         if revisado != {"usuario": usuario.pk, "huella": previa["huella"]}:
@@ -112,8 +110,12 @@ def registrar_feriado(usuario, fecha, descripcion, confirmacion=None):
         feriado = Feriado.objects.create(fecha=fecha, descripcion=descripcion)
         for clase in previa["clases"]:
             anular_clase(usuario, clase.pk, "Clase anulada por registro de feriado")
-        if (fecha > timezone.localdate()) != previa["anula_clases"]:
-            raise ValidationError("Cambió la fecha durante la operación. Revisá nuevamente el feriado.")
+        ahora = timezone.localtime()
+        if any(
+            timezone.make_aware(datetime.combine(fecha, clase.evento.turno.hora_inicio)) <= ahora
+            for clase in previa["clases"]
+        ):
+            raise ValidationError("Un turno alcanzó su inicio. Revisá nuevamente el feriado.")
     return feriado
 
 

@@ -14,9 +14,10 @@ DESTINOS_NAVEGACION = {
     "membresias:mis_contrataciones": ("cartera", "actividad"),
     "usuarios:usuario_lista": ("usuarios", "gestion"),
     "membresias:catalogos": ("libro", "gestion"),
-    "caja:caja_actual": ("cartera", "gestion"),
+    "caja:caja_actual": ("dinero-cuadrado", "gestion"),
     "reportes:inicio": ("auditoria", "seguimiento"),
-    "instalaciones:sede_lista": ("ubicacion", "academia"),
+    "instalaciones:sede_lista": ("ciudad", "academia"),
+    "instalaciones:horarios_especiales": ("reloj", "academia"),
     "clases:feriado_lista": ("calendario", "academia"),
     "oferta:inicio": ("libro", "academia"),
     "comunicaciones:envios_lista": ("correo", "seguimiento"),
@@ -36,6 +37,11 @@ def navegacion(request):
     namespace = ruta.namespace if ruta else ""
     nombre_vista = ruta.view_name if ruta else ""
     feriados_activo = namespace == "clases" and ruta.url_name.startswith("feriado_")
+    horarios_especiales_activo = feriados_activo or (
+        namespace == "instalaciones"
+        and ruta.url_name.startswith(("horarios_especiales", "horario_especial_", "feriado_"))
+    )
+    sedes_activo = namespace == "instalaciones" and not horarios_especiales_activo
     planilla_activa = namespace == "clases" and ruta.url_name.startswith(("planilla", "generacion_"))
     clases_concretas = namespace == "clases" and not feriados_activo and not planilla_activa
     clases_activo = planilla_activa if administrador else clases_concretas
@@ -106,7 +112,7 @@ def navegacion(request):
         ))
     if usuario.esta_habilitado and usuario.has_perm("instalaciones.view_sede"):
         administracion.append(enlace(
-            "Sedes y canchas", "instalaciones:sede_lista", namespace == "instalaciones",
+            "Instalaciones", "instalaciones:sede_lista", sedes_activo,
             "Consulta y gestión de sedes, canchas, horarios y precios.",
         ))
     membresias = None
@@ -118,8 +124,8 @@ def navegacion(request):
         )
         administracion.append(membresias)
         administracion.append(enlace(
-            "Feriados", "clases:feriado_lista", feriados_activo,
-            "Consulta y gestión de feriados.",
+            "Horarios especiales", "instalaciones:horarios_especiales", horarios_especiales_activo,
+            "Feriados globales y horarios particulares por sede.",
         ))
     if administrador:
         administracion.append(enlace("Caja", "caja:caja_actual", namespace == "caja", "Apertura, consulta y cierre de la sesión de caja."))
@@ -134,7 +140,7 @@ def navegacion(request):
     modulos_inicio = [{"nombre": "Agenda", "descripcion": agenda["descripcion"], "destino": agenda}] if agenda else []
     modulos_inicio.extend(
         {"nombre": item["nombre"], "descripcion": item["descripcion"], "destino": item}
-        for item in administracion if item["destino"] not in ("clases:feriado_lista", "membresias:catalogos")
+        for item in administracion if item["destino"] not in ("clases:feriado_lista", "instalaciones:horarios_especiales", "membresias:catalogos")
     )
     if clases:
         modulos_inicio.append({

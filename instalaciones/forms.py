@@ -1,9 +1,12 @@
+from copy import copy
 from datetime import time
 from decimal import Decimal
 
 from django import forms
 
-from .models import Cancha, Sede, SedeHorario
+from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_feriados
+
+from .models import Cancha, Sede, SedeHorario, SedeHorarioEspecial
 
 
 class SedeForm(forms.ModelForm):
@@ -175,4 +178,116 @@ class SedeHorarioForm(forms.Form):
                 self.add_error(nombre, errores)
         else:
             datos["horas"] = horas
+        return datos
+
+
+class SedeHorarioEspecialForm(forms.Form):
+    sede = forms.ModelChoiceField(
+        label="Sede",
+        queryset=Sede.objects.order_by("estado", "nombre", "pk"),
+        empty_label="Elegí una sede",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    fecha = forms.DateField(
+        label="Fecha",
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(
+            format="%Y-%m-%d",
+            attrs={
+                "class": "form-control",
+                "type": "date",
+                "min": FECHA_INICIO_OPERACIONES.isoformat(),
+            },
+        ),
+    )
+    motivo = forms.CharField(
+        label="Motivo",
+        max_length=150,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Mantenimiento, torneo o jornada reducida",
+            }
+        ),
+    )
+    cerrada = forms.BooleanField(label="Sede cerrada todo el día", required=False)
+    hora_inicio_1 = forms.IntegerField(label="Inicio de la primera franja", min_value=0, max_value=23, required=False)
+    hora_fin_1 = forms.IntegerField(label="Fin de la primera franja", min_value=0, max_value=23, required=False)
+    segunda_franja = forms.BooleanField(label="Segunda franja", required=False)
+    hora_inicio_2 = forms.IntegerField(label="Inicio de la segunda franja", min_value=0, max_value=23, required=False)
+    hora_fin_2 = forms.IntegerField(label="Fin de la segunda franja", min_value=0, max_value=23, required=False)
+
+    campos_horarios = ("hora_inicio_1", "hora_fin_1", "hora_inicio_2", "hora_fin_2")
+
+    def __init__(self, *args, instance=None, **kwargs):
+        self.instance = instance
+        initial = dict(kwargs.pop("initial", None) or {})
+        if instance is not None:
+            initial.setdefault("sede", instance.sede_id)
+            initial.setdefault("fecha", instance.fecha)
+            initial.setdefault("motivo", instance.motivo)
+            initial.setdefault("cerrada", instance.cerrada)
+            for nombre in self.campos_horarios:
+                hora = getattr(instance, nombre)
+                initial.setdefault(nombre, hora.hour if hora is not None else None)
+            initial.setdefault("segunda_franja", instance.hora_inicio_2 is not None)
+        super().__init__(*args, initial=initial, **kwargs)
+        self.fields["fecha"].widget.attrs["max"] = fecha_maxima_feriados().isoformat()
+        for nombre in self.campos_horarios:
+            self.fields[nombre].widget = forms.NumberInput(
+                attrs={"class": "form-control", "min": 0, "max": 23, "step": 1, "inputmode": "numeric"},
+            )
+        if instance is not None and instance.pk is not None:
+            self.fields["sede"].disabled = True
+            self.fields["fecha"].disabled = True
+        if self.is_bound:
+            self.data = self.data.copy()
+            if self.fields["cerrada"].to_python(self.data.get("cerrada")):
+                campos_ignorados = (*self.campos_horarios, "segunda_franja")
+            elif not self.fields["segunda_franja"].to_python(self.data.get("segunda_franja")):
+                campos_ignorados = self.campos_horarios[2:]
+            else:
+                campos_ignorados = ()
+            for nombre in campos_ignorados:
+                self.data.pop(nombre, None)
+
+    def clean_motivo(self):
+        motivo = self.cleaned_data["motivo"].strip()
+        if not motivo:
+            raise forms.ValidationError("Indicá el motivo del horario especial.")
+        return motivo
+
+    def clean(self):
+        datos = super().clean()
+        cerrada = bool(datos.get("cerrada"))
+        if not cerrada:
+            campos_requeridos = self.campos_horarios if datos.get("segunda_franja") else self.campos_horarios[:2]
+            for nombre in campos_requeridos:
+                if nombre not in self.errors and datos.get(nombre) is None:
+                    self.add_error(nombre, "Ingresá una hora entre 0 y 23.")
+        if self.errors:
+            return datos
+
+        horas = {
+            nombre: (
+                None
+                if cerrada or datos.get(nombre) is None
+                else time(datos[nombre])
+            )
+            for nombre in self.campos_horarios
+        }
+        horario = copy(self.instance) if self.instance is not None else SedeHorarioEspecial()
+        horario.sede = datos["sede"]
+        horario.fecha = datos["fecha"]
+        horario.motivo = datos["motivo"]
+        horario.cerrada = cerrada
+        for nombre, hora in horas.items():
+            setattr(horario, nombre, hora)
+        try:
+            horario.clean()
+        except forms.ValidationError as error:
+            for nombre, errores in error.message_dict.items():
+                self.add_error(nombre if nombre in self.fields else None, errores)
+        else:
+            datos["horario"] = horario
         return datos

@@ -65,7 +65,154 @@ body > .contenido-principal.contenido-feriados {
     color: var(--texto-suave);
 }
 
-.contenido-feriados .grupo-campo { margin-bottom: 20px; }
+.contenido-feriados .formulario-guiado .grupo-campo { margin-bottom: 20px; }
+
+.horarios-filtros {
+    margin-block: 12px;
+    padding: 0;
+}
+
+.horarios-filtros > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border-radius: inherit;
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+}
+
+.horarios-filtros > summary::-webkit-details-marker { display: none; }
+
+.horarios-filtros > summary svg {
+    width: 18px;
+    height: 18px;
+    color: var(--primario);
+    transform: rotate(-90deg);
+}
+
+.horarios-filtros[open] > summary svg { transform: none; }
+
+.horarios-filtros .tarjeta-busqueda.filtros-compactos {
+    margin: 0;
+    padding: 20px;
+    border-top: 1px solid var(--borde);
+}
+
+.horarios-filtro-busqueda {
+    flex: 0 1 50%;
+    min-width: 0;
+}
+
+.horarios-buscador {
+    position: relative;
+}
+
+.horarios-buscador svg {
+    position: absolute;
+    top: 50%;
+    inset-inline-start: 10px;
+    transform: translateY(-50%);
+    color: var(--texto-suave);
+    pointer-events: none;
+}
+
+.horarios-buscador .form-control {
+    padding-inline-start: 36px;
+}
+
+.horarios-filtro-tipo {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.horarios-filtro-tipo legend {
+    margin-bottom: 4px;
+    padding: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.horarios-tipos-opciones {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    padding: 2px;
+    border-radius: 10px;
+    background: var(--primario-suave);
+}
+
+.horarios-tipos-opciones label {
+    position: relative;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.horarios-tipos-opciones input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.horarios-tipo-opcion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 4px 9px;
+    border-radius: 8px;
+    color: var(--texto-suave);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.horarios-tipos-opciones label:hover .horarios-tipo-opcion {
+    color: var(--primario);
+}
+
+.horarios-tipos-opciones input:checked + .horarios-tipo-opcion {
+    background: var(--superficie);
+    color: var(--texto);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+}
+
+.horarios-tipos-opciones input:focus-visible + .horarios-tipo-opcion {
+    outline: 2px solid var(--primario);
+    outline-offset: -2px;
+}
+
+.horarios-filtro-sede {
+    flex: 0 1 185px;
+}
+
+@media (min-width: 1051px) {
+    .horarios-filtros .tarjeta-busqueda.filtros-compactos { flex-wrap: nowrap; }
+    .horarios-filtro-sede { flex-grow: 1; }
+    .horarios-filtro-tipo { flex: 1 0 auto; }
+}
+
+@media (max-width: 1050px) {
+    .horarios-filtro-busqueda { flex-basis: 100%; }
+}
+
+@media (max-width: 720px) {
+    .filtros-compactos > .horarios-filtro-busqueda,
+    .filtros-compactos > .horarios-filtro-sede {
+        flex: auto;
+    }
+
+    .horarios-tipos-opciones {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.contenido-feriados .filtros-compactos .filtros-acciones .boton {
+    white-space: nowrap;
+}
 
 .contenido-feriados .acciones-formulario {
     justify-content: flex-start;
@@ -81,4 +228,163 @@ body > .contenido-principal.contenido-feriados {
 .feriados-lista {
     padding: 0;
     overflow: hidden;
+}
+
+.contenido-feriados > .encabezado-con-descripcion:has(+ .horarios-tipos) {
+    margin-bottom: 12px;
+}
+
+.horarios-tipos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.horarios-tipo {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: clamp(16px, 2.5vw, 24px);
+}
+
+.horarios-tipo > .boton { margin-top: auto; }
+
+.horarios-tipo header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.horarios-tipo h2,
+.horarios-tipo h3,
+.horarios-tipo p {
+    margin: 0;
+}
+
+.horarios-tipo h2 { font-size: 1.25rem; }
+.horarios-tipo h3 { font-size: 0.9rem; }
+
+.horarios-tipo-icono {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--primario-suave);
+    color: var(--primario);
+}
+
+.horarios-tipo-efectos {
+    flex: 1;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: var(--primario-suave);
+    font-size: 0.9rem;
+}
+
+.horarios-tipo-efectos ul {
+    display: grid;
+    gap: 6px;
+    margin: 8px 0 0;
+    padding-inline-start: 18px;
+}
+
+.horarios-acciones-fila {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.horarios-acciones-fila .boton {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+}
+
+.horarios-acciones-fila .boton[aria-disabled="true"] {
+    color: var(--texto-suave);
+    background: var(--superficie);
+    border-color: var(--borde);
+    cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+    .horarios-tipos { grid-template-columns: minmax(0, 1fr); }
+}
+
+.horario-modal.horario-modal-revision {
+    width: min(820px, calc(100% - 32px));
+}
+
+.horario-modal [data-modal-titulo]:focus {
+    outline: none;
+}
+
+.horario-modal .modal-confirmacion-contenido .feriado-introduccion {
+    margin: 0 0 16px;
+    white-space: normal;
+}
+
+.horario-modal .modal-confirmacion-contenido .error-campo {
+    margin: 6px 0 0;
+    white-space: normal;
+}
+
+.horario-modal .modal-confirmacion-contenido .horario-ayuda {
+    margin: 8px 0 0;
+    white-space: normal;
+}
+
+.horario-modal .modal-confirmacion-contenido .nota-campo {
+    margin-top: 12px;
+    white-space: normal;
+}
+
+.horario-modal .modal-confirmacion-contenido .feriado-conservacion {
+    margin-top: 16px;
+    white-space: normal;
+}
+
+.horario-modal .grupo-campo {
+    margin-bottom: 16px;
+}
+
+.horario-modal .grupo-campo:last-child,
+.horario-modal .horario-franjas {
+    margin-bottom: 0;
+}
+
+.horario-modal .mensaje {
+    margin-bottom: 16px;
+}
+
+.horario-modal .mensaje ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.horario-modal .mensaje .errorlist {
+    padding-left: 0;
+    list-style: none;
+}
+
+.horario-modal .perfil-lista + .mensaje {
+    margin-top: 16px;
+}
+
+.horario-modal .feriado-revision-clases {
+    margin-top: 20px;
+    padding-top: 20px;
+}
+
+.horario-modal .feriado-revision-clases h2,
+.horario-modal .feriado-revision-clases h3 {
+    margin: 0 0 12px;
+    font-family: var(--fuente-titulos);
+    font-size: 1.1rem;
+}
+
+.horario-modal .feriado-revision-clases .tabla-contenedor {
+    border: 1px solid var(--borde);
+    border-radius: 10px;
 }

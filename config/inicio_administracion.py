@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from caja.finanzas import origenes_con_pendiente
 from caja.models import SesionCaja
-from clases.models import Asistencia, Clase, ClaseAlumno, Feriado
+from clases.models import Asistencia, Clase, ClaseAlumno
 from comunicaciones.models import EnvioEmail
 from instalaciones.models import Cancha, Sede, SedeHorario
 from membresias.continuidad import ventana_continuidad
@@ -307,14 +307,6 @@ def _contexto_ocupacion(hoy):
     # Últimas 4 semanas completas (28 días previos a hoy, 4 ocurrencias por cada día de semana).
     desde = hoy - timedelta(days=28)
     hasta = hoy - timedelta(days=1)
-    feriados = set(Feriado.objects.filter(fecha__range=(desde, hasta)).values_list("fecha", flat=True))
-
-    dias_habiles_por_semana = {dia: 0 for dia in range(1, 8)}
-    for desplazamiento in range(28):
-        fecha = desde + timedelta(days=desplazamiento)
-        if fecha not in feriados:
-            dias_habiles_por_semana[fecha.isoweekday()] += 1
-
     sedes = list(Sede.objects.filter(estado=Sede.Estado.ACTIVA).order_by("nombre"))
     canchas_por_sede = dict(
         Cancha.objects.filter(sede__in=sedes, estado=Cancha.Estado.ACTIVA)
@@ -332,8 +324,6 @@ def _contexto_ocupacion(hoy):
 
     hora_min = min(horas_visibles) if horas_visibles else 7
     hora_max = max(horas_visibles) if horas_visibles else 22
-    hora_min = min(hora_min, 7)
-    hora_max = max(hora_max, 22)
     horas_lista = list(range(hora_min, hora_max + 1))
 
     eventos_qs = (
@@ -343,7 +333,6 @@ def _contexto_ocupacion(hoy):
             tipo__in=(Evento.Tipo.CLASE, Evento.Tipo.RESERVA, Evento.Tipo.BLOQUEO),
         )
         .exclude(estado=Evento.Estado.ANULADO)
-        .exclude(turno__fecha__in=feriados)
         .values("turno__cancha__sede_id", "turno__fecha", "turno__hora_inicio", "tipo")
     )
     conteo = {}
@@ -364,14 +353,13 @@ def _contexto_ocupacion(hoy):
         matriz = []
         for dia in range(1, 8):
             abiertas = horarios_sede.get(dia, set())
-            habiles = dias_habiles_por_semana[dia]
             fila_celdas = []
             for hora in horas_lista:
-                if hora not in abiertas or n_canchas == 0 or habiles == 0:
+                if hora not in abiertas or n_canchas == 0:
                     fila_celdas.append({"cerrada": True})
                     continue
                 bucket = conteo.get((sede.pk, dia, hora), {"clases": 0, "reservas": 0, "bloq": 0})
-                capacidad = habiles * n_canchas
+                capacidad = 4 * n_canchas
                 disp = max(0, capacidad - bucket["bloq"])
                 fila_celdas.append({
                     "cerrada": False,

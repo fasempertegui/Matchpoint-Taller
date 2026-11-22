@@ -1,0 +1,16 @@
+<dialog class="modal-confirmacion perfil-modal horario-modal" id="modal-feriado" data-modal-horarios="feriado" aria-labelledby="modal-feriado-titulo">
+    {% include "instalaciones/_modal_feriado_contenido.html" with formulario=formulario_feriado csrf_token=csrf_token only %}
+</dialog>
+<template data-error-carga-feriado>
+    <div class="modal-confirmacion-formulario">
+        <header class="modal-confirmacion-cabecera">
+            <h2 id="modal-feriado-titulo" tabindex="-1" data-modal-titulo>Feriado</h2>
+        </header>
+        <div class="modal-confirmacion-contenido">
+            <p class="mensaje mensaje-error" role="alert"></p>
+        </div>
+        <footer class="modal-confirmacion-acciones">
+            <button class="boton boton-secundario" type="button" data-modal-cerrar>Cerrar</button>
+        </footer>
+    </div>
+</template>

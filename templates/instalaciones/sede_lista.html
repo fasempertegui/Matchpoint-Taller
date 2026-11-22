@@ -2,7 +2,7 @@
 {% load estados %}
 {% load static %}
 
-{% block titulo %}Sedes | Academia TM{% endblock %}
+{% block titulo %}Instalaciones | Academia TM{% endblock %}
 
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/instalaciones.css' %}">{% endblock %}
 
@@ -11,7 +11,7 @@
 {% block contenido %}
 <header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
     <div class="encabezado-fila">
-        <h1>Sedes</h1>
+        <h1>Instalaciones</h1>
         {% if perms.instalaciones.add_sede %}
             <a class="boton boton-primario" href="{% url 'instalaciones:sede_crear' %}">
                 Nueva sede

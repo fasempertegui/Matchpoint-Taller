@@ -35,7 +35,7 @@ def _revisar_desactivacion(sede, canchas, cancha_id):
         turno__cancha__in=canchas, turno__fecha__gte=ahora.date(),
     ).exclude(estado=Evento.Estado.ANULADO).select_related(
         "turno__cancha", "reserva", "clase", "bloqueo",
-    ).prefetch_related("clase__profesores", "clase__alumnos").order_by("turno_id", "pk")
+    ).prefetch_related("clase__profesores", "clase__alumnos", "reserva__invitados").order_by("turno_id", "pk")
     futuros = []
     for evento in eventos:
         turno = evento.turno
@@ -72,7 +72,7 @@ def _revisar_desactivacion(sede, canchas, cancha_id):
     }
 
 
-def _usuarios_de_eventos(eventos):
+def usuarios_de_eventos(eventos):
     usuarios_ids = set()
     for evento in eventos:
         if evento.tipo == Evento.Tipo.CLASE:
@@ -80,7 +80,7 @@ def _usuarios_de_eventos(eventos):
             usuarios_ids.update(v.usuario_id for v in evento.clase.alumnos.all())
         elif evento.tipo == Evento.Tipo.RESERVA:
             usuarios_ids.add(evento.reserva.organizador_id)
-            usuarios_ids.update(evento.reserva.invitados.values_list("usuario_id", flat=True))
+            usuarios_ids.update(invitado.usuario_id for invitado in evento.reserva.invitados.all())
     return usuarios_ids
 
 
@@ -119,7 +119,7 @@ def _cambiar_estado_instalacion(usuario, sede_id, estado, cancha_id=None, confir
         seleccion = _revisar_desactivacion(sede, canchas, cancha_id)
     usuarios_ids = {usuario.pk}
     if seleccion is not None:
-        usuarios_ids.update(_usuarios_de_eventos(seleccion["eventos"]))
+        usuarios_ids.update(usuarios_de_eventos(seleccion["eventos"]))
     usuarios = bloquear_usuarios_clase(usuarios_ids)
     usuario = exigir_administracion_clases(usuarios.get(usuario.pk))
     sede = Sede.objects.select_for_update().get(pk=sede_id)
@@ -139,7 +139,7 @@ def _cambiar_estado_instalacion(usuario, sede_id, estado, cancha_id=None, confir
     turnos = list(Turno.objects.select_for_update().filter(pk__in=turnos_ids).order_by("pk"))
     list(Evento.objects.select_for_update().filter(turno__in=turnos).order_by("pk"))
     previa = _revisar_desactivacion(sede, canchas, cancha_id)
-    if not _usuarios_de_eventos(previa["eventos"]).issubset(usuarios):
+    if not usuarios_de_eventos(previa["eventos"]).issubset(usuarios):
         raise ValidationError("Las actividades cambiaron. Revisá nuevamente la desactivación.")
     if previa["eventos"] or confirmacion is not None:
         _validar_confirmacion(confirmacion, usuario, sede_id, cancha_id, previa["huella"])

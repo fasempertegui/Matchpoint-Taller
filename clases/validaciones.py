@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_eventos, fecha_maxima_feriados
+from instalaciones.horarios import horario_efectivo
 from reservas.models import Evento
 from usuarios.models import Rol
 
@@ -32,14 +33,11 @@ def validar_datos_clase(fecha, hora_inicio, observaciones):
 
 
 def validar_horario_clase(sede, fecha, hora_inicio):
-    horario = sede.horarios.filter(dia_semana=fecha.isoweekday()).first()
-    franjas = []
-    if horario is not None:
-        franjas.append((horario.hora_inicio_1, horario.hora_fin_1))
-        if horario.hora_inicio_2 is not None:
-            franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
+    horario = horario_efectivo(sede, fecha)
+    if horario.feriado:
+        raise ValidationError("No se pueden programar clases en un feriado.")
     hora_fin = (datetime.combine(fecha, hora_inicio) + timedelta(hours=1)).time()
-    if not any(hora_inicio >= inicio and hora_fin <= fin for inicio, fin in franjas):
+    if not horario.contiene(hora_inicio, hora_fin):
         raise ValidationError("La clase debe quedar íntegramente dentro de una franja de funcionamiento de la sede.")
 
 

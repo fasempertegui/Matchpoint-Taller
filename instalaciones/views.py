@@ -155,7 +155,7 @@ def sede_horario_configurar(request, pk, dia=None):
                 estado=Evento.Estado.PROGRAMADO,
                 turno__cancha__sede=sede,
                 turno__fecha__gte=ahora.date(),
-            ).select_related("turno__cancha").order_by("turno__fecha", "turno__hora_inicio", "pk")
+            ).exclude(turno__fecha__in=sede.horarios_especiales.values("fecha")).select_related("turno__cancha").order_by("turno__fecha", "turno__hora_inicio", "pk")
             for evento in actividades:
                 turno = evento.turno
                 fin = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_fin))

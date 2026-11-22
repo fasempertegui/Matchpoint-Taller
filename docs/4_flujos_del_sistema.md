@@ -43,15 +43,15 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Usuarios | FL-05 | Cambiar el estado de un usuario |
 | Usuarios | FL-06 | Registrarse |
 | Usuarios | FL-07 | Asignar o quitar un rol a un usuario |
-| Sedes y canchas | FL-08 | Consultar sedes y canchas |
-| Sedes y canchas | FL-09 | Registrar una sede |
-| Sedes y canchas | FL-10 | Actualizar una sede |
-| Sedes y canchas | FL-11 | Cambiar el estado de una sede |
-| Sedes y canchas | FL-12 | Registrar una cancha |
-| Sedes y canchas | FL-13 | Actualizar una cancha |
-| Sedes y canchas | FL-14 | Cambiar el estado de una cancha |
-| Sedes y canchas | FL-57 | Consultar el horario de funcionamiento de una sede |
-| Sedes y canchas | FL-58 | Configurar el horario de funcionamiento de una sede |
+| Instalaciones | FL-08 | Consultar sedes y canchas |
+| Instalaciones | FL-09 | Registrar una sede |
+| Instalaciones | FL-10 | Actualizar una sede |
+| Instalaciones | FL-11 | Cambiar el estado de una sede |
+| Instalaciones | FL-12 | Registrar una cancha |
+| Instalaciones | FL-13 | Actualizar una cancha |
+| Instalaciones | FL-14 | Cambiar el estado de una cancha |
+| Instalaciones | FL-57 | Consultar el horario de funcionamiento de una sede |
+| Instalaciones | FL-58 | Configurar el horario de funcionamiento de una sede |
 | Planes y membresías | FL-15 | Consultar planes y membresías |
 | Planes y membresías | FL-16 | Registrar un plan o una membresía |
 | Planes y membresías | FL-17 | Actualizar un plan o una membresía |
@@ -63,7 +63,7 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Planilla y generación de clases | FL-24 | Crear un turno de planilla |
 | Planilla y generación de clases | FL-25 | Modificar un turno de planilla |
 | Planilla y generación de clases | FL-26 | Quitar horarios de planilla |
-| Planilla y generación de clases | FL-27 | Registrar o quitar un feriado |
+| Horarios especiales | FL-27 | Gestionar feriados y horarios especiales de sede |
 | Planilla y generación de clases | FL-28 | Generar clases para un período |
 | Agenda | FL-31 | Consultar la agenda diaria |
 | Agenda | FL-33 | Consultar el detalle de una clase |
@@ -362,7 +362,7 @@ flowchart TD
     H -->|No| J[Quitar asignación y conservar historia]
 ```
 
-### 3.3 Sedes y canchas
+### 3.3 Instalaciones
 
 #### FL-08. Consultar sedes y canchas
 
@@ -983,45 +983,29 @@ flowchart TD
     F -->|Sí| H[Eliminar horarios y asignaciones previstas]
 ```
 
-#### FL-27. Registrar o quitar un feriado
+#### FL-27. Gestionar feriados y horarios especiales de sede
 
-- **Objetivo:** registrar una fecha del calendario común de feriados o quitar una existente.
+- **Objetivo:** gestionar el calendario de feriados globales y las franjas de funcionamiento excepcionales de una sede.
 - **Actor:** administrador.
-- **Entradas:** fecha y descripción para registrar; feriado seleccionado para quitar.
+- **Entradas:** fecha y descripción para un feriado. Para un horario especial de sede, sede, fecha, motivo y cierre completo o hasta dos franjas.
 
-Recorrido de registro:
+Recorrido:
 
-1. Valida el acceso, la fecha entre el 01/08/2026 y cinco años calendario después de hoy y la ausencia de otro feriado en esa fecha.
-2. Si la fecha es posterior a hoy, prepara la vista previa de todas las clases Programadas de ese día, incluidas las manuales, en todas las sedes. Informa sus profesores y participantes y el motivo común «Clase anulada por registro de feriado».
-3. El administrador confirma. El sistema coordina la operación con la creación y generación de clases, bloquea los turnos y eventos afectados y vuelve a comprobar el conjunto revisado.
-4. En una única transacción registra el feriado y anula las clases revisadas, conservando asignaciones, actor, momento y motivo. Libera los turnos sin crear bloqueos ni modificar reservas. Si cambian las condiciones, revierte todo y exige revisar nuevamente.
-
-Recorrido de retiro:
-
-1. El administrador selecciona el feriado y confirma quitarlo.
-2. El sistema elimina la fecha del calendario. No reactiva clases Anuladas ni genera clases nuevas.
+1. El administrador abre Horarios especiales desde la barra lateral y elige Feriado u Horario especial de sede. La fecha cumple los límites del calendario y sólo admite un feriado global y un horario especial por sede.
+2. La revisión de un feriado identifica las clases manuales y generadas Programadas cuyo turno todavía no empezó, con profesores y participantes. Las reservas, los bloqueos y las franjas vigentes se conservan.
+3. La revisión de un horario de sede compara las franjas resultantes con los eventos del día. Si un turno en curso quedaría fuera o coincide un feriado con reservas o bloqueos futuros incompatibles, el sistema informa el conflicto y pide resolverlo.
+4. Cuando hay actividades afectadas, el administrador revisa y confirma el alcance. El servidor vuelve a comprobar la ocupación y el inicio de los turnos antes de guardar. Una diferencia exige una nueva revisión.
+5. Guarda el horario o feriado y anula los eventos futuros revisados en una transacción con sus avisos y auditoría. Las reservas afectadas aplican la regla de membresía de la anulación administrativa y conservan sus cobros.
+6. Agenda muestra el horario efectivo y el indicador de horario especial o feriado. La creación manual y la generación de clases excluyen los feriados. En otros días comprueban las franjas efectivas.
 
 Alternativas:
 
-- Registrar un feriado de hoy o pasado no anula ni modifica clases existentes.
-- Generar omite las fechas feriadas. Se admite crear una clase manual después del registro del feriado, respetando disponibilidad y horarios; esa excepción permanece Programada.
-- El feriado no se limita a una sede. Una fecha duplicada se rechaza sin cambios.
+- Si la fecha no tiene eventos afectados, la operación guarda el cambio de calendario sin anulaciones.
+- Desde la fila de cada horario especial, Editar abre el formulario con los datos cargados y Quitar abre la confirmación sobre el listado. Ambas operaciones revisan las franjas vigentes que resultarían del cambio. Quitar un feriado o un horario especial conserva las actividades anuladas.
+- El feriado y el horario especial de una sede pueden coexistir. El feriado suspende clases en todas las sedes y la excepción determina las franjas de esa sede.
 
-Al registrar el feriado, cada clase anulada guarda avisos a profesores y participantes todavía asignados. No asistirá no excluye ese aviso. El feriado y todos los avisos se confirman o revierten juntos; quitar el feriado no envía emails.
-
-- **Resultado:** calendario actualizado y, al registrar una fecha futura, clases revisadas Anuladas con historia preservada.
-- **Datos:** feriados, usuarios y roles del actor, clases, profesores, participantes, eventos, turnos y auditoría.
-
-```mermaid
-flowchart TD
-    A[Seleccionar operación y fecha] --> B{Registrar}
-    B -->|Sí| C[Validar fecha y duplicación]
-    C --> D{Fecha posterior a hoy}
-    D -->|Sí| E[Revisar clases programadas y confirmar]
-    E --> F[Revalidar y registrar feriado con anulaciones atómicas]
-    D -->|No| G[Registrar sin modificar clases]
-    B -->|No| H[Confirmar retiro y quitar feriado sin reactivar clases]
-```
+- **Resultado:** calendario actualizado con aplicación coordinada de las anulaciones y avisos.
+- **Datos:** feriados, horarios de sede, horarios especiales, eventos, turnos, reservas, clases, bloqueos, participantes y auditoría.
 
 
 #### FL-28. Generar clases para un período

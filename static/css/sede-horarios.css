@@ -137,6 +137,13 @@
     margin-bottom: var(--horario-espacio-24);
 }
 
+fieldset.horario-franjas,
+.horario-segunda-controles {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+}
+
 .horario-franja {
     display: grid;
     grid-template-columns: var(--horario-ancho-etiqueta) minmax(0, 1fr);

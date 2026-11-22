@@ -14,12 +14,14 @@ from clases.permisos import exigir_administracion_clases
 from clases.servicios import anular_clase, bloquear_usuarios_clase
 from clases.validaciones import validar_anulacion_clase
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_eventos
+from instalaciones.horarios import horario_efectivo, horarios_del_mes
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Turno
 from reservas.servicios import anular_reserva, validar_anulacion_reserva
 
 
-def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
+def _preparar_operacion_dia(sede, fecha, parametros, *, horarios_mes=None):
+    mensual = horarios_mes is not None
     ahora = timezone.localtime()
     if not mensual and not ahora.date() <= fecha <= fecha_maxima_agenda():
         raise ValidationError("Elegí una fecha desde hoy hasta un año después, inclusive.")
@@ -41,12 +43,8 @@ def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
         raise ValidationError("Elegí un motivo de bloqueo válido.")
 
     corte = time.fromisoformat(parametros["hora_desde"]) if parametros["alcance"] == "desde" else time.min
-    horario = sede.horarios.filter(dia_semana=fecha.isoweekday()).first()
-    franjas = []
-    if horario:
-        franjas.append((horario.hora_inicio_1, horario.hora_fin_1))
-        if horario.hora_inicio_2 is not None:
-            franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
+    horario = horarios_mes[fecha] if mensual else horario_efectivo(sede, fecha)
+    franjas = horario.franjas
     hasta = time.fromisoformat(parametros["hora_hasta"]) if parametros["hora_hasta"] else None
     if hasta and (
         parametros["alcance"] != "desde" or hasta <= corte
@@ -196,17 +194,16 @@ def preparar_operacion(sede, fecha, parametros, fecha_hasta=None):
     fechas = [dia for dia in dias_del_rango if not dias_semana or dia.isoweekday() in dias_semana]
     if not fechas:
         raise ValidationError("Ninguno de los días de la semana elegidos cae dentro del rango.")
+    horarios_mes = horarios_del_mes(sede, fecha)
     if parametros["hora_hasta"]:
         hora_hasta = time.fromisoformat(parametros["hora_hasta"])
-        franjas = []
-        for horario in sede.horarios.all():
-            franjas.append((horario.hora_inicio_1, horario.hora_fin_1))
-            if horario.hora_inicio_2 is not None:
-                franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
-        if not any(inicio < hora_hasta <= fin for inicio, fin in franjas):
+        if not any(
+            inicio < hora_hasta <= fin
+            for horario in horarios_mes.values() for inicio, fin in horario.franjas
+        ):
             raise ValidationError("La hora de fin debe coincidir con el fin de un turno habilitado.")
     dias = [
-        _preparar_operacion_dia(sede, dia, parametros, mensual=True) for dia in fechas
+        _preparar_operacion_dia(sede, dia, parametros, horarios_mes=horarios_mes) for dia in fechas
     ]
     return {
         "acciones": [fila for dia in dias for fila in dia["acciones"]],

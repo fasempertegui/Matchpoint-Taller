@@ -11,6 +11,7 @@ from auditoria.contexto import contexto_auditoria
 from clases.models import Clase
 from clases.servicios import anular_clase, bloquear_usuarios_clase
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_eventos
+from instalaciones.horarios import horario_efectivo
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Reserva, Turno
 from reservas.servicios import anular_reserva, exigir_acceso_reservas
@@ -76,14 +77,9 @@ def registrar_bloqueo(
     if sede.estado != Sede.Estado.ACTIVA or cancha.estado != Cancha.Estado.ACTIVA:
         raise ValidationError("La sede y la cancha deben estar activas para registrar un bloqueo.")
     validar_inicio_bloqueo(fecha, hora, timezone.localtime())
-    horario = sede.horarios.filter(dia_semana=fecha.isoweekday()).first()
-    franjas = []
-    if horario is not None:
-        franjas.append((horario.hora_inicio_1, horario.hora_fin_1))
-        if horario.hora_inicio_2 is not None:
-            franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
+    horario = horario_efectivo(sede, fecha)
     fin = (datetime.combine(fecha, hora) + timedelta(hours=1)).time()
-    if not any(hora >= inicio and fin <= limite for inicio, limite in franjas):
+    if not horario.contiene(hora, fin):
         raise ValidationError("El bloqueo debe estar dentro de una franja de funcionamiento de la sede.")
 
     with contexto_auditoria(registrado_por):

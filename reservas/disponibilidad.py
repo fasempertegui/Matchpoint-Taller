@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
+from instalaciones.horarios import horario_efectivo
 from instalaciones.models import Cancha, Sede
 
 from .models import Evento, Turno
@@ -28,12 +29,7 @@ def consultar_disponibilidad(cancha, fecha, *, requiere_tarifa=True):
     if requiere_tarifa and precio is None:
         raise ValidationError("La sede necesita un precio por turno configurado para ofrecer turnos.")
 
-    horario = sede.horarios.filter(dia_semana=fecha.isoweekday()).first()
-    franjas = []
-    if horario is not None:
-        franjas.append((horario.hora_inicio_1, horario.hora_fin_1))
-        if horario.hora_inicio_2 is not None:
-            franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
+    franjas = horario_efectivo(sede, fecha).franjas
 
     inicios_habilitados = [
         time(hora)

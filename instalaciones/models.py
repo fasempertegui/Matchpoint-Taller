@@ -7,8 +7,50 @@ from django.db import models
 from django.db.models.functions import Lower
 from django.db.models.lookups import GreaterThanOrEqual
 
+from common.fechas import FECHA_INICIO_OPERACIONES
+
 
 HORAS_EN_PUNTO = tuple(time(hora) for hora in range(24))
+
+
+def _validar_franjas_horarias(hora_inicio_1, hora_fin_1, hora_inicio_2, hora_fin_2):
+    errores = {}
+    if hora_inicio_1 is None:
+        errores["hora_inicio_1"] = "Indicá el inicio de la primera franja."
+    if hora_fin_1 is None:
+        errores["hora_fin_1"] = "Indicá el fin de la primera franja."
+    if (
+        hora_inicio_1 is not None
+        and hora_fin_1 is not None
+        and hora_fin_1 <= hora_inicio_1
+    ):
+        errores["hora_fin_1"] = "El fin debe ser posterior al inicio."
+
+    if hora_inicio_2 is None and hora_fin_2 is not None:
+        errores["hora_inicio_2"] = "Indicá el inicio de la segunda franja."
+    if hora_fin_2 is None and hora_inicio_2 is not None:
+        errores["hora_fin_2"] = "Indicá el fin de la segunda franja."
+    if hora_inicio_2 is not None and hora_fin_2 is not None:
+        if hora_fin_2 <= hora_inicio_2:
+            errores["hora_fin_2"] = "El fin debe ser posterior al inicio."
+        if hora_fin_1 is not None:
+            fin_primera = datetime.combine(date.min, hora_fin_1)
+            inicio_segunda = datetime.combine(date.min, hora_inicio_2)
+            if inicio_segunda - fin_primera < timedelta(hours=1):
+                errores["hora_inicio_2"] = (
+                    "La segunda franja debe comenzar al menos una hora después de terminar la primera."
+                )
+
+    for nombre, hora in (
+        ("hora_inicio_1", hora_inicio_1),
+        ("hora_fin_1", hora_fin_1),
+        ("hora_inicio_2", hora_inicio_2),
+        ("hora_fin_2", hora_fin_2),
+    ):
+        if hora is not None and hora not in HORAS_EN_PUNTO:
+            errores[nombre] = "Ingresá una hora en punto, por ejemplo 09:00."
+
+    return errores
 
 
 class Sede(models.Model):
@@ -198,37 +240,155 @@ class SedeHorario(models.Model):
         if all(hora is None for hora in horas):
             return
 
-        errores = {}
-        if self.hora_inicio_1 is None:
-            errores["hora_inicio_1"] = "Indicá el inicio de la primera franja."
-        if self.hora_fin_1 is None:
-            errores["hora_fin_1"] = "Indicá el fin de la primera franja."
-        if (
-            self.hora_inicio_1 is not None
-            and self.hora_fin_1 is not None
-            and self.hora_fin_1 <= self.hora_inicio_1
-        ):
-            errores["hora_fin_1"] = "El fin debe ser posterior al inicio."
+        errores = _validar_franjas_horarias(*horas)
+        if errores:
+            raise ValidationError(errores)
 
-        if self.hora_inicio_2 is None and self.hora_fin_2 is not None:
-            errores["hora_inicio_2"] = "Indicá el inicio de la segunda franja."
-        if self.hora_fin_2 is None and self.hora_inicio_2 is not None:
-            errores["hora_fin_2"] = "Indicá el fin de la segunda franja."
-        if self.hora_inicio_2 is not None and self.hora_fin_2 is not None:
-            if self.hora_fin_2 <= self.hora_inicio_2:
-                errores["hora_fin_2"] = "El fin debe ser posterior al inicio."
-            if self.hora_fin_1 is not None:
-                fin_primera = datetime.combine(date.min, self.hora_fin_1)
-                inicio_segunda = datetime.combine(date.min, self.hora_inicio_2)
-                if inicio_segunda - fin_primera < timedelta(hours=1):
-                    errores["hora_inicio_2"] = (
-                        "La segunda franja debe comenzar al menos una hora después de terminar la primera."
+
+class SedeHorarioEspecial(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    sede = models.ForeignKey(
+        Sede,
+        on_delete=models.PROTECT,
+        related_name="horarios_especiales",
+    )
+    fecha = models.DateField()
+    motivo = models.CharField(max_length=150)
+    cerrada = models.BooleanField(default=False)
+    hora_inicio_1 = models.TimeField("Inicio de la primera franja", blank=True, null=True)
+    hora_fin_1 = models.TimeField("Fin de la primera franja", blank=True, null=True)
+    hora_inicio_2 = models.TimeField("Inicio de la segunda franja", blank=True, null=True)
+    hora_fin_2 = models.TimeField("Fin de la segunda franja", blank=True, null=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "sedes_horarios_especiales"
+        ordering = ("fecha", "sede__nombre")
+        default_permissions = ()
+        constraints = [
+            models.UniqueConstraint(
+                fields=("sede", "fecha"),
+                name="sede_horario_especial_sede_fecha_unico",
+                violation_error_message="Ya existe un horario especial para esta sede en esa fecha.",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(fecha__gte=FECHA_INICIO_OPERACIONES),
+                name="sede_horario_especial_fecha_operativa",
+                violation_error_message=(
+                    f"La fecha no puede ser anterior al {FECHA_INICIO_OPERACIONES:%d/%m/%Y}."
+                ),
+            ),
+            models.CheckConstraint(
+                condition=models.Q(motivo__regex=r"\S"),
+                name="sede_horario_especial_motivo_informado",
+                violation_error_message="Indicá el motivo del horario especial.",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        cerrada=True,
+                        hora_inicio_1__isnull=True,
+                        hora_fin_1__isnull=True,
+                        hora_inicio_2__isnull=True,
+                        hora_fin_2__isnull=True,
                     )
+                    | models.Q(
+                        cerrada=False,
+                        hora_inicio_1__isnull=False,
+                        hora_fin_1__isnull=False,
+                    )
+                ),
+                name="sede_horario_especial_estado_franjas",
+                violation_error_message=(
+                    "Si la sede está cerrada no debe tener franjas; "
+                    "si está abierta debe tener al menos la primera franja."
+                ),
+            ),
+            models.CheckConstraint(
+                condition=(
+                    (
+                        models.Q(hora_inicio_1__isnull=True)
+                        | models.Q(hora_inicio_1__in=HORAS_EN_PUNTO)
+                    )
+                    & (
+                        models.Q(hora_fin_1__isnull=True)
+                        | models.Q(hora_fin_1__in=HORAS_EN_PUNTO)
+                    )
+                    & (
+                        models.Q(hora_inicio_2__isnull=True)
+                        | models.Q(hora_inicio_2__in=HORAS_EN_PUNTO)
+                    )
+                    & (
+                        models.Q(hora_fin_2__isnull=True)
+                        | models.Q(hora_fin_2__in=HORAS_EN_PUNTO)
+                    )
+                ),
+                name="sede_horario_especial_horas_en_punto",
+                violation_error_message="Los horarios deben ser en punto.",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(hora_inicio_1__isnull=True)
+                    | models.Q(hora_fin_1__gt=models.F("hora_inicio_1"))
+                ),
+                name="sede_horario_especial_primera_franja_valida",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(hora_inicio_2__isnull=True, hora_fin_2__isnull=True)
+                    | models.Q(hora_inicio_2__isnull=False, hora_fin_2__isnull=False)
+                ),
+                name="sede_horario_especial_segunda_franja_completa",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(hora_inicio_2__isnull=True)
+                    | models.Q(hora_fin_2__gt=models.F("hora_inicio_2"))
+                ),
+                name="sede_horario_especial_segunda_franja_valida",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(hora_inicio_2__isnull=True)
+                    | GreaterThanOrEqual(
+                        models.F("hora_inicio_2") - models.F("hora_fin_1"),
+                        models.Value(timedelta(hours=1)),
+                    )
+                ),
+                name="sede_horario_especial_pausa_minima",
+                violation_error_message="Debe haber al menos una hora sin funcionamiento entre las dos franjas.",
+            ),
+        ]
+        verbose_name = "horario especial de sede"
+        verbose_name_plural = "horarios especiales de sede"
 
-        for nombre in ("hora_inicio_1", "hora_fin_1", "hora_inicio_2", "hora_fin_2"):
-            hora = getattr(self, nombre)
-            if hora is not None and hora not in HORAS_EN_PUNTO:
-                errores[nombre] = "Ingresá una hora en punto, por ejemplo 09:00."
+    def __str__(self):
+        return f"{self.sede} - {self.fecha:%d/%m/%Y}"
+
+    def clean(self):
+        super().clean()
+        errores = {}
+        if self.fecha is not None and self.fecha < FECHA_INICIO_OPERACIONES:
+            errores["fecha"] = (
+                f"La fecha no puede ser anterior al {FECHA_INICIO_OPERACIONES:%d/%m/%Y}."
+            )
+        if self.motivo is not None and not self.motivo.strip():
+            errores["motivo"] = "Indicá el motivo del horario especial."
+
+        if self.cerrada:
+            for nombre in ("hora_inicio_1", "hora_fin_1", "hora_inicio_2", "hora_fin_2"):
+                if getattr(self, nombre) is not None:
+                    errores[nombre] = "No podés cargar horarios si la sede está cerrada."
+        else:
+            errores.update(
+                _validar_franjas_horarias(
+                    self.hora_inicio_1,
+                    self.hora_fin_1,
+                    self.hora_inicio_2,
+                    self.hora_fin_2,
+                )
+            )
 
         if errores:
             raise ValidationError(errores)

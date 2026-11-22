@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}Quitar horario especial | Academia TM{% endblock %}
+
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
+<link rel="stylesheet" href="{% static 'css/feriado-formulario.css' %}">
+{% endblock %}
+
+{% block contenido %}
+<div class="feriado-formulario">
+    <section class="tarjeta tarjeta-formulario formulario-guiado">
+        <form method="post" aria-labelledby="quitar-horario-titulo">
+            {% csrf_token %}
+            <input type="hidden" name="confirmacion" value="{{ revision.confirmacion|default:'' }}">
+            <h1 id="quitar-horario-titulo">Quitar horario especial</h1>
+            <p class="feriado-introduccion">Al quitar este horario especial, la sede volverá a regirse por su horario habitual para esa fecha.</p>
+
+            <dl class="perfil-lista">
+                <div class="perfil-fila"><dt>Sede</dt><dd>{{ horario.sede.nombre }}</dd></div>
+                <div class="perfil-fila"><dt>Fecha</dt><dd>{{ horario.fecha|date:"d/m/Y" }}</dd></div>
+                <div class="perfil-fila"><dt>Motivo</dt><dd>{{ horario.motivo }}</dd></div>
+                <div class="perfil-fila">
+                    <dt>Horario</dt>
+                    <dd>
+                        {% if horario.cerrada %}
+                            Sede cerrada todo el día
+                        {% else %}
+                            {{ horario.hora_inicio_1|time:"H:i" }} a {{ horario.hora_fin_1|time:"H:i" }}
+                            {% if horario.hora_inicio_2 %}
+                                y {{ horario.hora_inicio_2|time:"H:i" }} a {{ horario.hora_fin_2|time:"H:i" }}
+                            {% endif %}
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+
+            {% if revision.conflictos %}
+                <div class="mensaje mensaje-error" role="alert">
+                    <ul>
+                        {% for conflicto in revision.conflictos %}
+                            <li>{{ conflicto }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {% if revision.eventos %}
+                {% include "instalaciones/_horario_especial_actividades.html" with eventos=revision.eventos only %}
+            {% endif %}
+
+            <div class="acciones-formulario">
+                {% if not revision.conflictos and revision.confirmacion %}
+                    <button class="boton boton-confirmar-peligro" type="submit">{% if revision.eventos %}Quitar y anular actividades{% else %}Quitar horario especial{% endif %}</button>
+                {% endif %}
+                <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

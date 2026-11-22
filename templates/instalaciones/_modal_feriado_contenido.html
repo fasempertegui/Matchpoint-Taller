@@ -1,0 +1,87 @@
+<form class="modal-confirmacion-formulario" method="post" action="{% if quitar %}{% url 'instalaciones:feriado_quitar' feriado.pk %}{% else %}{% url 'instalaciones:feriado_crear' %}{% endif %}" data-modal-formulario novalidate>
+    {% csrf_token %}
+    <header class="modal-confirmacion-cabecera">
+        <h2 id="modal-feriado-titulo" tabindex="-1" data-modal-titulo>{% if quitar %}Quitar feriado{% elif revision %}Revisar feriado{% else %}Registrar feriado{% endif %}</h2>
+    </header>
+    <div class="modal-confirmacion-contenido">
+        <div class="mensaje mensaje-error" data-modal-error-general role="alert" hidden></div>
+        {% if formulario.non_field_errors %}
+            <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+        {% endif %}
+
+        {% if errores_quitar %}
+            <ul class="mensaje mensaje-error" role="alert">
+                {% for error in errores_quitar %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if quitar %}
+            <p class="feriado-introduccion">Las clases Anuladas no se reactivan y no se generan clases nuevas.</p>
+            <dl class="perfil-lista">
+                <div class="perfil-fila"><dt>Fecha</dt><dd>{{ feriado.fecha|date:"d/m/Y" }}</dd></div>
+                <div class="perfil-fila"><dt>Descripción</dt><dd>{{ feriado.descripcion }}</dd></div>
+            </dl>
+        {% elif revision %}
+            <input type="hidden" name="fecha" value="{{ revision.fecha|date:'Y-m-d' }}">
+            <input type="hidden" name="descripcion" value="{{ revision.descripcion }}">
+            <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+            <dl class="perfil-lista">
+                <div class="perfil-fila"><dt>Fecha</dt><dd>{{ revision.fecha|date:"d/m/Y" }}</dd></div>
+                <div class="perfil-fila"><dt>Descripción</dt><dd>{{ revision.descripcion }}</dd></div>
+            </dl>
+            <section class="feriado-revision-clases" aria-labelledby="modal-feriado-clases-titulo">
+                <h3 id="modal-feriado-clases-titulo">Clases que se anularán ({{ clases|length }})</h3>
+                <p class="nota-campo feriado-advertencia">Se anularán las clases de esta lista, incluidas las creadas manualmente, con el motivo «Clase anulada por registro de feriado». Sus turnos quedarán libres y se conservarán sus asignaciones e historia.</p>
+                <div class="tabla-contenedor">
+                    <table>
+                        <caption class="clase-etiqueta-oculta">Clases que se anularán el {{ revision.fecha|date:"d/m/Y" }} en todas las sedes</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Sede y cancha</th>
+                                <th scope="col">Horario</th>
+                                <th scope="col">Profesores</th>
+                                <th scope="col">Participantes</th>
+                                <th scope="col">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for clase in clases %}
+                                <tr>
+                                    <td>{{ clase.sede }} → {{ clase.cancha }}</td>
+                                    <td>{{ clase.hora|time:"H:i" }} a {{ clase.hora_fin|time:"H:i" }}</td>
+                                    <td>{{ clase.profesores|join:", "|default:"—" }}</td>
+                                    <td>{{ clase.participantes|join:", "|default:"—" }}</td>
+                                    <td><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' clase.id %}">Ver clase</a></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="feriado-conservacion">Las reservas y los bloqueos se conservan.</p>
+            </section>
+        {% else %}
+            {% for campo in formulario %}
+                <div class="grupo-campo">
+                    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                    {{ campo }}
+                    {% if campo.errors %}
+                        <div id="{{ campo.id_for_label }}_errores">
+                            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <footer class="modal-confirmacion-acciones">
+        {% if quitar %}
+            <button class="boton boton-confirmar-peligro" type="submit">Quitar feriado</button>
+        {% elif revision %}
+            <button class="boton boton-confirmar-peligro" name="paso" value="confirmar" type="submit">Registrar feriado y anular clases</button>
+            <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a editar</button>
+        {% else %}
+            <button class="boton boton-primario" name="paso" value="revisar" type="submit">Registrar feriado</button>
+        {% endif %}
+        <button class="boton boton-secundario" type="button" data-modal-cerrar>Cancelar</button>
+    </footer>
+</form>

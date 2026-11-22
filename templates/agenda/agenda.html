@@ -54,7 +54,9 @@
 
     {% if agenda %}
         <div class="agenda-titulo-fecha">
-            <h2>{{ agenda.fecha|date:"l d/m/Y"|capfirst }}{% if agenda.feriado %}<span class="etiqueta">Feriado: {{ agenda.feriado.descripcion }}</span>{% endif %}</h2>
+            <h2>{{ agenda.fecha|date:"l d/m/Y"|capfirst }}{% if agenda.feriado %}<span class="etiqueta">Feriado: {{ agenda.feriado.descripcion }}</span>{% endif %}
+                {% if agenda.horario_especial %}<span class="etiqueta">{% if agenda.horario_especial.cerrada %}Sede cerrada{% else %}Horario especial: {{ agenda.horario_especial.hora_inicio_1|time:"H:i" }}–{{ agenda.horario_especial.hora_fin_1|time:"H:i" }}{% if agenda.horario_especial.hora_inicio_2 %}, {{ agenda.horario_especial.hora_inicio_2|time:"H:i" }}–{{ agenda.horario_especial.hora_fin_2|time:"H:i" }}{% endif %}{% endif %}</span>{% endif %}
+            </h2>
             {% if agenda.sede.estado == 'inactiva' %}<span class="texto-secundario">Sede inactiva</span>{% endif %}
         </div>
         <div class="agenda-distribucion">

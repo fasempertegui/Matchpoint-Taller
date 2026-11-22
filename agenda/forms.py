@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from bloqueos.models import Bloqueo
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_eventos, opciones_meses_agenda
+from instalaciones.horarios import horario_efectivo, horarios_del_mes
 from instalaciones.models import Cancha, Sede
 from usuarios.models import Rol, Usuario
 
@@ -167,17 +168,12 @@ class AgendaOperacionForm(forms.Form):
             self.fields["operacion"].choices = (("liberar", "Anular y liberar"),)
             self.fields["operacion"].initial = "liberar"
         ahora = timezone.localtime()
-        horario = sede.horarios.filter(dia_semana=fecha.isoweekday()).first()
-        franjas = []
-        if horario is not None:
-            franjas.append((horario.hora_inicio_1, horario.hora_fin_1))
-            if horario.hora_inicio_2 is not None:
-                franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
+        horario = horario_efectivo(sede, fecha)
         self.fields["horario"].choices = [("dia", "Día completo")] + [
             (f"{hora:02d}:00", f"Desde las {hora:02d}:00")
             for hora in range(23)
             if timezone.make_aware(datetime.combine(fecha, time(hora))) > ahora
-            and any(time(hora) >= inicio and time(hora + 1) <= fin for inicio, fin in franjas)
+            and horario.contiene(time(hora), time(hora + 1))
         ]
         desde = self.data.get("horario", "dia")
         inicios = {valor for valor, _ in self.fields["horario"].choices if valor != "dia"}
@@ -303,15 +299,11 @@ class AgendaOperacionMesForm(AgendaOperacionForm):
         self.fields.pop("motivo_bloqueo")
         self.fields.pop("observaciones")
         self.fields["motivo_anulacion"].widget = forms.TextInput(attrs={"class": "form-control"})
-        horas = set()
-        for horario in sede.horarios.all():
-            franjas = [(horario.hora_inicio_1, horario.hora_fin_1)]
-            if horario.hora_inicio_2 is not None:
-                franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
-            horas.update(
-                hora for hora in range(23)
-                if any(time(hora) >= inicio and time(hora + 1) <= fin for inicio, fin in franjas)
-            )
+        horas = {
+            hora for horario in horarios_del_mes(sede, fecha).values()
+            for inicio, fin in horario.franjas
+            for hora in range(inicio.hour, fin.hour)
+        }
         self.fields["horario"].choices = [("dia", "Día completo")] + [
             (f"{hora:02d}:00", f"Desde las {hora:02d}:00") for hora in sorted(horas)
         ]

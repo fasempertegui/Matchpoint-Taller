@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}Horarios especiales | Academia TM{% endblock %}
+
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
+<link rel="stylesheet" href="{% static 'css/sede-horarios.css' %}">
+<link rel="stylesheet" href="{% static 'css/clases.css' %}">
+<link rel="stylesheet" href="{% static 'css/feriado-formulario.css' %}">
+{% endblock %}
+
+{% block clase_contenido %}contenido-feriados{% endblock %}
+
+{% block contenido %}
+<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-reticula">
+    <h1>Horarios especiales</h1>
+    <p class="encabezado-descripcion">Administrá los feriados y los horarios particulares.</p>
+</header>
+
+<div class="horarios-tipos">
+    <section class="tarjeta horarios-tipo" aria-labelledby="tipo-feriado-titulo">
+        <header>
+            <span class="horarios-tipo-icono">
+                <svg class="sidebar-icono" aria-hidden="true" width="24" height="24"><use href="{% static 'img/navegacion.svg' %}#calendario"/></svg>
+            </span>
+            <div>
+                <h2 id="tipo-feriado-titulo">Feriado</h2>
+                <span class="badge badge-neutro">Todas las sedes</span>
+            </div>
+        </header>
+        <p>Suspende las clases en una fecha para toda la academia</p>
+        <button class="boton boton-primario" type="button" data-abrir-modal="feriado" aria-haspopup="dialog" aria-controls="modal-feriado">Nuevo feriado</button>
+    </section>
+    <section class="tarjeta horarios-tipo" aria-labelledby="tipo-horario-titulo">
+        <header>
+            <span class="horarios-tipo-icono">
+                <svg class="sidebar-icono" aria-hidden="true" width="24" height="24"><use href="{% static 'img/navegacion.svg' %}#reloj"/></svg>
+            </span>
+            <div>
+                <h2 id="tipo-horario-titulo">Horario especial</h2>
+                <span class="badge badge-neutro">Una sede</span>
+            </div>
+        </header>
+        <p>Sobrescribe el horario de una sede para una fecha específica</p>
+        <button class="boton boton-primario" type="button" data-abrir-modal="horario-especial" aria-haspopup="dialog" aria-controls="modal-horario-especial">Nuevo horario especial</button>
+    </section>
+</div>
+
+<details class="tarjeta horarios-filtros"{% if parametros %} open{% endif %}>
+    <summary>
+        {% include "componentes/iconoir/chevron-abajo.html" %}
+        Filtros
+    </summary>
+    <form method="get" action="{% url 'instalaciones:horarios_especiales' %}" class="tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
+        <div class="grupo-campo horarios-filtro-busqueda">
+            <label for="buscar-horarios">Buscar</label>
+            <div class="horarios-buscador">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 4 4"/></svg>
+                <input class="form-control" type="search" id="buscar-horarios" name="q" value="{{ busqueda }}" placeholder="Navidad, aniversario…">
+            </div>
+        </div>
+        <div class="grupo-campo horarios-filtro-sede">
+            <label for="sede">Sede</label>
+            <select class="form-control" name="sede" id="sede">
+                <option value="">Todas las sedes</option>
+                {% for sede in sedes %}
+                    <option value="{{ sede.pk }}" {% if sede.pk == sede_actual %}selected{% endif %}>{{ sede.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <fieldset class="horarios-filtro-tipo">
+            <legend>Tipo</legend>
+            <div class="horarios-tipos-opciones">
+                {% for valor, etiqueta in tipos %}
+                    <label>
+                        <input type="radio" name="tipo" value="{{ valor }}"{% if valor == tipo_actual %} checked{% endif %}>
+                        <span class="horarios-tipo-opcion">{{ etiqueta }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+        <div class="filtros-acciones">
+            <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}" data-limpiar-filtros>Limpiar filtros</a>
+        </div>
+    </form>
+</details>
+
+<section class="tarjeta feriados-lista">
+    {% if pagina %}
+        <div class="tabla-contenedor tabla-listado">
+            <table>
+                <caption class="clase-etiqueta-oculta">Feriados globales y horarios particulares por sede</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Alcance</th>
+                        <th scope="col">Horario</th>
+                        <th scope="col">Motivo</th>
+                        <th scope="col" class="acciones-columna">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in pagina %}
+                        <tr>
+                            <td><strong>{{ item.fecha|date:"d/m/Y" }}</strong></td>
+                            <td>
+                                {% if item.tipo == "feriado" %}
+                                    <span class="badge badge-neutro">Todas las sedes</span>
+                                {% else %}
+                                    {{ item.alcance }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.tipo == "feriado" %}
+                                    Feriado
+                                {% elif item.cerrada %}
+                                    Cerrada
+                                {% else %}
+                                    {{ item.horario.hora_inicio_1|time:"H:i" }} a {{ item.horario.hora_fin_1|time:"H:i" }}
+                                    {% if item.horario.hora_inicio_2 %}
+                                        <br>{{ item.horario.hora_inicio_2|time:"H:i" }} a {{ item.horario.hora_fin_2|time:"H:i" }}
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>{{ item.motivo }}</td>
+                            <td>
+                                <div class="horarios-acciones-fila">
+                                    {% if item.tipo == "particular" %}
+                                        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horario_especial_editar' item.id %}" data-modal-horario-fila aria-haspopup="dialog" aria-controls="modal-horario-especial" aria-label="Editar horario de {{ item.alcance }} del {{ item.fecha|date:'d/m/Y' }}" title="Editar horario">
+                                            {% include "instalaciones/_icono_editar.html" %}
+                                        </a>
+                                        <a class="boton boton-peligro boton-chico" href="{% url 'instalaciones:horario_especial_quitar' item.id %}" data-modal-horario-fila aria-haspopup="dialog" aria-controls="modal-horario-especial" aria-label="Quitar horario de {{ item.alcance }} del {{ item.fecha|date:'d/m/Y' }}" title="Quitar horario">
+                                    {% else %}
+                                        <button class="boton boton-secundario boton-chico" type="button" aria-disabled="true" aria-label="Editar feriado" data-tooltip="Los feriados no se pueden editar.">
+                                            {% include "instalaciones/_icono_editar.html" %}
+                                        </button>
+                                        <a class="boton boton-peligro boton-chico" href="{% url 'instalaciones:feriado_quitar' item.id %}" data-modal-feriado-fila aria-haspopup="dialog" aria-controls="modal-feriado" aria-label="Quitar feriado del {{ item.fecha|date:'d/m/Y' }}" title="Quitar feriado">
+                                    {% endif %}
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6m5 4v7m4-7v7"/></svg>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "componentes/paginacion.html" with pagina=pagina entidad="horarios especiales" parametros=parametros only %}
+    {% else %}
+        <p class="estado-vacio">{% if parametros %}No hay resultados para los filtros seleccionados.{% else %}No hay horarios especiales ni feriados registrados.{% endif %}</p>
+    {% endif %}
+</section>
+{% include "instalaciones/_modal_feriado.html" %}
+{% include "instalaciones/_modal_horario_especial.html" %}
+<script src="{% static 'js/filtros.js' %}" defer></script>
+<script src="{% static 'js/horarios-especiales-modales.js' %}" defer></script>
+{% endblock %}

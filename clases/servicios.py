@@ -17,7 +17,7 @@ from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, Reserva, Turno
 from usuarios.models import Rol, Usuario
 
-from .models import Asistencia, Clase, ClaseAlumno, ClaseProfesor, Feriado
+from .models import Asistencia, Clase, ClaseAlumno, ClaseProfesor
 from .permisos import exigir_acceso_clases, exigir_administracion_clases, puede_dictar_clase
 from .validaciones import (
     normalizar_registros_asistencia,
@@ -98,9 +98,6 @@ def _revision_registro_clase(
             usuarios, profesores_ids | participantes_ids, fecha, hora_inicio,
         ),
     }
-    feriado = Feriado.objects.filter(fecha=fecha).first()
-    if feriado is not None:
-        datos["advertencias"].insert(0, f"La fecha es feriado ({feriado.descripcion}). La clase se creará como una excepción manual.")
     return datos
 
 
@@ -333,6 +330,8 @@ def editar_clase(
     )
     usuarios = bloquear_usuarios_clase(usuarios_ids)
     modificado_por = exigir_administracion_clases(usuarios.get(modificado_por.pk))
+    if cambia_cancha:
+        bloquear_calendario_clases(origen.fecha)
 
     sedes = {
         sede.pk: sede

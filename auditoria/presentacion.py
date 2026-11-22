@@ -13,7 +13,7 @@ from clases.models import (
     Asistencia, Clase, ClaseAlumno, ClaseProfesor, Feriado, TurnoPlanilla,
     TurnoPlanillaAlumno, TurnoPlanillaProfesor,
 )
-from instalaciones.models import Cancha, Sede, SedeHorario
+from instalaciones.models import Cancha, Sede, SedeHorario, SedeHorarioEspecial
 from comunicaciones.models import ConfiguracionNotificaciones
 from membresias.models import AjusteHorasMembresia, Membresia, MembresiaUsuario, Plan, PlanUsuario
 from reservas.models import Evento, Reserva, ReservaInvitado, Turno
@@ -33,12 +33,13 @@ TIPOS_REGISTRO = {
     "sedes": (Sede, "Sede", (), "instalaciones:sede_detalle"),
     "canchas": (Cancha, "Cancha", ("sede",), None),
     "sedes_horarios": (SedeHorario, "Horario de sede", ("sede",), None),
+    "sedes_horarios_especiales": (SedeHorarioEspecial, "Horario especial de sede", ("sede",), None),
     "turnos": (Turno, "Turno", ("cancha__sede",), None),
     "eventos": (Evento, "Evento", ("clase", "reserva", "bloqueo"), None),
     "reservas_invitados": (ReservaInvitado, "Invitación de reserva", ("reserva", "usuario"), None),
     "reservas": (Reserva, "Reserva", (), "reservas:reserva_detalle"),
     "bloqueos": (Bloqueo, "Bloqueo", (), "agenda:bloqueo_detalle"),
-    "feriados": (Feriado, "Feriado", (), "clases:feriado_detalle"),
+    "feriados": (Feriado, "Feriado", (), None),
     "turnos_planilla": (TurnoPlanilla, "Turno de planilla", (), "clases:planilla_detalle"),
     "turnos_planilla_profesores": (
         TurnoPlanillaProfesor, "Profesor de planilla", ("turno_planilla", "profesor"), None,
@@ -88,6 +89,8 @@ def _referencia_breve(objeto):
         return f"{objeto.nombre} · {_relacion(objeto, 'sede')}"
     if isinstance(objeto, SedeHorario):
         return f"{_relacion(objeto, 'sede')} · {objeto.get_dia_semana_display()}"
+    if isinstance(objeto, SedeHorarioEspecial):
+        return f"{_relacion(objeto, 'sede')} · {objeto.fecha:%d/%m/%Y}"
     if isinstance(objeto, Evento):
         try:
             actividad = getattr(objeto, objeto.tipo)

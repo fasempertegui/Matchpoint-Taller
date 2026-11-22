@@ -816,13 +816,30 @@ Conserva acuerdos de importe de reservas y contrataciones, separados de las tari
 
 El último ajuste, ordenado por fecha e identificador, fija el importe acordado hasta otro ajuste, incluso ante cambios de invitados de una reserva. El servicio exige origen no Anulado con importe por cubrir, revisión firmada vigente y bloqueo común de personas y origen. Conserva importes anteriores y nuevos sin generar dinero ni modificar tarifas aplicadas o catálogo. Un trigger impide UPDATE, DELETE y TRUNCATE; otro ajuste sólo se admite mientras quede importe por cubrir. Participa del trigger común de auditoría y las altas conservan su evidencia en la propia tabla. Detalles, comprobantes y reportes usan este importe y el historial se pagina de a 25 registros. La confirmación guarda un aviso de tipo `ajuste_importe` para el titular dentro de la misma transacción, sin duplicarlo al reenviar.
 
+### 4.34 `sedes_horarios_especiales`
+
+Define el horario efectivo de una sede para una fecha puntual.
+
+| Clave | Columna | Tipo de dato | Regla |
+|---|---|---|---|
+| PK | `id` | `bigint` identity | Identificador del horario especial |
+| FK | `sede_id` | `bigint` | Obligatorio y protegido |
+| | `fecha` | `date` | Desde el inicio de operaciones. Única por sede |
+| | `motivo` | `varchar(150)` | Texto obligatorio |
+| | `cerrada` | `boolean` | Indica cierre completo |
+| | `hora_inicio_1`, `hora_fin_1` | `time` | Obligatorias para una sede abierta |
+| | `hora_inicio_2`, `hora_fin_2` | `time` | Segunda franja opcional |
+| | `creado_en`, `actualizado_en` | `timestamptz` | Momentos asignados por el servidor |
+
+Un cierre completo deja las cuatro horas vacías. Las franjas abiertas usan horas en punto, cierre posterior a apertura y una pausa de al menos una hora si hay dos franjas. El horario especial prevalece sobre `sedes_horarios` en su sede y fecha. El feriado global conserva su propia regla de clases y puede coincidir con cualquier horario especial. Las modificaciones y eliminaciones participan del trigger común de auditoría.
+
 ## 5. Dependencias referenciales y eliminación
 
 - Las referencias a usuarios, sedes, canchas, productos y contrataciones protegen los registros que tienen datos dependientes. Cada contratación referencia obligatoriamente a su usuario y producto.
 - `usuarios_roles` utiliza cascada desde `usuarios`; `rol_id` protege el registro del catálogo mientras tenga asignaciones.
 - `notificaciones.destinatario_id` utiliza cascada desde `usuarios`; la bandeja pertenece a su titular y no condiciona la persistencia técnica de los emails.
 - `turnos_planilla_profesores` y `turnos_planilla_alumnos` utilizan cascada desde `turnos_planilla`.
-- `sedes_horarios.sede_id` protege la sede mientras tenga horarios registrados.
+- `sedes_horarios.sede_id` y `sedes_horarios_especiales.sede_id` protegen la sede mientras tenga horarios registrados.
 - Las clases concretas son independientes de las celdas de planilla. Eliminar una celda no modifica las clases ni su indicador de origen.
 - `eventos.turno_id` protege al turno. Las especializaciones `reservas`, `clases` y `bloqueos` protegen su evento.
 - Las relaciones de invitados protegen reserva, usuario y contratación aplicada; quitar un invitado elimina la relación y conserva su historia en auditoría, mientras que rechazar conserva la relación con su respuesta. Agregar nuevamente un participante crea una identidad nueva y respuesta Asistirá.

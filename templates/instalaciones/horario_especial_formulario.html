@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}
+{% if revision %}Revisar horario especial{% elif es_edicion %}Editar horario especial{% else %}Nuevo horario especial{% endif %} | Academia TM
+{% endblock %}
+
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
+<link rel="stylesheet" href="{% static 'css/sede-horarios.css' %}">
+<link rel="stylesheet" href="{% static 'css/feriado-formulario.css' %}">
+{% endblock %}
+
+{% block contenido %}
+<div class="horarios-pagina feriado-formulario">
+    <section class="tarjeta tarjeta-formulario formulario-guiado">
+        <form method="post" novalidate data-horario-especial aria-labelledby="horario-especial-titulo">
+            {% csrf_token %}
+            <h1 id="horario-especial-titulo">
+                {% if revision %}
+                    Revisar horario especial
+                {% elif es_edicion %}
+                    Editar horario especial
+                {% else %}
+                    Nuevo horario especial
+                {% endif %}
+            </h1>
+
+            {% if formulario.non_field_errors %}
+                <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+            {% endif %}
+
+            {% if revision %}
+                {% if not es_edicion %}
+                    <input type="hidden" name="sede" value="{{ horario_revisado.sede_id }}">
+                    <input type="hidden" name="fecha" value="{{ horario_revisado.fecha|date:'Y-m-d' }}">
+                {% endif %}
+                <input type="hidden" name="motivo" value="{{ horario_revisado.motivo }}">
+                {% if horario_revisado.cerrada %}
+                    <input type="hidden" name="cerrada" value="on">
+                {% else %}
+                    <input type="hidden" name="hora_inicio_1" value="{{ horario_revisado.hora_inicio_1.hour }}">
+                    <input type="hidden" name="hora_fin_1" value="{{ horario_revisado.hora_fin_1.hour }}">
+                    {% if horario_revisado.hora_inicio_2 %}
+                        <input type="hidden" name="segunda_franja" value="on">
+                        <input type="hidden" name="hora_inicio_2" value="{{ horario_revisado.hora_inicio_2.hour }}">
+                        <input type="hidden" name="hora_fin_2" value="{{ horario_revisado.hora_fin_2.hour }}">
+                    {% endif %}
+                {% endif %}
+                <input type="hidden" name="confirmacion" value="{{ revision.confirmacion|default:'' }}">
+
+                <dl class="perfil-lista">
+                    <div class="perfil-fila"><dt>Sede</dt><dd>{{ horario_revisado.sede.nombre }}</dd></div>
+                    <div class="perfil-fila"><dt>Fecha</dt><dd>{{ horario_revisado.fecha|date:"d/m/Y" }}</dd></div>
+                    <div class="perfil-fila"><dt>Motivo</dt><dd>{{ horario_revisado.motivo }}</dd></div>
+                    <div class="perfil-fila">
+                        <dt>Horario</dt>
+                        <dd>
+                            {% if horario_revisado.cerrada %}
+                                Sede cerrada todo el día
+                            {% else %}
+                                {{ horario_revisado.hora_inicio_1|time:"H:i" }} a {{ horario_revisado.hora_fin_1|time:"H:i" }}
+                                {% if horario_revisado.hora_inicio_2 %}
+                                    y {{ horario_revisado.hora_inicio_2|time:"H:i" }} a {{ horario_revisado.hora_fin_2|time:"H:i" }}
+                                {% endif %}
+                            {% endif %}
+                        </dd>
+                    </div>
+                </dl>
+
+                {% if revision.conflictos %}
+                    <div class="mensaje mensaje-error" role="alert">
+                        <ul>
+                            {% for conflicto in revision.conflictos %}
+                                <li>{{ conflicto }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                {% if revision.eventos %}
+                    {% include "instalaciones/_horario_especial_actividades.html" with eventos=revision.eventos only %}
+                {% endif %}
+
+                <div class="acciones-formulario">
+                    {% if not revision.conflictos and revision.confirmacion %}
+                        <button class="boton {% if revision.eventos %}boton-confirmar-peligro{% else %}boton-primario{% endif %}" name="paso" value="confirmar" type="submit">
+                            {% if revision.eventos %}Confirmar y anular actividades{% elif es_edicion %}Guardar cambios{% else %}Confirmar horario especial{% endif %}
+                        </button>
+                    {% endif %}
+                    <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a editar</button>
+                    <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}">Cancelar</a>
+                </div>
+            {% else %}
+                <p class="feriado-introduccion">Definí un horario particular o el cierre de una sede para una fecha puntual.</p>
+
+                <div class="grupo-campo">
+                    <label for="{{ formulario.sede.id_for_label }}">{{ formulario.sede.label }}</label>
+                    {{ formulario.sede }}
+                    {% for error in formulario.sede.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="{{ formulario.fecha.id_for_label }}">{{ formulario.fecha.label }}</label>
+                    {{ formulario.fecha }}
+                    {% for error in formulario.fecha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="{{ formulario.motivo.id_for_label }}">{{ formulario.motivo.label }}</label>
+                    {{ formulario.motivo }}
+                    {% for error in formulario.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="grupo-campo">
+                    <label class="campo-opcion" for="{{ formulario.cerrada.id_for_label }}">
+                        {{ formulario.cerrada }}<span>{{ formulario.cerrada.label }}</span>
+                    </label>
+                    {% for error in formulario.cerrada.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                <fieldset class="horario-franjas" data-franjas-especiales>
+                    <legend class="horario-solo-lectores">Franjas horarias</legend>
+                    <div class="horario-franja" role="group" aria-labelledby="primera-franja-titulo">
+                        <span class="horario-etiqueta" id="primera-franja-titulo">Primera franja</span>
+                        <div class="horario-franja-controles">
+                            {% include "instalaciones/_horario_hora.html" with campo=formulario.hora_inicio_1 only %}
+                            <span class="horario-hasta" aria-hidden="true">a</span>
+                            {% include "instalaciones/_horario_hora.html" with campo=formulario.hora_fin_1 only %}
+                        </div>
+                    </div>
+
+                    <div class="horario-franja" role="group" aria-labelledby="segunda-franja-titulo">
+                        <label class="horario-segunda-opcion" id="segunda-franja-titulo" for="{{ formulario.segunda_franja.id_for_label }}">
+                            {{ formulario.segunda_franja }}<span>Segunda franja</span>
+                        </label>
+                        <fieldset class="horario-segunda-controles" id="horario-segunda-franja" data-segunda-franja>
+                            <legend class="horario-solo-lectores">Horas de la segunda franja</legend>
+                            <div class="horario-franja-controles">
+                                {% include "instalaciones/_horario_hora.html" with campo=formulario.hora_inicio_2 only %}
+                                <span class="horario-hasta" aria-hidden="true">a</span>
+                                {% include "instalaciones/_horario_hora.html" with campo=formulario.hora_fin_2 only %}
+                            </div>
+                        </fieldset>
+                    </div>
+                    <p class="horario-ayuda">Dejá al menos una hora entre franjas.</p>
+                </fieldset>
+
+                <div class="acciones-formulario">
+                    <button class="boton boton-primario" name="paso" value="revisar" type="submit">
+                        {% if es_edicion %}Revisar cambios{% else %}Guardar horario especial{% endif %}
+                    </button>
+                    <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}">Cancelar</a>
+                </div>
+            {% endif %}
+        </form>
+    </section>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var formulario = document.querySelector("[data-horario-especial]");
+    if (!formulario) return;
+    var cerrada = formulario.querySelector("[name='cerrada']");
+    var franjas = formulario.querySelector("[data-franjas-especiales]");
+    var segundaFranja = formulario.querySelector("[name='segunda_franja']");
+    var horarioSegundaFranja = formulario.querySelector("[data-segunda-franja]");
+    if (!cerrada || !franjas || !segundaFranja || !horarioSegundaFranja) return;
+
+    function actualizar() {
+        var estaCerrada = cerrada.checked;
+        franjas.disabled = estaCerrada;
+        franjas.hidden = estaCerrada;
+        horarioSegundaFranja.disabled = estaCerrada || !segundaFranja.checked;
+        horarioSegundaFranja.hidden = !segundaFranja.checked;
+    }
+
+    cerrada.addEventListener("change", actualizar);
+    segundaFranja.addEventListener("change", actualizar);
+    actualizar();
+});
+</script>
+{% endblock %}

@@ -1,15 +1,16 @@
 from django.urls import path
 
-from . import views, vistas_feriados, vistas_generacion, vistas_planilla, vistas_planilla_personas
+from instalaciones import vistas_horarios_especiales
+
+from . import views, vistas_generacion, vistas_planilla, vistas_planilla_personas
 
 app_name = "clases"
 
 urlpatterns = [
     path("planilla/generar/", vistas_generacion.generacion_clases, name="generacion_clases"),
     path("planilla/generar/resultado/", vistas_generacion.generacion_resultado, name="generacion_resultado"),
-    path("feriados/", vistas_feriados.feriado_lista, name="feriado_lista"),
-    path("feriados/registrar/", vistas_feriados.feriado_registrar, name="feriado_registrar"),
-    path("feriados/<int:pk>/", vistas_feriados.feriado_detalle, name="feriado_detalle"),
+    path("feriados/", vistas_horarios_especiales.horarios_especiales_lista, name="feriado_lista"),
+    path("feriados/registrar/", vistas_horarios_especiales.feriado_crear, name="feriado_registrar"),
     path("planilla/", vistas_planilla.planilla, name="planilla"),
     path("planilla/personas/", vistas_planilla_personas.gestionar_personas, name="planilla_personas"),
     path("planilla/quitar/", vistas_planilla.planilla_quitar, name="planilla_quitar"),

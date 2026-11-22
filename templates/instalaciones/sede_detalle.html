@@ -149,7 +149,10 @@
             <div class="encabezado-pagina encabezado-seccion">
                 <h2>Horarios de funcionamiento</h2>
                 {% if puede_configurar_horarios %}
-                    <a class="boton boton-primario boton-chico" href="{% url 'instalaciones:sede_horarios_configurar' sede.pk %}">Configurar horarios</a>
+                    <div class="acciones">
+                        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}?sede={{ sede.pk }}">Horarios especiales</a>
+                        <a class="boton boton-primario boton-chico" href="{% url 'instalaciones:sede_horarios_configurar' sede.pk %}">Configurar horarios</a>
+                    </div>
                 {% endif %}
             </div>
             <section class="tarjeta tabla-contenedor tabla-listado">

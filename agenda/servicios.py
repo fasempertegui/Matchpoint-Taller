@@ -8,9 +8,10 @@ from django.utils import timezone
 
 from bloqueos.servicios import validar_anulacion_bloqueo
 from clases.consultas import consultar_clase
-from clases.models import Asistencia, ClaseAlumno, ClaseProfesor, Feriado
+from clases.models import Asistencia, ClaseAlumno, ClaseProfesor
 from clases.validaciones import validar_anulacion_clase
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_eventos, opciones_meses_agenda
+from instalaciones.horarios import horario_efectivo
 from instalaciones.models import Cancha, Sede
 from reservas.models import Evento, ReservaInvitado
 from reservas.servicios import validar_anulacion_reserva, validar_finalizacion_reserva
@@ -41,19 +42,10 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
     canchas = list(sede.canchas.all())
     columnas = [{"cancha": cancha, "fecha": fecha} for cancha in canchas]
 
-    horarios = {horario.dia_semana: horario for horario in sede.horarios.all()}
-    inicios_habilitados = {}
-    for dia in {columna["fecha"] for columna in columnas}:
-        horario = horarios.get(dia.isoweekday())
-        franjas = []
-        if horario is not None:
-            franjas.append((horario.hora_inicio_1, horario.hora_fin_1))
-            if horario.hora_inicio_2 is not None:
-                franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
-        inicios_habilitados[dia] = {
-            hora for hora in range(23)
-            if any(time(hora) >= inicio and time(hora + 1) <= fin for inicio, fin in franjas)
-        }
+    horario = horario_efectivo(sede, fecha)
+    inicios_habilitados = {
+        hora for hora in range(23) if horario.contiene(time(hora), time(hora + 1))
+    }
 
     fechas = [columna["fecha"] for columna in columnas]
     eventos_del_usuario = set()
@@ -121,7 +113,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             or (clase is not None and evento.clase_del_usuario)
         )
         ocupado_por_tercero = evento is not None and not puede_ver_evento
-        habilitado = hora in inicios_habilitados.get(dia, set())
+        habilitado = hora in inicios_habilitados
         en_rango = FECHA_INICIO_OPERACIONES <= dia <= fecha_maxima
         impedimento = ""
         if not en_rango:
@@ -179,6 +171,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
                 puede_anular_clase = True
         puede_crear_clase = (
             es_administrador and evento is None and en_rango and habilitado and inicio > ahora and dia <= maxima_eventos
+            and not horario.feriado
             and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
         )
         return {
@@ -217,7 +210,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             "url_historial": enlace_agenda(sede, dia, cancha, hora, historial=True),
         }
 
-    horas_visibles = set().union(*inicios_habilitados.values()) if inicios_habilitados else set()
+    horas_visibles = inicios_habilitados.copy()
     horas_visibles.update(clave[2] for clave in eventos_por_turno)
     horas_visibles.update(clave[2] for clave in anulados_por_turno)
     horas_propias = {
@@ -262,7 +255,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
     return {
         "columnas": columnas, "filas": filas, "detalle": detalle, "hoy": ahora.date(),
         "sede": sede, "cancha": cancha, "fecha": fecha,
-        "feriado": Feriado.objects.filter(fecha=fecha).first(),
+        "feriado": horario.feriado, "horario_especial": horario.especial,
         "url_anterior": enlace_agenda(sede, fecha - salto, cancha)
             if fecha - salto >= FECHA_INICIO_OPERACIONES else None,
         "url_siguiente": enlace_agenda(sede, fecha + salto, cancha)
