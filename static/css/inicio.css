@@ -92,6 +92,7 @@ body > .contenido-principal.contenido-inicio {
 }
 
 .dashboard-eventos::before {
+    height: 4px;
     background: var(--acento);
 }
 
@@ -215,11 +216,33 @@ body > .contenido-principal.contenido-inicio {
     align-items: stretch;
 }
 
+.dashboard-eventos-resumen,
+.dashboard-eventos-grafico {
+    min-width: 0;
+    padding: clamp(14px, 2vw, 22px);
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+    background: var(--superficie);
+}
+
 .dashboard-eventos-resumen {
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    gap: 16px;
-    min-width: 0;
+    grid-template-rows: auto 1fr auto auto;
+    gap: 14px;
+}
+
+.dashboard-eventos-resumen .dashboard-tarjeta-cabecera {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+}
+
+.dashboard-eventos-resumen .dashboard-enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--primario-suave);
 }
 
 .dashboard-tarjeta-cabecera {
@@ -268,7 +291,7 @@ body > .contenido-principal.contenido-inicio {
 .dashboard-valor-principal {
     margin: 0;
     color: var(--primario);
-    font-size: 3rem;
+    font-size: clamp(3rem, 4.5vw, 4.25rem);
     font-weight: 600;
     line-height: 1;
     font-variant-numeric: tabular-nums;
@@ -276,25 +299,46 @@ body > .contenido-principal.contenido-inicio {
 
 .dashboard-total-texto {
     color: var(--texto-suave);
-    font-size: .875rem;
+    font-size: .95rem;
+}
+
+.dashboard-marcador-clases {
+    background: var(--primario);
+}
+
+.dashboard-marcador-reservas {
+    background: var(--acento);
 }
 
 .dashboard-desglose {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    padding-top: 16px;
-    border-top: 1px solid #e7e4ee;
+    gap: 10px;
+}
+
+.dashboard-desglose > div {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--primario-suave);
 }
 
 .dashboard-subetiqueta {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     color: var(--texto-suave);
     font-size: .75rem;
 }
 
+.dashboard-marcador-clases,
+.dashboard-marcador-reservas {
+    flex: 0 0 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
 .dashboard-valor-secundario {
-    margin: 2px 0 0;
+    margin: 4px 0 0;
     color: var(--primario);
     font-size: 1.5rem;
     font-weight: 500;
@@ -302,13 +346,14 @@ body > .contenido-principal.contenido-inicio {
     font-variant-numeric: tabular-nums;
 }
 
+.dashboard-valor-cero {
+    color: var(--texto-suave);
+}
+
 .dashboard-eventos-grafico {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-width: 0;
-    padding-left: 24px;
-    border-left: 1px solid #e7e4ee;
 }
 
 .dashboard-grafico-cabecera {
@@ -779,7 +824,11 @@ body > .contenido-principal.contenido-inicio {
 .dashboard-revisar-lista > li {
     display: flex;
     align-items: center;
-    border-top: 1px solid #efeaf5;
+}
+
+.dashboard-eventos-separador,
+.dashboard-revisar-lista > li {
+    border-top: 1px solid var(--primario-medio);
 }
 
 .dashboard-revisar-lista > li:first-child {
@@ -840,13 +889,6 @@ body > .contenido-principal.contenido-inicio {
     .dashboard-eventos,
     .dashboard-fila-doble {
         grid-template-columns: minmax(0, 1fr);
-    }
-
-    .dashboard-eventos-grafico {
-        padding-left: 0;
-        padding-top: 20px;
-        border-left: 0;
-        border-top: 1px solid #e7e4ee;
     }
 }
 

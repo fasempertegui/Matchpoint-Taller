@@ -36,14 +36,16 @@
                 <span class="dashboard-total-texto">turno{{ actividad.hoy|pluralize }} hoy</span>
             </div>
 
+            <div class="dashboard-eventos-separador" aria-hidden="true"></div>
+
             <div class="dashboard-desglose">
                 <div>
-                    <span class="dashboard-subetiqueta">Clases hoy</span>
-                    <p class="dashboard-valor-secundario">{{ actividad.clases }}</p>
+                    <span class="dashboard-subetiqueta"><span class="dashboard-marcador-clases" aria-hidden="true"></span>Clases hoy</span>
+                    <p class="dashboard-valor-secundario{% if not actividad.clases %} dashboard-valor-cero{% endif %}">{{ actividad.clases }}</p>
                 </div>
                 <div>
-                    <span class="dashboard-subetiqueta">Reservas hoy</span>
-                    <p class="dashboard-valor-secundario">{{ actividad.reservas }}</p>
+                    <span class="dashboard-subetiqueta"><span class="dashboard-marcador-reservas" aria-hidden="true"></span>Reservas hoy</span>
+                    <p class="dashboard-valor-secundario{% if not actividad.reservas %} dashboard-valor-cero{% endif %}">{{ actividad.reservas }}</p>
                 </div>
             </div>
         </div>
@@ -237,7 +239,6 @@
                         <span>Cerrada</span>
                     </div>
                 </div>
-                <p class="dashboard-hm-nota">Últimas 4 semanas. Excluye bloqueos y feriados del cálculo.</p>
             </div>
         </article>
 
