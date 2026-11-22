@@ -1,9 +1,16 @@
+{% load l10n paginacion %}
 {% if pagina.has_other_pages %}
 <nav class="paginacion" aria-label="Páginas de {{ entidad }}">
     <span class="paginacion-resumen"><strong>{{ pagina.start_index }}–{{ pagina.end_index }}</strong> de {{ pagina.paginator.count }} {{ entidad }}</span>
     <div class="paginacion-controles">
         {% if pagina.has_previous %}<a class="boton boton-secundario boton-chico" href="?{% if parametros %}{{ parametros }}&amp;{% endif %}pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
-        <span class="paginacion-pagina">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+        <form method="get" class="paginacion-pagina">
+            {% for nombre, valores in parametros|parametros_paginacion %}
+                {% for valor in valores %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
+            {% endfor %}
+            <label>Página <input type="number" name="pagina" class="form-control paginacion-numero" value="{{ pagina.number|unlocalize }}" min="1" max="{{ pagina.paginator.num_pages|unlocalize }}" step="1" inputmode="numeric" required aria-label="Página actual" data-paginacion-numero></label>
+            <span>de {{ pagina.paginator.num_pages }}</span>
+        </form>
         {% if pagina.has_next %}<a class="boton boton-secundario boton-chico" href="?{% if parametros %}{{ parametros }}&amp;{% endif %}pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
     </div>
 </nav>

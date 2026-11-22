@@ -25,7 +25,26 @@
 .paginacion-controles {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 16px;
+}
+
+.paginacion-pagina {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.paginacion-pagina label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.paginacion .paginacion-numero {
+    width: 5rem;
+    min-height: 36px;
+    padding: 6px 8px;
 }
 
 .paginacion .boton {
