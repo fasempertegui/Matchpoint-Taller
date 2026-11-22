@@ -260,7 +260,7 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             if fecha + salto <= fecha_maxima else None,
         "url_hoy": enlace_agenda(sede, ahora.date(), cancha),
         "url_cerrar": enlace_agenda(sede, fecha, cancha),
-        "url_acciones": enlace_agenda(sede, fecha, acciones=True),
+        "url_acciones": enlace_agenda(sede, fecha, cancha, acciones=True),
         "url_acciones_mes": enlace_agenda(sede, fecha, cancha, acciones_mes=True),
         "url_seleccion": enlace_agenda(sede, fecha, cancha, hora_seleccionada),
         "url_historial": enlace_agenda(sede, fecha, cancha, hora_seleccionada, historial=True),

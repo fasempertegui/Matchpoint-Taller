@@ -1,3 +1,4 @@
+import json
 from calendar import monthrange
 from datetime import datetime, time
 from decimal import Decimal
@@ -99,7 +100,7 @@ class AgendaReservaForm(forms.Form):
 
 class CanchasAgendaField(forms.ModelMultipleChoiceField):
     def label_from_instance(self, cancha):
-        return cancha.nombre
+        return f"{cancha.sede.nombre} · {cancha.nombre}"
 
 
 class AgendaOperacionForm(forms.Form):
@@ -109,9 +110,21 @@ class AgendaOperacionForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-control"}),
         initial="bloquear",
     )
+    seleccion_sedes = forms.ChoiceField(
+        label="Sedes *",
+        choices=(("todas", "Todas las sedes"), ("seleccionar", "Seleccionar")),
+        widget=forms.Select(attrs={"class": "form-control"}),
+        initial="todas",
+    )
+    sedes = forms.ModelMultipleChoiceField(
+        label="Elegí las sedes *",
+        queryset=Sede.objects.order_by("nombre", "pk"),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(),
+    )
     seleccion_canchas = forms.ChoiceField(
         label="Canchas *",
-        choices=(("todas", "Todas las canchas de la sede"), ("seleccionar", "Seleccionar")),
+        choices=(("todas", "Todas las canchas de las sedes elegidas"), ("seleccionar", "Seleccionar")),
         widget=forms.Select(attrs={"class": "form-control"}),
         initial="todas",
     )
@@ -163,36 +176,52 @@ class AgendaOperacionForm(forms.Form):
         widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
     )
 
-    def __init__(self, *args, sede, fecha, **kwargs):
+    def __init__(self, *args, fecha, **kwargs):
         super().__init__(*args, **kwargs)
-        canchas = sede.canchas.order_by("nombre", "pk")
-        self.fields["canchas"].queryset = canchas
+        sedes = list(self.fields["sedes"].queryset)
+        self.fields["canchas"].queryset = Cancha.objects.select_related("sede").order_by("sede__nombre", "nombre", "pk")
         if fecha > fecha_maxima_eventos():
             self.fields["operacion"].choices = (("liberar", "Anular y liberar"),)
             self.fields["operacion"].initial = "liberar"
         ahora = timezone.localtime()
-        horario = horario_efectivo(sede, fecha)
+        horas_por_sede = {str(sede.pk): self._horas_habilitadas(sede, fecha, ahora) for sede in sedes}
+        self.fields["horario"].widget.attrs["data-horas-por-sede"] = json.dumps(horas_por_sede)
+        sedes_elegidas = horas_por_sede.keys()
+        if self.data.get("seleccion_sedes") == "seleccionar":
+            sedes_elegidas = {str(sede) for sede in self["sedes"].value() or ()}
+        horas = sorted({hora for sede in sedes_elegidas for hora in horas_por_sede.get(sede, ())})
         self.fields["horario"].choices = [("dia", "Día completo")] + [
-            (f"{hora:02d}:00", f"Desde las {hora:02d}:00")
-            for hora in range(23)
+            (f"{hora:02d}:00", f"Desde las {hora:02d}:00") for hora in horas
+        ]
+        desde = self.data.get("horario", "dia")
+        finales = [f"{hora + 1:02d}:00" for hora in horas]
+        self.fields["hora_hasta"].choices = [("", "Fin del día")] + [
+            (fin, fin) for fin in finales if desde == "dia" or fin > desde
+        ]
+
+    def _horas_habilitadas(self, sede, fecha, ahora):
+        horario = horario_efectivo(sede, fecha)
+        return [
+            hora for hora in range(23)
             if timezone.make_aware(datetime.combine(fecha, time(hora))) > ahora
             and horario.contiene(time(hora), time(hora + 1))
         ]
-        desde = self.data.get("horario", "dia")
-        inicios = {valor for valor, _ in self.fields["horario"].choices if valor != "dia"}
-        finales = sorted(f"{int(inicio[:2]) + 1:02d}:00" for inicio in inicios)
-        self.fields["hora_hasta"].choices = [("", "Fin del día")] + [
-            (fin, fin) for fin in finales if desde not in inicios or fin > desde
-        ]
-        self.fields["hora_hasta"].widget.attrs["data-finales-habilitados"] = ",".join(finales)
 
     def clean(self):
         datos = super().clean()
-        seleccion = datos.get("seleccion_canchas")
-        if seleccion == "todas":
-            datos["canchas"] = self.fields["canchas"].queryset.all()
-        if seleccion and not datos.get("canchas"):
-            self.add_error("canchas", "Elegí al menos una cancha.")
+        if datos.get("seleccion_sedes") == "todas":
+            datos["sedes"] = self.fields["sedes"].queryset.all()
+        sedes = datos.get("sedes")
+        if not sedes and "sedes" not in self.errors:
+            self.add_error("sedes", "Elegí al menos una sede.")
+        if sedes and datos.get("seleccion_canchas") == "todas":
+            datos["canchas"] = self.fields["canchas"].queryset.filter(sede__in=sedes)
+        if sedes and datos.get("seleccion_canchas") and "canchas" not in self.errors:
+            canchas = datos.get("canchas")
+            if not canchas:
+                self.add_error("canchas", "Elegí al menos una cancha en las sedes seleccionadas.")
+            elif canchas.exclude(sede__in=sedes).exists():
+                self.add_error("canchas", "Elegí sólo canchas de las sedes seleccionadas.")
         if datos.get("horario") == "dia":
             datos["hora_hasta"] = ""
         if datos.get("operacion") == "bloquear":
@@ -221,6 +250,9 @@ class AgendaOperacionForm(forms.Form):
         datos = self.cleaned_data
         return {
             "operacion": datos["operacion"],
+            "seleccion_sedes": datos["seleccion_sedes"],
+            "sedes": sorted(sede.pk for sede in datos["sedes"]),
+            "seleccion_canchas": datos["seleccion_canchas"],
             "canchas": sorted(cancha.pk for cancha in datos["canchas"]),
             "alcance": "dia" if datos["horario"] == "dia" else "desde",
             "hora_desde": "" if datos["horario"] == "dia" else datos["horario"],
@@ -233,10 +265,6 @@ class AgendaOperacionForm(forms.Form):
 
 
 class AgendaMesForm(forms.Form):
-    sede = forms.ModelChoiceField(
-        label="Sede", queryset=Sede.objects.order_by("estado", "nombre", "pk"), empty_label=None,
-        widget=forms.Select(attrs={"class": "form-control"}),
-    )
     mes = forms.DateField(
         label="Mes", input_formats=["%Y-%m"],
         widget=forms.Select(attrs={"class": "form-control"}),
@@ -284,8 +312,8 @@ class AgendaOperacionMesForm(AgendaOperacionForm):
         widget=forms.CheckboxSelectMultiple(),
     )
 
-    def __init__(self, *args, sede, fecha, **kwargs):
-        super().__init__(*args, sede=sede, fecha=fecha, **kwargs)
+    def __init__(self, *args, fecha, **kwargs):
+        super().__init__(*args, fecha=fecha, **kwargs)
         primer_dia = fecha.replace(day=1)
         ultimo_dia = primer_dia.replace(day=monthrange(primer_dia.year, primer_dia.month)[1])
         self.fecha_minima = max(timezone.localdate(), primer_dia)
@@ -302,20 +330,13 @@ class AgendaOperacionMesForm(AgendaOperacionForm):
         self.fields.pop("motivo_bloqueo")
         self.fields.pop("observaciones")
         self.fields["motivo_anulacion"].widget = forms.TextInput(attrs={"class": "form-control"})
-        horas = {
+
+    def _horas_habilitadas(self, sede, fecha, ahora):
+        return sorted({
             hora for horario in horarios_del_mes(sede, fecha).values()
             for inicio, fin in horario.franjas
             for hora in range(inicio.hour, fin.hour)
-        }
-        self.fields["horario"].choices = [("dia", "Día completo")] + [
-            (f"{hora:02d}:00", f"Desde las {hora:02d}:00") for hora in sorted(horas)
-        ]
-        finales = [f"{hora + 1:02d}:00" for hora in sorted(horas)]
-        desde = self.data.get("horario", "dia")
-        self.fields["hora_hasta"].choices = [("", "Fin del día")] + [
-            (fin, fin) for fin in finales if desde == "dia" or fin > desde
-        ]
-        self.fields["hora_hasta"].widget.attrs["data-finales-habilitados"] = ",".join(finales)
+        })
 
     def clean(self):
         datos = super().clean()

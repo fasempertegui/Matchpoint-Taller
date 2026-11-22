@@ -1,6 +1,7 @@
 import hashlib
 import json
 from calendar import monthrange
+from collections import defaultdict
 from datetime import date, datetime, time, timedelta
 
 from django.core.exceptions import ValidationError
@@ -20,58 +21,23 @@ from reservas.models import Evento, Turno
 from reservas.servicios import anular_reserva, validar_anulacion_reserva
 
 
-def _preparar_operacion_dia(sede, fecha, parametros, *, horarios_mes=None):
-    mensual = horarios_mes is not None
-    ahora = timezone.localtime()
-    if not mensual and not ahora.date() <= fecha <= fecha_maxima_agenda():
-        raise ValidationError("Elegí una fecha desde hoy hasta un año después, inclusive.")
+def _preparar_operacion_dia(sede, canchas, fecha, parametros, franjas, ahora, ocupacion):
     operacion = parametros["operacion"]
     actividades = parametros["actividades"]
-    if operacion not in ("liberar", "bloquear"):
-        raise ValidationError("Elegí una operación válida.")
-    if operacion == "bloquear" and fecha > fecha_maxima_eventos():
-        maxima = fecha_maxima_eventos()
-        raise ValidationError(f"Sólo se pueden crear bloqueos hasta el {maxima:%d/%m/%Y}, inclusive.")
-    canchas = list(Cancha.objects.filter(sede=sede, pk__in=parametros["canchas"]).order_by("pk"))
-    if not canchas or len(canchas) != len(parametros["canchas"]):
-        raise ValidationError("Revisá las canchas de la sede seleccionada.")
-    if operacion == "bloquear" and (
-        sede.estado != Sede.Estado.ACTIVA or any(cancha.estado != Cancha.Estado.ACTIVA for cancha in canchas)
-    ):
-        raise ValidationError("Para bloquear, la sede y todas las canchas seleccionadas deben estar activas.")
-    if operacion == "bloquear" and parametros["motivo_bloqueo"] not in Bloqueo.Motivo.values:
-        raise ValidationError("Elegí un motivo de bloqueo válido.")
-
     corte = time.fromisoformat(parametros["hora_desde"]) if parametros["alcance"] == "desde" else time.min
-    horario = horarios_mes[fecha] if mensual else horario_efectivo(sede, fecha)
-    franjas = horario.franjas
     hasta = time.fromisoformat(parametros["hora_hasta"]) if parametros["hora_hasta"] else None
-    if hasta and (
-        parametros["alcance"] != "desde" or hasta <= corte
-        or hasta.minute or hasta.second or hasta.microsecond
-        or (not mensual and not any(inicio < hasta <= fin for inicio, fin in franjas))
-    ):
-        raise ValidationError("La hora de fin debe ser posterior al inicio y coincidir con el fin de un turno habilitado.")
     horas_habilitadas = {
         hora for hora in range(23)
         if time(hora) >= corte and (hasta is None or time(hora + 1) <= hasta)
         and any(time(hora) >= inicio and time(hora + 1) <= fin for inicio, fin in franjas)
     }
-    eventos = Evento.objects.filter(
-        turno__cancha__in=canchas, turno__fecha=fecha, turno__hora_inicio__gte=corte,
-    ).exclude(estado=Evento.Estado.ANULADO).select_related("turno", "reserva__organizador", "bloqueo", "clase").prefetch_related(
-        "clase__profesores", "clase__alumnos",
-    )
-    if hasta is not None:
-        eventos = eventos.filter(turno__hora_inicio__lt=hasta)
-    ocupacion = {(evento.turno.cancha_id, evento.turno.hora_inicio.hour): evento for evento in eventos}
-
     filas = []
     for cancha in canchas:
-        horas = horas_habilitadas | {hora for cancha_id, hora in ocupacion if cancha_id == cancha.pk}
+        eventos = ocupacion.get(cancha.pk, {})
+        horas = horas_habilitadas | eventos.keys()
         for hora in sorted(horas):
             inicio = timezone.make_aware(datetime.combine(fecha, time(hora)))
-            evento = ocupacion.get((cancha.pk, hora))
+            evento = eventos.get(hora)
             fila = {
                 "cancha": cancha, "fecha": fecha, "hora": time(hora), "fin": time(hora + 1),
                 "evento": evento, "accion": "", "conservado": "",
@@ -144,7 +110,13 @@ def _preparar_operacion_dia(sede, fecha, parametros, *, horarios_mes=None):
             }
             for fila in filas if fila["clase"] is not None
         ],
-        "invitados": [list(fila["reserva"].invitados.order_by("usuario_id").values_list("usuario_id", "respuesta", "actualizado_en")) for fila in filas if fila["reserva"]],
+        "invitados": [
+            sorted(
+                (invitado.usuario_id, invitado.respuesta, invitado.actualizado_en)
+                for invitado in fila["reserva"].invitados.all()
+            )
+            for fila in filas if fila["reserva"]
+        ],
         "filas": [
             [fila["cancha"].pk, fila["hora"].isoformat(), fila["accion"], fila["conservado"],
              fila["evento"].pk if fila["evento"] else None,
@@ -165,14 +137,13 @@ def _preparar_operacion_dia(sede, fecha, parametros, *, horarios_mes=None):
     }
 
 
-def preparar_operacion(sede, fecha, parametros, fecha_hasta=None):
-    if parametros["operacion"] == "liberar" and not parametros["actividades"]:
-        raise ValidationError("Elegí al menos un tipo de actividad.")
+def _fechas_operacion(fecha, fecha_hasta, parametros, hoy):
     if fecha_hasta is None:
-        return _preparar_operacion_dia(sede, fecha, parametros)
+        if not hoy <= fecha <= fecha_maxima_agenda():
+            raise ValidationError("Elegí una fecha desde hoy hasta un año después, inclusive.")
+        return [fecha], fecha, fecha
     if parametros["operacion"] != "liberar":
         raise ValidationError("Las acciones del mes sólo permiten anular y liberar.")
-    hoy = timezone.localdate()
     if (
         fecha.day != 1 or fecha_hasta != fecha.replace(day=monthrange(fecha.year, fecha.month)[1])
         or fecha < max(FECHA_INICIO_OPERACIONES, hoy.replace(day=1))
@@ -194,36 +165,104 @@ def preparar_operacion(sede, fecha, parametros, fecha_hasta=None):
     fechas = [dia for dia in dias_del_rango if not dias_semana or dia.isoweekday() in dias_semana]
     if not fechas:
         raise ValidationError("Ninguno de los días de la semana elegidos cae dentro del rango.")
-    horarios_mes = horarios_del_mes(sede, fecha)
+    return fechas, desde, hasta
+
+
+def preparar_operacion(fecha, parametros, fecha_hasta=None):
+    operacion = parametros["operacion"]
+    if operacion not in ("liberar", "bloquear"):
+        raise ValidationError("Elegí una operación válida.")
+    if operacion == "liberar" and not parametros["actividades"]:
+        raise ValidationError("Elegí al menos un tipo de actividad.")
+    if operacion == "bloquear":
+        maxima = fecha_maxima_eventos()
+        if fecha > maxima:
+            raise ValidationError(f"Sólo se pueden crear bloqueos hasta el {maxima:%d/%m/%Y}, inclusive.")
+        if parametros["motivo_bloqueo"] not in Bloqueo.Motivo.values:
+            raise ValidationError("Elegí un motivo de bloqueo válido.")
+
+    ahora = timezone.localtime()
+    fechas, desde, hasta = _fechas_operacion(fecha, fecha_hasta, parametros, ahora.date())
+    sedes = Sede.objects.order_by("pk")
+    if parametros["seleccion_sedes"] == "seleccionar":
+        sedes = sedes.filter(pk__in=parametros["sedes"])
+    sedes = list(sedes)
+    if not sedes or [sede.pk for sede in sedes] != parametros["sedes"]:
+        raise ValidationError("El alcance de sedes cambió. Revisá nuevamente la selección.")
+
+    canchas = Cancha.objects.filter(sede__in=sedes).select_related("sede").order_by("pk")
+    if parametros["seleccion_canchas"] == "seleccionar":
+        canchas = canchas.filter(pk__in=parametros["canchas"])
+    canchas = list(canchas)
+    if not canchas or [cancha.pk for cancha in canchas] != parametros["canchas"]:
+        raise ValidationError("El alcance de canchas cambió. Revisá nuevamente la selección.")
+    if operacion == "bloquear" and (
+        any(sede.estado != Sede.Estado.ACTIVA for sede in sedes)
+        or any(cancha.estado != Cancha.Estado.ACTIVA for cancha in canchas)
+    ):
+        raise ValidationError("Para bloquear, elegí únicamente sedes y canchas activas.")
+
+    horarios = {
+        sede.pk: horarios_del_mes(sede, fecha) if fecha_hasta else {fecha: horario_efectivo(sede, fecha)}
+        for sede in sedes
+    }
     if parametros["hora_hasta"]:
-        hora_hasta = time.fromisoformat(parametros["hora_hasta"])
-        if not any(
-            inicio < hora_hasta <= fin
-            for horario in horarios_mes.values() for inicio, fin in horario.franjas
+        inicio_elegido = time.fromisoformat(parametros["hora_desde"] or "00:00")
+        fin_elegido = time.fromisoformat(parametros["hora_hasta"])
+        if (
+            parametros["alcance"] != "desde" or fin_elegido <= inicio_elegido
+            or fin_elegido.minute or fin_elegido.second or fin_elegido.microsecond
+            or not any(
+                inicio < fin_elegido <= fin
+                for dias in horarios.values() for horario in dias.values() for inicio, fin in horario.franjas
+            )
         ):
-            raise ValidationError("La hora de fin debe coincidir con el fin de un turno habilitado.")
+            raise ValidationError("La hora de fin debe ser posterior al inicio y coincidir con el fin de un turno habilitado.")
+
+    canchas_por_sede = {sede.pk: [] for sede in sedes}
+    for cancha in canchas:
+        canchas_por_sede[cancha.sede_id].append(cancha)
+    corte = time.fromisoformat(parametros["hora_desde"]) if parametros["alcance"] == "desde" else time.min
+    eventos = Evento.objects.filter(
+        turno__cancha__in=canchas, turno__fecha__in=fechas, turno__hora_inicio__gte=corte,
+    ).exclude(estado=Evento.Estado.ANULADO).select_related("turno", "reserva__organizador", "bloqueo", "clase").prefetch_related(
+        "clase__profesores", "clase__alumnos", "reserva__invitados",
+    )
+    if parametros["hora_hasta"]:
+        eventos = eventos.filter(turno__hora_inicio__lt=fin_elegido)
+    ocupacion_por_fecha = defaultdict(lambda: defaultdict(dict))
+    for evento in eventos:
+        turno = evento.turno
+        ocupacion_por_fecha[turno.fecha][turno.cancha_id][turno.hora_inicio.hour] = evento
+
     dias = [
-        _preparar_operacion_dia(sede, dia, parametros, horarios_mes=horarios_mes) for dia in fechas
+        _preparar_operacion_dia(
+            sede, canchas_por_sede[sede.pk], dia, parametros, horarios[sede.pk][dia].franjas,
+            ahora, ocupacion_por_fecha[dia],
+        )
+        for dia in fechas for sede in sedes if canchas_por_sede[sede.pk]
     ]
     return {
         "acciones": [fila for dia in dias for fila in dia["acciones"]],
         "conservados": [fila for dia in dias for fila in dia["conservados"]],
-        "canchas": dias[0]["canchas"],
+        "sedes": sedes, "canchas": canchas,
         "fechas": fechas,
         "desde": desde, "hasta": hasta,
         **{
             campo: sum(dia[campo] for dia in dias)
             for campo in ("anulaciones", "reservas_a_anular", "clases_a_anular", "bloqueos_a_crear", "libres_sin_accion")
         },
-        "huella": hashlib.sha256(json.dumps([dia["huella"] for dia in dias]).encode()).hexdigest(),
+        "huella": hashlib.sha256(json.dumps({
+            "sedes": [[sede.pk, sede.nombre, sede.estado] for sede in sedes],
+            "dias": [dia["huella"] for dia in dias],
+        }, sort_keys=True).encode()).hexdigest(),
     }
 
 
 @transaction.atomic
-def ejecutar_operacion(usuario, sede_id, fecha, parametros, huella, fecha_hasta=None):
+def ejecutar_operacion(usuario, fecha, parametros, huella, fecha_hasta=None):
     usuario = exigir_administracion_clases(usuario)
-    sede = Sede.objects.get(pk=sede_id)
-    seleccion = preparar_operacion(sede, fecha, parametros, fecha_hasta)
+    seleccion = preparar_operacion(fecha, parametros, fecha_hasta)
     if seleccion["huella"] != huella:
         raise ValidationError("La agenda o el horario cambió desde la vista previa. Revisá nuevamente las acciones.")
     usuarios_ids = {usuario.pk}
@@ -234,17 +273,17 @@ def ejecutar_operacion(usuario, sede_id, fecha, parametros, huella, fecha_hasta=
     for fila in seleccion["acciones"]:
         if fila["reserva"] is not None:
             usuarios_ids.add(fila["reserva"].organizador_id)
-            usuarios_ids.update(fila["reserva"].invitados.values_list("usuario_id", flat=True))
+            usuarios_ids.update(invitado.usuario_id for invitado in fila["reserva"].invitados.all())
     usuarios = bloquear_usuarios_clase(usuarios_ids)
     usuario = exigir_administracion_clases(usuarios.get(usuario.pk))
-    sede = Sede.objects.select_for_update().get(pk=sede_id)
-    list(Cancha.objects.select_for_update().filter(sede=sede, pk__in=parametros["canchas"]).order_by("pk"))
+    list(Sede.objects.select_for_update().filter(pk__in=parametros["sedes"]).order_by("pk"))
+    list(Cancha.objects.select_for_update().filter(pk__in=parametros["canchas"]).order_by("pk"))
     # Todos los turnos se bloquean antes de los eventos, igual que en las acciones individuales.
     turnos = list(Turno.objects.select_for_update().filter(
         cancha_id__in=parametros["canchas"], fecha__in=seleccion["fechas"],
     ).order_by("pk"))
     list(Evento.objects.select_for_update().filter(turno__in=turnos).order_by("pk"))
-    previa = preparar_operacion(sede, fecha, parametros, fecha_hasta)
+    previa = preparar_operacion(fecha, parametros, fecha_hasta)
     if previa["huella"] != huella:
         raise ValidationError("La agenda o el horario cambió desde la vista previa. Revisá nuevamente las acciones.")
     if not previa["acciones"]:

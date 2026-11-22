@@ -33,7 +33,8 @@
                 <p>{{ fecha|date:'d/m/Y' }}</p>
             {% endif %}
             <p>{% if alcance_operacion.actividades %}Actividades elegidas · {{ alcance_operacion.actividades|join:", " }}{% else %}Solo turnos libres{% endif %}</p>
-            <p class="agenda-impedimento">{% for cancha in previa.canchas %}{{ cancha.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+            <p>Sedes · {{ previa.sedes|join:", " }}</p>
+            <p class="agenda-impedimento">{% for cancha in previa.canchas %}{{ cancha.sede.nombre }} · {{ cancha.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
             <div class="operacion-totales" aria-live="polite">
                 <span>{{ previa.anulaciones }} evento{{ previa.anulaciones|pluralize }} a anular</span>
                 {% if parametros_operacion.operacion == 'bloquear' %}<span>{{ previa.bloqueos_a_crear }} bloqueo{{ previa.bloqueos_a_crear|pluralize }} a crear</span>{% endif %}
@@ -62,7 +63,7 @@
             </details>
             <div class="operacion-confirmacion">
                 {% if previa.acciones %}
-                    <form method="post" action="{{ url_operacion|default:agenda.url_acciones }}" data-confirmar="¿Confirmar la operación sobre {{ previa.canchas|length }} cancha{{ previa.canchas|length|pluralize }} de {{ sede.nombre }}, {% if mensual %}del {{ alcance_operacion.desde|date:'d/m/Y' }} al {{ alcance_operacion.hasta|date:'d/m/Y' }} ({{ alcance_operacion.dias|join:", " }}){% else %}el {{ fecha|date:'d/m/Y' }}{% endif %}? {% if alcance_operacion.actividades %}Actividades elegidas: {{ alcance_operacion.actividades|join:", " }}. {% else %}Solo turnos libres. {% endif %}Se anularán {{ previa.anulaciones }} eventos{% if parametros_operacion.operacion == 'bloquear' %} y se crearán {{ previa.bloqueos_a_crear }} bloqueos{% endif %}, según la vista previa. Horario: {{ alcance_operacion.horario }}." data-confirmar-titulo="Confirmar acciones del {% if mensual %}mes{% else %}día{% endif %}" data-confirmar-boton="Confirmar" data-confirmar-peligro>
+                    <form method="post" action="{{ url_operacion|default:agenda.url_acciones }}" data-confirmar="¿Confirmar la operación sobre {{ previa.canchas|length }} cancha{{ previa.canchas|length|pluralize }} en {{ previa.sedes|join:", " }}, {% if mensual %}del {{ alcance_operacion.desde|date:'d/m/Y' }} al {{ alcance_operacion.hasta|date:'d/m/Y' }} ({{ alcance_operacion.dias|join:", " }}){% else %}el {{ fecha|date:'d/m/Y' }}{% endif %}? {% if alcance_operacion.actividades %}Actividades elegidas: {{ alcance_operacion.actividades|join:", " }}. {% else %}Solo turnos libres. {% endif %}Se anularán {{ previa.anulaciones }} eventos{% if parametros_operacion.operacion == 'bloquear' %} y se crearán {{ previa.bloqueos_a_crear }} bloqueos{% endif %}, según la vista previa. Horario: {{ alcance_operacion.horario }}." data-confirmar-titulo="Confirmar acciones del {% if mensual %}mes{% else %}día{% endif %}" data-confirmar-boton="Confirmar" data-confirmar-peligro>
                         {% csrf_token %}<input type="hidden" name="paso" value="confirmar"><input type="hidden" name="confirmacion" value="{{ confirmacion }}">
                         <button class="boton boton-confirmar-peligro boton-chico" type="submit">{% if parametros_operacion.operacion == 'bloquear' %}Confirmar y bloquear{% else %}Confirmar y liberar{% endif %}</button>
                     </form>
@@ -121,12 +122,23 @@
                 </div>
             {% endif %}
             <div class="grupo-campo">
+                <label for="{{ formulario_operacion.seleccion_sedes.id_for_label }}">{{ formulario_operacion.seleccion_sedes.label }}</label>{{ formulario_operacion.seleccion_sedes }}
+                {% for error in formulario_operacion.seleccion_sedes.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+                {% for error in formulario_operacion.sedes.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <fieldset class="operacion-canchas" data-operacion-varias-sedes{% if formulario_operacion.seleccion_sedes.value != 'seleccionar' %} hidden{% endif %}>
+                <legend>{{ formulario_operacion.sedes.label }}</legend>{{ formulario_operacion.sedes }}
+            </fieldset>
+            <div class="grupo-campo">
                 <label for="{{ formulario_operacion.seleccion_canchas.id_for_label }}">{{ formulario_operacion.seleccion_canchas.label }}</label>{{ formulario_operacion.seleccion_canchas }}
                 {% for error in formulario_operacion.seleccion_canchas.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-            </div>
-            <fieldset class="operacion-canchas" data-operacion-varias-canchas>
-                <legend>{{ formulario_operacion.canchas.label }}</legend>{{ formulario_operacion.canchas }}
                 {% for error in formulario_operacion.canchas.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+            <fieldset class="operacion-canchas" data-operacion-varias-canchas{% if formulario_operacion.seleccion_canchas.value != 'seleccionar' %} hidden{% endif %}>
+                <legend>{{ formulario_operacion.canchas.label }}</legend>
+                {% for opcion in formulario_operacion.canchas %}
+                    <label data-sede-cancha="{{ opcion.data.value.instance.sede_id }}">{{ opcion.tag }} {{ opcion.choice_label }}</label>
+                {% endfor %}
             </fieldset>
             <div class="grupo-campo">
                 <label for="{{ formulario_operacion.horario.id_for_label }}">{{ formulario_operacion.horario.label }}</label>{{ formulario_operacion.horario }}
