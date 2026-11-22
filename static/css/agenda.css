@@ -33,9 +33,7 @@
 }
 
 .agenda-controles select {
-    height: 44px;
     max-width: 260px;
-    border-radius: 6px;
 }
 
 .agenda-controles .agenda-sede {
@@ -92,18 +90,15 @@
 .agenda-selector-fecha {
     display: flex;
     align-items: center;
-    height: 44px;
     border: 1px solid var(--borde);
-    border-radius: 6px;
+    border-radius: 10px;
     background: var(--superficie);
 }
 
-.agenda-selector-fecha input {
+.agenda-selector-fecha .form-control {
     flex: 0 0 11rem;
     width: 11rem;
-    height: 42px;
-    min-height: 42px;
-    padding: 8px 10px;
+    min-height: calc(var(--altura-control-filtro) - 2px);
     border-width: 0 1px;
     border-radius: 0;
 }
@@ -113,10 +108,10 @@
     outline-offset: 2px;
 }
 
-.agenda-flecha {
+.boton.agenda-flecha {
     flex-shrink: 0;
-    width: 42px;
-    height: 42px;
+    width: var(--altura-control-filtro);
+    min-height: calc(var(--altura-control-filtro) - 2px);
     padding: 0;
     border: 0;
     border-radius: 5px;
@@ -125,22 +120,13 @@
 
 .agenda-hoy,
 .agenda-menu-acciones > summary {
-    height: 44px;
     border-color: transparent;
-    border-radius: 6px;
     background: var(--primario-suave);
 }
 
 .agenda-hoy:hover,
 .agenda-menu-acciones > summary:hover {
     border-color: var(--borde);
-}
-
-.agenda-flecha:focus-visible,
-.agenda-hoy:focus-visible,
-.agenda-menu-acciones > summary:focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: 2px;
 }
 
 .agenda-titulo-fecha {
@@ -683,7 +669,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
         max-width: 100%;
     }
 
-    .agenda-selector-fecha input {
+    .agenda-selector-fecha .form-control {
         flex: 1 1 auto;
         width: 100%;
         min-width: 0;

@@ -9,7 +9,7 @@
 {% block clase_contenido %}contenido-actividad-clases{% endblock %}
 
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
+<header data-resultados-filtros="encabezado" class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
     <div class="encabezado-fila">
         <h1>Actividad de clases</h1>
         {% if es_profesor or request.user.pk != titular.pk %}
@@ -39,7 +39,7 @@
     <p class="encabezado-descripcion">Consultá {% if request.user.pk == titular.pk %}tus clases y asistencias{% else %}las clases y asistencias de {{ titular }}{% endif %} en el período seleccionado.</p>
 </header>
 {% if consulta_administrativa %}
-<section class="tarjeta actividad-tarjeta-resumen" aria-label="Resumen del período">
+<section class="tarjeta actividad-tarjeta-resumen" data-resultados-filtros="resumen" aria-label="Resumen del período">
     <div class="perfil-seccion">
         <dl class="perfil-lista"><dt>Período</dt>{% if actividad %}<dd>{{ actividad.fecha_desde|date:"d/m/Y" }} – {{ actividad.fecha_hasta|date:"d/m/Y" }}</dd>{% endif %}</dl>
     </div>
@@ -62,7 +62,7 @@
     </div>
     {% endif %}
 </section>
-{% tarjeta_filtros abierto=formulario.errors %}
+{% tarjeta_filtros abierto=formulario.errors|default:None %}
     <form class="actividad-filtros filtros-compactos" method="get">
         {{ formulario.vista }}
         {% if es_profesor %}<input type="hidden" name="funcion" value="{{ funcion }}">{% endif %}
@@ -73,12 +73,12 @@
             <div class="grupo-campo"><label for="{{ formulario.fecha_hasta.id_for_label }}">Hasta</label>{{ formulario.fecha_hasta }}{% for error in formulario.fecha_hasta.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
         </div>
         <p class="texto-secundario">Podés consultar hasta 366 días por período.</p>
-        <div class="acciones-formulario"><a class="boton boton-secundario boton-chico" href="{% url 'clases:actividad_clases' titular.pk %}{% if es_profesor %}?funcion={{ funcion }}{% endif %}">Este mes</a><button class="boton boton-primario boton-chico" type="submit">Aplicar período</button></div>
+        <div class="acciones-formulario"><a class="boton boton-secundario" href="{% url 'clases:actividad_clases' titular.pk %}{% if es_profesor %}?funcion={{ funcion }}{% endif %}" data-limpiar-filtros>Limpiar filtros</a></div>
     </form>
 {% endtarjeta_filtros %}
 {% else %}
 {% tarjeta_filtros %}
-    <form class="tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos aria-label="Filtros de clases">
+    <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de clases">
         {% if es_profesor %}<input type="hidden" name="funcion" value="{{ funcion }}">{% endif %}
         {% for campo in formulario %}
             <div class="grupo-campo">
@@ -87,15 +87,15 @@
             </div>
         {% endfor %}
         <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ url_limpiar }}" data-limpiar-filtros>Limpiar filtros</a></div>
-        <noscript><button class="boton boton-secundario" type="submit">Aplicar filtros</button></noscript>
     </form>
 {% endtarjeta_filtros %}
 {% endif %}
+<div data-resultados-filtros>
 {% if mostrar_listado %}
 <section class="tarjeta actividad-listado" aria-label="Clases del período">
     {% if consulta_administrativa %}
     <nav class="pestanas actividad-vistas" aria-label="Secciones de actividad">
-        {% for vista in vistas %}<a href="{{ vista.url }}"{% if vista.actual %} aria-current="page"{% endif %}>{{ vista.nombre }}</a>{% endfor %}
+        {% for vista in vistas %}<a href="{{ vista.url }}" data-consulta-filtros{% if vista.actual %} aria-current="page"{% endif %}>{{ vista.nombre }}</a>{% endfor %}
     </nav>
     {% endif %}
     {% if pagina %}
@@ -125,5 +125,5 @@
     {% include "componentes/paginacion.html" with pagina=pagina entidad="clases" parametros=parametros_paginacion only %}
 </section>
 {% endif %}
-{% if es_profesor or not consulta_administrativa %}<script src="{% static 'js/filtros.js' %}" defer></script>{% endif %}
+</div>
 {% endblock %}

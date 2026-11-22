@@ -119,31 +119,31 @@ document.addEventListener("DOMContentLoaded", function () {
             };
         var errorCarga = document.querySelector(configuracionFila.plantillaError);
 
-        document.querySelectorAll(configuracionFila.selector).forEach(function (enlace) {
-            enlace.addEventListener("click", async function (evento) {
-                if (evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
-                evento.preventDefault();
-                if (cargando || modal.open) return;
+        document.addEventListener("click", async function (evento) {
+            var enlace = evento.target.closest(configuracionFila.selector);
+            if (!enlace) return;
+            if (evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
+            evento.preventDefault();
+            if (cargando || modal.open) return;
 
-                devolverFoco = enlace;
-                devolverFoco.focus({ preventScroll: true });
-                cargando = true;
-                var datos = {};
-                try {
-                    datos = await solicitarFormulario(enlace.href);
-                    mostrarContenido(datos);
-                } catch (error) {
-                    modal.replaceChildren(errorCarga.content.cloneNode(true));
-                    modal.querySelector("[role='alert']").textContent = configuracionFila.mensajeError;
-                    modal.classList.remove("horario-modal-revision");
-                } finally {
-                    cargando = false;
-                }
-                if (!document.querySelector("[data-modal-horarios][open]")) {
-                    abrirModal();
-                    enfocarContenido(datos);
-                }
-            });
+            devolverFoco = enlace;
+            devolverFoco.focus({ preventScroll: true });
+            cargando = true;
+            var datos = {};
+            try {
+                datos = await solicitarFormulario(enlace.href);
+                mostrarContenido(datos);
+            } catch (error) {
+                modal.replaceChildren(errorCarga.content.cloneNode(true));
+                modal.querySelector("[role='alert']").textContent = configuracionFila.mensajeError;
+                modal.classList.remove("horario-modal-revision");
+            } finally {
+                cargando = false;
+            }
+            if (!document.querySelector("[data-modal-horarios][open]")) {
+                abrirModal();
+                enfocarContenido(datos);
+            }
         });
 
         modal.addEventListener("click", function (evento) {

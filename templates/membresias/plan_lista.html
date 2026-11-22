@@ -12,7 +12,7 @@
 </header>
 {% if hay_planes %}
     {% tarjeta_filtros %}
-        <form class="tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos>
+        <form class="tarjeta-busqueda filtros-compactos" method="get">
             <div class="grupo-campo">
                 <label for="plan-busqueda">Buscar</label>
                 <input class="form-control" type="search" id="plan-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="Nombre o descripción">
@@ -25,10 +25,9 @@
                 </select>
             </div>
             <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'membresias:plan_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
-            <noscript><button class="boton boton-secundario" type="submit">Buscar</button></noscript>
         </form>
     {% endtarjeta_filtros %}
-    <section class="tarjeta tabla-contenedor tabla-listado" aria-label="Catálogo de planes">
+    <section class="tarjeta tabla-contenedor tabla-listado" data-resultados-filtros aria-label="Catálogo de planes">
         <table>
             <thead><tr><th scope="col">Estado</th><th scope="col">Nombre</th><th scope="col">Modalidad</th><th scope="col">Encuentros por semana</th><th scope="col">Duración</th><th scope="col">Precio mensual (ARS)</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
             <tbody>
@@ -49,5 +48,4 @@
     </section>
 
 {% else %}<p class="tarjeta estado-vacio">Todavía no hay planes registrados.</p>{% endif %}
-<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

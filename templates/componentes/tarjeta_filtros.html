@@ -5,5 +5,11 @@
     </summary>
     <div class="tarjeta-filtros-contenido">
         {{ contenido }}
+        <div data-aviso-filtros role="status"></div>
+        <template data-filtro-borrar-texto>
+            <button type="button" class="filtro-borrar-texto" aria-label="Borrar texto" hidden>
+                {% include "componentes/iconoir/cruz.html" %}
+            </button>
+        </template>
     </div>
 </details>

@@ -12,7 +12,7 @@
 </header>
 {% if sesiones %}{% include "caja/navegacion.html" with seccion="sesiones" only %}{% else %}{% include "caja/navegacion.html" with seccion="movimientos" only %}{% endif %}
 {% tarjeta_filtros %}
-    <form method="get" class="caja-filtros tarjeta-busqueda filtros-compactos{% if sesiones %} caja-filtros-sesiones{% else %} caja-filtros-movimientos{% endif %}" data-filtros-automaticos aria-label="Filtros de caja">
+    <form method="get" class="caja-filtros tarjeta-busqueda filtros-compactos{% if sesiones %} caja-filtros-sesiones{% else %} caja-filtros-movimientos{% endif %}" aria-label="Filtros de caja">
         {% if formulario.non_field_errors %}<div class="mensaje mensaje-error">{{ formulario.non_field_errors }}</div>{% endif %}
         <div class="detalle-grid">
             {% for campo in formulario %}<div class="grupo-campo caja-filtro-{{ campo.name }}"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
@@ -20,7 +20,7 @@
         <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ request.path }}" data-limpiar-filtros>Limpiar filtros</a></div>
     </form>
 {% endtarjeta_filtros %}
-<section class="tarjeta caja-listado" aria-label="{% if sesiones %}Sesiones de caja{% else %}Movimientos de caja{% endif %}">
+<section class="tarjeta caja-listado" data-resultados-filtros aria-label="{% if sesiones %}Sesiones de caja{% else %}Movimientos de caja{% endif %}">
 {% if sesiones %}
     <div class="tabla-contenedor tabla-listado"><table>
         <thead><tr><th scope="col">Sesión</th><th scope="col">Responsable</th><th scope="col">Apertura</th><th scope="col">Cierre</th><th scope="col" class="caja-monto">Efectivo contado</th></tr></thead>
@@ -32,5 +32,4 @@
     {% include "componentes/paginacion.html" with pagina=pagina entidad="sesiones" parametros=parametros only %}
 {% else %}{% include "caja/_movimientos.html" with tabla_listado=True %}{% endif %}
 </section>
-<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

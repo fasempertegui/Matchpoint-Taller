@@ -12,7 +12,7 @@
 </header>
 {% if hay_membresias %}
     {% tarjeta_filtros %}
-        <form class="tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos>
+        <form class="tarjeta-busqueda filtros-compactos" method="get">
             <div class="grupo-campo">
                 <label for="membresia-busqueda">Buscar</label>
                 <input class="form-control" type="search" id="membresia-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="Nombre o descripción">
@@ -25,10 +25,9 @@
                 </select>
             </div>
             <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'membresias:membresia_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
-            <noscript><button class="boton boton-secundario" type="submit">Buscar</button></noscript>
         </form>
     {% endtarjeta_filtros %}
-    <section class="tarjeta tabla-contenedor tabla-listado" aria-label="Catálogo de membresías">
+    <section class="tarjeta tabla-contenedor tabla-listado" data-resultados-filtros aria-label="Catálogo de membresías">
         <table>
             <thead><tr><th scope="col">Estado</th><th scope="col">Nombre</th><th scope="col">Horas de organizador</th><th scope="col">Horas de invitado</th><th scope="col">Precio mensual (ARS)</th><th scope="col">Adicional por invitado sin beneficio (ARS)</th><th scope="col" class="acciones-columna">Acción</th></tr></thead>
             <tbody>
@@ -48,5 +47,4 @@
     </section>
 
 {% else %}<p class="tarjeta estado-vacio">Todavía no hay membresías registradas.</p>{% endif %}
-<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

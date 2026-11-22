@@ -15,13 +15,13 @@
     </p>
 </header>
 {% tarjeta_filtros %}
-    <form class="tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos aria-label="Filtros de continuidad">
+    <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de continuidad">
         {% if formulario.non_field_errors %}<div class="mensaje mensaje-error">{{ formulario.non_field_errors }}</div>{% endif %}
         {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
         <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'membresias:continuidad_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
-        <noscript><button class="boton boton-secundario" type="submit">Consultar</button></noscript>
     </form>
 {% endtarjeta_filtros %}
+<div data-resultados-filtros>
 {% if mes %}
 <section class="tarjeta tabla-contenedor tabla-listado" aria-label="Continuidad para {{ mes_consultado|date:'F Y' }}">
     <table>
@@ -37,5 +37,5 @@
     {% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=consulta only %}
 </section>
 {% endif %}
-<script src="{% static 'js/filtros.js' %}" defer></script>
+</div>
 {% endblock %}

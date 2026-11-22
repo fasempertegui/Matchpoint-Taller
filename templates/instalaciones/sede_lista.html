@@ -23,7 +23,7 @@
 </header>
 
 {% tarjeta_filtros %}
-    <form method="get" action="{% url 'instalaciones:sede_lista' %}" class="tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
+    <form method="get" action="{% url 'instalaciones:sede_lista' %}" class="tarjeta-busqueda filtros-compactos">
         <div class="grupo-campo">
             <label for="estado">Estado</label>
             <select class="form-control" name="estado" id="estado">
@@ -39,7 +39,7 @@
     </form>
 {% endtarjeta_filtros %}
 
-<section class="sedes-tarjetas" aria-label="Sedes">
+<section class="sedes-tarjetas" data-resultados-filtros aria-label="Sedes">
     {% for sede in sedes %}
         <article class="tarjeta sede-tarjeta">
             {% include "instalaciones/_imagen_sede.html" with sede=sede only %}
@@ -54,5 +54,4 @@
         <p class="tarjeta estado-vacio">No hay sedes para mostrar.</p>
     {% endfor %}
 </section>
-<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

@@ -48,7 +48,7 @@
 </div>
 
 {% tarjeta_filtros abierto=parametros %}
-    <form method="get" action="{% url 'instalaciones:horarios_especiales' %}" class="tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
+    <form method="get" action="{% url 'instalaciones:horarios_especiales' %}" class="tarjeta-busqueda filtros-compactos">
         <div class="grupo-campo horarios-filtro-busqueda">
             <label for="buscar-horarios">Buscar</label>
             <div class="horarios-buscador">
@@ -82,7 +82,7 @@
     </form>
 {% endtarjeta_filtros %}
 
-<section class="tarjeta feriados-lista">
+<section class="tarjeta feriados-lista" data-resultados-filtros>
     {% if pagina %}
         <div class="tabla-contenedor tabla-listado">
             <table>
@@ -149,6 +149,5 @@
 </section>
 {% include "instalaciones/_modal_feriado.html" %}
 {% include "instalaciones/_modal_horario_especial.html" %}
-<script src="{% static 'js/filtros.js' %}" defer></script>
 <script src="{% static 'js/horarios-especiales-modales.js' %}" defer></script>
 {% endblock %}

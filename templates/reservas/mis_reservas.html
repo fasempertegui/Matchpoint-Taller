@@ -21,16 +21,15 @@
 </header>
 {% endif %}
 {% tarjeta_filtros %}
-    <form class="tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos aria-label="Filtros de reservas">
+    <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de reservas">
         {% if consulta_administrativa %}
         <div class="grupo-campo"><label for="reservas-participacion">Participación</label><select class="form-control" name="participacion" id="reservas-participacion"><option value="">Todas</option><option value="organizador"{% if participacion == 'organizador' %} selected{% endif %}>Organizador</option><option value="invitado"{% if participacion == 'invitado' %} selected{% endif %}>Invitado</option></select></div>
         {% endif %}
         <div class="grupo-campo"><label for="reservas-estado">Estado</label><select class="form-control" name="estado" id="reservas-estado"><option value="">Todos</option>{% for valor, etiqueta in estados %}<option value="{{ valor }}"{% if estado == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}</select></div>
         <a class="boton boton-secundario" href="{{ request.path }}" data-limpiar-filtros>Limpiar filtros</a>
-        <noscript><button class="boton boton-secundario" type="submit">Aplicar filtros</button></noscript>
     </form>
 {% endtarjeta_filtros %}
-<section class="tarjeta reservas-tabla tabla-contenedor tabla-listado" aria-label="{% if consulta_administrativa %}Reservas e invitaciones{% elif solo_invitaciones %}Mis invitaciones{% else %}Mis reservas{% endif %}">
+<section class="tarjeta reservas-tabla tabla-contenedor tabla-listado" data-resultados-filtros aria-label="{% if consulta_administrativa %}Reservas e invitaciones{% elif solo_invitaciones %}Mis invitaciones{% else %}Mis reservas{% endif %}">
 <table><thead><tr><th scope="col">Reserva</th><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if consulta_administrativa %}<th scope="col">Participación</th>{% endif %}{% if consulta_administrativa or solo_invitaciones %}<th scope="col">Respuesta</th>{% endif %}<th scope="col">Estado</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead><tbody>
 {% for reserva in pagina %}<tr>
     <td><strong>{{ reserva.numero }}</strong></td>
@@ -48,5 +47,4 @@
     {% include "componentes/paginacion.html" with pagina=pagina entidad="reservas" parametros=parametros only %}
 {% endif %}
 </section>
-<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

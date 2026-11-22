@@ -21,7 +21,7 @@
 </header>
 
 {% tarjeta_filtros %}
-    <form method="get" action="{% url 'usuarios:usuario_lista' %}" class="tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
+    <form method="get" action="{% url 'usuarios:usuario_lista' %}" class="tarjeta-busqueda filtros-compactos">
         <div class="detalle-grid">
             <div class="grupo-campo">
                 <label for="{{ formulario_busqueda.q.id_for_label }}">{{ formulario_busqueda.q.label }}</label>
@@ -42,7 +42,7 @@
     </form>
 {% endtarjeta_filtros %}
 
-<section class="tarjeta tabla-contenedor tabla-listado">
+<section class="tarjeta tabla-contenedor tabla-listado" data-resultados-filtros>
     <table>
         <thead>
             <tr>
@@ -87,5 +87,4 @@
     </table>
 {% include "componentes/paginacion.html" with pagina=pagina entidad="usuarios" parametros=parametros only %}
 </section>
-<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

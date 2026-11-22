@@ -3,7 +3,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (filtros) {
         filtros.addEventListener("change", function (evento) {
             if (evento.target.name === "sede") filtros.elements.cancha.disabled = true;
-            filtros.requestSubmit();
         });
     }
 

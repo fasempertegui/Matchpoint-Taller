@@ -18,7 +18,7 @@
 
 {% if hay_sedes %}
     {% tarjeta_filtros %}
-        <form class="tarjeta-busqueda agenda-controles" method="get" data-agenda-filtros>
+        <form class="tarjeta-busqueda agenda-controles" method="get" data-filtros-navegacion>
             <div class="grupo-campo agenda-sede">
                 <label for="{{ formulario.sede.id_for_label }}">Sede</label>
                 {{ formulario.sede }}
@@ -45,7 +45,7 @@
                     {% if agenda %}<a class="boton boton-secundario agenda-hoy" href="{{ agenda.url_hoy }}">Hoy</a>{% endif %}
                 </div>
             </div>
-            <noscript><button class="boton boton-secundario boton-chico" type="submit">Aplicar filtros</button></noscript>
+            <a class="boton boton-secundario" href="{{ request.path }}" data-limpiar-filtros>Limpiar filtros</a>
         </form>
     {% endtarjeta_filtros %}
     {% if formulario.errors %}

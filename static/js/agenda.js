@@ -1,11 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-    var filtros = document.querySelector("[data-agenda-filtros]");
-    if (filtros) {
-        filtros.addEventListener("change", function () {
-            filtros.requestSubmit();
-        });
-    }
-
     var panel = document.querySelector("[data-agenda-detalle]");
     var menuAcciones = document.querySelector("[data-agenda-menu-acciones]");
     var contenido = panel && panel.querySelector("[data-agenda-contenido]");

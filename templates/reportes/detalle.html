@@ -7,24 +7,23 @@
 <header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
     <div class="encabezado-fila">
         <h1>{{ reporte.titulo }}</h1>
-        <div class="acciones">{% if totales_tabla %}<a class="boton boton-primario" href="{% url 'reportes:pdf' tipo %}?{{ parametros }}">Descargar PDF</a>{% endif %}<a class="boton boton-secundario" href="{% url 'reportes:inicio' %}">Ver reportes</a></div>
+        <div class="acciones" data-resultados-filtros="acciones">{% if totales_tabla %}<a class="boton boton-primario" href="{% url 'reportes:pdf' tipo %}?{{ parametros }}">Descargar PDF</a>{% endif %}<a class="boton boton-secundario" href="{% url 'reportes:inicio' %}">Ver reportes</a></div>
     </div>
     <p class="encabezado-descripcion">{{ reporte.descripcion }}</p>
 </header>
-<section class="tarjeta reporte-alcance" aria-label="Alcance del reporte">
+<section class="tarjeta reporte-alcance" data-resultados-filtros="alcance" aria-label="Alcance del reporte">
     <div class="reporte-consulta-actual"><h2>Consulta actual</h2>
         {% if filtros_aplicados %}<ul class="reporte-filtros-aplicados">{% for filtro in filtros_aplicados %}<li>{{ filtro }}</li>{% endfor %}</ul>{% else %}<p class="texto-secundario">Sin filtros adicionales</p>{% endif %}
     </div>
 </section>
-{% tarjeta_filtros abierto=formulario.errors %}
+{% tarjeta_filtros abierto=formulario.errors|default:None %}
     <form method="get" class="reporte-filtros filtros-compactos">
         {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
         <div class="detalle-grid">
             {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
         </div>
         <div class="acciones-formulario">
-            <button class="boton boton-primario" type="submit">Aplicar filtros</button>
-            <a class="boton boton-secundario" href="{% url 'reportes:detalle' tipo %}">Restablecer</a>
+            <a class="boton boton-secundario" href="{% url 'reportes:detalle' tipo %}" data-limpiar-filtros>Limpiar filtros</a>
         </div>
     </form>
 {% endtarjeta_filtros %}
@@ -32,6 +31,7 @@
     <summary>Criterios de cálculo</summary>
     <div class="reporte-criterios-contenido"><dl><dt>Información incluida</dt><dd>{{ reporte.procesos }}</dd></dl>{% for nota in reporte.notas %}<p>{{ nota }}</p>{% endfor %}</div>
 </details>
+<div data-resultados-filtros>
 {% if totales_tabla %}
 {% if indicadores %}<section class="tarjeta reporte-resumen" aria-label="Indicadores del reporte"><dl class="reporte-indicadores">{% for etiqueta, valor in indicadores %}<div><dt>{{ etiqueta }}</dt><dd>{{ valor }}</dd></div>{% endfor %}</dl></section>{% endif %}
 <section class="tarjeta reporte-resultados" aria-label="Resultado consolidado">
@@ -47,4 +47,5 @@
     {% include "componentes/paginacion.html" with pagina=pagina entidad="filas" parametros=parametros only %}
 </section>
 {% endif %}
+</div>
 {% endblock %}

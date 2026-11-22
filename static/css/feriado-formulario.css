@@ -97,10 +97,7 @@ body > .contenido-principal.contenido-feriados {
 }
 
 .horarios-filtro-tipo legend {
-    margin-bottom: 4px;
     padding: 0;
-    font-size: 0.85rem;
-    font-weight: 600;
 }
 
 .horarios-tipos-opciones {
@@ -128,7 +125,7 @@ body > .contenido-principal.contenido-feriados {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 32px;
+    min-height: calc(var(--altura-control-filtro) - 4px);
     padding: 4px 9px;
     border-radius: 8px;
     color: var(--texto-suave);

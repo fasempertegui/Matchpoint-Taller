@@ -25,7 +25,7 @@
 {% endif %}
 {% if hay_contrataciones %}
     {% tarjeta_filtros %}
-        <form class="tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos>
+        <form class="tarjeta-busqueda filtros-compactos" method="get">
             {% if propias or titular %}<input type="hidden" name="tipo" value="{{ tipo }}">{% endif %}
             <div class="grupo-campo">
                 <label for="contratacion-busqueda">Buscar</label>
@@ -46,10 +46,9 @@
                 </select>
             </div>
             <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ url_lista }}" data-limpiar-filtros>Limpiar filtros</a></div>
-            <noscript><button class="boton boton-secundario" type="submit">Buscar</button></noscript>
         </form>
     {% endtarjeta_filtros %}
-    <section class="tarjeta tabla-contenedor tabla-listado" aria-label="Contrataciones de {{ plural }}">
+    <section class="tarjeta tabla-contenedor tabla-listado" data-resultados-filtros aria-label="Contrataciones de {{ plural }}">
         <table>
             <thead><tr>{% if not propias and not titular %}<th scope="col">Usuario</th>{% endif %}<th scope="col">{{ nombre_tipo|default:tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
             <tbody>
@@ -70,5 +69,4 @@
         {% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=parametros only %}
     </section>
 {% else %}<p class="tarjeta estado-vacio">{% if propias %}Todavía no tenés contrataciones de {{ plural }} registradas.{% elif titular %}Este usuario todavía no tiene contrataciones de {{ plural }} registradas.{% else %}Todavía no hay contrataciones de {{ plural }} registradas.{% endif %}</p>{% endif %}
-<script src="{% static 'js/filtros.js' %}" defer></script>
 {% endblock %}

@@ -18,9 +18,9 @@
         <p>Cada cancha tiene su propia planilla semanal. La generación de clases incluye las planillas de todas las canchas de la sede elegida.</p>
     </aside>
     {% tarjeta_filtros %}
-        <form class="planilla-filtros" method="get" data-planilla-filtros>
+        <form class="planilla-filtros" method="get" data-filtros-navegacion data-planilla-filtros>
             {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>{% endfor %}
-            <noscript><button class="boton boton-secundario" type="submit">Aplicar filtros</button></noscript>
+            <a class="boton boton-secundario" href="{{ request.path }}" data-limpiar-filtros>Limpiar filtros</a>
         </form>
     {% endtarjeta_filtros %}
     {% if datos %}
