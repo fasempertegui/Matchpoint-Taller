@@ -169,7 +169,7 @@ class AgendaOperacionForm(forms.Form):
         label="Motivo de anulación *",
         required=False,
         help_text="Mínimo 5 caracteres",
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        widget=forms.TextInput(attrs={"class": "form-control"}),
     )
     observaciones = forms.CharField(
         required=False,
@@ -329,7 +329,6 @@ class AgendaOperacionMesForm(AgendaOperacionForm):
         self.fields["operacion"].widget.attrs["form"] = "agenda-operacion-mes"
         self.fields.pop("motivo_bloqueo")
         self.fields.pop("observaciones")
-        self.fields["motivo_anulacion"].widget = forms.TextInput(attrs={"class": "form-control"})
 
     def _horas_habilitadas(self, sede, fecha, ahora):
         return sorted({
