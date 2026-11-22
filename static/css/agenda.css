@@ -619,10 +619,53 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     }
 }
 
+@media (max-width: 720px) {
+    .agenda-encabezado .encabezado-fila {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .agenda-encabezado .acciones {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .agenda-controles {
+        align-items: stretch;
+    }
+
+    .agenda-controles .grupo-campo {
+        width: 100%;
+    }
+
+    .agenda-controles select {
+        width: 100%;
+        max-width: none;
+    }
+}
+
 @media (max-width: 560px) {
     .agenda-controles {
         gap: 12px;
     }
+
+    .agenda-fechas {
+        width: 100%;
+    }
+
+    .agenda-selector-fecha {
+        flex: 1 1 200px;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .agenda-selector-fecha input {
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+    }
+
     .agenda-turno {
         padding: 5px;
     }

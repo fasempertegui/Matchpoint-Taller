@@ -2,6 +2,25 @@
     font-size: .85rem;
 }
 
+@supports (appearance: base-select) and (width: anchor-size(width)) and selector(::picker(select)) {
+    :is(.agenda-controles, .agenda-operaciones) select.form-control:not(:disabled),
+    :is(.agenda-controles, .agenda-operaciones) select.form-control:not(:disabled)::picker(select) {
+        appearance: base-select;
+    }
+
+    :is(.agenda-controles, .agenda-operaciones) select.form-control:not(:disabled)::picker(select) {
+        position-area: block-end span-inline-end;
+        position-try-fallbacks: none;
+        box-sizing: border-box;
+        width: anchor-size(width);
+        min-width: 0;
+        border: 1px solid var(--borde);
+        border-radius: 6px;
+        background: var(--superficie);
+        color: var(--texto);
+    }
+}
+
 .operacion-rango-fechas {
     display: flex;
     flex-wrap: wrap;
