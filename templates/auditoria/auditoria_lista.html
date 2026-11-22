@@ -45,12 +45,10 @@
         </td>
         <td>
             <strong class="auditoria-accion">{{ fila.accion }}</strong>
-            {% if fila.accion != "Inicio de sesión" %}
+            {% if fila.accion != "Inicio de sesión" and fila.registro.accion != "eliminacion" %}
             <div class="auditoria-operacion-registro">
             <span>{{ fila.tipo }} · </span>
-            {% if fila.registro.accion == "eliminacion" %}
-            <i class="auditoria-referencia">{{ fila.referencia }}</i>
-            {% elif fila.url %}
+            {% if fila.url %}
             <a class="auditoria-referencia enlace-tabla" href="{{ fila.url }}">{{ fila.referencia }}</a>
             {% else %}
             <span class="auditoria-referencia">{{ fila.referencia }}</span>

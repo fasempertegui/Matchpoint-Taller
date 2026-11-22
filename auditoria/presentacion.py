@@ -19,6 +19,7 @@ from membresias.models import AjusteHorasMembresia, Membresia, MembresiaUsuario,
 from reservas.models import Evento, Reserva, ReservaInvitado, Turno
 from usuarios.models import Rol, Usuario, UsuarioRol
 
+from .acciones import clasificar_accion
 from .models import LogAuditoria
 
 
@@ -61,15 +62,6 @@ TIPOS_REGISTRO = {
     "planes": (Plan, "Plan", (), "membresias:plan_detalle"),
     "membresias_usuarios": (MembresiaUsuario, "Contratación de membresía", ("usuario",), "membresias:contratacion_membresia_detalle"),
     "planes_usuarios": (PlanUsuario, "Contratación de plan", ("usuario",), "membresias:contratacion_plan_detalle"),
-}
-
-
-ESTADOS_ACTIVACION = {
-    "usuarios": ("is_active", True, False),
-    "sedes": ("estado", "activa", "inactiva"),
-    "canchas": ("estado", "activa", "inactiva"),
-    "membresias": ("estado", "activo", "inactivo"),
-    "planes": ("estado", "activo", "inactivo"),
 }
 
 
@@ -172,42 +164,6 @@ def _clave_legible(clave, modelo=None):
     return " · ".join(partes)
 
 
-def _accion_visible(registro):
-    if registro.accion == "restablecimiento_contrasena":
-        return "Restablecimiento de contraseña"
-    if registro.accion != LogAuditoria.Accion.MODIFICACION:
-        return registro.get_accion_display()
-
-    anteriores = registro.valores_anteriores
-    actuales = registro.valores_actuales
-    campos = registro.valores_anteriores.keys() | registro.valores_actuales.keys()
-    if (
-        registro.tabla == "usuarios"
-        and registro.origen == LogAuditoria.Origen.APLICACION
-        and registro.usuario_id == registro.clave_registro.get("id")
-        and campos - {"actualizado_en"} == {"last_login"}
-        and registro.valores_actuales.get("last_login") is not None
-    ):
-        return "Inicio de sesión"
-
-    if (
-        registro.tabla == "eventos"
-        and anteriores.get("estado") == Evento.Estado.PROGRAMADO
-        and actuales.get("estado") == Evento.Estado.FINALIZADO
-    ):
-        return "Finalización"
-
-    configuracion = ESTADOS_ACTIVACION.get(registro.tabla)
-    if configuracion:
-        campo, activo, inactivo = configuracion
-        if anteriores.get(campo) == inactivo and actuales.get(campo) == activo:
-            return "Activación"
-        if anteriores.get(campo) == activo and actuales.get(campo) == inactivo:
-            return "Desactivación"
-
-    return registro.get_accion_display()
-
-
 def preparar_filas(registros):
     por_tabla = defaultdict(list)
     filas = {}
@@ -250,7 +206,7 @@ def preparar_filas(registros):
                 referencia = _referencia_eliminada(registro, clave)
             filas[registro.pk] = {
                 "registro": registro,
-                "accion": _accion_visible(registro),
+                "accion": clasificar_accion(registro, entidad=etiqueta.lower(), objeto=objeto, modelo=modelo),
                 "tipo": etiqueta,
                 "referencia": referencia,
                 "url": urls.get(registro.pk),
