@@ -14,12 +14,6 @@ body > .contenido-principal.contenido-membresias-configuracion {
     border-top: 3px solid var(--primario-medio);
 }
 
-.catalogo-listado .tarjeta-busqueda {
-    margin-block: 24px;
-    padding: 20px;
-}
-
-
 .catalogo-listado table { font-size: .9rem; }
 .catalogo-listado td { vertical-align: middle; }
 .catalogo-listado .catalogo-importe { white-space: nowrap; font-variant-numeric: tabular-nums; }

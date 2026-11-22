@@ -118,5 +118,3 @@
 .contratacion-datos small { display: block; margin-top: 3px; color: var(--texto-suave); font-weight: 400; }
 .contratacion-importe dd { color: var(--primario); font-size: 1.4rem; font-variant-numeric: tabular-nums; }
 .contratacion-alta .acciones-formulario { flex-wrap: wrap; }
-
-.mis-contrataciones .tarjeta-busqueda { margin-block: 20px; }

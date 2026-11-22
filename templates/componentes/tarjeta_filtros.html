@@ -1,0 +1,9 @@
+<details class="tarjeta tarjeta-filtros"{% if abierto %} open{% endif %}>
+    <summary>
+        {% include "componentes/iconoir/chevron-abajo.html" %}
+        Filtros
+    </summary>
+    <div class="tarjeta-filtros-contenido">
+        {{ contenido }}
+    </div>
+</details>

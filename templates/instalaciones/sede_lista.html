@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filtros %}
 {% load estados %}
 {% load static %}
 
@@ -21,20 +22,22 @@
     <p class="encabezado-descripcion">Consultá y administrá las sedes de la academia y sus canchas.</p>
 </header>
 
-<form method="get" action="{% url 'instalaciones:sede_lista' %}" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
-    <div class="grupo-campo">
-        <label for="estado">Estado</label>
-        <select class="form-control" name="estado" id="estado">
-            <option value="">Todos</option>
-            {% for valor, etiqueta in estados %}
-                <option value="{{ valor }}" {% if valor == estado_actual %}selected{% endif %}>{{ etiqueta }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="filtros-acciones">
-        <a class="boton boton-secundario" href="{% url 'instalaciones:sede_lista' %}" data-limpiar-filtros>Limpiar filtros</a>
-    </div>
-</form>
+{% tarjeta_filtros %}
+    <form method="get" action="{% url 'instalaciones:sede_lista' %}" class="tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
+        <div class="grupo-campo">
+            <label for="estado">Estado</label>
+            <select class="form-control" name="estado" id="estado">
+                <option value="">Todos</option>
+                {% for valor, etiqueta in estados %}
+                    <option value="{{ valor }}" {% if valor == estado_actual %}selected{% endif %}>{{ etiqueta }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filtros-acciones">
+            <a class="boton boton-secundario" href="{% url 'instalaciones:sede_lista' %}" data-limpiar-filtros>Limpiar filtros</a>
+        </div>
+    </form>
+{% endtarjeta_filtros %}
 
 <section class="sedes-tarjetas" aria-label="Sedes">
     {% for sede in sedes %}

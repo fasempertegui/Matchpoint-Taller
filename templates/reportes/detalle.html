@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static estados %}
+{% load static estados filtros %}
 {% block titulo %}{{ reporte.titulo }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/reportes.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-reportes{% endblock %}
@@ -15,20 +15,19 @@
     <div class="reporte-consulta-actual"><h2>Consulta actual</h2>
         {% if filtros_aplicados %}<ul class="reporte-filtros-aplicados">{% for filtro in filtros_aplicados %}<li>{{ filtro }}</li>{% endfor %}</ul>{% else %}<p class="texto-secundario">Sin filtros adicionales</p>{% endif %}
     </div>
-    <details class="reporte-filtros"{% if formulario.errors %} open{% endif %}>
-        <summary class="boton boton-secundario boton-chico">Modificar filtros</summary>
-        <form method="get" class="filtros-compactos">
-            {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
-            <div class="detalle-grid">
-                {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
-            </div>
-            <div class="acciones-formulario">
-                <button class="boton boton-primario" type="submit">Aplicar filtros</button>
-                <a class="boton boton-secundario" href="{% url 'reportes:detalle' tipo %}">Restablecer</a>
-            </div>
-        </form>
-    </details>
 </section>
+{% tarjeta_filtros abierto=formulario.errors %}
+    <form method="get" class="reporte-filtros filtros-compactos">
+        {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+        <div class="detalle-grid">
+            {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}
+        </div>
+        <div class="acciones-formulario">
+            <button class="boton boton-primario" type="submit">Aplicar filtros</button>
+            <a class="boton boton-secundario" href="{% url 'reportes:detalle' tipo %}">Restablecer</a>
+        </div>
+    </form>
+{% endtarjeta_filtros %}
 <details class="tarjeta reporte-criterios">
     <summary>Criterios de cálculo</summary>
     <div class="reporte-criterios-contenido"><dl><dt>Información incluida</dt><dd>{{ reporte.procesos }}</dd></dl>{% for nota in reporte.notas %}<p>{{ nota }}</p>{% endfor %}</div>

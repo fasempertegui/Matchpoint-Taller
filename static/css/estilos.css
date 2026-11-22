@@ -440,6 +440,52 @@ h2 {
     color: var(--texto-suave);
 }
 
+.tarjeta.tarjeta-filtros {
+    margin-block: 12px;
+    padding: 0;
+    border: 1px solid var(--borde);
+}
+
+.encabezado-con-descripcion:has(+ .tarjeta-filtros) { margin-bottom: 12px; }
+
+.tarjeta-filtros > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border-radius: inherit;
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+}
+
+.tarjeta-filtros > summary::-webkit-details-marker { display: none; }
+
+.tarjeta-filtros > summary:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: -2px;
+}
+
+.tarjeta-filtros > summary svg {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--primario);
+    transform: rotate(-90deg);
+}
+
+.tarjeta-filtros[open] > summary svg { transform: none; }
+
+.tarjeta-filtros-contenido {
+    padding: 20px;
+    border-top: 1px solid var(--borde);
+}
+
+.tarjeta-filtros > .tarjeta-filtros-contenido > form {
+    margin: 0;
+    padding: 0;
+}
+
 .tarjeta-busqueda {
     display: flex;
     align-items: end;

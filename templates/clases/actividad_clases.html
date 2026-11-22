@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filtros %}
 {% load estados %}
 {% load static %}
 
@@ -40,22 +41,7 @@
 {% if consulta_administrativa %}
 <section class="tarjeta actividad-tarjeta-resumen" aria-label="Resumen del período">
     <div class="perfil-seccion">
-    <div class="perfil-valor-accion">
         <dl class="perfil-lista"><dt>Período</dt>{% if actividad %}<dd>{{ actividad.fecha_desde|date:"d/m/Y" }} – {{ actividad.fecha_hasta|date:"d/m/Y" }}</dd>{% endif %}</dl>
-        <button class="boton boton-secundario boton-chico" type="button" data-cambiar-periodo aria-controls="actividad-periodo-formulario" aria-expanded="{{ formulario.errors|yesno:'true,false' }}">Cambiar período</button>
-    </div>
-        <form class="actividad-filtros filtros-compactos" id="actividad-periodo-formulario" method="get"{% if not formulario.errors %} hidden{% endif %}>
-            {{ formulario.vista }}
-            {% if es_profesor %}<input type="hidden" name="funcion" value="{{ funcion }}">{% endif %}
-            {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
-            {% for error in formulario.vista.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-            <div class="detalle-grid">
-                <div class="grupo-campo"><label for="{{ formulario.fecha_desde.id_for_label }}">Desde</label>{{ formulario.fecha_desde }}{% for error in formulario.fecha_desde.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
-                <div class="grupo-campo"><label for="{{ formulario.fecha_hasta.id_for_label }}">Hasta</label>{{ formulario.fecha_hasta }}{% for error in formulario.fecha_hasta.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
-            </div>
-            <p class="texto-secundario">Podés consultar hasta 366 días por período.</p>
-            <div class="acciones-formulario"><a class="boton boton-secundario boton-chico" href="{% url 'clases:actividad_clases' titular.pk %}{% if es_profesor %}?funcion={{ funcion }}{% endif %}">Este mes</a><button class="boton boton-primario boton-chico" type="submit">Aplicar período</button></div>
-        </form>
     </div>
     {% if actividad %}
     <div class="perfil-seccion">
@@ -76,18 +62,34 @@
     </div>
     {% endif %}
 </section>
-{% else %}
-<form class="tarjeta tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos aria-label="Filtros de clases">
-    {% if es_profesor %}<input type="hidden" name="funcion" value="{{ funcion }}">{% endif %}
-    {% for campo in formulario %}
-        <div class="grupo-campo">
-            {{ campo.label_tag }}{{ campo }}
-            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+{% tarjeta_filtros abierto=formulario.errors %}
+    <form class="actividad-filtros filtros-compactos" method="get">
+        {{ formulario.vista }}
+        {% if es_profesor %}<input type="hidden" name="funcion" value="{{ funcion }}">{% endif %}
+        {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+        {% for error in formulario.vista.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        <div class="detalle-grid">
+            <div class="grupo-campo"><label for="{{ formulario.fecha_desde.id_for_label }}">Desde</label>{{ formulario.fecha_desde }}{% for error in formulario.fecha_desde.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
+            <div class="grupo-campo"><label for="{{ formulario.fecha_hasta.id_for_label }}">Hasta</label>{{ formulario.fecha_hasta }}{% for error in formulario.fecha_hasta.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>
         </div>
-    {% endfor %}
-    <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ url_limpiar }}" data-limpiar-filtros>Limpiar filtros</a></div>
-    <noscript><button class="boton boton-secundario" type="submit">Aplicar filtros</button></noscript>
-</form>
+        <p class="texto-secundario">Podés consultar hasta 366 días por período.</p>
+        <div class="acciones-formulario"><a class="boton boton-secundario boton-chico" href="{% url 'clases:actividad_clases' titular.pk %}{% if es_profesor %}?funcion={{ funcion }}{% endif %}">Este mes</a><button class="boton boton-primario boton-chico" type="submit">Aplicar período</button></div>
+    </form>
+{% endtarjeta_filtros %}
+{% else %}
+{% tarjeta_filtros %}
+    <form class="tarjeta-busqueda filtros-compactos" method="get" data-filtros-automaticos aria-label="Filtros de clases">
+        {% if es_profesor %}<input type="hidden" name="funcion" value="{{ funcion }}">{% endif %}
+        {% for campo in formulario %}
+            <div class="grupo-campo">
+                {{ campo.label_tag }}{{ campo }}
+                {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+        {% endfor %}
+        <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ url_limpiar }}" data-limpiar-filtros>Limpiar filtros</a></div>
+        <noscript><button class="boton boton-secundario" type="submit">Aplicar filtros</button></noscript>
+    </form>
+{% endtarjeta_filtros %}
 {% endif %}
 {% if mostrar_listado %}
 <section class="tarjeta actividad-listado" aria-label="Clases del período">
@@ -123,6 +125,5 @@
     {% include "componentes/paginacion.html" with pagina=pagina entidad="clases" parametros=parametros_paginacion only %}
 </section>
 {% endif %}
-{% if consulta_administrativa %}<script src="{% static 'js/clase-actividad.js' %}" defer></script>{% endif %}
 {% if es_profesor or not consulta_administrativa %}<script src="{% static 'js/filtros.js' %}" defer></script>{% endif %}
 {% endblock %}

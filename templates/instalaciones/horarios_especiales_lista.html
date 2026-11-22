@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static filtros %}
 
 {% block titulo %}Horarios especiales | Academia TM{% endblock %}
 
@@ -47,11 +47,7 @@
     </section>
 </div>
 
-<details class="tarjeta horarios-filtros"{% if parametros %} open{% endif %}>
-    <summary>
-        {% include "componentes/iconoir/chevron-abajo.html" %}
-        Filtros
-    </summary>
+{% tarjeta_filtros abierto=parametros %}
     <form method="get" action="{% url 'instalaciones:horarios_especiales' %}" class="tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
         <div class="grupo-campo horarios-filtro-busqueda">
             <label for="buscar-horarios">Buscar</label>
@@ -84,7 +80,7 @@
             <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}" data-limpiar-filtros>Limpiar filtros</a>
         </div>
     </form>
-</details>
+{% endtarjeta_filtros %}
 
 <section class="tarjeta feriados-lista">
     {% if pagina %}

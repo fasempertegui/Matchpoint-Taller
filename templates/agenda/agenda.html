@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filtros %}
 {% load static l10n %}
 
 {% block titulo %}Agenda | Academia TM{% endblock %}
@@ -16,35 +17,37 @@
 </header>
 
 {% if hay_sedes %}
-    <form class="tarjeta tarjeta-busqueda agenda-controles" method="get" data-agenda-filtros>
-        <div class="grupo-campo agenda-sede">
-            <label for="{{ formulario.sede.id_for_label }}">Sede</label>
-            {{ formulario.sede }}
-        </div>
-        {% if es_administrador and agenda.columnas %}
-            <details class="agenda-menu-acciones" data-agenda-menu-acciones>
-                <summary class="boton boton-secundario">Acciones</summary>
-                <div class="agenda-menu-opciones">
-                    {% if agenda.fecha >= agenda.hoy %}
-                        <a data-agenda-acciones="dia" href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{% if panel_acciones and not panel_acciones_mes %}true{% else %}false{% endif %}">Acciones del día</a>
-                    {% endif %}
-                    <a data-agenda-acciones="mes" href="{{ agenda.url_acciones_mes }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones_mes|yesno:'true,false' }}">Acciones del mes</a>
-                </div>
-            </details>
-        {% endif %}
-        <div class="grupo-campo">
-            <label for="{{ formulario.fecha.id_for_label }}">Fecha</label>
-            <div class="agenda-fechas">
-                <div class="agenda-selector-fecha">
-                    {% if agenda.url_anterior %}<a class="boton boton-secundario agenda-flecha" href="{{ agenda.url_anterior }}" aria-label="Día anterior">‹</a>{% endif %}
-                    {{ formulario.fecha }}
-                    {% if agenda.url_siguiente %}<a class="boton boton-secundario agenda-flecha" href="{{ agenda.url_siguiente }}" aria-label="Día siguiente">›</a>{% endif %}
-                </div>
-                {% if agenda %}<a class="boton boton-secundario agenda-hoy" href="{{ agenda.url_hoy }}">Hoy</a>{% endif %}
+    {% tarjeta_filtros %}
+        <form class="tarjeta-busqueda agenda-controles" method="get" data-agenda-filtros>
+            <div class="grupo-campo agenda-sede">
+                <label for="{{ formulario.sede.id_for_label }}">Sede</label>
+                {{ formulario.sede }}
             </div>
-        </div>
-        <noscript><button class="boton boton-secundario boton-chico" type="submit">Aplicar filtros</button></noscript>
-    </form>
+            {% if es_administrador and agenda.columnas %}
+                <details class="agenda-menu-acciones" data-agenda-menu-acciones>
+                    <summary class="boton boton-secundario">Acciones</summary>
+                    <div class="agenda-menu-opciones">
+                        {% if agenda.fecha >= agenda.hoy %}
+                            <a data-agenda-acciones="dia" href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{% if panel_acciones and not panel_acciones_mes %}true{% else %}false{% endif %}">Acciones del día</a>
+                        {% endif %}
+                        <a data-agenda-acciones="mes" href="{{ agenda.url_acciones_mes }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones_mes|yesno:'true,false' }}">Acciones del mes</a>
+                    </div>
+                </details>
+            {% endif %}
+            <div class="grupo-campo">
+                <label for="{{ formulario.fecha.id_for_label }}">Fecha</label>
+                <div class="agenda-fechas">
+                    <div class="agenda-selector-fecha">
+                        {% if agenda.url_anterior %}<a class="boton boton-secundario agenda-flecha" href="{{ agenda.url_anterior }}" aria-label="Día anterior">‹</a>{% endif %}
+                        {{ formulario.fecha }}
+                        {% if agenda.url_siguiente %}<a class="boton boton-secundario agenda-flecha" href="{{ agenda.url_siguiente }}" aria-label="Día siguiente">›</a>{% endif %}
+                    </div>
+                    {% if agenda %}<a class="boton boton-secundario agenda-hoy" href="{{ agenda.url_hoy }}">Hoy</a>{% endif %}
+                </div>
+            </div>
+            <noscript><button class="boton boton-secundario boton-chico" type="submit">Aplicar filtros</button></noscript>
+        </form>
+    {% endtarjeta_filtros %}
     {% if formulario.errors %}
         <div class="mensaje mensaje-error" role="alert">
             {{ formulario.non_field_errors }}

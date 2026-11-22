@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static filtros %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/oferta.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-oferta{% endblock %}
@@ -8,7 +8,9 @@
 {% url ruta_catalogo as url_catalogo %}
 <header class="oferta-catalogo-encabezado">
     <h2>{{ titulo }}</h2>
-    {% if pagina or busqueda %}
+</header>
+{% if pagina or busqueda %}
+    {% tarjeta_filtros abierto=busqueda %}
         <form class="oferta-buscador" method="get" role="search" aria-label="Buscar en el catálogo" data-filtros-automaticos>
             <div class="oferta-buscador-campo">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg>
@@ -17,8 +19,8 @@
             {% if busqueda %}<a class="oferta-limpiar" href="{{ url_catalogo }}" data-limpiar-filtros>Limpiar búsqueda</a>{% endif %}
             <noscript><button class="boton boton-secundario boton-chico" type="submit">Buscar</button></noscript>
         </form>
-    {% endif %}
-</header>
+    {% endtarjeta_filtros %}
+{% endif %}
 {% if pagina or busqueda %}
     {% if pagina %}
         <section class="inicio-modulos oferta-catalogo" aria-label="{{ titulo }} disponibles">

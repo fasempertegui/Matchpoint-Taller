@@ -79,7 +79,10 @@ TEMPLATES = [
         'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
-            'libraries': {'paginacion': 'common.paginacion'},
+            'libraries': {
+                'filtros': 'common.filtros',
+                'paginacion': 'common.paginacion',
+            },
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',

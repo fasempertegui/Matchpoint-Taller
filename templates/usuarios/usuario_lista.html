@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filtros %}
 {% load estados %}
 {% load static %}
 
@@ -19,25 +20,27 @@
     <p class="encabezado-descripcion">Consultá y administrá las cuentas de usuario, sus roles y su acceso al sistema.</p>
 </header>
 
-<form method="get" action="{% url 'usuarios:usuario_lista' %}" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
-    <div class="detalle-grid">
-        <div class="grupo-campo">
-            <label for="{{ formulario_busqueda.q.id_for_label }}">{{ formulario_busqueda.q.label }}</label>
-            {{ formulario_busqueda.q }}
+{% tarjeta_filtros %}
+    <form method="get" action="{% url 'usuarios:usuario_lista' %}" class="tarjeta-busqueda filtros-compactos" data-filtros-automaticos>
+        <div class="detalle-grid">
+            <div class="grupo-campo">
+                <label for="{{ formulario_busqueda.q.id_for_label }}">{{ formulario_busqueda.q.label }}</label>
+                {{ formulario_busqueda.q }}
+            </div>
+            <div class="grupo-campo">
+                <label for="{{ formulario_busqueda.rol.id_for_label }}">Rol</label>
+                {{ formulario_busqueda.rol }}
+            </div>
+            <div class="grupo-campo">
+                <label for="{{ formulario_busqueda.estado.id_for_label }}">Estado</label>
+                {{ formulario_busqueda.estado }}
+            </div>
         </div>
-        <div class="grupo-campo">
-            <label for="{{ formulario_busqueda.rol.id_for_label }}">Rol</label>
-            {{ formulario_busqueda.rol }}
+        <div class="filtros-acciones">
+            <a class="boton boton-secundario" href="{% url 'usuarios:usuario_lista' %}" data-limpiar-filtros>Limpiar filtros</a>
         </div>
-        <div class="grupo-campo">
-            <label for="{{ formulario_busqueda.estado.id_for_label }}">Estado</label>
-            {{ formulario_busqueda.estado }}
-        </div>
-    </div>
-    <div class="filtros-acciones">
-        <a class="boton boton-secundario" href="{% url 'usuarios:usuario_lista' %}" data-limpiar-filtros>Limpiar filtros</a>
-    </div>
-</form>
+    </form>
+{% endtarjeta_filtros %}
 
 <section class="tarjeta tabla-contenedor tabla-listado">
     <table>

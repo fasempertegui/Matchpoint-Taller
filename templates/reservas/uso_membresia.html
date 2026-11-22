@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% load estados %}
-{% load static %}
+{% load static filtros %}
 {% block titulo %}Uso de membresías | Academia TM{% endblock %}
 {% block contenido %}
 <header class="tarjeta encabezado-pagina"><h1>{% if contrato %}Uso de membresía{% else %}Uso de membresías{% endif %}</h1>{% if contrato %}<a class="boton boton-secundario" href="{% url 'membresias:mis_contrataciones' %}?tipo=membresia">Mis contrataciones</a>{% endif %}</header>
 {% if not contrato %}
-<details class="tarjeta"{% if formulario.errors %} open{% endif %}><summary>Cambiar período</summary>
+{% tarjeta_filtros abierto=formulario.errors %}
 <form class="tarjeta-busqueda filtros-compactos" method="get" data-uso-formulario>{{ formulario.non_field_errors }}
 {% for campo in formulario %}<div class="grupo-campo"{% if campo.name == 'mes' %} data-uso-campo="mes"{% if formulario.modo.value != 'mes' %} hidden{% endif %}{% elif campo.name == 'desde' or campo.name == 'hasta' %} data-uso-campo="rango"{% if formulario.modo.value != 'rango' %} hidden{% endif %}{% endif %}><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endfor %}<button class="boton boton-secundario">Consultar</button></form>
-</details>
+{% endtarjeta_filtros %}
 {% endif %}
 <script src="{% static 'js/uso-membresia.js' %}" defer></script>
 {% if titular %}

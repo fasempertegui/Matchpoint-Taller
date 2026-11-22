@@ -67,39 +67,6 @@ body > .contenido-principal.contenido-feriados {
 
 .contenido-feriados .formulario-guiado .grupo-campo { margin-bottom: 20px; }
 
-.horarios-filtros {
-    margin-block: 12px;
-    padding: 0;
-}
-
-.horarios-filtros > summary {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 20px;
-    border-radius: inherit;
-    cursor: pointer;
-    font-weight: 600;
-    list-style: none;
-}
-
-.horarios-filtros > summary::-webkit-details-marker { display: none; }
-
-.horarios-filtros > summary svg {
-    width: 18px;
-    height: 18px;
-    color: var(--primario);
-    transform: rotate(-90deg);
-}
-
-.horarios-filtros[open] > summary svg { transform: none; }
-
-.horarios-filtros .tarjeta-busqueda.filtros-compactos {
-    margin: 0;
-    padding: 20px;
-    border-top: 1px solid var(--borde);
-}
-
 .horarios-filtro-busqueda {
     flex: 0 1 50%;
     min-width: 0;
@@ -190,7 +157,7 @@ body > .contenido-principal.contenido-feriados {
 }
 
 @media (min-width: 1051px) {
-    .horarios-filtros .tarjeta-busqueda.filtros-compactos { flex-wrap: nowrap; }
+    .contenido-feriados .tarjeta-busqueda.filtros-compactos { flex-wrap: nowrap; }
     .horarios-filtro-sede { flex-grow: 1; }
     .horarios-filtro-tipo { flex: 1 0 auto; }
 }

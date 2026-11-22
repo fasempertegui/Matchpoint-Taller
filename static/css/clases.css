@@ -69,7 +69,6 @@
 
 .actividad-tarjeta-resumen { padding-block: 16px; }
 .actividad-tarjeta-resumen .perfil-seccion + .perfil-seccion { margin-top: 16px; padding-top: 12px; }
-.actividad-filtros { margin-top: 20px; }
 .actividad-resumen { display: flex; flex-wrap: wrap; gap: 20px 40px; margin: 0; }
 .actividad-resumen dt { color: var(--texto-suave); font-size: .9rem; }
 .actividad-resumen dd { margin: 4px 0 0; font-family: var(--fuente-titulos); font-size: 1.4rem; }

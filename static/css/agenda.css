@@ -19,14 +19,11 @@
 }
 
 .agenda-controles {
-    border: 1px solid var(--borde);
-    border-radius: 10px;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 16px;
-    margin-bottom: 20px;
 }
 
 .agenda-controles .grupo-campo {

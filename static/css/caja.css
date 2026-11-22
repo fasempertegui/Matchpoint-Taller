@@ -37,7 +37,6 @@ body > .contenido-principal.contenido-caja {
 .caja-movimientos td:nth-child(2) { width: 38%; overflow-wrap: anywhere; }
 .caja-clase { display: block; margin-bottom: 4px; font-weight: 600; }
 .contenido-caja .caja-monto { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
-.caja-filtros { margin-bottom: 24px; padding: 20px; }
 .caja-filtros .detalle-grid { flex-basis: 100%; }
 .caja-filtros .mensaje { width: 100%; }
 .caja-sin-sesion p { color: var(--texto-suave); }
@@ -46,8 +45,7 @@ body > .contenido-principal.contenido-caja {
     .caja-importes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.contenido-caja .caja-filtros { padding: 20px; }
-.contenido-caja > .tarjeta + .tarjeta { margin-top: 24px; }
+.contenido-caja > .tarjeta:not(.tarjeta-filtros) + .tarjeta:not(.tarjeta-filtros) { margin-top: 24px; }
 .contenido-caja .tarjeta-formulario {
     width: 100%;
     max-width: none;
@@ -125,11 +123,6 @@ body > .contenido-principal.contenido-caja {
 .caja-formulario-contexto dd { margin: 6px 0 0; font-size: 1.2rem; font-weight: 600; }
 .caja-formulario-contexto .caja-contexto-importe dd { color: var(--primario); font-size: 1.6rem; font-variant-numeric: tabular-nums; }
 
-.contenido-caja .caja-filtros-sesion {
-    margin: 0;
-    padding: 20px;
-    border-bottom: 1px solid var(--borde);
-}
 
 .caja-estado-informacion { margin-left: -8px; color: var(--texto-suave); font-size: .85rem; }
 

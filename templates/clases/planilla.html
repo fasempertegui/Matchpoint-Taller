@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static filtros %}
 {% block titulo %}Planilla semanal | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/planilla.css' %}">{% endblock %}
 {% block contenido %}
@@ -13,18 +13,16 @@
     <p class="encabezado-descripcion">Organizá los horarios habituales de clases, profesores y participantes de cada cancha. Luego, generá las clases para que aparezcan en la agenda.</p>
 </header>
 {% if hay_sedes %}
-    <div class="planilla-contexto">
-    <section class="tarjeta planilla-filtros-tarjeta">
-        <form class="planilla-filtros" method="get" data-planilla-filtros>
-            {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>{% endfor %}
-            <noscript><button class="boton boton-secundario" type="submit">Aplicar filtros</button></noscript>
-        </form>
-    </section>
     <aside class="tarjeta tarjeta-informativa">
         {% include "componentes/iconoir/informacion.html" %}
         <p>Cada cancha tiene su propia planilla semanal. La generación de clases incluye las planillas de todas las canchas de la sede elegida.</p>
     </aside>
-    </div>
+    {% tarjeta_filtros %}
+        <form class="planilla-filtros" method="get" data-planilla-filtros>
+            {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>{% endfor %}
+            <noscript><button class="boton boton-secundario" type="submit">Aplicar filtros</button></noscript>
+        </form>
+    {% endtarjeta_filtros %}
     {% if datos %}
         <section class="tarjeta planilla-listado" aria-label="Semana tipo">
             {% if cancha.sede.estado == 'inactiva' or cancha.estado == 'inactiva' %}<p class="texto-secundario">La sede o la cancha está inactiva. La planilla se conserva para consulta.</p>{% endif %}

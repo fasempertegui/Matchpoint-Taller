@@ -11,12 +11,6 @@ body > .contenido-principal.contenido-instalaciones {
     border-radius: 10px;
 }
 
-.contenido-instalaciones .tarjeta-busqueda {
-    margin-block: 24px;
-    padding: 20px;
-}
-
-
 .contenido-instalaciones .tarjeta-formulario {
     width: 100%;
     max-width: none;

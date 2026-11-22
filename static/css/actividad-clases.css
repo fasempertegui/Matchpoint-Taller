@@ -8,11 +8,9 @@ body > .contenido-principal.contenido-actividad-clases { width: var(--ancho-cont
     gap: 8px;
 }
 .contenido-actividad-clases .actividad-selector-funcion .form-control { width: auto; }
-.contenido-actividad-clases > .tarjeta-busqueda { padding: 20px; margin-block: 20px; }
 .contenido-actividad-clases .actividad-tarjeta-resumen { padding: 20px; }
 .contenido-actividad-clases .perfil-valor-accion { align-items: center; }
 .contenido-actividad-clases .perfil-lista dd { margin: 4px 0 0; font-size: 1rem; font-weight: 600; }
-.contenido-actividad-clases .actividad-filtros { padding-top: 20px; border-top: 1px solid var(--borde); }
 .contenido-actividad-clases .actividad-filtros .detalle-grid { max-width: 600px; }
 .contenido-actividad-clases .actividad-filtros .grupo-campo { margin-bottom: 0; }
 .contenido-actividad-clases .actividad-filtros .acciones-formulario { margin-top: 16px; }

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load filtros %}
 {% load estados %}
 {% load static %}
 {% block titulo %}Envíos de email | Academia TM{% endblock %}
@@ -9,14 +10,16 @@
     <h1>Envíos de email</h1>
     <p class="encabezado-descripcion">Consultá los emails enviados por el sistema, su estado de entrega y los intentos realizados.</p>
 </header>
-<form method="get" class="tarjeta tarjeta-busqueda filtros-compactos" data-filtros-automaticos aria-label="Filtros de envíos">
-    <div class="detalle-grid">
-        <div class="grupo-campo"><label for="envios-estado">Estado</label><select id="envios-estado" name="estado" class="form-control"><option value="">Todos</option>{% for valor, texto in estados %}<option value="{{ valor }}"{% if valor == estado_actual %} selected{% endif %}>{{ texto }}</option>{% endfor %}</select></div>
-        <div class="grupo-campo"><label for="envios-tipo">Tipo</label><select id="envios-tipo" name="tipo" class="form-control"><option value="">Todos</option>{% for valor, texto in tipos %}<option value="{{ valor }}"{% if valor == tipo_actual %} selected{% endif %}>{{ texto }}</option>{% endfor %}</select></div>
-        <div class="grupo-campo"><label for="envios-destinatario">Destinatario</label><input id="envios-destinatario" name="q" type="search" maxlength="150" placeholder="Correo electrónico..." value="{{ busqueda }}" class="form-control"></div>
-    </div>
-    <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'comunicaciones:envios_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
-</form>
+{% tarjeta_filtros %}
+    <form method="get" class="tarjeta-busqueda filtros-compactos" data-filtros-automaticos aria-label="Filtros de envíos">
+        <div class="detalle-grid">
+            <div class="grupo-campo"><label for="envios-estado">Estado</label><select id="envios-estado" name="estado" class="form-control"><option value="">Todos</option>{% for valor, texto in estados %}<option value="{{ valor }}"{% if valor == estado_actual %} selected{% endif %}>{{ texto }}</option>{% endfor %}</select></div>
+            <div class="grupo-campo"><label for="envios-tipo">Tipo</label><select id="envios-tipo" name="tipo" class="form-control"><option value="">Todos</option>{% for valor, texto in tipos %}<option value="{{ valor }}"{% if valor == tipo_actual %} selected{% endif %}>{{ texto }}</option>{% endfor %}</select></div>
+            <div class="grupo-campo"><label for="envios-destinatario">Destinatario</label><input id="envios-destinatario" name="q" type="search" maxlength="150" placeholder="Correo electrónico..." value="{{ busqueda }}" class="form-control"></div>
+        </div>
+        <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'comunicaciones:envios_lista' %}" data-limpiar-filtros>Limpiar filtros</a></div>
+    </form>
+{% endtarjeta_filtros %}
 <section class="tarjeta tabla-contenedor tabla-listado" aria-label="Seguimiento de envíos">
 <table><thead><tr><th scope="col">Tipo</th><th scope="col">Destinatario</th><th scope="col">Creado</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
 <tbody>{% for envio in pagina %}<tr>
