@@ -11,33 +11,27 @@
 
 {% block contenido %}
 <header class="tarjeta agenda-encabezado encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
-    <div class="encabezado-fila">
-        <h1>Agenda</h1>
-        {% if es_administrador and agenda.columnas %}
-        <div class="acciones">
-            {% if agenda.fecha >= agenda.hoy %}
-                <a class="boton boton-primario" data-agenda-acciones="dia" href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{% if panel_acciones and not panel_acciones_mes %}true{% else %}false{% endif %}">Acciones del día</a>
-            {% endif %}
-            <a class="boton boton-secundario" data-agenda-acciones="mes" href="{{ agenda.url_acciones_mes }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones_mes|yesno:'true,false' }}">Acciones del mes</a>
-        </div>
-        {% endif %}
-    </div>
+    <h1>Agenda</h1>
     <p class="encabezado-descripcion">Consultá las clases, reservas y bloqueos de cada sede y cancha.</p>
 </header>
 
 {% if hay_sedes %}
     <form class="tarjeta tarjeta-busqueda agenda-controles" method="get" data-agenda-filtros>
-        <div class="grupo-campo">
+        <div class="grupo-campo agenda-sede">
             <label for="{{ formulario.sede.id_for_label }}">Sede</label>
             {{ formulario.sede }}
         </div>
-        <div class="grupo-campo">
-            <span class="agenda-etiqueta" id="agenda-vista-etiqueta">Vista</span>
-            <div class="pestanas agenda-vistas" role="group" aria-labelledby="agenda-vista-etiqueta">
-                <span aria-current="page">Día</span>
-                <button type="button" disabled>Semana</button>
-            </div>
-        </div>
+        {% if es_administrador and agenda.columnas %}
+            <details class="agenda-menu-acciones" data-agenda-menu-acciones>
+                <summary class="boton boton-secundario">Acciones</summary>
+                <div class="agenda-menu-opciones">
+                    {% if agenda.fecha >= agenda.hoy %}
+                        <a data-agenda-acciones="dia" href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{% if panel_acciones and not panel_acciones_mes %}true{% else %}false{% endif %}">Acciones del día</a>
+                    {% endif %}
+                    <a data-agenda-acciones="mes" href="{{ agenda.url_acciones_mes }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones_mes|yesno:'true,false' }}">Acciones del mes</a>
+                </div>
+            </details>
+        {% endif %}
         <div class="grupo-campo">
             <label for="{{ formulario.fecha.id_for_label }}">Fecha</label>
             <div class="agenda-fechas">
@@ -157,5 +151,5 @@
 <script src="{% static 'js/clase-formulario.js' %}" defer></script>
 <script src="{% static 'js/agenda-clase-pasos.js' %}" defer></script>
 <script src="{% static 'js/agenda_operaciones.js' %}" defer></script>
-<script src="{% static 'js/agenda.js' %}?v=20261104-acciones" defer></script>
+<script src="{% static 'js/agenda.js' %}?v=20261122-menu" defer></script>
 {% endblock %}

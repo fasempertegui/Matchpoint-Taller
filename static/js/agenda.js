@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     var panel = document.querySelector("[data-agenda-detalle]");
+    var menuAcciones = document.querySelector("[data-agenda-menu-acciones]");
     var contenido = panel && panel.querySelector("[data-agenda-contenido]");
     var aviso = panel && panel.querySelector("[data-agenda-aviso]");
     var solicitudActual = null;
@@ -269,6 +270,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
             var panelAcciones = contenido.querySelector("[data-agenda-panel-acciones]");
+            if (panelAcciones && enlace.matches("[data-agenda-acciones]")) {
+                var tituloAcciones = panelAcciones.querySelector("h2");
+                tituloAcciones.setAttribute("tabindex", "-1");
+                tituloAcciones.focus({preventScroll: true});
+            }
             document.querySelectorAll("[data-agenda-acciones]").forEach(function (boton) {
                 boton.setAttribute("aria-expanded", String(Boolean(
                     panelAcciones && panelAcciones.dataset.agendaPanelAcciones === boton.dataset.agendaAcciones
@@ -286,7 +292,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 else turno.removeAttribute("aria-current");
             });
             window.history.replaceState(null, "", destino.href);
-            if (cerrarDetalle && devolverFoco && seleccionadoAnterior) seleccionadoAnterior.focus({preventScroll: true});
+            if (cerrarDetalle && devolverFoco && seleccionadoAnterior) {
+                var control = seleccionadoAnterior.matches("[data-agenda-acciones]")
+                    ? menuAcciones.querySelector("summary")
+                    : seleccionadoAnterior;
+                control.focus({preventScroll: true});
+            }
             aviso.hidden = true;
             aviso.textContent = "";
         } catch (error) {
@@ -347,14 +358,25 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.addEventListener("click", function (evento) {
+        if (menuAcciones && !menuAcciones.contains(evento.target)) menuAcciones.open = false;
         var enlace = evento.target.closest("[data-agenda-turno], [data-agenda-cerrar], [data-agenda-acciones], [data-agenda-vista]");
         if (!enlace || !panel || evento.defaultPrevented || evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
         evento.preventDefault();
+        if (menuAcciones && menuAcciones.contains(enlace)) {
+            menuAcciones.open = false;
+            menuAcciones.querySelector("summary").focus({preventScroll: true});
+        }
         cargarDetalle(enlace);
     });
 
     document.addEventListener("keydown", function (evento) {
         if (evento.key !== "Escape" || evento.defaultPrevented || document.querySelector("dialog[open]")) return;
+        if (menuAcciones && menuAcciones.open) {
+            evento.preventDefault();
+            menuAcciones.open = false;
+            menuAcciones.querySelector("summary").focus();
+            return;
+        }
         var cerrar = contenido && contenido.querySelector("[data-agenda-cerrar]");
         if (!cerrar) return;
         evento.preventDefault();

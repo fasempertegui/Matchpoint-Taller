@@ -22,6 +22,7 @@
     border: 1px solid var(--borde);
     border-radius: 10px;
     display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 16px;
@@ -31,6 +32,7 @@
 .agenda-controles .grupo-campo {
     margin: 0;
     min-width: 0;
+    max-width: 100%;
 }
 
 .agenda-controles select {
@@ -39,10 +41,48 @@
     border-radius: 6px;
 }
 
-.agenda-etiqueta {
+.agenda-controles .agenda-sede {
+    flex: 0 1 13rem;
+}
+
+.agenda-menu-acciones {
+    position: relative;
+}
+
+.agenda-menu-acciones > summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.agenda-menu-acciones > summary::-webkit-details-marker {
+    display: none;
+}
+
+.agenda-menu-opciones {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 6px);
+    right: 0;
+    width: max-content;
+    padding: 6px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--superficie);
+    box-shadow: 0 6px 20px #00000018;
+}
+
+.agenda-menu-opciones a {
     display: block;
-    margin-bottom: 7px;
-    font-weight: 700;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: var(--texto);
+    text-decoration: none;
+}
+
+.agenda-menu-opciones a:hover,
+.agenda-menu-opciones a:focus-visible {
+    background: var(--primario-suave);
+    color: var(--primario);
 }
 
 .agenda-fechas {
@@ -86,24 +126,25 @@
     font-size: 1.25rem;
 }
 
-.agenda-hoy {
+.agenda-hoy,
+.agenda-menu-acciones > summary {
     height: 44px;
     border-color: transparent;
     border-radius: 6px;
     background: var(--primario-suave);
 }
 
-.agenda-hoy:hover {
+.agenda-hoy:hover,
+.agenda-menu-acciones > summary:hover {
     border-color: var(--borde);
 }
 
 .agenda-flecha:focus-visible,
-.agenda-hoy:focus-visible {
+.agenda-hoy:focus-visible,
+.agenda-menu-acciones > summary:focus-visible {
     outline: 2px solid var(--primario);
     outline-offset: 2px;
 }
-
-.agenda-vistas { margin: 0; min-height: 44px; }
 
 .agenda-titulo-fecha {
     margin-bottom: 20px;
@@ -620,25 +661,6 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
 }
 
 @media (max-width: 720px) {
-    .agenda-encabezado .encabezado-fila {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    .agenda-encabezado .acciones {
-        width: 100%;
-        justify-content: flex-start;
-    }
-
-    .agenda-controles {
-        align-items: stretch;
-    }
-
-    .agenda-controles .grupo-campo {
-        width: 100%;
-    }
-
     .agenda-controles select {
         width: 100%;
         max-width: none;
@@ -648,6 +670,10 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
 @media (max-width: 560px) {
     .agenda-controles {
         gap: 12px;
+    }
+
+    .agenda-controles .agenda-sede:has(+ .agenda-menu-acciones) {
+        flex-basis: min(13rem, calc(100% - 8rem));
     }
 
     .agenda-fechas {
@@ -684,11 +710,6 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
-}
-
-.agenda-vistas button:disabled {
-    opacity: .45;
-    cursor: not-allowed;
 }
 
 .agenda-aviso {
@@ -1012,8 +1033,4 @@ button.agenda-opcion:hover {
     margin: 8px 0 0;
     color: var(--advertencia);
     font-size: .85rem;
-}
-
-.agenda-encabezado .boton {
-    border-radius: 10px;
 }

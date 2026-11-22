@@ -66,7 +66,6 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Planilla y generación de clases | FL-27 | Registrar o quitar un feriado |
 | Planilla y generación de clases | FL-28 | Generar clases para un período |
 | Agenda | FL-31 | Consultar la agenda diaria |
-| Agenda | FL-32 | Consultar la agenda semanal |
 | Agenda | FL-33 | Consultar el detalle de una clase |
 | Clases | FL-34 | Crear una clase concreta |
 | Clases | FL-35 | Actualizar los datos, participantes y cancha de una clase |
@@ -1083,7 +1082,7 @@ Recorrido:
 2. El sistema valida el acceso y los criterios, consulta horarios, canchas y eventos no Anulados de la fecha y aplica los permisos.
 3. Muestra columnas por cancha y filas por hora, distinguiendo libres, reservas, clases y bloqueos. Conserva actividades fuera del horario vigente y agrupa pausas comunes sin actividad. Destaca la hora actual sólo en el margen con Ahora.
 4. Seleccionar una celda carga el panel y actualiza el resaltado sin recargar la página ni cambiar la posición de la grilla. Cerrar el detalle utiliza el mismo mecanismo. La consulta mantiene las validaciones de acceso y selección; un fallo conserva el contenido anterior y se informa, y una respuesta desactualizada no reemplaza la última selección. El panel muestra los datos y las acciones autorizadas. Permite registrar mediante **FL-51**, **FL-34** o **FL-63**, consultar una actividad o anularla para liberar o bloquear. Las operaciones no admitidas no se ofrecen.
-5. Puede pasar a **FL-32** conservando fecha y cancha seleccionada. Consultar no escribe eventos ni prepara turnos persistidos.
+5. Consultar no escribe eventos ni prepara turnos persistidos.
 
 Alternativas:
 
@@ -1101,37 +1100,6 @@ flowchart TD
     A[Seleccionar sede y fecha] --> B[Validar acceso y calendario]
     B --> C[Consultar horarios y ocupación autorizada]
     C --> D[Mostrar canchas y horas]
-    D --> E[Seleccionar turno y mostrar detalle y acciones]
-```
-
-#### FL-32. Consultar la agenda semanal
-
-- **Objetivo:** visualizar la ocupación de una cancha durante una semana.
-- **Actores:** administrador; usuario del portal según sus relaciones con cada actividad.
-- **Entradas:** sede, cancha, fecha de referencia y selección opcional de hora; para clases, filtros opcionales por profesor o estado.
-
-Recorrido:
-
-1. Selecciona sede y cancha; cambiar de sede limpia cancha y turno. Se propone la primera cancha disponible de la sede cuando no se indicó una.
-2. Selecciona una fecha de referencia. El sistema obtiene su semana de lunes a domingo y permite navegar por semanas o volver a Hoy.
-3. Valida el calendario y consulta la ocupación y horarios de cada día, con las mismas reglas de acceso y representación de **FL-31**.
-4. Muestra días en columnas y horas en filas. Las fechas fuera de los límites del calendario permanecen sin acciones; conserva las actividades fuera del horario actual de la sede.
-5. Permite consultar la actividad seleccionada y pasar a la vista diaria de esa fecha manteniendo la cancha. La presentación y la interacción de la vista semanal están pendientes de definición.
-
-Alternativas:
-
-- Se aplican la privacidad y los permisos de **FL-31**: cualquier titular puede consultar sus clases como participante sin exigir Alumno; sólo un profesor autorizado tiene acciones de docencia y no accede a datos de actividades ajenas.
-- Una cancha que no pertenece a la sede o una fecha inválida rechaza la consulta.
-- La consulta no requiere una tarifa ni crea eventos o turnos persistidos; las operaciones de reserva conservan el límite de tres días.
-
-- **Resultado:** agenda semanal y detalle del turno seleccionado, sin modificaciones.
-- **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, clases, profesores asignados y bloqueos.
-
-```mermaid
-flowchart TD
-    A[Seleccionar sede cancha y fecha] --> B[Validar acceso y calendario]
-    B --> C[Obtener semana y ocupación autorizada]
-    C --> D[Mostrar días y horas]
     D --> E[Seleccionar turno y mostrar detalle y acciones]
 ```
 
