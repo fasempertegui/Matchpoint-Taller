@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static filtros %}
+{% load static %}
 {% block titulo %}Planilla semanal | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/planilla.css' %}">{% endblock %}
 {% block contenido %}
@@ -13,18 +13,30 @@
     <p class="encabezado-descripcion">Organizá los horarios habituales de clases, profesores y participantes de cada cancha. Luego, generá las clases para que aparezcan en la agenda.</p>
 </header>
 {% if hay_sedes %}
-    <aside class="tarjeta tarjeta-informativa">
-        {% include "componentes/iconoir/informacion.html" %}
-        <p>Cada cancha tiene su propia planilla semanal. La generación de clases incluye las planillas de todas las canchas de la sede elegida.</p>
-    </aside>
-    {% tarjeta_filtros %}
-        <form class="planilla-filtros" method="get" data-filtros-navegacion data-planilla-filtros>
-            {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>{% endfor %}
-            <a class="boton boton-secundario" href="{{ request.path }}" data-limpiar-filtros>Limpiar filtros</a>
-        </form>
-    {% endtarjeta_filtros %}
-    {% if datos %}
-        <section class="tarjeta planilla-listado" aria-label="Semana tipo">
+    <section class="tarjeta planilla-listado" aria-label="Planilla semanal">
+        <header class="planilla-encabezado-grilla">
+            <form class="planilla-contexto" method="get" data-planilla-contexto>
+                {% for campo in formulario %}
+                    {% if campo.name == 'sede' or hay_canchas %}
+                        <div class="selector-contexto">
+                            <label class="clase-etiqueta-oculta" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                            {{ campo }}
+                            {% include "componentes/iconoir/chevron-abajo.html" %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </form>
+            <p class="planilla-nota">
+                {% include "componentes/iconoir/informacion.html" %}
+                Cada cancha tiene su propia planilla semanal
+            </p>
+        </header>
+        {% for error in formulario.sede.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        {% if hay_canchas %}{% for error in formulario.cancha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endif %}
+        {% if formulario.sede.errors or hay_canchas and formulario.cancha.errors %}
+            <p><a href="{{ request.path }}">Volver a la planilla</a></p>
+        {% endif %}
+        {% if datos %}
             {% if cancha.sede.estado == 'inactiva' or cancha.estado == 'inactiva' %}<p class="texto-secundario">La sede o la cancha está inactiva. La planilla se conserva para consulta.</p>{% endif %}
             {% if filas %}
                 <div class="tabla-contenedor">
@@ -60,8 +72,10 @@
                     </table>
                 </div>
             {% else %}<p class="texto-secundario">No hay horarios de funcionamiento configurados para esta sede.</p>{% endif %}
-        </section>
-    {% elif not formulario.cancha.field.queryset.exists %}<p class="tarjeta texto-secundario">No hay canchas para consultar en esta sede.</p>{% endif %}
+        {% elif not hay_canchas and not formulario.sede.errors %}
+            <p class="texto-secundario">No hay canchas para consultar en esta sede.</p>
+        {% endif %}
+    </section>
 {% else %}<p class="tarjeta texto-secundario">No hay sedes registradas.</p>{% endif %}
 {% if cancha %}
 <p class="planilla-aviso-seleccion" role="status" aria-live="polite" data-planilla-aviso hidden></p>
@@ -97,5 +111,5 @@
     <div data-quitar-valores></div>
 </form>
 {% endif %}
-<script src="{% static 'js/planilla.js' %}" defer></script>
+<script src="{% static 'js/planilla.js' %}?v=20261122-grilla" defer></script>
 {% endblock %}

@@ -1,8 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
-    var filtros = document.querySelector("[data-planilla-filtros]");
-    if (filtros) {
-        filtros.addEventListener("change", function (evento) {
-            if (evento.target.name === "sede") filtros.elements.cancha.disabled = true;
+    var contexto = document.querySelector("[data-planilla-contexto]");
+    if (contexto) {
+        contexto.addEventListener("change", function (evento) {
+            if (evento.target.name === "sede" && contexto.elements.cancha) contexto.elements.cancha.disabled = true;
+            contexto.requestSubmit();
         });
     }
 

@@ -87,11 +87,11 @@ class CanchaPlanillaField(forms.ModelChoiceField):
 class PlanillaFiltroForm(forms.Form):
     sede = forms.ModelChoiceField(
         queryset=Sede.objects.order_by("estado", "nombre", "pk"), empty_label=None,
-        widget=forms.Select(attrs={"class": "form-control"}),
+        widget=forms.Select(attrs={"class": "boton boton-secundario boton-chico"}),
     )
     cancha = CanchaPlanillaField(
         queryset=Cancha.objects.none(), empty_label=None,
-        widget=forms.Select(attrs={"class": "form-control"}),
+        widget=forms.Select(attrs={"class": "boton boton-secundario boton-chico"}),
     )
 
     def __init__(self, *args, **kwargs):

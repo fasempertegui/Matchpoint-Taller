@@ -1,4 +1,4 @@
-<form class="agenda-sede" method="get" data-agenda-sede>
+<form class="agenda-sede selector-contexto" method="get" data-agenda-sede>
     {% if not formulario.fecha.errors %}{{ formulario.fecha.as_hidden }}{% endif %}
     <label class="clase-etiqueta-oculta" for="{{ formulario.sede.id_for_label }}">Sede de la agenda</label>
     {{ formulario.sede }}

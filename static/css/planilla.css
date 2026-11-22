@@ -1,5 +1,38 @@
-.planilla-filtros { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
-.planilla-filtros .grupo-campo { margin: 0; min-width: 180px; }
+.planilla-encabezado-grilla {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--borde);
+}
+
+.planilla-nota {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 5px 9px;
+    border-radius: 6px;
+    background: var(--acento-suave);
+    color: var(--acento-texto);
+    font-size: .875rem;
+}
+
+.planilla-nota svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+
+.planilla-contexto {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+}
+
 .planilla-listado {
     margin-top: 20px;
     padding: 0;
@@ -7,7 +40,7 @@
     border-radius: 10px;
 }
 .planilla-listado > p { margin: 0; padding: 16px 20px; }
-.planilla-listado > .tabla-contenedor { width: 100%; border-radius: inherit; }
+.planilla-listado > .tabla-contenedor { width: 100%; border-radius: 0 0 9px 9px; }
 .planilla-listado h2 { font-size: 1.1rem; margin-top: 0; }
 .planilla-tabla {
     width: 100%;
@@ -22,6 +55,10 @@
     text-transform: none;
     letter-spacing: normal;
     overflow-wrap: anywhere;
+}
+.planilla-tabla thead th {
+    background: var(--primario-suave);
+    color: var(--primario);
 }
 .planilla-tabla th:first-child {
     padding-inline: 3px;

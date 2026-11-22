@@ -81,7 +81,8 @@ def planilla(request):
                     })
                 filas.append({"hora": time(hora), "celdas": celdas, "seleccionable": any(c["seleccionable"] for c in celdas)})
     return render(request, "clases/planilla.html", {
-        "formulario": formulario, "hay_sedes": sede is not None,
+        "formulario": formulario,
+        "hay_sedes": sede is not None, "hay_canchas": primera_cancha is not None,
         "datos": datos, "cancha": cancha, "filas": filas,
         "dias": TurnoPlanilla.DiaSemana.labels,
     })

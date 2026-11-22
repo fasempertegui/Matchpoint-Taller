@@ -22,10 +22,7 @@ class AgendaFiltroForm(forms.Form):
     sede = forms.ModelChoiceField(
         queryset=Sede.objects.all(),
         empty_label=None,
-        widget=forms.Select(attrs={
-            "class": "boton boton-secundario boton-chico",
-            "data-tooltip": "Cambiar sede",
-        }),
+        widget=forms.Select(attrs={"class": "boton boton-secundario boton-chico"}),
     )
     cancha = CanchaAgendaField(
         queryset=Cancha.objects.none(),
