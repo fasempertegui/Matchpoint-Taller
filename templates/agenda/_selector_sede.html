@@ -1,0 +1,6 @@
+<form class="agenda-sede" method="get" data-agenda-sede>
+    {% if not formulario.fecha.errors %}{{ formulario.fecha.as_hidden }}{% endif %}
+    <label class="clase-etiqueta-oculta" for="{{ formulario.sede.id_for_label }}">Sede de la agenda</label>
+    {{ formulario.sede }}
+    {% include "componentes/iconoir/chevron-abajo.html" %}
+</form>

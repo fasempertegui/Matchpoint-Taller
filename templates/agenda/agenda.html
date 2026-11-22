@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% load filtros %}
 {% load static l10n %}
 
 {% block titulo %}Agenda | Academia TM{% endblock %}
 
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'css/clases.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/flatpickr/flatpickr.min.css' %}">
 <link rel="stylesheet" href="{% static 'css/agenda.css' %}">
 <link rel="stylesheet" href="{% static 'css/agenda_operaciones.css' %}">
 {% endblock %}
@@ -17,127 +17,135 @@
 </header>
 
 {% if hay_sedes %}
-    {% tarjeta_filtros %}
-        <form class="tarjeta-busqueda agenda-controles" method="get" data-filtros-navegacion>
-            <div class="grupo-campo agenda-sede">
-                <label for="{{ formulario.sede.id_for_label }}">Sede</label>
-                {{ formulario.sede }}
-            </div>
-            {% if es_administrador and agenda.columnas %}
-                <details class="agenda-menu-acciones" data-agenda-menu-acciones>
-                    <summary class="boton boton-secundario">Acciones</summary>
-                    <div class="agenda-menu-opciones">
-                        {% if agenda.fecha >= agenda.hoy %}
-                            <a data-agenda-acciones="dia" href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{% if panel_acciones and not panel_acciones_mes %}true{% else %}false{% endif %}">Acciones del día</a>
-                        {% endif %}
-                        <a data-agenda-acciones="mes" href="{{ agenda.url_acciones_mes }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones_mes|yesno:'true,false' }}">Acciones del mes</a>
-                    </div>
-                </details>
-            {% endif %}
-            <div class="grupo-campo">
-                <label for="{{ formulario.fecha.id_for_label }}">Fecha</label>
-                <div class="agenda-fechas">
-                    <div class="agenda-selector-fecha">
-                        {% if agenda.url_anterior %}<a class="boton boton-secundario agenda-flecha" href="{{ agenda.url_anterior }}" aria-label="Día anterior">‹</a>{% endif %}
-                        {{ formulario.fecha }}
-                        {% if agenda.url_siguiente %}<a class="boton boton-secundario agenda-flecha" href="{{ agenda.url_siguiente }}" aria-label="Día siguiente">›</a>{% endif %}
-                    </div>
-                    {% if agenda %}<a class="boton boton-secundario agenda-hoy" href="{{ agenda.url_hoy }}">Hoy</a>{% endif %}
-                </div>
-            </div>
-            <a class="boton boton-secundario" href="{{ request.path }}" data-limpiar-filtros>Limpiar filtros</a>
-        </form>
-    {% endtarjeta_filtros %}
     {% if formulario.errors %}
         <div class="mensaje mensaje-error" role="alert">
             {{ formulario.non_field_errors }}
             {% for campo in formulario %}{% for error in campo.errors %}<p>{{ campo.label }}: {{ error }}</p>{% endfor %}{% endfor %}
+            {% if not agenda %}{% include "agenda/_selector_sede.html" %}{% endif %}
+            <a href="{{ request.path }}">Volver a la agenda</a>
         </div>
     {% endif %}
 
     {% if agenda %}
-        <div class="agenda-titulo-fecha">
-            <h2>{{ agenda.fecha|date:"l d/m/Y"|capfirst }}{% if agenda.feriado %}<span class="etiqueta">Feriado: {{ agenda.feriado.descripcion }}</span>{% endif %}
-                {% if agenda.horario_especial %}<span class="etiqueta">{% if agenda.horario_especial.cerrada %}Sede cerrada{% else %}Horario especial: {{ agenda.horario_especial.hora_inicio_1|time:"H:i" }}–{{ agenda.horario_especial.hora_fin_1|time:"H:i" }}{% if agenda.horario_especial.hora_inicio_2 %}, {{ agenda.horario_especial.hora_inicio_2|time:"H:i" }}–{{ agenda.horario_especial.hora_fin_2|time:"H:i" }}{% endif %}{% endif %}</span>{% endif %}
-            </h2>
-            {% if agenda.sede.estado == 'inactiva' %}<span class="texto-secundario">Sede inactiva</span>{% endif %}
-        </div>
         <div class="agenda-distribucion">
             <section aria-label="Calendario de ocupación" data-agenda-calendario>
-                {% if agenda.columnas and agenda.filas %}
-                    <div class="agenda-tabla-contenedor">
-                        <table class="agenda-tabla" data-agenda-tabla data-zona-horaria="{{ zona_horaria }}" style="--agenda-columnas: {{ agenda.columnas|length }};">
-                            <caption>Turnos de todas las canchas de la sede</caption>
-                            <thead><tr>
-                                <th scope="col">Hora</th>
-                                {% for columna in agenda.columnas %}
-                                    <th scope="col" data-fecha-columna="{{ columna.fecha|date:'Y-m-d' }}"{% if columna.hoy %} class="agenda-columna-hoy"{% endif %}>
-                                        {{ columna.cancha.nombre }}
-                                        {% if columna.cancha.estado == 'inactiva' %}<span class="agenda-anotacion">Inactiva</span>{% endif %}
-                                    </th>
-                                {% endfor %}
-                            </tr></thead>
-                            <tbody>
-                                {% for fila in agenda.filas %}
-                                    {% if fila.pausa %}
-                                        <tr class="agenda-pausa"><td colspan="{{ agenda.columnas|length|add:'1' }}">{{ fila.inicio|time:"H:i" }} a {{ fila.fin|time:"H:i" }} · Fuera del horario de funcionamiento</td></tr>
-                                    {% else %}
-                                        <tr>
-                                            <th scope="row" data-hora-fila="{{ fila.hora.hour }}"{% if fila.ahora %} class="agenda-hora-actual"{% endif %}>
-                                                {{ fila.hora|time:"H:i" }}<span class="agenda-ahora"{% if not fila.ahora %} hidden{% endif %}>Ahora</span>
-                                            </th>
-                                            {% for celda in fila.celdas %}
-                                                <td>
-                                                    {% if celda.en_rango and not celda.consultable %}
-                                                        <span class="agenda-turno agenda-turno-pasado{% if celda.habilitado %} agenda-turno-libre{% else %} agenda-turno-cerrado{% endif %}">{% if celda.habilitado %}Libre{% else %}Fuera de horario{% endif %}</span>
-                                                    {% elif celda.en_rango %}
-                                                        <a data-agenda-turno class="agenda-turno{% if celda.ocupado_por_tercero %} agenda-turno-ocupado{% elif celda.evento %} agenda-turno-{{ celda.evento.tipo }}{% elif not celda.habilitado %} agenda-turno-cerrado{% else %} agenda-turno-libre{% endif %}{% if celda.iniciado %} agenda-turno-pasado{% endif %}{% if celda.seleccionada %} agenda-turno-seleccionado{% endif %}"
-                                                           href="{{ celda.url }}"{% if celda.seleccionada %} aria-current="true"{% endif %}
-                                                           aria-label="{{ celda.cancha.nombre }}, {{ celda.fecha|date:'d/m/Y' }}, {{ celda.hora|time:'H:i' }} a {{ celda.fin|time:'H:i' }}. {% if celda.ocupado_por_tercero %}No disponible{% elif celda.reserva %}Reserva de {{ celda.reserva.organizador }}. {{ celda.estado_temporal }}{% elif celda.evento %}{{ celda.evento.get_tipo_display }}{% elif celda.puede_reservar %}Turno libre{% else %}{{ celda.impedimento }}{% endif %}">
-                                                            {% if celda.ocupado_por_tercero %}
-                                                                <span>No disponible</span>
-                                                            {% elif celda.evento %}
-                                                                {% include "agenda/_contenido_evento.html" with evento=celda.evento profesores=celda.profesores only %}
-                                                                {% include "agenda/_estado_evento.html" with evento=celda.evento estado_temporal=celda.estado_temporal en_grilla=True only %}
-                                                            {% elif not celda.habilitado %}
-                                                                <span>Fuera de horario</span>
-                                                            {% elif celda.cancha.estado == 'inactiva' or agenda.sede.estado == 'inactiva' %}
-                                                                <span>No disponible</span>
-                                                            {% else %}
-                                                                <span>{% if celda.puede_reservar or celda.puede_bloquear %}<span class="agenda-mas" aria-hidden="true">＋ </span>{% endif %}Libre</span>
-                                                            {% endif %}
-                                                            {% if celda.anulados %}
-                                                                <span class="agenda-historial" role="img" aria-label="Hay eventos anulados" data-tooltip="Hay eventos anulados">
-                                                                    <svg width="18" height="18" viewBox="0 0 24 24" stroke-width="1.5" fill="none" aria-hidden="true" focusable="false">
-                                                                        <path d="M13 21H5C3.89543 21 3 20.1046 3 19V10H21V13M15 4V2M15 4V6M15 4H10.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                                                        <path d="M3 10V6C3 4.89543 3.89543 4 5 4H7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                                                        <path d="M7 2V6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                                                        <path d="M21 10V6C21 4.89543 20.1046 4 19 4H18.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                                                        <path d="M15.9922 19H22" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
-                                                                    </svg>
-                                                                </span>
-                                                            {% endif %}
-                                                        </a>
-                                                    {% else %}
-                                                        <span class="agenda-fuera-rango">Fuera del calendario</span>
-                                                    {% endif %}
-                                                </td>
-                                            {% endfor %}
-                                        </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% elif not agenda.columnas %}
-                    <p class="tarjeta estado-vacio">Esta sede no tiene canchas registradas.</p>
-                {% elif not es_administrador and agenda.fecha < agenda.hoy %}
-                    <p class="tarjeta estado-vacio">No tenés eventos en esta fecha.</p>
-                {% elif not es_administrador and agenda.fecha == agenda.hoy %}
-                    <p class="tarjeta estado-vacio">No tenés eventos propios ni turnos pendientes de inicio para hoy.</p>
-                {% else %}
-                    <p class="tarjeta estado-vacio">No hay horarios de funcionamiento ni actividades para este período.</p>
-                {% endif %}
+                <div class="agenda-grilla">
+                    <header class="agenda-titulo-fecha">
+                        {% include "agenda/_selector_sede.html" %}
+                        <div class="agenda-fecha-consultada">
+                            <h2><time datetime="{{ agenda.fecha|date:'Y-m-d' }}"><span class="agenda-dia-semana">{{ agenda.fecha|date:"l"|capfirst }} </span>{{ agenda.fecha|date:"d/m/Y" }}</time></h2>
+                            {% if agenda.feriado or agenda.horario_especial %}
+                                <span class="ayuda-contextual">
+                                    <button type="button" class="ayuda-contextual-boton" aria-label="Información sobre el horario de la fecha" aria-describedby="agenda-fecha-aviso"><span aria-hidden="true">!</span></button>
+                                    <span id="agenda-fecha-aviso" class="ayuda-contextual-texto" role="tooltip">
+                                        {% if agenda.feriado %}<span>Feriado: {{ agenda.feriado.descripcion }}</span>{% endif %}
+                                        {% if agenda.horario_especial %}<span>{% if agenda.horario_especial.cerrada %}Horario especial: sede cerrada.{% else %}Horario especial: {{ agenda.horario_especial.hora_inicio_1|time:"H:i" }}–{{ agenda.horario_especial.hora_fin_1|time:"H:i" }}{% if agenda.horario_especial.hora_inicio_2 %}, {{ agenda.horario_especial.hora_inicio_2|time:"H:i" }}–{{ agenda.horario_especial.hora_fin_2|time:"H:i" }}{% endif %}{% endif %}</span>{% endif %}
+                                    </span>
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="agenda-controles-grilla" role="group" aria-label="Controles de la grilla">
+                            {% if agenda.url_anterior %}<a class="boton boton-secundario boton-chico agenda-flecha" href="{{ agenda.url_anterior }}" aria-label="Día anterior" data-tooltip="Día anterior">‹</a>{% endif %}
+                            <a class="boton boton-secundario boton-chico" href="{{ agenda.url_hoy }}" data-tooltip="Ir a hoy">Hoy</a>
+                            {% if agenda.url_siguiente %}<a class="boton boton-secundario boton-chico agenda-flecha" href="{{ agenda.url_siguiente }}" aria-label="Día siguiente" data-tooltip="Día siguiente">›</a>{% endif %}
+                            <button class="boton boton-secundario boton-chico agenda-boton-calendario" type="button" aria-label="Elegir fecha" data-tooltip="Elegir fecha" aria-haspopup="dialog" aria-controls="agenda-selector-fecha" data-agenda-elegir-fecha="{{ agenda.url_cerrar }}">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="{% static 'img/navegacion.svg' %}#calendario"/></svg>
+                            </button>
+                            {% if es_administrador and agenda.columnas %}
+                                <details class="agenda-menu-acciones" data-agenda-menu-acciones>
+                                    <summary class="boton boton-secundario boton-chico" aria-label="Acciones" data-tooltip="Acciones">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+                                            <circle cx="12" cy="5" r="1.5"/>
+                                            <circle cx="12" cy="12" r="1.5"/>
+                                            <circle cx="12" cy="19" r="1.5"/>
+                                        </svg>
+                                    </summary>
+                                    <div class="agenda-menu-opciones">
+                                        {% if agenda.fecha >= agenda.hoy %}
+                                            <a data-agenda-acciones="dia" href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{% if panel_acciones and not panel_acciones_mes %}true{% else %}false{% endif %}">Acciones del día</a>
+                                        {% endif %}
+                                        <a data-agenda-acciones="mes" href="{{ agenda.url_acciones_mes }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones_mes|yesno:'true,false' }}">Acciones del mes</a>
+                                    </div>
+                                </details>
+                            {% endif %}
+                        </div>
+                        {% if agenda.sede.estado == 'inactiva' %}<span class="agenda-sede-inactiva texto-secundario">Sede inactiva</span>{% endif %}
+                    </header>
+                    {% if agenda.columnas and agenda.filas %}
+                        <div class="agenda-tabla-contenedor">
+                            <table class="agenda-tabla" data-agenda-tabla data-fecha-agenda="{{ agenda.fecha|date:'Y-m-d' }}" data-zona-horaria="{{ zona_horaria }}" style="--agenda-columnas: {{ agenda.columnas|length }};">
+                                <caption>Turnos de todas las canchas de la sede</caption>
+                                <thead><tr>
+                                    <th scope="col">Hora</th>
+                                    {% for columna in agenda.columnas %}
+                                        <th scope="col">
+                                            {{ columna.cancha.nombre }}
+                                            {% if columna.cancha.estado == 'inactiva' %}<span class="agenda-anotacion">Inactiva</span>{% endif %}
+                                        </th>
+                                    {% endfor %}
+                                </tr></thead>
+                                <tbody>
+                                    {% for fila in agenda.filas %}
+                                        {% if fila.pausa %}
+                                            <tr class="agenda-pausa"><td colspan="{{ agenda.columnas|length|add:'1' }}">{{ fila.inicio|time:"H:i" }} a {{ fila.fin|time:"H:i" }} · Fuera del horario de funcionamiento</td></tr>
+                                        {% else %}
+                                            <tr>
+                                                <th scope="row" data-hora-fila="{{ fila.hora.hour }}"{% if fila.ahora %} class="agenda-hora-actual"{% endif %}>
+                                                    {{ fila.hora|time:"H:i" }}<span class="agenda-ahora"{% if not fila.ahora %} hidden{% endif %}>Ahora</span>
+                                                </th>
+                                                {% for celda in fila.celdas %}
+                                                    <td>
+                                                        {% if celda.en_rango and not celda.consultable %}
+                                                            <span class="agenda-turno agenda-turno-pasado{% if celda.habilitado %} agenda-turno-libre{% else %} agenda-turno-cerrado{% endif %}">{% if celda.habilitado %}Libre{% else %}Fuera de horario{% endif %}</span>
+                                                        {% elif celda.en_rango %}
+                                                            <a data-agenda-turno class="agenda-turno{% if celda.ocupado_por_tercero %} agenda-turno-ocupado{% elif celda.evento %} agenda-turno-{{ celda.evento.tipo }}{% elif not celda.habilitado %} agenda-turno-cerrado{% else %} agenda-turno-libre{% endif %}{% if celda.iniciado %} agenda-turno-pasado{% endif %}{% if celda.seleccionada %} agenda-turno-seleccionado{% endif %}"
+                                                               href="{{ celda.url }}"{% if celda.seleccionada %} aria-current="true"{% endif %}
+                                                               aria-label="{{ celda.cancha.nombre }}, {{ celda.fecha|date:'d/m/Y' }}, {{ celda.hora|time:'H:i' }} a {{ celda.fin|time:'H:i' }}. {% if celda.ocupado_por_tercero %}No disponible{% elif celda.reserva %}Reserva de {{ celda.reserva.organizador }}. {{ celda.estado_temporal }}{% elif celda.evento %}{{ celda.evento.get_tipo_display }}{% elif celda.puede_reservar %}Turno libre{% else %}{{ celda.impedimento }}{% endif %}">
+                                                                {% if celda.ocupado_por_tercero %}
+                                                                    <span>No disponible</span>
+                                                                {% elif celda.evento %}
+                                                                    {% include "agenda/_contenido_evento.html" with evento=celda.evento profesores=celda.profesores only %}
+                                                                    {% include "agenda/_estado_evento.html" with evento=celda.evento estado_temporal=celda.estado_temporal en_grilla=True only %}
+                                                                {% elif not celda.habilitado %}
+                                                                    <span>Fuera de horario</span>
+                                                                {% elif celda.cancha.estado == 'inactiva' or agenda.sede.estado == 'inactiva' %}
+                                                                    <span>No disponible</span>
+                                                                {% else %}
+                                                                    <span>{% if celda.puede_reservar or celda.puede_bloquear %}<span class="agenda-mas" aria-hidden="true">＋ </span>{% endif %}Libre</span>
+                                                                {% endif %}
+                                                                {% if celda.anulados %}
+                                                                    <span class="agenda-historial" role="img" aria-label="Hay eventos anulados" data-tooltip="Hay eventos anulados">
+                                                                        <svg width="18" height="18" viewBox="0 0 24 24" stroke-width="1.5" fill="none" aria-hidden="true" focusable="false">
+                                                                            <path d="M13 21H5C3.89543 21 3 20.1046 3 19V10H21V13M15 4V2M15 4V6M15 4H10.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                            <path d="M3 10V6C3 4.89543 3.89543 4 5 4H7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                            <path d="M7 2V6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                            <path d="M21 10V6C21 4.89543 20.1046 4 19 4H18.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                            <path d="M15.9922 19H22" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                        </svg>
+                                                                    </span>
+                                                                {% endif %}
+                                                            </a>
+                                                        {% else %}
+                                                            <span class="agenda-fuera-rango">Fuera del calendario</span>
+                                                        {% endif %}
+                                                    </td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% elif not agenda.columnas %}
+                        <p class="estado-vacio">Esta sede no tiene canchas registradas.</p>
+                    {% elif not es_administrador and agenda.fecha < agenda.hoy %}
+                        <p class="estado-vacio">No tenés eventos en esta fecha.</p>
+                    {% elif not es_administrador and agenda.fecha == agenda.hoy %}
+                        <p class="estado-vacio">No tenés eventos propios ni turnos pendientes de inicio para hoy.</p>
+                    {% else %}
+                        <p class="estado-vacio">No hay horarios de funcionamiento ni actividades para este período.</p>
+                    {% endif %}
+                </div>
                 <div class="agenda-leyenda" role="group" aria-label="Tipos de evento">
                     <span><i aria-hidden="true"></i>{% if es_administrador %}Reserva{% else %}Mi reserva{% endif %}</span>
                     <span><i class="agenda-leyenda-clase" aria-hidden="true"></i>{% if es_administrador %}Clase{% else %}Mi clase{% endif %}</span>
@@ -149,6 +157,14 @@
                 <div data-agenda-contenido>{% if panel_acciones %}{% include "agenda/_acciones_dia.html" %}{% elif panel_historial %}{% include "agenda/_historial_turno.html" %}{% else %}{% include "agenda/_detalle_turno.html" %}{% endif %}</div>
             </aside>
         </div>
+        <dialog id="agenda-selector-fecha" class="modal-confirmacion agenda-selector-fecha" aria-labelledby="agenda-selector-fecha-titulo"
+                data-fecha-minima="{{ formulario.fecha.field.widget.attrs.min }}" data-fecha-maxima="{{ formulario.fecha.field.widget.attrs.max }}" data-hoy="{{ agenda.hoy|date:'Y-m-d' }}">
+            <h2 id="agenda-selector-fecha-titulo">Elegir fecha</h2>
+            <input type="hidden" data-agenda-calendario-campo hidden>
+            <form method="dialog">
+                <button class="boton boton-secundario boton-chico" type="submit" autofocus>Cerrar</button>
+            </form>
+        </dialog>
     {% endif %}
 {% else %}
     <p class="tarjeta estado-vacio">{% if es_administrador %}Registrá una sede y sus canchas para consultar la agenda.{% else %}No hay sedes disponibles para consultar la agenda.{% endif %}</p>
@@ -156,5 +172,10 @@
 <script src="{% static 'js/clase-formulario.js' %}" defer></script>
 <script src="{% static 'js/agenda-clase-pasos.js' %}" defer></script>
 <script src="{% static 'js/agenda_operaciones.js' %}" defer></script>
-<script src="{% static 'js/agenda.js' %}?v=20261122-menu" defer></script>
+<script src="{% static 'js/agenda.js' %}?v=20261122-controles" defer></script>
+{% if agenda %}
+    <script src="{% static 'vendor/flatpickr/flatpickr.min.js' %}" defer></script>
+    <script src="{% static 'vendor/flatpickr/es.js' %}" defer></script>
+    <script src="{% static 'js/agenda-calendario.js' %}" defer></script>
+{% endif %}
 {% endblock %}

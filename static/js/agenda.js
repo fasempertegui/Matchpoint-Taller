@@ -328,6 +328,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var desplazamiento = contenedorTabla ? contenedorTabla.scrollLeft : 0;
             desmontarPanel();
             document.querySelector("[data-agenda-calendario]").replaceChildren(...calendario.childNodes);
+            menuAcciones = document.querySelector("[data-agenda-menu-acciones]");
             contenido.innerHTML = detalle.innerHTML;
             prepararPanel();
             contenedorTabla = document.querySelector(".agenda-tabla-contenedor");
@@ -377,7 +378,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.addEventListener("change", function (evento) {
-        if (evento.target.matches('[data-agenda-mes] select[name="mes"]')) {
+        if (evento.target.matches('[data-agenda-sede] select, [data-agenda-mes] select[name="mes"]')) {
             evento.target.form.requestSubmit();
         }
     });
@@ -412,12 +413,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var partes = {};
             formato.formatToParts(new Date()).forEach(function (parte) { partes[parte.type] = parte.value; });
             var fecha = partes.year + "-" + partes.month + "-" + partes.day;
-            var incluyeHoy = false;
-            tabla.querySelectorAll("[data-fecha-columna]").forEach(function (columna) {
-                var hoy = columna.dataset.fechaColumna === fecha;
-                columna.classList.toggle("agenda-columna-hoy", hoy);
-                if (hoy) incluyeHoy = true;
-            });
+            var incluyeHoy = tabla.dataset.fechaAgenda === fecha;
             tabla.querySelectorAll("[data-hora-fila]").forEach(function (fila) {
                 var actual = incluyeHoy && Number(fila.dataset.horaFila) === Number(partes.hour);
                 fila.classList.toggle("agenda-hora-actual", actual);

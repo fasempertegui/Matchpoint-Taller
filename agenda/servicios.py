@@ -249,8 +249,6 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
         detalle["datos_clase"] = datos_clase
         detalle["profesores_activos"] = datos_clase["profesores"]
         detalle["cantidad_participantes"] = len(datos_clase["participantes"])
-    for columna in columnas:
-        columna["hoy"] = columna["fecha"] == ahora.date()
     salto = timedelta(days=1)
     return {
         "columnas": columnas, "filas": filas, "detalle": detalle, "hoy": ahora.date(),
