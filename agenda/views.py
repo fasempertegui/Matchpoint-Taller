@@ -308,7 +308,7 @@ def _preparar_acciones(request, sede, fecha, fecha_hasta=None, url_agenda=None):
                 raise signing.BadSignature
             if mensual and confirmacion.get("fecha_hasta") != fecha_hasta.isoformat():
                 raise signing.BadSignature
-            if not {"excluir_clases_manuales", "excluir_clases_generadas"} <= confirmacion["parametros"].keys():
+            if "actividades" not in confirmacion["parametros"]:
                 raise signing.BadSignature
             datos = QueryDict(mutable=True)
             for nombre, valor in confirmacion["parametros"].items():
@@ -319,11 +319,7 @@ def _preparar_acciones(request, sede, fecha, fecha_hasta=None, url_agenda=None):
                         datos[nombre] = "on"
                 else:
                     datos[nombre] = valor
-            canchas = confirmacion["parametros"]["canchas"]
-            if set(canchas) == set(sede.canchas.values_list("pk", flat=True)):
-                datos["seleccion_canchas"] = "todas"
-            else:
-                datos["seleccion_canchas"] = "seleccionar"
+            datos["seleccion_canchas"] = confirmacion["seleccion_canchas"]
             datos["horario"] = confirmacion["parametros"]["hora_desde"] or "dia"
         except (signing.BadSignature, KeyError, TypeError, ValueError):
             avisos.append("La vista previa venció o no corresponde a esta selección. Preparala nuevamente.")
@@ -343,6 +339,8 @@ def _preparar_acciones(request, sede, fecha, fecha_hasta=None, url_agenda=None):
         try:
             if paso == "confirmar":
                 try:
+                    if parametros != confirmacion["parametros"]:
+                        raise ValidationError("El alcance cambió desde la vista previa. Revisá nuevamente las acciones.")
                     resultado = ejecutar_operacion(request.user, sede.pk, fecha, parametros, confirmacion["huella"], fecha_hasta)
                 except ValidationError as error:
                     for mensaje in error.messages:
@@ -366,12 +364,33 @@ def _preparar_acciones(request, sede, fecha, fecha_hasta=None, url_agenda=None):
         token = signing.dumps({
             "usuario": request.user.pk, "sede": sede.pk, "fecha": fecha.isoformat(),
             "parametros": parametros, "huella": previa["huella"],
+            "seleccion_canchas": formulario.cleaned_data["seleccion_canchas"],
             "fecha_hasta": fecha_hasta.isoformat() if mensual else None,
         }, salt=sal, compress=True)
+    alcance = {}
+    if previa is not None:
+        alcance["horario"] = "Día completo"
+        if parametros["alcance"] == "desde":
+            alcance["horario"] = f'Desde las {parametros["hora_desde"]}'
+            if parametros["hora_hasta"]:
+                alcance["horario"] += f' hasta las {parametros["hora_hasta"]}'
+        alcance["actividades"] = [
+            etiqueta for valor, etiqueta in formulario.fields["actividades"].choices
+            if valor in parametros["actividades"]
+        ]
+        if mensual:
+            alcance.update({
+                "desde": previa["desde"],
+                "hasta": previa["hasta"],
+                "dias": [
+                    etiqueta for valor, etiqueta in formulario.fields["dias_semana"].choices
+                    if int(valor) in parametros.get("dias_semana", ())
+                ] or ["Todos los días"],
+            })
     return {
         "sede": sede, "fecha": fecha, "mensual": mensual,
         "formulario_operacion": formulario, "previa": previa, "confirmacion": token, "parametros_operacion": parametros,
-        "avisos_operacion": avisos,
+        "avisos_operacion": avisos, "alcance_operacion": alcance,
         "motivo_bloqueo": dict(formulario.fields["motivo_bloqueo"].choices).get(parametros["motivo_bloqueo"], "")
             if parametros and not mensual else "",
     }

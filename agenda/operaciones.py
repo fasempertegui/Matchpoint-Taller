@@ -1,7 +1,7 @@
 import hashlib
 import json
 from calendar import monthrange
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -24,6 +24,7 @@ def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
     if not mensual and not ahora.date() <= fecha <= fecha_maxima_agenda():
         raise ValidationError("Elegí una fecha desde hoy hasta un año después, inclusive.")
     operacion = parametros["operacion"]
+    actividades = parametros["actividades"]
     if operacion not in ("liberar", "bloquear"):
         raise ValidationError("Elegí una operación válida.")
     if operacion == "bloquear" and fecha > fecha_maxima_eventos():
@@ -93,17 +94,16 @@ def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
                 fila["conservado"] = "Finalizado"
             elif inicio <= ahora:
                 fila["conservado"] = "En curso" if inicio + timedelta(hours=1) > ahora else "Terminado"
-            elif evento and evento.tipo == Evento.Tipo.CLASE and (
-                parametros["excluir_clases_generadas"] if evento.clase.es_generada
-                else parametros["excluir_clases_manuales"]
-            ):
-                fila["conservado"] = "Clase excluida"
-            elif evento and evento.tipo == Evento.Tipo.RESERVA and parametros["excluir_reservas"]:
-                fila["conservado"] = "Reserva excluida"
+            elif fila["clase"] and (
+                "clase_generada" if fila["clase"].es_generada else "clase_manual"
+            ) not in actividades:
+                fila["conservado"] = "Clase fuera de la selección"
+            elif fila["reserva"] and "reserva" not in actividades:
+                fila["conservado"] = "Reserva fuera de la selección"
             elif evento and evento.tipo == Evento.Tipo.BLOQUEO and operacion == "bloquear":
                 fila["conservado"] = "Bloqueo existente"
-            elif evento and evento.tipo == Evento.Tipo.BLOQUEO and parametros["excluir_bloqueos"]:
-                fila["conservado"] = "Bloqueo excluido"
+            elif fila["bloqueo"] and "bloqueo" not in actividades:
+                fila["conservado"] = "Bloqueo fuera de la selección"
             elif operacion == "bloquear" and hora not in horas_habilitadas:
                 fila["conservado"] = "Fuera del horario vigente"
             elif operacion == "bloquear":
@@ -158,6 +158,7 @@ def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
     huella = hashlib.sha256(json.dumps(instantanea, sort_keys=True, default=str).encode()).hexdigest()
     return {
         "acciones": acciones, "conservados": conservados, "canchas": canchas,
+        "fechas": [fecha],
         "anulaciones": anulaciones, "reservas_a_anular": reservas_a_anular,
         "clases_a_anular": sum(fila["clase"] is not None for fila in acciones),
         "bloqueos_a_crear": len(acciones) if operacion == "bloquear" else 0,
@@ -167,33 +168,52 @@ def _preparar_operacion_dia(sede, fecha, parametros, mensual=False):
 
 
 def preparar_operacion(sede, fecha, parametros, fecha_hasta=None):
+    if parametros["operacion"] == "liberar" and not parametros["actividades"]:
+        raise ValidationError("Elegí al menos un tipo de actividad.")
     if fecha_hasta is None:
         return _preparar_operacion_dia(sede, fecha, parametros)
     if parametros["operacion"] != "liberar":
         raise ValidationError("Las acciones del mes sólo permiten anular y liberar.")
+    hoy = timezone.localdate()
     if (
         fecha.day != 1 or fecha_hasta != fecha.replace(day=monthrange(fecha.year, fecha.month)[1])
-        or fecha < max(FECHA_INICIO_OPERACIONES, timezone.localdate().replace(day=1))
+        or fecha < max(FECHA_INICIO_OPERACIONES, hoy.replace(day=1))
         or fecha_hasta > fecha_maxima_eventos()
     ):
         raise ValidationError("Elegí un mes completo dentro del calendario operativo.")
+    primera_fecha = max(fecha, hoy)
+    try:
+        desde = date.fromisoformat(parametros["fecha_desde"]) if "fecha_desde" in parametros else primera_fecha
+        hasta = date.fromisoformat(parametros["fecha_hasta"]) if "fecha_hasta" in parametros else fecha_hasta
+        dias_semana = set(parametros.get("dias_semana", ()))
+    except (TypeError, ValueError):
+        raise ValidationError("Revisá las fechas y los días de la semana.") from None
+    if not primera_fecha <= desde <= hasta <= fecha_hasta:
+        raise ValidationError("Elegí un rango válido dentro del mes, desde hoy en adelante.")
+    if not dias_semana <= set(range(1, 8)):
+        raise ValidationError("Revisá los días de la semana elegidos.")
+    dias_del_rango = (desde + timedelta(days=numero) for numero in range((hasta - desde).days + 1))
+    fechas = [dia for dia in dias_del_rango if not dias_semana or dia.isoweekday() in dias_semana]
+    if not fechas:
+        raise ValidationError("Ninguno de los días de la semana elegidos cae dentro del rango.")
     if parametros["hora_hasta"]:
-        hasta = time.fromisoformat(parametros["hora_hasta"])
+        hora_hasta = time.fromisoformat(parametros["hora_hasta"])
         franjas = []
         for horario in sede.horarios.all():
             franjas.append((horario.hora_inicio_1, horario.hora_fin_1))
             if horario.hora_inicio_2 is not None:
                 franjas.append((horario.hora_inicio_2, horario.hora_fin_2))
-        if not any(inicio < hasta <= fin for inicio, fin in franjas):
+        if not any(inicio < hora_hasta <= fin for inicio, fin in franjas):
             raise ValidationError("La hora de fin debe coincidir con el fin de un turno habilitado.")
     dias = [
-        _preparar_operacion_dia(sede, fecha + timedelta(days=numero), parametros, mensual=True)
-        for numero in range((fecha_hasta - fecha).days + 1)
+        _preparar_operacion_dia(sede, dia, parametros, mensual=True) for dia in fechas
     ]
     return {
         "acciones": [fila for dia in dias for fila in dia["acciones"]],
         "conservados": [fila for dia in dias for fila in dia["conservados"]],
         "canchas": dias[0]["canchas"],
+        "fechas": fechas,
+        "desde": desde, "hasta": hasta,
         **{
             campo: sum(dia[campo] for dia in dias)
             for campo in ("anulaciones", "reservas_a_anular", "clases_a_anular", "bloqueos_a_crear", "libres_sin_accion")
@@ -224,7 +244,7 @@ def ejecutar_operacion(usuario, sede_id, fecha, parametros, huella, fecha_hasta=
     list(Cancha.objects.select_for_update().filter(sede=sede, pk__in=parametros["canchas"]).order_by("pk"))
     # Todos los turnos se bloquean antes de los eventos, igual que en las acciones individuales.
     turnos = list(Turno.objects.select_for_update().filter(
-        cancha_id__in=parametros["canchas"], fecha__range=(fecha, fecha_hasta or fecha),
+        cancha_id__in=parametros["canchas"], fecha__in=seleccion["fechas"],
     ).order_by("pk"))
     list(Evento.objects.select_for_update().filter(turno__in=turnos).order_by("pk"))
     previa = preparar_operacion(sede, fecha, parametros, fecha_hasta)

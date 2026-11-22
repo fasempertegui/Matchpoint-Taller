@@ -1,3 +1,4 @@
+from calendar import monthrange
 from datetime import datetime, time
 from decimal import Decimal
 
@@ -128,10 +129,18 @@ class AgendaOperacionForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-control"}),
         error_messages={"invalid_choice": "Elegí una hora de fin posterior al inicio y dentro del horario del día."},
     )
-    excluir_clases_manuales = forms.BooleanField(label="Clases creadas manualmente", required=False)
-    excluir_clases_generadas = forms.BooleanField(label="Clases generadas desde la planilla", required=False)
-    excluir_reservas = forms.BooleanField(label="Reservas", required=False)
-    excluir_bloqueos = forms.BooleanField(label="Bloqueos", required=False)
+    actividades = forms.MultipleChoiceField(
+        label="Elegir actividades",
+        choices=(
+            ("clase_manual", "Clases creadas manualmente"),
+            ("clase_generada", "Clases generadas desde la planilla"),
+            ("reserva", "Reservas"),
+            ("bloqueo", "Bloqueos"),
+        ),
+        required=False,
+        initial=(),
+        widget=forms.CheckboxSelectMultiple(),
+    )
     motivo_bloqueo = forms.ChoiceField(
         label="Motivo del bloqueo *",
         required=False,
@@ -191,10 +200,12 @@ class AgendaOperacionForm(forms.Form):
             if not datos.get("motivo_bloqueo"):
                 self.add_error("motivo_bloqueo", "Elegí el motivo de los bloqueos.")
             datos["motivo_anulacion"] = dict(Bloqueo.Motivo.choices).get(datos.get("motivo_bloqueo"), "")
-            datos["excluir_bloqueos"] = False
+            datos["actividades"] = [actividad for actividad in datos.get("actividades", []) if actividad != "bloqueo"]
         else:
             datos["motivo_bloqueo"] = ""
             datos["observaciones"] = ""
+            if datos.get("operacion") == "liberar" and not datos.get("actividades"):
+                self.add_error("actividades", "Elegí al menos una actividad para anular.")
         return datos
 
     def validar_motivos(self, previa):
@@ -215,10 +226,7 @@ class AgendaOperacionForm(forms.Form):
             "alcance": "dia" if datos["horario"] == "dia" else "desde",
             "hora_desde": "" if datos["horario"] == "dia" else datos["horario"],
             "hora_hasta": datos["hora_hasta"],
-            "excluir_clases_manuales": datos["excluir_clases_manuales"],
-            "excluir_clases_generadas": datos["excluir_clases_generadas"],
-            "excluir_reservas": datos["excluir_reservas"],
-            "excluir_bloqueos": datos["excluir_bloqueos"],
+            "actividades": sorted(set(datos["actividades"])),
             "motivo_bloqueo": datos["motivo_bloqueo"],
             "motivo_anulacion": datos["motivo_anulacion"],
             "observaciones": datos["observaciones"],
@@ -247,13 +255,54 @@ class AgendaMesForm(forms.Form):
 
 
 class AgendaOperacionMesForm(AgendaOperacionForm):
+    DIAS_SEMANA = (
+        (1, "Lunes"),
+        (2, "Martes"),
+        (3, "Miércoles"),
+        (4, "Jueves"),
+        (5, "Viernes"),
+        (6, "Sábado"),
+        (7, "Domingo"),
+    )
+
+    fecha_desde = forms.DateField(
+        label="Desde",
+        required=False,
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+    fecha_hasta = forms.DateField(
+        label="Hasta",
+        required=False,
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+    dias_semana = forms.TypedMultipleChoiceField(
+        label="Días de la semana",
+        choices=DIAS_SEMANA,
+        coerce=int,
+        required=False,
+        widget=forms.CheckboxSelectMultiple(),
+    )
+
     def __init__(self, *args, sede, fecha, **kwargs):
         super().__init__(*args, sede=sede, fecha=fecha, **kwargs)
+        primer_dia = fecha.replace(day=1)
+        ultimo_dia = primer_dia.replace(day=monthrange(primer_dia.year, primer_dia.month)[1])
+        self.fecha_minima = max(timezone.localdate(), primer_dia)
+        self.fecha_maxima = ultimo_dia
+        for campo in ("fecha_desde", "fecha_hasta"):
+            self.fields[campo].widget.attrs.update({
+                "min": self.fecha_minima.isoformat(),
+                "max": self.fecha_maxima.isoformat(),
+            })
         self.fields["operacion"].choices = (("liberar", "Anular y liberar"),)
         self.fields["operacion"].initial = "liberar"
         self.fields["operacion"].disabled = True
+        self.fields["operacion"].widget.attrs["form"] = "agenda-operacion-mes"
         self.fields.pop("motivo_bloqueo")
         self.fields.pop("observaciones")
+        self.fields["motivo_anulacion"].widget = forms.TextInput(attrs={"class": "form-control"})
         horas = set()
         for horario in sede.horarios.all():
             franjas = [(horario.hora_inicio_1, horario.hora_fin_1)]
@@ -272,3 +321,26 @@ class AgendaOperacionMesForm(AgendaOperacionForm):
             (fin, fin) for fin in finales if desde == "dia" or fin > desde
         ]
         self.fields["hora_hasta"].widget.attrs["data-finales-habilitados"] = ",".join(finales)
+
+    def clean(self):
+        datos = super().clean()
+        fecha_desde = datos.get("fecha_desde")
+        fecha_hasta = datos.get("fecha_hasta")
+        rango_error = f"Elegí una fecha entre el {self.fecha_minima:%d/%m/%Y} y el {self.fecha_maxima:%d/%m/%Y}."
+        if fecha_desde and not self.fecha_minima <= fecha_desde <= self.fecha_maxima:
+            self.add_error("fecha_desde", rango_error)
+        if fecha_hasta and not self.fecha_minima <= fecha_hasta <= self.fecha_maxima:
+            self.add_error("fecha_hasta", rango_error)
+        if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
+            self.add_error("fecha_hasta", "La fecha hasta debe ser igual o posterior a la fecha desde.")
+        return datos
+
+    def parametros(self):
+        datos = self.cleaned_data
+        parametros = super().parametros()
+        for campo in ("fecha_desde", "fecha_hasta"):
+            if datos[campo]:
+                parametros[campo] = datos[campo].isoformat()
+        if datos["dias_semana"]:
+            parametros["dias_semana"] = sorted(set(datos["dias_semana"]))
+        return parametros

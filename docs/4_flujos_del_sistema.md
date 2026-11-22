@@ -2281,7 +2281,7 @@ flowchart TD
 
 - **Objetivo:** impedir el uso de varios turnos por una causa común.
 - **Actor:** administrador.
-- **Entradas:** una o varias canchas de una sede, fecha y turnos seleccionados o fecha completa o intervalo desde una hora de corte inclusiva; motivo común de clima adverso, torneo o mantenimiento; exclusión opcional de clases, reservas o ambas; observaciones opcionales. El nombre del motivo de bloqueo se usa también para anular las reservas o clases afectadas.
+- **Entradas:** una o varias canchas de una sede, fecha y turnos seleccionados o fecha completa o intervalo desde una hora de corte inclusiva; motivo común de clima adverso, torneo o mantenimiento; selección opcional de clases y reservas a anular; observaciones opcionales. El nombre del motivo de bloqueo se usa también para anular las reservas o clases afectadas.
 
 Recorrido:
 
@@ -2295,7 +2295,7 @@ Recorrido:
 Alternativas:
 
 - Los bloqueos existentes se conservan como ya cubiertos: no se anulan ni se superponen con otros.
-- Conservar actividades permite marcar por separado clases creadas manualmente, clases generadas desde la planilla y reservas. Las categorías marcadas conservan sus actividades y sus turnos ocupados; las no marcadas se incluyen si son elegibles. Los turnos libres se bloquean. Los eventos Anulados son historia y no impiden un nuevo bloqueo.
+- Elegir actividades permite marcar por separado clases creadas manualmente, clases generadas desde la planilla y reservas. Las actividades elegidas se incluyen si son elegibles y las demás se conservan. Los turnos libres habilitados se bloquean incluso con la selección de actividades vacía. Los eventos Anulados son historia y no impiden un nuevo bloqueo.
 - Los días pasados no admiten la operación. Los turnos iniciados y los eventos Finalizados se muestran como conservados y no impiden actuar sobre los demás.
 - Cada turno debe quedar íntegramente dentro de una franja, aunque los distintos turnos del lote pertenezcan a franjas diferentes. Cada bloqueo referencia un único turno, con estado y auditoría independientes.
 - La confirmación identifica al actor y los parámetros revisados, con una validez de quince minutos. Una confirmación vencida o de otra selección exige preparar nuevamente la vista previa.
@@ -2349,13 +2349,13 @@ flowchart TD
 
 - **Objetivo:** liberar varios turnos anulando sus eventos no iniciados.
 - **Actor:** administrador.
-- **Entradas:** una o varias canchas de una sede, fecha o mes calendario completo, todas o varias canchas y día completo o intervalo desde una hora de corte inclusiva, con fin opcional exclusivo; exclusión opcional de clases, reservas, bloqueos o cualquier combinación; motivo de anulación.
+- **Entradas:** una o varias canchas de una sede, fecha o rango inclusivo y días de semana dentro de un mes calendario, todas o varias canchas y día completo o intervalo desde una hora de corte inclusiva, con fin opcional exclusivo; selección obligatoria de al menos un tipo entre clases, reservas y bloqueos; motivo de anulación.
 
 Recorrido:
 
-1. Desde Acciones del día o Acciones del mes de Agenda, elige alcance, exclusiones y motivo. En el alcance mensual conserva la sede de Agenda y elige el mes completo dentro del mismo panel lateral, con el mes de la fecha consultada por defecto si está habilitado y el actual en caso contrario; sólo se ofrecen el mes actual y los dos siguientes. Elegir mes, revisar y editar mantienen la grilla visible. El horario se aplica a cada día y no se ofrece crear bloqueos. Un corte a las 18:30 selecciona desde las 19:00; a la hora exacta de inicio el turno ya se considera iniciado.
+1. Desde Acciones del día o Acciones del mes de Agenda, elige alcance, actividades y motivo. En el alcance mensual conserva la sede de Agenda y elige el mes dentro del mismo panel lateral, con el mes de la fecha consultada por defecto si está habilitado y el actual en caso contrario; sólo se ofrecen el mes actual y los dos siguientes. Elegir mes, revisar y editar mantienen la grilla visible. Puede ajustar Período y Días de la semana debajo de Mes. Cada selector despliega sus campos al elegir Seleccionar y descarta su selección al volver a Todo el mes o Todos los días. Desde y Hasta son opcionales e inclusivos. El alcance predeterminado va desde la primera fecha disponible hasta fin de mes e incluye todos los días. Marcar días de la semana reduce el alcance a esos días dentro del rango. El horario se aplica a las fechas que cumplen el filtro. La acción mensual sólo permite anular y liberar. Un corte a las 18:30 selecciona desde las 19:00; a la hora exacta de inicio el turno ya se considera iniciado.
 2. La vista previa muestra las reservas, clases y bloqueos a anular y los eventos excluidos, iniciados o Finalizados que se conservan. Los turnos libres y los eventos Anulados no requieren acción.
-3. Confirma las acciones. Se exigen los motivos y condiciones de cada tipo, incluido el mínimo de 5 caracteres para todo motivo libre. Conservar actividades ofrece casillas independientes para clases creadas manualmente, clases generadas desde la planilla, reservas y bloqueos. Las categorías marcadas se conservan; las no marcadas se incluyen si son elegibles. Para seleccionar sólo bloqueos se marcan ambas categorías de clases y reservas. La vista previa identifica el origen de cada clase.
+3. Confirma las acciones. Se exigen los motivos y condiciones de cada tipo, incluido el mínimo de 5 caracteres para todo motivo libre. Elegir actividades ofrece casillas independientes para clases creadas manualmente, clases generadas desde la planilla, reservas y bloqueos. Marca sólo las categorías que quiere anular. La vista previa y la confirmación muestran el rango, los días elegidos cuando corresponde y las actividades marcadas. Editar recupera la selección revisada. La vista previa identifica el origen de cada clase.
 4. En una transacción, bloquea los turnos y eventos afectados en orden estable y vuelve a validar acceso, estado, inicio futuro y alcance confirmado. Anula cada evento efectivo y registra su auditoría, conservando referencias, orígenes, importes y movimientos monetarios.
 5. Confirma todo el lote y envía las notificaciones de cancelación de reservas y clases. Los bloqueos no generan avisos.
 

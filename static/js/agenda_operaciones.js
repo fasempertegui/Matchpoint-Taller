@@ -3,6 +3,34 @@ window.prepararCamposOperacion = function () {
     if (!formulario || formulario.dataset.camposPreparados) return;
     formulario.dataset.camposPreparados = "1";
 
+    formulario.querySelectorAll("[data-operacion-refinamiento]").forEach(function (selector) {
+        var bloque = document.getElementById(selector.getAttribute("aria-controls"));
+
+        function actualizarRefinamiento() {
+            var abierto = selector.value === "seleccionar";
+            bloque.hidden = !abierto;
+            bloque.disabled = !abierto;
+            if (!abierto) {
+                bloque.querySelectorAll("input").forEach(function (campo) {
+                    if (campo.type === "checkbox") campo.checked = false;
+                    else campo.value = "";
+                });
+            }
+        }
+
+        selector.value = bloque.hasAttribute("data-refinamiento-abierto") ? "seleccionar" : "todo";
+        actualizarRefinamiento();
+        selector.addEventListener("change", actualizarRefinamiento);
+    });
+
+    if (formulario.elements.fecha_desde) {
+        formulario.addEventListener("formdata", function (evento) {
+            ["fecha_desde", "fecha_hasta"].forEach(function (nombre) {
+                if (evento.formData.get(nombre) === "") evento.formData.delete(nombre);
+            });
+        });
+    }
+
     function actualizarCampos() {
         var bloquear = formulario.elements.operacion.value === "bloquear";
         var variasCanchas = formulario.elements.seleccion_canchas.value === "seleccionar";
@@ -31,8 +59,11 @@ window.prepararCamposOperacion = function () {
         }
         formulario.querySelector("[data-operacion-motivo-anulacion]").hidden = bloquear;
         formulario.elements.motivo_anulacion.disabled = bloquear;
-        formulario.querySelector("[data-operacion-excluir-bloqueos]").hidden = bloquear;
-        formulario.elements.excluir_bloqueos.disabled = bloquear;
+        var opcionBloqueos = formulario.querySelector("[data-operacion-actividad-bloqueo]");
+        if (opcionBloqueos) {
+            opcionBloqueos.hidden = bloquear;
+            opcionBloqueos.querySelector("input").disabled = bloquear;
+        }
     }
 
     formulario.addEventListener("change", actualizarCampos);

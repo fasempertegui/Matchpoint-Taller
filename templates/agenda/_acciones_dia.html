@@ -10,8 +10,14 @@
             {% if agenda.cancha %}<input type="hidden" name="cancha" value="{{ agenda.cancha.pk }}">{% endif %}
             <input type="hidden" name="panel" value="acciones_mes">
             {{ formulario_mes.non_field_errors }}
+            {% if formulario_operacion and previa == None %}
+                <div class="grupo-campo">
+                    <label for="{{ formulario_operacion.operacion.id_for_label }}">{{ formulario_operacion.operacion.label }}</label>{{ formulario_operacion.operacion }}
+                    {% for error in formulario_operacion.operacion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
             <div class="grupo-campo">
-                <label for="{{ formulario_mes.mes.id_for_label }}">Mes</label>{{ formulario_mes.mes }}
+                <label for="{{ formulario_mes.mes.id_for_label }}">Mes *</label>{{ formulario_mes.mes }}
                 {% for error in formulario_mes.mes.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
             </div>
             <noscript><button class="boton boton-secundario boton-chico" type="submit">Elegir mes</button></noscript>
@@ -20,7 +26,13 @@
     {% for aviso in avisos_operacion %}<p class="error-campo" role="alert">{{ aviso }}</p>{% endfor %}
     {% if previa != None %}
         <div class="operacion-previa">
-            <p>{% if parametros_operacion.operacion == 'bloquear' %}Anular y bloquear{% else %}Anular y liberar{% endif %} · {% if parametros_operacion.alcance == 'dia' %}Día completo{% else %}Desde las {{ parametros_operacion.hora_desde }}{% if parametros_operacion.hora_hasta %} hasta las {{ parametros_operacion.hora_hasta }}{% endif %}{% endif %}</p>
+            <p>{% if parametros_operacion.operacion == 'bloquear' %}Anular y bloquear{% else %}Anular y liberar{% endif %} · {{ alcance_operacion.horario }}</p>
+            {% if mensual %}
+                <p>{{ alcance_operacion.desde|date:'d/m/Y' }} al {{ alcance_operacion.hasta|date:'d/m/Y' }} · {{ alcance_operacion.dias|join:", " }}</p>
+            {% else %}
+                <p>{{ fecha|date:'d/m/Y' }}</p>
+            {% endif %}
+            <p>{% if alcance_operacion.actividades %}Actividades elegidas · {{ alcance_operacion.actividades|join:", " }}{% else %}Solo turnos libres{% endif %}</p>
             <p class="agenda-impedimento">{% for cancha in previa.canchas %}{{ cancha.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
             <div class="operacion-totales" aria-live="polite">
                 <span>{{ previa.anulaciones }} evento{{ previa.anulaciones|pluralize }} a anular</span>
@@ -50,7 +62,7 @@
             </details>
             <div class="operacion-confirmacion">
                 {% if previa.acciones %}
-                    <form method="post" action="{{ url_operacion|default:agenda.url_acciones }}" data-confirmar="¿Confirmar la operación sobre {{ previa.canchas|length }} cancha{{ previa.canchas|length|pluralize }} de {{ sede.nombre }}, {% if mensual %}durante {{ fecha|date:'F Y' }}{% else %}el {{ fecha|date:'d/m/Y' }}{% endif %}? Se anularán {{ previa.anulaciones }} eventos{% if parametros_operacion.operacion == 'bloquear' %} y se crearán {{ previa.bloqueos_a_crear }} bloqueos{% endif %}, según la vista previa." data-confirmar-titulo="Confirmar acciones del {% if mensual %}mes{% else %}día{% endif %}" data-confirmar-boton="Confirmar" data-confirmar-peligro>
+                    <form method="post" action="{{ url_operacion|default:agenda.url_acciones }}" data-confirmar="¿Confirmar la operación sobre {{ previa.canchas|length }} cancha{{ previa.canchas|length|pluralize }} de {{ sede.nombre }}, {% if mensual %}del {{ alcance_operacion.desde|date:'d/m/Y' }} al {{ alcance_operacion.hasta|date:'d/m/Y' }} ({{ alcance_operacion.dias|join:", " }}){% else %}el {{ fecha|date:'d/m/Y' }}{% endif %}? {% if alcance_operacion.actividades %}Actividades elegidas: {{ alcance_operacion.actividades|join:", " }}. {% else %}Solo turnos libres. {% endif %}Se anularán {{ previa.anulaciones }} eventos{% if parametros_operacion.operacion == 'bloquear' %} y se crearán {{ previa.bloqueos_a_crear }} bloqueos{% endif %}, según la vista previa. Horario: {{ alcance_operacion.horario }}." data-confirmar-titulo="Confirmar acciones del {% if mensual %}mes{% else %}día{% endif %}" data-confirmar-boton="Confirmar" data-confirmar-peligro>
                         {% csrf_token %}<input type="hidden" name="paso" value="confirmar"><input type="hidden" name="confirmacion" value="{{ confirmacion }}">
                         <button class="boton boton-confirmar-peligro boton-chico" type="submit">{% if parametros_operacion.operacion == 'bloquear' %}Confirmar y bloquear{% else %}Confirmar y liberar{% endif %}</button>
                     </form>
@@ -63,13 +75,51 @@
             {% if previa.acciones %}<p class="agenda-impedimento">Si cambian la agenda o los horarios, se pide revisar nuevamente. No se aplican cambios parciales.</p>{% endif %}
         </div>
     {% elif formulario_operacion %}
-        <form class="agenda-formulario operacion-formulario" method="post" action="{{ url_operacion|default:agenda.url_acciones }}" data-agenda-operacion data-agenda-operacion-envio>
+        <form{% if mensual %} id="agenda-operacion-mes"{% endif %} class="agenda-formulario operacion-formulario" method="post" action="{{ url_operacion|default:agenda.url_acciones }}" data-agenda-operacion data-agenda-operacion-envio>
             {% csrf_token %}<input type="hidden" name="paso" value="previsualizar">
             {{ formulario_operacion.non_field_errors }}
-            <div class="grupo-campo">
-                <label for="{{ formulario_operacion.operacion.id_for_label }}">{{ formulario_operacion.operacion.label }}</label>{{ formulario_operacion.operacion }}
-                {% for error in formulario_operacion.operacion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-            </div>
+            {% if mensual %}
+                <div class="operacion-refinamientos">
+                    <div class="grupo-campo">
+                        <label for="agenda-mes-seleccion-periodo">Período</label>
+                        <select class="form-control" id="agenda-mes-seleccion-periodo" data-operacion-refinamiento aria-controls="agenda-mes-periodo">
+                            <option value="todo">Todo el mes</option>
+                            <option value="seleccionar">Seleccionar</option>
+                        </select>
+                    </div>
+                    <fieldset id="agenda-mes-periodo" class="operacion-opciones" hidden disabled{% if formulario_operacion.fecha_desde.value or formulario_operacion.fecha_hasta.value or formulario_operacion.fecha_desde.errors or formulario_operacion.fecha_hasta.errors %} data-refinamiento-abierto{% endif %}>
+                        <div class="operacion-rango-fechas">
+                            <div class="grupo-campo">
+                                <label for="{{ formulario_operacion.fecha_desde.id_for_label }}">{{ formulario_operacion.fecha_desde.label }}</label>
+                                {{ formulario_operacion.fecha_desde }}
+                                {% for error in formulario_operacion.fecha_desde.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+                            </div>
+                            <div class="grupo-campo">
+                                <label for="{{ formulario_operacion.fecha_hasta.id_for_label }}">{{ formulario_operacion.fecha_hasta.label }}</label>
+                                {{ formulario_operacion.fecha_hasta }}
+                                {% for error in formulario_operacion.fecha_hasta.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="grupo-campo">
+                        <label for="agenda-mes-seleccion-dias">Días de la semana</label>
+                        <select class="form-control" id="agenda-mes-seleccion-dias" data-operacion-refinamiento aria-controls="agenda-mes-dias">
+                            <option value="todo">Todos los días</option>
+                            <option value="seleccionar">Seleccionar</option>
+                        </select>
+                    </div>
+                    <fieldset id="agenda-mes-dias" class="operacion-opciones operacion-dias-semana" hidden disabled{% if formulario_operacion.dias_semana.value or formulario_operacion.dias_semana.errors %} data-refinamiento-abierto{% endif %}>
+                        <legend>{{ formulario_operacion.dias_semana.label }}</legend>
+                        {{ formulario_operacion.dias_semana }}
+                        {% for error in formulario_operacion.dias_semana.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+                    </fieldset>
+                </div>
+            {% else %}
+                <div class="grupo-campo">
+                    <label for="{{ formulario_operacion.operacion.id_for_label }}">{{ formulario_operacion.operacion.label }}</label>{{ formulario_operacion.operacion }}
+                    {% for error in formulario_operacion.operacion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
             <div class="grupo-campo">
                 <label for="{{ formulario_operacion.seleccion_canchas.id_for_label }}">{{ formulario_operacion.seleccion_canchas.label }}</label>{{ formulario_operacion.seleccion_canchas }}
                 {% for error in formulario_operacion.seleccion_canchas.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
@@ -86,12 +136,12 @@
                 <label for="{{ formulario_operacion.hora_hasta.id_for_label }}">{{ formulario_operacion.hora_hasta.label }}</label>{{ formulario_operacion.hora_hasta }}
                 {% for error in formulario_operacion.hora_hasta.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
             </div>
-            <fieldset class="operacion-exclusiones">
-                <legend>Conservar actividades</legend>
-                <label>{{ formulario_operacion.excluir_clases_manuales }} {{ formulario_operacion.excluir_clases_manuales.label }}</label>
-                <label>{{ formulario_operacion.excluir_clases_generadas }} {{ formulario_operacion.excluir_clases_generadas.label }}</label>
-                <label>{{ formulario_operacion.excluir_reservas }} {{ formulario_operacion.excluir_reservas.label }}</label>
-                <label data-operacion-excluir-bloqueos>{{ formulario_operacion.excluir_bloqueos }} {{ formulario_operacion.excluir_bloqueos.label }}</label>
+            <fieldset class="operacion-opciones">
+                <legend>{{ formulario_operacion.actividades.label }}</legend>
+                {% for opcion in formulario_operacion.actividades %}
+                    <label{% if opcion.data.value == 'bloqueo' %} data-operacion-actividad-bloqueo{% endif %}>{{ opcion.tag }} {{ opcion.choice_label }}</label>
+                {% endfor %}
+                {% for error in formulario_operacion.actividades.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
             </fieldset>
             {% if not mensual %}
             <div class="grupo-campo" data-operacion-motivo-bloqueo>
