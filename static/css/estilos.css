@@ -1189,6 +1189,35 @@ html.modal-abierto {
     overflow-wrap: anywhere;
 }
 
+.modal-confirmacion-contenido:has(.modal-confirmacion-detalle) > [data-modal-mensaje] {
+    font-weight: 700;
+}
+
+.modal-confirmacion-detalle {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: var(--fondo);
+    font-size: .9rem;
+}
+
+.modal-confirmacion-detalle > div {
+    display: grid;
+    grid-template-columns: minmax(0, 6rem) minmax(0, 1fr);
+    gap: 10px;
+}
+
+.modal-confirmacion-detalle dt {
+    color: var(--texto-suave);
+}
+
+.modal-confirmacion-detalle dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
 .modal-confirmacion-acciones {
     display: flex;
     flex-wrap: wrap;

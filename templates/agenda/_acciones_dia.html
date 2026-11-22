@@ -3,14 +3,14 @@
         <div><h2>Acciones del {% if mensual %}mes{% else %}día{% endif %}</h2></div>
         <a class="agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar acciones del {% if mensual %}mes{% else %}día{% endif %}">×</a>
     </header>
-    {% if mensual %}
+    {% if mensual and not previa %}
         <form method="get" action="{% url 'agenda:agenda' %}" class="agenda-formulario" data-agenda-mes>
             <input type="hidden" name="sede" value="{{ agenda.sede.pk }}">
             <input type="hidden" name="fecha" value="{{ agenda.fecha|date:'Y-m-d' }}">
             {% if agenda.cancha %}<input type="hidden" name="cancha" value="{{ agenda.cancha.pk }}">{% endif %}
             <input type="hidden" name="panel" value="acciones_mes">
             {{ formulario_mes.non_field_errors }}
-            {% if formulario_operacion and previa == None %}
+            {% if formulario_operacion %}
                 <div class="grupo-campo">
                     <label for="{{ formulario_operacion.operacion.id_for_label }}">{{ formulario_operacion.operacion.label }}</label>{{ formulario_operacion.operacion }}
                     {% for error in formulario_operacion.operacion.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
@@ -26,15 +26,6 @@
     {% for aviso in avisos_operacion %}<p class="error-campo" role="alert">{{ aviso }}</p>{% endfor %}
     {% if previa != None %}
         <div class="operacion-previa">
-            <p>{% if parametros_operacion.operacion == 'bloquear' %}Anular y bloquear{% else %}Anular y liberar{% endif %} · {{ alcance_operacion.horario }}</p>
-            {% if mensual %}
-                <p>{{ alcance_operacion.desde|date:'d/m/Y' }} al {{ alcance_operacion.hasta|date:'d/m/Y' }} · {{ alcance_operacion.dias|join:", " }}</p>
-            {% else %}
-                <p>{{ fecha|date:'d/m/Y' }}</p>
-            {% endif %}
-            <p>{% if alcance_operacion.actividades %}Actividades elegidas · {{ alcance_operacion.actividades|join:", " }}{% else %}Solo turnos libres{% endif %}</p>
-            <p>Sedes · {{ previa.sedes|join:", " }}</p>
-            <p class="agenda-impedimento">{% for cancha in previa.canchas %}{{ cancha.sede.nombre }} · {{ cancha.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
             <div class="operacion-totales" aria-live="polite">
                 <span>{{ previa.anulaciones }} evento{{ previa.anulaciones|pluralize }} a anular</span>
                 {% if parametros_operacion.operacion == 'bloquear' %}<span>{{ previa.bloqueos_a_crear }} bloqueo{{ previa.bloqueos_a_crear|pluralize }} a crear</span>{% endif %}
@@ -63,8 +54,24 @@
             </details>
             <div class="operacion-confirmacion">
                 {% if previa.acciones %}
-                    <form method="post" action="{{ url_operacion|default:agenda.url_acciones }}" data-confirmar="¿Confirmar la operación sobre {{ previa.canchas|length }} cancha{{ previa.canchas|length|pluralize }} en {{ previa.sedes|join:", " }}, {% if mensual %}del {{ alcance_operacion.desde|date:'d/m/Y' }} al {{ alcance_operacion.hasta|date:'d/m/Y' }} ({{ alcance_operacion.dias|join:", " }}){% else %}el {{ fecha|date:'d/m/Y' }}{% endif %}? {% if alcance_operacion.actividades %}Actividades elegidas: {{ alcance_operacion.actividades|join:", " }}. {% else %}Solo turnos libres. {% endif %}Se anularán {{ previa.anulaciones }} eventos{% if parametros_operacion.operacion == 'bloquear' %} y se crearán {{ previa.bloqueos_a_crear }} bloqueos{% endif %}, según la vista previa. Horario: {{ alcance_operacion.horario }}." data-confirmar-titulo="Confirmar acciones del {% if mensual %}mes{% else %}día{% endif %}" data-confirmar-boton="Confirmar" data-confirmar-peligro>
+                    <form method="post" action="{{ url_operacion|default:agenda.url_acciones }}"
+                          data-confirmar="{% if previa.anulaciones %}Se anulará{{ previa.anulaciones|pluralize:'n' }} {{ previa.anulaciones }} evento{{ previa.anulaciones|pluralize }}.{% endif %}{% if parametros_operacion.operacion == 'bloquear' %}{% if previa.anulaciones %} {% endif %}Se creará{{ previa.bloqueos_a_crear|pluralize:'n' }} {{ previa.bloqueos_a_crear }} bloqueo{{ previa.bloqueos_a_crear|pluralize }}.{% endif %}"
+                          data-confirmar-titulo="Confirmar acciones del {% if mensual %}mes{% else %}día{% endif %}" data-confirmar-boton="Confirmar" data-confirmar-peligro>
                         {% csrf_token %}<input type="hidden" name="paso" value="confirmar"><input type="hidden" name="confirmacion" value="{{ confirmacion }}">
+                        <template data-confirmar-detalle>
+                            <dl class="modal-confirmacion-detalle">
+                                {% if mensual %}
+                                    <div><dt>Período</dt><dd>{{ alcance_operacion.desde|date:'d/m/Y' }} al {{ alcance_operacion.hasta|date:'d/m/Y' }}</dd></div>
+                                    <div><dt>Días</dt><dd>{{ alcance_operacion.dias|join:", " }}</dd></div>
+                                {% else %}
+                                    <div><dt>Fecha</dt><dd>{{ fecha|date:'d/m/Y' }}</dd></div>
+                                {% endif %}
+                                <div><dt>Horario</dt><dd>{{ alcance_operacion.horario }}</dd></div>
+                                <div><dt>Sedes</dt><dd>{{ previa.sedes|join:", " }}</dd></div>
+                                <div><dt>Canchas</dt><dd>{{ previa.canchas|length }}</dd></div>
+                                <div><dt>Actividades</dt><dd>{% if alcance_operacion.actividades %}{{ alcance_operacion.actividades|join:", " }}{% else %}Solo turnos libres{% endif %}</dd></div>
+                            </dl>
+                        </template>
                         <button class="boton boton-confirmar-peligro boton-chico" type="submit">{% if parametros_operacion.operacion == 'bloquear' %}Confirmar y bloquear{% else %}Confirmar y liberar{% endif %}</button>
                     </form>
                 {% endif %}

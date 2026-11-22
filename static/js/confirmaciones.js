@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var modal = document.querySelector("[data-modal-confirmacion]");
     var titulo = modal.querySelector("[data-modal-titulo]");
     var mensaje = modal.querySelector("[data-modal-mensaje]");
+    var detalle = modal.querySelector("[data-modal-confirmar-detalle]");
     var botonConfirmar = modal.querySelector("[data-modal-confirmar]");
     var confirmacionPendiente = null;
     var formularioAutorizado = null;
@@ -71,6 +72,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         titulo.textContent = formulario.dataset.confirmarTitulo || "Confirmar acción";
         mensaje.textContent = formulario.dataset.confirmar;
+        var plantilla = formulario.querySelector("template[data-confirmar-detalle]");
+        detalle.replaceChildren();
+        if (plantilla) detalle.append(plantilla.content.cloneNode(true));
+        detalle.hidden = !plantilla;
         botonConfirmar.textContent = formulario.dataset.confirmarBoton || "Confirmar";
         var esPeligrosa = formulario.hasAttribute("data-confirmar-peligro");
         botonConfirmar.classList.toggle("boton-confirmar-peligro", esPeligrosa);
