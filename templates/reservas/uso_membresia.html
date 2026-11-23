@@ -24,22 +24,22 @@
     <h2>{% if contrato %}{{ contrato.producto.nombre }}{% else %}{{ titular }}{% endif %}</h2>
     {% if contrato %}<p>{{ contrato.mes_cubierto|date:"F \d\e Y"|capfirst }}</p>{% endif %}
     <p>Los cupos de organizador e invitado son independientes. Aceptar una invitación con beneficio compromete una hora de invitado y la consume al comenzar el turno. Las Pendientes y Rechazadas no comprometen horas ni generan adicional. El saldo incluye usos conservados de contrataciones Anuladas.</p>
-    <div class="tabla-contenedor">{% tabla %}
-        <thead><tr><th>Mes</th><th>Tipo de horas</th><th>Cupo</th><th>Otorgadas</th><th>Descontadas</th><th>Comprometidas</th><th>Consumidas</th><th>Disponibles</th></tr></thead>
-        <tbody>{% for fila in meses %}<tr><td>{{ fila.mes|date:"F Y" }}</td><td>{{ fila.rol }}</td><td>{{ fila.cupo }}</td><td>{{ fila.otorgadas }}</td><td>{{ fila.descontadas }}</td><td>{{ fila.comprometidas }}</td><td>{{ fila.consumidas }}</td><td>{{ fila.disponibles }}</td></tr>{% endfor %}</tbody>
+    <div class="tabla-contenedor tabla-embebida">{% tabla %}
+        <thead><tr><th scope="col">Mes</th><th scope="col">Tipo de horas</th><th scope="col">Cupo</th><th scope="col">Otorgadas</th><th scope="col">Descontadas</th><th scope="col">Comprometidas</th><th scope="col">Consumidas</th><th scope="col">Disponibles</th></tr></thead>
+        <tbody>{% for fila in meses %}<tr><td><strong>{{ fila.mes|date:"F Y"|capfirst }}</strong></td><td>{{ fila.rol }}</td><td class="tabla-numero">{{ fila.cupo }}</td><td class="tabla-numero">{{ fila.otorgadas }}</td><td class="tabla-numero">{{ fila.descontadas }}</td><td class="tabla-numero">{{ fila.comprometidas }}</td><td class="tabla-numero">{{ fila.consumidas }}</td><td class="tabla-numero">{{ fila.disponibles }}</td></tr>{% endfor %}</tbody>
     {% endtabla %}</div>
 </section>
-<section class="tarjeta"><h2>Reservas del período</h2><div class="tabla-contenedor">{% tabla %}<thead><tr><th>Reserva</th><th>Turno</th><th>Estado</th><th>Computa una hora</th></tr></thead><tbody>{% for reserva in reservas %}<tr><td>{% if request.user.puede_reservar %}<a href="{% url 'reservas:reserva_detalle' reserva.pk %}">{{ reserva.numero }}</a>{% else %}{{ reserva.numero }}{% endif %}</td><td>{{ reserva.evento.turno.fecha|date:"d/m/Y" }} {{ reserva.evento.turno.hora_inicio|time:"H:i" }}</td><td>{% indicador_estado "evento" reserva.evento.estado %}</td><td>{{ reserva.computa_hora_membresia|yesno:"Sí,No" }}</td></tr>{% empty %}<tr><td colspan="4">No hay reservas con membresía en el período.</td></tr>{% endfor %}</tbody>{% endtabla %}</div></section>
+<section class="tarjeta"><h2>Reservas del período</h2><div class="tabla-contenedor tabla-embebida">{% tabla %}<thead><tr><th scope="col">Reserva</th><th scope="col">Turno</th><th scope="col">Estado</th><th scope="col">Computa una hora</th></tr></thead><tbody>{% for reserva in reservas %}<tr><td>{% if request.user.puede_reservar %}<a class="enlace-tabla" href="{% url 'reservas:reserva_detalle' reserva.pk %}">{{ reserva.numero }}</a>{% else %}<strong>{{ reserva.numero }}</strong>{% endif %}</td><td class="tabla-fecha">{{ reserva.evento.turno.fecha|date:"d/m/Y" }}<span class="tabla-secundario">{{ reserva.evento.turno.hora_inicio|time:"H:i" }} a {{ reserva.evento.turno.hora_fin|time:"H:i" }}</span></td><td>{% indicador_estado "evento" reserva.evento.estado %}</td><td>{{ reserva.computa_hora_membresia|yesno:"Sí,No" }}</td></tr>{% empty %}<tr><td class="estado-vacio" colspan="4">No hay reservas con membresía en el período.</td></tr>{% endfor %}</tbody>{% endtabla %}</div></section>
 <section class="tarjeta">
     <h2>Participaciones como invitado</h2>
-    <div class="tabla-contenedor">{% tabla %}
-        <thead><tr><th>Reserva</th><th>Turno</th><th>Estado de reserva</th><th>Participación</th><th>Condición aplicada</th></tr></thead>
+    <div class="tabla-contenedor tabla-embebida">{% tabla %}
+        <thead><tr><th scope="col">Reserva</th><th scope="col">Turno</th><th scope="col">Estado de reserva</th><th scope="col">Participación</th><th scope="col">Condición aplicada</th></tr></thead>
         <tbody>{% for fila in invitaciones %}{% with invitacion=fila.invitacion %}<tr>
-            <td>{% if request.user.puede_reservar %}<a href="{% url 'reservas:reserva_detalle' invitacion.reserva_id %}">{{ invitacion.reserva.numero }}</a>{% else %}{{ invitacion.reserva.numero }}{% endif %}</td>
-            <td>{{ invitacion.reserva.evento.turno.fecha|date:"d/m/Y" }} {{ invitacion.reserva.evento.turno.hora_inicio|time:"H:i" }}</td>
+            <td>{% if request.user.puede_reservar %}<a class="enlace-tabla" href="{% url 'reservas:reserva_detalle' invitacion.reserva_id %}">{{ invitacion.reserva.numero }}</a>{% else %}<strong>{{ invitacion.reserva.numero }}</strong>{% endif %}</td>
+            <td class="tabla-fecha">{{ invitacion.reserva.evento.turno.fecha|date:"d/m/Y" }}<span class="tabla-secundario">{{ invitacion.reserva.evento.turno.hora_inicio|time:"H:i" }} a {{ invitacion.reserva.evento.turno.hora_fin|time:"H:i" }}</span></td>
             <td>{% indicador_estado "evento" invitacion.reserva.evento.estado %}</td><td>{% indicador_estado "respuesta" invitacion.respuesta texto=fila.respuesta_texto %}</td>
             <td>{{ invitacion.get_condicion_aplicada_display }}</td>
-        </tr>{% endwith %}{% empty %}<tr><td colspan="5">No hay invitaciones en el período.</td></tr>{% endfor %}</tbody>
+        </tr>{% endwith %}{% empty %}<tr><td class="estado-vacio" colspan="5">No hay invitaciones en el período.</td></tr>{% endfor %}</tbody>
     {% endtabla %}</div>
 </section>
 {% endif %}

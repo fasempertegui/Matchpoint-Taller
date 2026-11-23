@@ -98,7 +98,7 @@
                 <tbody>
                     {% for item in pagina %}
                         <tr>
-                            <td><strong>{{ item.fecha|date:"d/m/Y" }}</strong></td>
+                            <td class="tabla-fecha"><strong>{{ item.fecha|date:"d/m/Y" }}</strong></td>
                             <td>
                                 {% if item.tipo == "feriado" %}
                                     <span class="badge badge-neutro">Todas las sedes</span>
@@ -106,7 +106,7 @@
                                     {{ item.alcance }}
                                 {% endif %}
                             </td>
-                            <td>
+                            <td class="tabla-fecha">
                                 {% if item.tipo == "feriado" %}
                                     Feriado
                                 {% elif item.cerrada %}
@@ -119,7 +119,7 @@
                                 {% endif %}
                             </td>
                             <td>{{ item.motivo }}</td>
-                            <td>
+                            <td class="acciones-columna">
                                 <div class="horarios-acciones-fila">
                                     {% if item.tipo == "particular" %}
                                         <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horario_especial_editar' item.id %}" data-modal-horario-fila aria-haspopup="dialog" aria-controls="modal-horario-especial" aria-label="Editar horario de {{ item.alcance }} del {{ item.fecha|date:'d/m/Y' }}" title="Editar horario">

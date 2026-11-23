@@ -99,21 +99,21 @@
                 {% tabla %}
                     <thead>
                         <tr>
-                            <th>Nombre</th>
-                            <th>Superficie</th>
-                            <th>Estado</th>
-                            <th class="acciones-columna">Acciones</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Superficie</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col" class="acciones-columna">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for cancha in canchas %}
                             <tr>
-                                <td>{{ cancha.nombre }}</td>
+                                <td><strong>{{ cancha.nombre }}</strong></td>
                                 <td>{{ cancha.get_superficie_display }}</td>
                                 <td>
                                     {% indicador_estado "habilitacion" cancha.estado %}
                                 </td>
-                                <td>
+                                <td class="acciones-columna">
                                     <div class="acciones">
                                         {% if perms.instalaciones.change_cancha %}
                                             <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:cancha_editar' sede.pk cancha.pk %}">
@@ -158,27 +158,27 @@
                 {% tabla %}
                     <thead>
                         <tr>
-                            <th>Día</th>
-                            <th>Primera franja</th>
-                            <th>Segunda franja</th>
+                            <th scope="col">Día</th>
+                            <th scope="col">Primera franja</th>
+                            <th scope="col">Segunda franja</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for dia in horarios_semana %}
                             <tr>
-                                <td>{{ dia.nombre }}</td>
-                                <td>
+                                <td><strong>{{ dia.nombre }}</strong></td>
+                                <td class="tabla-fecha">
                                     {% if dia.horario %}
                                         {{ dia.horario.hora_inicio_1|time:"H:i" }} a {{ dia.horario.hora_fin_1|time:"H:i" }}
                                     {% else %}
-                                        Sin funcionamiento
+                                        <span class="texto-secundario">Sin funcionamiento</span>
                                     {% endif %}
                                 </td>
-                                <td>
+                                <td class="tabla-fecha">
                                     {% if dia.horario.hora_inicio_2 %}
                                         {{ dia.horario.hora_inicio_2|time:"H:i" }} a {{ dia.horario.hora_fin_2|time:"H:i" }}
                                     {% else %}
-                                        —
+                                        <span class="texto-secundario">—</span>
                                     {% endif %}
                                 </td>
                             </tr>

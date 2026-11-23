@@ -8,8 +8,6 @@
 .contenido-detalle-evento > .perfil { border: 0; border-top: 3px solid var(--primario-medio); }
 .contenido-detalle-evento .perfil-cabecera { padding: 24px; border-radius: 8px 8px 0 0; }
 .detalle-evento-cuerpo { padding: 24px; }
-.detalle-evento-cuerpo table { font-size: .9rem; }
-.detalle-evento-cuerpo td { vertical-align: middle; }
 .detalle-evento-cuerpo tr:last-child :is(td, th) { border-bottom: 0; }
 
 .perfil-cabecera {
@@ -222,8 +220,6 @@
 .finanzas-ajuste-motivo > summary { color: var(--primario); font-weight: 600; cursor: pointer; }
 .finanzas-ajuste-motivo p { margin: 6px 0 0; text-align: left; }
 .modal-movimientos { width: min(860px, calc(100% - 32px)); }
-.modal-movimientos .tabla-contenedor { border: 1px solid var(--borde); border-radius: 10px; }
-.modal-movimientos .modal-movimientos-importe { white-space: nowrap; }
 .modal-movimientos nav { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
 
 .perfil-desplegable {

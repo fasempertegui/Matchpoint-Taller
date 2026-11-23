@@ -27,7 +27,7 @@
             <h2 id="asistencia-personas-titulo">Personas <span class="texto-secundario">(<span data-total-personas>{{ filas|length }}</span>)</span></h2>
             <noscript><p class="mensaje mensaje-info">Para editar estados y buscar personas necesitás habilitar JavaScript.</p></noscript>
             <p class="texto-secundario" data-asistencia-vacio{% if filas %} hidden{% endif %}>No hay participantes ni asistencia registrada. Agregá una persona para comenzar.</p>
-            <div class="tabla-contenedor" data-asistencia-tabla{% if not filas %} hidden{% endif %}>
+            <div class="tabla-contenedor tabla-embebida" data-asistencia-tabla{% if not filas %} hidden{% endif %}>
                 {% tabla %}
                     <thead><tr><th scope="col">Nombre</th><th scope="col">Asistencia</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
                     <tbody data-asistencia-filas>{% for fila in filas %}{% include "clases/_asistencia_fila.html" with fila=fila only %}{% endfor %}</tbody>

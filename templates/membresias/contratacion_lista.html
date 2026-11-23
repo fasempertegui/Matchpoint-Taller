@@ -33,7 +33,7 @@
                 <label for="contratacion-mes">Mes cubierto</label>
                 <select class="form-control" id="contratacion-mes" name="mes">
                     <option value="">Todos</option>
-                    {% for mes in meses %}<option value="{{ mes|date:'Y-m-d' }}"{% if mes_actual == mes|date:'Y-m-d' %} selected{% endif %}>{{ mes|date:"F Y" }}</option>{% endfor %}
+                    {% for mes in meses %}<option value="{{ mes|date:'Y-m-d' }}"{% if mes_actual == mes|date:'Y-m-d' %} selected{% endif %}>{{ mes|date:"F Y"|capfirst }}</option>{% endfor %}
                 </select>
             </div>
             <div class="grupo-campo">
@@ -52,10 +52,10 @@
             <tbody>
                 {% for contratacion in pagina %}
                     <tr>
-                        {% if not propias and not titular %}<td><strong>{{ contratacion.usuario }}</strong></td>{% endif %}
+                        {% if not propias and not titular %}<td><strong>{{ contratacion.usuario }}</strong><span class="tabla-secundario">@{{ contratacion.usuario.username }}</span></td>{% endif %}
                         <td>{% if propias or titular %}<strong>{{ contratacion.producto.nombre }}</strong>{% else %}{{ contratacion.producto.nombre }}{% endif %}</td>
-                        <td>{{ contratacion.mes_cubierto|date:"F Y" }}</td>
-                        <td class="catalogo-importe">$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
+                        <td>{{ contratacion.mes_cubierto|date:"F Y"|capfirst }}</td>
+                        <td class="tabla-numero">$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
                         <td>{% indicador_estado "contratacion" contratacion.estado %}</td>
                         <td class="acciones-columna"><div class="acciones">
                             {% if propias and tipo == 'membresia' %}<a class="boton boton-secundario boton-chico" href="{% url 'membresias:mi_membresia_uso' contratacion.pk %}">Ver uso</a>{% endif %}

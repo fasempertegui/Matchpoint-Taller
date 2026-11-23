@@ -105,13 +105,13 @@
             <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if mostrar_estado %}<th scope="col">Estado de clase</th>{% endif %}{% if ver_asistencia %}<th scope="col">Participación</th><th scope="col">Asistencia</th>{% endif %}<th scope="col" class="acciones-columna">Acciones</th></tr></thead>
             <tbody>{% for fila in pagina %}
                 <tr>
-                    <td><strong>{{ fila.fecha|date:"d/m/Y" }}</strong><span class="actividad-secundario">{{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</span></td>
-                    <td>{{ fila.sede.nombre }}<span class="actividad-secundario">{{ fila.cancha.nombre }}</span></td>
+                    <td class="tabla-fecha"><strong>{{ fila.fecha|date:"d/m/Y" }}</strong><span class="tabla-secundario">{{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</span></td>
+                    <td>{{ fila.sede.nombre }}<span class="tabla-secundario">{{ fila.cancha.nombre }}</span></td>
                     {% if mostrar_estado %}<td>{% indicador_estado "evento" fila.estado texto=fila.estado_texto %}</td>{% endif %}
                     {% if ver_asistencia %}<td>{% if fila.respuesta_texto %}{% indicador_estado "respuesta" fila.respuesta texto=fila.respuesta_texto %}{% else %}<span class="texto-secundario">—</span>{% endif %}</td><td>
                         {% if fila.asistencia_texto %}
                             {% indicador_estado "asistencia" fila.asistencia texto=fila.asistencia_texto %}
-                            {% if fila.observaciones_asistencia %}<p class="actividad-nota texto-secundario">{{ fila.observaciones_asistencia|linebreaksbr }}</p>{% endif %}
+                            {% if fila.observaciones_asistencia %}<p class="actividad-nota tabla-secundario">{{ fila.observaciones_asistencia|linebreaksbr }}</p>{% endif %}
                         {% else %}<span class="texto-secundario">—</span>{% endif %}
                     </td>{% endif %}
                     <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' fila.id %}" aria-label="Ver clase {{ fila.id }} del {{ fila.fecha|date:'d/m/Y' }}">Ver clase</a></td>

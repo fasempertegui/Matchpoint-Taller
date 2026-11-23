@@ -1,32 +1,32 @@
+.contenido-auditoria .tarjeta,
+.contenido-auditoria .boton {
+    border-radius: 10px;
+}
+
 .auditoria-lista {
     padding: 0;
 }
 
 .auditoria-tabla {
-    min-width: 960px;
-    font-size: 0.9rem;
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
 }
 
-.auditoria-tabla th:first-child,
-.auditoria-registro time {
-    white-space: nowrap;
-}
+.auditoria-tabla > thead th:first-child { width: 14%; }
+.auditoria-tabla > thead th:nth-child(2) { width: 17%; }
+.auditoria-tabla > thead th:nth-child(3) { width: 17%; }
+.auditoria-tabla > thead th:nth-child(4) { width: 16%; }
+.auditoria-tabla > thead th:nth-child(5) { width: 22%; }
+.auditoria-tabla > thead th:last-child { width: 14%; }
 
-.auditoria-tabla th:nth-child(2) {
-    width: 16%;
-}
+.auditoria-tabla-cambios > thead th:nth-child(1) { width: 23%; }
+.auditoria-tabla-cambios > thead th:nth-child(2) { width: 41%; }
+.auditoria-tabla-cambios > thead th:nth-child(3) { width: 20%; }
+.auditoria-tabla-cambios > thead th:nth-child(4) { width: 16%; }
 
-.auditoria-tabla th:nth-child(5) {
-    width: 32%;
-}
-
-.auditoria-registro time {
-    color: var(--texto-suave);
-}
-
-.auditoria-accion {
-    color: var(--primario);
-    font-weight: 600;
+.auditoria-registro > td {
+    overflow-wrap: anywhere;
 }
 
 .auditoria-referencia {
@@ -35,8 +35,8 @@
 }
 
 .auditoria-desplegar {
-    min-width: 128px;
-    white-space: nowrap;
+    min-width: 0;
+    white-space: normal;
 }
 
 .auditoria-desplegar:focus-visible {
@@ -49,8 +49,12 @@
     background: var(--primario-suave);
 }
 
+.auditoria-fila-detalle[hidden] {
+    display: none;
+}
+
 .auditoria-fila-detalle > td {
-    padding: 0 16px 16px;
+    padding: 20px;
 }
 
 .auditoria-detalle {
@@ -60,6 +64,24 @@
 
 .auditoria-detalle > p {
     margin: 10px 0;
+}
+
+.auditoria-metadatos {
+    background: var(--superficie);
+    margin-bottom: 20px;
+}
+
+.auditoria-metadatos table {
+    table-layout: fixed;
+}
+
+.auditoria-metadatos th {
+    width: 25%;
+}
+
+.auditoria-metadatos td {
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
 }
 
 .auditoria-valores {
@@ -74,49 +96,13 @@
 }
 
 .auditoria-valores pre {
+    max-height: 320px;
+    overflow: auto;
     margin: 0;
-    white-space: pre-wrap;
-}
-
-.contenido-auditoria .tarjeta,
-.contenido-auditoria .boton { border-radius: 10px; }
-.auditoria-tabla { min-width: 0; width: 100%; table-layout: fixed; }
-.auditoria-tabla > thead th:first-child { width: 16%; }
-.auditoria-tabla > thead th:nth-child(2) { width: 17%; }
-.auditoria-tabla > thead th:nth-child(3) { width: 16%; }
-.auditoria-tabla > thead th:nth-child(4) { width: 15%; }
-.auditoria-tabla > thead th:nth-child(5) { width: 22%; }
-.auditoria-tabla > thead th:last-child { width: 14%; }
-.auditoria-registro > td { vertical-align: top; overflow-wrap: anywhere; }
-.auditoria-registro time { white-space: normal; font-size: .85rem; }
-.auditoria-desplegar { min-width: 0; white-space: normal; }
-.auditoria-fila-detalle[hidden] { display: none; }
-.auditoria-fila-detalle > td { padding: 20px; }
-.auditoria-valores pre { max-height: 320px; overflow: auto; padding: 16px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; font-size: .8rem; }
-
-
-.auditoria-metadatos {
+    padding: 16px;
     background: var(--superficie);
     border: 1px solid var(--borde);
     border-radius: 8px;
-    margin-bottom: 20px;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
 }
-
-.auditoria-metadatos table { table-layout: fixed; }
-.auditoria-metadatos table th:nth-child(n) {
-    width: 25%;
-    color: var(--texto-suave);
-    font-size: .85rem;
-    text-align: left;
-    text-transform: none;
-    letter-spacing: normal;
-    vertical-align: top;
-}
-.auditoria-metadatos td { overflow-wrap: anywhere; }
-
-.auditoria-tabla-cambios > thead th:nth-child(1) { width: 23%; }
-.auditoria-tabla-cambios > thead th:nth-child(2) { width: 41%; }
-.auditoria-tabla-cambios > thead th:nth-child(3) { width: 20%; }
-.auditoria-tabla-cambios > thead th:nth-child(4) { width: 16%; }
-.auditoria-operacion-registro { margin-top: 5px; color: var(--texto-suave); }
-.auditoria-operacion-registro .auditoria-referencia { display: inline; }

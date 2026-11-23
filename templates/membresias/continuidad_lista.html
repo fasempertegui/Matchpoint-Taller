@@ -24,11 +24,11 @@
     {% tabla %}
         <thead><tr><th scope="col">Titular</th><th scope="col">Producto</th><th scope="col">Contratación</th><th scope="col">Respuesta</th><th scope="col">Fecha de respuesta</th></tr></thead>
         <tbody>{% for contrato in pagina %}<tr>
-            <td><strong>{{ contrato.usuario }}</strong></td>
+            <td><strong>{{ contrato.usuario }}</strong><span class="tabla-secundario">@{{ contrato.usuario.username }}</span></td>
             <td><a class="enlace-tabla" href="{% url ruta_detalle contrato.pk %}">{{ contrato.producto.nombre }}</a></td>
             <td>{% indicador_estado "contratacion" contrato.estado %}</td>
-            <td>{{ contrato.get_respuesta_continuidad_display|default:"Sin responder" }}</td>
-            <td>{{ contrato.continuidad_respondida_en|date:"d/m/Y H:i"|default:"—" }}</td>
+            <td>{% if contrato.get_respuesta_continuidad_display %}{{ contrato.get_respuesta_continuidad_display }}{% else %}<span class="texto-secundario">Sin responder</span>{% endif %}</td>
+            <td class="tabla-fecha">{% if contrato.continuidad_respondida_en %}{{ contrato.continuidad_respondida_en|date:"d/m/Y" }}<span class="tabla-secundario">{{ contrato.continuidad_respondida_en|date:"H:i" }}</span>{% else %}<span class="texto-secundario">—</span>{% endif %}</td>
         </tr>{% empty %}<tr><td colspan="5" class="estado-vacio">No hay contrataciones que coincidan con la consulta.</td></tr>{% endfor %}</tbody>
     {% endtabla %}
     {% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=consulta only %}

@@ -1,27 +1,28 @@
+{% load tablas %}
 <section class="tarjeta caja-resumen">
     <h2>Resumen de movimientos</h2>
     <div class="caja-resumen-bloques">
         <section aria-labelledby="resumen-medios-titulo">
             <h3 id="resumen-medios-titulo">Totales por medio</h3>
-            <div class="tabla-contenedor caja-resumen-tabla">
-                <table>
-                    <thead><tr><th scope="col">Clase</th><th scope="col">Medio</th><th scope="col" class="caja-monto">Total</th></tr></thead>
+            <div class="tabla-contenedor tabla-embebida">
+                {% tabla %}
+                    <thead><tr><th scope="col">Clase</th><th scope="col">Medio</th><th scope="col">Total</th></tr></thead>
                     <tbody>{% for fila in resumen_medios %}
-                        <tr><td>{{ fila.clase_texto }}</td><td>{{ fila.medio_texto }}</td><td class="caja-monto">$ {{ fila.total|floatformat:"2g" }}</td></tr>
+                        <tr><td><strong>{{ fila.clase_texto }}</strong></td><td>{{ fila.medio_texto }}</td><td class="tabla-numero">$ {{ fila.total|floatformat:"2g" }}</td></tr>
                     {% empty %}<tr><td class="estado-vacio" colspan="3">No hay movimientos que sumar.</td></tr>{% endfor %}</tbody>
-                </table>
+                {% endtabla %}
             </div>
         </section>
         {% if resumen_ingresos %}
         <section aria-labelledby="resumen-ingresos-titulo">
             <h3 id="resumen-ingresos-titulo">Ingresos por categoría</h3>
-            <div class="tabla-contenedor caja-resumen-tabla">
-                <table>
-                    <thead><tr><th scope="col">Categoría</th><th scope="col" class="caja-monto">Total</th></tr></thead>
+            <div class="tabla-contenedor tabla-embebida">
+                {% tabla %}
+                    <thead><tr><th scope="col">Categoría</th><th scope="col">Total</th></tr></thead>
                     <tbody>{% for fila in resumen_ingresos %}
-                        <tr><td>{{ fila.categoria_texto }}</td><td class="caja-monto">$ {{ fila.total|floatformat:"2g" }}</td></tr>
+                        <tr><td><strong>{{ fila.categoria_texto }}</strong></td><td class="tabla-numero">$ {{ fila.total|floatformat:"2g" }}</td></tr>
                     {% endfor %}</tbody>
-                </table>
+                {% endtabla %}
             </div>
         </section>
         {% endif %}

@@ -53,12 +53,12 @@
             <tbody>
                 {% for item in pagina %}
                     <tr>
-                        <td><strong>{{ item.contratacion.usuario }}</strong></td>
+                        <td><strong>{{ item.contratacion.usuario }}</strong><span class="tabla-secundario">@{{ item.contratacion.usuario.username }}</span></td>
                         <td>{{ item.tipo_texto }}</td>
                         <td>{{ item.contratacion.producto.nombre }}</td>
-                        <td>{{ item.contratacion.mes_cubierto|date:"F Y" }}</td>
-                        <td class="catalogo-importe">$ {{ item.contratacion.importe_financiero|floatformat:"2g" }}</td>
-                        <td class="catalogo-importe"><strong>$ {{ item.contratacion.pendiente_cobro|floatformat:"2g" }}</strong></td>
+                        <td>{{ item.contratacion.mes_cubierto|date:"F Y"|capfirst }}</td>
+                        <td class="tabla-numero">$ {{ item.contratacion.importe_financiero|floatformat:"2g" }}</td>
+                        <td class="tabla-numero">$ {{ item.contratacion.pendiente_cobro|floatformat:"2g" }}</td>
                         <td>{% indicador_estado "contratacion" item.contratacion.estado %}</td>
                         <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url item.ruta_detalle item.contratacion.pk %}" aria-label="Ver contratación de {{ item.contratacion.usuario }} para {{ item.contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></td>
                     </tr>

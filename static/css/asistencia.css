@@ -5,10 +5,6 @@
 .asistencia-aviso-finalizacion { margin: 20px 0 0; padding: 12px 16px; border-radius: 8px; background: var(--advertencia-suave); color: var(--advertencia); font-size: .9rem; }
 .contenido-asistencia .clase-contenido { padding: 20px; }
 .contenido-asistencia .clase-contenido h2 { margin: 0 0 20px; font-size: 1.2rem; }
-.contenido-asistencia [data-asistencia-tabla] { border: 1px solid var(--borde); border-radius: 8px; }
-.contenido-asistencia [data-asistencia-tabla] table { font-size: .9rem; }
-.contenido-asistencia [data-asistencia-tabla] td { vertical-align: middle; }
-.contenido-asistencia [data-asistencia-tabla] tr:last-child td { border-bottom: 0; }
 .contenido-asistencia .clase-opciones-lista span { border-radius: 8px; }
 .contenido-asistencia [data-editor-nombre] { font-size: 1.1rem; font-weight: 600; }
 @media (max-width: 900px) { .asistencia-contexto dl { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

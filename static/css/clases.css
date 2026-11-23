@@ -73,6 +73,5 @@
 .actividad-resumen dt { color: var(--texto-suave); font-size: .9rem; }
 .actividad-resumen dd { margin: 4px 0 0; font-family: var(--fuente-titulos); font-size: 1.4rem; }
 .actividad-listado { margin-top: 20px; }
-.actividad-secundario { display: block; margin-top: 4px; color: var(--texto-suave); font-size: .9rem; }
 .actividad-nota { margin: 6px 0 0; min-width: 140px; overflow-wrap: anywhere; }
 .actividad-paginacion { margin-top: 20px; }

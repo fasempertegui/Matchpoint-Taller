@@ -658,6 +658,8 @@ h2 {
 :is(.tabla-contenedor.tabla-listado > table, table.tabla-listado) {
     background-color: var(--superficie);
     color: var(--texto);
+    font-size: 0.9rem;
+    line-height: 1.35;
 }
 
 :is(.tabla-contenedor.tabla-listado > table, table.tabla-listado) > thead th {
@@ -699,20 +701,27 @@ tbody tr:last-child td {
     border-bottom: 0;
 }
 
-.tabla-resumen strong {
+.tabla-secundario {
     display: block;
+    margin-top: 2px;
+    color: var(--texto-suave);
+    font-size: 0.8rem;
+    font-weight: 400;
 }
 
-.tabla-resumen .texto-secundario {
-    display: block;
-    margin-top: 4px;
-    font-size: 0.9rem;
+.tabla-secundario .enlace-tabla {
+    font-weight: 600;
 }
 
-.tabla-importe {
-    text-align: right;
+.tabla-fecha,
+.tabla-numero {
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
+}
+
+.tabla-embebida {
+    border: 1px solid var(--borde);
+    border-radius: 10px;
 }
 
 .enlace-tabla {

@@ -17,14 +17,14 @@
         <tr><th scope="row">Clases omitidas</th><td>{{ resultado.omitidas }}</td></tr>
     {% endtabla_datos %}
     {% if pagina %}
-        <div class="tabla-contenedor actividad-listado">
+        <div class="tabla-contenedor tabla-embebida actividad-listado">
             {% tabla %}
                 <caption class="clase-etiqueta-oculta">Clases creadas</caption>
-                <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Cancha</th><th scope="col">Acción</th></tr></thead>
+                <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Cancha</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
                 <tbody>{% for clase in pagina %}<tr>
-                    <td>{{ clase.evento.turno.fecha|date:"d/m/Y" }}<span class="actividad-secundario">{{ clase.evento.turno.hora_inicio|time:"H:i" }} a {{ clase.evento.turno.hora_fin|time:"H:i" }}</span></td>
+                    <td class="tabla-fecha"><strong>{{ clase.evento.turno.fecha|date:"d/m/Y" }}</strong><span class="tabla-secundario">{{ clase.evento.turno.hora_inicio|time:"H:i" }} a {{ clase.evento.turno.hora_fin|time:"H:i" }}</span></td>
                     <td>{{ clase.evento.turno.cancha.nombre }}</td>
-                    <td><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' clase.pk %}">Ver clase</a></td>
+                    <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' clase.pk %}">Ver clase</a></td>
                 </tr>{% endfor %}</tbody>
             {% endtabla %}
         </div>

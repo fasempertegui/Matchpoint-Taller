@@ -45,11 +45,10 @@
         <thead>
             <tr>
                 <th scope="col">Estado</th>
-                <th>Nombre</th>
-                <th>Nombre de usuario</th>
-                <th>Email</th>
+                <th scope="col">Usuario</th>
+                <th scope="col">Email</th>
                 <th scope="col">Último acceso</th>
-                <th class="acciones-columna">Acciones</th>
+                <th scope="col" class="acciones-columna">Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -57,15 +56,19 @@
             <tr>
                 <td>{% indicador_estado "habilitacion" usuario_obj.is_active %}</td>
                 <td>
-                    <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>
-                    {% if usuario_obj.es_administrador_listado %}
-                        <span role="img" tabindex="0" aria-label="Administrador" data-tooltip="Administrador">⭐</span>
+                    <strong>{{ usuario_obj.get_full_name|default:usuario_obj.username }}</strong>{% if usuario_obj.es_administrador_listado %} <span role="img" tabindex="0" aria-label="Administrador" data-tooltip="Administrador">⭐</span>{% endif %}
+                    <span class="tabla-secundario">@{{ usuario_obj.username }}</span>
+                </td>
+                <td>{{ usuario_obj.email }}</td>
+                <td class="tabla-fecha">
+                    {% if usuario_obj.last_login %}
+                        {{ usuario_obj.last_login|date:"d/m/Y" }}
+                        <span class="tabla-secundario">{{ usuario_obj.last_login|date:"H:i" }}</span>
+                    {% else %}
+                        <span class="texto-secundario">Nunca</span>
                     {% endif %}
                 </td>
-                <td>{{ usuario_obj.username }}</td>
-                <td>{{ usuario_obj.email }}</td>
-                <td>{{ usuario_obj.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</td>
-                <td>
+                <td class="acciones-columna">
                     <div class="acciones">
                         <a class="boton boton-secundario boton-chico"
                             href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}">
@@ -76,7 +79,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td class="estado-vacio" colspan="6">
+                <td class="estado-vacio" colspan="5">
                     No se encontraron usuarios.
                 </td>
             </tr>

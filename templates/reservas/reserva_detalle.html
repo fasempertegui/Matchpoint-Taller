@@ -59,7 +59,7 @@
             <summary>Invitados{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
             <div class="perfil-seccion-desplegable-cuerpo">
                 {% if invitados %}
-                <div class="tabla-contenedor tabla-listado tabla-listado-sin-centrado reserva-tabla-invitados">
+                <div class="tabla-contenedor tabla-listado tabla-listado-sin-centrado tabla-embebida">
                     <table aria-label="Invitados de la reserva">
                         <thead>
                             <tr><th scope="col">Persona</th><th scope="col">Respuesta</th><th scope="col">Condición aplicada</th></tr>
@@ -67,7 +67,10 @@
                         <tbody>
                             {% for fila in invitados %}
                             <tr>
-                                <td><strong>{{ fila.invitado.usuario }}</strong></td>
+                                <td>
+                                    <strong>{{ fila.invitado.usuario }}</strong>
+                                    <span class="tabla-secundario">@{{ fila.invitado.usuario.username }}</span>
+                                </td>
                                 <td>{% indicador_estado "respuesta" fila.invitado.respuesta texto=fila.respuesta_texto %}</td>
                                 <td>{{ fila.invitado.get_condicion_aplicada_display }}</td>
                             </tr>

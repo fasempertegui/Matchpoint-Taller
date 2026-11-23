@@ -20,15 +20,15 @@
 {% if pagina_importes %}
 <details class="finanzas-ajustes"{% if historial_importes_abierto %} open{% endif %}>
     <summary>Ver ajustes de importe ({{ pagina_importes.paginator.count }}){% include "componentes/iconoir/chevron-abajo.html" %}</summary>
-    <div class="tabla-contenedor tabla-listado">
+    <div class="tabla-contenedor tabla-listado tabla-embebida">
         <table>
             <thead><tr><th scope="col">Fecha</th><th scope="col">Anterior</th><th scope="col">Nuevo</th><th scope="col">Detalle</th></tr></thead>
             <tbody>
                 {% for ajuste in pagina_importes %}
                 <tr>
-                    <td>{{ ajuste.creado_en|date:"d/m/Y H:i" }}</td>
-                    <td>$ {{ ajuste.importe_anterior|floatformat:"2g" }}</td>
-                    <td>$ {{ ajuste.importe_nuevo|floatformat:"2g" }}</td>
+                    <td class="tabla-fecha"><strong>{{ ajuste.creado_en|date:"d/m/Y" }}</strong><span class="tabla-secundario">{{ ajuste.creado_en|date:"H:i" }}</span></td>
+                    <td class="tabla-numero">$ {{ ajuste.importe_anterior|floatformat:"2g" }}</td>
+                    <td class="tabla-numero">$ {{ ajuste.importe_nuevo|floatformat:"2g" }}</td>
                     <td>
                         <details class="finanzas-ajuste-motivo">
                             <summary>Ver motivo</summary>

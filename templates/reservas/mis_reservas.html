@@ -32,8 +32,8 @@
 {% tabla %}<thead><tr><th scope="col">Reserva</th><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if consulta_administrativa %}<th scope="col">Participación</th>{% endif %}{% if consulta_administrativa or solo_invitaciones %}<th scope="col">Respuesta</th>{% endif %}<th scope="col">Estado</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead><tbody>
 {% for reserva in pagina %}<tr>
     <td><strong>{{ reserva.numero }}</strong></td>
-    <td><strong>{{ reserva.evento.turno.fecha|date:"d/m/Y" }}</strong><small>{{ reserva.evento.turno.hora_inicio|time:"H:i" }} a {{ reserva.evento.turno.hora_fin|time:"H:i" }}</small></td>
-    <td>{{ reserva.evento.turno.cancha.sede.nombre }}<small>{{ reserva.evento.turno.cancha.nombre }}</small></td>
+    <td class="tabla-fecha">{{ reserva.evento.turno.fecha|date:"d/m/Y" }}<span class="tabla-secundario">{{ reserva.evento.turno.hora_inicio|time:"H:i" }} a {{ reserva.evento.turno.hora_fin|time:"H:i" }}</span></td>
+    <td>{{ reserva.evento.turno.cancha.sede.nombre }}<span class="tabla-secundario">{{ reserva.evento.turno.cancha.nombre }}</span></td>
     {% if consulta_administrativa %}<td>{% if reserva.organizador_id == titular.pk %}Organizador{% else %}Invitado{% endif %}</td>{% endif %}
     {% if consulta_administrativa or solo_invitaciones %}<td>{% if reserva.organizador_id != titular.pk %}{% for invitacion in reserva.invitaciones_titular %}{% indicador_estado "respuesta" invitacion.respuesta %}{% endfor %}{% else %}<span class="texto-secundario">—</span>{% endif %}</td>{% endif %}
     <td>{% indicador_estado "evento" reserva.evento.estado %}</td>

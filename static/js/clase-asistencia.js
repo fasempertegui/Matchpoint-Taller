@@ -189,6 +189,11 @@ document.addEventListener("DOMContentLoaded", function () {
         fila.dataset.usuario = persona.id;
         fila.dataset.nombre = persona.nombre;
         fila.querySelector("[data-nombre]").textContent = persona.nombre;
+        var usuarioNombre = fila.querySelector("[data-usuario-nombre]");
+        if (usuarioNombre) {
+            usuarioNombre.textContent = "@" + persona.usuario;
+            usuarioNombre.hidden = false;
+        }
         fila.querySelector("[data-editar-asistencia]").setAttribute("aria-label", "Observaciones de " + persona.nombre);
         campo(fila, "usuario").value = persona.id;
         campo(fila, "estado").value = "sin_registrar";

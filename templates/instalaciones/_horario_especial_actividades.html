@@ -1,26 +1,27 @@
+{% load tablas %}
 <section class="feriado-revision-clases" aria-labelledby="eventos-titulo">
     <h2 id="eventos-titulo">Actividades que se anularán ({{ eventos|length }})</h2>
-    <div class="tabla-contenedor">
-        <table>
+    <div class="tabla-contenedor tabla-embebida">
+        {% tabla %}
             <thead><tr><th scope="col">Actividad</th><th scope="col">Cancha</th><th scope="col">Horario</th></tr></thead>
             <tbody>
                 {% for evento in eventos %}
                     <tr>
                         <td>
                             {% if evento.tipo == "clase" %}
-                                <a href="{% url 'clases:clase_detalle' evento.clase.pk %}">Clase {{ evento.clase.pk }}</a>
+                                <a class="enlace-tabla" href="{% url 'clases:clase_detalle' evento.clase.pk %}">Clase {{ evento.clase.pk }}</a>
                             {% elif evento.tipo == "reserva" %}
-                                <a href="{% url 'reservas:reserva_detalle' evento.reserva.pk %}">Reserva {{ evento.reserva.numero }}</a>
+                                <a class="enlace-tabla" href="{% url 'reservas:reserva_detalle' evento.reserva.pk %}">Reserva {{ evento.reserva.numero }}</a>
                             {% else %}
-                                <a href="{% url 'agenda:bloqueo_detalle' evento.bloqueo.pk %}">Bloqueo {{ evento.bloqueo.numero }}</a>
+                                <a class="enlace-tabla" href="{% url 'agenda:bloqueo_detalle' evento.bloqueo.pk %}">Bloqueo {{ evento.bloqueo.numero }}</a>
                             {% endif %}
                         </td>
                         <td>{{ evento.turno.cancha.nombre }}</td>
-                        <td>{{ evento.turno.hora_inicio|time:"H:i" }} a {{ evento.turno.hora_fin|time:"H:i" }}</td>
+                        <td class="tabla-fecha">{{ evento.turno.hora_inicio|time:"H:i" }} a {{ evento.turno.hora_fin|time:"H:i" }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
-        </table>
+        {% endtabla %}
     </div>
     <p class="nota-campo">Se enviarán los avisos correspondientes. Si hay cobros, las devoluciones se registran por separado.</p>
 </section>

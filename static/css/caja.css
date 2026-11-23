@@ -92,15 +92,7 @@
 }
 .caja-nota { font-size: .85rem; color: var(--texto-suave); }
 .caja-listado { padding: 0; }
-.caja-listado table,
-.caja-movimientos { font-size: .9rem; }
-.caja-listado td,
-.caja-movimientos td { vertical-align: middle; }
-.caja-listado small,
-.caja-movimientos small { display: block; margin-top: 4px; color: var(--texto-suave); font-size: .8rem; }
-.caja-movimientos td:nth-child(2) { width: 38%; overflow-wrap: anywhere; }
-.caja-clase { display: block; margin-bottom: 4px; font-weight: 600; }
-.contenido-caja .caja-monto { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+.caja-movimientos td:nth-child(3) { width: 34%; overflow-wrap: anywhere; }
 .caja-filtros .detalle-grid { flex-basis: 100%; }
 .caja-filtros .mensaje { width: 100%; }
 .caja-sin-sesion p { color: var(--texto-suave); }
@@ -177,11 +169,6 @@
 .caja-resumen-bloques > :only-child { grid-column: 1 / -1; }
 .caja-resumen-bloques > section { min-width: 0; }
 .caja-resumen .caja-resumen-bloques h3 { margin: 0 0 12px; font-size: 1rem; }
-.caja-resumen-tabla { border: 1px solid var(--borde); border-radius: 8px; }
-.caja-resumen-tabla table { font-size: .875rem; }
-.caja-resumen-tabla thead { background: #faf9fc; }
-.caja-resumen-tabla th, .caja-resumen-tabla td { padding: 12px; }
-.caja-resumen-tabla tbody tr:last-child td { border-bottom: 0; }
 .caja-resumen-egresos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin: 24px 0 0; padding-top: 20px; border-top: 1px solid var(--borde); }
 .caja-resumen-egresos dt { color: var(--texto-suave); font-size: .85rem; }
 .caja-resumen-egresos dd { margin: 6px 0 0; font-size: 1.2rem; font-weight: 600; font-variant-numeric: tabular-nums; }

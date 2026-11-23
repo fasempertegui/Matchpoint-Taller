@@ -1,6 +1,5 @@
 .clase-detalle-cuerpo .perfil-seccion + .perfil-seccion { margin-top: 24px; padding-top: 24px; }
 .clase-detalle-cuerpo .perfil-seccion h2 { margin-bottom: 16px; }
-.clase-detalle-cuerpo .tabla-listado { border: 1px solid var(--borde); border-radius: 8px; }
 .clase-detalle-aviso { padding: 16px 20px; margin-top: 24px; border-radius: 10px; background: var(--primario-suave); color: var(--primario); }
 .clase-detalle-aviso p { margin: 8px 0 0; }
 .clase-detalle-aviso + .perfil-seccion { margin-top: 24px; }

@@ -33,8 +33,8 @@
             <section class="feriado-revision-clases" aria-labelledby="modal-feriado-clases-titulo">
                 <h3 id="modal-feriado-clases-titulo">Clases que se anularán ({{ clases|length }})</h3>
                 <p class="nota-campo feriado-advertencia">Se anularán las clases de esta lista, incluidas las creadas manualmente, con el motivo «Clase anulada por registro de feriado». Sus turnos quedarán libres y se conservarán sus asignaciones e historia.</p>
-                <div class="tabla-contenedor">
-                    <table>
+                <div class="tabla-contenedor tabla-embebida">
+                    {% tabla %}
                         <caption class="clase-etiqueta-oculta">Clases que se anularán el {{ revision.fecha|date:"d/m/Y" }} en todas las sedes</caption>
                         <thead>
                             <tr>
@@ -42,21 +42,21 @@
                                 <th scope="col">Horario</th>
                                 <th scope="col">Profesores</th>
                                 <th scope="col">Participantes</th>
-                                <th scope="col">Acción</th>
+                                <th scope="col" class="acciones-columna">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for clase in clases %}
                                 <tr>
-                                    <td>{{ clase.sede }} → {{ clase.cancha }}</td>
-                                    <td>{{ clase.hora|time:"H:i" }} a {{ clase.hora_fin|time:"H:i" }}</td>
-                                    <td>{{ clase.profesores|join:", "|default:"—" }}</td>
-                                    <td>{{ clase.participantes|join:", "|default:"—" }}</td>
-                                    <td><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' clase.id %}">Ver clase</a></td>
+                                    <td><strong>{{ clase.sede }}</strong><span class="tabla-secundario">{{ clase.cancha }}</span></td>
+                                    <td class="tabla-fecha">{{ clase.hora|time:"H:i" }} a {{ clase.hora_fin|time:"H:i" }}</td>
+                                    <td>{% if clase.profesores %}{{ clase.profesores|join:", " }}{% else %}<span class="texto-secundario">—</span>{% endif %}</td>
+                                    <td>{% if clase.participantes %}{{ clase.participantes|join:", " }}{% else %}<span class="texto-secundario">—</span>{% endif %}</td>
+                                    <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' clase.id %}">Ver clase</a></td>
                                 </tr>
                             {% endfor %}
                         </tbody>
-                    </table>
+                    {% endtabla %}
                 </div>
                 <p class="feriado-conservacion">Las reservas y los bloqueos se conservan.</p>
             </section>

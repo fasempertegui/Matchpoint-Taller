@@ -30,33 +30,31 @@
 {% for fila in filas %}
     <tr class="auditoria-registro">
         <td>
-            <strong class="auditoria-usuario">
-                {% if fila.registro.usuario %}
-                    {{ fila.registro.usuario }}
-                {% elif fila.registro.usuario_id %}
-                    Cuenta eliminada (#{{ fila.registro.usuario_id }})
-                {% elif fila.registro.origen == "tarea" %}
-                    Proceso automático
-                {% else %}
-                    PostgreSQL: {{ fila.registro.usuario_bd }}
-                {% endif %}
-            </strong>
-        </td>
-        <td>
-            <strong class="auditoria-accion">{{ fila.accion }}</strong>
-            {% if fila.accion != "Inicio de sesión" and fila.registro.accion != "eliminacion" %}
-            <div class="auditoria-operacion-registro">
-            <span>{{ fila.tipo }} · </span>
-            {% if fila.url %}
-            <a class="auditoria-referencia enlace-tabla" href="{{ fila.url }}">{{ fila.referencia }}</a>
+            {% if fila.registro.usuario %}
+                <strong>{{ fila.registro.usuario }}</strong>
+                <span class="tabla-secundario">@{{ fila.registro.usuario.username }}</span>
+            {% elif fila.registro.usuario_id %}
+                <strong>Cuenta eliminada (#{{ fila.registro.usuario_id }})</strong>
+            {% elif fila.registro.origen == "tarea" %}
+                <strong>Proceso automático</strong>
             {% else %}
-            <span class="auditoria-referencia">{{ fila.referencia }}</span>
-            {% endif %}
-            </div>
+                <strong>{{ fila.registro.usuario_bd }}</strong>
+                <span class="tabla-secundario">PostgreSQL</span>
             {% endif %}
         </td>
         <td>
-            <time datetime="{{ fila.registro.realizado_en|date:'c' }}">{{ fila.registro.realizado_en|date:"d/m/Y H:i:s" }}</time>
+            <span>{{ fila.accion }}</span>
+            {% if fila.accion != "Inicio de sesión" and fila.registro.accion != "eliminacion" %}
+            <span class="tabla-secundario">
+                {{ fila.tipo }} · {% if fila.url %}<a class="enlace-tabla" href="{{ fila.url }}">{{ fila.referencia }}</a>{% else %}{{ fila.referencia }}{% endif %}
+            </span>
+            {% endif %}
+        </td>
+        <td class="tabla-fecha">
+            <time datetime="{{ fila.registro.realizado_en|date:'c' }}">
+                {{ fila.registro.realizado_en|date:"d/m/Y" }}
+                <span class="tabla-secundario">{{ fila.registro.realizado_en|date:"H:i:s" }}</span>
+            </time>
         </td>
         <td>
             <button type="button" class="boton boton-secundario boton-chico auditoria-desplegar"
@@ -72,21 +70,16 @@
             {% if fila.registro.accion == "cambio_contrasena" or fila.registro.accion == "restablecimiento_contrasena" or fila.registro.accion == "actualizacion_hash" %}
             <p class="texto-secundario">Este evento no guarda la contraseña ni su hash.</p>
             {% endif %}
-            <div class="tabla-contenedor tabla-listado tabla-listado-sin-centrado auditoria-metadatos">
-                <table>
-                    <caption class="clase-etiqueta-oculta">Información técnica</caption>
-                    <tbody>
-                        <tr><th scope="row">Tabla</th><td><code>{{ fila.registro.tabla }}</code></td></tr>
-                        <tr><th scope="row">Clave del registro</th><td><code>{{ fila.clave }}</code></td></tr>
-                        <tr><th scope="row">Origen</th><td>{{ fila.registro.get_origen_display }}</td></tr>
-                        {% if fila.registro.origen == "aplicacion" %}
-                        <tr><th scope="row">Usuario de aplicación</th><td>{{ fila.registro.usuario|default:"Cuenta eliminada" }} (#{{ fila.registro.usuario_id }})</td></tr>
-                        {% endif %}
-                        <tr><th scope="row">Usuario de PostgreSQL</th><td>{{ fila.registro.usuario_bd }}</td></tr>
-                        <tr><th scope="row">Operación</th><td><code>{{ fila.registro.operacion_id }}</code></td></tr>
-                    </tbody>
-                </table>
-            </div>
+            {% tabla_datos etiqueta="Información técnica" clases="auditoria-metadatos" %}
+                <tr><th scope="row">Tabla</th><td><code>{{ fila.registro.tabla }}</code></td></tr>
+                <tr><th scope="row">Clave del registro</th><td><code>{{ fila.clave }}</code></td></tr>
+                <tr><th scope="row">Origen</th><td>{{ fila.registro.get_origen_display }}</td></tr>
+                {% if fila.registro.origen == "aplicacion" %}
+                <tr><th scope="row">Usuario de aplicación</th><td>{{ fila.registro.usuario|default:"Cuenta eliminada" }} (#{{ fila.registro.usuario_id }})</td></tr>
+                {% endif %}
+                <tr><th scope="row">Usuario de PostgreSQL</th><td>{{ fila.registro.usuario_bd }}</td></tr>
+                <tr><th scope="row">Operación</th><td><code>{{ fila.registro.operacion_id }}</code></td></tr>
+            {% endtabla_datos %}
                 <div class="auditoria-valores">
                     <section><h2>Valores anteriores completos</h2><pre>{{ fila.anteriores }}</pre></section>
                     <section><h2>Valores actuales completos</h2><pre>{{ fila.actuales }}</pre></section>

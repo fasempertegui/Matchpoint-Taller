@@ -16,6 +16,4 @@
 .contenido-actividad-clases .actividad-resumen dd { color: var(--primario); font-weight: 600; }
 .contenido-actividad-clases .actividad-listado { padding: 0; }
 .contenido-actividad-clases .actividad-vistas { margin: 12px 20px; }
-.contenido-actividad-clases .actividad-listado table { font-size: .9rem; }
-.contenido-actividad-clases .actividad-listado td { vertical-align: middle; }
 .contenido-actividad-clases .actividad-listado > .estado-vacio { margin: 0; padding: 24px 20px; }

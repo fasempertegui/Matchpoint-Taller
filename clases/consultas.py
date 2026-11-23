@@ -95,6 +95,7 @@ def consultar_clase(usuario, clase_id):
             {
                 "usuario_id": asignacion.profesor_id,
                 "nombre": str(asignacion.profesor),
+                "username": asignacion.profesor.username,
             }
             for asignacion in profesores
         ],
@@ -102,6 +103,7 @@ def consultar_clase(usuario, clase_id):
             {
                 "usuario_id": asignacion.usuario_id,
                 "nombre": str(asignacion.usuario),
+                "username": asignacion.usuario.username,
                 "observaciones": asignacion.observaciones,
                 "respuesta_texto": asignacion.get_respuesta_display(),
                 "respuesta": asignacion.respuesta,

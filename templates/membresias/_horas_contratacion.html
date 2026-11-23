@@ -1,20 +1,20 @@
 <details class="perfil-seccion-desplegable">
     <summary>Horas de membresía{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
     <div class="perfil-seccion-desplegable-cuerpo">
-        <div class="tabla-contenedor tabla-listado"><table>
-            <thead><tr><th>Tipo de horas</th><th>Cupo</th><th>Otorgadas</th><th>Descontadas</th><th>Comprometidas</th><th>Consumidas</th><th>Disponibles</th></tr></thead>
-            <tbody>{% for fila in resumen_horas %}<tr><td>{{ fila.rol }}</td><td>{{ fila.cupo }}</td><td>{{ fila.otorgadas }}</td><td>{{ fila.descontadas }}</td><td>{{ fila.comprometidas }}</td><td>{{ fila.consumidas }}</td><td>{{ fila.disponibles }}</td></tr>{% endfor %}</tbody>
+        <div class="tabla-contenedor tabla-listado tabla-embebida"><table>
+            <thead><tr><th scope="col">Tipo de horas</th><th scope="col">Cupo</th><th scope="col">Otorgadas</th><th scope="col">Descontadas</th><th scope="col">Comprometidas</th><th scope="col">Consumidas</th><th scope="col">Disponibles</th></tr></thead>
+            <tbody>{% for fila in resumen_horas %}<tr><td><strong>{{ fila.rol }}</strong></td><td class="tabla-numero">{{ fila.cupo }}</td><td class="tabla-numero">{{ fila.otorgadas }}</td><td class="tabla-numero">{{ fila.descontadas }}</td><td class="tabla-numero">{{ fila.comprometidas }}</td><td class="tabla-numero">{{ fila.consumidas }}</td><td class="tabla-numero">{{ fila.disponibles }}</td></tr>{% endfor %}</tbody>
         </table></div>
     </div>
 </details>
 <details class="perfil-seccion-desplegable" id="ajustes-horas"{% if request.GET.pagina_ajustes %} open{% endif %}>
     <summary>Ajustes de horas{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
     <div class="perfil-seccion-desplegable-cuerpo">
-        {% if ajustes_horas %}<div class="tabla-contenedor tabla-listado"><table>
-            <thead><tr><th>Fecha</th><th>Tipo de horas</th><th>Movimiento</th><th>Horas</th><th>Detalle</th></tr></thead>
+        {% if ajustes_horas %}<div class="tabla-contenedor tabla-listado tabla-embebida"><table>
+            <thead><tr><th scope="col">Fecha</th><th scope="col">Tipo de horas</th><th scope="col">Movimiento</th><th scope="col">Horas</th><th scope="col">Detalle</th></tr></thead>
             <tbody>{% for ajuste in ajustes_horas %}<tr>
-                <td>{{ ajuste.creado_en|date:"d/m/Y H:i" }}</td><td>{{ ajuste.get_tipo_horas_display }}</td>
-                <td>{{ ajuste.get_operacion_display }}</td><td>{{ ajuste.cantidad }}</td>
+                <td class="tabla-fecha"><strong>{{ ajuste.creado_en|date:"d/m/Y" }}</strong><span class="tabla-secundario">{{ ajuste.creado_en|date:"H:i" }}</span></td><td>{{ ajuste.get_tipo_horas_display }}</td>
+                <td>{{ ajuste.get_operacion_display }}</td><td class="tabla-numero">{{ ajuste.cantidad }}</td>
                 <td><details><summary>Ver detalle</summary>
                     <p>Motivo: {{ ajuste.motivo|linebreaksbr }}</p><p>Registrado por {{ ajuste.registrado_por }}</p>
                 </details></td>

@@ -2,8 +2,9 @@
 <tr data-asistencia-fila data-usuario="{{ fila.formulario.usuario.value|default:'' }}" data-nombre="{{ fila.persona|default:'Usuario no disponible' }}" data-quitable="{{ fila.quitable|yesno:'true,false' }}">
     <td>
         <strong data-nombre>{{ fila.persona|default:"Usuario no disponible" }}</strong>
+        <span class="tabla-secundario" data-usuario-nombre{% if not fila.persona %} hidden{% endif %}>{% if fila.persona %}@{{ fila.persona.username }}{% endif %}</span>
         {{ fila.formulario.usuario }}{{ fila.formulario.estado }}{{ fila.formulario.observaciones }}
-        <p class="texto-secundario asistencia-observacion" data-observacion{% if not fila.formulario.observaciones.value %} hidden{% endif %}>{{ fila.formulario.observaciones.value|default:'' }}</p>
+        <p class="tabla-secundario asistencia-observacion" data-observacion{% if not fila.formulario.observaciones.value %} hidden{% endif %}>{{ fila.formulario.observaciones.value|default:'' }}</p>
         {% for campo in fila.formulario %}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
     </td>
     <td>

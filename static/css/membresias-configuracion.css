@@ -4,10 +4,6 @@
     border-radius: 10px;
 }
 
-.catalogo-listado table { font-size: .9rem; }
-.catalogo-listado td { vertical-align: middle; }
-.catalogo-listado .catalogo-importe { white-space: nowrap; font-variant-numeric: tabular-nums; }
-
 .catalogo-estado {
     width: 8px;
     height: 8px;

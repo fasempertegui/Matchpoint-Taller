@@ -22,11 +22,11 @@
     </form>
 {% endtarjeta_filtros %}
 <section class="tarjeta tabla-contenedor" data-resultados-filtros aria-label="Seguimiento de envíos">
-{% tabla %}<thead><tr><th scope="col">Tipo</th><th scope="col">Destinatario</th><th scope="col">Creado</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
+{% tabla %}<thead><tr><th scope="col">Tipo</th><th scope="col">Destinatario</th><th scope="col">Creado</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
 <tbody>{% for envio in pagina %}<tr>
-<td><strong>{{ envio.get_tipo_display }}</strong></td><td>{{ envio.destinatario }}</td><td>{{ envio.creado_en|date:"d/m/Y H:i" }}</td>
+<td><strong>{{ envio.get_tipo_display }}</strong></td><td>{{ envio.destinatario }}</td><td class="tabla-fecha">{{ envio.creado_en|date:"d/m/Y" }}<span class="tabla-secundario">{{ envio.creado_en|date:"H:i" }}</span></td>
 <td>{% indicador_estado "envio" envio.estado %}</td>
-<td><button type="button" class="boton boton-secundario boton-chico" data-entrega aria-expanded="false" aria-controls="entrega-{{ envio.pk }}">Ver entrega</button></td></tr>
+<td class="acciones-columna"><button type="button" class="boton boton-secundario boton-chico" data-entrega aria-expanded="false" aria-controls="entrega-{{ envio.pk }}">Ver entrega</button></td></tr>
 <tr id="entrega-{{ envio.pk }}" class="envio-entrega" hidden><td colspan="5"><dl>
 <div><dt>Intentos</dt><dd>{{ envio.intentos }}</dd></div>
 {% if envio.ultimo_intento_en %}<div><dt>Último intento</dt><dd>{{ envio.ultimo_intento_en|date:"d/m/Y H:i" }}</dd></div>{% endif %}
