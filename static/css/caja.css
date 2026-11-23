@@ -3,6 +3,28 @@
 .contenido-caja .form-control { border-radius: 10px; }
 .caja-sesion { margin-bottom: 24px; }
 .caja-sesion-cabecera { display: flex; align-items: center; gap: 16px; }
+.caja-sesion .caja-sesion-cabecera {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    margin: -20px -20px 0;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--borde);
+}
+.caja-sesion-titulo-linea {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    min-width: 0;
+}
+.caja-sesion-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
 .caja-sesion h2, .caja-sin-sesion h2 { margin: 0; font-size: 1.25rem; }
 .caja-estado { display: inline-flex; align-items: center; gap: 7px; color: var(--texto-suave); font-size: .85rem; white-space: nowrap; }
 .caja-estado::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--texto-suave); flex-shrink: 0; }
@@ -17,14 +39,58 @@
 }
 .caja-sesion-datos dt { color: var(--texto-suave); font-size: .85rem; }
 .caja-sesion-datos dd { margin: 4px 0 0; font-size: .95rem; }
-.caja-importes { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 24px; margin: 0; }
-.caja-sesion > .caja-importes { margin-top: 24px; }
-.caja-sesion > .caja-nota { margin: 20px 0 0; }
-.caja-importes dt { font-size: .85rem; color: var(--texto-suave); }
-.caja-importes dd { margin: 6px 0 0; font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-.caja-importe-principal dd { color: var(--primario); font-size: 1.8rem; }
-.caja-sesion-pie { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px -20px -20px; padding: 16px 20px; border-top: 1px solid var(--borde); }
-.caja-sesion-pie > span, .caja-nota { font-size: .85rem; color: var(--texto-suave); }
+.caja-importes {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: var(--espacio-componentes);
+    margin: 0;
+}
+.caja-importes-cerrada {
+    grid-template-columns: minmax(220px, 1.3fr) repeat(3, minmax(0, 1fr));
+}
+.caja-sesion > .caja-importes { margin-top: 20px; }
+.caja-sesion > .caja-nota { margin: 16px 0 0; }
+.caja-importes > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: 16px 20px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--superficie);
+}
+.caja-importes > .caja-importe-principal {
+    border-color: var(--primario-medio);
+    background: var(--primario-suave);
+}
+.caja-importes dt {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--texto-suave);
+}
+.caja-importes dd {
+    margin: 6px 0 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+.caja-importe-principal dd {
+    color: var(--primario);
+    font-size: clamp(1.6rem, 2.4vw, 1.95rem);
+    font-weight: 700;
+}
+.caja-importes .caja-importe-nota {
+    margin: 6px 0 0;
+    color: var(--texto-suave);
+    font-size: .8rem;
+    font-weight: 400;
+    line-height: 1.4;
+    font-variant-numeric: normal;
+}
+.caja-nota { font-size: .85rem; color: var(--texto-suave); }
 .caja-listado { padding: 0; }
 .caja-listado table { font-size: .9rem; }
 .caja-listado td { vertical-align: top; }
@@ -37,7 +103,24 @@
 .caja-sin-sesion p { color: var(--texto-suave); }
 .caja-sin-sesion .boton { margin-top: 12px; }
 @media (max-width: 1100px) {
-    .caja-importes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .caja-importes-cerrada { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+    .caja-sesion .caja-sesion-cabecera {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .caja-sesion-acciones {
+        flex-direction: column;
+        width: 100%;
+    }
+    .caja-sesion-acciones .boton {
+        width: 100%;
+    }
+    .caja-importes,
+    .caja-importes-cerrada {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .contenido-caja .tarjeta-formulario {

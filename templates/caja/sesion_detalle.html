@@ -6,18 +6,19 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
-{% tarjeta_titulo "Caja" descripcion="Consultá el efectivo y los movimientos de cada sesión." %}
-    {% if puede_cerrar %}<a class="boton boton-primario" href="{% url 'caja:movimiento_crear' sesion.pk %}">Registrar movimiento</a>{% endif %}
-{% endtarjeta_titulo %}
+{% tarjeta_titulo "Caja" descripcion="Consultá el efectivo y los movimientos de cada sesión." %}{% endtarjeta_titulo %}
 {% if sesion.estado == 'abierta' %}{% include "caja/navegacion.html" with seccion="actual" only %}{% else %}{% include "caja/navegacion.html" only %}{% endif %}
 <section class="tarjeta caja-sesion" aria-labelledby="sesion-titulo">
     <div class="caja-sesion-cabecera">
-        <h2 id="sesion-titulo">{{ sesion.numero }}</h2>
-        <span class="caja-estado{% if sesion.estado == 'abierta' %} caja-estado-abierta{% endif %}">{{ sesion.get_estado_display }}</span>
-        {% include "caja/_estado_informacion.html" with sesion=sesion only %}
+        <div class="caja-sesion-titulo-linea">
+            <h2 id="sesion-titulo">{{ sesion.numero }}</h2>
+            <span class="caja-estado{% if sesion.estado == 'abierta' %} caja-estado-abierta{% endif %}">{{ sesion.get_estado_display }}</span>
+            {% include "caja/_estado_informacion.html" with sesion=sesion only %}
+        </div>
+        {% if puede_cerrar %}<div class="caja-sesion-acciones"><a class="boton boton-primario" href="{% url 'caja:movimiento_crear' sesion.pk %}">Registrar movimiento</a><a class="boton boton-advertencia" href="{% url 'caja:caja_cerrar' sesion.pk %}">Cerrar caja</a></div>{% endif %}
     </div>
-    <dl class="caja-importes">
-        <div class="caja-importe-principal"><dt>Efectivo esperado</dt><dd>$ {{ esperado|floatformat:"2g" }}</dd></div>
+    <dl class="caja-importes{% if sesion.estado == 'cerrada' %} caja-importes-cerrada{% endif %}">
+        <div class="caja-importe-principal"><dt>Efectivo esperado</dt><dd>$ {{ esperado|floatformat:"2g" }}</dd><dd class="caja-importe-nota">El efectivo esperado incluye sólo movimientos en efectivo</dd></div>
         <div><dt>Efectivo inicial</dt><dd>$ {{ sesion.efectivo_inicial|floatformat:"2g" }}</dd></div>
         {% if sesion.estado == 'cerrada' %}
             <div><dt>Efectivo contado</dt><dd>$ {{ sesion.efectivo_contado|floatformat:"2g" }}</dd></div>
@@ -26,9 +27,7 @@
     </dl>
     {% if sesion.motivo_apertura %}<p class="caja-nota"><strong>Motivo de apertura:</strong> {{ sesion.motivo_apertura|linebreaksbr }}</p>{% endif %}
     {% if sesion.motivo_diferencia %}<p class="nota-campo nota-campo-ambar"><strong>Motivo de diferencia:</strong> {{ sesion.motivo_diferencia|linebreaksbr }}</p>{% endif %}
-    {% if puede_cerrar %}
-        <div class="caja-sesion-pie"><span>El efectivo esperado incluye sólo movimientos en efectivo.</span><a class="boton boton-advertencia boton-chico" href="{% url 'caja:caja_cerrar' sesion.pk %}">Cerrar caja</a></div>
-    {% elif sesion.estado == 'abierta' %}
+    {% if not puede_cerrar and sesion.estado == 'abierta' %}
         <p class="caja-nota">Sólo {{ sesion.responsable }} puede registrar movimientos y cerrar esta sesión.</p>
     {% endif %}
 </section>

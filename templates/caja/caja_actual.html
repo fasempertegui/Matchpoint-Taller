@@ -8,7 +8,7 @@
 {% tarjeta_titulo "Caja" descripcion="Consultá el efectivo y los movimientos de cada sesión." %}{% endtarjeta_titulo %}
 {% include "caja/navegacion.html" with seccion="actual" only %}
 <section class="tarjeta caja-sin-sesion">
-    <div class="caja-sesion-cabecera"><h2>No hay una sesión abierta</h2><span class="caja-estado">Cerrada</span>{% if ultimo_cierre %}{% include "caja/_estado_informacion.html" with sesion=ultimo_cierre only %}{% endif %}</div>
+    <h2>No hay una sesión abierta</h2>
     {% if ultimo_cierre %}<p>Último cierre: <a class="enlace-tabla" href="{% url 'caja:sesion_detalle' ultimo_cierre.pk %}">{{ ultimo_cierre.numero }}</a></p><p>Efectivo contado: <strong>$ {{ ultimo_cierre.efectivo_contado|floatformat:"2g" }}</strong></p>{% endif %}
     <a class="boton boton-primario" href="{% url 'caja:caja_abrir' %}">Abrir caja</a>
 </section>
