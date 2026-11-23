@@ -16,7 +16,7 @@ body > .contenido-principal.contenido-asistencia { width: var(--ancho-contenido-
 .contenido-asistencia [data-editor-nombre] { font-size: 1.1rem; font-weight: 600; }
 @media (max-width: 900px) { .asistencia-contexto dl { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-.asistencia-fila-acciones { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+.asistencia-fila-acciones { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
 .asistencia-marcar { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 7px; border: 1px solid transparent; border-radius: 8px; background: transparent; cursor: pointer; }
 .asistencia-marcar-presente { color: var(--estado-positivo); }
 .asistencia-marcar-ausente { color: var(--peligro); }

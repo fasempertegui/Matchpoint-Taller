@@ -1,6 +1,6 @@
 {% load tablas %}
 <div class="tabla-contenedor actividad-listado">
-    {% tabla centrada=False listado=tabla_listado %}
+    {% tabla listado=tabla_listado %}
         <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Cancha</th><th scope="col">Profesores</th><th scope="col">Participantes</th>{% if mostrar_motivo %}<th scope="col">Motivo</th>{% endif %}</tr></thead>
         <tbody>{% for fila in filas %}
             <tr>

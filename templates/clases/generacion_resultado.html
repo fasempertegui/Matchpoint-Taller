@@ -17,7 +17,7 @@
     </dl>
     {% if pagina %}
         <div class="tabla-contenedor actividad-listado">
-            {% tabla centrada=False %}
+            {% tabla %}
                 <caption class="clase-etiqueta-oculta">Clases creadas</caption>
                 <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Cancha</th><th scope="col">Acción</th></tr></thead>
                 <tbody>{% for clase in pagina %}<tr>

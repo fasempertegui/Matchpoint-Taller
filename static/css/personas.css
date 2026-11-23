@@ -103,19 +103,9 @@ body > .contenido-principal.contenido-usuarios {
     border-radius: 0 0 10px 10px;
 }
 
-.listado-usuarios > .tarjeta:not(.tarjeta-filtros) {
-    border-radius: 10px;
-    border-top: 3px solid var(--primario-medio);
-}
-
-
 .listado-usuarios .boton,
 .listado-usuarios .form-control {
     border-radius: 10px;
-}
-
-.listado-usuarios > .tabla-contenedor {
-    border-top: 1px solid var(--borde);
 }
 
 .usuario-estado-punto {
