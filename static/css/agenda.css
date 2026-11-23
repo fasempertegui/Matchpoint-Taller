@@ -292,8 +292,8 @@
 }
 
 .agenda-tabla tbody th {
-    vertical-align: top;
-    padding-top: 9px;
+    vertical-align: middle;
+    text-align: center;
 }
 
 .agenda-tabla td {

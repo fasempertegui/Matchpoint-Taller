@@ -46,10 +46,12 @@
     min-width: 0;
     table-layout: fixed;
     border-collapse: collapse;
+    font-size: .85rem;
 }
-.planilla-tabla .planilla-columna-hora { width: 44px; }
+.planilla-tabla .planilla-columna-hora { width: 58px; }
 .planilla-tabla th {
-    padding: 12px 4px;
+    padding: 12px 5px;
+    font-weight: 500;
     text-align: center;
     text-transform: none;
     letter-spacing: normal;
@@ -60,11 +62,11 @@
     color: var(--primario);
 }
 .planilla-tabla th:first-child {
-    padding-inline: 3px;
+    width: 58px;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
-.planilla-tabla tbody th { vertical-align: top; padding-top: 12px; }
+.planilla-tabla tbody th { vertical-align: middle; text-align: center; }
 .planilla-tabla td { padding: 3px; vertical-align: middle; border-left: 1px solid var(--borde); }
 .planilla-celda {
     display: flex;
@@ -94,7 +96,19 @@ button.planilla-celda:hover { background: var(--primario-suave); color: var(--pr
 button.planilla-celda:focus-visible,
 .planilla-hora:focus-visible { outline: 2px solid var(--primario); outline-offset: -2px; }
 button.planilla-celda-seleccionada { background: var(--primario-suave); color: var(--primario); box-shadow: inset 0 0 0 2px var(--primario); }
-.planilla-hora { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; min-height: 40px; }
+.planilla-hora {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
 .planilla-seleccion { position: fixed; z-index: 20; bottom: 16px; left: calc(50% + var(--planilla-desplazamiento, 0px) / 2); transform: translateX(-50%); display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 12px; width: max-content; max-width: calc(100% - var(--planilla-desplazamiento, 0px) - 32px); margin: 0; padding: 16px; border: 1px solid var(--primario); border-radius: 10px; background: var(--primario-suave); box-shadow: 0 6px 20px #4b176d24; }
 .con-sidebar .planilla-seleccion { --planilla-desplazamiento: var(--ancho-sidebar); }
 @media (max-width: 900px) {
