@@ -1,6 +1,6 @@
 :root {
-    --fuente-interfaz: "Hanken Grotesk", Arial, sans-serif;
-    --fuente-titulos: "Bricolage Grotesque", Arial, sans-serif;
+    --fuente-interfaz: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --fuente-titulos: "Bricolage Grotesque", var(--fuente-interfaz);
     --fuente-detalles: var(--fuente-interfaz);
     --fondo: #ffffff;
     --fondo-pagina: #f4f1f8;
