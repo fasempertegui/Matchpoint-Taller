@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tablas %}
 {% load estados %}
 {% load static %}
 
@@ -96,8 +97,8 @@
                 {% endif %}
             </div>
 
-            <section class="tarjeta tabla-contenedor tabla-listado">
-                <table>
+            <section class="tarjeta tabla-contenedor">
+                {% tabla %}
                     <thead>
                         <tr>
                             <th>Nombre</th>
@@ -142,7 +143,7 @@
                             </tr>
                         {% endfor %}
                     </tbody>
-                </table>
+                {% endtabla %}
             </section>
         </div>
         <div class="pestana-panel" id="sede-panel-horarios" role="tabpanel" aria-labelledby="sede-tab-horarios" tabindex="0" data-panel="horarios" hidden>
@@ -155,8 +156,8 @@
                     </div>
                 {% endif %}
             </div>
-            <section class="tarjeta tabla-contenedor tabla-listado">
-                <table>
+            <section class="tarjeta tabla-contenedor">
+                {% tabla %}
                     <thead>
                         <tr>
                             <th>Día</th>
@@ -185,7 +186,7 @@
                             </tr>
                         {% endfor %}
                     </tbody>
-                </table>
+                {% endtabla %}
             </section>
         </div>
         {% if puede_consultar_precio %}

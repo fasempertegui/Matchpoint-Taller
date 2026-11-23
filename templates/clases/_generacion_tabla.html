@@ -1,5 +1,6 @@
+{% load tablas %}
 <div class="tabla-contenedor actividad-listado">
-    <table>
+    {% tabla centrada=False listado=tabla_listado %}
         <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Cancha</th><th scope="col">Profesores</th><th scope="col">Participantes</th>{% if mostrar_motivo %}<th scope="col">Motivo</th>{% endif %}</tr></thead>
         <tbody>{% for fila in filas %}
             <tr>
@@ -10,5 +11,5 @@
                 {% if mostrar_motivo %}<td>{{ fila.motivo }}</td>{% endif %}
             </tr>
         {% endfor %}</tbody>
-    </table>
+    {% endtabla %}
 </div>

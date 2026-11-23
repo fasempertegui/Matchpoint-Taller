@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tablas %}
 {% load filtros %}
 {% load estados %}
 {% load static %}
@@ -99,8 +100,8 @@
     </nav>
     {% endif %}
     {% if pagina %}
-    <div class="tabla-contenedor tabla-listado">
-        <table>
+    <div class="tabla-contenedor">
+        {% tabla %}
             <caption class="clase-etiqueta-oculta">Clases de {{ titular }} en el período consultado</caption>
             <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if mostrar_estado %}<th scope="col">Estado de clase</th>{% endif %}{% if ver_asistencia %}<th scope="col">Participación</th><th scope="col">Asistencia</th>{% endif %}<th scope="col" class="acciones-columna">Acciones</th></tr></thead>
             <tbody>{% for fila in pagina %}
@@ -117,7 +118,7 @@
                     <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' fila.id %}" aria-label="Ver clase {{ fila.id }} del {{ fila.fecha|date:'d/m/Y' }}">Ver clase</a></td>
                 </tr>
             {% endfor %}</tbody>
-        </table>
+        {% endtabla %}
     </div>
     {% else %}
         <p class="estado-vacio">{% if not consulta_administrativa %}No hay clases para los filtros seleccionados.{% elif formulario.vista.value == 'proximas' %}No hay próximas clases asignadas en este período.{% elif formulario.vista.value == 'anuladas' %}No hay clases anuladas en este período.{% else %}No hay clases en el historial de este período.{% endif %}</p>

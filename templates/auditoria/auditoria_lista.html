@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tablas %}
 {% load static %}
 
 {% block titulo %}Auditoría | Academia TM{% endblock %}
@@ -17,8 +18,8 @@
 
 {% include "auditoria/navegacion.html" %}
 
-<section class="tarjeta tabla-contenedor tabla-listado tabla-listado-sin-centrado auditoria-lista" aria-label="Registros de auditoría">
-<table class="auditoria-tabla auditoria-tabla-cambios">
+<section class="tarjeta tabla-contenedor auditoria-lista" aria-label="Registros de auditoría">
+{% tabla clases="auditoria-tabla auditoria-tabla-cambios" centrada=False %}
     <thead>
         <tr>
             <th scope="col">Responsable</th>
@@ -99,7 +100,7 @@
     <tr><td colspan="4" class="estado-vacio">No hay registros de auditoría.</td></tr>
 {% endfor %}
     </tbody>
-</table>
+{% endtabla %}
 {% include "componentes/paginacion.html" with pagina=pagina entidad="registros" only %}
 </section>
 

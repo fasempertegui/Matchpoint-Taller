@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tablas %}
 {% load static %}
 {% block titulo %}Asistencia de clase {{ clase.pk }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}"><link rel="stylesheet" href="{% static 'css/asistencia.css' %}">{% endblock %}
@@ -27,10 +28,10 @@
             <noscript><p class="mensaje mensaje-info">Para editar estados y buscar personas necesitás habilitar JavaScript.</p></noscript>
             <p class="texto-secundario" data-asistencia-vacio{% if filas %} hidden{% endif %}>No hay participantes ni asistencia registrada. Agregá una persona para comenzar.</p>
             <div class="tabla-contenedor" data-asistencia-tabla{% if not filas %} hidden{% endif %}>
-                <table>
+                {% tabla centrada=False %}
                     <thead><tr><th scope="col">Nombre</th><th scope="col">Asistencia</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
                     <tbody data-asistencia-filas>{% for fila in filas %}{% include "clases/_asistencia_fila.html" with fila=fila only %}{% endfor %}</tbody>
-                </table>
+                {% endtabla %}
             </div>
             <div class="asistencia-agregar">
                 <button class="boton boton-secundario boton-chico" type="button" data-abrir-busqueda aria-expanded="false" aria-controls="asistencia-busqueda">Agregar persona</button>

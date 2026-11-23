@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tablas %}
 {% load filtros %}
 {% load estados %}
 {% load static %}
@@ -23,8 +24,8 @@
 {% endtarjeta_filtros %}
 <div data-resultados-filtros>
 {% if mes %}
-<section class="tarjeta tabla-contenedor tabla-listado" aria-label="Continuidad para {{ mes_consultado|date:'F Y' }}">
-    <table>
+<section class="tarjeta tabla-contenedor" aria-label="Continuidad para {{ mes_consultado|date:'F Y' }}">
+    {% tabla %}
         <thead><tr><th scope="col">Titular</th><th scope="col">Producto</th><th scope="col">Contratación</th><th scope="col">Respuesta</th><th scope="col">Fecha de respuesta</th></tr></thead>
         <tbody>{% for contrato in pagina %}<tr>
             <td><strong>{{ contrato.usuario }}</strong></td>
@@ -33,7 +34,7 @@
             <td>{{ contrato.get_respuesta_continuidad_display|default:"Sin responder" }}</td>
             <td>{{ contrato.continuidad_respondida_en|date:"d/m/Y H:i"|default:"—" }}</td>
         </tr>{% empty %}<tr><td colspan="5" class="estado-vacio">No hay contrataciones que coincidan con la consulta.</td></tr>{% endfor %}</tbody>
-    </table>
+    {% endtabla %}
     {% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=consulta only %}
 </section>
 {% endif %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tablas %}
 {% load filtros %}
 {% load estados %}
 {% load static %}
@@ -42,8 +43,8 @@
     </form>
 {% endtarjeta_filtros %}
 
-<section class="tarjeta tabla-contenedor tabla-listado" data-resultados-filtros>
-    <table>
+<section class="tarjeta tabla-contenedor" data-resultados-filtros>
+    {% tabla %}
         <thead>
             <tr>
                 <th scope="col">Estado</th>
@@ -84,7 +85,7 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
+    {% endtabla %}
 {% include "componentes/paginacion.html" with pagina=pagina entidad="usuarios" parametros=parametros only %}
 </section>
 {% endblock %}

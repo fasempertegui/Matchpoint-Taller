@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tablas %}
 {% load filtros %}
 {% load estados %}
 {% load static %}
@@ -22,13 +23,13 @@
 {% endtarjeta_filtros %}
 <section class="tarjeta caja-listado" data-resultados-filtros aria-label="{% if sesiones %}Sesiones de caja{% else %}Movimientos de caja{% endif %}">
 {% if sesiones %}
-    <div class="tabla-contenedor tabla-listado"><table>
+    <div class="tabla-contenedor">{% tabla %}
         <thead><tr><th scope="col">Sesión</th><th scope="col">Responsable</th><th scope="col">Apertura</th><th scope="col">Cierre</th><th scope="col" class="caja-monto">Efectivo contado</th></tr></thead>
         <tbody>{% for sesion in pagina %}<tr>
             <td><span class="estado-identidad">{% indicador_estado "sesion" sesion.estado %} <a class="enlace-tabla" href="{% url 'caja:sesion_detalle' sesion.pk %}">{{ sesion.numero }}</a></span></td>
             <td>{{ sesion.responsable }}</td><td>{{ sesion.creado_en|date:"d/m/Y H:i" }}</td><td>{{ sesion.cerrada_en|date:"d/m/Y H:i"|default:"—" }}</td><td class="caja-monto">{% if sesion.estado == 'cerrada' %}$ {{ sesion.efectivo_contado|floatformat:"2g" }}{% else %}—{% endif %}</td>
         </tr>{% empty %}<tr><td class="estado-vacio" colspan="5">No hay sesiones que coincidan.</td></tr>{% endfor %}</tbody>
-    </table></div>
+    {% endtabla %}</div>
     {% include "componentes/paginacion.html" with pagina=pagina entidad="sesiones" parametros=parametros only %}
 {% else %}{% include "caja/_movimientos.html" with tabla_listado=True %}{% endif %}
 </section>

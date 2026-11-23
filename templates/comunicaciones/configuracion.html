@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tablas %}
 {% block titulo %}Reglas de notificación | Academia TM{% endblock %}
 {% block clase_contenido %}contenido-notificaciones{% endblock %}
 {% block contenido %}
@@ -16,8 +17,8 @@
     </div>
     <p class="encabezado-descripcion">Plazos de recordatorios y calendario de continuidad.</p>
 </header>
-<section class="tarjeta tabla-contenedor tabla-listado tabla-listado-sin-centrado" aria-label="Reglas vigentes de notificación">
-    <table class="notificaciones-reglas">
+<section class="tarjeta tabla-contenedor" aria-label="Reglas vigentes de notificación">
+    {% tabla clases="notificaciones-reglas" centrada=False %}
         <thead>
             <tr><th scope="col">Regla</th><th scope="col">Valor vigente</th><th scope="col">Acciones</th></tr>
         </thead>
@@ -53,7 +54,7 @@
         </tr>
         {% endfor %}
         </tbody>
-    </table>
+    {% endtabla %}
 </section>
 <p class="texto-secundario">La confirmación o asignación dentro del plazo de recordatorio cubre el aviso de esa participación. Los recordatorios de continuidad incluyen sólo a quienes no respondieron; un día inexistente se ajusta al último del mes.</p>
 <p class="texto-secundario">Los cambios se aplican en las próximas evaluaciones y a la ventana de respuesta de continuidad. Los avisos guardados conservan su texto y no se repiten por modificar estas reglas.</p>

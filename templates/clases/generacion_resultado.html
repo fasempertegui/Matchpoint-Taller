@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tablas %}
 {% load static %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 {% block estilos %}
@@ -16,7 +17,7 @@
     </dl>
     {% if pagina %}
         <div class="tabla-contenedor actividad-listado">
-            <table>
+            {% tabla centrada=False %}
                 <caption class="clase-etiqueta-oculta">Clases creadas</caption>
                 <thead><tr><th scope="col">Fecha y horario</th><th scope="col">Cancha</th><th scope="col">Acción</th></tr></thead>
                 <tbody>{% for clase in pagina %}<tr>
@@ -24,7 +25,7 @@
                     <td>{{ clase.evento.turno.cancha.nombre }}</td>
                     <td><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' clase.pk %}">Ver clase</a></td>
                 </tr>{% endfor %}</tbody>
-            </table>
+            {% endtabla %}
         </div>
         {% if pagina.has_other_pages %}
         <nav class="acciones actividad-paginacion" aria-label="Páginas de clases creadas">
@@ -36,7 +37,7 @@
     {% endif %}
     {% if omitidas %}
         <details class="perfil-desplegable"><summary>Clases omitidas ({{ omitidas|length }})</summary>
-            {% include "clases/_generacion_tabla.html" with filas=omitidas mostrar_motivo=True only %}
+            {% include "clases/_generacion_tabla.html" with filas=omitidas mostrar_motivo=True tabla_listado=True only %}
         </details>
     {% endif %}
     <div class="acciones-formulario"><a class="boton boton-secundario" href="{{ url_planilla }}">Volver a la planilla</a><a class="boton boton-primario" href="{{ url_agenda }}">Ver en agenda</a></div>

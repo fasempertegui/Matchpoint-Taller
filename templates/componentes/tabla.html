@@ -1,0 +1,3 @@
+<table{% if listado or clases %} class="{% if listado %}tabla-listado{% if not centrada %} tabla-listado-sin-centrado{% endif %}{% if clases %} {% endif %}{% endif %}{{ clases }}"{% endif %}>
+    {{ contenido }}
+</table>

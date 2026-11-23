@@ -1,5 +1,6 @@
+{% load tablas %}
 {% load estados %}
-<div class="tabla-contenedor{% if tabla_listado %} tabla-listado tabla-listado-sin-centrado{% endif %}"><table class="caja-movimientos">
+<div class="tabla-contenedor">{% tabla clases="caja-movimientos" centrada=False listado=tabla_listado %}
     <thead><tr><th scope="col">Movimiento</th><th scope="col">Concepto</th><th scope="col">Medio</th><th scope="col" class="caja-monto">Importe</th><th scope="col">Estado</th>{% if sesion.estado == 'cerrada' %}<th scope="col">Al cierre</th>{% endif %}</tr></thead>
     <tbody>{% for movimiento in pagina %}<tr>
         <td><a class="enlace-tabla" href="{% url 'caja:movimiento_detalle' movimiento.pk %}">{{ movimiento.numero }}</a><small>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</small></td>
@@ -9,5 +10,5 @@
         <td>{% indicador_estado "movimiento" movimiento.estado %}</td>
         {% if sesion.estado == 'cerrada' %}<td>{{ movimiento.incluido_al_cierre|yesno:"Incluido,Excluido" }}{% if movimiento.anulado_en > sesion.cerrada_en %}<small>Anulado después del cierre</small>{% endif %}</td>{% endif %}
     </tr>{% empty %}<tr><td class="estado-vacio" colspan="{% if sesion.estado == 'cerrada' %}6{% else %}5{% endif %}">No hay movimientos para mostrar.</td></tr>{% endfor %}</tbody>
-</table></div>
+{% endtabla %}</div>
 {% include "componentes/paginacion.html" with pagina=pagina entidad="movimientos" parametros=parametros only %}

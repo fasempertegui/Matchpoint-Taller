@@ -82,6 +82,7 @@ TEMPLATES = [
             'libraries': {
                 'filtros': 'common.filtros',
                 'paginacion': 'common.paginacion',
+                'tablas': 'common.tablas',
             },
             'context_processors': [
                 'django.template.context_processors.request',

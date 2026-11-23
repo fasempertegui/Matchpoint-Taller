@@ -615,22 +615,27 @@ h2 {
 .tabla-datos-nota { display: block; margin-top: 4px; color: var(--texto-suave); }
 .tabla-datos tr:last-child th, .tabla-datos tr:last-child td { border-bottom: 0; }
 
-.tabla-contenedor.tabla-listado {
+.tabla-contenedor:is(.tabla-listado, :has(> table.tabla-listado)) {
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
 }
 
-.tabla-contenedor.tabla-listado > table > thead th {
-    background-color: var(--primario-medio);
-    color: var(--primario);
+:is(.tabla-contenedor.tabla-listado > table, table.tabla-listado) {
+    background-color: var(--superficie);
+    color: var(--texto);
 }
 
-.tabla-contenedor.tabla-listado:where(:not(.tabla-listado-sin-centrado)) > table > thead th,
-.tabla-contenedor.tabla-listado:where(:not(.tabla-listado-sin-centrado)) > table > tbody td {
+:is(.tabla-contenedor.tabla-listado > table, table.tabla-listado) > thead th {
+    background-color: var(--primario-suave);
+    color: var(--texto);
+}
+
+:is(.tabla-contenedor.tabla-listado:where(:not(.tabla-listado-sin-centrado)) > table, table.tabla-listado:where(:not(.tabla-listado-sin-centrado))) > thead th,
+:is(.tabla-contenedor.tabla-listado:where(:not(.tabla-listado-sin-centrado)) > table, table.tabla-listado:where(:not(.tabla-listado-sin-centrado))) > tbody td {
     text-align: center;
 }
 
-.tabla-contenedor.tabla-listado:where(:not(.tabla-listado-sin-centrado)) > table > tbody td .acciones {
+:is(.tabla-contenedor.tabla-listado:where(:not(.tabla-listado-sin-centrado)) > table, table.tabla-listado:where(:not(.tabla-listado-sin-centrado))) > tbody td .acciones {
     justify-content: center;
 }
 

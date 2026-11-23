@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load tablas %}
 {% load static estados filtros %}
 {% block titulo %}{{ reporte.titulo }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/reportes.css' %}">{% endblock %}
@@ -35,13 +36,13 @@
 {% if totales_tabla %}
 {% if indicadores %}<section class="tarjeta reporte-resumen" aria-label="Indicadores del reporte"><dl class="reporte-indicadores">{% for etiqueta, valor in indicadores %}<div><dt>{{ etiqueta }}</dt><dd>{{ valor }}</dd></div>{% endfor %}</dl></section>{% endif %}
 <section class="tarjeta reporte-resultados" aria-label="Resultado consolidado">
-    <div class="tabla-contenedor tabla-listado" role="region" aria-label="Tabla de {{ reporte.titulo }}" tabindex="0">
-        <table class="reporte-tabla">
+    <div class="tabla-contenedor" role="region" aria-label="Tabla de {{ reporte.titulo }}" tabindex="0">
+        {% tabla clases="reporte-tabla" %}
             <caption>{{ reporte.titulo }}</caption>
             <thead><tr>{% for clave, titulo, formato, peso in columnas %}<th scope="col"{% if clave == 'estado' %} class="reporte-estado"{% elif formato == 'dinero' or formato == 'entero' or formato == 'porcentaje' %} class="reporte-numero"{% endif %}>{{ titulo }}</th>{% endfor %}</tr></thead>
             <tbody>{% for fila in pagina %}<tr>{% for celda in fila %}<td{% if tipo == 'contrataciones' and forloop.counter == 4 %} class="reporte-estado"{% elif celda.numero %} class="reporte-numero"{% endif %}>{% if forloop.first %}<strong>{{ celda.texto }}</strong>{% elif tipo == 'contrataciones' and forloop.counter == 4 %}{% indicador_estado "contratacion" celda.texto|lower texto=celda.texto %}{% else %}{{ celda.texto }}{% endif %}</td>{% endfor %}</tr>{% empty %}<tr><td colspan="{{ columnas|length }}" class="estado-vacio">No hay resultados para los filtros aplicados.</td></tr>{% endfor %}</tbody>
             <tfoot><tr>{% for total in totales_tabla %}{% if forloop.first %}<th scope="row">{{ total }}</th>{% else %}<td>{{ total }}</td>{% endif %}{% endfor %}</tr></tfoot>
-        </table>
+        {% endtabla %}
     </div>
     <p class="reporte-total-alcance">Los totales corresponden a todas las filas filtradas.</p>
     {% include "componentes/paginacion.html" with pagina=pagina entidad="filas" parametros=parametros only %}
