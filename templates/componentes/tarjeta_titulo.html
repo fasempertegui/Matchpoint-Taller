@@ -2,7 +2,10 @@
     <div class="tarjeta-titulo-principal">
         <div class="tarjeta-titulo-identidad">
             {% if subtitulo %}<p class="tarjeta-titulo-subtitulo">{{ subtitulo }}</p>{% endif %}
-            <h1>{{ titulo }}</h1>
+            <div class="tarjeta-titulo-linea">
+                <h1>{{ titulo }}</h1>
+                {% if ayuda %}{{ ayuda }}{% endif %}
+            </div>
         </div>
         {% if acciones %}<div class="tarjeta-titulo-acciones">{{ acciones }}</div>{% endif %}
     </div>

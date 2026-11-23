@@ -436,6 +436,8 @@ Las campañas de encuesta se revisan cada minuto y se generan desde la hora conf
 
 #### Configuración de reglas
 
+Administración accede a las reglas desde el botón Configuración en el encabezado de Envíos de email. El encabezado de Configuración de notificaciones ofrece Volver a envíos. El ícono de información junto al título muestra la fecha y hora de última modificación.
+
 `configuracion_notificaciones` contiene una única fila creada por migración, con las anticipaciones de clases y reservas en minutos, día de apertura, día del primer recordatorio, último día de respuesta del mes siguiente y hora de campaña. Cada evaluación consulta los valores persistidos, sin caché de proceso ni necesidad de reiniciar Beat al modificarlos. Los valores iniciales son los acordados en esta sección. La revisión técnica cada minuto es independiente de los umbrales funcionales.
 
 Las anticipaciones admiten de uno a mil cuatrocientos cuarenta minutos. La apertura admite días del 1 al 27 para reservar un recordatorio posterior incluso en febrero. El primer recordatorio admite Último día del mes o un día posterior a la apertura; si el día elegido no existe, se ajusta al último real del mes. El cierre inclusivo ocurre en el mes siguiente y su día debe ser menor al de apertura para evitar superponer campañas. La hora admite precisión de minutos. Formulario y restricciones de base validan estos límites.

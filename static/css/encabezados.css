@@ -32,6 +32,17 @@
     overflow-wrap: anywhere;
 }
 
+.tarjeta-titulo-linea {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tarjeta-titulo-linea > .ayuda-contextual {
+    flex-shrink: 0;
+    color: var(--primario);
+}
+
 .tarjeta-titulo-subtitulo,
 .tarjeta-titulo-descripcion {
     margin: 0;

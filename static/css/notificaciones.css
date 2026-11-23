@@ -52,10 +52,6 @@
     font-size: 10px;
 }
 
-.contenido-notificaciones .tarjeta-titulo-acciones .ayuda-contextual {
-    color: var(--primario);
-}
-
 .notificaciones-acciones {
     flex-shrink: 0;
 }

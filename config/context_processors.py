@@ -21,7 +21,6 @@ DESTINOS_NAVEGACION = {
     "clases:feriado_lista": ("calendario", "academia"),
     "oferta:inicio": ("libro", "academia"),
     "comunicaciones:envios_lista": ("correo", "seguimiento"),
-    "comunicaciones:configuracion_notificaciones": ("correo", "seguimiento"),
     "auditoria:auditoria_lista": ("auditoria", "seguimiento"),
 }
 
@@ -161,13 +160,9 @@ def navegacion(request):
         })
     if administrador:
         administracion.append(enlace(
-            "Envíos de email", "comunicaciones:envios_lista", nombre_vista == "comunicaciones:envios_lista",
+            "Envíos de email", "comunicaciones:envios_lista",
+            nombre_vista in ("comunicaciones:envios_lista", "comunicaciones:configuracion_notificaciones"),
             "Consulta de entregas y fallos de los emails de la academia.",
-        ))
-        administracion.append(enlace(
-            "Reglas de notificación", "comunicaciones:configuracion_notificaciones",
-            nombre_vista == "comunicaciones:configuracion_notificaciones",
-            "Anticipación de recordatorios y calendario de continuidad.",
         ))
     if auditoria:
         modulos_inicio.append({"nombre": "Auditoría", "descripcion": auditoria["descripcion"], "destino": auditoria})

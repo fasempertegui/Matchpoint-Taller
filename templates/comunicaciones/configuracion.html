@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load encabezados %}
 {% load tablas %}
-{% block titulo %}Reglas de notificación | Academia TM{% endblock %}
+{% block titulo %}Configuración de notificaciones | Academia TM{% endblock %}
 {% block clase_contenido %}contenido-notificaciones{% endblock %}
 {% block contenido %}
-{% tarjeta_titulo "Reglas de notificación" descripcion="Plazos de recordatorios y calendario de continuidad." %}
+{% texto_titulo as ayuda_titulo %}
     <span class="ayuda-contextual">
         <button type="button" class="ayuda-contextual-boton" aria-label="Última modificación" aria-describedby="reglas-ultima-modificacion">
             {% include "componentes/iconoir/informacion.html" %}
@@ -13,6 +13,9 @@
             Última modificación <time datetime="{{ configuracion.actualizado_en|date:'c' }}">{{ configuracion.actualizado_en|date:"d/m/Y H:i" }}</time>
         </span>
     </span>
+{% endtexto_titulo %}
+{% tarjeta_titulo "Configuración de notificaciones" descripcion="Configurá los plazos de recordatorios y calendario de continuidad." ayuda=ayuda_titulo %}
+    <a class="boton boton-secundario" href="{% url 'comunicaciones:envios_lista' %}">Volver a envíos</a>
 {% endtarjeta_titulo %}
 <section class="tarjeta tabla-contenedor" aria-label="Reglas vigentes de notificación">
     {% tabla clases="notificaciones-reglas" %}
