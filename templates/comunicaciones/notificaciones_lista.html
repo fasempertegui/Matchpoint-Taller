@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load encabezados %}
+{% load pestanas %}
 {% block titulo %}Notificaciones | Academia TM{% endblock %}
 {% block clase_contenido %}contenido-notificaciones{% endblock %}
 {% block contenido %}
@@ -11,11 +12,11 @@
     </details>
     {% endif %}
 {% endtarjeta_titulo %}
-<nav class="pestanas notificaciones-filtros" aria-label="Filtrar notificaciones">
+{% pestanas "Filtrar notificaciones" clases="notificaciones-filtros" %}
     <a href="{% url 'comunicaciones:notificaciones_lista' %}"{% if not estado_actual %} aria-current="page"{% endif %}>Todas</a>
     <a href="?estado=pendientes"{% if estado_actual == 'pendientes' %} aria-current="page"{% endif %}>Sin leer</a>
     <a href="?estado=leidas"{% if estado_actual == 'leidas' %} aria-current="page"{% endif %}>Leídas</a>
-</nav>
+{% endpestanas %}
 <section class="tarjeta notificaciones-bandeja" aria-label="Bandeja de notificaciones">
     <ul class="notificaciones-lista">
     {% for notificacion in pagina %}

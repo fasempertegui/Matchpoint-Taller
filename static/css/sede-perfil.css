@@ -3,8 +3,7 @@
 }
 
 .sede-operaciones .pestanas {
-    margin: 0;
-    padding: 16px 32px 0;
+    margin: 16px 32px 0;
 }
 
 .sede-operaciones .encabezado-seccion {
@@ -22,7 +21,7 @@
     }
 
     .sede-operaciones .pestanas {
-        padding-inline: 24px;
+        margin-inline: 24px;
     }
 }
 
@@ -32,12 +31,12 @@
     }
 
     .sede-operaciones .pestanas {
-        padding-inline: 20px;
+        width: auto;
+        margin-inline: 20px;
     }
 
     .sede-operaciones .pestana-boton {
         flex: 1;
         padding-inline: 8px;
-        font-size: 0.9rem;
     }
 }

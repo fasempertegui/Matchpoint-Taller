@@ -83,6 +83,7 @@ TEMPLATES = [
                 'encabezados': 'common.encabezados',
                 'filtros': 'common.filtros',
                 'paginacion': 'common.paginacion',
+                'pestanas': 'common.pestanas',
                 'tablas': 'common.tablas',
             },
             'context_processors': [

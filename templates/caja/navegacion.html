@@ -1,5 +1,6 @@
-<nav class="pestanas" aria-label="Secciones de caja">
+{% load pestanas %}
+{% pestanas "Secciones de caja" %}
     <a href="{% url 'caja:caja_actual' %}"{% if seccion == 'actual' %} aria-current="page"{% endif %}>Caja actual</a>
     <a href="{% url 'caja:historial_sesiones' %}"{% if seccion == 'sesiones' %} aria-current="page"{% endif %}>Sesiones</a>
     <a href="{% url 'caja:movimiento_lista' %}"{% if seccion == 'movimientos' %} aria-current="page"{% endif %}>Movimientos</a>
-</nav>
+{% endpestanas %}

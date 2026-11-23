@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load pestanas %}
 {% load tablas %}
 {% load estados %}
 {% load static %}
@@ -23,14 +24,14 @@
     </header>
 
     <section class="sede-operaciones" data-pestanas aria-label="Información de la sede">
-        <div class="pestanas" role="tablist" aria-label="Información de la sede">
+        {% pestanas "Información de la sede" modo="paneles" %}
             <button type="button" class="pestana-boton" id="sede-tab-detalles" role="tab" aria-controls="sede-panel-detalles" data-pestana="detalles" aria-selected="true">Detalles</button>
             <button type="button" class="pestana-boton" id="sede-tab-canchas" role="tab" aria-controls="sede-panel-canchas" data-pestana="canchas" aria-selected="false" tabindex="-1">Canchas</button>
             <button type="button" class="pestana-boton" id="sede-tab-horarios" role="tab" aria-controls="sede-panel-horarios" data-pestana="horarios" aria-selected="false" tabindex="-1">Horarios</button>
             {% if puede_consultar_precio %}
                 <button type="button" class="pestana-boton" id="sede-tab-precios" role="tab" aria-controls="sede-panel-precios" data-pestana="precios" aria-selected="false" tabindex="-1">Precio</button>
             {% endif %}
-        </div>
+        {% endpestanas %}
 
         <div class="pestana-panel" id="sede-panel-detalles" role="tabpanel" aria-labelledby="sede-tab-detalles" tabindex="0" data-panel="detalles">
             <div class="perfil-cuerpo">

@@ -1163,57 +1163,6 @@ textarea.form-control {
     text-transform: uppercase;
 }
 
-.pestanas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-block: 20px;
-}
-
-.pestanas > :is(a, button, [aria-current]) {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 7px 12px;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--primario);
-    font: inherit;
-    text-decoration: none;
-}
-
-.pestanas > button:not(:disabled) {
-    cursor: pointer;
-}
-
-.pestanas > :is(a, button:not(:disabled)):hover,
-.pestanas > :is([aria-current="page"], [aria-selected="true"]) {
-    background: var(--primario-suave);
-}
-
-.pestanas > :is([aria-current="page"], [aria-selected="true"]) {
-    font-weight: 700;
-    box-shadow: inset 0 -2px var(--acento);
-}
-
-.pestanas > :is(a, button):focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: 3px;
-}
-
-.pestana-panel[hidden] {
-    display: none;
-}
-
-.pestana-panel > .tarjeta + .tarjeta {
-    margin-top: var(--espacio-componentes);
-}
-
-.pestana-panel > .encabezado-seccion:first-child {
-    margin-top: 0;
-}
-
 .enlace-texto {
     display: inline-block;
     margin-top: 16px;

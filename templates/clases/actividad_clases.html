@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load encabezados %}
+{% load pestanas %}
 {% load tablas %}
 {% load filtros %}
 {% load estados %}
@@ -93,9 +94,9 @@
 {% if mostrar_listado %}
 <section class="tarjeta actividad-listado" aria-label="Clases del período">
     {% if consulta_administrativa %}
-    <nav class="pestanas actividad-vistas" aria-label="Secciones de actividad">
+    {% pestanas "Secciones de actividad" clases="actividad-vistas" %}
         {% for vista in vistas %}<a href="{{ vista.url }}" data-consulta-filtros{% if vista.actual %} aria-current="page"{% endif %}>{{ vista.nombre }}</a>{% endfor %}
-    </nav>
+    {% endpestanas %}
     {% endif %}
     {% if pagina %}
     <div class="tabla-contenedor">

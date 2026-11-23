@@ -1,5 +1,6 @@
-<nav class="pestanas" aria-label="Oferta de la academia">
+{% load pestanas %}
+{% pestanas "Oferta de la academia" %}
     <a href="{% url 'oferta:sedes' %}"{% if tipo == 'sede' %} aria-current="page"{% endif %}>Sedes</a>
     <a href="{% url 'oferta:planes' %}"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
     <a href="{% url 'oferta:membresias' %}"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
-</nav>
+{% endpestanas %}

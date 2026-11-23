@@ -1,0 +1,9 @@
+{% if es_tablist %}
+<div class="pestanas{% if clases %} {{ clases }}{% endif %}" role="tablist" aria-label="{{ etiqueta }}">
+    {{ contenido }}
+</div>
+{% else %}
+<nav class="pestanas{% if clases %} {{ clases }}{% endif %}" aria-label="{{ etiqueta }}">
+    {{ contenido }}
+</nav>
+{% endif %}

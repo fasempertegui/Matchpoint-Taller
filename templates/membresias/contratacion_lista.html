@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load encabezados %}
+{% load pestanas %}
 {% load tablas %}
 {% load filtros %}
 {% load estados %}
@@ -15,10 +16,10 @@
     {% if titular %}<a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>{% elif not propias %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
 {% endtarjeta_titulo %}
 {% if propias or titular %}
-<nav class="pestanas" aria-label="Tipo de contratación">
+{% pestanas "Tipo de contratación" %}
     <a href="{{ request.path }}?tipo=plan"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
     <a href="{{ request.path }}?tipo=membresia"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
-</nav>
+{% endpestanas %}
 {% endif %}
 {% if hay_contrataciones %}
     {% tarjeta_filtros %}

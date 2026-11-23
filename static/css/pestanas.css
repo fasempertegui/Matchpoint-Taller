@@ -1,0 +1,61 @@
+.pestanas {
+    display: flex;
+    flex-wrap: wrap;
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
+    gap: 2px;
+    margin-block: 20px;
+    padding: 2px;
+    border-radius: 10px;
+    background: rgb(75 23 109 / 6%);
+}
+
+.pestanas > :is(a, button, [aria-current]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 4px 14px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--texto-suave);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+}
+
+.pestanas > button:not(:disabled) {
+    cursor: pointer;
+}
+
+.pestanas > :is(a, button:not(:disabled)):not([aria-current="page"], [aria-selected="true"]):hover {
+    color: var(--primario);
+}
+
+.pestanas > :is([aria-current="page"], [aria-selected="true"]) {
+    background: var(--superficie);
+    color: var(--texto);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+}
+
+.pestanas > :is(a, button):focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: -2px;
+}
+
+.pestana-panel[hidden] {
+    display: none;
+}
+
+.pestana-panel > .tarjeta + .tarjeta {
+    margin-top: var(--espacio-componentes);
+}
+
+.pestana-panel > .encabezado-seccion:first-child {
+    margin-top: 0;
+}
