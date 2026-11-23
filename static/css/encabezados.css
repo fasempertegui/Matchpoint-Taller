@@ -15,7 +15,7 @@
 
 .tarjeta.tarjeta-titulo {
     padding: 0;
-    border-top: 3px solid var(--primario-medio);
+    background-color: var(--primario-suave);
 }
 
 .tarjeta-titulo-principal {
@@ -72,6 +72,8 @@
 .tarjeta-titulo-descripcion {
     padding: 12px 20px;
     border-top: 1px solid var(--borde);
+    border-radius: 0 0 9px 9px;
+    background-color: var(--superficie);
 }
 
 body > .contenido-principal > .tarjeta.descripcion-seccion {
