@@ -2,21 +2,52 @@
 {% if not sin_titulo_financiero %}<h2>Situación financiera</h2>{% endif %}
 {% include "caja/_resumen_financiero.html" %}
 {% if not pagina_finanzas %}<p class="texto-secundario finanzas-sin-movimientos">No hay movimientos registrados.</p>{% endif %}
-{% if url_cobrar or url_devolver %}<details><summary>Registrar movimiento</summary><div class="perfil-acciones">
-{% if url_cobrar %}<a class="boton boton-secundario boton-chico" href="{{ url_cobrar }}">Cobrar hasta $ {{ finanzas.maximo_ingreso|floatformat:"2g" }}</a>{% endif %}
-{% if url_devolver %}<a class="boton boton-secundario boton-chico" href="{{ url_devolver }}">Devolver hasta $ {{ finanzas.maximo_devolucion|floatformat:"2g" }}</a>{% endif %}
-</div></details>{% endif %}
-{% if url_excedente or url_ajustar_importe %}<details><summary>Más acciones</summary><div class="perfil-acciones">
-{% if url_excedente %}<a class="boton boton-secundario boton-chico" href="{{ url_excedente }}">Registrar cobro con excedente</a>{% endif %}
-{% if url_ajustar_importe %}<a class="boton boton-secundario boton-chico" href="{{ url_ajustar_importe }}">Ajustar importe acordado</a>{% endif %}
-</div></details>{% endif %}
-{% if pagina_importes %}<details{% if historial_importes_abierto %} open{% endif %}><summary>Ver ajustes de importe ({{ pagina_importes.paginator.count }})</summary>
-<div class="tabla-contenedor"><table><thead><tr><th>Fecha</th><th>Anterior</th><th>Nuevo</th><th>Detalle</th></tr></thead><tbody>
-{% for ajuste in pagina_importes %}<tr><td>{{ ajuste.creado_en|date:"d/m/Y H:i" }}</td><td>$ {{ ajuste.importe_anterior|floatformat:"2g" }}</td><td>$ {{ ajuste.importe_nuevo|floatformat:"2g" }}</td><td><details><summary>Ver motivo</summary><p>{{ ajuste.motivo|linebreaksbr }}</p><p>{{ ajuste.registrado_por }}</p></details></td></tr>{% endfor %}
-</tbody></table></div>
-{% if pagina_importes.has_other_pages %}<nav aria-label="Páginas de ajustes de importe">
-{% if pagina_importes.has_previous %}<a href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_importes={{ pagina_importes.previous_page_number }}">Anterior</a>{% endif %}
-<span>{{ pagina_importes.number }} de {{ pagina_importes.paginator.num_pages }}</span>
-{% if pagina_importes.has_next %}<a href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_importes={{ pagina_importes.next_page_number }}">Siguiente</a>{% endif %}
-</nav>{% endif %}</details>{% endif %}
+{% if url_cobrar or url_devolver or url_excedente or url_ajustar_importe %}
+<div class="finanzas-acciones">
+    {% if url_cobrar %}<a class="boton boton-primario boton-chico" href="{{ url_cobrar }}">Cobrar hasta $ {{ finanzas.maximo_ingreso|floatformat:"2g" }}</a>{% endif %}
+    {% if url_devolver %}<a class="boton boton-secundario boton-chico" href="{{ url_devolver }}">Devolver hasta $ {{ finanzas.maximo_devolucion|floatformat:"2g" }}</a>{% endif %}
+    {% if url_excedente or url_ajustar_importe %}
+    <details class="perfil-menu finanzas-menu" data-menu-contextual>
+        <summary class="boton boton-secundario boton-chico" aria-expanded="false">Más acciones <span aria-hidden="true">⋮</span></summary>
+        <div class="perfil-menu-opciones">
+            {% if url_excedente %}<a href="{{ url_excedente }}">Registrar cobro con excedente</a>{% endif %}
+            {% if url_ajustar_importe %}<a href="{{ url_ajustar_importe }}">Ajustar importe acordado</a>{% endif %}
+        </div>
+    </details>
+    {% endif %}
+</div>
+{% endif %}
+{% if pagina_importes %}
+<details class="finanzas-ajustes"{% if historial_importes_abierto %} open{% endif %}>
+    <summary>Ver ajustes de importe ({{ pagina_importes.paginator.count }}){% include "componentes/iconoir/chevron-abajo.html" %}</summary>
+    <div class="tabla-contenedor tabla-listado">
+        <table>
+            <thead><tr><th scope="col">Fecha</th><th scope="col">Anterior</th><th scope="col">Nuevo</th><th scope="col">Detalle</th></tr></thead>
+            <tbody>
+                {% for ajuste in pagina_importes %}
+                <tr>
+                    <td>{{ ajuste.creado_en|date:"d/m/Y H:i" }}</td>
+                    <td>$ {{ ajuste.importe_anterior|floatformat:"2g" }}</td>
+                    <td>$ {{ ajuste.importe_nuevo|floatformat:"2g" }}</td>
+                    <td>
+                        <details class="finanzas-ajuste-motivo">
+                            <summary>Ver motivo</summary>
+                            <p>{{ ajuste.motivo|linebreaksbr }}</p>
+                            <p class="texto-secundario">{{ ajuste.registrado_por }}</p>
+                        </details>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if pagina_importes.has_other_pages %}
+    <nav class="finanzas-ajustes-paginacion" aria-label="Páginas de ajustes de importe">
+        {% if pagina_importes.has_previous %}<a class="boton boton-secundario boton-chico" href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_importes={{ pagina_importes.previous_page_number }}">Anterior</a>{% endif %}
+        <span>{{ pagina_importes.number }} de {{ pagina_importes.paginator.num_pages }}</span>
+        {% if pagina_importes.has_next %}<a class="boton boton-secundario boton-chico" href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_importes={{ pagina_importes.next_page_number }}">Siguiente</a>{% endif %}
+    </nav>
+    {% endif %}
+</details>
+{% endif %}
 </section>

@@ -35,11 +35,13 @@
             <a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>
         </div>
     </form>
-    {% if origen %}
-        <details class="ingreso-cobros"{% if request.GET.pagina %} open{% endif %}>
-            <summary>Cobros registrados <span>({{ pagina_cobros.paginator.count }})</span></summary>
-            {% if pagina_cobros %}{% include "caja/_movimientos.html" with pagina=pagina_cobros %}{% else %}<p class="texto-secundario">Este registro todavía no tiene cobros vigentes.</p>{% endif %}
-        </details>
-    {% endif %}
 </section>
+{% if origen %}
+<details class="tarjeta ingreso-cobros"{% if request.GET.pagina %} open{% endif %}>
+    <summary>Cobros registrados <span>({{ pagina_cobros.paginator.count }})</span>{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
+    <div class="ingreso-cobros-cuerpo">
+        {% if pagina_cobros %}{% include "caja/_movimientos.html" with pagina=pagina_cobros tabla_listado=True %}{% else %}<p class="texto-secundario">Este registro todavía no tiene cobros vigentes.</p>{% endif %}
+    </div>
+</details>
+{% endif %}
 {% endblock %}

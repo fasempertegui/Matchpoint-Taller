@@ -104,6 +104,12 @@
     margin: 0;
 }
 
+.tarjeta-formulario .perfil-lista {
+    margin: 20px 0 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--borde);
+}
+
 .perfil-fila {
     display: grid;
     grid-template-columns: 150px minmax(0, 1fr);
@@ -200,6 +206,27 @@
 .perfil-seccion-desplegable[open] > summary > svg { transform: rotate(180deg); }
 .perfil-seccion-desplegable-cuerpo { padding-bottom: 8px; }
 .perfil-seccion-desplegable-cuerpo .finanzas-sin-movimientos { margin: 8px 0 0; }
+.finanzas-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
+.finanzas-menu .perfil-menu-opciones { left: 0; right: auto; width: max-content; min-width: 220px; }
+.finanzas-ajustes { margin-top: 16px; }
+.finanzas-ajustes > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    list-style: none;
+    color: var(--primario);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.finanzas-ajustes > summary::-webkit-details-marker { display: none; }
+.finanzas-ajustes > summary > svg { order: -1; width: 18px; height: 18px; flex-shrink: 0; }
+.finanzas-ajustes[open] > summary > svg { transform: rotate(180deg); }
+.finanzas-ajustes > .tabla-contenedor { margin-top: 12px; }
+.finanzas-ajustes-paginacion { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; font-size: 0.9rem; }
+.finanzas-ajuste-motivo > summary { color: var(--primario); font-weight: 600; cursor: pointer; }
+.finanzas-ajuste-motivo p { margin: 6px 0 0; text-align: left; }
 .modal-movimientos { width: min(860px, calc(100% - 32px)); }
 .modal-movimientos .tabla-contenedor { border: 1px solid var(--borde); border-radius: 10px; }
 .modal-movimientos .modal-movimientos-importe { white-space: nowrap; }

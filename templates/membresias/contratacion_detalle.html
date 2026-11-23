@@ -12,8 +12,8 @@
                 {% include "componentes/badge_estado.html" with estado=contratacion.estado texto=contratacion.get_estado_display only %}
             </div>
         </div>
-        <details class="perfil-menu">
-            <summary class="boton boton-secundario">Acciones <span aria-hidden="true">⋮</span></summary>
+        <details class="perfil-menu" data-menu-contextual>
+            <summary class="boton boton-secundario" aria-expanded="false">Acciones <span aria-hidden="true">⋮</span></summary>
             <div class="perfil-menu-opciones">
                 {% if pagina_finanzas %}<button type="button" data-abrir-movimientos aria-haspopup="dialog" aria-controls="movimientos-financieros">Ver movimientos ({{ pagina_finanzas.paginator.count }})</button>{% endif %}
                 <a href="{% url ruta_comprobante contratacion.pk %}">Ver comprobante</a>
@@ -88,4 +88,5 @@
     </div>
 </article>
 {% include "caja/_modal_movimientos.html" %}
+<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 {% endblock %}

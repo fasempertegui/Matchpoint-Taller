@@ -64,7 +64,7 @@
 }
 
 .ingreso-seccion-titulo {
-    margin: 0 0 12px;
+    margin: 0 0 16px;
     padding: 0;
     font-size: 1.1rem;
     font-weight: 600;
@@ -209,19 +209,58 @@
 }
 
 .ingreso-cobros {
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid var(--borde);
+    margin-top: 16px;
+    padding: 0;
 }
 
-.ingreso-cobros summary {
+.ingreso-cobros > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 20px;
+    list-style: none;
     color: var(--primario);
-    cursor: pointer;
     font-weight: 600;
+    cursor: pointer;
 }
 
-.ingreso-cobros summary span {
-    font-weight: 400;
+.ingreso-cobros > summary::-webkit-details-marker {
+    display: none;
+}
+
+.ingreso-cobros > summary > svg {
+    order: -1;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.ingreso-cobros[open] > summary > svg {
+    transform: rotate(180deg);
+}
+
+.ingreso-cobros > summary:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: -2px;
+    border-radius: 10px;
+}
+
+.ingreso-cobros > summary span {
+    color: var(--texto-suave);
+    font-weight: 500;
+}
+
+.ingreso-cobros-cuerpo {
+    padding: 0 20px 20px;
+}
+
+.ingreso-cobros-cuerpo > .tabla-contenedor {
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+}
+
+.ingreso-cobros-cuerpo > p {
+    margin: 0;
 }
 
 @media (max-width: 480px) {
