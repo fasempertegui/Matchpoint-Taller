@@ -104,7 +104,7 @@
     flex-direction: column;
     width: var(--ancho-sidebar);
     padding: 20px 16px 12px;
-    background: #faf9fc;
+    background: var(--superficie);
     border-right: 1px solid var(--borde);
     transform: translateX(0);
 }
