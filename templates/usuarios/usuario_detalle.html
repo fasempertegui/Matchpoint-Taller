@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 
 {% block titulo %}{{ usuario_obj.get_full_name|default:usuario_obj.username }} | Academia TM{% endblock %}
 
@@ -48,43 +48,35 @@
     <div class="perfil-datos">
         <section class="perfil-seccion" aria-labelledby="datos-titulo">
             <h2 id="datos-titulo">Datos personales</h2>
-            <div class="tabla-contenedor tabla-datos">
-                <table aria-labelledby="datos-titulo">
-                    <tbody>
-                        <tr><th scope="row">Correo electrónico</th><td data-correo-actual>{{ usuario_obj.email|default:"Sin informar" }}</td></tr>
-                        <tr><th scope="row">Celular</th><td>{{ usuario_obj.celular_contacto|default:"Sin informar" }}</td></tr>
-                        <tr><th scope="row">Fecha de nacimiento</th><td>{{ usuario_obj.fecha_nacimiento|date:"d/m/Y"|default:"Sin informar" }}</td></tr>
-                        {% if perms.usuarios.view_usuario and usuario_obj.observaciones %}
-                        <tr><th scope="row">Observaciones</th><td>{{ usuario_obj.observaciones|linebreaksbr }}</td></tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
+            {% tabla_datos etiqueta_por="datos-titulo" %}
+                <tr><th scope="row">Correo electrónico</th><td data-correo-actual>{{ usuario_obj.email|default:"Sin informar" }}</td></tr>
+                <tr><th scope="row">Celular</th><td>{{ usuario_obj.celular_contacto|default:"Sin informar" }}</td></tr>
+                <tr><th scope="row">Fecha de nacimiento</th><td>{{ usuario_obj.fecha_nacimiento|date:"d/m/Y"|default:"Sin informar" }}</td></tr>
+                {% if perms.usuarios.view_usuario and usuario_obj.observaciones %}
+                <tr><th scope="row">Observaciones</th><td>{{ usuario_obj.observaciones|linebreaksbr }}</td></tr>
+                {% endif %}
+            {% endtabla_datos %}
         </section>
         <section class="perfil-seccion" aria-labelledby="cuenta-titulo">
             <h2 id="cuenta-titulo">Datos de la cuenta</h2>
-            <div class="tabla-contenedor tabla-datos">
-                <table aria-labelledby="cuenta-titulo">
-                    <tbody>
-                        <tr><th scope="row">Nombre de usuario</th><td>{{ usuario_obj.username }}</td></tr>
-                        <tr><th scope="row">Fecha de alta</th><td>{{ usuario_obj.date_joined|date:"d/m/Y" }}</td></tr>
-                        {% if usuario_obj.fecha_baja %}
-                        <tr><th scope="row">Fecha de baja</th><td>{{ usuario_obj.fecha_baja|date:"d/m/Y H:i" }}</td></tr>
-                        {% endif %}
-                        <tr><th scope="row">Último inicio de sesión</th><td>{{ usuario_obj.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</td></tr>
-                        <tr>
-                            <th scope="row">Roles</th>
-                            <td>
-                                {% if roles_asignados %}
-                                <ul class="perfil-roles" aria-label="Roles asignados">
-                                    {% for rol in roles_asignados %}<li class="perfil-rol-{{ rol.codigo }}">{{ rol.nombre }}</li>{% endfor %}
-                                </ul>
-                                {% else %}Sin roles asignados{% endif %}
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            {% tabla_datos etiqueta_por="cuenta-titulo" %}
+                <tr><th scope="row">Nombre de usuario</th><td>{{ usuario_obj.username }}</td></tr>
+                <tr><th scope="row">Fecha de alta</th><td>{{ usuario_obj.date_joined|date:"d/m/Y" }}</td></tr>
+                {% if usuario_obj.fecha_baja %}
+                <tr><th scope="row">Fecha de baja</th><td>{{ usuario_obj.fecha_baja|date:"d/m/Y H:i" }}</td></tr>
+                {% endif %}
+                <tr><th scope="row">Último inicio de sesión</th><td>{{ usuario_obj.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</td></tr>
+                <tr>
+                    <th scope="row">Roles</th>
+                    <td>
+                        {% if roles_asignados %}
+                        <ul class="perfil-roles" aria-label="Roles asignados">
+                            {% for rol in roles_asignados %}<li class="perfil-rol-{{ rol.codigo }}">{{ rol.nombre }}</li>{% endfor %}
+                        </ul>
+                        {% else %}Sin roles asignados{% endif %}
+                    </td>
+                </tr>
+            {% endtabla_datos %}
             {% if usuario_obj.debe_cambiar_contrasena %}
                 {% if request.user.pk == usuario_obj.pk or perms.usuarios.change_usuario %}
                 <p class="nota-campo nota-campo-ambar">Cambio de contraseña pendiente</p>

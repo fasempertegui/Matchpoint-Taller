@@ -104,12 +104,6 @@
     margin: 0;
 }
 
-.tarjeta-formulario .perfil-lista {
-    margin: 20px 0 24px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--borde);
-}
-
 .perfil-fila {
     display: grid;
     grid-template-columns: 150px minmax(0, 1fr);

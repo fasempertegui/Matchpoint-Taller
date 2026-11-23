@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 {% block titulo %}{{ plan.nombre }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
 {% block contenido %}
@@ -18,11 +18,11 @@
         <div class="perfil-datos">
             <section class="perfil-seccion" aria-labelledby="plan-datos-titulo">
                 <h2 id="plan-datos-titulo">Características</h2>
-                <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Modalidad</dt><dd>{{ plan.get_modalidad_display }}</dd></div>
-                    <div class="perfil-fila"><dt>Encuentros por semana</dt><dd>{{ plan.frecuencia_semanal }}</dd></div>
-                    <div class="perfil-fila"><dt>Duración de cada encuentro</dt><dd>{{ plan.get_cantidad_clases_por_encuentro_display }}</dd></div>
-                </dl>
+                {% tabla_datos etiqueta_por="plan-datos-titulo" %}
+                    <tr><th scope="row">Modalidad</th><td>{{ plan.get_modalidad_display }}</td></tr>
+                    <tr><th scope="row">Encuentros por semana</th><td>{{ plan.frecuencia_semanal }}</td></tr>
+                    <tr><th scope="row">Duración de cada encuentro</th><td>{{ plan.get_cantidad_clases_por_encuentro_display }}</td></tr>
+                {% endtabla_datos %}
             </section>
             {% if plan.descripcion %}<section class="perfil-seccion" aria-labelledby="plan-descripcion-titulo"><h2 id="plan-descripcion-titulo">Descripción</h2><p class="perfil-observaciones">{{ plan.descripcion|linebreaksbr }}</p></section>{% endif %}
         </div>

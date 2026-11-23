@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
@@ -17,13 +17,13 @@
             <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
             <section class="perfil-seccion">
                 <h2>{% if confirmacion_final %}Confirmación 2 de 2{% else %}Revisar generación{% endif %}</h2>
-                <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Sede</dt><dd>{{ sede.nombre }}</dd></div>
-                    <div class="perfil-fila"><dt>Mes</dt><dd>{{ revision.fecha_desde|date:"F Y"|capfirst }}</dd></div>
-                    <div class="perfil-fila"><dt>Período efectivo</dt><dd>{{ revision.desde_efectivo|date:"d/m/Y" }} – {{ revision.fecha_hasta|date:"d/m/Y" }}</dd></div>
-                    <div class="perfil-fila"><dt>Clases a crear</dt><dd>{{ candidatas|length }}</dd></div>
-                    <div class="perfil-fila"><dt>Clases omitidas</dt><dd>{{ omitidas|length }}</dd></div>
-                </dl>
+                {% tabla_datos etiqueta="Resumen de generación" %}
+                    <tr><th scope="row">Sede</th><td>{{ sede.nombre }}</td></tr>
+                    <tr><th scope="row">Mes</th><td>{{ revision.fecha_desde|date:"F Y"|capfirst }}</td></tr>
+                    <tr><th scope="row">Período efectivo</th><td>{{ revision.desde_efectivo|date:"d/m/Y" }} – {{ revision.fecha_hasta|date:"d/m/Y" }}</td></tr>
+                    <tr><th scope="row">Clases a crear</th><td>{{ candidatas|length }}</td></tr>
+                    <tr><th scope="row">Clases omitidas</th><td>{{ omitidas|length }}</td></tr>
+                {% endtabla_datos %}
                 <p class="nota-campo">La generación abarca todas las canchas de {{ sede.nombre }} y utiliza la programación habitual actual.</p>
             </section>
             {% if candidatas %}

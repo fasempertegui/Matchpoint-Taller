@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load estados static %}
+{% load estados tablas static %}
 {% block titulo %}Reserva {{ reserva.numero }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/reservas-portal.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-reservas reserva-perfil{% endblock %}
@@ -78,9 +78,9 @@
                 {% else %}<p class="texto-secundario">Sin invitados</p>{% endif %}
             </div>
         </details>
-        <details class="perfil-seccion-desplegable"{% if historial_financiero_abierto %} open{% endif %}><summary>Pagos y movimientos{% include "componentes/iconoir/chevron-abajo.html" %}</summary><div class="perfil-seccion-desplegable-cuerpo">{% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True finanzas_en_tabla=True %}</div></details>
+        <details class="perfil-seccion-desplegable"{% if historial_financiero_abierto %} open{% endif %}><summary>Pagos y movimientos{% include "componentes/iconoir/chevron-abajo.html" %}</summary><div class="perfil-seccion-desplegable-cuerpo">{% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True %}</div></details>
         <details class="perfil-seccion-desplegable"><summary>Modalidad y uso{% include "componentes/iconoir/chevron-abajo.html" %}</summary><div class="perfil-seccion-desplegable-cuerpo">
-            <div class="tabla-contenedor tabla-datos reserva-tabla-modalidad"><table><tbody>
+            {% tabla_datos clases="reserva-tabla-modalidad" %}
                 <tr><th scope="row">Modalidad</th><td>{% if reserva.es_con_membresia %}Con membresía{% else %}Reserva normal{% endif %}</td></tr>
                 {% if reserva.es_con_membresia %}
                 <tr><th scope="row">Membresía aplicada</th><td>{{ reserva.membresia_usuario.membresia.nombre }}</td></tr>
@@ -113,7 +113,7 @@
                 </tr>
                 {% if reserva.resultado_original %}<tr><th scope="row">Resultado original</th><td>{{ reserva.resultado_original_texto }}</td></tr>{% endif %}
                 {% endif %}
-            </tbody></table></div>
+            {% endtabla_datos %}
         </div></details>
         {% if mi_invitacion %}<section class="perfil-seccion"><h2>Tu participación</h2>{% include "reservas/_respuesta_invitacion.html" with invitacion=mi_invitacion %}</section>{% endif %}
 

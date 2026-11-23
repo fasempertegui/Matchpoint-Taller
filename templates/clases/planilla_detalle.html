@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 {% block titulo %}Horario habitual | Academia TM{% endblock %}
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
@@ -12,11 +12,11 @@
     <div class="perfil-datos">
         <section class="perfil-seccion">
             <h2>Datos del horario</h2>
-            <dl class="perfil-lista">
-                <div class="perfil-fila"><dt>Sede y cancha</dt><dd>{{ turno.cancha.sede.nombre }} → {{ turno.cancha.nombre }}</dd></div>
-                <div class="perfil-fila"><dt>Día y horario</dt><dd>{{ turno.get_dia_semana_display }} → {{ turno.hora_inicio|time:"H:i" }} a {{ hora_fin|time:"H:i" }}</dd></div>
-                {% if turno.observaciones %}<div class="perfil-fila"><dt>Observaciones</dt><dd>{{ turno.observaciones|linebreaksbr }}</dd></div>{% endif %}
-            </dl>
+            {% tabla_datos etiqueta="Datos del horario" %}
+                <tr><th scope="row">Sede y cancha</th><td>{{ turno.cancha.sede.nombre }} → {{ turno.cancha.nombre }}</td></tr>
+                <tr><th scope="row">Día y horario</th><td>{{ turno.get_dia_semana_display }} → {{ turno.hora_inicio|time:"H:i" }} a {{ hora_fin|time:"H:i" }}</td></tr>
+                {% if turno.observaciones %}<tr><th scope="row">Observaciones</th><td>{{ turno.observaciones|linebreaksbr }}</td></tr>{% endif %}
+            {% endtabla_datos %}
         </section>
         <section class="perfil-seccion">
             <h2>Profesores ({{ profesores|length }})</h2>

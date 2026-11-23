@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 
 {% block titulo %}Quitar horario especial | Academia TM{% endblock %}
 
@@ -17,13 +17,13 @@
             <h1 id="quitar-horario-titulo">Quitar horario especial</h1>
             <p class="feriado-introduccion">Al quitar este horario especial, la sede volverá a regirse por su horario habitual para esa fecha.</p>
 
-            <dl class="perfil-lista">
-                <div class="perfil-fila"><dt>Sede</dt><dd>{{ horario.sede.nombre }}</dd></div>
-                <div class="perfil-fila"><dt>Fecha</dt><dd>{{ horario.fecha|date:"d/m/Y" }}</dd></div>
-                <div class="perfil-fila"><dt>Motivo</dt><dd>{{ horario.motivo }}</dd></div>
-                <div class="perfil-fila">
-                    <dt>Horario</dt>
-                    <dd>
+            {% tabla_datos etiqueta="Datos del horario especial" %}
+                <tr><th scope="row">Sede</th><td>{{ horario.sede.nombre }}</td></tr>
+                <tr><th scope="row">Fecha</th><td>{{ horario.fecha|date:"d/m/Y" }}</td></tr>
+                <tr><th scope="row">Motivo</th><td>{{ horario.motivo }}</td></tr>
+                <tr>
+                    <th scope="row">Horario</th>
+                    <td>
                         {% if horario.cerrada %}
                             Sede cerrada todo el día
                         {% else %}
@@ -32,9 +32,9 @@
                                 y {{ horario.hora_inicio_2|time:"H:i" }} a {{ horario.hora_fin_2|time:"H:i" }}
                             {% endif %}
                         {% endif %}
-                    </dd>
-                </div>
-            </dl>
+                    </td>
+                </tr>
+            {% endtabla_datos %}
 
             {% if revision.conflictos %}
                 <div class="mensaje mensaje-error" role="alert">

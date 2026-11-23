@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 {% block titulo %}Contratación #{{ contratacion.pk }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
 {% block contenido %}
@@ -40,47 +40,43 @@
                     </div>
                 </div>
             </div>
-            <div class="tabla-contenedor tabla-datos">
-                <table aria-labelledby="contratacion-datos-titulo">
-                    <tbody>
-                        <tr><th scope="row">Número</th><td>{{ contratacion.pk }}</td></tr>
-                        {% if not propias %}<tr><th scope="row">Usuario</th><td><a href="{% url 'usuarios:usuario_detalle' contratacion.usuario_id %}">{{ contratacion.usuario }}</a></td></tr>{% endif %}
-                        <tr><th scope="row">{{ nombre_tipo|default:tipo|capfirst }}</th><td>{% if propias %}{{ contratacion.producto.nombre }}{% else %}<a href="{% url ruta_producto contratacion.producto.pk %}">{{ contratacion.producto.nombre }}</a>{% endif %}</td></tr>
-                        <tr><th scope="row">Período cubierto</th><td>{{ contratacion.mes_cubierto|date:"F"|capfirst }} de {{ contratacion.mes_cubierto|date:"Y" }}</td></tr>
-                        <tr><th scope="row">Fecha efectiva de alta</th><td>{{ contratacion.fecha_alta|date:"d/m/Y" }}</td></tr>
-                        {% if tipo == 'plan' %}
-                        <tr><th scope="row">Modalidad</th><td>{{ contratacion.producto.get_modalidad_display }}</td></tr>
-                        <tr><th scope="row">Encuentros por semana</th><td>{{ contratacion.producto.frecuencia_semanal }}</td></tr>
-                        <tr><th scope="row">Duración de cada encuentro</th><td>{{ contratacion.producto.get_cantidad_clases_por_encuentro_display }}</td></tr>
-                        {% endif %}
-                        <tr>
-                            <th scope="row">{{ etiqueta_importe }}</th>
-                            <td>
-                                <strong>$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</strong>
-                                <span class="ayuda-contextual">
-                                    <button type="button" class="ayuda-contextual-boton" aria-label="Información sobre el importe aplicado" aria-describedby="contratacion-importe-ayuda">
-                                        {% include "componentes/iconoir/informacion.html" %}
-                                    </button>
-                                    <span class="ayuda-contextual-texto" id="contratacion-importe-ayuda" role="tooltip">El importe aplicado se conserva en esta contratación.</span>
-                                </span>
-                            </td>
-                        </tr>
-                        {% if not propias and contratacion.observaciones %}<tr><th scope="row">Observaciones</th><td>{{ contratacion.observaciones|linebreaksbr }}</td></tr>{% endif %}
-                        {% if contratacion.estado == 'anulado' %}
-                        <tr><th scope="row">Fecha de anulación</th><td>{{ contratacion.anulado_en|date:"d/m/Y H:i" }}</td></tr>
-                        {% if not propias %}
-                        <tr><th scope="row">Anulada por</th><td>{{ contratacion.anulado_por }}</td></tr>
-                        <tr><th scope="row">Motivo de anulación</th><td>{{ contratacion.motivo_anulacion|linebreaksbr }}</td></tr>
-                        {% endif %}
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
+            {% tabla_datos etiqueta_por="contratacion-datos-titulo" %}
+                <tr><th scope="row">Número</th><td>{{ contratacion.pk }}</td></tr>
+                {% if not propias %}<tr><th scope="row">Usuario</th><td><a href="{% url 'usuarios:usuario_detalle' contratacion.usuario_id %}">{{ contratacion.usuario }}</a></td></tr>{% endif %}
+                <tr><th scope="row">{{ nombre_tipo|default:tipo|capfirst }}</th><td>{% if propias %}{{ contratacion.producto.nombre }}{% else %}<a href="{% url ruta_producto contratacion.producto.pk %}">{{ contratacion.producto.nombre }}</a>{% endif %}</td></tr>
+                <tr><th scope="row">Período cubierto</th><td>{{ contratacion.mes_cubierto|date:"F"|capfirst }} de {{ contratacion.mes_cubierto|date:"Y" }}</td></tr>
+                <tr><th scope="row">Fecha efectiva de alta</th><td>{{ contratacion.fecha_alta|date:"d/m/Y" }}</td></tr>
+                {% if tipo == 'plan' %}
+                <tr><th scope="row">Modalidad</th><td>{{ contratacion.producto.get_modalidad_display }}</td></tr>
+                <tr><th scope="row">Encuentros por semana</th><td>{{ contratacion.producto.frecuencia_semanal }}</td></tr>
+                <tr><th scope="row">Duración de cada encuentro</th><td>{{ contratacion.producto.get_cantidad_clases_por_encuentro_display }}</td></tr>
+                {% endif %}
+                <tr>
+                    <th scope="row">{{ etiqueta_importe }}</th>
+                    <td>
+                        <strong>$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</strong>
+                        <span class="ayuda-contextual">
+                            <button type="button" class="ayuda-contextual-boton" aria-label="Información sobre el importe aplicado" aria-describedby="contratacion-importe-ayuda">
+                                {% include "componentes/iconoir/informacion.html" %}
+                            </button>
+                            <span class="ayuda-contextual-texto" id="contratacion-importe-ayuda" role="tooltip">El importe aplicado se conserva en esta contratación.</span>
+                        </span>
+                    </td>
+                </tr>
+                {% if not propias and contratacion.observaciones %}<tr><th scope="row">Observaciones</th><td>{{ contratacion.observaciones|linebreaksbr }}</td></tr>{% endif %}
+                {% if contratacion.estado == 'anulado' %}
+                <tr><th scope="row">Fecha de anulación</th><td>{{ contratacion.anulado_en|date:"d/m/Y H:i" }}</td></tr>
+                {% if not propias %}
+                <tr><th scope="row">Anulada por</th><td>{{ contratacion.anulado_por }}</td></tr>
+                <tr><th scope="row">Motivo de anulación</th><td>{{ contratacion.motivo_anulacion|linebreaksbr }}</td></tr>
+                {% endif %}
+                {% endif %}
+            {% endtabla_datos %}
         </section>
         <details class="perfil-seccion-desplegable"{% if historial_financiero_abierto or historial_importes_abierto %} open{% endif %}>
             <summary>Pagos y movimientos{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
             <div class="perfil-seccion-desplegable-cuerpo">
-                {% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True finanzas_en_tabla=True %}
+                {% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True %}
             </div>
         </details>
         {% include "membresias/_continuidad.html" %}

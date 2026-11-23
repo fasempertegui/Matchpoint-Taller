@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load static %}
+{% extends "base.html" %}{% load tablas static %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
 {% block contenido %}
@@ -8,13 +8,13 @@
     <form method="post">{% csrf_token %}
         {% if revision %}
             <h2>Revisar efecto</h2>
-            <dl class="perfil-lista">
-                <div class="perfil-fila"><dt>Tipo de horas</dt><dd>{{ revision.tipo_horas_texto }}</dd></div>
-                <div class="perfil-fila"><dt>Operación</dt><dd>{{ revision.operacion_texto }} {{ revision.datos.cantidad }} hora{{ revision.datos.cantidad|pluralize }}</dd></div>
-                <div class="perfil-fila"><dt>Disponibles ahora</dt><dd>{{ revision.saldo_actual }}</dd></div>
-                <div class="perfil-fila"><dt>Disponibles después</dt><dd>{{ revision.saldo_resultante }}</dd></div>
-                <div class="perfil-fila"><dt>Motivo visible al titular</dt><dd>{{ revision.datos.motivo|linebreaksbr }}</dd></div>
-            </dl>
+            {% tabla_datos etiqueta="Resumen del ajuste de horas" %}
+                <tr><th scope="row">Tipo de horas</th><td>{{ revision.tipo_horas_texto }}</td></tr>
+                <tr><th scope="row">Operación</th><td>{{ revision.operacion_texto }} {{ revision.datos.cantidad }} hora{{ revision.datos.cantidad|pluralize }}</td></tr>
+                <tr><th scope="row">Disponibles ahora</th><td>{{ revision.saldo_actual }}</td></tr>
+                <tr><th scope="row">Disponibles después</th><td>{{ revision.saldo_resultante }}</td></tr>
+                <tr><th scope="row">Motivo visible al titular</th><td>{{ revision.datos.motivo|linebreaksbr }}</td></tr>
+            {% endtabla_datos %}
             <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
             <p>El ajuste afecta sólo a esta contratación y tipo de horas. No modifica el cupo base, las participaciones existentes ni los movimientos de dinero.</p>
         {% else %}

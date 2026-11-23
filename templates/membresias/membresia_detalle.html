@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 {% block titulo %}{{ membresia.nombre }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
 {% block contenido %}
@@ -18,11 +18,11 @@
         <div class="perfil-datos">
             <section class="perfil-seccion" aria-labelledby="membresia-datos-titulo">
                 <h2 id="membresia-datos-titulo">Características</h2>
-                <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Horas mensuales como organizador</dt><dd>{{ membresia.horas_organizador }}</dd></div>
-                    <div class="perfil-fila"><dt>Horas mensuales como invitado</dt><dd>{{ membresia.horas_invitado }}</dd></div>
-                    <div class="perfil-fila"><dt>Adicional por invitado sin beneficio (ARS)</dt><dd>$ {{ membresia.precio_invitado_vigente|floatformat:"2g" }}</dd></div>
-                </dl>
+                {% tabla_datos etiqueta_por="membresia-datos-titulo" %}
+                    <tr><th scope="row">Horas mensuales como organizador</th><td>{{ membresia.horas_organizador }}</td></tr>
+                    <tr><th scope="row">Horas mensuales como invitado</th><td>{{ membresia.horas_invitado }}</td></tr>
+                    <tr><th scope="row">Adicional por invitado sin beneficio (ARS)</th><td>$ {{ membresia.precio_invitado_vigente|floatformat:"2g" }}</td></tr>
+                {% endtabla_datos %}
             </section>
             {% if membresia.descripcion %}<section class="perfil-seccion" aria-labelledby="membresia-descripcion-titulo"><h2 id="membresia-descripcion-titulo">Descripción</h2><p class="perfil-observaciones">{{ membresia.descripcion|linebreaksbr }}</p></section>{% endif %}
         </div>

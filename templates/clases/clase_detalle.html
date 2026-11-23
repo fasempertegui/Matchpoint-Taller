@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 {% block titulo %}Clase {{ clase.id }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/clase-detalle.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-detalle-evento{% endblock %}
@@ -54,7 +54,7 @@
                 </div>
                 {% endif %}
             </div>
-            <div class="tabla-contenedor tabla-datos"><table aria-labelledby="clase-datos-titulo"><tbody>
+            {% tabla_datos etiqueta_por="clase-datos-titulo" %}
                 <tr><th scope="row">Sede</th><td>{{ clase.sede.nombre }}</td></tr>
                 <tr><th scope="row">Cancha</th><td>{{ clase.cancha.nombre }}</td></tr>
                 <tr><th scope="row">Fecha</th><td>{{ clase.fecha|date:"d/m/Y" }}</td></tr>
@@ -62,7 +62,7 @@
                 {% if clase.es_administrador %}<tr><th scope="row">Origen</th><td>{% if clase.es_generada %}Generada desde la planilla{% else %}Creación manual{% endif %}</td></tr>{% endif %}
                 {% if clase.observaciones %}<tr><th scope="row">Observaciones</th><td>{{ clase.observaciones|linebreaksbr }}</td></tr>{% endif %}
                 {% if clase.estado == 'anulado' %}<tr><th scope="row">Motivo de anulación</th><td>{{ clase.motivo_anulacion|linebreaksbr }}</td></tr>{% endif %}
-            </tbody></table></div>
+            {% endtabla_datos %}
         </section>
         {% if clase.mi_respuesta.respuesta == 'no_asistira' %}
         <section class="clase-detalle-aviso" aria-label="Tu aviso de no asistencia"><strong>Avisaste que no vas a asistir</strong><p>El aviso libera tu disponibilidad y no se puede modificar. Si cambiás de opinión, comunicate con tu profesor. Si finalmente asistís, tu presencia se registra sin modificar este aviso.</p></section>

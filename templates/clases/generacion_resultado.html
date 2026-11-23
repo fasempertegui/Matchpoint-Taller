@@ -11,11 +11,11 @@
 {% tarjeta_titulo titulo %}{% endtarjeta_titulo %}
 <section class="tarjeta">
     <p class="mensaje mensaje-success" role="status">Se crearon {{ cantidad_creadas }} clases.</p>
-    <dl class="perfil-lista">
-        <div class="perfil-fila"><dt>Sede</dt><dd>{{ sede.nombre }}</dd></div>
-        <div class="perfil-fila"><dt>Período</dt><dd>{{ desde|date:"d/m/Y" }} – {{ hasta|date:"d/m/Y" }}</dd></div>
-        <div class="perfil-fila"><dt>Clases omitidas</dt><dd>{{ resultado.omitidas }}</dd></div>
-    </dl>
+    {% tabla_datos etiqueta="Resumen de generación" %}
+        <tr><th scope="row">Sede</th><td>{{ sede.nombre }}</td></tr>
+        <tr><th scope="row">Período</th><td>{{ desde|date:"d/m/Y" }} – {{ hasta|date:"d/m/Y" }}</td></tr>
+        <tr><th scope="row">Clases omitidas</th><td>{{ resultado.omitidas }}</td></tr>
+    {% endtabla_datos %}
     {% if pagina %}
         <div class="tabla-contenedor actividad-listado">
             {% tabla %}

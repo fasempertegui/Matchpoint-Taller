@@ -38,12 +38,9 @@
                 <div class="perfil-datos">
                     <section class="perfil-seccion" aria-labelledby="sede-datos-titulo">
                         <h2 id="sede-datos-titulo">Datos de la sede</h2>
-                        <dl class="perfil-lista">
-                            <div class="perfil-fila">
-                                <dt>Dirección</dt>
-                                <dd>{{ sede.direccion|default:"Sin dirección informada" }}</dd>
-                            </div>
-                        </dl>
+                        {% tabla_datos etiqueta_por="sede-datos-titulo" %}
+                            <tr><th scope="row">Dirección</th><td>{{ sede.direccion|default:"Sin dirección informada" }}</td></tr>
+                        {% endtabla_datos %}
                     </section>
                     <section class="perfil-seccion" aria-labelledby="sede-observaciones-titulo">
                         <h2 id="sede-observaciones-titulo">Observaciones</h2>
@@ -200,12 +197,12 @@
                         </a>
                     {% endif %}
                 </div>
-                <dl class="perfil-lista">
-                    <div class="perfil-fila">
-                        <dt>Precio por turno (ARS)</dt>
-                        <dd>{% if sede.precio_reserva_vigente is None %}Sin configurar{% else %}$ {{ sede.precio_reserva_vigente|floatformat:"2g" }}{% endif %}</dd>
-                    </div>
-                </dl>
+                {% tabla_datos etiqueta="Precio de reservas" %}
+                    <tr>
+                        <th scope="row">Precio por turno (ARS)</th>
+                        <td>{% if sede.precio_reserva_vigente is None %}Sin configurar{% else %}$ {{ sede.precio_reserva_vigente|floatformat:"2g" }}{% endif %}</td>
+                    </tr>
+                {% endtabla_datos %}
             </div>
         {% endif %}
     </section>

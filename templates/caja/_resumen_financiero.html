@@ -1,25 +1,16 @@
+{% load tablas %}
 {% if finanzas.operacion_anulada %}
 <p class="nota-campo nota-campo-ambar">
     {% if mostrar_estado_origen != False %}<strong>Operación anulada.</strong>{% endif %}
     El neto es lo cobrado menos lo devuelto. No hay saldo por cobrar y cualquier devolución se evalúa por separado.
 </p>
 {% endif %}
-{% if finanzas_en_tabla %}
-<div class="tabla-contenedor tabla-datos"><table aria-label="Resumen de pagos"><tbody>
+{% tabla_datos etiqueta="Resumen de pagos" %}
     <tr><th scope="row">Importe acordado</th><td>$ {{ finanzas.importe_acordado|floatformat:"2g" }}</td></tr>
     <tr><th scope="row">Ingresos vigentes</th><td>$ {{ finanzas.ingresos|floatformat:"2g" }}</td></tr>
     <tr><th scope="row">Devoluciones vigentes</th><td>$ {{ finanzas.devoluciones|floatformat:"2g" }}</td></tr>
     <tr><th scope="row">Neto recibido</th><td><strong>$ {{ finanzas.neto_recibido|floatformat:"2g" }}</strong></td></tr>
     {% if finanzas.estado_financiero %}<tr><th scope="row">Situación</th><td>{{ finanzas.estado_financiero }}{% if finanzas.diferencia_importe %}<span class="tabla-datos-nota">$ {{ finanzas.diferencia_importe|floatformat:"2g" }}</span>{% endif %}</td></tr>{% endif %}
-</tbody></table></div>
-{% else %}
-<dl class="perfil-lista">
-    <div class="perfil-fila"><dt>Importe acordado</dt><dd>$ {{ finanzas.importe_acordado|floatformat:"2g" }}</dd></div>
-    <div class="perfil-fila"><dt>Ingresos vigentes</dt><dd>$ {{ finanzas.ingresos|floatformat:"2g" }}</dd></div>
-    <div class="perfil-fila"><dt>Devoluciones vigentes</dt><dd>$ {{ finanzas.devoluciones|floatformat:"2g" }}</dd></div>
-    <div class="perfil-fila"><dt>Neto recibido</dt><dd><strong>$ {{ finanzas.neto_recibido|floatformat:"2g" }}</strong></dd></div>
-    {% if finanzas.estado_financiero %}<div class="perfil-fila"><dt>Situación</dt><dd>{{ finanzas.estado_financiero }}{% if finanzas.diferencia_importe %} · $ {{ finanzas.diferencia_importe|floatformat:"2g" }}{% endif %}</dd></div>{% endif %}
-</dl>
-{% endif %}
+{% endtabla_datos %}
 {% if finanzas.diferencia_revision %}<p role="status">Diferencia para revisión administrativa: $ {{ finanzas.diferencia_revision|floatformat:"2g" }}. Las devoluciones vigentes superan los ingresos vigentes.</p>{% endif %}
 {% if finanzas.estado_financiero == 'Excedente por resolver' %}<p class="texto-secundario">El excedente requiere una decisión administrativa. No se devuelve ni se aplica a otra operación automáticamente.</p>{% endif %}

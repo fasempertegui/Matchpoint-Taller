@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load static %}
+{% extends "base.html" %}{% load tablas static %}
 {% block titulo %}Registrar devolución | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script><link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
@@ -7,7 +7,11 @@
     <h1>Registrar devolución</h1>
     {% include "caja/_ingreso_contexto.html" %}
     {% if origen %}<p>{% if tipo == 'reserva' %}{{ origen.numero }} · {{ origen.organizador }} · {{ origen.evento.get_estado_display }}{% else %}{{ origen.producto.nombre }} · {{ origen.usuario }} · {{ origen.mes_cubierto|date:"F Y" }} · {{ origen.get_estado_display }}{% endif %}</p>
-        <dl class="perfil-lista"><div class="perfil-fila"><dt>Ingresos vigentes</dt><dd>$ {{ situacion.ingresos|floatformat:"2g" }}</dd></div><div class="perfil-fila"><dt>Devoluciones vigentes</dt><dd>$ {{ situacion.devoluciones|floatformat:"2g" }}</dd></div><div class="perfil-fila"><dt>Máximo disponible para devolver</dt><dd><strong>$ {{ situacion.maximo_devolucion|floatformat:"2g" }}</strong></dd></div></dl>
+        {% tabla_datos etiqueta="Resumen para devolución" %}
+            <tr><th scope="row">Ingresos vigentes</th><td>$ {{ situacion.ingresos|floatformat:"2g" }}</td></tr>
+            <tr><th scope="row">Devoluciones vigentes</th><td>$ {{ situacion.devoluciones|floatformat:"2g" }}</td></tr>
+            <tr><th scope="row">Máximo disponible para devolver</th><td><strong>$ {{ situacion.maximo_devolucion|floatformat:"2g" }}</strong></td></tr>
+        {% endtabla_datos %}
     {% else %}<p>Devolución sin vínculo a una reserva o contratación. El concepto debe explicar el motivo.</p>{% endif %}
     {% if origen and not situacion.operacion_anulada %}<p>Esta operación sólo permite devolver el excedente sobre el importe acordado.</p>{% endif %}
     <form method="post" action="?tipo={{ tipo }}"{% if not revision %}{% if not origen or situacion.maximo_devolucion > 0 %} data-ingreso-formulario{% endif %}{% endif %} novalidate>{% csrf_token %}

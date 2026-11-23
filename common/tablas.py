@@ -12,3 +12,13 @@ def tabla(content, clases="", centrada=True, listado=True):
         "centrada": centrada,
         "listado": listado,
     })
+
+
+@register.simple_block_tag
+def tabla_datos(content, clases="", etiqueta="", etiqueta_por=""):
+    return render_to_string("componentes/tabla_datos.html", {
+        "contenido": content,
+        "clases": clases,
+        "etiqueta": etiqueta,
+        "etiqueta_por": etiqueta_por,
+    })

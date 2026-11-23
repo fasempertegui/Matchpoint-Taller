@@ -1,0 +1,7 @@
+<div class="tabla-contenedor tabla-datos{% if clases %} {{ clases }}{% endif %}">
+    <table{% if etiqueta_por %} aria-labelledby="{{ etiqueta_por }}"{% elif etiqueta %} aria-label="{{ etiqueta }}"{% endif %}>
+        <tbody>
+            {{ contenido }}
+        </tbody>
+    </table>
+</div>

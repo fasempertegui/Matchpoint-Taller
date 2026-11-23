@@ -1,3 +1,4 @@
+{% load tablas %}
 <form class="modal-confirmacion-formulario" method="post" action="{% if quitar %}{% url 'instalaciones:feriado_quitar' feriado.pk %}{% else %}{% url 'instalaciones:feriado_crear' %}{% endif %}" data-modal-formulario novalidate>
     {% csrf_token %}
     <header class="modal-confirmacion-cabecera">
@@ -17,18 +18,18 @@
 
         {% if quitar %}
             <p class="feriado-introduccion">Las clases Anuladas no se reactivan y no se generan clases nuevas.</p>
-            <dl class="perfil-lista">
-                <div class="perfil-fila"><dt>Fecha</dt><dd>{{ feriado.fecha|date:"d/m/Y" }}</dd></div>
-                <div class="perfil-fila"><dt>Descripción</dt><dd>{{ feriado.descripcion }}</dd></div>
-            </dl>
+            {% tabla_datos etiqueta="Datos del feriado" %}
+                <tr><th scope="row">Fecha</th><td>{{ feriado.fecha|date:"d/m/Y" }}</td></tr>
+                <tr><th scope="row">Descripción</th><td>{{ feriado.descripcion }}</td></tr>
+            {% endtabla_datos %}
         {% elif revision %}
             <input type="hidden" name="fecha" value="{{ revision.fecha|date:'Y-m-d' }}">
             <input type="hidden" name="descripcion" value="{{ revision.descripcion }}">
             <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
-            <dl class="perfil-lista">
-                <div class="perfil-fila"><dt>Fecha</dt><dd>{{ revision.fecha|date:"d/m/Y" }}</dd></div>
-                <div class="perfil-fila"><dt>Descripción</dt><dd>{{ revision.descripcion }}</dd></div>
-            </dl>
+            {% tabla_datos etiqueta="Datos del feriado" %}
+                <tr><th scope="row">Fecha</th><td>{{ revision.fecha|date:"d/m/Y" }}</td></tr>
+                <tr><th scope="row">Descripción</th><td>{{ revision.descripcion }}</td></tr>
+            {% endtabla_datos %}
             <section class="feriado-revision-clases" aria-labelledby="modal-feriado-clases-titulo">
                 <h3 id="modal-feriado-clases-titulo">Clases que se anularán ({{ clases|length }})</h3>
                 <p class="nota-campo feriado-advertencia">Se anularán las clases de esta lista, incluidas las creadas manualmente, con el motivo «Clase anulada por registro de feriado». Sus turnos quedarán libres y se conservarán sus asignaciones e historia.</p>

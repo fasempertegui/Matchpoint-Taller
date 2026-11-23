@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 {% block titulo %}{{ movimiento.get_clase_display }} {{ movimiento.numero }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
@@ -19,35 +19,27 @@
     <div class="perfil-datos">
         <section class="perfil-seccion" aria-labelledby="movimiento-datos-titulo">
             <h2 id="movimiento-datos-titulo">Datos del movimiento</h2>
-            <div class="tabla-contenedor tabla-datos">
-                <table aria-labelledby="movimiento-datos-titulo">
-                    <tbody>
-                        <tr><th scope="row">Estado</th><td>{{ movimiento.get_estado_display }}</td></tr>
-                        {% if movimiento.categoria_ingreso %}<tr><th scope="row">Categoría</th><td>{{ movimiento.get_categoria_ingreso_display }}</td></tr>{% elif movimiento.categoria_egreso %}<tr><th scope="row">Categoría</th><td>{{ movimiento.get_categoria_egreso_display }}</td></tr>{% endif %}
-                        {% if movimiento.destinatario %}<tr><th scope="row">Destinatario</th><td>{{ movimiento.destinatario }}</td></tr>{% endif %}
-                        <tr><th scope="row">Concepto</th><td>{{ movimiento.concepto|linebreaksbr }}</td></tr>
-                        {% if movimiento.motivo_excedente %}<tr><th scope="row">Motivo del excedente</th><td>{{ movimiento.motivo_excedente|linebreaksbr }}</td></tr>{% endif %}
-                        <tr><th scope="row">Monto</th><td>$ {{ movimiento.monto|floatformat:"2g" }}</td></tr>
-                        <tr><th scope="row">Medio</th><td>{{ movimiento.get_medio_pago_display }}</td></tr>
-                        {% if movimiento.referencia %}<tr><th scope="row">Referencia</th><td>{{ movimiento.referencia }}</td></tr>{% endif %}
-                        <tr><th scope="row">Responsable</th><td>{{ movimiento.registrado_por }}</td></tr>
-                        <tr><th scope="row">Registro</th><td>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            {% tabla_datos etiqueta_por="movimiento-datos-titulo" %}
+                <tr><th scope="row">Estado</th><td>{{ movimiento.get_estado_display }}</td></tr>
+                {% if movimiento.categoria_ingreso %}<tr><th scope="row">Categoría</th><td>{{ movimiento.get_categoria_ingreso_display }}</td></tr>{% elif movimiento.categoria_egreso %}<tr><th scope="row">Categoría</th><td>{{ movimiento.get_categoria_egreso_display }}</td></tr>{% endif %}
+                {% if movimiento.destinatario %}<tr><th scope="row">Destinatario</th><td>{{ movimiento.destinatario }}</td></tr>{% endif %}
+                <tr><th scope="row">Concepto</th><td>{{ movimiento.concepto|linebreaksbr }}</td></tr>
+                {% if movimiento.motivo_excedente %}<tr><th scope="row">Motivo del excedente</th><td>{{ movimiento.motivo_excedente|linebreaksbr }}</td></tr>{% endif %}
+                <tr><th scope="row">Monto</th><td>$ {{ movimiento.monto|floatformat:"2g" }}</td></tr>
+                <tr><th scope="row">Medio</th><td>{{ movimiento.get_medio_pago_display }}</td></tr>
+                {% if movimiento.referencia %}<tr><th scope="row">Referencia</th><td>{{ movimiento.referencia }}</td></tr>{% endif %}
+                <tr><th scope="row">Responsable</th><td>{{ movimiento.registrado_por }}</td></tr>
+                <tr><th scope="row">Registro</th><td>{{ movimiento.creado_en|date:"d/m/Y H:i" }}</td></tr>
+            {% endtabla_datos %}
         </section>
         {% if movimiento.estado == 'anulado' %}
         <section class="perfil-seccion" aria-labelledby="movimiento-anulacion-titulo">
             <h2 id="movimiento-anulacion-titulo">Anulación del movimiento</h2>
-            <div class="tabla-contenedor tabla-datos">
-                <table aria-labelledby="movimiento-anulacion-titulo">
-                    <tbody>
-                        <tr><th scope="row">Fecha y hora</th><td><time datetime="{{ movimiento.anulado_en|date:'c' }}">{{ movimiento.anulado_en|date:"d/m/Y H:i" }}</time></td></tr>
-                        <tr><th scope="row">Responsable</th><td>{{ movimiento.anulado_por }}</td></tr>
-                        <tr><th scope="row">Motivo</th><td>{{ movimiento.motivo_anulacion|linebreaksbr }}</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            {% tabla_datos etiqueta_por="movimiento-anulacion-titulo" %}
+                <tr><th scope="row">Fecha y hora</th><td><time datetime="{{ movimiento.anulado_en|date:'c' }}">{{ movimiento.anulado_en|date:"d/m/Y H:i" }}</time></td></tr>
+                <tr><th scope="row">Responsable</th><td>{{ movimiento.anulado_por }}</td></tr>
+                <tr><th scope="row">Motivo</th><td>{{ movimiento.motivo_anulacion|linebreaksbr }}</td></tr>
+            {% endtabla_datos %}
             {% if movimiento.sesion.estado == 'cerrada' and movimiento.anulado_en > movimiento.sesion.cerrada_en %}
             <p>La anulación es posterior al cierre. Los importes y totales históricos de esa sesión se conservan.</p>
             {% endif %}
@@ -75,7 +67,7 @@
     </div>
     <div class="perfil-seccion">
         <h2>Situación financiera</h2>
-        {% include "caja/_resumen_financiero.html" with finanzas_en_tabla=True mostrar_estado_origen=False %}
+        {% include "caja/_resumen_financiero.html" with mostrar_estado_origen=False %}
     </div>
 </section>
 {% endif %}

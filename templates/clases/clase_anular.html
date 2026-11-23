@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 
 {% block titulo %}{% if bloquear %}Anular y bloquear{% else %}Anular y liberar{% endif %} | Academia TM{% endblock %}
 {% block estilos %}
@@ -29,11 +29,11 @@
                 <input type="hidden" name="confirmacion" value="{{ confirmacion }}">
                 {% for campo in formulario %}<textarea name="{{ campo.name }}" hidden>{{ campo.value|default:'' }}</textarea>{% endfor %}
                 <p>{% if bloquear %}Se anulará la clase y se creará un bloqueo en la misma cancha, fecha y horario. El turno quedará ocupado por ese bloqueo.{% else %}Se anulará la clase y su turno quedará libre.{% endif %}</p>
-                <dl class="perfil-lista">
-                    {% if not bloquear %}<div class="perfil-fila"><dt>Motivo de anulación</dt><dd>{{ formulario.motivo.value|linebreaksbr }}</dd></div>{% endif %}
-                    {% if bloquear %}<div class="perfil-fila"><dt>Motivo del bloqueo</dt><dd>{{ motivo_bloqueo }}</dd></div>{% endif %}
-                    {% if formulario.observaciones.value %}<div class="perfil-fila"><dt>Observaciones del bloqueo</dt><dd>{{ formulario.observaciones.value|linebreaksbr }}</dd></div>{% endif %}
-                </dl>
+                {% tabla_datos etiqueta="Resumen de anulación" %}
+                    {% if not bloquear %}<tr><th scope="row">Motivo de anulación</th><td>{{ formulario.motivo.value|linebreaksbr }}</td></tr>{% endif %}
+                    {% if bloquear %}<tr><th scope="row">Motivo del bloqueo</th><td>{{ motivo_bloqueo }}</td></tr>{% endif %}
+                    {% if formulario.observaciones.value %}<tr><th scope="row">Observaciones del bloqueo</th><td>{{ formulario.observaciones.value|linebreaksbr }}</td></tr>{% endif %}
+                {% endtabla_datos %}
                 <p class="nota-campo">La clase, sus asignaciones y su historia se conservan.{% if bloquear %} Liberar el bloqueo no reactiva la clase.{% endif %}</p>
                 <div class="acciones-formulario clase-revision-acciones">
                     <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a editar</button>

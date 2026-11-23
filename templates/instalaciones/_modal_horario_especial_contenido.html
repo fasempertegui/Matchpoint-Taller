@@ -1,3 +1,4 @@
+{% load tablas %}
 <form class="modal-confirmacion-formulario" method="post" action="{% if quitar %}{% url 'instalaciones:horario_especial_quitar' horario.pk %}{% elif es_edicion %}{% url 'instalaciones:horario_especial_editar' horario.pk %}{% else %}{% url 'instalaciones:horario_especial_crear' %}{% endif %}" data-modal-formulario data-horario-especial novalidate>
     {% csrf_token %}
     <header class="modal-confirmacion-cabecera">
@@ -40,13 +41,13 @@
             {% endif %}
             <input type="hidden" name="confirmacion" value="{{ revision.confirmacion|default:'' }}">
 
-            <dl class="perfil-lista">
-                <div class="perfil-fila"><dt>Sede</dt><dd>{{ horario_revisado.sede.nombre }}</dd></div>
-                <div class="perfil-fila"><dt>Fecha</dt><dd>{{ horario_revisado.fecha|date:"d/m/Y" }}</dd></div>
-                <div class="perfil-fila"><dt>Motivo</dt><dd>{{ horario_revisado.motivo }}</dd></div>
-                <div class="perfil-fila">
-                    <dt>Horario</dt>
-                    <dd>
+            {% tabla_datos etiqueta="Datos del horario especial" %}
+                <tr><th scope="row">Sede</th><td>{{ horario_revisado.sede.nombre }}</td></tr>
+                <tr><th scope="row">Fecha</th><td>{{ horario_revisado.fecha|date:"d/m/Y" }}</td></tr>
+                <tr><th scope="row">Motivo</th><td>{{ horario_revisado.motivo }}</td></tr>
+                <tr>
+                    <th scope="row">Horario</th>
+                    <td>
                         {% if horario_revisado.cerrada %}
                             Sede cerrada todo el día
                         {% else %}
@@ -55,9 +56,9 @@
                                 y {{ horario_revisado.hora_inicio_2|time:"H:i" }} a {{ horario_revisado.hora_fin_2|time:"H:i" }}
                             {% endif %}
                         {% endif %}
-                    </dd>
-                </div>
-            </dl>
+                    </td>
+                </tr>
+            {% endtabla_datos %}
 
             {% if revision.conflictos %}
                 <div class="mensaje mensaje-error" role="alert">

@@ -648,6 +648,7 @@ h2 {
 .tabla-datos td { font-size: 1rem; }
 .tabla-datos-nota { display: block; margin-top: 4px; color: var(--texto-suave); }
 .tabla-datos tr:last-child th, .tabla-datos tr:last-child td { border-bottom: 0; }
+.tarjeta-formulario .tabla-datos { margin: 20px 0 24px; }
 
 .tabla-contenedor:is(.tabla-listado, :has(> table.tabla-listado)) {
     border-top-left-radius: 10px;

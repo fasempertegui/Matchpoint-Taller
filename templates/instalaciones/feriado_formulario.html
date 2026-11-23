@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 
 {% block titulo %}{% if revision %}Revisar feriado{% else %}Registrar feriado{% endif %} | Academia TM{% endblock %}
 
@@ -26,10 +26,10 @@
                 <input type="hidden" name="fecha" value="{{ revision.fecha|date:'Y-m-d' }}">
                 <input type="hidden" name="descripcion" value="{{ revision.descripcion }}">
                 <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
-                <dl class="perfil-lista">
-                    <div class="perfil-fila"><dt>Fecha</dt><dd>{{ revision.fecha|date:"d/m/Y" }}</dd></div>
-                    <div class="perfil-fila"><dt>Descripción</dt><dd>{{ revision.descripcion }}</dd></div>
-                </dl>
+                {% tabla_datos etiqueta="Datos del feriado" %}
+                    <tr><th scope="row">Fecha</th><td>{{ revision.fecha|date:"d/m/Y" }}</td></tr>
+                    <tr><th scope="row">Descripción</th><td>{{ revision.descripcion }}</td></tr>
+                {% endtabla_datos %}
                 <section class="feriado-revision-clases" aria-labelledby="clases-titulo">
                     <h2 id="clases-titulo">Clases que se anularán ({{ clases|length }})</h2>
                     <p class="nota-campo feriado-advertencia">Se anularán las clases de esta lista, incluidas las creadas manualmente, con el motivo «Clase anulada por registro de feriado». Sus turnos quedarán libres y se conservarán sus asignaciones e historia.</p>

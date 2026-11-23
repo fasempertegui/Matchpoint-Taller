@@ -1,17 +1,16 @@
-<div class="tabla-contenedor tabla-datos">
-    <table aria-label="Tu participación en la reserva"><tbody>
-        <tr><th scope="row">Respuesta</th><td><strong>{{ invitacion.get_respuesta_display }}</strong></td></tr>
-        {% if invitacion.respondido_en %}<tr><th scope="row">Fecha de respuesta</th><td>{{ invitacion.respondido_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}
-        {% if invitacion.participacion_computable %}
-            <tr><th scope="row">Condición aplicada</th><td>{{ invitacion.get_condicion_aplicada_display }}</td></tr>
-            {% if invitacion.condicion_aplicada == 'socio' and reserva.evento.estado != 'anulado' %}
-                <tr><th scope="row">Uso de membresía</th><td>Una hora de tu cupo de invitado</td></tr>
-            {% elif invitacion.genera_adicional %}
-                <tr><th scope="row">Adicional en la reserva</th><td><strong>$ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}</strong></td></tr>
-            {% endif %}
+{% load tablas %}
+{% tabla_datos etiqueta="Tu participación en la reserva" %}
+    <tr><th scope="row">Respuesta</th><td><strong>{{ invitacion.get_respuesta_display }}</strong></td></tr>
+    {% if invitacion.respondido_en %}<tr><th scope="row">Fecha de respuesta</th><td>{{ invitacion.respondido_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}
+    {% if invitacion.participacion_computable %}
+        <tr><th scope="row">Condición aplicada</th><td>{{ invitacion.get_condicion_aplicada_display }}</td></tr>
+        {% if invitacion.condicion_aplicada == 'socio' and reserva.evento.estado != 'anulado' %}
+            <tr><th scope="row">Uso de membresía</th><td>Una hora de tu cupo de invitado</td></tr>
+        {% elif invitacion.genera_adicional %}
+            <tr><th scope="row">Adicional en la reserva</th><td><strong>$ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}</strong></td></tr>
         {% endif %}
-    </tbody></table>
-</div>
+    {% endif %}
+{% endtabla_datos %}
 {% if not invitacion.participacion_computable %}<p class="perfil-descripcion invitacion-aclaracion">El estado actual de esta invitación no compromete tu disponibilidad ni tus horas y no genera adicional.</p>{% endif %}
 {% if puede_responder %}
     <form method="post" action="{% url 'reservas:reserva_responder' reserva.pk %}" class="invitacion-respuesta-acciones">

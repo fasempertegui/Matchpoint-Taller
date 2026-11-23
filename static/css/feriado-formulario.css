@@ -320,7 +320,7 @@
     list-style: none;
 }
 
-.horario-modal .perfil-lista + .mensaje {
+.horario-modal .tabla-datos + .mensaje {
     margin-top: 16px;
 }
 

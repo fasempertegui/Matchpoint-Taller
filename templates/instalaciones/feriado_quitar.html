@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load tablas static %}
 
 {% block titulo %}Quitar feriado | Academia TM{% endblock %}
 
@@ -16,10 +16,10 @@
             <h1 id="quitar-feriado-titulo">Quitar feriado</h1>
             <p class="feriado-introduccion">Las clases Anuladas no se reactivan y no se generan clases nuevas.</p>
 
-            <dl class="perfil-lista">
-                <div class="perfil-fila"><dt>Fecha</dt><dd>{{ feriado.fecha|date:"d/m/Y" }}</dd></div>
-                <div class="perfil-fila"><dt>Descripción</dt><dd>{{ feriado.descripcion }}</dd></div>
-            </dl>
+            {% tabla_datos etiqueta="Datos del feriado" %}
+                <tr><th scope="row">Fecha</th><td>{{ feriado.fecha|date:"d/m/Y" }}</td></tr>
+                <tr><th scope="row">Descripción</th><td>{{ feriado.descripcion }}</td></tr>
+            {% endtabla_datos %}
 
             <div class="acciones-formulario">
                 <button class="boton boton-confirmar-peligro" type="submit">Quitar feriado</button>
