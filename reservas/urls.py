@@ -11,6 +11,7 @@ urlpatterns = [
     path("mis-invitaciones/", vistas_comerciales.mis_reservas, {"solo_invitaciones": True}, name="mis_invitaciones"),
     path("usuario/<int:usuario_id>/", vistas_comerciales.mis_reservas, name="reservas_usuario"),
     path("uso/", vistas_comerciales.uso_membresia, name="uso_membresia"),
+    path("sin-resultado/", views.reservas_sin_resultado, name="sin_resultado"),
     path("<int:pk>/invitados/", vistas_comerciales.reserva_invitados, name="reserva_invitados"),
     path("<int:pk>/socios/", vistas_comerciales.reserva_socios, name="reserva_socios"),
     path("<int:pk>/responder/", vistas_comerciales.reserva_responder, name="reserva_responder"),

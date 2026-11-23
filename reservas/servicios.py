@@ -18,6 +18,14 @@ from .disponibilidad import consultar_disponibilidad
 from .models import Evento, Reserva, Turno
 
 
+def reservas_sin_resultado_queryset():
+    return Reserva.objects.filter(
+        evento__estado=Evento.Estado.FINALIZADO,
+        membresia_usuario__isnull=False,
+        resultado_uso="sin_registrar",
+    )
+
+
 def exigir_acceso_reservas(usuario):
     if usuario is None or not usuario.is_authenticated:
         raise PermissionDenied

@@ -1,18 +1,19 @@
 from datetime import datetime, time, timedelta
 
-from django.db.models import Count, Exists, OuterRef, Q
+from django.db.models import Count, Q
 from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
 
-from caja.finanzas import origenes_con_pendiente
 from caja.models import SesionCaja
-from clases.models import Asistencia, Clase, ClaseAlumno
+from clases.consultas import clases_sin_asistencia_queryset
 from comunicaciones.models import EnvioEmail
 from instalaciones.models import Cancha, Sede, SedeHorario
+from membresias.consultas import contar_contrataciones_con_diferencia
 from membresias.continuidad import ventana_continuidad
 from membresias.models import MembresiaUsuario, PlanUsuario
-from reservas.models import Evento, Reserva
+from reservas.models import Evento
+from reservas.servicios import reservas_sin_resultado_queryset
 from usuarios.models import Usuario
 
 MESES_NOMBRES = (
@@ -225,41 +226,10 @@ def _contexto_actividad_hoy(hoy, hora_actual):
     }
 
 
-def _contar_contrataciones_con_diferencia():
-    return sum(
-        origenes_con_pendiente(
-            modelo.objects.exclude(estado=modelo.Estado.ANULADO), tipo,
-        ).count()
-        for tipo, modelo in (("plan", PlanUsuario), ("membresia", MembresiaUsuario))
-    )
-
-
 def _contexto_para_revisar():
-    asistencias_registradas = Asistencia.objects.filter(
-        clase_id=OuterRef("clase_id"),
-        usuario_id=OuterRef("usuario_id"),
-        estado__in=(Asistencia.Estado.PRESENTE, Asistencia.Estado.AUSENTE),
-    )
-    alumnos_sin_asistencia = ClaseAlumno.objects.filter(
-        ~Exists(asistencias_registradas),
-        clase_id=OuterRef("pk"),
-    )
-    asistencias_pendientes = Asistencia.objects.filter(
-        clase_id=OuterRef("pk"),
-        estado=Asistencia.Estado.SIN_REGISTRAR,
-    )
-    clases_sin_asistencia = Clase.objects.filter(
-        Exists(alumnos_sin_asistencia) | Exists(asistencias_pendientes),
-        evento__estado=Evento.Estado.FINALIZADO,
-    ).count()
-
-    reservas_sin_resultado = Reserva.objects.filter(
-        evento__estado=Evento.Estado.FINALIZADO,
-        membresia_usuario__isnull=False,
-        resultado_uso="sin_registrar",
-    ).count()
-
-    contrataciones_diferencia = _contar_contrataciones_con_diferencia()
+    clases_sin_asistencia = clases_sin_asistencia_queryset().count()
+    reservas_sin_resultado = reservas_sin_resultado_queryset().count()
+    contrataciones_diferencia = contar_contrataciones_con_diferencia()
     emails_fallidos = EnvioEmail.objects.filter(estado=EnvioEmail.Estado.FALLIDO).count()
 
     filas = [
@@ -268,21 +238,21 @@ def _contexto_para_revisar():
             "cantidad": clases_sin_asistencia,
             "badge_clase": "baja" if clases_sin_asistencia else "igual",
             "enlace_texto": "Ver clases",
-            "url": reverse("reportes:detalle", args=["asistencia"]),
+            "url": reverse("clases:sin_asistencia"),
         },
         {
             "texto": "Reservas finalizadas sin resultado",
             "cantidad": reservas_sin_resultado,
             "badge_clase": "baja" if reservas_sin_resultado else "igual",
-            "enlace_texto": "Ver agenda",
-            "url": reverse("agenda:agenda"),
+            "enlace_texto": "Ver reservas",
+            "url": reverse("reservas:sin_resultado"),
         },
         {
             "texto": "Contrataciones con diferencia por cubrir",
             "cantidad": contrataciones_diferencia,
             "badge_clase": "info" if contrataciones_diferencia else "igual",
-            "enlace_texto": "Ver reporte",
-            "url": reverse("reportes:detalle", args=["contrataciones"]),
+            "enlace_texto": "Ver contrataciones",
+            "url": reverse("membresias:contrataciones_por_cubrir"),
         },
         {
             "texto": "Emails fallidos",

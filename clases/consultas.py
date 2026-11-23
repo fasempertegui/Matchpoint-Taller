@@ -16,6 +16,26 @@ from .permisos import exigir_acceso_clases, exigir_administracion_clases, puede_
 from .validaciones import validar_horario_clase, validar_periodo_actividad_clases
 
 
+def clases_sin_asistencia_queryset():
+    asistencias_registradas = Asistencia.objects.filter(
+        clase_id=OuterRef("clase_id"),
+        usuario_id=OuterRef("usuario_id"),
+        estado__in=(Asistencia.Estado.PRESENTE, Asistencia.Estado.AUSENTE),
+    )
+    alumnos_sin_asistencia = ClaseAlumno.objects.filter(
+        ~Exists(asistencias_registradas),
+        clase_id=OuterRef("pk"),
+    )
+    asistencias_pendientes = Asistencia.objects.filter(
+        clase_id=OuterRef("pk"),
+        estado=Asistencia.Estado.SIN_REGISTRAR,
+    )
+    return Clase.objects.filter(
+        Exists(alumnos_sin_asistencia) | Exists(asistencias_pendientes),
+        evento__estado=Evento.Estado.FINALIZADO,
+    )
+
+
 def consultar_clase(usuario, clase_id):
     usuario = exigir_acceso_clases(usuario)
     clase = Clase.objects.select_related("evento__turno__cancha__sede").get(

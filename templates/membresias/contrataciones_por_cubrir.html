@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load encabezados %}
+{% load tablas %}
+{% load filtros %}
+{% load estados %}
+{% load static %}
+{% block titulo %}Contrataciones con diferencia por cubrir | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}"><link rel="stylesheet" href="{% static 'css/contrataciones.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-membresias-configuracion catalogo-listado contratacion-listado{% endblock %}
+{% block contenido %}
+{% tarjeta_titulo "Contrataciones con diferencia por cubrir" descripcion="Consultá las contrataciones de planes y membresías que todavía tienen importe por cubrir." %}
+    <a class="boton boton-secundario" href="{% url 'inicio' %}">Volver al inicio</a>
+{% endtarjeta_titulo %}
+{% if hay_pendientes %}
+    {% tarjeta_filtros %}
+        <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de contrataciones con diferencia por cubrir">
+            <div class="grupo-campo">
+                <label for="pendientes-busqueda">Buscar</label>
+                <input class="form-control" type="search" id="pendientes-busqueda" name="q" value="{{ busqueda }}" maxlength="150" placeholder="Usuario o producto">
+            </div>
+            <div class="grupo-campo">
+                <label for="pendientes-tipo">Tipo</label>
+                <select class="form-control" id="pendientes-tipo" name="tipo">
+                    <option value="">Todos</option>
+                    <option value="plan"{% if tipo_actual == 'plan' %} selected{% endif %}>Planes</option>
+                    <option value="membresia"{% if tipo_actual == 'membresia' %} selected{% endif %}>Membresías</option>
+                </select>
+            </div>
+            <div class="grupo-campo">
+                <label for="pendientes-estado">Estado</label>
+                <select class="form-control" id="pendientes-estado" name="estado">
+                    <option value="">Todos</option>
+                    {% for valor, etiqueta in estados %}<option value="{{ valor }}"{% if estado_actual == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="filtros-acciones"><a class="boton boton-secundario" href="{% url 'membresias:contrataciones_por_cubrir' %}" data-limpiar-filtros>Limpiar filtros</a></div>
+        </form>
+    {% endtarjeta_filtros %}
+    <section class="tarjeta tabla-contenedor" data-resultados-filtros aria-label="Contrataciones con diferencia por cubrir">
+        {% tabla %}
+            <thead>
+                <tr>
+                    <th scope="col">Usuario</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Mes cubierto</th>
+                    <th scope="col">Importe acordado</th>
+                    <th scope="col">Por cubrir</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col" class="acciones-columna">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in pagina %}
+                    <tr>
+                        <td><strong>{{ item.contratacion.usuario }}</strong></td>
+                        <td>{{ item.tipo_texto }}</td>
+                        <td>{{ item.contratacion.producto.nombre }}</td>
+                        <td>{{ item.contratacion.mes_cubierto|date:"F Y" }}</td>
+                        <td class="catalogo-importe">$ {{ item.contratacion.importe_financiero|floatformat:"2g" }}</td>
+                        <td class="catalogo-importe"><strong>$ {{ item.contratacion.pendiente_cobro|floatformat:"2g" }}</strong></td>
+                        <td>{% indicador_estado "contratacion" item.contratacion.estado %}</td>
+                        <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url item.ruta_detalle item.contratacion.pk %}" aria-label="Ver contratación de {{ item.contratacion.usuario }} para {{ item.contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td class="estado-vacio" colspan="8">No hay contrataciones con diferencia por cubrir que coincidan con los filtros.</td></tr>
+                {% endfor %}
+            </tbody>
+        {% endtabla %}
+        {% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=parametros only %}
+    </section>
+{% else %}
+    <p class="tarjeta estado-vacio">No hay contrataciones con diferencia por cubrir.</p>
+{% endif %}
+{% endblock %}

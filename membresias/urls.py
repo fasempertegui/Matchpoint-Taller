@@ -16,6 +16,7 @@ urlpatterns = [
     path("continuidad/", vistas_continuidad.lista, name="continuidad_lista"),
     path("", views.catalogos, name="catalogos"),
     path("contrataciones/usuario/<int:usuario_id>/", vistas_contrataciones.contratacion_lista, name="contrataciones_usuario"),
+    path("contrataciones/por-cubrir/", vistas_contrataciones.contrataciones_por_cubrir, name="contrataciones_por_cubrir"),
     path("contrataciones/planes/", vistas_contrataciones.contratacion_lista, name="contratacion_plan_lista"),
     path("contrataciones/planes/buscar-usuarios/", vistas_contrataciones.buscar_usuarios_contratacion, name="contratacion_plan_buscar_usuarios"),
     path("contrataciones/planes/nueva/", vistas_contrataciones.contratacion_crear, name="contratacion_plan_crear"),

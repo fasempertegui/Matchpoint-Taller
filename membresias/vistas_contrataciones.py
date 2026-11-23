@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -19,7 +21,7 @@ from .contrataciones import (
     revision_precio_contratacion, version_anulacion_contratacion,
 )
 from .ajustes import contexto_horas_contratacion
-from .consultas import listar_contrataciones
+from .consultas import listar_contrataciones, listar_contrataciones_con_diferencia
 from .continuidad import contexto_continuidad
 from .forms import (
     AnulacionContratacionForm, ContratacionMembresiaForm, ContratacionPlanForm,
@@ -88,6 +90,27 @@ def contratacion_lista(request, tipo="plan", usuario_id=None):
     return render(request, "membresias/contratacion_lista.html", {
         "parametros": parametros.urlencode(),
         **contexto, **listar_contrataciones(contrataciones, request.GET, tipo=tipo, buscar_usuario=titular is None),
+    })
+
+
+@login_required
+@never_cache
+@require_GET
+def contrataciones_por_cubrir(request):
+    exigir_administracion_membresias(request.user)
+    datos = listar_contrataciones_con_diferencia(request.GET)
+    parametros = urlencode({
+        clave: valor
+        for clave, valor in (
+            ("q", datos["busqueda"]),
+            ("tipo", datos["tipo_actual"]),
+            ("estado", datos["estado_actual"]),
+        )
+        if valor
+    })
+    return render(request, "membresias/contrataciones_por_cubrir.html", {
+        "parametros": parametros,
+        **datos,
     })
 
 

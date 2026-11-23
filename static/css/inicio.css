@@ -770,7 +770,7 @@
 
 .dashboard-revisar-fila {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 34px 82px;
+    grid-template-columns: minmax(0, 1fr) 34px 112px;
     align-items: center;
     gap: 12px;
     width: calc(100% + 16px);
