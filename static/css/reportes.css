@@ -1,6 +1,5 @@
-body > .contenido-principal.contenido-reportes { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
 .contenido-reportes .tarjeta, .contenido-reportes .boton, .contenido-reportes .form-control { border-radius: 10px; }
-.reportes-catalogo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.reportes-catalogo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--espacio-componentes); }
 .reporte-opcion { display: flex; flex-direction: column; min-width: 0; padding: 0; background-image: linear-gradient(to top, #4b176d12, transparent 55%); }
 .reporte-opcion h2 { margin: 0; padding: 24px 24px 0; font-size: 1.2rem; line-height: 1.35; }
 .reporte-opcion-descripcion { flex: 1; margin: 16px 0 0; padding: 0 24px 24px; color: var(--texto-suave); font-size: .95rem; }
@@ -15,7 +14,7 @@ body > .contenido-principal.contenido-reportes { width: var(--ancho-contenido-pr
 .reporte-filtros .detalle-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
 .reporte-filtros .grupo-campo { margin-bottom: 0; }
 .reporte-filtros .acciones-formulario { justify-content: flex-start; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
-.reporte-criterios { margin-bottom: 20px; padding: 16px 20px; }
+.reporte-criterios { padding: 16px 20px; }
 .reporte-criterios > summary { color: var(--primario); cursor: pointer; font-size: .9rem; font-weight: 600; }
 .reporte-criterios p { margin: 16px 0 0; color: var(--texto-suave); font-size: .9rem; line-height: 1.65; }
 .reporte-criterios-contenido { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--borde); }
@@ -23,7 +22,7 @@ body > .contenido-principal.contenido-reportes { width: var(--ancho-contenido-pr
 .reporte-criterios dt { color: var(--texto-suave); font-size: .8rem; }
 .reporte-criterios dd { margin: 4px 0 0; font-size: .9rem; font-weight: 600; }
 .reporte-criterios > summary:focus-visible { outline: 2px solid var(--primario); outline-offset: 4px; }
-.reporte-resumen { margin-bottom: 20px; padding: 20px; }
+.reporte-resumen { padding: 20px; }
 .reporte-indicadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px 24px; margin: 0; }
 .reporte-indicadores dt { color: var(--texto-suave); font-size: .85rem; }
 .reporte-indicadores dd { margin: 6px 0 0; color: var(--primario); font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; }

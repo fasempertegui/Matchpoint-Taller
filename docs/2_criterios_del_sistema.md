@@ -18,6 +18,10 @@ El inicio del portal presenta un saludo y la fecha local, la próxima clase asig
 
 La tarjeta desplegable de filtros usa etiquetas de 0,85 rem en el color de texto secundario. Los campos de búsqueda, fechas, selectores y botones usan texto de 0,9 rem y una altura mínima de 36 px. Los selectores aplican la consulta al cambiar y los campos de texto después de 300 ms sin escribir. Una cruz roja a la derecha de cada campo con texto borra ese valor. El botón secundario «Limpiar filtros» restablece la consulta completa. En tablas y catálogos, los cambios actualizan los resultados en la misma página y conservan la apertura de la tarjeta. Los selectores de sede y cancha de Planilla y los de sede y fecha de Agenda abren la consulta correspondiente mediante navegación. En Planilla, los selectores aparecen en la cabecera de la grilla, encima de la fila Hora y días de la semana.
 
+El área principal se centra en el espacio disponible después de la barra superior y la barra lateral. En escritorio ocupa el 90 % de ese ancho, hasta 1.600 px, y deja 32 px arriba y abajo. Hasta 900 px los márgenes laterales son de 24 px y el espacio vertical es de 24 px por extremo. Hasta 480 px los márgenes laterales son de 16 px.
+
+La separación se mide entre los bordes de los componentes. En una misma sección es de 16 px y entre secciones es de 24 px. Hasta 480 px pasa a 12 px y 20 px, respectivamente. El título, los filtros y los resultados de un listado forman un mismo grupo.
+
 Las tarjetas de título de página comparten un fondo blanco, bordes redondeados y una franja superior lila. El título y su subtítulo opcional quedan a la izquierda y las acciones a la derecha. La descripción, cuando corresponde, aparece debajo, separada por un divisor fino.
 
 Las tablas de listado comparten una estructura y estilos de encabezado. Cada pantalla define sus columnas, filas y acciones. Los encabezados y las celdas de las tablas de listado se centran. La tarjeta del listado usa el borde gris de 1 px del sistema y la franja de color va en la tarjeta del título.

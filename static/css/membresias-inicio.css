@@ -1,8 +1,3 @@
-body > .contenido-principal.contenido-membresias-inicio {
-    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
-    padding-block: 48px;
-}
-
 .contenido-membresias-inicio .tarjeta,
 .contenido-membresias-inicio .boton {
     border-radius: 10px;

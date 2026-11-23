@@ -1,4 +1,3 @@
-body > .contenido-principal.contenido-actividad-clases { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
 .contenido-actividad-clases .tarjeta, .contenido-actividad-clases .boton, .contenido-actividad-clases .form-control { border-radius: 10px; }
 .contenido-actividad-clases .actividad-selector-funcion {
     display: flex;

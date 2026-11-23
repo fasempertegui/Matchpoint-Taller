@@ -71,12 +71,6 @@
     border-top: 3px solid var(--primario-medio);
 }
 
-body > .contenido-principal.contenido-usuarios {
-    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
-    padding-top: 48px;
-    padding-bottom: 48px;
-}
-
 .nota-campo-ambar {
     border-left-color: var(--advertencia);
     background: var(--advertencia-suave);

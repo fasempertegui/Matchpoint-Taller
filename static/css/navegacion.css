@@ -6,10 +6,6 @@
     background: #f4f5f7;
 }
 
-.con-sidebar>.contenido-principal {
-    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 48px)));
-}
-
 .barra-app {
     position: sticky;
     top: 0;
@@ -386,10 +382,6 @@
 @media (max-width: 900px) {
     .con-sidebar {
         padding-left: 0;
-    }
-
-    .con-sidebar>.contenido-principal {
-        width: calc(100% - 32px);
     }
 
     .barra-app {

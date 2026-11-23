@@ -176,7 +176,6 @@
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    margin-bottom: 28px;
 }
 
 .oferta-buscador {
@@ -244,8 +243,6 @@
 }
 
 
-body > .contenido-principal.contenido-oferta { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
-.contenido-oferta > .oferta-catalogo-encabezado { margin-bottom: 20px; }
 .contenido-oferta > .oferta-catalogo-encabezado h2 { margin: 0; font-size: 1.4rem; }
 
 .contenido-oferta .oferta-producto,

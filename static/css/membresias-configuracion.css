@@ -1,8 +1,3 @@
-body > .contenido-principal.contenido-membresias-configuracion {
-    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
-    padding-block: 48px;
-}
-
 .contenido-membresias-configuracion .tarjeta,
 .contenido-membresias-configuracion .boton,
 .contenido-membresias-configuracion .form-control {

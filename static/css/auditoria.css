@@ -1,6 +1,5 @@
 .auditoria-lista {
     padding: 0;
-    margin-bottom: 16px;
 }
 
 .auditoria-tabla {
@@ -79,10 +78,6 @@
     white-space: pre-wrap;
 }
 
-body > .contenido-principal.contenido-auditoria {
-    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
-    padding-block: 48px;
-}
 .contenido-auditoria .tarjeta,
 .contenido-auditoria .boton { border-radius: 10px; }
 .auditoria-tabla { min-width: 0; width: 100%; table-layout: fixed; }

@@ -1,8 +1,3 @@
-body > .contenido-principal.contenido-inicio {
-    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 64px)));
-    padding-block: 32px;
-}
-
 /* Clases compartidas con inicio_portal.html */
 .inicio-seccion-cabecera {
     display: flex;
@@ -60,7 +55,7 @@ body > .contenido-principal.contenido-inicio {
 /* Dashboard de administración */
 .dashboard-admin {
     display: grid;
-    gap: 16px;
+    gap: var(--espacio-secciones);
 }
 
 .dashboard-admin > .tarjeta,
@@ -211,7 +206,7 @@ body > .contenido-principal.contenido-inicio {
 .dashboard-eventos {
     display: grid;
     grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
-    gap: 24px;
+    gap: var(--espacio-componentes);
     padding: 24px;
     align-items: stretch;
 }
@@ -547,7 +542,7 @@ body > .contenido-principal.contenido-inicio {
 .dashboard-kpis {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
+    gap: var(--espacio-componentes);
     align-items: stretch;
 }
 
@@ -608,7 +603,7 @@ body > .contenido-principal.contenido-inicio {
 .dashboard-fila-doble {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
+    gap: var(--espacio-componentes);
     align-items: stretch;
 }
 
@@ -903,11 +898,6 @@ body > .contenido-principal.contenido-inicio {
 }
 
 @media (max-width: 480px) {
-    body > .contenido-principal.contenido-inicio {
-        width: calc(100% - 32px);
-        padding-block: 24px;
-    }
-
     .dashboard-cabecera,
     .dashboard-eventos,
     .dashboard-ocupacion,

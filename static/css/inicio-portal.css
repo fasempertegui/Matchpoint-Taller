@@ -1,4 +1,4 @@
-.portal-inicio-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: stretch; }
+.portal-inicio-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--espacio-componentes); align-items: stretch; }
 .contenido-inicio-portal .tarjeta, .contenido-inicio-portal .boton { border-radius: 10px; }
 .portal-inicio-grid > .tarjeta { display: flex; flex-direction: column; min-width: 0; padding: 0; }
 .portal-inicio-grid h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }

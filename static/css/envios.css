@@ -1,7 +1,3 @@
-body > .contenido-principal.contenido-envios {
-    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
-    padding-block: 48px;
-}
 .contenido-envios .tarjeta,
 .contenido-envios .boton,
 .contenido-envios .form-control { border-radius: 10px; }

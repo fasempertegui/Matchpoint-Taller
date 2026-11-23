@@ -41,12 +41,6 @@
     margin-top: 16px;
 }
 
-body > .contenido-principal.contenido-feriados {
-    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
-    padding-top: 48px;
-    padding-bottom: 48px;
-}
-
 .contenido-feriados .tarjeta,
 .contenido-feriados .boton,
 .contenido-feriados .form-control {
@@ -187,21 +181,15 @@ body > .contenido-principal.contenido-feriados {
     border-radius: 0 0 10px 10px;
 }
 
-.contenido-feriados > .tarjeta-informativa { margin-bottom: 20px; }
-
 .feriados-lista {
     padding: 0;
     overflow: hidden;
 }
 
-.contenido-feriados > .tarjeta-titulo:has(+ .horarios-tipos) {
-    margin-bottom: 12px;
-}
-
 .horarios-tipos {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: var(--espacio-componentes);
 }
 
 .horarios-tipo {

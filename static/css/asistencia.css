@@ -1,6 +1,4 @@
-body > .contenido-principal.contenido-asistencia { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
 .contenido-asistencia .tarjeta, .contenido-asistencia .boton, .contenido-asistencia .form-control, .contenido-asistencia .modal-confirmacion { border-radius: 10px; }
-.asistencia-contexto { margin-bottom: 20px; }
 .asistencia-contexto dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin: 0; }
 .asistencia-contexto dt { color: var(--texto-suave); font-size: .875rem; }
 .asistencia-contexto dd { margin: 6px 0 0; font-weight: 600; }

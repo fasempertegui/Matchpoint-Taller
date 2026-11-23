@@ -1,7 +1,3 @@
-body > .contenido-principal.contenido-caja {
-    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
-    padding-block: 48px;
-}
 .contenido-caja .tarjeta,
 .contenido-caja .boton,
 .contenido-caja .form-control { border-radius: 10px; }
@@ -45,7 +41,6 @@ body > .contenido-principal.contenido-caja {
     .caja-importes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.contenido-caja > .tarjeta:not(.tarjeta-filtros) + .tarjeta:not(.tarjeta-filtros) { margin-top: 24px; }
 .contenido-caja .tarjeta-formulario {
     width: 100%;
     max-width: none;
@@ -62,7 +57,7 @@ body > .contenido-principal.contenido-caja {
     border-top: 1px solid var(--borde);
     border-radius: 0 0 10px 10px;
 }
-.caja-tipos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+.caja-tipos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--espacio-componentes); margin-top: 24px; }
 .caja-tipos a { display: block; padding: 20px; text-decoration: none; border: 1px solid var(--borde); border-radius: 10px; }
 .caja-tipos a:hover { background: var(--primario-suave); border-color: var(--primario); }
 .caja-tipos strong { display: block; color: var(--primario); }

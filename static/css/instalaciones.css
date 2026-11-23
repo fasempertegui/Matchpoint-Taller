@@ -1,9 +1,3 @@
-body > .contenido-principal.contenido-instalaciones {
-    width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px)));
-    padding-top: 48px;
-    padding-bottom: 48px;
-}
-
 .contenido-instalaciones .tarjeta,
 .contenido-instalaciones .formulario-guiado-ayuda,
 .contenido-instalaciones .boton,
@@ -60,7 +54,7 @@ body > .contenido-principal.contenido-instalaciones {
 .sedes-tarjetas {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-    gap: 24px;
+    gap: var(--espacio-componentes);
 }
 
 .sede-tarjeta {
