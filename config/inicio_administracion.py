@@ -8,7 +8,8 @@ from django.utils import timezone
 from caja.models import SesionCaja
 from clases.consultas import clases_sin_asistencia_queryset
 from comunicaciones.models import EnvioEmail
-from instalaciones.models import Cancha, Sede, SedeHorario
+from instalaciones.horarios import franjas_horario
+from instalaciones.models import Cancha, Sede, SedeHorario, SedeHorarioEspecial
 from membresias.consultas import contar_contrataciones_con_diferencia
 from membresias.continuidad import ventana_continuidad
 from membresias.models import MembresiaUsuario, PlanUsuario
@@ -153,6 +154,36 @@ def _serie_usuarios_30_dias(hoy, tz):
     return serie
 
 
+def _horas_de_horarios(horarios):
+    horas = set()
+    for horario in horarios:
+        for inicio, fin in franjas_horario(horario):
+            horas.update(range(inicio.hour, fin.hour))
+    return horas
+
+
+def _rango_horas_hoy(hoy, horas_con_eventos):
+    sedes_activas = list(Sede.objects.filter(estado=Sede.Estado.ACTIVA).values_list("pk", flat=True))
+    especiales = {
+        horario.sede_id: horario
+        for horario in SedeHorarioEspecial.objects.filter(sede_id__in=sedes_activas, fecha=hoy)
+    }
+    habituales = {
+        horario.sede_id: horario
+        for horario in SedeHorario.objects.filter(sede_id__in=sedes_activas, dia_semana=hoy.isoweekday())
+    }
+    horarios_hoy = [
+        especiales[sede_id] if sede_id in especiales else habituales.get(sede_id)
+        for sede_id in sedes_activas
+    ]
+    horas_visibles = _horas_de_horarios(horarios_hoy) | set(horas_con_eventos)
+    if not horas_visibles:
+        horas_visibles = _horas_de_horarios(SedeHorario.objects.filter(sede_id__in=sedes_activas))
+    if not horas_visibles:
+        return list(range(7, 23))
+    return list(range(min(horas_visibles), max(horas_visibles) + 1))
+
+
 def _contexto_actividad_hoy(hoy, hora_actual):
     eventos_hoy = (
         Evento.objects.filter(
@@ -177,9 +208,7 @@ def _contexto_actividad_hoy(hoy, hora_actual):
             par["reservas"] += cantidad
             reservas_hoy += cantidad
 
-    hora_inicio = min([7, *conteo_por_hora.keys()])
-    hora_fin = max([22, *conteo_por_hora.keys()])
-    horas_rango = list(range(hora_inicio, hora_fin + 1))
+    horas_rango = _rango_horas_hoy(hoy, conteo_por_hora.keys())
 
     max_serie = max(
         (max(par["clases"], par["reservas"]) for par in conteo_por_hora.values()),
@@ -237,28 +266,24 @@ def _contexto_para_revisar():
             "texto": "Clases finalizadas sin asistencia cargada",
             "cantidad": clases_sin_asistencia,
             "badge_clase": "baja" if clases_sin_asistencia else "igual",
-            "enlace_texto": "Ver clases",
             "url": reverse("clases:sin_asistencia"),
         },
         {
             "texto": "Reservas finalizadas sin resultado",
             "cantidad": reservas_sin_resultado,
             "badge_clase": "baja" if reservas_sin_resultado else "igual",
-            "enlace_texto": "Ver reservas",
             "url": reverse("reservas:sin_resultado"),
         },
         {
             "texto": "Contrataciones con diferencia por cubrir",
             "cantidad": contrataciones_diferencia,
             "badge_clase": "info" if contrataciones_diferencia else "igual",
-            "enlace_texto": "Ver contrataciones",
             "url": reverse("membresias:contrataciones_por_cubrir"),
         },
         {
             "texto": "Emails fallidos",
             "cantidad": emails_fallidos,
             "badge_clase": "baja" if emails_fallidos else "igual",
-            "enlace_texto": "Ver envíos",
             "url": f"{reverse('comunicaciones:envios_lista')}?estado=fallido",
         },
     ]

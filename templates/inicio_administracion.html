@@ -250,11 +250,19 @@
             <ul class="dashboard-revisar-lista">
                 {% for fila in para_revisar.filas %}
                     <li>
-                        <a class="dashboard-revisar-fila{% if fila.cantidad == 0 %} dashboard-revisar-vacia{% endif %}" href="{{ fila.url }}">
-                            <span class="dashboard-revisar-texto">{{ fila.texto }}</span>
-                            <span class="dashboard-delta dashboard-delta-{{ fila.badge_clase }} dashboard-revisar-contador">{{ fila.cantidad }}</span>
-                            <span class="dashboard-revisar-enlace">{{ fila.enlace_texto }}</span>
-                        </a>
+                        {% if fila.cantidad %}
+                            <a class="dashboard-revisar-fila" href="{{ fila.url }}">
+                                <span class="dashboard-revisar-texto">{{ fila.texto }}</span>
+                                <span class="dashboard-delta dashboard-delta-{{ fila.badge_clase }} dashboard-revisar-contador">{{ fila.cantidad }}</span>
+                                <span class="dashboard-revisar-enlace">Revisar</span>
+                            </a>
+                        {% else %}
+                            <div class="dashboard-revisar-fila dashboard-revisar-vacia">
+                                <span class="dashboard-revisar-texto">{{ fila.texto }}</span>
+                                <span class="dashboard-delta dashboard-delta-{{ fila.badge_clase }} dashboard-revisar-contador">{{ fila.cantidad }}</span>
+                                <span class="dashboard-revisar-ok">¡Todo bien!</span>
+                            </div>
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>
