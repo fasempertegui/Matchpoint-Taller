@@ -1,8 +1,10 @@
 """Importa un escenario histórico de demostración sobre la base inicial del proyecto."""
 
 from collections import Counter, defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
+from itertools import repeat
 from pathlib import Path
 import random
 import unicodedata
@@ -11,6 +13,7 @@ from uuid import uuid4
 from django.contrib.auth.hashers import make_password
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection, transaction
+from django.db.models import ForeignKey
 from django.utils import timezone
 
 from auditoria.contexto import contexto_auditoria
@@ -19,9 +22,8 @@ from caja.finanzas import resumen_financiero
 from caja.models import AjusteImporte, MovimientoFondo, SesionCaja
 from caja.servicios import efectivo_esperado
 from clases.models import Asistencia, Clase, ClaseAlumno, ClaseProfesor, Feriado
-from clases.validaciones import validar_horario_clase
-from common.disponibilidad import validar_disponibilidad
 from common.fechas import FECHA_INICIO_OPERACIONES
+from instalaciones.horarios import horarios_efectivos
 from instalaciones.models import Cancha
 from membresias.fechas import mes_siguiente
 from membresias.models import Membresia, MembresiaUsuario, Plan, PlanUsuario
@@ -30,10 +32,10 @@ from usuarios.forms import validar_celular_ar
 from usuarios.models import Rol, Usuario, UsuarioRol
 
 
-MARCA = "Demostración parcial 2"
-NOMBRES = "Lucía Mateo Camila Nicolás Valentina Santiago Julieta Tomás Sofía Benjamín Martina Joaquín Catalina Lautaro Emilia Agustín Paula Ignacio Delfina Facundo Florencia Bruno Victoria Gonzalo Abril Ramiro Rocío Franco Malena Andrés".split()
+MARCA = ""
+NOMBRES = "Lucía Fabricio Yuliana Luciana Gustavo Tiziana Mateo Camila Nicolás Valentina Santiago Julieta Tomás Sofía Benjamín Martina Joaquín Catalina Lautaro Emilia Agustín Paula Ignacio Delfina Facundo Florencia Bruno Victoria Gonzalo Abril Ramiro Rocío Franco Malena Andrés".split()
 APELLIDOS = "Herrera Acosta Aguirre Alarcón Álvarez Arias Ávila Barrios Benítez Blanco Bustos Cabrera Cáceres Campos Cárdenas Carrizo Castro Chávez Córdoba Correa Costa Cruz Delgado Díaz Domínguez Duarte Escobar Espinoza Farías Fernández Ferreyra Figueroa Flores Franco Fuentes García Giménez Godoy Gómez González Gutiérrez Guzmán Ibáñez Juárez Lagos Leiva Ledesma López Luna Maidana Maldonado Mansilla Márquez Martínez Medina Méndez Miranda Molina Montero Morales Moreno Muñoz Navarro Núñez Ojeda Oliva Olivera Ortiz Páez Palacios Paredes Paz Peralta Pereyra Pérez Ponce Quiroga Ramírez Ramos Reyes Ríos Rivas Robles Rojas Romero Ruiz Salazar Sánchez Sosa Torres".split()
-HORAS = (18, 19, 17, 20, 16, 10, 11, 9, 8, 12, 21, 22)
+HORAS = range(15, 7, -1)
 DIAS_PLAN = {1: (0,), 2: (1, 3), 3: (0, 2, 4), 5: (0, 1, 2, 3, 4)}
 
 
@@ -46,7 +48,13 @@ def normalizar(texto):
 
 
 def insertar(objeto, creado, actualizado=None):
-    objeto.full_clean()
+    # PostgreSQL comprueba referencias, unicidad y restricciones dentro de la transacción.
+    referencias = [
+        campo.name
+        for campo in objeto._meta.fields
+        if isinstance(campo, ForeignKey) and campo.db_constraint and not campo.get_limit_choices_to()
+    ]
+    objeto.full_clean(exclude=referencias, validate_unique=False, validate_constraints=False)
     if isinstance(objeto, Evento):
         # La importación conserva eventos históricos; el alta interactiva exige inicio futuro.
         Evento.objects.bulk_create([objeto])
@@ -163,14 +171,17 @@ class Command(BaseCommand):
         self.usuarios = []
         roles = {r.codigo: r for r in Rol.objects.all()}
         creado = instante(FECHA_INICIO_OPERACIONES - timedelta(days=1), 8)
-        for indice, apellido in enumerate(APELLIDOS[:90]):
+        apellidos = APELLIDOS[:90]
+        with ThreadPoolExecutor(max_workers=4) as ejecutor:
+            contrasenas = list(ejecutor.map(make_password, repeat("ulisesbatata", len(apellidos))))
+        for indice, (apellido, contrasena) in enumerate(zip(apellidos, contrasenas)):
             nombre = NOMBRES[indice % len(NOMBRES)]
             correo = f"{normalizar(apellido)}{normalizar(nombre[0])}@gmail.com"
             usuario = insertar(Usuario(
                 username=correo.removesuffix("@gmail.com"), email=correo,
                 first_name=nombre, last_name=apellido, fecha_nacimiento=date(2000, 1, 1),
                 celular_contacto=validar_celular_ar(f"387500{indice + 1:04d}"),
-                password=make_password("ulisesbatata"), date_joined=creado,
+                password=contrasena, date_joined=creado,
                 correo_verificado_en=creado, verificacion_solicitada_en=creado,
                 observaciones=MARCA,
             ), creado)
@@ -230,7 +241,9 @@ class Command(BaseCommand):
                                       concepto=concepto, devolucion=devolucion))
 
     def evento(self, cancha, fecha, hora, tipo, *, anulado=False, motivo=""):
-        validar_horario_clase(cancha.sede, fecha, time(hora))
+        hora_inicio = time(hora)
+        if not self.horarios[cancha.sede_id][fecha].contiene(hora_inicio, time(hora + 1)):
+            raise CommandError(f"El turno del {fecha} a las {hora_inicio:%H:%M} está fuera del horario de {cancha.sede}.")
         clave = (fecha, hora, cancha.pk)
         if clave in self.ocupacion:
             raise CommandError(f"Turno repetido en la carga: {clave}.")
@@ -238,9 +251,10 @@ class Command(BaseCommand):
         fin = inicio + timedelta(hours=1)
         if fin > timezone.now():
             raise CommandError("La importación no admite actividades futuras ni en curso.")
-        turno = Turno.objects.filter(cancha=cancha, fecha=fecha, hora_inicio=time(hora)).first()
+        turno = self.turnos.get(clave)
         if turno is None:
-            turno = insertar(Turno(cancha=cancha, fecha=fecha, hora_inicio=time(hora)), instante(fecha))
+            turno = insertar(Turno(cancha=cancha, fecha=fecha, hora_inicio=hora_inicio), instante(fecha))
+            self.turnos[clave] = turno
         datos = dict(turno=turno, tipo=tipo, registrado_por=self.admin, observaciones=MARCA,
                      estado="anulado" if anulado else "finalizado")
         if anulado:
@@ -254,7 +268,7 @@ class Command(BaseCommand):
         indice_mes = self.meses.index(fecha.replace(day=1))
         clima = fecha.weekday() == 5 and 7 <= fecha.day <= 13
         for cancha in self.canchas:
-            horas = (17, 18, 19) if clima else ()
+            horas = (13, 14, 15) if clima else ()
             for hora in horas:
                 evento = self.evento(cancha, fecha, hora, "bloqueo")
                 insertar(Bloqueo(evento=evento, motivo="clima_adverso"), evento.creado_en)
@@ -268,7 +282,7 @@ class Command(BaseCommand):
 
     def buscar_turno(self, fecha, personas, *, preferencia=0):
         for hora in HORAS:
-            if set(personas) & self.personas_ocupadas[(fecha, hora)]:
+            if not personas.isdisjoint(self.personas_ocupadas[(fecha, hora)]):
                 continue
             for desplazamiento in range(4):
                 cancha = self.canchas[(preferencia + desplazamiento) % 4]
@@ -295,7 +309,6 @@ class Command(BaseCommand):
                 if turno is None:
                     raise CommandError(f"No hay capacidad para las clases del {fecha}.")
                 cancha, hora = turno
-                validar_disponibilidad(personas, fecha, time(hora))
                 anulado = self.azar.random() < 0.035
                 evento = self.evento(cancha, fecha, hora, "clase", anulado=anulado, motivo="Profesor ausente por motivo personal")
                 clase = insertar(Clase(evento=evento, finalizado_por=None if anulado else profesor), evento.creado_en)
@@ -326,7 +339,6 @@ class Command(BaseCommand):
             if turno is None:
                 continue
             cancha, hora = turno
-            validar_disponibilidad({usuario.pk}, fecha, time(hora))
             contrato = self.contratos.get((usuario.pk, mes))
             socio = isinstance(contrato, MembresiaUsuario) and self.usos_organizador[(usuario.pk, mes)] < contrato.horas_organizador_aplicadas
             con_membresia = socio and self.azar.random() < 0.85
@@ -355,7 +367,6 @@ class Command(BaseCommand):
                 cobertura = self.contratos.get((invitado.pk, mes))
                 condicion, aplicada = "sin_aplicar", None
                 if respuesta == "afirmativa":
-                    validar_disponibilidad({invitado.pk}, fecha, time(hora))
                     personas.add(invitado.pk)
                     if not con_membresia:
                         condicion = "reserva_normal"
@@ -383,14 +394,25 @@ class Command(BaseCommand):
             self.cantidades["reservas_anuladas" if anulado else "reservas_finalizadas"] += 1
 
     def crear_agenda(self):
-        fecha = FECHA_INICIO_OPERACIONES
-        while fecha < self.hoy:
+        fechas = [
+            FECHA_INICIO_OPERACIONES + timedelta(days=dia)
+            for dia in range((self.hoy - FECHA_INICIO_OPERACIONES).days)
+        ]
+        sedes = {cancha.sede_id: cancha.sede for cancha in self.canchas}
+        self.horarios = {sede_id: horarios_efectivos(sede, fechas) for sede_id, sede in sedes.items()}
+        self.turnos = {
+            (turno.fecha, turno.hora_inicio.hour, turno.cancha_id): turno
+            for turno in Turno.objects.filter(
+                cancha__in=self.canchas, fecha__gte=FECHA_INICIO_OPERACIONES, fecha__lt=self.hoy,
+            ).order_by()
+        }
+        # La agenda parte sin eventos; la ocupación se registra al generar cada actividad.
+        for fecha in fechas:
             self.crear_bloqueos(fecha)
             self.crear_clases(fecha)
             self.crear_reservas(fecha)
             if fecha.day in (1, 15):
                 self.stdout.write(f"Agenda importada hasta {fecha:%d/%m/%Y}…", ending="\n")
-            fecha += timedelta(days=1)
 
     def crear_caja(self):
         for fecha, pagos in sorted(self.pagos.items()):

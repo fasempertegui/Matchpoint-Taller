@@ -21,9 +21,8 @@ BEGIN
         ) RETURNING id INTO sede_id;
 
         INSERT INTO sedes_horarios (
-            sede_id, dia_semana, hora_inicio_1, hora_fin_1, hora_inicio_2, hora_fin_2,
-            creado_en, actualizado_en
-        ) SELECT sede_id, numero, '08:00'::time, '13:00'::time, '16:00'::time, '23:00'::time,
+            sede_id, dia_semana, hora_inicio_1, hora_fin_1, creado_en, actualizado_en
+        ) SELECT sede_id, numero, '08:00'::time, '16:00'::time,
             now(), now() FROM generate_series(1, 7) AS numero;
 
         FOR cancha_numero IN 1..2 LOOP
