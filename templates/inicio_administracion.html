@@ -1,31 +1,28 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load static %}
 {% block titulo %}Inicio | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-inicio{% endblock %}
 {% block contenido %}
-<div class="dashboard-admin">
-    <header class="tarjeta dashboard-cabecera">
-        <div>
-            <p class="dashboard-fecha">{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
-            <h1>¡Hola, {{ request.user.first_name|default:request.user.username }}!</h1>
-        </div>
-        <div class="dashboard-estados">
-            {% if caja_abierta is not None %}
-                <a class="dashboard-pill" href="{% url 'caja:caja_actual' %}">
-                    <span class="dashboard-punto{% if caja_abierta %} dashboard-punto-activo{% endif %}" aria-hidden="true"></span>
-                    {% if caja_abierta %}Caja abierta{% else %}Caja cerrada{% endif %}
-                </a>
-            {% endif %}
-            <a class="dashboard-pill" href="{% url 'membresias:continuidad_lista' %}">
-                <span class="dashboard-punto{% if encuestas.abiertas %} dashboard-punto-primario{% endif %}" aria-hidden="true"></span>
-                {% if encuestas.abiertas %}Continuidad abierta{% else %}Continuidad cerrada{% endif %}
-            </a>
-        </div>
-    </header>
+{% texto_titulo as titulo_tarjeta %}¡Hola, {{ request.user.first_name|default:request.user.username }}!{% endtexto_titulo %}
+{% texto_titulo as subtitulo_tarjeta %}{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}{% endtexto_titulo %}
+{% tarjeta_titulo titulo_tarjeta subtitulo=subtitulo_tarjeta %}
+    {% if caja_abierta is not None %}
+        <a class="dashboard-pill" href="{% url 'caja:caja_actual' %}">
+            <span class="dashboard-punto{% if caja_abierta %} dashboard-punto-activo{% endif %}" aria-hidden="true"></span>
+            {% if caja_abierta %}Caja abierta{% else %}Caja cerrada{% endif %}
+        </a>
+    {% endif %}
+    <a class="dashboard-pill" href="{% url 'membresias:continuidad_lista' %}">
+        <span class="dashboard-punto{% if encuestas.abiertas %} dashboard-punto-primario{% endif %}" aria-hidden="true"></span>
+        {% if encuestas.abiertas %}Encuestas abiertas{% else %}Encuestas cerradas{% endif %}
+    </a>
+{% endtarjeta_titulo %}
 
-    <section class="tarjeta dashboard-eventos" aria-labelledby="inicio-eventos-titulo">
-        <div class="dashboard-eventos-resumen">
+<div class="dashboard-admin">
+    <section class="dashboard-eventos" aria-label="Actividad de hoy">
+        <article class="tarjeta dashboard-eventos-resumen" aria-labelledby="inicio-eventos-titulo">
             <div class="dashboard-tarjeta-cabecera">
                 <h2 class="dashboard-etiqueta" id="inicio-eventos-titulo">Eventos hoy</h2>
                 <a class="dashboard-enlace" href="{% url 'agenda:agenda' %}?fecha={{ hoy|date:'Y-m-d' }}">Ver agenda de hoy</a>
@@ -48,11 +45,11 @@
                     <p class="dashboard-valor-secundario{% if not actividad.reservas %} dashboard-valor-cero{% endif %}">{{ actividad.reservas }}</p>
                 </div>
             </div>
-        </div>
+        </article>
 
-        <div class="dashboard-eventos-grafico">
+        <article class="tarjeta dashboard-eventos-grafico" aria-labelledby="inicio-distribucion-titulo">
             <div class="dashboard-grafico-cabecera">
-                <h3 class="dashboard-grafico-titulo">Distribución por hora</h3>
+                <h2 class="dashboard-etiqueta" id="inicio-distribucion-titulo">Distribución por hora</h2>
                 <div class="dashboard-leyenda" aria-hidden="true">
                     <span><i class="dashboard-muestra dashboard-muestra-clases"></i>Clases</span>
                     <span><i class="dashboard-muestra dashboard-muestra-reservas"></i>Reservas</span>
@@ -101,7 +98,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </article>
     </section>
 
     <section class="dashboard-kpis" aria-label="Resumen general">
