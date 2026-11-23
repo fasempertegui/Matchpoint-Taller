@@ -66,6 +66,14 @@
     display: inline-flex;
 }
 
+.sidebar-boton-icono.barra-app-alternar {
+    color: var(--primario);
+}
+
+.sidebar-boton-icono.barra-app-alternar:hover {
+    color: var(--primario-hover);
+}
+
 .barra-app-salir {
     margin: 0;
 }
@@ -79,7 +87,7 @@
     border: 0;
     border-radius: 7px;
     background: transparent;
-    color: var(--texto-suave);
+    color: var(--primario);
     font: inherit;
     font-size: 14px;
     font-weight: 500;
@@ -88,7 +96,7 @@
 
 .barra-app-salir-boton:hover {
     background: var(--primario-suave);
-    color: var(--primario);
+    color: var(--primario-hover);
 }
 
 .barra-app-salir-boton:focus-visible {

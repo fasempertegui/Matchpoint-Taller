@@ -35,11 +35,13 @@
 
 .barra-app-notificaciones {
     position: relative;
+    color: #c28400;
 }
 
+.barra-app-notificaciones:hover,
 .barra-app-notificaciones-activa {
-    background: var(--primario-suave);
-    color: var(--primario);
+    background: var(--advertencia-suave);
+    color: #a16207;
 }
 
 .barra-app-notificaciones .notificaciones-contador {
