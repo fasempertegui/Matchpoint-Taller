@@ -118,3 +118,66 @@
 .contratacion-datos small { display: block; margin-top: 3px; color: var(--texto-suave); font-weight: 400; }
 .contratacion-importe dd { color: var(--primario); font-size: 1.4rem; font-variant-numeric: tabular-nums; }
 .contratacion-alta .acciones-formulario { flex-wrap: wrap; }
+
+.continuidad-respuesta {
+    display: grid;
+    gap: var(--espacio-componentes);
+    width: min(100%, 700px);
+    margin-inline: auto;
+}
+
+.continuidad-respuesta-campo {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.continuidad-respuesta-campo legend {
+    margin-bottom: 12px;
+    padding: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.continuidad-respuesta-opciones {
+    display: grid;
+    gap: 8px;
+}
+
+.continuidad-respuesta-opcion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.continuidad-respuesta-opcion input {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--primario);
+}
+
+.continuidad-respuesta-opcion:hover,
+.continuidad-respuesta-opcion:has(input:checked) {
+    background: var(--primario-suave);
+}
+
+.continuidad-respuesta-opcion:has(input:checked) {
+    border-color: var(--primario);
+}
+
+.continuidad-respuesta-opcion:has(input:focus-visible) {
+    outline: 2px solid var(--primario);
+    outline-offset: 2px;
+}
+
+.continuidad-respuesta-formulario .acciones-formulario {
+    flex-wrap: wrap;
+}

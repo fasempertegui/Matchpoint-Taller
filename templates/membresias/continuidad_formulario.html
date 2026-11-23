@@ -1,15 +1,37 @@
 {% extends "base.html" %}
+{% load encabezados static %}
 {% block titulo %}Responder continuidad | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/contrataciones.css' %}">{% endblock %}
 {% block contenido %}
-<section class="tarjeta">
-    <h1>Continuidad para {{ continuidad.mes_consultado|date:"F Y" }}</h1>
-    <p>{{ contratacion.producto.nombre }} · Contratación de {{ contratacion.mes_cubierto|date:"F Y" }}</p>
-    <p>Podés cambiar tu respuesta hasta terminar el {{ continuidad.ultimo_dia|date:"d/m/Y" }}. Los cambios de producto y las contrataciones se coordinan con administración.</p>
-    <form method="post">
+<div class="continuidad-respuesta">
+    {% texto_titulo as titulo %}Continuidad para {{ continuidad.mes_consultado|date:"F Y" }}{% endtexto_titulo %}
+    {% texto_titulo as subtitulo %}{{ contratacion.producto.nombre }} · Contratación de {{ contratacion.mes_cubierto|date:"F Y" }}{% endtexto_titulo %}
+    {% texto_titulo as descripcion %}Podés cambiar tu respuesta hasta el <strong><time datetime="{{ continuidad.ultimo_dia|date:'Y-m-d' }}">{{ continuidad.ultimo_dia|date:"d/m/Y" }}</time> inclusive</strong>. Los cambios de producto y las contrataciones se coordinan con administración.{% endtexto_titulo %}
+    {% tarjeta_titulo titulo subtitulo=subtitulo descripcion=descripcion %}{% endtarjeta_titulo %}
+
+    <form class="tarjeta continuidad-respuesta-formulario" method="post">
         {% csrf_token %}
         {{ formulario.non_field_errors }}
-        <fieldset class="grupo-campo"><legend>{{ formulario.respuesta.label }}</legend>{{ formulario.respuesta }}{{ formulario.respuesta.errors }}</fieldset>
-        <div class="acciones-formulario"><button class="boton boton-primario" type="submit">Guardar respuesta</button><a class="boton boton-secundario" href="{{ url_detalle }}">Cancelar</a></div>
+        <fieldset class="continuidad-respuesta-campo"{% if formulario.respuesta.errors %} aria-describedby="continuidad-respuesta-errores"{% endif %}>
+            <legend>{{ formulario.respuesta.label }}</legend>
+            <div class="continuidad-respuesta-opciones">
+                {% for opcion in formulario.respuesta %}
+                    <label class="continuidad-respuesta-opcion">
+                        {{ opcion.tag }}
+                        <span>{{ opcion.choice_label }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+            {% if formulario.respuesta.errors %}
+                <div id="continuidad-respuesta-errores" role="alert">
+                    {% for error in formulario.respuesta.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+        </fieldset>
+        <div class="acciones-formulario">
+            <button class="boton boton-primario" type="submit">Guardar respuesta</button>
+            <a class="boton boton-secundario" href="{{ url_detalle }}">Cancelar</a>
+        </div>
     </form>
-</section>
+</div>
 {% endblock %}
