@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load filtros %}
 {% load estados %}
@@ -7,17 +8,12 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}"><link rel="stylesheet" href="{% static 'css/contrataciones.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-membresias-configuracion catalogo-listado contratacion-listado{% if propias or titular %} mis-contrataciones{% endif %}{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion{% if propias or titular %} encabezado-geometrico encabezado-geometrico-orbitas{% endif %}">
-    <div class="encabezado-fila">
-        <h1>{{ titulo_lista }}</h1>
-        {% if titular %}<a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>{% elif not propias %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
-    </div>
-    <p class="encabezado-descripcion">
-        {% if titular %}Consultá los planes y membresías contratados por este usuario, sus períodos e importes.
+{% texto_titulo as descripcion_tarjeta %}{% if titular %}Consultá los planes y membresías contratados por este usuario, sus períodos e importes.
         {% elif propias %}Consultá tus planes y membresías contratados, sus períodos e importes.
-        {% else %}Consultá y registrá las contrataciones mensuales de {{ plural }} de cada usuario.{% endif %}
-    </p>
-</header>
+        {% else %}Consultá y registrá las contrataciones mensuales de {{ plural }} de cada usuario.{% endif %}{% endtexto_titulo %}
+{% tarjeta_titulo titulo_lista descripcion=descripcion_tarjeta %}
+    {% if titular %}<a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>{% elif not propias %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
+{% endtarjeta_titulo %}
 {% if propias or titular %}
 <nav class="pestanas" aria-label="Tipo de contratación">
     <a href="{{ request.path }}?tipo=plan"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>

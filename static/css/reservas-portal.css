@@ -1,6 +1,5 @@
 body > .contenido-principal.contenido-reservas { width: var(--ancho-contenido-principal, min(1120px, calc(100% - 96px))); padding-block: 48px; }
 .contenido-reservas .tarjeta, .contenido-reservas .boton, .contenido-reservas .form-control { border-radius: 10px; }
-.reservas-listado > .encabezado-pagina { border: 0; border-top: 3px solid var(--primario-medio); }
 .reservas-tabla table { font-size: .9rem; }
 .reservas-tabla td { vertical-align: middle; }
 .reservas-tabla small { display: block; margin-top: 4px; color: var(--texto-suave); }

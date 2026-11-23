@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load filtros %}
 {% load estados %}
@@ -9,17 +10,13 @@
 {% block clase_contenido %}contenido-usuarios listado-usuarios{% endblock %}
 
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
-    <div class="encabezado-fila">
-        <h1>Usuarios</h1>
-        {% if perms.usuarios.add_usuario %}
-        <a class="boton boton-primario" href="{% url 'usuarios:usuario_crear' %}">
-            Nuevo usuario
-        </a>
-        {% endif %}
-    </div>
-    <p class="encabezado-descripcion">Consultá y administrá las cuentas de usuario, sus roles y su acceso al sistema.</p>
-</header>
+{% tarjeta_titulo "Usuarios" descripcion="Consultá y administrá las cuentas de usuario, sus roles y su acceso al sistema." %}
+    {% if perms.usuarios.add_usuario %}
+    <a class="boton boton-primario" href="{% url 'usuarios:usuario_crear' %}">
+        Nuevo usuario
+    </a>
+    {% endif %}
+{% endtarjeta_titulo %}
 
 {% tarjeta_filtros %}
     <form method="get" action="{% url 'usuarios:usuario_lista' %}" class="tarjeta-busqueda filtros-compactos">

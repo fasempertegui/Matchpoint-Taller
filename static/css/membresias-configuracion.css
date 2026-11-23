@@ -9,11 +9,6 @@ body > .contenido-principal.contenido-membresias-configuracion {
     border-radius: 10px;
 }
 
-.catalogo-listado > .encabezado-pagina {
-    border: 0;
-    border-top: 3px solid var(--primario-medio);
-}
-
 .catalogo-listado table { font-size: .9rem; }
 .catalogo-listado td { vertical-align: middle; }
 .catalogo-listado .catalogo-importe { white-space: nowrap; font-variant-numeric: tabular-nums; }

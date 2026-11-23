@@ -1,15 +1,15 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load static %}
 {% block titulo %}Asistencia de clase {{ clase.pk }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}"><link rel="stylesheet" href="{% static 'css/asistencia.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-asistencia{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-reticula">
-    <h1>Asistencia</h1>
+{% texto_titulo as descripcion_tarjeta %}Registrá la asistencia de la clase {{ clase.pk }}. Sin registrar no equivale a Ausente; cada cambio se guarda al confirmar.{% endtexto_titulo %}
+{% tarjeta_titulo "Asistencia" descripcion=descripcion_tarjeta %}
     <a class="boton boton-secundario" href="{{ url_detalle }}">Volver al detalle</a>
-</header>
-<p class="tarjeta descripcion-seccion">Registrá la asistencia de la clase {{ clase.pk }}. Sin registrar no equivale a Ausente; cada cambio se guarda al confirmar.</p>
+{% endtarjeta_titulo %}
 <section class="tarjeta asistencia-contexto" aria-label="Turno de la clase">
     <dl>
         <div><dt>Fecha</dt><dd>{{ turno.fecha|date:"d/m/Y" }}</dd></div>

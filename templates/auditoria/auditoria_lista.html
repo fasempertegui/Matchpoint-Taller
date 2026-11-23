@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load static %}
 
@@ -11,10 +12,7 @@
 {% block clase_contenido %}contenido-auditoria{% endblock %}
 
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-reticula">
-    <h1>Auditoría</h1>
-    <p class="encabezado-descripcion">Consultá los cambios realizados en el sistema, quién los hizo y los intentos de acceso rechazados.</p>
-</header>
+{% tarjeta_titulo "Auditoría" descripcion="Consultá los cambios realizados en el sistema, quién los hizo y los intentos de acceso rechazados." %}{% endtarjeta_titulo %}
 
 {% include "auditoria/navegacion.html" %}
 

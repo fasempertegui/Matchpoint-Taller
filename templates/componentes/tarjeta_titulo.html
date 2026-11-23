@@ -1,0 +1,10 @@
+<header class="tarjeta tarjeta-titulo"{% if region %} data-resultados-filtros="{{ region }}"{% endif %}>
+    <div class="tarjeta-titulo-principal">
+        <div class="tarjeta-titulo-identidad">
+            {% if subtitulo %}<p class="tarjeta-titulo-subtitulo">{{ subtitulo }}</p>{% endif %}
+            <h1>{{ titulo }}</h1>
+        </div>
+        {% if acciones %}<div class="tarjeta-titulo-acciones">{{ acciones }}</div>{% endif %}
+    </div>
+    {% if descripcion %}<p class="tarjeta-titulo-descripcion">{{ descripcion }}</p>{% endif %}
+</header>

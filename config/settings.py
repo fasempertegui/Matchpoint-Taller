@@ -80,6 +80,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'libraries': {
+                'encabezados': 'common.encabezados',
                 'filtros': 'common.filtros',
                 'paginacion': 'common.paginacion',
                 'tablas': 'common.tablas',

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load static %}
 {% block titulo %}Inicio | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}"><link rel="stylesheet" href="{% static 'css/inicio-portal.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-inicio contenido-inicio-portal{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
-    <h1>Hola, {{ request.user.first_name|default:request.user.username }}</h1>
-    <p class="encabezado-descripcion">{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}</p>
-</header>
+{% texto_titulo as titulo_tarjeta %}Hola, {{ request.user.first_name|default:request.user.username }}{% endtexto_titulo %}
+{% texto_titulo as subtitulo_tarjeta %}{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}{% endtexto_titulo %}
+{% tarjeta_titulo titulo_tarjeta subtitulo=subtitulo_tarjeta %}{% endtarjeta_titulo %}
 {% if not request.user.correo_verificado_en %}
 <section class="tarjeta portal-verificacion"><p>Verificá tu correo para acceder a tus actividades y reservas</p><a class="boton boton-primario" href="{% url 'estado_verificacion' %}">Verificar mi correo</a></section>
 {% else %}

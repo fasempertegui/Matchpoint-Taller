@@ -194,7 +194,7 @@ body > .contenido-principal.contenido-feriados {
     overflow: hidden;
 }
 
-.contenido-feriados > .encabezado-con-descripcion:has(+ .horarios-tipos) {
+.contenido-feriados > .tarjeta-titulo:has(+ .horarios-tipos) {
     margin-bottom: 12px;
 }
 

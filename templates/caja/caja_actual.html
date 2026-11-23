@@ -1,13 +1,11 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load static %}
 {% block titulo %}Caja | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
-    <h1>Caja</h1>
-    <p class="encabezado-descripcion">Consultá el efectivo y los movimientos de cada sesión.</p>
-</header>
+{% tarjeta_titulo "Caja" descripcion="Consultá el efectivo y los movimientos de cada sesión." %}{% endtarjeta_titulo %}
 {% include "caja/navegacion.html" with seccion="actual" only %}
 <section class="tarjeta caja-sin-sesion">
     <div class="caja-sesion-cabecera"><h2>No hay una sesión abierta</h2><span class="caja-estado">Cerrada</span>{% if ultimo_cierre %}{% include "caja/_estado_informacion.html" with sesion=ultimo_cierre only %}{% endif %}</div>

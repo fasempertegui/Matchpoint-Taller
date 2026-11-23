@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load filtros %}
 {% load estados %}
@@ -7,10 +8,9 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-membresias-configuracion catalogo-listado{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina">
-    <h1>Planes</h1>
+{% tarjeta_titulo "Planes" %}
     <a class="boton boton-primario" href="{% url 'membresias:plan_crear' %}">Nuevo plan</a>
-</header>
+{% endtarjeta_titulo %}
 {% if hay_planes %}
     {% tarjeta_filtros %}
         <form class="tarjeta-busqueda filtros-compactos" method="get">

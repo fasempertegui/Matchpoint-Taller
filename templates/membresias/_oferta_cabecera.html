@@ -1,5 +1,3 @@
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
-    <h1>Oferta</h1>
-    <p class="encabezado-descripcion">Conocé las sedes, los planes de clases, las membresías y las tarifas de la academia.</p>
-</header>
+{% load encabezados %}
+{% tarjeta_titulo "Oferta" descripcion="Conocé las sedes, los planes de clases, las membresías y las tarifas de la academia." %}{% endtarjeta_titulo %}
 {% include "membresias/_oferta_navegacion.html" with tipo=tipo only %}

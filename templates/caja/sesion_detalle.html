@@ -1,17 +1,14 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load filtros %}
 {% load static %}
 {% block titulo %}Caja {{ sesion.numero }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
-    <div class="encabezado-fila">
-        <h1>Caja</h1>
-        {% if puede_cerrar %}<a class="boton boton-primario" href="{% url 'caja:movimiento_crear' sesion.pk %}">Registrar movimiento</a>{% endif %}
-    </div>
-    <p class="encabezado-descripcion">Consultá el efectivo y los movimientos de cada sesión.</p>
-</header>
+{% tarjeta_titulo "Caja" descripcion="Consultá el efectivo y los movimientos de cada sesión." %}
+    {% if puede_cerrar %}<a class="boton boton-primario" href="{% url 'caja:movimiento_crear' sesion.pk %}">Registrar movimiento</a>{% endif %}
+{% endtarjeta_titulo %}
 {% if sesion.estado == 'abierta' %}{% include "caja/navegacion.html" with seccion="actual" only %}{% else %}{% include "caja/navegacion.html" only %}{% endif %}
 <section class="tarjeta caja-sesion" aria-labelledby="sesion-titulo">
     <div class="caja-sesion-cabecera">

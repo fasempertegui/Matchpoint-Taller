@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load filtros %}
 {% load estados %}
 {% load static %}
@@ -10,17 +11,13 @@
 {% block clase_contenido %}contenido-instalaciones{% endblock %}
 
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
-    <div class="encabezado-fila">
-        <h1>Instalaciones</h1>
-        {% if perms.instalaciones.add_sede %}
-            <a class="boton boton-primario" href="{% url 'instalaciones:sede_crear' %}">
-                Nueva sede
-            </a>
-        {% endif %}
-    </div>
-    <p class="encabezado-descripcion">Consultá y administrá las sedes de la academia y sus canchas.</p>
-</header>
+{% tarjeta_titulo "Instalaciones" descripcion="Consultá y administrá las sedes de la academia y sus canchas." %}
+    {% if perms.instalaciones.add_sede %}
+        <a class="boton boton-primario" href="{% url 'instalaciones:sede_crear' %}">
+            Nueva sede
+        </a>
+    {% endif %}
+{% endtarjeta_titulo %}
 
 {% tarjeta_filtros %}
     <form method="get" action="{% url 'instalaciones:sede_lista' %}" class="tarjeta-busqueda filtros-compactos">

@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load estados %}
 {% load static filtros %}
 {% block titulo %}Uso de membresías | Academia TM{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-pagina"><h1>{% if contrato %}Uso de membresía{% else %}Uso de membresías{% endif %}</h1>{% if contrato %}<a class="boton boton-secundario" href="{% url 'membresias:mis_contrataciones' %}?tipo=membresia">Mis contrataciones</a>{% endif %}</header>
+{% texto_titulo as titulo_tarjeta %}{% if contrato %}Uso de membresía{% else %}Uso de membresías{% endif %}{% endtexto_titulo %}
+{% tarjeta_titulo titulo_tarjeta %}
+    {% if contrato %}<a class="boton boton-secundario" href="{% url 'membresias:mis_contrataciones' %}?tipo=membresia">Mis contrataciones</a>{% endif %}
+{% endtarjeta_titulo %}
 {% if not contrato %}
 {% tarjeta_filtros abierto=formulario.errors|default:None %}
 <form class="tarjeta-busqueda filtros-compactos" method="get" data-uso-formulario>{{ formulario.non_field_errors }}

@@ -52,12 +52,7 @@
     font-size: 10px;
 }
 
-.reglas-notificacion-titulo {
-    justify-content: flex-start;
-    gap: 8px;
-}
-
-.reglas-notificacion-titulo .ayuda-contextual {
+.contenido-notificaciones .tarjeta-titulo-acciones .ayuda-contextual {
     color: var(--primario);
 }
 

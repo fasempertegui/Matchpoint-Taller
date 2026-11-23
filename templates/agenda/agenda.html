@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load static l10n %}
 
 {% block titulo %}Agenda | Academia TM{% endblock %}
@@ -11,10 +12,7 @@
 {% endblock %}
 
 {% block contenido %}
-<header class="tarjeta agenda-encabezado encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
-    <h1>Agenda</h1>
-    <p class="encabezado-descripcion">Consultá las clases, reservas y bloqueos de cada sede y cancha.</p>
-</header>
+{% tarjeta_titulo "Agenda" descripcion="Consultá las clases, reservas y bloqueos de cada sede y cancha." %}{% endtarjeta_titulo %}
 
 {% if hay_sedes %}
     {% if formulario.errors %}

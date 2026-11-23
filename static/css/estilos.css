@@ -446,8 +446,6 @@ h2 {
     border: 1px solid var(--borde);
 }
 
-.encabezado-con-descripcion:has(+ .tarjeta-filtros) { margin-bottom: 12px; }
-
 .tarjeta-filtros > summary {
     display: flex;
     align-items: center;

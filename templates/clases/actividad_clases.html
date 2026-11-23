@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load filtros %}
 {% load estados %}
@@ -10,35 +11,32 @@
 {% block clase_contenido %}contenido-actividad-clases{% endblock %}
 
 {% block contenido %}
-<header data-resultados-filtros="encabezado" class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
-    <div class="encabezado-fila">
-        <h1>Actividad de clases</h1>
-        {% if es_profesor or request.user.pk != titular.pk %}
-        <div class="acciones">
-            {% if es_profesor %}
-            <form class="actividad-selector-funcion" method="get" data-filtros-automaticos>
-                {% if consulta_administrativa %}
-                <input type="hidden" name="fecha_desde" value="{{ formulario.fecha_desde.value|default_if_none:'' }}">
-                <input type="hidden" name="fecha_hasta" value="{{ formulario.fecha_hasta.value|default_if_none:'' }}">
-                <input type="hidden" name="vista" value="{{ formulario.vista.value }}">
-                {% else %}
-                <input type="hidden" name="mes" value="{{ formulario.mes.value|default_if_none:'' }}">
-                <input type="hidden" name="estado" value="{{ formulario.estado.value|default_if_none:'' }}">
-                {% endif %}
-                <label class="clase-etiqueta-oculta" for="actividad-funcion">Función en la clase</label>
-                <select class="form-control" id="actividad-funcion" name="funcion">
-                    <option value="profesor"{% if funcion == "profesor" %} selected{% endif %}>Profesor</option>
-                    <option value="participante"{% if funcion == "participante" %} selected{% endif %}>Participante</option>
-                </select>
-                <noscript><button class="boton boton-secundario boton-chico" type="submit">Aplicar</button></noscript>
-            </form>
+{% texto_titulo as descripcion_tarjeta %}Consultá {% if request.user.pk == titular.pk %}tus clases y asistencias{% else %}las clases y asistencias de {{ titular }}{% endif %} en el período seleccionado.{% endtexto_titulo %}
+{% tarjeta_titulo "Actividad de clases" descripcion=descripcion_tarjeta region="encabezado" %}
+    {% if es_profesor or request.user.pk != titular.pk %}
+    <div class="acciones">
+        {% if es_profesor %}
+        <form class="actividad-selector-funcion" method="get" data-filtros-automaticos>
+            {% if consulta_administrativa %}
+            <input type="hidden" name="fecha_desde" value="{{ formulario.fecha_desde.value|default_if_none:'' }}">
+            <input type="hidden" name="fecha_hasta" value="{{ formulario.fecha_hasta.value|default_if_none:'' }}">
+            <input type="hidden" name="vista" value="{{ formulario.vista.value }}">
+            {% else %}
+            <input type="hidden" name="mes" value="{{ formulario.mes.value|default_if_none:'' }}">
+            <input type="hidden" name="estado" value="{{ formulario.estado.value|default_if_none:'' }}">
             {% endif %}
-            {% if request.user.pk != titular.pk %}<a class="boton boton-secundario" href="{{ url_perfil }}">Ver perfil</a>{% endif %}
-        </div>
+            <label class="clase-etiqueta-oculta" for="actividad-funcion">Función en la clase</label>
+            <select class="form-control" id="actividad-funcion" name="funcion">
+                <option value="profesor"{% if funcion == "profesor" %} selected{% endif %}>Profesor</option>
+                <option value="participante"{% if funcion == "participante" %} selected{% endif %}>Participante</option>
+            </select>
+            <noscript><button class="boton boton-secundario boton-chico" type="submit">Aplicar</button></noscript>
+        </form>
         {% endif %}
+        {% if request.user.pk != titular.pk %}<a class="boton boton-secundario" href="{{ url_perfil }}">Ver perfil</a>{% endif %}
     </div>
-    <p class="encabezado-descripcion">Consultá {% if request.user.pk == titular.pk %}tus clases y asistencias{% else %}las clases y asistencias de {{ titular }}{% endif %} en el período seleccionado.</p>
-</header>
+    {% endif %}
+{% endtarjeta_titulo %}
 {% if consulta_administrativa %}
 <section class="tarjeta actividad-tarjeta-resumen" data-resultados-filtros="resumen" aria-label="Resumen del período">
     <div class="perfil-seccion">

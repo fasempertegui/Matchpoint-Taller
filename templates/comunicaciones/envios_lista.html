@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load filtros %}
 {% load estados %}
@@ -7,10 +8,7 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/envios.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-envios{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico">
-    <h1>Envíos de email</h1>
-    <p class="encabezado-descripcion">Consultá los emails enviados por el sistema, su estado de entrega y los intentos realizados.</p>
-</header>
+{% tarjeta_titulo "Envíos de email" descripcion="Consultá los emails enviados por el sistema, su estado de entrega y los intentos realizados." %}{% endtarjeta_titulo %}
 {% tarjeta_filtros %}
     <form method="get" class="tarjeta-busqueda filtros-compactos" aria-label="Filtros de envíos">
         <div class="detalle-grid">

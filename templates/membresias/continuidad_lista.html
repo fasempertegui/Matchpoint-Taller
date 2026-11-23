@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load filtros %}
 {% load estados %}
@@ -9,12 +10,7 @@
 {% endblock %}
 {% block clase_contenido %}contenido-membresias-configuracion catalogo-listado{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
-    <h1>Continuidad</h1>
-    <p class="encabezado-descripcion">
-        Consultá las respuestas de los titulares sobre la continuidad de sus planes y membresías el mes siguiente. Sin responder no indica una baja.
-    </p>
-</header>
+{% tarjeta_titulo "Continuidad" descripcion="Consultá las respuestas de los titulares sobre la continuidad de sus planes y membresías el mes siguiente. Sin responder no indica una baja." %}{% endtarjeta_titulo %}
 {% tarjeta_filtros %}
     <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de continuidad">
         {% if formulario.non_field_errors %}<div class="mensaje mensaje-error">{{ formulario.non_field_errors }}</div>{% endif %}

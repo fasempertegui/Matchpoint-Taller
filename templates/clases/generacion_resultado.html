@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load static %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
@@ -7,7 +8,7 @@
 <link rel="stylesheet" href="{% static 'css/clases.css' %}">
 {% endblock %}
 {% block contenido %}
-<header class="clase-encabezado"><h1>{{ titulo }}</h1></header>
+{% tarjeta_titulo titulo %}{% endtarjeta_titulo %}
 <section class="tarjeta">
     <p class="mensaje mensaje-success" role="status">Se crearon {{ cantidad_creadas }} clases.</p>
     <dl class="perfil-lista">

@@ -1,22 +1,19 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% block titulo %}Reglas de notificación | Academia TM{% endblock %}
 {% block clase_contenido %}contenido-notificaciones{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico">
-    <div class="encabezado-fila reglas-notificacion-titulo">
-        <h1>Reglas de notificación</h1>
-        <span class="ayuda-contextual">
-            <button type="button" class="ayuda-contextual-boton" aria-label="Última modificación" aria-describedby="reglas-ultima-modificacion">
-                {% include "componentes/iconoir/informacion.html" %}
-            </button>
-            <span class="ayuda-contextual-texto" id="reglas-ultima-modificacion" role="tooltip">
-                Última modificación <time datetime="{{ configuracion.actualizado_en|date:'c' }}">{{ configuracion.actualizado_en|date:"d/m/Y H:i" }}</time>
-            </span>
+{% tarjeta_titulo "Reglas de notificación" descripcion="Plazos de recordatorios y calendario de continuidad." %}
+    <span class="ayuda-contextual">
+        <button type="button" class="ayuda-contextual-boton" aria-label="Última modificación" aria-describedby="reglas-ultima-modificacion">
+            {% include "componentes/iconoir/informacion.html" %}
+        </button>
+        <span class="ayuda-contextual-texto" id="reglas-ultima-modificacion" role="tooltip">
+            Última modificación <time datetime="{{ configuracion.actualizado_en|date:'c' }}">{{ configuracion.actualizado_en|date:"d/m/Y H:i" }}</time>
         </span>
-    </div>
-    <p class="encabezado-descripcion">Plazos de recordatorios y calendario de continuidad.</p>
-</header>
+    </span>
+{% endtarjeta_titulo %}
 <section class="tarjeta tabla-contenedor" aria-label="Reglas vigentes de notificación">
     {% tabla clases="notificaciones-reglas" %}
         <thead>

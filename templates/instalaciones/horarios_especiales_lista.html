@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load static filtros %}
 
@@ -14,10 +15,7 @@
 {% block clase_contenido %}contenido-feriados{% endblock %}
 
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-reticula">
-    <h1>Horarios especiales</h1>
-    <p class="encabezado-descripcion">Administrá los feriados y los horarios particulares.</p>
-</header>
+{% tarjeta_titulo "Horarios especiales" descripcion="Administrá los feriados y los horarios particulares." %}{% endtarjeta_titulo %}
 
 <div class="horarios-tipos">
     <section class="tarjeta horarios-tipo" aria-labelledby="tipo-feriado-titulo">

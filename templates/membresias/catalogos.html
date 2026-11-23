@@ -1,13 +1,11 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load static %}
 {% block titulo %}Planes y membresías | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/membresias-inicio.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-membresias-inicio{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-orbitas">
-    <h1>Planes y membresías</h1>
-    <p class="encabezado-descripcion">Administrá las contrataciones y configurá los planes y las membresías de la academia.</p>
-</header>
+{% tarjeta_titulo "Planes y membresías" descripcion="Administrá las contrataciones y configurá los planes y las membresías de la academia." %}{% endtarjeta_titulo %}
 
 <div class="membresias-grupos">
     <section class="tarjeta membresias-grupo" aria-labelledby="contrataciones-titulo">

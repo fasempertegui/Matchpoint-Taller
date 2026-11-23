@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load filtros %}
 {% load static estados %}
@@ -7,19 +8,16 @@
 {% block clase_contenido %}contenido-reservas reservas-listado{% endblock %}
 {% block contenido %}
 {% if consulta_administrativa %}
-<header class="tarjeta encabezado-pagina encabezado-separado encabezado-geometrico encabezado-geometrico-ondas">
-    <h1>Reservas de {{ titular }}</h1>
+{% texto_titulo as titulo_tarjeta %}Reservas de {{ titular }}{% endtexto_titulo %}
+{% tarjeta_titulo titulo_tarjeta descripcion="Consultá las reservas que organizó este usuario y las invitaciones que recibió." %}
     <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>
-</header>
-<p class="tarjeta descripcion-seccion">Consultá las reservas que organizó este usuario y las invitaciones que recibió.</p>
+{% endtarjeta_titulo %}
 {% else %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
-    <div class="encabezado-fila">
-        <h1>{% if solo_invitaciones %}Mis invitaciones{% else %}Mis reservas{% endif %}</h1>
-        <a class="boton boton-primario" href="{% url 'agenda:agenda' %}">Ver agenda</a>
-    </div>
-    <p class="encabezado-descripcion">{% if solo_invitaciones %}Consultá las invitaciones a reservas que recibiste y tu respuesta.{% else %}Consultá las reservas que organizaste, su estado y el lugar de cada turno.{% endif %}</p>
-</header>
+{% texto_titulo as titulo_tarjeta %}{% if solo_invitaciones %}Mis invitaciones{% else %}Mis reservas{% endif %}{% endtexto_titulo %}
+{% texto_titulo as descripcion_tarjeta %}{% if solo_invitaciones %}Consultá las invitaciones a reservas que recibiste y tu respuesta.{% else %}Consultá las reservas que organizaste, su estado y el lugar de cada turno.{% endif %}{% endtexto_titulo %}
+{% tarjeta_titulo titulo_tarjeta descripcion=descripcion_tarjeta %}
+    <a class="boton boton-primario" href="{% url 'agenda:agenda' %}">Ver agenda</a>
+{% endtarjeta_titulo %}
 {% endif %}
 {% tarjeta_filtros %}
     <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de reservas">

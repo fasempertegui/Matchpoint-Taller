@@ -1,17 +1,14 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load static %}
 {% block titulo %}Planilla semanal | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/planilla.css' %}">{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-reticula">
-    <div class="encabezado-fila">
-        <h1>Planilla semanal</h1>
-        {% if cancha %}<div class="acciones">
-            <a class="boton boton-primario" href="{% url 'clases:generacion_clases' %}?sede={{ cancha.sede_id }}&amp;cancha={{ cancha.pk }}">Generar clases</a>
-        </div>{% endif %}
-    </div>
-    <p class="encabezado-descripcion">Organizá los horarios habituales de clases, profesores y participantes de cada cancha. Luego, generá las clases para que aparezcan en la agenda.</p>
-</header>
+{% tarjeta_titulo "Planilla semanal" descripcion="Organizá los horarios habituales de clases, profesores y participantes de cada cancha. Luego, generá las clases para que aparezcan en la agenda." %}
+    {% if cancha %}<div class="acciones">
+        <a class="boton boton-primario" href="{% url 'clases:generacion_clases' %}?sede={{ cancha.sede_id }}&amp;cancha={{ cancha.pk }}">Generar clases</a>
+    </div>{% endif %}
+{% endtarjeta_titulo %}
 {% if hay_sedes %}
     <section class="tarjeta planilla-listado" aria-label="Planilla semanal">
         <header class="planilla-encabezado-grilla">

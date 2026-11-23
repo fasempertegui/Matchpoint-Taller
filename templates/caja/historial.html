@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load encabezados %}
 {% load tablas %}
 {% load filtros %}
 {% load estados %}
@@ -7,10 +8,8 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
-<header class="tarjeta encabezado-con-descripcion encabezado-geometrico encabezado-geometrico-ondas">
-    <h1>{{ titulo }}</h1>
-    <p class="encabezado-descripcion">{% if sesiones %}Consultá las aperturas, los cierres y el efectivo contado de cada sesión.{% else %}Consultá los ingresos, egresos, aportes y retiros registrados en caja.{% endif %}</p>
-</header>
+{% texto_titulo as descripcion_tarjeta %}{% if sesiones %}Consultá las aperturas, los cierres y el efectivo contado de cada sesión.{% else %}Consultá los ingresos, egresos, aportes y retiros registrados en caja.{% endif %}{% endtexto_titulo %}
+{% tarjeta_titulo titulo descripcion=descripcion_tarjeta %}{% endtarjeta_titulo %}
 {% if sesiones %}{% include "caja/navegacion.html" with seccion="sesiones" only %}{% else %}{% include "caja/navegacion.html" with seccion="movimientos" only %}{% endif %}
 {% tarjeta_filtros %}
     <form method="get" class="caja-filtros tarjeta-busqueda filtros-compactos{% if sesiones %} caja-filtros-sesiones{% else %} caja-filtros-movimientos{% endif %}" aria-label="Filtros de caja">
