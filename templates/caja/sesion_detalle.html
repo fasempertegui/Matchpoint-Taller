@@ -41,8 +41,7 @@
         <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ request.path }}" data-limpiar-filtros>Limpiar filtros</a></div>
     </form>
 {% endtarjeta_filtros %}
-<section class="tarjeta caja-listado" data-resultados-filtros aria-labelledby="movimientos-titulo">
-    <header class="caja-listado-cabecera"><h2 id="movimientos-titulo">Movimientos de esta caja</h2></header>
+<section class="tarjeta caja-listado" data-resultados-filtros aria-label="Movimientos de esta caja">
     {% include "caja/_movimientos.html" with pagina=pagina_movimientos tabla_listado=True %}
 </section>
 {% endblock %}

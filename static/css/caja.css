@@ -3,7 +3,7 @@
 .contenido-caja .form-control { border-radius: 10px; }
 .caja-sesion { margin-bottom: 24px; }
 .caja-sesion-cabecera { display: flex; align-items: center; gap: 16px; }
-.caja-sesion h2, .caja-listado h2, .caja-sin-sesion h2 { margin: 0; font-size: 1.25rem; }
+.caja-sesion h2, .caja-sin-sesion h2 { margin: 0; font-size: 1.25rem; }
 .caja-estado { display: inline-flex; align-items: center; gap: 7px; color: var(--texto-suave); font-size: .85rem; white-space: nowrap; }
 .caja-estado::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--texto-suave); flex-shrink: 0; }
 .caja-estado-abierta::before { background: var(--acento); }
@@ -26,7 +26,6 @@
 .caja-sesion-pie { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px -20px -20px; padding: 16px 20px; border-top: 1px solid var(--borde); }
 .caja-sesion-pie > span, .caja-nota { font-size: .85rem; color: var(--texto-suave); }
 .caja-listado { padding: 0; }
-.caja-listado-cabecera { padding: 20px; border-bottom: 1px solid var(--borde); }
 .caja-listado table { font-size: .9rem; }
 .caja-listado td { vertical-align: top; }
 .caja-listado small { display: block; margin-top: 4px; color: var(--texto-suave); font-size: .8rem; }
