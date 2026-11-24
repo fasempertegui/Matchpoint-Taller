@@ -5,9 +5,9 @@ from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
 
+from caja.consultas import sesiones_con_diferencia_pendiente_queryset
 from caja.models import SesionCaja
 from clases.consultas import clases_sin_asistencia_queryset
-from comunicaciones.models import EnvioEmail
 from instalaciones.horarios import franjas_horario
 from instalaciones.models import Cancha, Sede, SedeHorario, SedeHorarioEspecial
 from membresias.consultas import contar_contrataciones_con_diferencia
@@ -259,32 +259,32 @@ def _contexto_para_revisar():
     clases_sin_asistencia = clases_sin_asistencia_queryset().count()
     reservas_sin_resultado = reservas_sin_resultado_queryset().count()
     contrataciones_diferencia = contar_contrataciones_con_diferencia()
-    emails_fallidos = EnvioEmail.objects.filter(estado=EnvioEmail.Estado.FALLIDO).count()
+    sesiones_con_diferencia = sesiones_con_diferencia_pendiente_queryset().count()
 
     filas = [
         {
             "texto": "Clases finalizadas sin asistencia cargada",
             "cantidad": clases_sin_asistencia,
-            "badge_clase": "baja" if clases_sin_asistencia else "igual",
+            "badge_clase": "advertencia" if clases_sin_asistencia else "sube",
             "url": reverse("clases:sin_asistencia"),
         },
         {
             "texto": "Reservas finalizadas sin resultado",
             "cantidad": reservas_sin_resultado,
-            "badge_clase": "baja" if reservas_sin_resultado else "igual",
+            "badge_clase": "advertencia" if reservas_sin_resultado else "sube",
             "url": reverse("reservas:sin_resultado"),
         },
         {
             "texto": "Contrataciones con diferencia por cubrir",
             "cantidad": contrataciones_diferencia,
-            "badge_clase": "info" if contrataciones_diferencia else "igual",
+            "badge_clase": "advertencia" if contrataciones_diferencia else "sube",
             "url": reverse("membresias:contrataciones_por_cubrir"),
         },
         {
-            "texto": "Emails fallidos",
-            "cantidad": emails_fallidos,
-            "badge_clase": "baja" if emails_fallidos else "igual",
-            "url": f"{reverse('comunicaciones:envios_lista')}?estado=fallido",
+            "texto": "Sesiones de caja con diferencia pendiente",
+            "cantidad": sesiones_con_diferencia,
+            "badge_clase": "advertencia" if sesiones_con_diferencia else "sube",
+            "url": f"{reverse('caja:historial_sesiones')}?revision=pendiente",
         },
     ]
     todo_al_dia = all(fila["cantidad"] == 0 for fila in filas)

@@ -152,6 +152,11 @@
     color: var(--peligro);
 }
 
+.dashboard-delta-advertencia {
+    background: var(--advertencia-suave);
+    color: var(--advertencia);
+}
+
 .dashboard-delta-info {
     background: var(--primario-suave);
     color: var(--primario);
@@ -816,10 +821,6 @@ a.dashboard-revisar-fila:focus-visible {
 .dashboard-revisar-ok {
     color: var(--texto-suave);
     font-weight: 500;
-}
-
-.dashboard-revisar-vacia {
-    opacity: .6;
 }
 
 .dashboard-revisar-vacia .dashboard-revisar-texto {
