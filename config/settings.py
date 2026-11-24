@@ -82,6 +82,7 @@ TEMPLATES = [
             'libraries': {
                 'encabezados': 'common.encabezados',
                 'filtros': 'common.filtros',
+                'formularios': 'common.formularios',
                 'paginacion': 'common.paginacion',
                 'pestanas': 'common.pestanas',
                 'tablas': 'common.tablas',

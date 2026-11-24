@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="{% static 'css/ayuda-contextual.css' %}">
     <link rel="stylesheet" href="{% static 'css/estados.css' %}">
     <link rel="stylesheet" href="{% static 'css/encabezados.css' %}">
+    <link rel="stylesheet" href="{% static 'css/formularios.css' %}">
     <link rel="stylesheet" href="{% static 'css/pestanas.css' %}">
     <link rel="stylesheet" href="{% static 'css/notificaciones.css' %}">
     {% block estilos %}{% endblock %}
@@ -59,6 +60,8 @@
         {% block contenido %}{% endblock %}
     </main>
     {% include "componentes/modal_confirmacion.html" %}
+    {% include "componentes/modal_formulario_dialog.html" %}
+    <script src="{% static 'js/modal-formulario.js' %}" defer></script>
     <script src="{% static 'js/observaciones.js' %}" defer></script>
     <script src="{% static 'js/tooltips.js' %}" defer></script>
     <script src="{% static 'js/paginacion.js' %}" defer></script>

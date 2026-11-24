@@ -1,0 +1,20 @@
+<form class="modal-unificado-estructura" method="{{ metodo }}"{% if action %} action="{{ action }}"{% endif %} data-modal-formulario-form{% if peligro %} data-modal-peligro{% endif %}{% if amplio %} data-modal-amplio{% endif %} novalidate>
+    {% if metodo == "post" %}{% csrf_token %}{% endif %}
+    <header class="modal-cabecera">
+        <div class="modal-cabecera-identidad">
+            {% if subtitulo %}<p class="modal-subtitulo">{{ subtitulo }}</p>{% endif %}
+            <h2 id="{{ id_titulo }}" class="modal-titulo" tabindex="-1" data-modal-titulo>{{ titulo }}</h2>
+        </div>
+        <button type="button" class="modal-cerrar" data-modal-cerrar aria-label="Cerrar">&times;</button>
+    </header>
+    <div class="modal-cuerpo">
+        <div class="mensaje mensaje-error" data-modal-error-general role="alert" hidden></div>
+        {{ contenido }}
+    </div>
+    <footer class="modal-acciones">
+        <button type="button" class="boton boton-secundario" data-modal-cerrar>{{ texto_cancelar }}</button>
+        {% if mostrar_enviar %}
+            <button type="submit" class="boton {{ clase_enviar }}" data-modal-enviar>{{ texto_enviar }}</button>
+        {% endif %}
+    </footer>
+</form>

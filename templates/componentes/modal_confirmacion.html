@@ -1,13 +1,16 @@
-<dialog class="modal-confirmacion" data-modal-confirmacion aria-labelledby="modal-confirmacion-titulo" aria-describedby="modal-confirmacion-mensaje">
-    <form method="dialog" class="modal-confirmacion-formulario">
-        <header class="modal-confirmacion-cabecera">
-            <h2 id="modal-confirmacion-titulo" data-modal-titulo>Confirmar acción</h2>
+<dialog class="modal-unificado" data-modal-confirmacion aria-labelledby="modal-confirmacion-titulo" aria-describedby="modal-confirmacion-mensaje">
+    <form method="dialog" class="modal-unificado-estructura">
+        <header class="modal-cabecera">
+            <div class="modal-cabecera-identidad">
+                <h2 id="modal-confirmacion-titulo" class="modal-titulo" data-modal-titulo>Confirmar acción</h2>
+            </div>
+            <button class="modal-cerrar" type="submit" value="cancelar" aria-label="Cerrar">&times;</button>
         </header>
-        <div class="modal-confirmacion-contenido">
+        <div class="modal-cuerpo">
             <p id="modal-confirmacion-mensaje" data-modal-mensaje></p>
             <div data-modal-confirmar-detalle hidden></div>
         </div>
-        <footer class="modal-confirmacion-acciones">
+        <footer class="modal-acciones">
             <button class="boton boton-secundario" type="submit" value="cancelar" autofocus>Cancelar</button>
             <button class="boton boton-primario" type="submit" value="confirmar" data-modal-confirmar>Confirmar</button>
         </footer>

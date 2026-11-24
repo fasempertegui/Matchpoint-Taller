@@ -1,0 +1,8 @@
+<div class="pasos-formulario" role="progressbar" aria-label="{{ etiqueta }}" aria-valuemin="1" aria-valuemax="{{ total }}" aria-valuenow="{{ actual }}">
+    <div class="pasos-formulario-barra">
+        {% for paso in pasos %}
+            <span class="pasos-formulario-segmento{% if paso <= actual %} activo{% endif %}" aria-hidden="true"></span>
+        {% endfor %}
+    </div>
+    <p class="pasos-formulario-etiqueta">Paso {{ actual }} de {{ total }}{% if nombre %}: <strong>{{ nombre }}</strong>{% endif %}</p>
+</div>
