@@ -16,5 +16,6 @@ urlpatterns = [
     path("importes/<str:tipo>/<int:origen_id>/ajustar/", vistas_ajustes.ajustar_importe, name="ajustar_importe"),
     path("<int:pk>/", views.sesion_detalle, name="sesion_detalle"),
     path("<int:pk>/cerrar/", views.caja_cerrar, name="caja_cerrar"),
+    path("<int:pk>/diferencias/<str:momento>/revisar/", views.revision_diferencia, name="revision_diferencia"),
     path("<int:pk>/devoluciones/nueva/", vistas_devoluciones.devolucion_crear, name="devolucion_crear"),
 ]

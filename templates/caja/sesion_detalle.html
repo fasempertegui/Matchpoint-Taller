@@ -38,14 +38,57 @@
     </div>
     <dl class="caja-importes{% if sesion.estado == 'cerrada' %} caja-importes-cerrada{% endif %}">
         <div class="caja-importe-principal"><dt>Efectivo esperado</dt><dd>$ {{ esperado|floatformat:"2g" }}</dd><dd class="caja-importe-nota">El efectivo esperado incluye sólo movimientos en efectivo</dd></div>
-        <div><dt>Efectivo inicial</dt><dd>$ {{ sesion.efectivo_inicial|floatformat:"2g" }}</dd></div>
+        <div>
+            <dt>Efectivo inicial</dt>
+            <dd>$ {{ sesion.efectivo_inicial|floatformat:"2g" }}</dd>
+            {% if sesion.tiene_diferencia_apertura %}<dd class="caja-importe-nota">Último cierre: $ {{ sesion.efectivo_anterior|floatformat:"2g" }}</dd>{% endif %}
+        </div>
         {% if sesion.estado == 'cerrada' %}
             <div><dt>Efectivo contado</dt><dd>$ {{ sesion.efectivo_contado|floatformat:"2g" }}</dd></div>
-            <div><dt>Diferencia</dt><dd>$ {{ sesion.diferencia|floatformat:"2g" }}</dd></div>
+            <div>
+                <dt>Diferencia</dt>
+                <dd>$ {{ sesion.diferencia|floatformat:"2g" }}</dd>
+                {% if sesion.diferencia > 0 %}<dd class="caja-importe-nota">Sobrante</dd>{% elif sesion.diferencia < 0 %}<dd class="caja-importe-nota">Faltante</dd>{% endif %}
+            </div>
         {% endif %}
     </dl>
-    {% if sesion.motivo_apertura %}<p class="caja-nota"><strong>Motivo de apertura:</strong> {{ sesion.motivo_apertura|linebreaksbr }}</p>{% endif %}
-    {% if sesion.motivo_diferencia %}<p class="nota-campo nota-campo-ambar"><strong>Motivo de diferencia:</strong> {{ sesion.motivo_diferencia|linebreaksbr }}</p>{% endif %}
+    {% if diferencias_sesion %}
+    <div class="caja-diferencias" aria-label="Diferencias registradas en esta sesión">
+        {% for dif in diferencias_sesion %}
+        <article class="caja-diferencia{% if dif.revision %} caja-diferencia-revisada{% else %} caja-diferencia-pendiente{% endif %}">
+            <header class="caja-diferencia-cabecera">
+                <div class="caja-diferencia-titulo">
+                    <h3>{{ dif.titulo }}</h3>
+                    <span class="caja-diferencia-estado">{% if dif.revision %}Revisada{% else %}Pendiente de revisión{% endif %}</span>
+                </div>
+                {% if not dif.revision %}
+                <button type="button" class="boton boton-secundario boton-chico" data-abrir-modal-url="{% url 'caja:revision_diferencia' sesion.pk dif.momento %}">Registrar revisión</button>
+                {% endif %}
+            </header>
+            <dl class="caja-diferencia-datos">
+                <div>
+                    <dt>Importe</dt>
+                    <dd class="caja-diferencia-importe">{{ dif.tipo_texto }} de $ {{ dif.importe_abs|floatformat:"2g" }}</dd>
+                </div>
+                <div>
+                    <dt>Motivo</dt>
+                    <dd>{{ dif.motivo }}</dd>
+                </div>
+                {% if dif.revision %}
+                <div>
+                    <dt>Revisada por</dt>
+                    <dd>{{ dif.revision.revisada_por }}<span class="caja-diferencia-meta">{{ dif.revision.revisada_en|date:"d/m/Y H:i" }}</span></dd>
+                </div>
+                <div>
+                    <dt>Conclusión</dt>
+                    <dd>{{ dif.revision.conclusion }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+        </article>
+        {% endfor %}
+    </div>
+    {% endif %}
     {% if not puede_cerrar and sesion.estado == 'abierta' %}
         <p class="caja-nota">Sólo {{ sesion.responsable }} puede registrar movimientos y cerrar esta sesión.</p>
     {% endif %}

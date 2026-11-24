@@ -27,6 +27,10 @@ ESTADOS = {
         "abierta": ("abierto", "positivo", "Abierta"),
         "cerrada": ("cerrado", "neutro", "Cerrada"),
     },
+    "revision_diferencia": {
+        "pendiente": ("reloj", "advertencia", "Pendiente de revisión"),
+        "revisada": ("check", "positivo", "Revisada"),
+    },
     "movimiento": {
         "vigente": ("check", "positivo", "Vigente"),
         "anulado": ("cruz", "negativo", "Anulado"),
@@ -60,6 +64,11 @@ def indicador_estado(dominio, estado, texto="", integrado=False):
     figura, color, etiqueta = datos
     return {
         "figura": figura, "color": color, "texto": texto or etiqueta,
-        "contexto": "Asistencia" if dominio == "asistencia" else "Respuesta" if dominio == "respuesta" else "Estado",
+        "contexto": (
+            "Asistencia" if dominio == "asistencia"
+            else "Respuesta" if dominio == "respuesta"
+            else "Revisión" if dominio == "revision_diferencia"
+            else "Estado"
+        ),
         "integrado": integrado,
     }

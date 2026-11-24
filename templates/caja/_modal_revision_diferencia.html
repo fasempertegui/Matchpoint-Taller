@@ -1,0 +1,24 @@
+{% load encabezados formularios tablas %}
+{% url 'caja:revision_diferencia' sesion.pk momento as accion_url %}
+{% texto_titulo as titulo_modal %}Revisar diferencia de {{ momento_texto|lower }} · {{ sesion.numero }}{% endtexto_titulo %}
+{% modal_formulario titulo_modal action=accion_url amplio=True texto_enviar="Registrar revisión" %}
+    {% tabla_datos etiqueta="Resumen de la diferencia" %}
+        <tr><th scope="row">Sesión</th><td>{{ sesion.numero }}</td></tr>
+        <tr><th scope="row">Momento</th><td>{{ momento_texto }}</td></tr>
+        <tr><th scope="row">{{ referencia_etiqueta }}</th><td>$ {{ referencia_valor|floatformat:"2g" }}</td></tr>
+        <tr><th scope="row">{{ declarado_etiqueta }}</th><td>$ {{ declarado_valor|floatformat:"2g" }}</td></tr>
+        <tr><th scope="row">Diferencia</th><td><strong>{{ tipo_diferencia }} de $ {{ diferencia_abs|floatformat:"2g" }}</strong></td></tr>
+        <tr><th scope="row">Motivo</th><td>{{ motivo }}</td></tr>
+    {% endtabla_datos %}
+    <div class="formulario-aviso">
+        <p>La revisión deja constancia de lo encontrado y no se puede editar ni borrar. No genera movimientos ni modifica los importes de la sesión.</p>
+    </div>
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    <div class="grupo-campo">
+        <label for="{{ formulario.conclusion.id_for_label }}">{{ formulario.conclusion.label }}</label>
+        {{ formulario.conclusion }}
+        {% for error in formulario.conclusion.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+{% endmodal_formulario %}

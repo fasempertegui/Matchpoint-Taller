@@ -158,5 +158,44 @@
 .caja-estado-informacion { margin-left: -8px; color: var(--texto-suave); font-size: .85rem; }
 
 .contenido-caja .caja-filtros-sesiones { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
-.caja-filtros-sesiones .detalle-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.caja-filtros-sesiones .detalle-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .caja-filtros-sesiones > .mensaje { grid-column: 1 / -1; }
+@media (max-width: 900px) {
+    .caja-filtros-sesiones .detalle-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.caja-diferencias { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.caja-diferencia { border-radius: 10px; color: var(--texto); overflow: hidden; }
+.caja-diferencia-pendiente { background: var(--advertencia-suave); }
+.caja-diferencia-revisada { background: var(--superficie); border: 1px solid var(--borde); }
+.caja-diferencia-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding: 12px 18px;
+}
+.caja-diferencia-pendiente .caja-diferencia-cabecera { border-bottom: 1px solid rgb(128 82 18 / .12); }
+.caja-diferencia-revisada .caja-diferencia-cabecera { border-bottom: 1px solid var(--borde); }
+.caja-diferencia-titulo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.caja-diferencia-titulo h3 { margin: 0; font-size: .98rem; font-weight: 600; }
+.caja-diferencia-pendiente .caja-diferencia-titulo h3 { color: var(--advertencia); }
+.caja-diferencia-estado { font-size: .78rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+.caja-diferencia-pendiente .caja-diferencia-estado { background: var(--superficie); color: var(--advertencia); }
+.caja-diferencia-revisada .caja-diferencia-estado { background: var(--acento-suave); color: var(--acento-texto); }
+.caja-diferencia-pendiente .boton-secundario { background: var(--superficie); }
+.caja-diferencia-datos {
+    display: grid;
+    grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+    gap: 14px 24px;
+    margin: 0;
+    padding: 14px 18px;
+}
+.caja-diferencia-datos dt { font-size: .78rem; font-weight: 600; color: var(--texto-suave); }
+.caja-diferencia-datos dd { margin: 4px 0 0; font-size: .92rem; line-height: 1.4; overflow-wrap: anywhere; }
+.caja-diferencia-importe { font-weight: 600; font-variant-numeric: tabular-nums; }
+.caja-diferencia-meta { display: block; margin-top: 2px; font-size: .8rem; color: var(--texto-suave); }
+@media (max-width: 720px) {
+    .caja-diferencia-datos { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+}

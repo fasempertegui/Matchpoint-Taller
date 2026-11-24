@@ -13,15 +13,20 @@ from django.views.decorators.debug import sensitive_post_parameters
 
 from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
 
+from .consultas import anotar_revision_diferencias, filtrar_sesiones_por_revision
 from .forms import (
     AnulacionMovimientoForm, AperturaCajaForm, CierreCajaForm, HistorialMovimientosForm,
-    HistorialSesionesForm, IngresoForm, MovimientoCajaForm, MovimientosSesionForm, SeleccionOrigenMovimientoForm,
+    HistorialSesionesForm, IngresoForm, MovimientoCajaForm, MovimientosSesionForm,
+    RevisionDiferenciaForm, SeleccionOrigenMovimientoForm,
 )
 from .finanzas import origenes_con_pendiente, resumen_financiero, situacion_financiera
 from .ingresos import consultar_origen, origen_del_movimiento, ORIGENES, cobros_del_origen, filtrar_origenes, registrar_ingreso
-from .models import MovimientoFondo, SesionCaja
+from .models import MovimientoFondo, RevisionDiferenciaCaja, SesionCaja
 from .movimientos import anular_movimiento, registrar_movimiento, revision_anulacion
-from .servicios import abrir_caja, cerrar_caja, efectivo_esperado, exigir_acceso_caja, revision_apertura, ultimo_cierre, resumen_sesion
+from .servicios import (
+    abrir_caja, cerrar_caja, efectivo_esperado, exigir_acceso_caja,
+    resumen_sesion, revisar_diferencia, revision_apertura, ultimo_cierre,
+)
 
 
 @login_required
@@ -84,13 +89,101 @@ def sesion_detalle(request, pk):
     if sesion.estado == "cerrada":
         for movimiento in pagina:
             movimiento.incluido_al_cierre = movimiento.anulado_en is None or movimiento.anulado_en > sesion.cerrada_en
+    revisiones = {r.momento: r for r in sesion.revisiones_diferencias.select_related("revisada_por")}
+    diferencias_sesion = []
+    if sesion.tiene_diferencia_apertura:
+        diferencias_sesion.append({
+            "momento": RevisionDiferenciaCaja.Momento.APERTURA,
+            "titulo": "Diferencia de apertura",
+            "tipo_texto": "Sobrante" if sesion.diferencia_apertura > 0 else "Faltante",
+            "importe_abs": abs(sesion.diferencia_apertura),
+            "referencia_etiqueta": "Último cierre",
+            "referencia_valor": sesion.efectivo_anterior,
+            "motivo": sesion.motivo_apertura,
+            "revision": revisiones.get(RevisionDiferenciaCaja.Momento.APERTURA),
+        })
+    if sesion.estado == SesionCaja.Estado.CERRADA and sesion.tiene_diferencia_cierre:
+        diferencias_sesion.append({
+            "momento": RevisionDiferenciaCaja.Momento.CIERRE,
+            "titulo": "Diferencia de cierre",
+            "tipo_texto": "Sobrante" if sesion.diferencia > 0 else "Faltante",
+            "importe_abs": abs(sesion.diferencia),
+            "motivo": sesion.motivo_diferencia,
+            "revision": revisiones.get(RevisionDiferenciaCaja.Momento.CIERRE),
+        })
     return render(request, "caja/sesion_detalle.html", {
         "pagina_movimientos": pagina, "formulario_filtros": formulario,
         "parametros": parametros.urlencode(),
         **resumen_sesion(sesion),
-        "sesion": sesion, "esperado": efectivo_esperado(sesion) if sesion.estado == SesionCaja.Estado.ABIERTA else sesion.efectivo_esperado,
+        "sesion": sesion, "diferencias_sesion": diferencias_sesion,
+        "esperado": efectivo_esperado(sesion) if sesion.estado == SesionCaja.Estado.ABIERTA else sesion.efectivo_esperado,
         "puede_cerrar": sesion.estado == SesionCaja.Estado.ABIERTA and sesion.responsable_id == actor.pk,
     })
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def revision_diferencia(request, pk, momento):
+    actor = exigir_acceso_caja(request.user)
+    if momento not in RevisionDiferenciaCaja.Momento.values:
+        raise Http404
+    sesion = get_object_or_404(SesionCaja, pk=pk)
+    url_detalle = reverse("caja:sesion_detalle", args=[pk])
+    if not es_peticion_modal(request):
+        return redirect(url_detalle)
+    if momento == RevisionDiferenciaCaja.Momento.APERTURA:
+        tiene_diferencia = sesion.tiene_diferencia_apertura
+        diferencia = sesion.diferencia_apertura
+        datos_diferencia = {
+            "momento_texto": "Apertura",
+            "referencia_etiqueta": "Último cierre",
+            "referencia_valor": sesion.efectivo_anterior,
+            "declarado_etiqueta": "Efectivo inicial",
+            "declarado_valor": sesion.efectivo_inicial,
+            "diferencia_abs": abs(diferencia) if diferencia is not None else None,
+            "tipo_diferencia": "Sobrante" if diferencia and diferencia > 0 else "Faltante",
+            "motivo": sesion.motivo_apertura,
+        }
+    else:
+        tiene_diferencia = sesion.estado == SesionCaja.Estado.CERRADA and sesion.tiene_diferencia_cierre
+        diferencia = sesion.diferencia
+        datos_diferencia = {
+            "momento_texto": "Cierre",
+            "referencia_etiqueta": "Efectivo esperado",
+            "referencia_valor": sesion.efectivo_esperado,
+            "declarado_etiqueta": "Efectivo contado",
+            "declarado_valor": sesion.efectivo_contado,
+            "diferencia_abs": abs(diferencia) if diferencia is not None else None,
+            "tipo_diferencia": "Sobrante" if diferencia and diferencia > 0 else "Faltante",
+            "motivo": sesion.motivo_diferencia,
+        }
+    if not tiene_diferencia:
+        messages.error(request, "Esta sesión no tiene una diferencia disponible para revisar en ese momento.")
+        return respuesta_modal_exito(url_detalle)
+    if RevisionDiferenciaCaja.objects.filter(sesion=sesion, momento=momento).exists():
+        messages.info(request, "Esta diferencia ya fue revisada.")
+        return respuesta_modal_exito(url_detalle)
+    formulario = RevisionDiferenciaForm(request.POST if request.method == "POST" else None)
+    if request.method == "POST" and formulario.is_valid():
+        try:
+            revisar_diferencia(actor, pk, momento=momento, **formulario.cleaned_data)
+        except ValidationError as error:
+            formulario.add_error(None, error.messages)
+        else:
+            messages.success(request, "La revisión de la diferencia fue registrada.")
+            return respuesta_modal_exito(url_detalle)
+    return respuesta_modal_html(
+        request,
+        "caja/_modal_revision_diferencia.html",
+        {
+            "sesion": sesion, "momento": momento, "formulario": formulario,
+            **datos_diferencia,
+        },
+        status=400 if formulario.errors else 200,
+        amplio=True,
+        errores=bool(formulario.errors),
+    )
 
 
 @login_required
@@ -358,10 +451,21 @@ def historial_sesiones(request):
         consulta = _filtrar_fechas(SesionCaja.objects.select_related("responsable"), datos)
         if datos.get("estado"):
             consulta = consulta.filter(estado=datos["estado"])
+        consulta = anotar_revision_diferencias(filtrar_sesiones_por_revision(consulta, datos.get("revision")))
     parametros = request.GET.copy()
     parametros.pop("pagina", None)
+    pagina = Paginator(consulta, 25).get_page(request.GET.get("pagina"))
+    for sesion in pagina:
+        pendiente_apertura = sesion.tiene_diferencia_apertura and not sesion._rev_apertura
+        pendiente_cierre = sesion.tiene_diferencia_cierre and not sesion._rev_cierre
+        if pendiente_apertura or pendiente_cierre:
+            sesion.estado_revision = "pendiente"
+        elif sesion.tiene_diferencia_apertura or sesion.tiene_diferencia_cierre:
+            sesion.estado_revision = "revisada"
+        else:
+            sesion.estado_revision = None
     return render(request, "caja/historial.html", {
-        "formulario": formulario, "pagina": Paginator(consulta, 25).get_page(request.GET.get("pagina")),
+        "formulario": formulario, "pagina": pagina,
         "parametros": parametros.urlencode(), "sesiones": True, "titulo": "Historial de sesiones",
     })
 

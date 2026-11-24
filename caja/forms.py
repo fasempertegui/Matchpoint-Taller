@@ -135,14 +135,30 @@ class AnulacionMovimientoForm(forms.Form):
     revision = forms.CharField(widget=forms.HiddenInput())
 
 
+class RevisionDiferenciaForm(forms.Form):
+    conclusion = forms.CharField(
+        min_length=5,
+        label="Conclusión de la revisión",
+        strip=True,
+        widget=forms.TextInput(attrs={"class": "form-control", "autofocus": True, "placeholder": "Ingresá al menos 5 caracteres"}),
+    )
+
+
 class HistorialSesionesForm(forms.Form):
     desde = forms.DateField(label="Apertura desde", required=False, widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
     hasta = forms.DateField(label="Apertura hasta", required=False, widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
     estado = forms.ChoiceField(label="Estado", required=False, widget=forms.Select(attrs={"class": "form-control"}))
+    revision = forms.ChoiceField(label="Revisión de diferencias", required=False, widget=forms.Select(attrs={"class": "form-control"}))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["estado"].choices = [("", "Todos"), *SesionCaja.Estado.choices]
+        self.fields["revision"].choices = [
+            ("", "Todas"),
+            ("pendiente", "Pendiente de revisión"),
+            ("revisada", "Revisada"),
+            ("sin_diferencias", "Sin diferencias"),
+        ]
 
     def clean(self):
         datos = super().clean()
@@ -158,6 +174,7 @@ class HistorialMovimientosForm(HistorialSesionesForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields.pop("revision", None)
         self.fields["desde"].label = "Registro desde"
         self.fields["hasta"].label = "Registro hasta"
         self.fields["estado"].choices = [("", "Todos"), *MovimientoFondo.Estado.choices]
