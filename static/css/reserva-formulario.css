@@ -1,73 +1,7 @@
-.reserva-progreso {
-    display: flex;
-    gap: 6px;
-    margin-top: 16px;
-}
-
-.reserva-progreso > span {
-    flex: 1;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--borde);
-}
-
-.reserva-progreso > .completo {
-    background: var(--primario);
-}
-
 .reserva-invitados-resumen {
     list-style: none;
-    padding: 0;
-}
-
-.reserva-invitados-resumen li {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--borde);
-    overflow-wrap: anywhere;
-}
-
-.reserva-turno-tarjetas {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.reserva-turno-tarjetas section {
-    padding: 14px 16px;
-    border-radius: 10px;
-    overflow-wrap: anywhere;
-}
-
-.reserva-tarjeta-lugar,
-.reserva-tarjeta-horario {
-    background: var(--primario);
-    color: #fff;
-}
-
-.reserva-turno-tarjetas p,
-.reserva-tarjeta-organizador p,
-.reserva-tarjeta-modalidad p {
-    margin: 0 0 6px;
-    color: inherit;
-    font-size: .75rem;
-    font-weight: 600;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-}
-
-.reserva-turno-tarjetas h2,
-.reserva-tarjeta-organizador h2,
-.reserva-tarjeta-modalidad h2 {
     margin: 0;
-    color: inherit;
-    font-size: 1.6rem;
-    line-height: 1.15;
-}
-
-.reserva-tarjeta-lugar p,
-.reserva-tarjeta-horario p {
-    color: #e6daf3;
+    padding: 0;
 }
 
 .reserva-invitados-resumen li {
@@ -75,6 +9,13 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--borde);
+    overflow-wrap: anywhere;
+}
+
+.reserva-invitados-resumen li:last-child {
+    border-bottom: 0;
 }
 
 .reserva-invitado-condicion {
@@ -100,20 +41,19 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 8px;
-    margin: 24px 0;
     padding-top: 16px;
     border-top: 1px solid var(--borde);
 }
 
 .reserva-total strong {
     color: var(--primario);
-    font-size: 1.5rem;
+    font-size: 1.4rem;
 }
-
 
 .reserva-modalidad-titulo {
     margin: 0 0 12px;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    font-weight: 700;
 }
 
 .reserva-modalidades {
@@ -127,7 +67,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 10px;
     padding: 18px;
     border: 1px solid var(--borde);
     border-radius: 10px;
@@ -137,25 +77,26 @@
     text-align: left;
     cursor: pointer;
     overflow-wrap: anywhere;
+    transition: background-color 140ms ease;
 }
 
 .reserva-modalidad:not(:has(input:disabled)):hover {
-    border-color: var(--primario);
-    background: var(--primario-suave);
+    background: #faf7fc;
 }
 
 .reserva-modalidad:has(input:focus-visible) {
     outline: 2px solid var(--primario);
-    outline-offset: 3px;
+    outline-offset: 2px;
 }
 
 .reserva-modalidad-nombre {
+    padding-right: 24px;
     font-weight: 600;
 }
 
 .reserva-modalidad-importe {
     color: var(--primario);
-    font-size: 1.5rem;
+    font-size: 1.45rem;
     font-weight: 700;
     line-height: 1.2;
 }
@@ -180,10 +121,6 @@
     border: 0;
 }
 
-.reserva-modalidad-nombre {
-    padding-right: 24px;
-}
-
 .reserva-modalidad-radio {
     position: absolute;
     width: 1px;
@@ -200,7 +137,6 @@
 }
 
 .reserva-modalidad:has(input:checked) {
-    border-color: var(--primario);
     background: var(--primario-suave);
 }
 
@@ -214,45 +150,17 @@
     cursor: default;
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
     .reserva-modalidades {
         grid-template-columns: 1fr;
     }
 }
 
-.reserva-tarjeta-organizador,
-.reserva-tarjeta-modalidad {
-    padding: 14px 16px;
-    border-radius: 10px;
-    background: var(--primario-suave);
+.reserva-membresia-ayuda {
+    margin-left: 6px;
+    vertical-align: middle;
     color: var(--primario);
-    overflow-wrap: anywhere;
 }
-
-.reserva-contexto-tarjetas {
-    display: grid;
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-.reserva-contexto-tarjetas-doble {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-
-.reserva-modalidad-encabezado {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 6px;
-}
-
-.reserva-modalidad-encabezado p {
-    margin: 0;
-}
-
-.reserva-membresia-ayuda { flex-shrink: 0; color: var(--primario); font-size: 18px; }
 
 .reserva-membresia-tooltip strong,
 .reserva-membresia-tooltip span,
@@ -261,7 +169,7 @@
 }
 
 .reserva-membresia-tooltip strong {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     color: var(--primario);
     font-size: .95rem;
 }
@@ -276,12 +184,6 @@
     font-size: 1rem;
 }
 
-
-.reserva-invitados-resumen li:last-child {
-    border-bottom: 0;
-}
-
-
 .reserva-error-texto {
     margin: 0;
 }
@@ -290,31 +192,9 @@
     margin-top: 6px;
 }
 
-.reserva-gestion-paso {
-    margin: 6px 0 16px;
-    color: var(--texto-suave);
-    font-size: .75rem;
-}
-
-.reserva-gestion-titulo {
-    font-size: 1.1rem;
-}
-
 .reserva-gestion-condicion {
     display: block;
     margin-top: 4px;
     color: var(--texto-suave);
     font-size: .8rem;
-}
-
-.reserva-gestion-separador {
-    margin: 16px 0;
-    border: 0;
-    border-top: 1px solid var(--borde);
-}
-
-.reserva-nota-advertencia {
-    border-left-color: var(--advertencia);
-    background: var(--advertencia-suave);
-    color: var(--advertencia);
 }

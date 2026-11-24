@@ -1,0 +1,25 @@
+{% load formularios %}
+{% url 'reservas:reserva_resultado' reserva.pk as accion_url %}
+{% modal_formulario titulo action=accion_url texto_enviar="Guardar resultado" %}
+    {% if es_correccion %}
+        <p>Resultado actual: <strong>{{ reserva.get_resultado_uso_display }}</strong>. Solo se admite una corrección.</p>
+    {% endif %}
+    {{ formulario.version }}
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    {% for error in formulario.version.errors %}
+        <p class="error-campo" role="alert">{{ error }}</p>
+    {% endfor %}
+    {% for campo in formulario.visible_fields %}
+        <div class="grupo-campo">
+            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+            {{ campo }}
+            {% if campo.help_text %}<small class="formulario-ayuda">{{ campo.help_text }}</small>{% endif %}
+            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+    {% endfor %}
+    <div class="formulario-aviso">
+        <p>El resultado de uso se registra sin modificar el consumo de horas, los invitados ni los cobros.</p>
+    </div>
+{% endmodal_formulario %}

@@ -1,0 +1,21 @@
+{% load formularios tablas %}
+{% url 'reservas:reserva_socios' reserva.pk as accion_url %}
+{% modal_formulario "Actualizar socios" action=accion_url amplio=True texto_enviar="Confirmar actualización" mostrar_enviar=revision.cambios %}
+    <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+    <p>El beneficio exige membresía para la fecha del turno y horas de invitado disponibles. Cada actualización compromete una hora y elimina el adicional de esa participación.</p>
+    {% if revision.cambios %}
+        {% tabla_datos etiqueta="Cambios a confirmar" %}
+            {% for cambio in revision.cambios %}
+                <tr><th scope="row">Invitado elegible</th><td>{{ cambio }}</td></tr>
+            {% endfor %}
+            <tr><th scope="row">Total resultante</th><td><strong>$ {{ revision.total|floatformat:"2g" }}</strong></td></tr>
+        {% endtabla_datos %}
+        <div class="formulario-aviso">
+            <p>Se conservan la historia, las respuestas y los cobros registrados. Si corresponde devolver dinero, se registra una devolución desde Caja.</p>
+        </div>
+    {% else %}
+        <div class="formulario-aviso">
+            <p>No hay invitados con cobertura y horas disponibles para actualizar en esta reserva.</p>
+        </div>
+    {% endif %}
+{% endmodal_formulario %}

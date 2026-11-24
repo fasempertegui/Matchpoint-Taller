@@ -13,9 +13,8 @@
 {% endtabla_datos %}
 {% if not invitacion.participacion_computable %}<p class="perfil-descripcion invitacion-aclaracion">El estado actual de esta invitación no compromete tu disponibilidad ni tus horas y no genera adicional.</p>{% endif %}
 {% if puede_responder %}
-    <form method="post" action="{% url 'reservas:reserva_responder' reserva.pk %}" class="invitacion-respuesta-acciones">
-        {% csrf_token %}<input type="hidden" name="version" value="{{ version }}">
-        {% if invitacion.respuesta != 'afirmativa' %}<button class="boton boton-primario boton-chico" type="submit" name="respuesta" value="afirmativa">Aceptar invitación</button>{% endif %}
-        {% if invitacion.respuesta != 'negativa' %}<button class="boton boton-peligro boton-chico" type="submit" name="respuesta" value="negativa">Rechazar invitación</button>{% endif %}
-    </form>
+    <div class="invitacion-respuesta-acciones">
+        {% if invitacion.respuesta != 'afirmativa' %}<button class="boton boton-primario boton-chico" type="button" data-abrir-modal-url="{% url 'reservas:reserva_responder' reserva.pk %}?respuesta=afirmativa&amp;version={{ version|urlencode }}">Aceptar invitación</button>{% endif %}
+        {% if invitacion.respuesta != 'negativa' %}<button class="boton boton-peligro boton-chico" type="button" data-abrir-modal-url="{% url 'reservas:reserva_responder' reserva.pk %}?respuesta=negativa&amp;version={{ version|urlencode }}">Rechazar invitación</button>{% endif %}
+    </div>
 {% endif %}

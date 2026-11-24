@@ -1,64 +1,83 @@
-{% extends "base.html" %}{% load static %}
-{% block titulo %}Gestionar invitados | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/reserva-formulario.css' %}"><script src="{% static 'js/selector-usuario.js' %}" defer></script>{% endblock %}
+{% extends "base.html" %}
+{% load encabezados formularios tablas static %}
+
+{% block titulo %}{{ titulo }} | Academia TM{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/reserva-formulario.css' %}">
+<script src="{% static 'js/selector-usuario.js' %}" defer></script>
+{% endblock %}
+
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1>Gestionar invitados</h1>
-    <div class="reserva-progreso" role="progressbar" aria-label="Progreso de gestión de invitados" aria-valuemin="1" aria-valuemax="2" aria-valuenow="{% if revision %}2{% else %}1{% endif %}">
-        <span class="completo" aria-hidden="true"></span><span{% if revision %} class="completo"{% endif %} aria-hidden="true"></span>
-    </div>
-    <p class="reserva-gestion-paso">Paso {% if revision %}2 de 2 · Revisar cambios{% else %}1 de 2 · Invitados{% endif %}</p>
-    <div class="reserva-turno-tarjetas" aria-label="Turno de la reserva">
-        <section class="reserva-tarjeta-lugar"><p>{{ reserva.evento.turno.cancha.sede.nombre }}</p><h2>{{ reserva.evento.turno.cancha.nombre }}</h2></section>
-        <section class="reserva-tarjeta-horario"><p>{{ reserva.evento.turno.fecha|date:"D j M Y"|capfirst }}</p><h2>{{ reserva.evento.turno.hora_inicio|time:"H:i" }}</h2></section>
-    </div>
-    <div class="reserva-contexto-tarjetas reserva-contexto-tarjetas-doble">
-        <section class="reserva-tarjeta-organizador"><p>Organizador</p><h2>{{ reserva.organizador }}</h2></section>
-        <section class="reserva-tarjeta-modalidad">
-            <div class="reserva-modalidad-encabezado">
-                <p>Modalidad</p>
-                {% if reserva.es_con_membresia %}
-                    <div class="ayuda-contextual reserva-membresia-ayuda">
-                        <button type="button" class="ayuda-contextual-boton" aria-label="Información de la membresía aplicada" aria-describedby="reserva-membresia-tooltip">{% include "componentes/iconoir/informacion.html" %}</button>
-                        <div class="ayuda-contextual-texto reserva-membresia-tooltip" id="reserva-membresia-tooltip" role="tooltip">
-                            <strong>{{ reserva.membresia_usuario.membresia.nombre }}</strong>
-                            <span>Adicional por invitado sin beneficio</span>
-                            <b>$ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}</b>
-                        </div>
+<div class="formulario-pagina">
+    {% tarjeta_titulo titulo %}
+        <a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_detalle' reserva.pk %}">Volver a la reserva</a>
+    {% endtarjeta_titulo %}
+
+    {% if revision %}
+        {% pasos_formulario 2 2 nombre="Revisar cambios" etiqueta="Progreso de gestión de invitados" %}
+    {% else %}
+        {% pasos_formulario 1 2 nombre="Seleccionar invitados" etiqueta="Progreso de gestión de invitados" %}
+    {% endif %}
+
+    <section class="tarjeta formulario-cuerpo">
+        {% tabla_datos etiqueta="Datos de la reserva" %}
+            <tr><th scope="row">Ubicación</th><td>{{ reserva.evento.turno.cancha.nombre }}, {{ reserva.evento.turno.cancha.sede.nombre }}</td></tr>
+            <tr><th scope="row">Fecha y horario</th><td>{{ reserva.evento.turno.fecha|date:"l d/m/Y"|capfirst }} a las {{ reserva.evento.turno.hora_inicio|time:"H:i" }}</td></tr>
+            <tr><th scope="row">Organizador</th><td>{{ reserva.organizador }}</td></tr>
+            <tr>
+                <th scope="row">Modalidad</th>
+                <td>
+                    {% if reserva.es_con_membresia %}
+                        Con membresía
+                        <span class="ayuda-contextual reserva-membresia-ayuda">
+                            <button type="button" class="ayuda-contextual-boton" aria-label="Información de la membresía aplicada" aria-describedby="reserva-membresia-tooltip">{% include "componentes/iconoir/informacion.html" %}</button>
+                            <span class="ayuda-contextual-texto reserva-membresia-tooltip" id="reserva-membresia-tooltip" role="tooltip">
+                                <strong>{{ reserva.membresia_usuario.membresia.nombre }}</strong>
+                                <span>Adicional por invitado sin beneficio</span>
+                                <b>$ {{ reserva.precio_invitado_aplicado|floatformat:"2g" }}</b>
+                            </span>
+                        </span>
+                    {% else %}
+                        Reserva normal
+                    {% endif %}
+                </td>
+            </tr>
+        {% endtabla_datos %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert"><div>{% for error in formulario.non_field_errors %}<p class="reserva-error-texto">{{ error }}</p>{% endfor %}</div></div>{% endif %}
+
+            {% if revision %}
+                <h2 class="formulario-seccion-titulo">Cambios a confirmar</h2>
+                {% for persona in invitados_seleccionados %}<input type="hidden" name="invitados" value="{{ persona.pk }}">{% endfor %}
+                <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+                {% if revision.cambios %}
+                    <ul class="reserva-invitados-resumen">
+                        {% for nombre, estado, condicion in revision.cambios %}
+                            <li>
+                                <span>{{ nombre }}{% if reserva.es_con_membresia %}<small class="reserva-gestion-condicion">{% if condicion == 'sin_aplicar' %}Sin aplicar hasta aceptar{% elif condicion == 'socio' %}Socio con beneficio{% elif condicion == 'cupo_agotado' %}Socio con cupo de invitado agotado{% else %}No socio{% endif %}</small>{% endif %}</span>
+                                <span class="reserva-invitado-condicion {% if estado == 'agregar' %}reserva-invitado-socio{% else %}reserva-invitado-no-socio{% endif %}">{% if estado == 'agregar' %}Agregar{% else %}Quitar{% endif %}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <div class="reserva-total"><span>Total de la reserva</span><strong>$ {{ revision.total|floatformat:"2g" }}</strong></div>
+                {% else %}
+                    <div class="formulario-aviso formulario-aviso-advertencia">
+                        <p>No hay cambios para aplicar.</p>
                     </div>
                 {% endif %}
+            {% else %}
+                {% include "componentes/selector_usuarios.html" with campo=formulario.invitados seleccionados=invitados_seleccionados url_busqueda=url_buscar_invitados advertencias=advertencias_invitados only %}
+                <noscript><p>Habilitá JavaScript para buscar y agregar invitados.</p></noscript>
+            {% endif %}
+
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' reserva.pk %}">Cancelar</a>
+                {% if revision %}<button class="boton boton-secundario" name="paso" value="editar">Volver</button>{% endif %}
+                {% if revision.cambios %}<button class="boton boton-primario" name="paso" value="confirmar">Confirmar cambios</button>{% elif not revision %}<button class="boton boton-primario" name="paso" value="revisar">Revisar cambios</button>{% endif %}
             </div>
-            <h2>{% if reserva.es_con_membresia %}Con membresía{% else %}Reserva normal{% endif %}</h2>
-        </section>
-    </div>
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert"><div>{% for error in formulario.non_field_errors %}<p class="reserva-error-texto">{{ error }}</p>{% endfor %}</div></div>{% endif %}
-        {% if revision %}
-            <h2 class="reserva-gestion-titulo">Cambios a confirmar</h2>
-            {% for persona in invitados_seleccionados %}<input type="hidden" name="invitados" value="{{ persona.pk }}">{% endfor %}
-            <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
-            {% if revision.cambios %}
-                <ul class="reserva-invitados-resumen">
-                    {% for nombre, estado, condicion in revision.cambios %}
-                        <li>
-                            <span>{{ nombre }}{% if reserva.es_con_membresia %}<small class="reserva-gestion-condicion">{% if condicion == 'sin_aplicar' %}Sin aplicar hasta aceptar{% elif condicion == 'socio' %}Socio con beneficio{% elif condicion == 'cupo_agotado' %}Socio con cupo de invitado agotado{% else %}No socio{% endif %}</small>{% endif %}</span>
-                            <span class="reserva-invitado-condicion {% if estado == 'agregar' %}reserva-invitado-socio{% else %}reserva-invitado-no-socio{% endif %}">{% if estado == 'agregar' %}Agregar{% else %}Quitar{% endif %}</span>
-                        </li>
-                    {% endfor %}
-                </ul>
-                <div class="reserva-total"><span>Total de la reserva</span><strong>$ {{ revision.total|floatformat:"2g" }}</strong></div>
-            {% else %}<p class="nota-campo reserva-nota-advertencia">No hay cambios para aplicar</p>{% endif %}
-        {% else %}
-            {% include "componentes/selector_usuarios.html" with campo=formulario.invitados seleccionados=invitados_seleccionados url_busqueda=url_buscar_invitados advertencias=advertencias_invitados only %}
-            <hr class="reserva-gestion-separador">
-            <noscript><p>Habilitá JavaScript para buscar y agregar invitados.</p></noscript>
-        {% endif %}
-        <div class="acciones-formulario">
-            {% if revision %}<button class="boton boton-secundario" name="paso" value="editar">Volver</button>{% else %}<a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' reserva.pk %}">Volver</a>{% endif %}
-            <a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' reserva.pk %}">Cancelar</a>
-            {% if revision.cambios %}<button class="boton boton-primario" name="paso" value="confirmar">Confirmar cambios</button>{% elif not revision %}<button class="boton boton-primario" name="paso" value="revisar">Siguiente</button>{% endif %}
-        </div>
-    </form>
-</section>
+        </form>
+    </section>
+</div>
 {% endblock %}

@@ -18,7 +18,7 @@ class ReservaAnulacionForm(forms.Form):
             "required": "Indicá el motivo de la anulación.",
             "min_length": "El motivo de anulación debe tener al menos 5 caracteres.",
         },
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ingresá al menos 5 caracteres"}),
     )
 
 
@@ -80,7 +80,7 @@ class InvitadosReservaForm(forms.Form):
 
 class ResultadoReservaForm(forms.Form):
     resultado = forms.ChoiceField(label="Resultado", choices=(("realizada", "Realizada"), ("no_realizada", "No realizada")), widget=forms.Select(attrs={"class": "form-control"}))
-    motivo = forms.CharField(min_length=5, label="Motivo de corrección", required=False, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    motivo = forms.CharField(min_length=5, label="Motivo de corrección", required=False, widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ingresá al menos 5 caracteres"}))
     version = forms.CharField(widget=forms.HiddenInput())
 
     def __init__(self, *args, reserva, **kwargs):

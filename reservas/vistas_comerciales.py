@@ -13,8 +13,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from django.views.decorators.http import require_GET, require_http_methods
 
+from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
 from membresias.fechas import mes_siguiente
 from membresias.models import MembresiaUsuario
 from usuarios.models import Rol, Usuario
@@ -196,36 +197,70 @@ def reserva_socios(request, pk):
     reserva, administrador = _obtener_reserva_para_consulta(request.user, pk)
     if not administrador and reserva.organizador_id != request.user.pk:
         raise PermissionDenied
-    contexto = {"reserva": reserva, "titulo": "Actualizar socios"}
+    url_detalle = reverse("reservas:reserva_detalle", args=[pk])
+    if not es_peticion_modal(request):
+        return redirect(url_detalle)
+
     try:
         if request.method == "POST":
             actualizar_socios(request.user, pk, confirmacion=request.POST.get("confirmacion") or "")
             messages.success(request, "La condición de socios fue actualizada.")
-            return redirect("reservas:reserva_detalle", pk=pk)
-        contexto["revision"] = actualizar_socios(request.user, pk)
+            return respuesta_modal_exito(url_detalle)
+        revision = actualizar_socios(request.user, pk)
     except ValidationError as error:
         messages.error(request, error.messages[0])
-        return redirect("reservas:reserva_detalle", pk=pk)
-    return render(request, "reservas/reserva_gestion.html", contexto)
+        return respuesta_modal_exito(url_detalle)
+
+    return respuesta_modal_html(
+        request,
+        "reservas/_modal_reserva_socios.html",
+        {"reserva": reserva, "revision": revision},
+        amplio=True,
+    )
 
 
 @login_required
 @never_cache
-@require_POST
+@require_http_methods(["GET", "POST"])
 def reserva_responder(request, pk):
-    respuesta = request.POST.get("respuesta")
-    version = request.POST.get("version", "")
-    try:
-        if request.POST.get("confirmacion"):
-            responder_invitacion(request.user, pk, respuesta, version=version, confirmacion=request.POST["confirmacion"])
+    url_detalle = reverse("reservas:reserva_detalle", args=[pk])
+    if not es_peticion_modal(request):
+        return redirect(url_detalle)
+
+    if request.method == "POST":
+        respuesta = request.POST.get("respuesta")
+        version = request.POST.get("version", "")
+        try:
+            responder_invitacion(
+                request.user,
+                pk,
+                respuesta,
+                version=version,
+                confirmacion=request.POST.get("confirmacion") or "",
+            )
             messages.success(request, "Tu respuesta fue registrada.")
-        else:
-            revision = preparar_respuesta_invitacion(request.user, pk, respuesta, version=version)
-            return render(request, "reservas/reserva_respuesta_revision.html", {"revision": revision})
+        except ValidationError as error:
+            for mensaje in error.messages:
+                messages.error(request, mensaje)
+        return respuesta_modal_exito(url_detalle)
+
+    respuesta = request.GET.get("respuesta")
+    version = request.GET.get("version", "")
+    try:
+        revision = preparar_respuesta_invitacion(request.user, pk, respuesta, version=version)
     except ValidationError as error:
         for mensaje in error.messages:
             messages.error(request, mensaje)
-    return redirect("reservas:reserva_detalle", pk=pk)
+        return respuesta_modal_exito(url_detalle)
+
+    es_rechazo = revision["respuesta"] == "negativa"
+    return respuesta_modal_html(
+        request,
+        "reservas/_modal_reserva_responder.html",
+        {"revision": revision, "es_rechazo": es_rechazo},
+        peligro=es_rechazo,
+        amplio=True,
+    )
 
 
 @login_required
@@ -235,19 +270,47 @@ def reserva_resultado(request, pk):
     reserva, administrador = _obtener_reserva_para_consulta(request.user, pk)
     if not administrador:
         raise PermissionDenied
+    url_detalle = reverse("reservas:reserva_detalle", args=[pk])
+    if not es_peticion_modal(request):
+        return redirect(url_detalle)
+
     if not reserva.es_con_membresia or reserva.evento.estado != Evento.Estado.FINALIZADO or reserva.resultado_corregido_en:
         messages.error(request, "La reserva no admite registro o corrección de resultado.")
-        return redirect("reservas:reserva_detalle", pk=pk)
-    formulario = ResultadoReservaForm(request.POST if request.method == "POST" else None, reserva=reserva, initial={"version": version_resultado(request.user, reserva)})
+        return respuesta_modal_exito(url_detalle)
+
+    formulario = ResultadoReservaForm(
+        request.POST if request.method == "POST" else None,
+        reserva=reserva,
+        initial={"version": version_resultado(request.user, reserva)},
+    )
     if request.method == "POST" and formulario.is_valid():
         try:
-            registrar_resultado(request.user, pk, formulario.cleaned_data["resultado"], formulario.cleaned_data.get("motivo", ""), version=formulario.cleaned_data["version"])
+            registrar_resultado(
+                request.user,
+                pk,
+                formulario.cleaned_data["resultado"],
+                formulario.cleaned_data.get("motivo", ""),
+                version=formulario.cleaned_data["version"],
+            )
         except ValidationError as error:
             formulario.add_error(None, error)
         else:
             messages.success(request, "El resultado fue registrado sin modificar horas ni cobros.")
-            return redirect("reservas:reserva_detalle", pk=pk)
-    return render(request, "reservas/reserva_gestion.html", {"reserva": reserva, "titulo": "Resultado de uso", "formulario": formulario, "resultado": True})
+            return respuesta_modal_exito(url_detalle)
+
+    es_correccion = reserva.resultado_uso != "sin_registrar"
+    return respuesta_modal_html(
+        request,
+        "reservas/_modal_reserva_resultado.html",
+        {
+            "reserva": reserva,
+            "formulario": formulario,
+            "es_correccion": es_correccion,
+            "titulo": "Corregir resultado" if es_correccion else "Registrar resultado",
+        },
+        status=400 if formulario.errors else 200,
+        errores=bool(formulario.errors),
+    )
 
 
 @login_required

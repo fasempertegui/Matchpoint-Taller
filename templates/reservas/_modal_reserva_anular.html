@@ -1,0 +1,26 @@
+{% load encabezados formularios tablas %}
+{% url 'reservas:reserva_anular' reserva.pk as accion_url %}
+{% texto_titulo as titulo_modal %}Anular reserva {{ reserva.numero }}{% endtexto_titulo %}
+{% modal_formulario titulo_modal action=accion_url peligro=True amplio=True texto_enviar="Anular reserva" %}
+    {% if siguiente %}<input type="hidden" name="siguiente" value="{{ siguiente }}">{% endif %}
+    {% tabla_datos etiqueta="Datos de la reserva" %}
+        <tr><th scope="row">Organizador</th><td>{{ reserva.organizador }}</td></tr>
+        <tr><th scope="row">Ubicación</th><td>{{ turno.cancha.nombre }}, {{ turno.cancha.sede.nombre }}</td></tr>
+        <tr><th scope="row">Fecha y horario</th><td>{{ turno.fecha|date:"d/m/Y" }} de {{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</td></tr>
+    {% endtabla_datos %}
+    <div class="formulario-aviso formulario-aviso-peligro">
+        {% if es_administrador %}
+            <p>Se anulará la reserva y el turno quedará disponible.{% if reserva.es_con_membresia %} Se liberan las horas comprometidas del organizador y de los invitados.{% endif %} Los cobros registrados no se devuelven automáticamente.</p>
+        {% else %}
+            <p>Podés cancelar antes del inicio.{% if reserva.es_con_membresia %} Más de dos horas de antelación libera tu hora de organizador; dos horas o menos conserva su consumo. Las horas de invitados se liberan siempre.{% endif %} La devolución de dinero se gestiona por separado.</p>
+        {% endif %}
+    </div>
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    <div class="grupo-campo">
+        <label for="{{ formulario.motivo.id_for_label }}">{{ formulario.motivo.label }}</label>
+        {{ formulario.motivo }}
+        {% for error in formulario.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+{% endmodal_formulario %}

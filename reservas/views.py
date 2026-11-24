@@ -6,11 +6,13 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from caja.consultas import contexto_financiero
+from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
 from instalaciones.models import Sede
 
 from .forms import ReservaAnulacionForm
@@ -62,7 +64,7 @@ def _obtener_reserva_para_consulta(usuario, pk, *, solo_organizador=False):
     return get_object_or_404(reservas, pk=pk), es_administrador
 
 
-def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=None, *, usuario, parametros):
+def _contexto_reserva_detalle(reserva, es_administrador, *, usuario, parametros):
     from .comercial import inicio_reserva, version_invitacion
     ahora = timezone.localtime()
     try:
@@ -97,18 +99,32 @@ def _contexto_reserva_detalle(reserva, es_administrador, formulario_anulacion=No
         "puede_finalizar": puede_finalizar,
         "es_administrador": es_administrador,
         "impedimento_anulacion": impedimento_anulacion,
-        "formulario_anulacion": formulario_anulacion if formulario_anulacion is not None else ReservaAnulacionForm(),
     }
 
 
 @login_required
-@require_http_methods(["POST"])
+@never_cache
+@require_http_methods(["GET", "POST"])
 def reserva_anular(request, pk):
     reserva, es_administrador = _obtener_reserva_para_consulta(request.user, pk)
     if not es_administrador and reserva.organizador_id != request.user.pk:
         raise PermissionDenied
-    formulario = ReservaAnulacionForm(request.POST)
-    if formulario.is_valid():
+    url_detalle = reverse("reservas:reserva_detalle", args=[reserva.pk])
+    if not es_peticion_modal(request):
+        return redirect(url_detalle)
+
+    destino = request.POST.get("siguiente") or request.GET.get("siguiente") or url_detalle
+    if not destino.startswith("/") or destino.startswith("//"):
+        destino = url_detalle
+
+    try:
+        validar_anulacion_reserva(reserva, es_administrador, timezone.localtime())
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+        return respuesta_modal_exito(destino)
+
+    formulario = ReservaAnulacionForm(request.POST if request.method == "POST" else None)
+    if request.method == "POST" and formulario.is_valid():
         try:
             reserva = anular_reserva(request.user, reserva.pk, formulario.cleaned_data["motivo"])
         except ValidationError as error:
@@ -116,8 +132,23 @@ def reserva_anular(request, pk):
             reserva.refresh_from_db()
         else:
             messages.success(request, f"La reserva {reserva.numero} fue anulada. El turno y el cupo Programado quedaron liberados.")
-            return redirect("reservas:reserva_detalle", pk=reserva.pk)
-    return render(request, "reservas/reserva_detalle.html", _contexto_reserva_detalle(reserva, es_administrador, formulario, usuario=request.user, parametros=request.GET))
+            return respuesta_modal_exito(destino)
+
+    return respuesta_modal_html(
+        request,
+        "reservas/_modal_reserva_anular.html",
+        {
+            "reserva": reserva,
+            "turno": reserva.evento.turno,
+            "es_administrador": es_administrador,
+            "formulario": formulario,
+            "siguiente": destino if destino != url_detalle else "",
+        },
+        status=400 if formulario.errors else 200,
+        peligro=True,
+        amplio=True,
+        errores=bool(formulario.errors),
+    )
 
 
 @login_required

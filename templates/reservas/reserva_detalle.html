@@ -4,21 +4,19 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/reservas-portal.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-reservas reserva-perfil{% endblock %}
 {% block contenido %}
-{% if not puede_anular and formulario_anulacion.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario_anulacion.non_field_errors }}</div>{% endif %}
-{% if not puede_anular %}{% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endif %}
 <article class="tarjeta perfil">
     <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-reticula">
         <div><p class="perfil-contexto">Reserva</p><div class="perfil-identidad"><h1>{{ reserva.numero }}</h1>{% include "componentes/badge_estado.html" with estado=reserva.evento.estado texto=reserva.evento.get_estado_display only %}</div></div>
-        <details class="perfil-menu" data-reserva-menu>
+        <details class="perfil-menu" data-menu-contextual>
     <summary class="boton boton-secundario" aria-expanded="false" aria-controls="reserva-menu-opciones">Acciones <span aria-hidden="true">⋮</span></summary>
     <div class="perfil-menu-opciones" id="reserva-menu-opciones">
         {% if pagina_finanzas %}<button type="button" data-abrir-movimientos aria-haspopup="dialog" aria-controls="movimientos-financieros">Ver movimientos ({{ pagina_finanzas.paginator.count }})</button>{% endif %}
         <a href="{% url 'agenda:agenda' %}?sede={{ turno.cancha.sede_id }}&amp;cancha={{ turno.cancha_id }}&amp;fecha={{ turno.fecha|date:'Y-m-d' }}&amp;hora={{ turno.hora_inicio.hour }}">Ver turno en agenda</a>
         <a href="{% url 'reservas:reserva_comprobante' reserva.pk %}">Ver comprobante</a>
-        {% if puede_gestionar %}<a href="{% url 'reservas:reserva_invitados' reserva.pk %}">Gestionar invitados</a>{% if reserva.es_con_membresia %}<a href="{% url 'reservas:reserva_socios' reserva.pk %}">Actualizar socios</a>{% endif %}{% endif %}
-        {% if es_administrador and reserva.es_con_membresia and reserva.evento.estado == 'finalizado' and not reserva.resultado_corregido_en %}<a href="{% url 'reservas:reserva_resultado' reserva.pk %}">{% if reserva.resultado_uso == 'sin_registrar' %}Registrar resultado{% else %}Corregir resultado{% endif %}</a>{% endif %}
+        {% if puede_gestionar %}<a href="{% url 'reservas:reserva_invitados' reserva.pk %}">Gestionar invitados</a>{% if reserva.es_con_membresia %}<button type="button" data-abrir-modal-url="{% url 'reservas:reserva_socios' reserva.pk %}">Actualizar socios</button>{% endif %}{% endif %}
+        {% if es_administrador and reserva.es_con_membresia and reserva.evento.estado == 'finalizado' and not reserva.resultado_corregido_en %}<button type="button" data-abrir-modal-url="{% url 'reservas:reserva_resultado' reserva.pk %}">{% if reserva.resultado_uso == 'sin_registrar' %}Registrar resultado{% else %}Corregir resultado{% endif %}</button>{% endif %}
         {% if puede_finalizar %}<form method="post" action="{% url 'reservas:reserva_finalizar' reserva.pk %}" data-confirmar="¿Finalizar la reserva {{ reserva.numero }}? Se conservará su turno y su ocupación histórica." data-confirmar-titulo="Finalizar reserva" data-confirmar-boton="Finalizar reserva">{% csrf_token %}<button type="submit">Finalizar reserva</button></form>{% endif %}
-        {% if puede_anular %}<button class="perfil-menu-peligro" type="button" data-abrir-anulacion>Anular reserva</button>{% elif not es_administrador and reserva.evento.estado == 'programado' %}<p class="reserva-menu-impedimento">{{ impedimento_anulacion }}</p>{% endif %}
+        {% if puede_anular %}<button class="perfil-menu-peligro" type="button" data-abrir-modal-url="{% url 'reservas:reserva_anular' reserva.pk %}">Anular reserva</button>{% elif not es_administrador and reserva.evento.estado == 'programado' %}<p class="reserva-menu-impedimento">{{ impedimento_anulacion }}</p>{% endif %}
     </div>
 </details>
     </header>
@@ -123,26 +121,5 @@
     </div>
 </article>
 {% include "caja/_modal_movimientos.html" %}
-{% if puede_anular %}<dialog class="modal-confirmacion reserva-modal-anulacion" data-modal-anulacion{% if formulario_anulacion.is_bound %} data-abrir-inicialmente{% endif %} aria-labelledby="anular-reserva-titulo">
-<form class="modal-confirmacion-formulario" method="post" action="{% url 'reservas:reserva_anular' reserva.pk %}">
-<header class="modal-confirmacion-cabecera"><h2 id="anular-reserva-titulo">Anular reserva {{ reserva.numero }}</h2></header>
-<div class="modal-confirmacion-contenido">
-    {% if formulario_anulacion.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario_anulacion.non_field_errors }}</div>{% endif %}
-    <p>Se anulará la reserva y se liberará el turno. No se devuelve dinero automáticamente.{% if es_administrador and reserva.es_con_membresia %} Se liberan las horas del organizador y de los invitados.{% endif %}</p>
-                            {% csrf_token %}
-                            {% if not es_administrador %}
-                                <p class="perfil-descripcion">Podés cancelar antes del inicio.{% if reserva.es_con_membresia %} Más de dos horas libera tu hora de organizador; dos horas o menos conserva su consumo. Las horas de invitados se liberan siempre.{% endif %} La devolución de dinero se decide por separado.</p>
-                            {% endif %}
-                            <div class="grupo-campo">
-                                <label for="{{ formulario_anulacion.motivo.id_for_label }}">{{ formulario_anulacion.motivo.label }} <span aria-hidden="true">*</span></label>
-                                {{ formulario_anulacion.motivo }}
-                                <small class="nota-campo" id="{{ formulario_anulacion.motivo.auto_id }}_helptext">{{ formulario_anulacion.motivo.help_text }}</small>
-                                {% for error in formulario_anulacion.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-                            </div>
-
-                        </div><footer class="modal-confirmacion-acciones"><button class="boton boton-secundario" type="button" data-cerrar-anulacion>Cancelar</button><button class="boton boton-peligro" type="submit">Anular reserva</button></footer>
-</form>
-</dialog>{% endif %}
 <script src="{% static 'js/menu-contextual.js' %}" defer></script>
-<script src="{% static 'js/reserva-detalle.js' %}" defer></script>
 {% endblock %}

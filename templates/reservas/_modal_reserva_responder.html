@@ -1,0 +1,47 @@
+{% load encabezados formularios tablas %}
+{% url 'reservas:reserva_responder' revision.reserva.pk as accion_url %}
+{% if revision.respuesta == 'afirmativa' %}
+    {% texto_titulo as titulo_modal %}Aceptar invitación{% endtexto_titulo %}
+    {% texto_titulo as boton_enviar %}Aceptar invitación{% endtexto_titulo %}
+{% else %}
+    {% texto_titulo as titulo_modal %}Rechazar invitación{% endtexto_titulo %}
+    {% texto_titulo as boton_enviar %}Rechazar invitación{% endtexto_titulo %}
+{% endif %}
+{% modal_formulario titulo_modal action=accion_url amplio=True peligro=es_rechazo texto_enviar=boton_enviar %}
+    <input type="hidden" name="respuesta" value="{{ revision.respuesta }}">
+    <input type="hidden" name="version" value="{{ revision.version }}">
+    <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+    {% tabla_datos etiqueta="Datos de la invitación" %}
+        <tr><th scope="row">Organizador</th><td>{{ revision.reserva.organizador }}</td></tr>
+        <tr><th scope="row">Ubicación</th><td>{{ revision.reserva.evento.turno.cancha.nombre }}, {{ revision.reserva.evento.turno.cancha.sede.nombre }}</td></tr>
+        <tr><th scope="row">Fecha y horario</th><td>{{ revision.reserva.evento.turno.fecha|date:"d/m/Y" }} de {{ revision.reserva.evento.turno.hora_inicio|time:"H:i" }} a {{ revision.reserva.evento.turno.hora_fin|time:"H:i" }}</td></tr>
+        {% if revision.respuesta == 'afirmativa' %}
+            {% if revision.condicion == 'socio' %}
+                <tr><th scope="row">Condición</th><td><strong>Uso de membresía (1 hora de invitado)</strong></td></tr>
+            {% elif revision.adicional != None %}
+                <tr><th scope="row">Adicional</th><td><strong>$ {{ revision.adicional|floatformat:"2g" }}</strong></td></tr>
+            {% else %}
+                <tr><th scope="row">Modalidad</th><td>Reserva normal</td></tr>
+            {% endif %}
+        {% endif %}
+    {% endtabla_datos %}
+    {% if revision.respuesta == 'afirmativa' %}
+        {% if revision.condicion == 'socio' %}
+            <div class="formulario-aviso formulario-aviso-positivo">
+                <p>Tu participación ocupa este horario y compromete <strong>una hora de tu cupo de invitado</strong> para el mes del turno. La disponibilidad se comprueba al confirmar.</p>
+            </div>
+        {% elif revision.adicional != None %}
+            <div class="formulario-aviso formulario-aviso-advertencia">
+                <p>{% if revision.condicion == 'cupo_agotado' %}No tenés horas de invitado disponibles.{% else %}No tenés membresía con cobertura para este turno.{% endif %} Tu participación ocupa este horario y agrega un adicional de <strong>$ {{ revision.adicional|floatformat:"2g" }}</strong> a la reserva.</p>
+            </div>
+        {% else %}
+            <div class="formulario-aviso">
+                <p>Tu participación ocupa este horario y no utiliza horas de membresía ni genera adicional. La disponibilidad se comprueba al confirmar.</p>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="formulario-aviso formulario-aviso-peligro">
+            <p>Esta invitación no ocupará tu horario, no comprometerá horas ni generará adicional. Los cobros registrados no se devuelven automáticamente.</p>
+        </div>
+    {% endif %}
+{% endmodal_formulario %}
