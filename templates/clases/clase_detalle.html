@@ -14,14 +14,14 @@
                 {% if clase.puede_registrar_asistencia or clase.puede_finalizar %}<a href="{% url 'clases:clase_asistencia' clase.id %}">{% if clase.puede_finalizar %}Finalizar y registrar asistencia{% elif hay_asistencia %}Revisar asistencia{% else %}Registrar asistencia{% endif %}</a>{% endif %}
                 {% if clase.puede_finalizar %}{% include "clases/_finalizar_clase.html" with clase_id=clase.id %}{% endif %}
                 {% if clase.puede_editar %}<a href="{% url 'clases:clase_editar' clase.id %}">Editar clase</a>{% endif %}
-                {% if clase.puede_cambiar_cancha %}<a href="{% url 'clases:clase_cambiar_cancha' clase.id %}">Cambiar de cancha</a>{% endif %}
+                {% if clase.puede_cambiar_cancha %}<button type="button" data-abrir-modal-url="{% url 'clases:clase_cambiar_cancha' clase.id %}">Cambiar de cancha</button>{% endif %}
                 {% if clase.puede_responder %}
-                <form method="post" action="{% url 'clases:clase_responder' clase.id %}" data-confirmar="Este aviso libera tu disponibilidad para este horario y no se puede modificar. Si cambiás de opinión, comunicate con tu profesor. Si finalmente asistís, tu presencia puede registrarse sin modificar el aviso." data-confirmar-titulo="Avisar que no asistís" data-confirmar-boton="No asisto">
+                <form method="post" action="{% url 'clases:clase_responder' clase.id %}" data-confirmar="Este aviso libera tu disponibilidad para este horario y no se puede modificar. Si cambiás de opinión, comunicate con tu profesor. Si finalmente asistís, tu presencia puede registrarse sin modificar el aviso." data-confirmar-titulo="Avisar que no asistís" data-confirmar-boton="No asisto" data-confirmar-peligro>
                     {% csrf_token %}<input type="hidden" name="respuesta" value="no_asistira"><input type="hidden" name="identidad" value="{{ clase.mi_respuesta.identidad }}"><button type="submit">No asisto</button>
                 </form>
                 {% endif %}
-                {% if clase.puede_anular %}<a class="perfil-menu-peligro" href="{% url 'clases:clase_anular' clase.id %}">Anular y liberar</a>{% endif %}
-                {% if clase.puede_anular_bloquear %}<a class="perfil-menu-peligro" href="{% url 'clases:clase_anular_bloquear' clase.id %}">Anular y bloquear</a>{% endif %}
+                {% if clase.puede_anular %}<button type="button" class="perfil-menu-peligro" data-abrir-modal-url="{% url 'clases:clase_anular' clase.id %}">Anular y liberar</button>{% endif %}
+                {% if clase.puede_anular_bloquear %}<button type="button" class="perfil-menu-peligro" data-abrir-modal-url="{% url 'clases:clase_anular_bloquear' clase.id %}">Anular y bloquear</button>{% endif %}
             </div>
         </details>
     </header>

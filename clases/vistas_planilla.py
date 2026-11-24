@@ -3,7 +3,6 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core import signing
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -11,6 +10,7 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
+from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
 from instalaciones.models import Cancha, Sede
 
 from .forms import ObservacionesPlanillaForm, PlanillaFiltroForm
@@ -182,73 +182,57 @@ def planilla_quitar(request):
 def planilla_formulario(request, pk):
     usuario = exigir_administracion_clases(request.user)
     turno = get_object_or_404(TurnoPlanilla.objects.select_related("cancha__sede"), pk=pk)
+    url_detalle = reverse("clases:planilla_detalle", args=[pk])
+    if not es_peticion_modal(request):
+        return redirect(url_detalle)
+
     cancha, dia, hora = turno.cancha, turno.dia_semana, turno.hora_inicio
-    coordenadas = [(dia, hora)]
     profesores_actuales = list(turno.profesores.values_list("profesor_id", flat=True))
     participantes_actuales = list(turno.alumnos.values_list("usuario_id", flat=True))
-    inicial = {
-        "observaciones": turno.observaciones,
-    }
-    url_cancelar = reverse("clases:planilla_detalle", args=[pk])
-    if request.method == "POST":
-        version = request.POST.get("version", "")
-    else:
-        version = version_turno_planilla(turno)
+    version = request.POST.get("version", "") if request.method == "POST" else version_turno_planilla(turno)
     formulario = ObservacionesPlanillaForm(
-        request.POST if request.method == "POST" else None, initial=inicial,
+        request.POST if request.method == "POST" else None,
+        initial={"observaciones": turno.observaciones},
     )
     impedimento = None
     try:
         if cancha.estado != Cancha.Estado.ACTIVA or cancha.sede.estado != Sede.Estado.ACTIVA:
             raise ValidationError("La sede y la cancha deben estar activas para guardar la planilla.")
-        for dia, hora in coordenadas:
-            validar_horario_planilla(cancha.sede, dia, hora)
+        validar_horario_planilla(cancha.sede, dia, hora)
     except ValidationError as error:
         impedimento = " ".join(error.messages)
-    revision = None
+
     if request.method == "POST" and formulario.is_valid():
         try:
             if impedimento:
                 raise ValidationError(impedimento)
-            parametros = {
-                "profesores_ids": set(profesores_actuales), "participantes_ids": set(participantes_actuales),
-                "observaciones": formulario.cleaned_data["observaciones"],
-            }
             validar_version_turno_planilla(turno, version)
-            datos_revision = {
-                "actor": usuario.pk, "turno": pk, "cancha": cancha.pk,
-                "horarios": [[dia, hora.isoformat()] for dia, hora in coordenadas],
-                "version": version, "profesores": sorted(parametros["profesores_ids"]),
-                "participantes": sorted(parametros["participantes_ids"]),
-                "observaciones": parametros["observaciones"],
-            }
-            paso = request.POST.get("paso")
-            if paso == "confirmar":
-                try:
-                    confirmado = signing.loads(request.POST.get("confirmacion", ""), salt="clases.planilla.revision", max_age=900)
-                except signing.BadSignature:
-                    raise ValidationError("La revisión venció o no es válida. Revisá nuevamente antes de guardar.") from None
-                if confirmado != datos_revision:
-                    raise ValidationError("Los datos cambiaron. Revisá nuevamente antes de guardar.")
-                guardado = editar_turno_planilla(usuario, pk, **parametros, version=version)
-                messages.success(request, "El horario de la planilla fue guardado.")
-                return redirect("clases:planilla_detalle", pk=guardado.pk)
-            if paso == "revisar":
-                revision = signing.dumps(datos_revision, salt="clases.planilla.revision", compress=True)
-            elif paso != "editar":
-                raise ValidationError("La acción solicitada no es válida.")
+            guardado = editar_turno_planilla(
+                usuario,
+                pk,
+                profesores_ids=set(profesores_actuales),
+                participantes_ids=set(participantes_actuales),
+                observaciones=formulario.cleaned_data["observaciones"],
+                version=version,
+            )
+            messages.success(request, "Las observaciones del horario fueron guardadas.")
+            return respuesta_modal_exito(reverse("clases:planilla_detalle", args=[guardado.pk]))
         except TurnoPlanilla.DoesNotExist:
             raise Http404("El horario ya no existe en la planilla.") from None
         except ValidationError as error:
             formulario.add_error(None, error)
-    titulo = "Editar observaciones"
-    return render(request, "clases/planilla_formulario.html", {
-        "titulo": titulo, "editando": True, "formulario": formulario,
-        "cancha": cancha, "version": version,
-        "horarios": [
-            {"dia": TurnoPlanilla.DiaSemana(dia).label, "hora": hora, "hora_fin": time(hora.hour + 1)}
-            for dia, hora in coordenadas
-        ],
-        "revision": revision, "impedimento": impedimento,
-        "url_cancelar": url_cancelar,
-    })
+
+    return respuesta_modal_html(
+        request,
+        "clases/_modal_planilla_observaciones.html",
+        {
+            "turno": turno,
+            "cancha": cancha,
+            "hora_fin": time(hora.hour + 1),
+            "formulario": formulario,
+            "version": version,
+            "impedimento": impedimento,
+        },
+        status=400 if formulario.errors else 200,
+        errores=bool(formulario.errors),
+    )

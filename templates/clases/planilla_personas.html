@@ -1,42 +1,63 @@
 {% extends "base.html" %}
-{% load static %}
+{% load encabezados tablas static %}
+
 {% block titulo %}{{ funcion|capfirst }} de la planilla | Academia TM{% endblock %}
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'css/clases.css' %}">
 <link rel="stylesheet" href="{% static 'css/planilla-personas.css' %}">
 {% endblock %}
-{% block clase_contenido %}contenido-planilla-personas{% endblock %}
+
 {% block contenido %}
-<section class="tarjeta planilla-personas">
-    <h1>{% if accion == 'agregar' %}Agregar {{ funcion }}{% elif accion == 'quitar' %}Quitar {{ funcion }}{% else %}{{ funcion|capfirst }}{% endif %}</h1>
-    <dl class="planilla-personas-contexto">
-        <div><dt>Sede</dt><dd>{{ cancha.sede.nombre }}</dd></div>
-        <div><dt>Cancha</dt><dd>{{ cancha.nombre }}</dd></div>
-        <div><dt>Horarios seleccionados</dt><dd>{{ turnos|length }}</dd></div>
-    </dl>
-    <details class="planilla-personas-horarios"><summary>Ver horarios seleccionados</summary><ul>{% for turno in turnos %}<li>{{ turno.get_dia_semana_display }} <strong>{{ turno.hora_inicio|time:"H:i" }}</strong></li>{% endfor %}</ul></details>
-    <form method="post" novalidate{% if accion == 'agregar' %} data-clase-formulario{% endif %}
-          data-confirmar="¿{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} los {{ funcion }} seleccionados en {{ turnos|length }} horario{{ turnos|length|pluralize }}?"
-          data-confirmar-titulo="{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} {{ funcion }}"
-          data-confirmar-boton="{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %}">
-        {% csrf_token %}
-        <input type="hidden" name="seleccion" value="{{ seleccion }}">
-        {% if accion %}<input type="hidden" name="accion" value="{{ accion }}">{% endif %}
-        {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
-        <p class="texto-secundario">{% if accion == 'agregar' %}Se agregarán sólo las personas que falten en cada horario. Las asignaciones existentes se mantienen.{% else %}Elegí a quién quitar. Cada persona se retirará únicamente de los horarios donde esté asignada.{% endif %}</p>
-        {% if accion == 'agregar' %}
-            {% include "clases/_selector_personas.html" with campo=campo seleccionados=personas titulo=funcion|capfirst etiqueta="Buscar persona" vacio="Todavía no seleccionaste personas." ampliar_busqueda=formulario.buscar_todos.value sin_asterisco=True only %}
-        {% else %}
-            <div class="planilla-personas-opciones">{% for fila in disponibles %}
-                <label><input type="checkbox" name="{{ funcion }}" value="{{ fila.persona.pk }}"{% if fila.elegida %} checked{% endif %}><span><strong>{{ fila.persona }}</strong><small>Asignado en {{ fila.cantidad }} de {{ turnos|length }} horarios</small></span></label>
-            {% empty %}<p class="texto-secundario">No hay {{ funcion }} asignados en estos horarios.</p>{% endfor %}</div>
-            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+<div class="formulario-pagina">
+    {% texto_titulo as titulo_pantalla %}{% if accion == 'agregar' %}Agregar {{ funcion }}{% elif accion == 'quitar' %}Quitar {{ funcion }}{% else %}{{ funcion|capfirst }}{% endif %}{% endtexto_titulo %}
+    {% texto_titulo as desc_pantalla %}{% if accion == 'agregar' %}Se agregarán sólo las personas que falten en cada horario. Las asignaciones existentes se mantienen.{% else %}Elegí a quién quitar. Cada persona se retirará únicamente de los horarios donde esté asignada.{% endif %}{% endtexto_titulo %}
+    {% tarjeta_titulo titulo_pantalla descripcion=desc_pantalla %}
+        <a class="boton boton-secundario boton-chico" href="{{ url_planilla }}">Volver a la planilla</a>
+    {% endtarjeta_titulo %}
+
+    <section class="tarjeta formulario-cuerpo">
+        {% tabla_datos etiqueta="Alcance de la selección" %}
+            <tr><th scope="row">Ubicación</th><td>{{ cancha.nombre }}, {{ cancha.sede.nombre }}</td></tr>
+            {% if turnos|length == 1 %}
+                {% with turno=turnos.0 %}
+                    <tr><th scope="row">Horario</th><td>{{ turno.get_dia_semana_display }} a las {{ turno.hora_inicio|time:"H:i" }}</td></tr>
+                {% endwith %}
+            {% else %}
+                <tr><th scope="row">Horarios seleccionados</th><td>{{ turnos|length }}</td></tr>
+            {% endif %}
+        {% endtabla_datos %}
+
+        {% if turnos|length > 1 %}
+            <details class="planilla-personas-horarios">
+                <summary>Ver horarios seleccionados</summary>
+                <ul>{% for turno in turnos %}<li>{{ turno.get_dia_semana_display }} <strong>{{ turno.hora_inicio|time:"H:i" }}</strong></li>{% endfor %}</ul>
+            </details>
         {% endif %}
-        <div class="acciones-formulario">
-            {% if accion == 'agregar' or disponibles %}<button class="boton boton-primario" name="paso" value="guardar">{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} {{ funcion }}</button>{% endif %}
-            <a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a>
-        </div>
-    </form>
-</section>
+
+        <form method="post" novalidate{% if accion == 'agregar' %} data-clase-formulario{% endif %}
+              data-confirmar="¿{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} los {{ funcion }} seleccionados en {{ turnos|length }} horario{{ turnos|length|pluralize }}?"
+              data-confirmar-titulo="{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} {{ funcion }}"
+              data-confirmar-boton="{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %}"{% if accion == 'quitar' %} data-confirmar-peligro{% endif %}>
+            {% csrf_token %}
+            <input type="hidden" name="seleccion" value="{{ seleccion }}">
+            {% if accion %}<input type="hidden" name="accion" value="{{ accion }}">{% endif %}
+            {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+
+            {% if accion == 'agregar' %}
+                {% include "clases/_selector_personas.html" with campo=campo seleccionados=personas titulo=funcion|capfirst etiqueta="Buscar persona" vacio="Todavía no seleccionaste personas." ampliar_busqueda=formulario.buscar_todos.value sin_asterisco=True only %}
+            {% else %}
+                <div class="planilla-personas-opciones">{% for fila in disponibles %}
+                    <label><input type="checkbox" name="{{ funcion }}" value="{{ fila.persona.pk }}"{% if fila.elegida %} checked{% endif %}><span><strong>{{ fila.persona }}</strong><small>Asignado en {{ fila.cantidad }} de {{ turnos|length }} horarios</small></span></label>
+                {% empty %}<p class="texto-secundario">No hay {{ funcion }} asignados en estos horarios.</p>{% endfor %}</div>
+                {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            {% endif %}
+
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a>
+                {% if accion == 'agregar' or disponibles %}<button class="boton {% if accion == 'quitar' %}boton-confirmar-peligro{% else %}boton-primario{% endif %}" name="paso" value="guardar">{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} {{ funcion }}</button>{% endif %}
+            </div>
+        </form>
+    </section>
+</div>
 <script src="{% static 'js/clase-formulario.js' %}" defer></script>
 {% endblock %}

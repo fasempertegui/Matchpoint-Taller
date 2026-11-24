@@ -132,7 +132,7 @@ class ClaseAnulacionForm(forms.Form):
         min_length=5,
         label="Motivo de anulación",
         error_messages={"required": "Indicá el motivo de la anulación."},
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ingresá al menos 5 caracteres"}),
     )
     motivo_bloqueo = forms.ChoiceField(
         label="Motivo del bloqueo", choices=(("", "Elegí un motivo"), *Bloqueo.Motivo.choices),

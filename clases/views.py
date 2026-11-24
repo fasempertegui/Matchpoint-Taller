@@ -16,6 +16,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from common.fechas import FECHA_INICIO_OPERACIONES
+from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
 from instalaciones.models import Sede
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
@@ -229,6 +230,9 @@ def clase_editar(request, pk):
 def clase_cambiar_cancha(request, pk):
     usuario = exigir_administracion_clases(request.user)
     url_detalle = reverse("clases:clase_detalle", args=[pk])
+    if not es_peticion_modal(request):
+        return redirect(url_detalle)
+
     try:
         datos = consultar_edicion_clase(usuario, pk)
     except Clase.DoesNotExist:
@@ -236,39 +240,43 @@ def clase_cambiar_cancha(request, pk):
     except ValidationError as error:
         for mensaje in error.messages:
             messages.error(request, mensaje)
-        return redirect(url_detalle)
+        return respuesta_modal_exito(url_detalle)
+
     clase = datos["clase"]
     turno = clase.evento.turno
     inicio = timezone.make_aware(datetime.combine(turno.fecha, turno.hora_inicio))
     if timezone.localtime() >= inicio:
         messages.error(request, "Sólo se puede cambiar de cancha antes del inicio de la clase.")
-        return redirect(url_detalle)
+        return respuesta_modal_exito(url_detalle)
+
     version = request.POST.get("version", "") if request.method == "POST" else datos["version"]
     formulario = ClaseCanchaForm(request.POST if request.method == "POST" else None, clase=clase)
-    confirmacion = None
-    destino = None
     if request.method == "POST" and formulario.is_valid():
         destino = formulario.cleaned_data["cancha"]
-        paso = request.POST.get("paso")
         try:
-            if paso == "confirmar":
-                cambiar_cancha_clase(usuario, pk, destino, confirmacion=request.POST.get("confirmacion", ""))
-                messages.success(request, "La clase cambió de cancha. La cancha original quedó disponible para ese turno.")
-                return redirect(url_detalle)
-            if paso == "revisar":
-                confirmacion = preparar_cambio_cancha(usuario, pk, destino, version=version)
-            elif paso != "editar":
-                raise ValidationError("La acción solicitada no es válida.")
+            confirmacion = preparar_cambio_cancha(usuario, pk, destino, version=version)
+            cambiar_cancha_clase(usuario, pk, destino, confirmacion=confirmacion)
+            messages.success(request, "La clase cambió de cancha. La cancha original quedó disponible para ese turno.")
+            return respuesta_modal_exito(url_detalle)
         except ValidationError as error:
             formulario.add_error(None, error)
         except Clase.DoesNotExist:
             raise Http404("La clase no existe.") from None
-    return render(request, "clases/clase_cambiar_cancha.html", {
-        "clase": clase, "turno": turno, "formulario": formulario,
-        "version": version, "confirmacion": confirmacion, "destino": destino,
-        "hay_destinos": formulario.fields["cancha"].queryset.exists(),
-        "url_detalle": url_detalle,
-    })
+
+    return respuesta_modal_html(
+        request,
+        "clases/_modal_clase_cambiar_cancha.html",
+        {
+            "clase": clase,
+            "turno": turno,
+            "formulario": formulario,
+            "version": version,
+            "hay_destinos": formulario.fields["cancha"].queryset.exists(),
+        },
+        status=400 if formulario.errors else 200,
+        amplio=True,
+        errores=bool(formulario.errors),
+    )
 
 
 @login_required
@@ -305,6 +313,9 @@ def clase_anular(request, pk, bloquear=False):
         return JsonResponse({"confirmacion": confirmacion, "mensaje": mensaje})
 
     url_detalle = reverse("clases:clase_detalle", args=[pk])
+    if not es_peticion_modal(request):
+        return redirect(url_detalle)
+
     try:
         datos = consultar_edicion_clase(usuario, pk)
         validar_accion_anulacion(datos["clase"], bloquear)
@@ -313,33 +324,47 @@ def clase_anular(request, pk, bloquear=False):
     except ValidationError as error:
         for mensaje in error.messages:
             messages.error(request, mensaje)
-        return redirect(url_detalle)
+        return respuesta_modal_exito(url_detalle)
+
     clase = datos["clase"]
+    turno = clase.evento.turno
     version = request.POST.get("version", "") if request.method == "POST" else datos["version"]
     formulario = ClaseAnulacionForm(request.POST if request.method == "POST" else None, bloquear=bloquear)
-    confirmacion = None
+    destino = request.POST.get("siguiente") or request.GET.get("siguiente") or url_detalle
+    if not destino.startswith("/") or destino.startswith("//"):
+        destino = url_detalle
+
     if request.method == "POST" and formulario.is_valid():
         parametros = {"bloquear": bloquear, **formulario.cleaned_data}
-        paso = request.POST.get("paso")
         try:
-            if paso == "confirmar":
-                confirmar_anulacion_clase(usuario, pk, **parametros, confirmacion=request.POST.get("confirmacion", ""))
-                messages.success(request, "La clase fue anulada y su turno quedó bloqueado." if bloquear else "La clase fue anulada y su turno quedó libre.")
-                return redirect(url_detalle)
-            if paso == "revisar":
-                confirmacion = preparar_anulacion_clase(usuario, pk, **parametros, version=version)
-            elif paso != "editar":
-                raise ValidationError("La acción solicitada no es válida.")
+            confirmacion = preparar_anulacion_clase(usuario, pk, **parametros, version=version)
+            confirmar_anulacion_clase(usuario, pk, **parametros, confirmacion=confirmacion)
+            messages.success(
+                request,
+                "La clase fue anulada y su turno quedó bloqueado." if bloquear else "La clase fue anulada y su turno quedó libre.",
+            )
+            return respuesta_modal_exito(destino)
         except ValidationError as error:
             formulario.add_error(None, error)
         except Clase.DoesNotExist:
             raise Http404("La clase no existe.") from None
-    return render(request, "clases/clase_anular.html", {
-        "clase": clase, "turno": clase.evento.turno, "bloquear": bloquear,
-        "formulario": formulario, "confirmacion": confirmacion, "version": version,
-        "motivo_bloqueo": dict(formulario.fields["motivo_bloqueo"].choices).get(formulario["motivo_bloqueo"].value(), "") if bloquear else "",
-        "url_detalle": url_detalle,
-    })
+
+    return respuesta_modal_html(
+        request,
+        "clases/_modal_clase_anular.html",
+        {
+            "clase": clase,
+            "turno": turno,
+            "bloquear": bloquear,
+            "formulario": formulario,
+            "version": version,
+            "siguiente": destino if destino != url_detalle else "",
+        },
+        status=400 if formulario.errors else 200,
+        peligro=True,
+        amplio=True,
+        errores=bool(formulario.errors),
+    )
 
 
 @login_required

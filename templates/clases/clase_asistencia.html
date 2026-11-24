@@ -52,15 +52,20 @@
 <template data-asistencia-fila-nueva>
     {% include "clases/_asistencia_fila.html" with fila=fila_vacia only %}
 </template>
-<dialog class="modal-confirmacion" data-asistencia-editor aria-labelledby="asistencia-editor-titulo">
-    <form method="dialog" class="modal-confirmacion-formulario">
-        <header class="modal-confirmacion-cabecera"><h2 id="asistencia-editor-titulo">Observaciones de asistencia</h2></header>
-        <div class="modal-confirmacion-contenido">
-            <p data-editor-nombre></p>
+<dialog class="modal-unificado" data-asistencia-editor aria-labelledby="asistencia-editor-titulo">
+    <form method="dialog" class="modal-unificado-estructura">
+        <header class="modal-cabecera">
+            <div class="modal-cabecera-identidad">
+                <h2 id="asistencia-editor-titulo" class="modal-titulo">Observaciones de asistencia</h2>
+            </div>
+            <button class="modal-cerrar" type="submit" value="cancelar" aria-label="Cerrar">&times;</button>
+        </header>
+        <div class="modal-cuerpo">
+            <p><strong data-editor-nombre></strong></p>
             <p class="error-campo" role="alert" data-error-observaciones hidden></p>
             {% include "componentes/observaciones_opcionales.html" with campo=editor.observaciones only %}
         </div>
-        <footer class="modal-confirmacion-acciones">
+        <footer class="modal-acciones">
             <button class="boton boton-secundario" type="button" data-quitar-marca>Quitar marca de asistencia</button>
             <button class="boton boton-peligro" type="button" data-quitar-de-carga hidden>Quitar de esta carga</button>
             <button class="boton boton-secundario" type="submit" value="cancelar">Cancelar</button>
@@ -68,11 +73,24 @@
         </footer>
     </form>
 </dialog>
-<dialog class="modal-confirmacion" data-asistencia-confirmacion aria-labelledby="asistencia-confirmacion-titulo">
-    <form method="dialog" class="modal-confirmacion-formulario">
-        <header class="modal-confirmacion-cabecera"><h2 id="asistencia-confirmacion-titulo" data-confirmacion-titulo></h2></header>
-        <div class="modal-confirmacion-contenido"><p data-confirmacion-mensaje></p><p class="texto-secundario">El cambio se guarda al confirmar. Si la clase ya terminó y sigue Programada, también se finalizará.</p></div>
-        <footer class="modal-confirmacion-acciones"><button class="boton boton-secundario" type="submit" value="cancelar" autofocus>Cancelar</button><button class="boton boton-primario" type="submit" value="confirmar">Confirmar</button></footer>
+<dialog class="modal-unificado" data-asistencia-confirmacion aria-labelledby="asistencia-confirmacion-titulo">
+    <form method="dialog" class="modal-unificado-estructura">
+        <header class="modal-cabecera">
+            <div class="modal-cabecera-identidad">
+                <h2 id="asistencia-confirmacion-titulo" class="modal-titulo" data-confirmacion-titulo></h2>
+            </div>
+            <button class="modal-cerrar" type="submit" value="cancelar" aria-label="Cerrar">&times;</button>
+        </header>
+        <div class="modal-cuerpo">
+            <p data-confirmacion-mensaje></p>
+            <div class="formulario-aviso">
+                <p>El cambio se guarda al confirmar. Si la clase ya terminó y sigue Programada, también se finalizará.</p>
+            </div>
+        </div>
+        <footer class="modal-acciones">
+            <button class="boton boton-secundario" type="submit" value="cancelar" autofocus>Cancelar</button>
+            <button class="boton boton-primario" type="submit" value="confirmar">Confirmar</button>
+        </footer>
     </form>
 </dialog>
 <script src="{% static 'js/clase-asistencia.js' %}" defer></script>

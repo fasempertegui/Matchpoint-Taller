@@ -1,90 +1,124 @@
 {% extends "base.html" %}
-{% load static %}
+{% load encabezados formularios tablas static %}
 
 {% block titulo %}{% if editando %}{% if revision %}Revisar cambios{% else %}Editar clase{% endif %}{% else %}{% if revision %}Revisar clase{% else %}Crear clase{% endif %}{% endif %} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/clases.css' %}">{% endblock %}
 
 {% block contenido %}
-<header class="clase-encabezado">
-    <div><p class="texto-secundario">{% if editando %}Clase {{ clase_id }}{% elif revision %}Último paso{% else %}Clase manual{% endif %}</p><h1>{% if editando %}{% if revision %}Revisar cambios{% else %}Editar clase{% endif %}{% else %}{% if revision %}Revisar clase{% else %}Crear clase{% endif %}{% endif %}</h1></div>
-    <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">{% if editando %}Volver al detalle{% else %}Volver a agenda{% endif %}</a>
-</header>
-<div class="clase-distribucion">
-    <aside class="tarjeta clase-turno" aria-labelledby="clase-turno-titulo">
-        <h2 id="clase-turno-titulo">{% if editando %}Turno de la clase{% else %}Turno seleccionado{% endif %}</h2>
-        <p class="clase-turno-fecha">{{ fecha|date:"l d/m/Y"|capfirst }}</p>
-        <p class="clase-turno-hora">{{ hora|time:"H:i" }} a {{ hora_fin|time:"H:i" }}</p>
-        <p>{{ cancha.sede.nombre }}<br><strong>{{ cancha.nombre }}</strong></p>
-        <p class="nota-campo">{% if editando %}Esta edición conserva la fecha, el horario y la cancha de la clase.{% else %}Para elegir otra fecha, hora o cancha, volvé a la agenda.{% endif %}</p>
-    </aside>
-    <section class="tarjeta clase-contenido{% if revision %} clase-revision{% endif %}" aria-label="{% if revision %}Resumen de la clase{% else %}Datos de la clase{% endif %}">
+<div class="formulario-pagina">
+    {% if editando %}
+        {% if revision %}
+            {% texto_titulo as titulo_edicion %}Revisar cambios de clase {{ clase_id }}{% endtexto_titulo %}
+            {% tarjeta_titulo titulo_edicion %}
+                <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">Volver al detalle</a>
+            {% endtarjeta_titulo %}
+            {% pasos_formulario 2 2 nombre="Revisar cambios" etiqueta="Progreso de edición de clase" %}
+        {% else %}
+            {% texto_titulo as titulo_edicion %}Editar clase {{ clase_id }}{% endtexto_titulo %}
+            {% tarjeta_titulo titulo_edicion descripcion="Esta edición conserva la fecha, el horario y la cancha de la clase." %}
+                <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">Volver al detalle</a>
+            {% endtarjeta_titulo %}
+            {% pasos_formulario 1 2 nombre="Profesores, participantes y observaciones" etiqueta="Progreso de edición de clase" %}
+        {% endif %}
+    {% else %}
+        {% if revision %}
+            {% tarjeta_titulo "Revisar clase" %}
+                <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">Volver a agenda</a>
+            {% endtarjeta_titulo %}
+            {% pasos_formulario 2 2 nombre="Revisar clase" etiqueta="Progreso de creación de clase" %}
+        {% else %}
+            {% tarjeta_titulo "Crear clase" descripcion="Para elegir otra fecha, hora o cancha, volvé a la agenda." %}
+                <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">Volver a agenda</a>
+            {% endtarjeta_titulo %}
+            {% pasos_formulario 1 2 nombre="Profesores, participantes y observaciones" etiqueta="Progreso de creación de clase" %}
+        {% endif %}
+    {% endif %}
+
+    <section class="tarjeta formulario-cuerpo{% if revision %} clase-revision{% endif %}" aria-label="{% if revision %}Resumen de la clase{% else %}Datos de la clase{% endif %}">
+        {% tabla_datos etiqueta="Turno de la clase" %}
+            <tr><th scope="row">Ubicación</th><td>{{ cancha.nombre }}, {{ cancha.sede.nombre }}</td></tr>
+            <tr><th scope="row">Fecha y horario</th><td>{{ fecha|date:"l d/m/Y"|capfirst }} de {{ hora|time:"H:i" }} a {{ hora_fin|time:"H:i" }}</td></tr>
+        {% endtabla_datos %}
+
         {% if impedimento %}<div class="mensaje mensaje-error" role="alert">{{ impedimento }}</div>{% endif %}
+
         {% if not impedimento or formulario.is_bound %}
         <form method="post" novalidate data-clase-formulario>
             {% csrf_token %}
             {% if editando %}<input type="hidden" name="version" value="{{ version }}">{% endif %}
             {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+
             {% if revision %}
                 {{ formulario.profesores }}{{ formulario.participantes }}
                 {% if formulario.buscar_todos.value %}<input type="hidden" name="buscar_todos" value="on">{% endif %}
                 <textarea name="observaciones" hidden>{{ formulario.observaciones.value|default:'' }}</textarea>
                 <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
-                <div class="clase-revision-cabecera">
-                    <h2>Resumen de la clase</h2>
-                </div>
+
                 <div class="clase-revision-personas">
                     <section aria-labelledby="revision-profesores">
-                        <h3 id="revision-profesores">Profesores <span>({{ profesores|length }})</span></h3>
+                        <h2 class="formulario-seccion-titulo" id="revision-profesores">Profesores ({{ profesores|length }})</h2>
                         {% if profesores %}
                             <ul class="clase-revision-nombres">{% for persona in profesores %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% endfor %}</ul>
                         {% else %}<p class="clase-revision-vacio">Sin profesores asignados.</p>{% endif %}
                     </section>
                     <section aria-labelledby="revision-participantes">
-                        <h3 id="revision-participantes">Participantes <span>({{ participantes|length }})</span></h3>
+                        <h2 class="formulario-seccion-titulo" id="revision-participantes">Participantes ({{ participantes|length }})</h2>
                         {% if participantes %}
                             <ul class="clase-revision-nombres{% if participantes|length >= 4 %} clase-revision-nombres-columnas{% endif %}">{% for persona in participantes %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% endfor %}</ul>
                         {% else %}<p class="clase-revision-vacio">Sin participantes asignados.</p>{% endif %}
                     </section>
                 </div>
+
                 {% if revision.cambios %}
-                    <section class="clase-revision-observaciones" aria-labelledby="revision-cambios-titulo">
-                        <h3 id="revision-cambios-titulo">Cambios de asignación</h3>
-                        <ul class="clase-revision-nombres">{% for cambio in revision.cambios %}<li class="clase-revision-persona">{{ cambio.accion }}: {{ cambio.nombre }} · {{ cambio.funcion }}</li>{% endfor %}</ul>
+                    <section aria-labelledby="revision-cambios-titulo">
+                        <h2 class="formulario-seccion-titulo" id="revision-cambios-titulo">Cambios de asignación</h2>
+                        <ul class="clase-revision-nombres">{% for cambio in revision.cambios %}<li class="clase-revision-persona">{{ cambio.accion }} a {{ cambio.nombre }} como {{ cambio.funcion }}</li>{% endfor %}</ul>
                         <p class="texto-secundario">Las personas retiradas conservan su vínculo histórico con la clase.</p>
                     </section>
                 {% endif %}
+
                 {% if formulario.observaciones.value %}
-                    <section class="clase-revision-observaciones"><h3>Observaciones</h3><p class="clase-observaciones">{{ formulario.observaciones.value|linebreaksbr }}</p></section>
+                    <section>
+                        <h2 class="formulario-seccion-titulo">Observaciones</h2>
+                        <p class="clase-observaciones">{{ formulario.observaciones.value|linebreaksbr }}</p>
+                    </section>
                 {% endif %}
+
                 {% if revision.advertencias %}
-                    <div class="mensaje mensaje-warning" role="alert">
-                        <strong>Revisá antes de {% if editando %}guardar los cambios{% else %}crear la clase{% endif %}</strong>
+                    <div class="formulario-aviso formulario-aviso-advertencia" role="alert">
+                        <p><strong>Revisá antes de {% if editando %}guardar los cambios{% else %}crear la clase{% endif %}</strong></p>
                         <ul>{% for advertencia in revision.advertencias %}<li>{{ advertencia }}</li>{% endfor %}</ul>
                         <p>Podés continuar si estas condiciones están acordadas.</p>
                     </div>
                 {% endif %}
-                <div class="acciones-formulario clase-revision-acciones">
+
+                <div class="acciones-formulario">
+                    <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
                     <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a editar</button>
                     <button class="boton boton-primario" name="paso" value="confirmar" type="submit">{% if editando %}Guardar cambios{% else %}Crear clase{% endif %}</button>
                 </div>
             {% else %}
                 {% if editando and not puede_editar_asignaciones %}
-                    <p class="nota-campo">La clase ya comenzó. Sus profesores y participantes se conservan.</p>
-                    <h2>Profesores ({{ profesores|length }})</h2>
+                    <div class="formulario-aviso">
+                        <p>La clase ya comenzó. Sus profesores y participantes se conservan.</p>
+                    </div>
+                    <h2 class="formulario-seccion-titulo">Profesores ({{ profesores|length }})</h2>
                     <ul class="clase-revision-nombres">{% for persona in profesores %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% endfor %}</ul>
-                    <h2>Participantes ({{ participantes|length }})</h2>
+                    <h2 class="formulario-seccion-titulo">Participantes ({{ participantes|length }})</h2>
                     <ul class="clase-revision-nombres">{% for persona in participantes %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% empty %}<li>Sin participantes.</li>{% endfor %}</ul>
                 {% else %}
-                <noscript><p class="mensaje mensaje-info">Para buscar y agregar personas necesitás habilitar JavaScript.</p></noscript>
-                {% include "clases/_selector_personas.html" with campo=formulario.profesores seleccionados=profesores titulo="Profesores" etiqueta="Agregar profesor" vacio="Todavía no agregaste profesores." only %}
-                {% include "clases/_selector_personas.html" with campo=formulario.participantes seleccionados=participantes titulo="Participantes" etiqueta="Agregar participante" vacio="Podés crear la clase sin participantes y agregarlos después." ampliar_busqueda=formulario.buscar_todos.value only %}
+                    <noscript><p class="mensaje mensaje-info">Para buscar y agregar personas necesitás habilitar JavaScript.</p></noscript>
+                    {% include "clases/_selector_personas.html" with campo=formulario.profesores seleccionados=profesores titulo="Profesores" etiqueta="Agregar profesor" vacio="Todavía no agregaste profesores." only %}
+                    {% include "clases/_selector_personas.html" with campo=formulario.participantes seleccionados=participantes titulo="Participantes" etiqueta="Agregar participante" vacio="Podés crear la clase sin participantes y agregarlos después." ampliar_busqueda=formulario.buscar_todos.value only %}
                 {% endif %}
+
                 {% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}
+
                 {% if not impedimento %}
-                <div class="acciones-formulario">
-                    <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-                    <button class="boton boton-primario" name="paso" value="revisar" type="submit">{% if editando %}Revisar cambios{% else %}Revisar clase{% endif %}</button>
-                </div>
+                    <div class="acciones-formulario">
+                        <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+                        <button class="boton boton-primario" name="paso" value="revisar" type="submit">{% if editando %}Revisar cambios{% else %}Revisar clase{% endif %}</button>
+                    </div>
                 {% endif %}
             {% endif %}
         </form>

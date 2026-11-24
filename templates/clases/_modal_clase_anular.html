@@ -1,0 +1,39 @@
+{% load encabezados formularios tablas %}
+{% if bloquear %}
+    {% url 'clases:clase_anular_bloquear' clase.pk as accion_url %}
+    {% texto_titulo as titulo_modal %}Anular y bloquear clase{% endtexto_titulo %}
+    {% texto_titulo as boton_enviar %}Anular y bloquear{% endtexto_titulo %}
+{% else %}
+    {% url 'clases:clase_anular' clase.pk as accion_url %}
+    {% texto_titulo as titulo_modal %}Anular y liberar clase{% endtexto_titulo %}
+    {% texto_titulo as boton_enviar %}Anular y liberar{% endtexto_titulo %}
+{% endif %}
+{% modal_formulario titulo_modal action=accion_url peligro=True amplio=True texto_enviar=boton_enviar %}
+    <input type="hidden" name="version" value="{{ version }}">
+    {% if siguiente %}<input type="hidden" name="siguiente" value="{{ siguiente }}">{% endif %}
+    {% tabla_datos etiqueta="Datos de la clase" %}
+        <tr><th scope="row">Ubicación</th><td>{{ turno.cancha.nombre }}, {{ turno.cancha.sede.nombre }}</td></tr>
+        <tr><th scope="row">Fecha y horario</th><td>{{ turno.fecha|date:"d/m/Y" }} de {{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</td></tr>
+    {% endtabla_datos %}
+    <div class="formulario-aviso formulario-aviso-peligro">
+        {% if bloquear %}
+            <p>Se anulará la clase y se creará un bloqueo en el mismo turno. La clase, sus asignaciones y su historia se conservan; liberar el bloqueo no reactiva la clase.</p>
+        {% else %}
+            <p>Se anulará la clase y el turno quedará disponible para otra actividad. La clase, sus asignaciones y su historia se conservan.</p>
+        {% endif %}
+    </div>
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    {% for campo in formulario %}
+        {% if campo.name == "observaciones" %}
+            {% include "componentes/observaciones_opcionales.html" with campo=campo only %}
+        {% else %}
+            <div class="grupo-campo">
+                <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                {{ campo }}
+                {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endmodal_formulario %}

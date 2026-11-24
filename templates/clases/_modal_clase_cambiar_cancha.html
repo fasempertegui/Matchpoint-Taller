@@ -1,0 +1,28 @@
+{% load formularios tablas %}
+{% url 'clases:clase_cambiar_cancha' clase.pk as accion_url %}
+{% modal_formulario "Cambiar de cancha" action=accion_url amplio=True texto_enviar="Confirmar cambio" mostrar_enviar=hay_destinos %}
+    <input type="hidden" name="version" value="{{ version }}">
+    {% tabla_datos etiqueta="Ubicación actual" %}
+        <tr><th scope="row">Ubicación actual</th><td>{{ turno.cancha.nombre }}, {{ turno.cancha.sede.nombre }}</td></tr>
+        <tr><th scope="row">Fecha y horario</th><td>{{ turno.fecha|date:"d/m/Y" }} de {{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</td></tr>
+    {% endtabla_datos %}
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    {% if hay_destinos %}
+        <div class="grupo-campo">
+            <label for="{{ formulario.cancha.id_for_label }}">{{ formulario.cancha.label }}</label>
+            {{ formulario.cancha }}
+            <small class="formulario-ayuda">Se muestran las canchas activas y disponibles para este mismo día y horario.</small>
+            {% for error in formulario.cancha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="formulario-aviso">
+            <p>La cancha actual quedará libre para este turno. Se conservan los profesores, participantes y observaciones.</p>
+        </div>
+    {% else %}
+        {% for error in formulario.cancha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        <div class="formulario-aviso formulario-aviso-advertencia">
+            <p>No hay otra cancha activa y disponible dentro del horario de funcionamiento para este turno.</p>
+        </div>
+    {% endif %}
+{% endmodal_formulario %}

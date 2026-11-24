@@ -1,64 +1,104 @@
 {% extends "base.html" %}
-{% load tablas static %}
+{% load encabezados formularios tablas static %}
+
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
 {% block estilos %}
 <link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
 <link rel="stylesheet" href="{% static 'css/clases.css' %}">
 {% endblock %}
+
 {% block contenido %}
-<header class="clase-encabezado"><h1>{{ titulo }}</h1></header>
-<section class="tarjeta{% if not revision %} tarjeta-formulario{% endif %}">
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
-        {% if revision %}
-            <input type="hidden" name="sede" value="{{ sede.pk }}">
-            <input type="hidden" name="mes" value="{{ revision.fecha_desde|date:'Y-m' }}">
-            <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
-            <section class="perfil-seccion">
-                <h2>{% if confirmacion_final %}Confirmación 2 de 2{% else %}Revisar generación{% endif %}</h2>
+<div class="formulario-pagina formulario-pagina-amplia">
+    {% if revision %}
+        {% tarjeta_titulo titulo %}
+            <a class="boton boton-secundario boton-chico" href="{{ url_planilla }}">Volver a la planilla</a>
+        {% endtarjeta_titulo %}
+        {% if confirmacion_final %}
+            {% pasos_formulario 3 3 nombre="Confirmación final" etiqueta="Progreso de generación de clases" %}
+        {% else %}
+            {% pasos_formulario 2 3 nombre="Revisar clases a generar" etiqueta="Progreso de generación de clases" %}
+        {% endif %}
+    {% else %}
+        {% tarjeta_titulo titulo descripcion="Elegí la sede y el mes. Se utilizará la planilla de todas las canchas para los turnos que todavía no comenzaron." %}
+            <a class="boton boton-secundario boton-chico" href="{{ url_planilla }}">Volver a la planilla</a>
+        {% endtarjeta_titulo %}
+        {% pasos_formulario 1 3 nombre="Elegir sede y mes" etiqueta="Progreso de generación de clases" %}
+    {% endif %}
+
+    <section class="tarjeta formulario-cuerpo">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
+
+            {% if revision %}
+                <input type="hidden" name="sede" value="{{ sede.pk }}">
+                <input type="hidden" name="mes" value="{{ revision.fecha_desde|date:'Y-m' }}">
+                <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+
+                <h2 class="formulario-seccion-titulo">{% if confirmacion_final %}Confirmación final{% else %}Resumen de generación{% endif %}</h2>
                 {% tabla_datos etiqueta="Resumen de generación" %}
                     <tr><th scope="row">Sede</th><td>{{ sede.nombre }}</td></tr>
                     <tr><th scope="row">Mes</th><td>{{ revision.fecha_desde|date:"F Y"|capfirst }}</td></tr>
-                    <tr><th scope="row">Período efectivo</th><td>{{ revision.desde_efectivo|date:"d/m/Y" }} – {{ revision.fecha_hasta|date:"d/m/Y" }}</td></tr>
-                    <tr><th scope="row">Clases a crear</th><td>{{ candidatas|length }}</td></tr>
+                    <tr><th scope="row">Período efectivo</th><td>Del {{ revision.desde_efectivo|date:"d/m/Y" }} al {{ revision.fecha_hasta|date:"d/m/Y" }}</td></tr>
+                    <tr><th scope="row">Clases a crear</th><td><strong>{{ candidatas|length }}</strong></td></tr>
                     <tr><th scope="row">Clases omitidas</th><td>{{ omitidas|length }}</td></tr>
                 {% endtabla_datos %}
-                <p class="nota-campo">La generación abarca todas las canchas de {{ sede.nombre }} y utiliza la programación habitual actual.</p>
-            </section>
-            {% if candidatas %}
-                <details class="perfil-desplegable"><summary>Clases a crear ({{ candidatas|length }})</summary>
-                    {% include "clases/_generacion_tabla.html" with filas=candidatas mostrar_motivo=False only %}
-                </details>
-            {% elif omitidas %}<p class="texto-secundario">Todas las clases previstas quedaron omitidas.</p>
-            {% else %}<p class="texto-secundario">No quedan turnos futuros en la planilla para este período.</p>{% endif %}
-            {% if omitidas %}
-                <details class="perfil-desplegable"><summary>Clases omitidas ({{ omitidas|length }})</summary>
-                    {% include "clases/_generacion_tabla.html" with filas=omitidas mostrar_motivo=True only %}
-                </details>
-            {% endif %}
-            {% if hay_cambios %}
-                <section class="perfil-seccion actividad-listado" aria-label="Confirmación de generación">
-                    {% if not confirmacion_final %}<h2>Confirmación 1 de 2</h2>{% endif %}
-                    <p>Esta operación no se puede deshacer. Las clases se conservan; si generás clases por error, podés anularlas antes de su inicio desde su detalle o desde Acciones del día o del mes.</p>
-                    {% if confirmacion_final %}<p>Al confirmar se crearán {{ candidatas|length }} clases. Se volverán a validar la programación y la disponibilidad antes de guardar.</p>{% endif %}
-                </section>
-            {% endif %}
-            <div class="acciones-formulario clase-revision-acciones">
-                <button class="boton boton-secundario" name="paso" value="editar" type="submit">Cambiar mes</button>
-                {% if hay_cambios %}
-                    {% if confirmacion_final %}
-                        <button class="boton boton-secundario" name="paso" value="revisar" type="submit">Volver a revisar</button>
-                        <button class="boton boton-primario" name="paso" value="generar" type="submit">{{ titulo }}</button>
-                    {% else %}<button class="boton boton-primario" name="paso" value="confirmar_revision" type="submit">Confirmar revisión</button>{% endif %}
+
+                <div class="formulario-aviso">
+                    <p>La generación abarca todas las canchas de {{ sede.nombre }} y utiliza la programación habitual actual.</p>
+                </div>
+
+                {% if candidatas %}
+                    <details class="perfil-desplegable"><summary>Clases a crear ({{ candidatas|length }})</summary>
+                        {% include "clases/_generacion_tabla.html" with filas=candidatas mostrar_motivo=False only %}
+                    </details>
+                {% elif omitidas %}
+                    <p class="texto-secundario">Todas las clases previstas quedaron omitidas.</p>
+                {% else %}
+                    <p class="texto-secundario">No quedan turnos futuros en la planilla para este período.</p>
                 {% endif %}
-                <a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a>
-            </div>
-        {% else %}
-            <p class="texto-secundario">Elegí la sede y el mes. Se utilizará la planilla de todas las canchas para los turnos que todavía no comenzaron.</p>
-            {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}</div>{% endfor %}
-            <div class="acciones-formulario"><a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a><button class="boton boton-primario" name="paso" value="revisar" type="submit">Revisar generación</button></div>
-        {% endif %}
-    </form>
-</section>
+
+                {% if omitidas %}
+                    <details class="perfil-desplegable"><summary>Clases omitidas ({{ omitidas|length }})</summary>
+                        {% include "clases/_generacion_tabla.html" with filas=omitidas mostrar_motivo=True only %}
+                    </details>
+                {% endif %}
+
+                {% if hay_cambios %}
+                    <div class="formulario-aviso formulario-aviso-advertencia">
+                        <p><strong>Esta operación no se puede deshacer.</strong> Las clases se conservan; si generás clases por error, podés anularlas antes de su inicio desde su detalle o desde Acciones del día o del mes.</p>
+                        {% if confirmacion_final %}<p>Al confirmar se crearán {{ candidatas|length }} clases. Se volverán a validar la programación y la disponibilidad antes de guardar.</p>{% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="acciones-formulario">
+                    <a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a>
+                    <button class="boton boton-secundario" name="paso" value="editar" type="submit">Cambiar mes</button>
+                    {% if hay_cambios %}
+                        {% if confirmacion_final %}
+                            <button class="boton boton-secundario" name="paso" value="revisar" type="submit">Volver a revisar</button>
+                            <button class="boton boton-primario" name="paso" value="generar" type="submit">{{ titulo }}</button>
+                        {% else %}
+                            <button class="boton boton-primario" name="paso" value="confirmar_revision" type="submit">Confirmar revisión</button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="formulario-fila-doble">
+                    {% for campo in formulario %}
+                        <div class="grupo-campo">
+                            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                            {{ campo }}
+                            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="acciones-formulario">
+                    <a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a>
+                    <button class="boton boton-primario" name="paso" value="revisar" type="submit">Revisar generación</button>
+                </div>
+            {% endif %}
+        </form>
+    </section>
+</div>
 {% endblock %}

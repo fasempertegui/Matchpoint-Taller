@@ -1,17 +1,7 @@
-.contenido-planilla-personas .tarjeta,
-.contenido-planilla-personas .boton,
-.contenido-planilla-personas .form-control { border-radius: 10px; }
-.planilla-personas { border-top: 3px solid var(--primario-medio); }
-.planilla-personas-contexto { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin: 24px 0; padding: 20px; background: var(--primario-suave); border-radius: 10px; }
-.planilla-personas-contexto dt { font-size: .85rem; color: var(--texto-suave); }
-.planilla-personas-contexto dd { margin: 5px 0 0; font-weight: 600; overflow-wrap: anywhere; }
-.planilla-personas-horarios { margin-bottom: 24px; }
-.planilla-personas-horarios summary { cursor: pointer; color: var(--primario); font-size: .9rem; }
-.planilla-personas-horarios ul { display: flex; flex-wrap: wrap; gap: 12px 24px; list-style: none; padding: 0; margin-top: 16px; font-size: .9rem; }
-.planilla-personas .clase-selector { margin-top: 24px; }
-.planilla-personas .clase-selector h2 { font-size: 1.2rem; }
-.planilla-personas-opciones { margin-block: 20px; }
-.planilla-personas-opciones label { display: flex; align-items: center; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--borde); cursor: pointer; }
+.planilla-personas-horarios summary { cursor: pointer; color: var(--primario); font-size: .9rem; font-weight: 600; }
+.planilla-personas-horarios ul { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 12px 0 0; font-size: .88rem; }
+.planilla-personas-horarios li { padding: 4px 10px; border-radius: 8px; background: var(--primario-suave); color: var(--texto); }
+.planilla-personas-opciones label { display: flex; align-items: center; gap: 12px; padding-block: 10px; border-bottom: 1px solid var(--borde); cursor: pointer; }
+.planilla-personas-opciones label:last-child { border-bottom: 0; }
 .planilla-personas-opciones input { width: 18px; height: 18px; accent-color: var(--primario); flex-shrink: 0; }
-.planilla-personas-opciones small { display: block; margin-top: 4px; color: var(--texto-suave); }
-.planilla-personas .acciones-formulario { justify-content: flex-start; flex-wrap: wrap; gap: 10px; margin: 24px -20px -20px; padding: 16px 20px; border-top: 1px solid var(--borde); border-radius: 0 0 10px 10px; }
+.planilla-personas-opciones small { display: block; margin-top: 2px; color: var(--texto-suave); }

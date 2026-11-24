@@ -109,6 +109,9 @@ document.addEventListener("DOMContentLoaded", function () {
         evento.preventDefault();
         if (cargando || enviando) return;
 
+        var menu = disparador.closest("details[data-menu-contextual]");
+        if (menu) menu.open = false;
+
         cargando = true;
         devolverFoco = disparador;
         disparador.setAttribute("aria-busy", "true");

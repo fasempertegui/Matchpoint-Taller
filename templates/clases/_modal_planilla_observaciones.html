@@ -1,0 +1,18 @@
+{% load formularios %}
+{% url 'clases:planilla_editar' turno.pk as accion_url %}
+{% modal_formulario "Editar observaciones" action=accion_url texto_enviar="Guardar observaciones" mostrar_enviar=impedimento|yesno:",1" %}
+    <input type="hidden" name="version" value="{{ version }}">
+    {% if impedimento %}
+        <div class="formulario-aviso formulario-aviso-advertencia" role="alert">
+            <p>{{ impedimento }}</p>
+        </div>
+    {% endif %}
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    <div class="grupo-campo">
+        <label for="{{ formulario.observaciones.id_for_label }}">Observaciones <span class="texto-secundario">(opcional)</span></label>
+        {{ formulario.observaciones }}
+        {% for error in formulario.observaciones.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+{% endmodal_formulario %}
