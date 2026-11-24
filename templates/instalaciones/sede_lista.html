@@ -45,13 +45,47 @@
 <section class="sedes-tarjetas" data-resultados-filtros aria-label="Sedes">
     {% for sede in sedes %}
         <article class="tarjeta sede-tarjeta">
-            {% include "instalaciones/_imagen_sede.html" with sede=sede only %}
-            <h2 class="instalacion-nombre-estado">
-                {% indicador_estado "habilitacion" sede.estado %}
-                {{ sede.nombre }}
-            </h2>
-            <p>{{ sede.direccion_sin_cpa }}</p>
-            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}" aria-label="Ver detalles de {{ sede.nombre }}">Ver detalles</a>
+            <header class="sede-tarjeta-cabecera">
+                <h2 class="instalacion-nombre-estado">
+                    {% indicador_estado "habilitacion" sede.estado %}
+                    {{ sede.nombre }}
+                </h2>
+                <div class="sede-tarjeta-acciones">
+                    <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}" aria-label="Ver detalles de {{ sede.nombre }}">Ver detalles</a>
+                </div>
+            </header>
+            <div class="sede-tarjeta-cuerpo">
+                <div class="sede-tarjeta-media">
+                    {% include "instalaciones/_imagen_sede.html" with sede=sede only %}
+                </div>
+                <div class="sede-tarjeta-detalles">
+                    <ul class="sede-detalles-lista">
+                        <li class="sede-detalle-item">
+                            <svg class="sede-detalle-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/sede-iconos.svg' %}#pin"/></svg>
+                            <span>{{ sede.direccion_sin_cpa }}</span>
+                        </li>
+                        {% if sede.telefonos_contacto %}
+                            {% for telefono in sede.telefonos_contacto %}
+                                <li class="sede-detalle-item">
+                                    <svg class="sede-detalle-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/sede-iconos.svg' %}#telefono"/></svg>
+                                    <span>{{ telefono }}</span>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="sede-detalle-item sede-detalle-item-muteado">
+                                <svg class="sede-detalle-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/sede-iconos.svg' %}#telefono"/></svg>
+                                <span>Sin teléfonos informados</span>
+                            </li>
+                        {% endif %}
+                        {% for servicio in sede.servicios_detalle %}
+                            <li class="sede-detalle-item{% if not servicio.disponible %} sede-detalle-item-muteado{% endif %}" aria-label="{{ servicio.etiqueta }}: {% if servicio.disponible %}disponible{% else %}no disponible{% endif %}">
+                                <svg class="sede-detalle-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/sede-iconos.svg' %}#{{ servicio.icono }}"/></svg>
+                                <span>{{ servicio.etiqueta }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </article>
     {% empty %}
         <p class="tarjeta estado-vacio">No hay sedes para mostrar.</p>

@@ -50,7 +50,7 @@
                                 <td data-dia="{{ celda.numero_dia }}" data-hora="{{ fila.hora.hour }}">
                                     {% if celda.turno %}
                                         {% if celda.seleccionable %}
-                                        <button class="planilla-celda planilla-celda-ocupada" type="button" data-seleccionar-turno="{{ celda.numero_dia }}-{{ fila.hora.hour }}" data-tipo-turno="creado" data-turno-id="{{ celda.turno.id }}" data-version="{{ celda.turno.version }}" data-url-detalle="{{ celda.url }}" aria-pressed="false" aria-label="Seleccionar horario creado del {{ celda.dia }} a las {{ fila.hora|time:'H:i' }}">
+                                        <button class="planilla-celda planilla-celda-ocupada" type="button" data-seleccionar-turno="{{ celda.numero_dia }}-{{ fila.hora.hour }}" data-tipo-turno="creado" data-editable="{% if celda.editable %}1{% else %}0{% endif %}" data-turno-id="{{ celda.turno.id }}" data-version="{{ celda.turno.version }}" data-url-detalle="{{ celda.url }}" aria-pressed="false" aria-label="Seleccionar horario creado del {{ celda.dia }} a las {{ fila.hora|time:'H:i' }}">
                                         {% else %}<a class="planilla-celda planilla-celda-ocupada" href="{{ celda.url }}" aria-label="Ver horario del {{ celda.dia }} a las {{ fila.hora|time:'H:i' }}">{% endif %}
                                             {% for profesor in celda.turno.profesores|slice:':2' %}<span>{{ profesor.nombre }}</span>{% empty %}<span class="texto-secundario">Sin profesores</span>{% endfor %}
                                             {% if celda.turno.profesores|length > 2 %}<span class="texto-secundario">Profesores ({{ celda.turno.profesores|length }})</span>{% endif %}
@@ -108,5 +108,5 @@
     <div data-quitar-valores></div>
 </form>
 {% endif %}
-<script src="{% static 'js/planilla.js' %}?v=20261122-grilla" defer></script>
+<script src="{% static 'js/planilla.js' %}?v=20261124-planilla" defer></script>
 {% endblock %}

@@ -68,16 +68,18 @@ def planilla(request):
                         filas.append({"pausa": True, "inicio": time(hora), "fin": time(hora + 1)})
                     continue
                 celdas = []
+                activa = cancha.estado == Cancha.Estado.ACTIVA and cancha.sede.estado == Sede.Estado.ACTIVA
                 for dia, nombre in TurnoPlanilla.DiaSemana.choices:
                     turno = turnos.get((dia, hora))
                     habilitada = (dia, hora) in habilitadas
                     url = None
                     if turno:
                         url = reverse("clases:planilla_detalle", args=[turno["id"]])
-                    seleccionable = habilitada and cancha.estado == Cancha.Estado.ACTIVA and cancha.sede.estado == Sede.Estado.ACTIVA
+                    editable = habilitada and activa
+                    seleccionable = bool(turno) or editable
                     celdas.append({
                         "turno": turno, "habilitada": habilitada, "url": url, "dia": nombre,
-                        "numero_dia": dia, "seleccionable": seleccionable,
+                        "numero_dia": dia, "seleccionable": seleccionable, "editable": editable,
                     })
                 filas.append({"hora": time(hora), "celdas": celdas, "seleccionable": any(c["seleccionable"] for c in celdas)})
     return render(request, "clases/planilla.html", {

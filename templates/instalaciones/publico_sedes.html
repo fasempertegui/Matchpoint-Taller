@@ -16,34 +16,53 @@
 <section class="sedes-tarjetas" aria-label="Sedes disponibles">
     {% for sede in sedes %}
     <article class="tarjeta sede-tarjeta">
-        {% include "instalaciones/_imagen_sede.html" with sede=sede only %}
-        <h2>{{ sede.nombre }}</h2>
-        <p>{{ sede.direccion_completa }}</p>
-        {% if sede.servicios_disponibles %}
-        <p class="sede-oferta-servicios"><strong>Servicios:</strong> {{ sede.servicios_disponibles|join:", " }}</p>
-        {% endif %}
-        <dl class="sede-oferta-precio">
-            <dt>Reserva por turno de 1 hora</dt>
-            <dd>{% if sede.precio_reserva_vigente is not None %}$ {{ sede.precio_reserva_vigente|floatformat:"2g" }}{% else %}Consultar{% endif %}</dd>
-        </dl>
-        <div class="sede-tarjeta-acciones">
-            <button type="button"
-                    class="boton boton-secundario boton-chico"
-                    data-ver-ubicacion-sede
-                    data-sede-nombre="{{ sede.nombre }}"
-                    data-sede-direccion="{{ sede.direccion_completa }}"
-                    data-sede-lat="{{ sede.latitud|stringformat:'.6f' }}"
-                    data-sede-lon="{{ sede.longitud|stringformat:'.6f' }}"
-                    data-sede-url-como-llegar="{{ sede.url_como_llegar }}"
-                    {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
-                        data-sede-url-agenda="{% url 'agenda:agenda' %}?sede={{ sede.pk }}"
-                    {% endif %}
-                    aria-label="Ver ubicación de {{ sede.nombre }}">
-                Ver ubicación
-            </button>
-            {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
-            <a class="boton boton-secundario boton-chico" href="{% url 'agenda:agenda' %}?sede={{ sede.pk }}" aria-label="Ver agenda de {{ sede.nombre }}">Ver agenda</a>
-            {% endif %}
+        <header class="sede-tarjeta-cabecera">
+            <h2>{{ sede.nombre }}</h2>
+            <div class="sede-tarjeta-acciones">
+                <button type="button"
+                        class="boton boton-secundario boton-chico"
+                        data-ver-ubicacion-sede
+                        data-sede-nombre="{{ sede.nombre }}"
+                        data-sede-direccion="{{ sede.direccion_completa }}"
+                        data-sede-lat="{{ sede.latitud|stringformat:'.6f' }}"
+                        data-sede-lon="{{ sede.longitud|stringformat:'.6f' }}"
+                        data-sede-url-como-llegar="{{ sede.url_como_llegar }}"
+                        {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
+                            data-sede-url-agenda="{% url 'agenda:agenda' %}?sede={{ sede.pk }}"
+                        {% endif %}
+                        aria-label="Ver ubicación de {{ sede.nombre }}">
+                    Ver ubicación
+                </button>
+                {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
+                <a class="boton boton-primario boton-chico" href="{% url 'agenda:agenda' %}?sede={{ sede.pk }}" aria-label="Ver agenda de {{ sede.nombre }}">Ver agenda</a>
+                {% endif %}
+            </div>
+        </header>
+        <div class="sede-tarjeta-cuerpo">
+            <div class="sede-tarjeta-media">
+                {% include "instalaciones/_imagen_sede.html" with sede=sede only %}
+            </div>
+            <div class="sede-tarjeta-detalles">
+                <ul class="sede-detalles-lista">
+                    <li class="sede-detalle-item">
+                        <svg class="sede-detalle-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/sede-iconos.svg' %}#pin"/></svg>
+                        <span>{{ sede.direccion_completa }}</span>
+                    </li>
+                    <li class="sede-detalle-item">
+                        <svg class="sede-detalle-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/sede-iconos.svg' %}#precio"/></svg>
+                        <span>
+                            Reserva por turno de 1 hora:
+                            <strong class="sede-oferta-precio-valor">{% if sede.precio_reserva_vigente is not None %}$ {{ sede.precio_reserva_vigente|floatformat:"2g" }}{% else %}Consultar{% endif %}</strong>
+                        </span>
+                    </li>
+                    {% for servicio in sede.servicios_detalle %}
+                        <li class="sede-detalle-item{% if not servicio.disponible %} sede-detalle-item-muteado{% endif %}" aria-label="{{ servicio.etiqueta }}: {% if servicio.disponible %}disponible{% else %}no disponible{% endif %}">
+                            <svg class="sede-detalle-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/sede-iconos.svg' %}#{{ servicio.icono }}"/></svg>
+                            <span>{{ servicio.etiqueta }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </article>
     {% empty %}<p class="tarjeta estado-vacio">No hay sedes disponibles.</p>{% endfor %}

@@ -381,7 +381,7 @@ Alternativas:
 
 - Una sede sin canchas muestra una lista vacía.
 - La consulta de sedes puede incluir registros inactivos.
-- La portada pública presenta la dirección sin CPA y el botón «Cómo llegar» de las sedes activas registradas; las tarjetas del listado administrativo también omiten el CPA. En el catálogo de sedes activas se muestran la dirección legible, los servicios disponibles registrados como texto y el disparador «Ver ubicación», que abre un panel compartido de solo lectura con la dirección, el mapa del pin, el enlace «Cómo llegar» y el acceso «Ver agenda» para cuentas habilitadas. Si fallan las teselas del mapa, la dirección y el enlace «Cómo llegar» permanecen disponibles. Los teléfonos de contacto y el origen de la calle se consultan en administración.
+- La portada pública presenta la dirección sin CPA y el botón «Cómo llegar» de las sedes activas registradas; las tarjetas del listado administrativo también omiten el CPA y listan los servicios individualmente marcando como atenuados los no disponibles. En el catálogo de sedes activas se muestran la dirección legible, la tarifa vigente por turno, los servicios listados individualmente (atenuando los no disponibles) y el disparador «Ver ubicación», que abre un panel compartido de solo lectura con la dirección, el mapa del pin, el enlace «Cómo llegar» y el acceso «Ver agenda» para cuentas habilitadas. Si fallan las teselas del mapa, la dirección y el enlace «Cómo llegar» permanecen disponibles. Los teléfonos de contacto y el origen de la calle se consultan en administración.
 
 - **Resultado:** jerarquía de sedes y canchas sin modificaciones.
 - **Datos:** sedes y canchas.

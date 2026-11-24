@@ -78,9 +78,16 @@ class Sede(models.Model):
         ("tiene_estacionamiento", "Estacionamiento"),
         ("tiene_sanitarios", "Sanitarios"),
         ("tiene_vestuarios", "Vestuarios"),
-        ("tiene_wifi", "Wi-Fi"),
         ("tiene_buffet", "Buffet"),
+        ("tiene_wifi", "Wi-Fi"),
     )
+    SERVICIOS_ICONOS = {
+        "tiene_estacionamiento": "estacionamiento",
+        "tiene_sanitarios": "sanitarios",
+        "tiene_vestuarios": "vestuarios",
+        "tiene_wifi": "wifi",
+        "tiene_buffet": "buffet",
+    }
 
     id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=120)
@@ -183,6 +190,18 @@ class Sede(models.Model):
     @property
     def servicios_disponibles(self):
         return [etiqueta for campo, etiqueta in self.SERVICIOS if getattr(self, campo)]
+
+    @property
+    def servicios_detalle(self):
+        return [
+            {
+                "campo": campo,
+                "etiqueta": etiqueta,
+                "icono": self.SERVICIOS_ICONOS[campo],
+                "disponible": bool(getattr(self, campo)),
+            }
+            for campo, etiqueta in self.SERVICIOS
+        ]
 
     @property
     def telefonos_contacto(self):

@@ -70,7 +70,6 @@ document.addEventListener("DOMContentLoaded", function () {
         crear.hidden = tipo !== "libre";
         crear.disabled = tipo !== "libre";
         quitar.hidden = tipo !== "creado";
-        barra.querySelector("[data-separador-quitar]").hidden = tipo !== "creado";
         quitar.disabled = tipo !== "creado";
         var valoresQuitar = formularioQuitar.querySelector("[data-quitar-valores]");
         valoresQuitar.replaceChildren();
@@ -91,14 +90,19 @@ document.addEventListener("DOMContentLoaded", function () {
             : "Se quitarán " + seleccion.size + " horarios de la planilla")
             + " con sus profesores y participantes. Las clases ya generadas se conservan.";
         cerrarMenus();
-        menusPersonas.forEach(function (menu) { menu.hidden = tipo !== "creado"; });
+        var puedeGestionarPersonas = tipo === "creado" && seleccion.size > 0 && Array.from(seleccion).every(function (valor) {
+            var celda = porCoordenada.get(valor);
+            return celda && celda.dataset.editable === "1";
+        });
+        menusPersonas.forEach(function (menu) { menu.hidden = !puedeGestionarPersonas; });
         accionesPersonas.forEach(function (boton) {
-            boton.hidden = tipo !== "creado";
-            boton.disabled = tipo !== "creado";
+            boton.hidden = !puedeGestionarPersonas;
+            boton.disabled = !puedeGestionarPersonas;
         });
         detalle.hidden = tipo !== "creado" || seleccion.size !== 1;
         detalle.removeAttribute("href");
         if (!detalle.hidden) detalle.href = porCoordenada.get(seleccion.values().next().value).dataset.urlDetalle;
+        barra.querySelector("[data-separador-quitar]").hidden = !(puedeGestionarPersonas || !detalle.hidden);
         var valores = barra.querySelector("[data-seleccion-valores]");
         valores.replaceChildren();
         Array.from(seleccion).sort().forEach(function (valor) {
@@ -221,7 +225,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     barra.addEventListener("submit", function (evento) {
         var gestionaPersonas = evento.submitter && evento.submitter.hasAttribute("data-gestionar-personas");
-        if (!seleccion.size || (gestionaPersonas ? tipo !== "creado" : tipo !== "libre")) {
+        var puedeGestionarPersonas = tipo === "creado" && Array.from(seleccion).every(function (valor) {
+            var celda = porCoordenada.get(valor);
+            return celda && celda.dataset.editable === "1";
+        });
+        if (!seleccion.size || (gestionaPersonas ? !puedeGestionarPersonas : tipo !== "libre")) {
             evento.preventDefault();
             return;
         }

@@ -33,8 +33,7 @@ class CambioContrasenaObligatorioMiddleware:
                 lectura = request.method == "GET" and (
                     ruta.view_name == "inicio"
                     or (ruta.view_name == "usuarios:usuario_detalle" and ruta.kwargs.get("pk") == usuario.pk)
-                    or (ruta.namespace == "membresias" and ruta.url_name.startswith("oferta"))
-                    or (ruta.namespace == "instalaciones" and ruta.url_name.startswith("publico_"))
+                    or ruta.namespace == "oferta"
                 )
                 if not lectura:
                     raise PermissionDenied
