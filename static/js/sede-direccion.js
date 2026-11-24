@@ -45,6 +45,25 @@ document.addEventListener("DOMContentLoaded", function () {
         var instantanea = null;
         var solicitudActiva = 0;
 
+        function guardarReferenciaGeoref(ubicacion, localidad) {
+            if (ubicacion && typeof ubicacion.lat === "number" && typeof ubicacion.lon === "number" && localidad) {
+                bloque.dataset.georefLat = String(ubicacion.lat);
+                bloque.dataset.georefLon = String(ubicacion.lon);
+                bloque.dataset.georefLocalidad = localidad;
+            } else {
+                delete bloque.dataset.georefLat;
+                delete bloque.dataset.georefLon;
+                delete bloque.dataset.georefLocalidad;
+            }
+        }
+
+        function notificarCambioDireccion() {
+            bloque.dispatchEvent(new CustomEvent("sede-direccion:cambio", {
+                bubbles: true,
+                detail: { localidad: (selectLocalidad && selectLocalidad.value) || "" },
+            }));
+        }
+
         function textoLocalidadSeleccionada() {
             if (!selectLocalidad || !selectLocalidad.value) return "";
             var opcion = selectLocalidad.options[selectLocalidad.selectedIndex];
@@ -211,12 +230,14 @@ document.addEventListener("DOMContentLoaded", function () {
             solicitudActiva += 1;
             limpiarResultados();
             mostrarErrorPanel("");
+            guardarReferenciaGeoref(null, "");
             if (inputModo.value !== "manual") {
                 inputTokenSeleccion.value = "";
                 inputCalle.value = "";
                 inputModo.value = "georef";
                 actualizarVistaModo();
             }
+            notificarCambioDireccion();
         }
 
         function renderizarResultados(resultados) {
@@ -269,6 +290,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         inputAltura.value = item.altura;
                     }
                     checkConfirmacion.checked = false;
+                    guardarReferenciaGeoref(item.ubicacion_aproximada, item.localidad_codigo);
+                    notificarCambioDireccion();
 
                     listaResultados.querySelectorAll(".sede-direccion-resultado-boton").forEach(function (b) {
                         b.classList.remove("seleccionado");
@@ -384,7 +407,9 @@ document.addEventListener("DOMContentLoaded", function () {
             limpiarErroresServidorPanel();
             inputModo.value = "manual";
             inputTokenSeleccion.value = "";
+            guardarReferenciaGeoref(null, "");
             actualizarVistaModo();
+            notificarCambioDireccion();
             inputCalle.focus();
         });
 
@@ -465,6 +490,7 @@ document.addEventListener("DOMContentLoaded", function () {
             resumenOrigen.hidden = false;
             botonAbrir.textContent = "Cambiar dirección";
             instantanea = null;
+            notificarCambioDireccion();
             cerrarPanel(true);
         });
 

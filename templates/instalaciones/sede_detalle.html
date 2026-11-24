@@ -7,9 +7,13 @@
 {% block titulo %}{{ sede.nombre }} | Academia TM{% endblock %}
 
 {% block estilos %}
+<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
 <link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
 <link rel="stylesheet" href="{% static 'css/sede-perfil.css' %}">
+<script src="{% static 'vendor/leaflet/leaflet.js' %}" defer></script>
 <script src="{% static 'js/sede-direccion.js' %}" defer></script>
+<script src="{% static 'js/sede-ubicacion.js' %}" defer></script>
+<script src="{% static 'js/sede-mapa.js' %}" defer></script>
 {% endblock %}
 
 {% block contenido %}
@@ -71,11 +75,45 @@
                                     {% endif %}
                                 </td>
                             </tr>
+                            <tr>
+                                <th scope="row">Observaciones</th>
+                                <td>
+                                    {% if sede.observaciones %}
+                                        {{ sede.observaciones|linebreaksbr }}
+                                    {% else %}
+                                        <span class="texto-secundario">Sin observaciones</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
                         {% endtabla_datos %}
                     </section>
-                    <section class="perfil-seccion" aria-labelledby="sede-observaciones-titulo">
-                        <h2 id="sede-observaciones-titulo">Observaciones</h2>
-                        <p class="perfil-observaciones{% if not sede.observaciones %} texto-secundario{% endif %}">{{ sede.observaciones|default:"Sin observaciones"|linebreaksbr }}</p>
+                    <section class="perfil-seccion" aria-labelledby="sede-ubicacion-titulo">
+                        <h2 id="sede-ubicacion-titulo">Ubicación de entrada</h2>
+                        {% if sede.tiene_ubicacion %}
+                            <div class="sede-mapa-contenedor">
+                                <div class="sede-minimapa"
+                                     data-sede-minimapa
+                                     data-lat="{{ sede.latitud|stringformat:'.6f' }}"
+                                     data-lon="{{ sede.longitud|stringformat:'.6f' }}"
+                                     data-teselas-url="{{ mapa_config.teselas_url }}"
+                                     data-atribucion="{{ mapa_config.atribucion }}"
+                                     data-zoom-max="{{ mapa_config.zoom_max }}"
+                                     data-marker-icon="{% static 'vendor/leaflet/images/marker-icon.png' %}"
+                                     data-marker-icon-2x="{% static 'vendor/leaflet/images/marker-icon-2x.png' %}"
+                                     data-marker-shadow="{% static 'vendor/leaflet/images/marker-shadow.png' %}"
+                                     role="region"
+                                     aria-label="Mapa con la ubicación de entrada de {{ sede.nombre }}"></div>
+                                <p class="sede-mapa-aviso texto-secundario" data-mapa-aviso-teselas role="status" hidden>
+                                    El mapa no pudo cargarse en este momento. La dirección y los enlaces externos siguen disponibles.
+                                </p>
+                            </div>
+                            <div class="sede-mapa-enlaces">
+                                <a class="boton boton-secundario boton-chico" href="{{ sede.enlaces_ubicacion.openstreetmap }}" target="_blank" rel="noopener noreferrer">Ver en OpenStreetMap</a>
+                                <a class="boton boton-secundario boton-chico" href="{{ sede.enlaces_ubicacion.google_maps }}" target="_blank" rel="noopener noreferrer">Cómo llegar con Google Maps</a>
+                            </div>
+                        {% else %}
+                            <p class="texto-secundario">Ubicación de entrada sin marcar.</p>
+                        {% endif %}
                     </section>
                 </div>
 

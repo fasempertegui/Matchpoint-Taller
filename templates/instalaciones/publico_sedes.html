@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 {% load static %}
 {% block titulo %}Sedes | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/oferta.css' %}"><link rel="stylesheet" href="{% static 'css/instalaciones.css' %}"><link rel="stylesheet" href="{% static 'css/instalaciones-publicas.css' %}">{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
+<link rel="stylesheet" href="{% static 'css/oferta.css' %}">
+<link rel="stylesheet" href="{% static 'css/instalaciones.css' %}">
+<link rel="stylesheet" href="{% static 'css/instalaciones-publicas.css' %}">
+<script src="{% static 'vendor/leaflet/leaflet.js' %}" defer></script>
+<script src="{% static 'js/sede-mapa.js' %}" defer></script>
+{% endblock %}
 {% block clase_contenido %}contenido-instalaciones instalaciones-publicas contenido-oferta{% endblock %}
 {% block contenido %}
 {% include "membresias/_oferta_cabecera.html" with tipo="sede" only %}
@@ -19,10 +26,67 @@
             <dt>Reserva por turno de 1 hora</dt>
             <dd>{% if sede.precio_reserva_vigente is not None %}$ {{ sede.precio_reserva_vigente|floatformat:"2g" }}{% else %}Consultar{% endif %}</dd>
         </dl>
-        {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
-        <a class="boton boton-secundario boton-chico" href="{% url 'agenda:agenda' %}?sede={{ sede.pk }}" aria-label="Ver agenda de {{ sede.nombre }}">Ver agenda</a>
-        {% endif %}
+        <div class="sede-tarjeta-acciones">
+            <button type="button"
+                    class="boton boton-secundario boton-chico"
+                    data-ver-ubicacion-sede
+                    data-sede-nombre="{{ sede.nombre }}"
+                    data-sede-direccion="{{ sede.direccion_completa|default:'Dirección sin informar' }}"
+                    {% if sede.tiene_ubicacion %}
+                        data-sede-lat="{{ sede.latitud|stringformat:'.6f' }}"
+                        data-sede-lon="{{ sede.longitud|stringformat:'.6f' }}"
+                        data-sede-url-osm="{{ sede.enlaces_ubicacion.openstreetmap }}"
+                        data-sede-url-google="{{ sede.enlaces_ubicacion.google_maps }}"
+                    {% endif %}
+                    {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
+                        data-sede-url-agenda="{% url 'agenda:agenda' %}?sede={{ sede.pk }}"
+                    {% endif %}
+                    aria-label="Ver ubicación de {{ sede.nombre }}">
+                Ver ubicación
+            </button>
+            {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
+            <a class="boton boton-secundario boton-chico" href="{% url 'agenda:agenda' %}?sede={{ sede.pk }}" aria-label="Ver agenda de {{ sede.nombre }}">Ver agenda</a>
+            {% endif %}
+        </div>
     </article>
     {% empty %}<p class="tarjeta estado-vacio">No hay sedes disponibles.</p>{% endfor %}
 </section>
+
+<dialog class="modal-unificado modal-amplio"
+        data-sede-mapa-modal
+        data-teselas-url="{{ mapa_config.teselas_url }}"
+        data-atribucion="{{ mapa_config.atribucion }}"
+        data-zoom-max="{{ mapa_config.zoom_max }}"
+        data-marker-icon="{% static 'vendor/leaflet/images/marker-icon.png' %}"
+        data-marker-icon-2x="{% static 'vendor/leaflet/images/marker-icon-2x.png' %}"
+        data-marker-shadow="{% static 'vendor/leaflet/images/marker-shadow.png' %}"
+        aria-labelledby="sede-mapa-modal-titulo">
+    <div class="modal-unificado-estructura">
+        <header class="modal-cabecera">
+            <div class="modal-cabecera-identidad">
+                <p class="modal-subtitulo">Ubicación de la sede</p>
+                <h2 id="sede-mapa-modal-titulo" class="modal-titulo" tabindex="-1" data-sede-mapa-titulo>Ubicación</h2>
+            </div>
+            <button type="button" class="modal-cerrar" data-sede-mapa-cerrar aria-label="Cerrar">&times;</button>
+        </header>
+        <div class="modal-cuerpo">
+            <p class="sede-mapa-modal-direccion" data-sede-mapa-direccion></p>
+            <div class="sede-mapa-contenedor" data-sede-mapa-bloque hidden>
+                <div class="sede-minimapa" data-sede-mapa-canvas role="region" aria-label="Mapa de ubicación de la sede"></div>
+                <p class="sede-mapa-aviso texto-secundario" data-mapa-aviso-teselas role="status" hidden>
+                    El mapa no pudo cargarse en este momento. La dirección y los enlaces externos siguen disponibles.
+                </p>
+            </div>
+            <p class="texto-secundario" data-sede-mapa-sin-pin hidden>Esta sede todavía no tiene un pin de entrada cargado.</p>
+            <div class="sede-mapa-enlaces" data-sede-mapa-enlaces hidden>
+                <a class="boton boton-secundario boton-chico" data-sede-mapa-osm target="_blank" rel="noopener noreferrer">Ver en OpenStreetMap</a>
+                <a class="boton boton-secundario boton-chico" data-sede-mapa-google target="_blank" rel="noopener noreferrer">Cómo llegar con Google Maps</a>
+            </div>
+        </div>
+        <footer class="modal-acciones">
+            <a class="boton boton-primario" data-sede-mapa-agenda hidden>Ver agenda</a>
+            <button type="button" class="boton boton-secundario" data-sede-mapa-cerrar>Cerrar</button>
+        </footer>
+    </div>
+</dialog>
 {% endblock %}

@@ -1,4 +1,4 @@
-{% load formularios %}
+{% load formularios static %}
 {% if sede %}{% url 'instalaciones:sede_editar' sede.pk as accion_url %}{% else %}{% url 'instalaciones:sede_crear' as accion_url %}{% endif %}
 {% modal_formulario titulo action=accion_url texto_enviar=texto_boton amplio=True %}
     {% if not sede %}
@@ -123,6 +123,69 @@
             <div class="sede-direccion-panel-acciones">
                 <button type="button" class="boton boton-secundario boton-chico" data-dir-cancelar>Cancelar</button>
                 <button type="button" class="boton boton-primario boton-chico" data-dir-aplicar>Aplicar dirección</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="sede-direccion-bloque"
+             data-sede-ubicacion
+             data-es-edicion="{% if sede %}1{% else %}0{% endif %}"
+             data-sede-localidad="{% if sede %}{{ sede.localidad_codigo }}{% endif %}"
+             data-sede-tiene-pin="{% if sede and sede.tiene_ubicacion %}1{% else %}0{% endif %}"
+             data-teselas-url="{{ mapa_config.teselas_url }}"
+             data-atribucion="{{ mapa_config.atribucion }}"
+             data-zoom-max="{{ mapa_config.zoom_max }}"
+             data-centros="{{ centros_localidades_json }}"
+             data-marker-icon="{% static 'vendor/leaflet/images/marker-icon.png' %}"
+             data-marker-icon-2x="{% static 'vendor/leaflet/images/marker-icon-2x.png' %}"
+             data-marker-shadow="{% static 'vendor/leaflet/images/marker-shadow.png' %}">
+        <input type="hidden" name="{{ formulario.ubicacion_modo.html_name }}" id="{{ formulario.ubicacion_modo.id_for_label }}" value="{{ formulario.ubicacion_modo_actual }}" data-ubic-modo>
+
+        <div class="sede-direccion-cabecera">
+            <div>
+                <p class="sede-direccion-etiqueta">Ubicación de entrada</p>
+                <p class="sede-direccion-valor{% if not formulario.ubicacion_resumen_actual %} texto-secundario{% endif %}" data-ubic-resumen-texto{% if formulario.abrir_ubicacion and not formulario.ubicacion_resumen_actual %} hidden{% endif %}>
+                    {{ formulario.ubicacion_resumen_actual|default:"Sin ubicación marcada" }}
+                </p>
+                <p class="sede-direccion-origen texto-secundario" data-ubic-resumen-origen{% if not formulario.tiene_ubicacion_actual %} hidden{% endif %}>
+                    Pin de entrada confirmado
+                </p>
+            </div>
+            <button type="button" class="boton boton-secundario boton-chico" data-ubic-abrir aria-expanded="{% if formulario.abrir_ubicacion %}true{% else %}false{% endif %}" aria-controls="sede-ubicacion-panel"{% if formulario.abrir_ubicacion %} hidden{% endif %}>
+                {% if formulario.tiene_ubicacion_actual %}Cambiar ubicación{% else %}Marcar ubicación{% endif %}
+            </button>
+        </div>
+
+        <div class="sede-direccion-panel" id="sede-ubicacion-panel" data-ubic-panel{% if not formulario.abrir_ubicacion %} hidden{% endif %}>
+            <div class="mensaje mensaje-error" role="alert" data-ubic-error-panel hidden></div>
+            <p class="formulario-ayuda sede-ubicacion-ayuda">Hacé clic o tocá en el mapa sobre la entrada que usan los jugadores, o ingresá las coordenadas manualmente.</p>
+
+            <div class="sede-mapa-contenedor">
+                <div class="sede-mapa-selector" data-ubic-mapa role="application" aria-label="Mapa para marcar la entrada de la sede"></div>
+                <div class="sede-direccion-estado sede-direccion-estado-advertencia" data-ubic-aviso-teselas role="status" hidden>
+                    No se pudieron cargar las teselas del mapa. Podés ingresar o ajustar las coordenadas manualmente debajo.
+                </div>
+            </div>
+
+            <div class="formulario-fila-doble">
+                <div class="grupo-campo">
+                    <label for="{{ formulario.latitud_entrada.id_for_label }}">{{ formulario.latitud_entrada.label }}</label>
+                    {{ formulario.latitud_entrada }}
+                    {% for error in formulario.latitud_entrada.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="grupo-campo">
+                    <label for="{{ formulario.longitud_entrada.id_for_label }}">{{ formulario.longitud_entrada.label }}</label>
+                    {{ formulario.longitud_entrada }}
+                    {% for error in formulario.longitud_entrada.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <div class="sede-direccion-panel-acciones sede-ubicacion-acciones">
+                <button type="button" class="sede-direccion-enlace" data-ubic-quitar{% if not formulario.tiene_ubicacion_actual %} hidden{% endif %}>Quitar pin</button>
+                <div class="sede-ubicacion-acciones-principales">
+                    <button type="button" class="boton boton-secundario boton-chico" data-ubic-cancelar>Cancelar</button>
+                    <button type="button" class="boton boton-primario boton-chico" data-ubic-confirmar>Confirmar ubicación</button>
+                </div>
             </div>
         </div>
     </section>

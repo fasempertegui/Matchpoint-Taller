@@ -42,6 +42,8 @@ CAMPOS_CONCRETOS = {
     ("sedes", "altura"): "Cambio de altura de sede",
     ("sedes", "cpa"): "Cambio de CPA de sede",
     ("sedes", "calle_georef_id"): "Actualización de referencia de calle de sede",
+    ("sedes", "latitud"): "Cambio de latitud de sede",
+    ("sedes", "longitud"): "Cambio de longitud de sede",
     ("sedes", "tiene_estacionamiento"): "Actualización de estacionamiento de sede",
     ("sedes", "tiene_sanitarios"): "Actualización de sanitarios de sede",
     ("sedes", "tiene_vestuarios"): "Actualización de vestuarios de sede",
@@ -95,6 +97,8 @@ ETIQUETAS_CAMPO = {
     "altura": "altura",
     "cpa": "CPA",
     "calle_georef_id": "identificador de calle en Georef",
+    "latitud": "latitud",
+    "longitud": "longitud",
     "tiene_estacionamiento": "estacionamiento",
     "tiene_sanitarios": "sanitarios",
     "tiene_vestuarios": "vestuarios",
@@ -125,6 +129,7 @@ CAMPOS_DIRECCION_SEDE = frozenset({
     "cpa",
     "calle_georef_id",
 })
+CAMPOS_UBICACION_SEDE = frozenset({"latitud", "longitud"})
 CAMPOS_SERVICIOS_SEDE = frozenset({
     "tiene_estacionamiento",
     "tiene_sanitarios",
@@ -286,6 +291,14 @@ def _clasificar_modificacion_contratacion(registro, campos, anteriores, actuales
 def _clasificar_modificacion_sede(_registro, campos, _anteriores, _actuales, _objeto):
     if len(campos) > 1 and campos <= CAMPOS_DIRECCION_SEDE:
         return "Actualización de dirección de sede"
+    if len(campos) > 1 and campos <= CAMPOS_UBICACION_SEDE:
+        return "Actualización de ubicación de sede"
+    if (
+        campos <= (CAMPOS_DIRECCION_SEDE | CAMPOS_UBICACION_SEDE)
+        and (campos & CAMPOS_DIRECCION_SEDE)
+        and (campos & CAMPOS_UBICACION_SEDE)
+    ):
+        return "Actualización de dirección y ubicación de sede"
     if len(campos) > 1 and campos <= CAMPOS_SERVICIOS_SEDE:
         return "Actualización de servicios de sede"
     if len(campos) > 1 and campos <= CAMPOS_TELEFONOS_SEDE:

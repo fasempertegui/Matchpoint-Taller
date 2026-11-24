@@ -15,6 +15,10 @@
     font-weight: 500;
 }
 
+.sede-operaciones .sede-mapa-enlaces {
+    margin-top: 12px;
+}
+
 @media (max-width: 900px) {
     .sede-operaciones .pestana-panel:not([data-panel="detalles"]) {
         padding: 24px;

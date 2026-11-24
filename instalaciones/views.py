@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from django.contrib import messages
@@ -24,6 +25,7 @@ from .direcciones import (
 from .forms import CanchaForm, SedeForm, SedeHorarioForm, SedePrecioForm
 from .models import Cancha, Sede, SedeHorario
 from .servicios import cambiar_estado_cancha, cambiar_estado_sede
+from .ubicacion import centros_localidades, configuracion_mapa
 
 
 @login_required
@@ -73,6 +75,7 @@ def sede_detalle(request, pk):
                 request.user.has_perm("instalaciones.change_sede")
                 and es_administrador
             ),
+            "mapa_config": configuracion_mapa(),
         },
     )
 
@@ -236,15 +239,12 @@ def _buscar_direccion_sede(request, *, alcance, sede_id=None):
             {"ok": False, "error": error.messages[0]},
             status=400,
         )
-    except ErrorServicioGeoref:
+    except ErrorServicioGeoref as error:
         return JsonResponse(
             {
                 "ok": False,
                 "servicio_caido": True,
-                "error": (
-                    "No se pudo consultar el catálogo oficial de calles (Georef). "
-                    "Podés reintentar o ingresar la dirección manualmente."
-                ),
+                "error": error.mensaje_usuario,
             },
             status=503,
         )
@@ -319,6 +319,8 @@ def sede_crear(request):
             "titulo": "Nueva sede",
             "texto_boton": "Crear sede",
             "url_buscar_direccion": reverse("instalaciones:sede_buscar_direccion_crear"),
+            "mapa_config": configuracion_mapa(),
+            "centros_localidades_json": json.dumps(centros_localidades()),
         },
         status=400 if formulario.errors else 200,
         errores=bool(formulario.errors),
@@ -329,45 +331,50 @@ def sede_crear(request):
 @permission_required("instalaciones.change_sede", raise_exception=True)
 @require_http_methods(["GET", "POST"])
 def sede_editar(request, pk):
-    sede = get_object_or_404(Sede, pk=pk)
-    destino = reverse("instalaciones:sede_detalle", args=[sede.pk])
+    destino = reverse("instalaciones:sede_detalle", args=[pk])
     if not es_peticion_modal(request):
+        get_object_or_404(Sede, pk=pk)
         return redirect(destino)
 
-    titulo = f"Editar {sede.nombre}"
-    formulario = SedeForm(
-        request.POST if request.method == "POST" else None,
-        instance=sede,
-        usuario=request.user,
-    )
+    with transaction.atomic():
+        sedes = Sede.objects.select_for_update() if request.method == "POST" else Sede.objects.all()
+        sede = get_object_or_404(sedes, pk=pk)
+        titulo = f"Editar {sede.nombre}"
+        formulario = SedeForm(
+            request.POST if request.method == "POST" else None,
+            instance=sede,
+            usuario=request.user,
+        )
 
-    if request.method == "POST" and formulario.is_valid():
-        sede = formulario.save(commit=False)
-        campos_actualizar = [*SedeForm.Meta.fields, "actualizado_en"]
-        if formulario.cleaned_data.get("direccion_cambio"):
-            campos_actualizar.extend(
-                [
-                    "direccion",
-                    "localidad_codigo",
-                    "calle",
-                    "altura",
-                    "cpa",
-                    "calle_georef_id",
-                ]
-            )
-        try:
-            with transaction.atomic():
-                sede.save(update_fields=campos_actualizar)
-        except IntegrityError as error:
-            if (
-                not isinstance(error.__cause__, UniqueViolation)
-                or error.__cause__.diag.constraint_name != "sede_nombre_unico_sin_mayusculas"
-            ):
-                raise
-            formulario.add_error("nombre", "Ya existe una sede con ese nombre.")
-        else:
-            messages.success(request, f'La sede "{sede.nombre}" fue actualizada.')
-            return respuesta_modal_exito(destino)
+        if request.method == "POST" and formulario.is_valid():
+            sede = formulario.save(commit=False)
+            campos_actualizar = [*SedeForm.Meta.fields, "actualizado_en"]
+            if formulario.cleaned_data.get("direccion_cambio"):
+                campos_actualizar.extend(
+                    [
+                        "direccion",
+                        "localidad_codigo",
+                        "calle",
+                        "altura",
+                        "cpa",
+                        "calle_georef_id",
+                    ]
+                )
+            if formulario.cleaned_data.get("ubicacion_cambio"):
+                campos_actualizar.extend(["latitud", "longitud"])
+            try:
+                with transaction.atomic():
+                    sede.save(update_fields=campos_actualizar)
+            except IntegrityError as error:
+                if (
+                    not isinstance(error.__cause__, UniqueViolation)
+                    or error.__cause__.diag.constraint_name != "sede_nombre_unico_sin_mayusculas"
+                ):
+                    raise
+                formulario.add_error("nombre", "Ya existe una sede con ese nombre.")
+            else:
+                messages.success(request, f'La sede "{sede.nombre}" fue actualizada.')
+                return respuesta_modal_exito(destino)
 
     return respuesta_modal_html(
         request,
@@ -381,6 +388,8 @@ def sede_editar(request, pk):
                 "instalaciones:sede_buscar_direccion_editar",
                 args=[sede.pk],
             ),
+            "mapa_config": configuracion_mapa(),
+            "centros_localidades_json": json.dumps(centros_localidades()),
         },
         status=400 if formulario.errors else 200,
         errores=bool(formulario.errors),

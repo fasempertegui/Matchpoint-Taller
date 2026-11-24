@@ -16,6 +16,13 @@ from .direcciones import (
     componer_direccion,
     etiqueta_localidad,
 )
+from .ubicacion import (
+    LATITUD_MAX,
+    LATITUD_MIN,
+    LONGITUD_MAX,
+    LONGITUD_MIN,
+    enlaces_mapa,
+)
 
 
 HORAS_EN_PUNTO = tuple(time(hora) for hora in range(24))
@@ -94,6 +101,20 @@ class Sede(models.Model):
         blank=True,
         default="",
     )
+    latitud = models.DecimalField(
+        "Latitud",
+        max_digits=9,
+        decimal_places=6,
+        blank=True,
+        null=True,
+    )
+    longitud = models.DecimalField(
+        "Longitud",
+        max_digits=9,
+        decimal_places=6,
+        blank=True,
+        null=True,
+    )
     tiene_estacionamiento = models.BooleanField("Estacionamiento", default=False)
     tiene_sanitarios = models.BooleanField("Sanitarios", default=False)
     tiene_vestuarios = models.BooleanField("Vestuarios", default=False)
@@ -162,6 +183,30 @@ class Sede(models.Model):
                 name="sede_direccion_estructurada_coherente",
                 violation_error_message="La dirección estructurada requiere localidad, calle y altura.",
             ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(latitud__isnull=True, longitud__isnull=True)
+                    | models.Q(latitud__isnull=False, longitud__isnull=False)
+                ),
+                name="sede_coordenadas_completas",
+                violation_error_message="La latitud y la longitud deben informarse juntas.",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(latitud__isnull=True)
+                    | models.Q(latitud__gte=LATITUD_MIN, latitud__lte=LATITUD_MAX)
+                ),
+                name="sede_latitud_rango",
+                violation_error_message="La latitud debe estar entre -90 y 90.",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(longitud__isnull=True)
+                    | models.Q(longitud__gte=LONGITUD_MIN, longitud__lte=LONGITUD_MAX)
+                ),
+                name="sede_longitud_rango",
+                violation_error_message="La longitud debe estar entre -180 y 180.",
+            ),
         ]
         verbose_name = "sede"
         verbose_name_plural = "sedes"
@@ -211,6 +256,14 @@ class Sede(models.Model):
         if self.calle_georef_id:
             return "Normalizada con Georef"
         return "Carga manual confirmada"
+
+    @property
+    def tiene_ubicacion(self):
+        return self.latitud is not None and self.longitud is not None
+
+    @property
+    def enlaces_ubicacion(self):
+        return enlaces_mapa(self.latitud, self.longitud)
 
 
 class Cancha(models.Model):

@@ -6,6 +6,7 @@ from django.views.decorators.http import require_GET
 from usuarios.models import Rol
 
 from .models import Sede
+from .ubicacion import configuracion_mapa
 
 
 def exigir_consulta_publica(usuario):
@@ -17,4 +18,11 @@ def exigir_consulta_publica(usuario):
 @require_GET
 def sedes_publicas(request):
     exigir_consulta_publica(request.user)
-    return render(request, "instalaciones/publico_sedes.html", {"sedes": Sede.objects.filter(estado="activa")})
+    return render(
+        request,
+        "instalaciones/publico_sedes.html",
+        {
+            "sedes": Sede.objects.filter(estado=Sede.Estado.ACTIVA),
+            "mapa_config": configuracion_mapa(),
+        },
+    )

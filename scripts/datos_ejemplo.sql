@@ -15,6 +15,7 @@ BEGIN
         INSERT INTO sedes (
             nombre, direccion,
             localidad_codigo, calle, altura, cpa, calle_georef_id,
+            latitud, longitud,
             tiene_estacionamiento, tiene_sanitarios, tiene_vestuarios, tiene_wifi, tiene_buffet,
             telefono_contacto_1, telefono_contacto_2,
             precio_reserva_vigente, observaciones, estado, creado_en, actualizado_en
@@ -22,6 +23,7 @@ BEGIN
             CASE sede_numero WHEN 1 THEN 'Sociedad Española' ELSE 'Sirio Libanesa' END,
             CASE sede_numero WHEN 1 THEN 'Balcarce 643' ELSE 'San Martin 673' END,
             '', '', '', '', '',
+            NULL, NULL,
             false, false, false, false, false,
             '', '',
             25000, '', 'activa', now(), now()

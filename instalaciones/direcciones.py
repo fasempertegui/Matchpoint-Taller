@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 import secrets
 from urllib.error import HTTPError, URLError
@@ -8,6 +9,11 @@ from urllib.request import Request, urlopen
 from django.conf import settings
 from django.core import signing
 from django.core.exceptions import ValidationError
+
+from .ubicacion import cuantizar_coordenada, punto_en_localidad
+
+
+logger = logging.getLogger(__name__)
 
 
 PROVINCIA_CODIGO = "66"
@@ -55,7 +61,12 @@ _RE_LETRA = re.compile(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]")
 
 
 class ErrorServicioGeoref(Exception):
-    """Error al consultar o interpretar la respuesta del servicio Georef."""
+    """Error al consultar o interpretar la respuesta del servicio externo Georef."""
+
+    def __init__(self, mensaje_usuario, *, codigo_http=None):
+        super().__init__(mensaje_usuario)
+        self.mensaje_usuario = mensaje_usuario
+        self.codigo_http = codigo_http
 
 
 def etiqueta_localidad(localidad_codigo):
@@ -318,16 +329,49 @@ def buscar_direcciones_georef(consulta, localidad_codigo, *, limite=5):
     try:
         with urlopen(peticion, timeout=timeout) as respuesta:
             if getattr(respuesta, "status", 200) != 200:
-                raise ErrorServicioGeoref("Georef devolvió un estado no exitoso.")
+                raise ErrorServicioGeoref(
+                    "El servicio externo Georef devolvió una respuesta inesperada. "
+                    "Podés reintentar o ingresar la dirección manualmente.",
+                    codigo_http=getattr(respuesta, "status", None),
+                )
             carga = json.loads(respuesta.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, OSError, ValueError) as error:
+    except HTTPError as error:
+        logger.warning("Georef respondió HTTP %s para localidad %s.", error.code, localidad_codigo)
+        if error.code == 429:
+            mensaje = (
+                "El servicio externo Georef superó temporalmente su límite de consultas (HTTP 429). "
+                "No es un error del sistema; podés reintentar más tarde o ingresar la dirección manualmente."
+            )
+        elif 500 <= error.code < 600:
+            mensaje = (
+                f"El servicio externo Georef está presentando fallas (HTTP {error.code}). "
+                "No es un error del sistema; podés reintentar o ingresar la dirección manualmente."
+            )
+        else:
+            mensaje = (
+                f"El servicio externo Georef rechazó la consulta (HTTP {error.code}). "
+                "Podés reintentar o ingresar la dirección manualmente."
+            )
+        raise ErrorServicioGeoref(mensaje, codigo_http=error.code) from error
+    except TimeoutError as error:
+        logger.warning("Tiempo de espera agotado consultando Georef para localidad %s.", localidad_codigo)
         raise ErrorServicioGeoref(
-            "No se pudo consultar el servicio de direcciones Georef."
+            "El servicio externo Georef tardó demasiado en responder. "
+            "No es un error del sistema; podés reintentar o ingresar la dirección manualmente."
+        ) from error
+    except (URLError, OSError, ValueError) as error:
+        logger.warning("Error consultando Georef para localidad %s: %s", localidad_codigo, error)
+        raise ErrorServicioGeoref(
+            "No se pudo conectar con el servicio externo Georef. "
+            "No es un error del sistema; podés reintentar o ingresar la dirección manualmente."
         ) from error
 
     direcciones = carga.get("direcciones")
     if not isinstance(direcciones, list):
-        raise ErrorServicioGeoref("La respuesta de Georef no tiene el formato esperado.")
+        raise ErrorServicioGeoref(
+            "El servicio externo Georef devolvió un formato inesperado. "
+            "Podés reintentar o ingresar la dirección manualmente."
+        )
 
     resultados = []
     vistos = set()
@@ -364,6 +408,16 @@ def buscar_direcciones_georef(consulta, localidad_codigo, *, limite=5):
             and ubicacion.get("lat") is not None
             and ubicacion.get("lon") is not None
         )
+        ubicacion_aproximada = None
+        if tiene_ubicacion and punto_en_localidad(
+            localidad_codigo,
+            ubicacion["lat"],
+            ubicacion["lon"],
+        ):
+            ubicacion_aproximada = {
+                "lat": float(cuantizar_coordenada(ubicacion["lat"])),
+                "lon": float(cuantizar_coordenada(ubicacion["lon"])),
+            }
 
         resultados.append(
             {
@@ -374,6 +428,7 @@ def buscar_direcciones_georef(consulta, localidad_codigo, *, limite=5):
                 "localidad_etiqueta": etiqueta_loc,
                 "provincia": PROVINCIA_NOMBRE,
                 "tiene_ubicacion": tiene_ubicacion,
+                "ubicacion_aproximada": ubicacion_aproximada,
             }
         )
         if len(resultados) >= limite:

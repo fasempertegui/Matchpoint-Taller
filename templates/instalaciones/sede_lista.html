@@ -7,8 +7,11 @@
 {% block titulo %}Instalaciones | Academia TM{% endblock %}
 
 {% block estilos %}
+<link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
 <link rel="stylesheet" href="{% static 'css/instalaciones.css' %}">
+<script src="{% static 'vendor/leaflet/leaflet.js' %}" defer></script>
 <script src="{% static 'js/sede-direccion.js' %}" defer></script>
+<script src="{% static 'js/sede-ubicacion.js' %}" defer></script>
 {% endblock %}
 
 {% block clase_contenido %}contenido-instalaciones{% endblock %}

@@ -14,6 +14,7 @@ from .direcciones import (
     PROVINCIA_NOMBRE,
     componer_direccion,
     crear_token_formulario_direccion,
+    etiqueta_localidad,
     validar_altura,
     validar_calle,
     validar_cpa,
@@ -22,6 +23,11 @@ from .direcciones import (
     validar_token_formulario_direccion,
 )
 from .models import Cancha, Sede, SedeHorario, SedeHorarioEspecial
+from .ubicacion import (
+    centros_localidades,
+    punto_en_localidad,
+    validar_par_coordenadas,
+)
 
 
 TIPOS_TELEFONO_SEDE = (
@@ -74,10 +80,42 @@ class SedeForm(forms.ModelForm):
         "cpa",
         "confirmacion_direccion_manual",
     )
+    campos_ubicacion = (
+        "ubicacion_modo",
+        "latitud_entrada",
+        "longitud_entrada",
+    )
 
     direccion_formulario_token = forms.CharField(required=False, widget=forms.HiddenInput())
     direccion_modo = forms.CharField(required=False, widget=forms.HiddenInput())
     direccion_seleccion_token = forms.CharField(required=False, widget=forms.HiddenInput())
+    ubicacion_modo = forms.CharField(required=False, widget=forms.HiddenInput())
+    latitud_entrada = forms.CharField(
+        label="Latitud",
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "inputmode": "decimal",
+                "placeholder": "-24.781872",
+                "autocomplete": "off",
+            }
+        ),
+    )
+    longitud_entrada = forms.CharField(
+        label="Longitud",
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "inputmode": "decimal",
+                "placeholder": "-65.411627",
+                "autocomplete": "off",
+            }
+        ),
+    )
     direccion_consulta = forms.CharField(
         label="Buscar calle y altura",
         max_length=150,
@@ -206,6 +244,7 @@ class SedeForm(forms.ModelForm):
             ),
         )
         initial.setdefault("direccion_modo", "mantener" if self.es_edicion else "")
+        initial.setdefault("ubicacion_modo", "mantener" if self.es_edicion else "")
         if self.es_edicion and instance.tiene_direccion_estructurada:
             initial.setdefault("localidad_codigo", instance.localidad_codigo)
             initial.setdefault("calle", instance.calle)
@@ -215,6 +254,9 @@ class SedeForm(forms.ModelForm):
                 "confirmacion_direccion_manual",
                 not bool(instance.calle_georef_id),
             )
+        if self.es_edicion and instance.tiene_ubicacion:
+            initial.setdefault("latitud_entrada", f"{instance.latitud:.6f}")
+            initial.setdefault("longitud_entrada", f"{instance.longitud:.6f}")
         super().__init__(*args, initial=initial, **kwargs)
         self._token_formulario_renovado = None
 
@@ -228,30 +270,29 @@ class SedeForm(forms.ModelForm):
         for mensaje in error.messages:
             self.add_error(campo, mensaje)
 
-    def clean(self):
-        datos = super().clean()
+    def _limpiar_direccion(self, datos):
         modo = (datos.get("direccion_modo") or "").strip()
 
         if modo == "mantener":
             if self.es_edicion:
                 datos["direccion_cambio"] = False
-                return datos
+                return
             self.add_error("direccion_consulta", "Cargá la dirección estructurada de la sede.")
-            return datos
+            return
 
         if modo == "":
             self.add_error("direccion_consulta", "Cargá la dirección estructurada de la sede.")
-            return datos
+            return
 
         if modo not in ("georef", "manual", "editar_existente"):
             self.add_error("direccion_consulta", "Indicá cómo querés cargar la dirección de la sede.")
-            return datos
+            return
 
         if modo == "editar_existente" and not (
             self.es_edicion and self.instance.tiene_direccion_estructurada
         ):
             self.add_error("direccion_consulta", "Cargá la dirección estructurada de la sede.")
-            return datos
+            return
 
         localidad_codigo = ""
         if "localidad_codigo" not in self.errors:
@@ -290,7 +331,7 @@ class SedeForm(forms.ModelForm):
                     sede_id=self.sede_id_direccion,
                 )
                 self._agregar_error_validacion("direccion_consulta", error)
-                return datos
+                return
 
             if localidad_codigo:
                 try:
@@ -340,7 +381,7 @@ class SedeForm(forms.ModelForm):
                 calle_georef_id = ""
 
         if any(campo in self.errors for campo in self.campos_direccion):
-            return datos
+            return
 
         datos["direccion_cambio"] = True
         datos["direccion_estructurada"] = {
@@ -351,12 +392,91 @@ class SedeForm(forms.ModelForm):
             "calle_georef_id": calle_georef_id,
             "direccion": componer_direccion(calle, altura, localidad_codigo, cpa),
         }
+
+    def _limpiar_ubicacion(self, datos):
+        modo_ubicacion = (datos.get("ubicacion_modo") or "").strip()
+        lat_raw = (datos.get("latitud_entrada") or "").strip()
+        lon_raw = (datos.get("longitud_entrada") or "").strip()
+
+        if modo_ubicacion == "mantener" and self.es_edicion:
+            latitud = self.instance.latitud
+            longitud = self.instance.longitud
+            ubicacion_cambio = False
+        elif modo_ubicacion == "quitar":
+            latitud, longitud = None, None
+            ubicacion_cambio = self.es_edicion and self.instance.tiene_ubicacion
+        elif modo_ubicacion in ("", "marcar"):
+            if not lat_raw and not lon_raw:
+                latitud, longitud = None, None
+                ubicacion_cambio = self.es_edicion and self.instance.tiene_ubicacion
+            else:
+                try:
+                    latitud, longitud = validar_par_coordenadas(lat_raw, lon_raw)
+                except ValidationError as error:
+                    for campo, mensajes in error.message_dict.items():
+                        self.add_error(campo, mensajes)
+                    return
+                ubicacion_cambio = True
+        else:
+            self.add_error("latitud_entrada", "Indicá una ubicación válida en el mapa o dejá el pin vacío.")
+            return
+
+        if datos.get("direccion_cambio"):
+            localidad_efectiva = datos["direccion_estructurada"]["localidad_codigo"]
+        elif (datos.get("localidad_codigo") or "").strip() in centros_localidades():
+            localidad_efectiva = (datos.get("localidad_codigo") or "").strip()
+        elif self.es_edicion:
+            localidad_efectiva = self.instance.localidad_codigo
+        else:
+            localidad_efectiva = ""
+
+        cambio_localidad = (
+            self.es_edicion
+            and bool(localidad_efectiva)
+            and bool(self.instance.localidad_codigo)
+            and localidad_efectiva != self.instance.localidad_codigo
+        )
+
+        if latitud is not None and longitud is not None:
+            if not localidad_efectiva:
+                self.add_error(
+                    "latitud_entrada",
+                    "Cargá primero una dirección con localidad habilitada para validar el pin de entrada.",
+                )
+                return
+            if not punto_en_localidad(localidad_efectiva, latitud, longitud):
+                nombre_localidad = etiqueta_localidad(localidad_efectiva)
+                if cambio_localidad and not ubicacion_cambio:
+                    mensaje = (
+                        f"El pin guardado quedó fuera de {nombre_localidad}. "
+                        "Marcá nuevamente la entrada dentro de esa localidad."
+                    )
+                else:
+                    mensaje = (
+                        f"El pin debe quedar dentro de {nombre_localidad} (incluido su borde)."
+                    )
+                self.add_error("latitud_entrada", mensaje)
+                return
+
+        datos["ubicacion_cambio"] = ubicacion_cambio
+        datos["ubicacion_pin"] = {
+            "latitud": latitud,
+            "longitud": longitud,
+        }
+
+    def clean(self):
+        datos = super().clean()
+        self._limpiar_direccion(datos)
+        self._limpiar_ubicacion(datos)
         return datos
 
     def save(self, commit=True):
         sede = super().save(commit=False)
         if self.cleaned_data.get("direccion_cambio"):
             for campo, valor in self.cleaned_data["direccion_estructurada"].items():
+                setattr(sede, campo, valor)
+        if self.cleaned_data.get("ubicacion_cambio"):
+            for campo, valor in self.cleaned_data["ubicacion_pin"].items():
                 setattr(sede, campo, valor)
         if commit:
             sede.save()
@@ -386,6 +506,38 @@ class SedeForm(forms.ModelForm):
 
     def abrir_direccion(self):
         return any(self[nombre].errors for nombre in self.campos_direccion)
+
+    def abrir_ubicacion(self):
+        return any(self[nombre].errors for nombre in self.campos_ubicacion)
+
+    @property
+    def ubicacion_modo_actual(self):
+        return (self["ubicacion_modo"].value() or "").strip()
+
+    @property
+    def tiene_ubicacion_actual(self):
+        modo = self.ubicacion_modo_actual
+        if modo == "quitar":
+            return False
+        if modo == "mantener" and self.es_edicion:
+            return self.instance.tiene_ubicacion
+        return bool(
+            (self["latitud_entrada"].value() or "").strip()
+            and (self["longitud_entrada"].value() or "").strip()
+        )
+
+    @property
+    def ubicacion_resumen_actual(self):
+        modo = self.ubicacion_modo_actual
+        if modo == "quitar":
+            return ""
+        if modo == "mantener" and self.es_edicion and self.instance.tiene_ubicacion:
+            return f"Lat {self.instance.latitud:.6f}, Lon {self.instance.longitud:.6f}"
+        lat = (self["latitud_entrada"].value() or "").strip()
+        lon = (self["longitud_entrada"].value() or "").strip()
+        if lat and lon:
+            return f"Lat {lat}, Lon {lon}"
+        return ""
 
     @property
     def token_formulario_direccion_actual(self):

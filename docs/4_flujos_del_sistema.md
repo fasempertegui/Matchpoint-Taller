@@ -374,14 +374,14 @@ flowchart TD
 Recorrido:
 
 1. El administrador accede a la consulta.
-2. El sistema muestra las sedes con su dirección legible.
-3. Al seleccionar una sede, muestra su dirección, el origen de la calle (normalizada con Georef o carga manual confirmada), el resumen de servicios disponibles, los teléfonos de contacto informados, las observaciones y todas sus canchas, activas e inactivas, con sus superficies y estados.
+2. El sistema muestra las sedes con su dirección legible; desde «Ver detalles» accede al detalle completo.
+3. Al seleccionar una sede, muestra su dirección, el origen de la calle (normalizada con Georef o carga manual confirmada), el resumen de servicios disponibles, los teléfonos de contacto informados, el minimapa de solo lectura con el pin de entrada y los enlaces externos a OpenStreetMap y «Cómo llegar con Google Maps» cuando tiene ubicación cargada, las observaciones y todas sus canchas, activas e inactivas, con sus superficies y estados.
 
 Alternativas:
 
 - Una sede sin canchas muestra una lista vacía.
 - La consulta de sedes puede incluir registros inactivos.
-- En el catálogo de sedes activas se muestran la dirección legible y, como texto, los servicios disponibles que se hayan registrado; los teléfonos de contacto y el origen de la calle se consultan en administración.
+- En el catálogo de sedes activas se muestran la dirección legible, los servicios disponibles registrados como texto y el disparador «Ver ubicación», que abre un panel compartido de solo lectura con la dirección, el mapa del pin, los enlaces externos y el acceso «Ver agenda» para cuentas habilitadas. Si fallan las teselas del mapa, la dirección y los enlaces externos permanecen disponibles. Los teléfonos de contacto y el origen de la calle se consultan en administración.
 
 - **Resultado:** jerarquía de sedes y canchas sin modificaciones.
 - **Datos:** sedes y canchas.
@@ -389,7 +389,7 @@ Alternativas:
 ```mermaid
 flowchart TD
     A[Consultar sedes] --> B[Seleccionar sede]
-    B --> C[Mostrar dirección, origen de calle, servicios, teléfonos y canchas]
+    B --> C[Mostrar dirección, origen de calle, servicios, teléfonos, mapa y canchas]
     C --> D[Mostrar superficies y estados]
 ```
 
@@ -397,20 +397,22 @@ flowchart TD
 
 - **Objetivo:** crear una sede activa.
 - **Actor:** administrador.
-- **Entradas:** nombre y dirección estructurada obligatorios (localidad habilitada de Salta, calle o ruta y altura; CPA opcional); servicios disponibles (estacionamiento, sanitarios, vestuarios, Wi-Fi y buffet), hasta dos teléfonos de contacto y observaciones opcionales.
+- **Entradas:** nombre y dirección estructurada obligatorios (localidad habilitada de Salta, calle o ruta y altura; CPA opcional); pin de entrada en coordenadas WGS 84 (`latitud`, `longitud`), servicios disponibles (estacionamiento, sanitarios, vestuarios, Wi-Fi y buffet), hasta dos teléfonos de contacto y observaciones opcionales.
 
 Recorrido:
 
 1. El administrador ingresa el nombre y abre bajo demanda «Cargar dirección», donde la provincia Salta es fija y elige entre Ciudad de Salta, Vaqueros, San Lorenzo o Cerrillos.
 2. Consulta el nomenclador oficial de Georef desde el servidor para la localidad elegida (hasta cinco coincidencias firmadas y asociadas al usuario y al formulario), selecciona una coincidencia y confirma la altura y el CPA opcional; o bien elige «Ingresar dirección manualmente» con confirmación administrativa explícita cuando no existe coincidencia adecuada o el servicio no responde.
-3. Opcionalmente despliega «Servicios», «Contacto» y «Observaciones».
-4. El sistema valida que el nombre no esté vacío ni repetido (sin distinguir mayúsculas de minúsculas), comprueba la localidad, la selección firmada de Georef o la confirmación manual, la calle, la altura (numeración con sufijo, kilómetro o `s/n`), el CPA opcional de 8 caracteres y los teléfonos argentinos opcionales normalizados a E.164.
-5. Crea la sede con estado **Activa** y compone el texto de dirección a partir de los campos estructurados.
+3. Abre bajo demanda «Marcar ubicación» para señalar la entrada en el mapa de Leaflet (con clic, toque o carga manual de coordenadas), centrado inicialmente en el pin de la localidad, la ubicación aproximada de Georef si está dentro de la localidad o el centro de la localidad, en ese orden. Solo se guarda un pin que el administrador marca o confirma.
+4. Opcionalmente despliega «Servicios», «Contacto» y «Observaciones».
+5. El sistema valida en la misma transacción el nombre único (sin distinguir mayúsculas de minúsculas), la dirección estructurada (localidad, selección firmada de Georef o confirmación manual, calle, altura y CPA opcional), el par completo de coordenadas dentro de la geometría censal del INDEC de la localidad elegida (incluido su borde) y los teléfonos argentinos opcionales normalizados a E.164.
+6. Crea la sede con estado **Activa** y compone el texto de dirección a partir de los campos estructurados.
 
 Alternativas:
 
-- Cambiar la localidad o el texto de búsqueda invalida los resultados anteriores de Georef. Cancelar el panel conserva la selección previa.
+- Cambiar la localidad o el texto de búsqueda invalida los resultados anteriores de Georef. Cancelar el panel de dirección o el panel de ubicación conserva la selección previa.
 - Ante un error de validación o una selección de Georef vencida, el modal conserva los datos ingresados y vuelve a abrir el panel que requiere corrección.
+- Si fallan las teselas del mapa, el panel permite cargar y ajustar las coordenadas manualmente.
 - Registrar la sede no crea canchas ni horario de funcionamiento automáticamente: hasta configurarlo mediante **FL-58**, la sede queda sin franjas y no funciona ningún día.
 - Si se omite algún servicio o teléfono, los servicios quedan inactivos y los teléfonos vacíos.
 
@@ -419,30 +421,31 @@ Alternativas:
 
 ```mermaid
 flowchart TD
-    A[Ingresar nombre y abrir dirección] --> B[Elegir localidad y buscar en Georef o carga manual]
-    B --> C{Datos y selección válidos y nombre único}
+    A[Ingresar nombre, dirección y pin de entrada] --> B[Validar nombre, dirección estructurada y pin en localidad]
+    B --> C{Datos y selección válidos}
     C -->|No| D[Solicitar corrección conservando datos]
-    D --> B
+    D --> A
     C -->|Sí| E[Crear sede activa]
 ```
 
 #### FL-10. Actualizar una sede
 
-- **Objetivo:** modificar nombre, dirección estructurada, servicios disponibles, teléfonos de contacto u observaciones de una sede.
+- **Objetivo:** modificar nombre, dirección estructurada, pin de entrada, servicios disponibles, teléfonos de contacto u observaciones de una sede.
 - **Actor:** administrador.
 - **Precondición:** sede seleccionada mediante **FL-08**.
 
 Recorrido:
 
-1. El sistema presenta los datos actuales, con el resumen de dirección y las secciones «Servicios» y «Contacto» desplegables bajo demanda.
-2. El administrador modifica los campos necesarios y, si desea actualizar el domicilio, abre «Cargar dirección» o «Cambiar dirección» para buscar en Georef o cargar la dirección manualmente con confirmación administrativa.
-3. El sistema valida la unicidad del nombre sin distinguir mayúsculas de minúsculas, los teléfonos argentinos opcionales normalizados a E.164 y, cuando corresponde, la dirección estructurada (localidad habilitada, selección firmada o confirmación manual, calle, altura y CPA opcional).
-4. Guarda la sede.
+1. El sistema presenta los datos actuales, con los resúmenes de dirección y ubicación de entrada y las secciones «Servicios» y «Contacto» desplegables bajo demanda.
+2. El administrador modifica los campos necesarios; puede abrir «Cargar dirección» / «Cambiar dirección» o «Marcar ubicación» / «Cambiar ubicación» de forma independiente.
+3. Dentro de una transacción y bajo bloqueo de la sede, el sistema revalida la combinación vigente de localidad y coordenadas con Shapely contra la geometría censal del INDEC, además de la unicidad del nombre, la dirección estructurada y los teléfonos opcionales normalizados a E.164.
+4. Guarda la sede en una única transacción.
 
 Alternativas:
 
 - Este flujo no cambia el estado ni modifica canchas.
-- Cancelar el panel de dirección conserva la selección vigente.
+- Mover el pin conserva la dirección. Al cambiar de localidad, se conserva el pin si sigue dentro de la nueva localidad y se solicita marcarlo nuevamente si quedó afuera.
+- Cancelar el panel de dirección o de ubicación conserva la selección vigente.
 - Un cambio manual de la calle requiere confirmación administrativa y registra la calle sin identificador de Georef.
 - Ante un error de validación, el formulario conserva los datos ingresados y mantiene abiertos los paneles o grupos que requieren corrección.
 
@@ -451,10 +454,10 @@ Alternativas:
 
 ```mermaid
 flowchart TD
-    A[Abrir sede] --> B[Modificar datos o cambiar dirección]
-    B --> C{Datos válidos y nombre único}
+    A[Abrir sede] --> B[Modificar datos, dirección o pin de entrada]
+    B --> C{Datos y combinación localidad-pin válidos}
     C -->|No| B
-    C -->|Sí| D[Guardar sede]
+    C -->|Sí| D[Guardar sede bajo bloqueo]
 ```
 
 #### FL-11. Cambiar el estado de una sede

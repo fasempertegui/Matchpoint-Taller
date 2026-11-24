@@ -255,3 +255,13 @@ GEOREF_API_URL = os.environ.get(
 GEOREF_TIMEOUT = float(os.environ.get("GEOREF_TIMEOUT", "5"))
 GEOREF_SELECCION_MAX_AGE = int(os.environ.get("GEOREF_SELECCION_MAX_AGE", "900"))
 GEOREF_FORMULARIO_MAX_AGE = int(os.environ.get("GEOREF_FORMULARIO_MAX_AGE", "3600"))
+
+MAPA_TESELAS_URL = os.environ.get(
+    "MAPA_TESELAS_URL",
+    "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+)
+MAPA_ATRIBUCION = os.environ.get(
+    "MAPA_ATRIBUCION",
+    '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>',
+)
+MAPA_ZOOM_MAX = int(os.environ.get("MAPA_ZOOM_MAX", "19"))

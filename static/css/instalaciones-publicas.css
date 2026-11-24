@@ -5,3 +5,4 @@
 .sede-oferta-precio { margin: 0 0 20px; }
 .sede-oferta-precio dt { color: var(--texto-suave); font-size: .875rem; }
 .sede-oferta-precio dd { margin: 4px 0 0; color: var(--primario); font-size: 1.15rem; font-weight: 700; }
+.sede-tarjeta-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
