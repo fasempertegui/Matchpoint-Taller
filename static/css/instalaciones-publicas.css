@@ -1,5 +1,7 @@
 .instalaciones-publicas .tarjeta, .instalaciones-publicas .boton { border-radius: 10px; }
 .instalaciones-publicas .sede-tarjeta h2 { margin: 0; font-size: 1.25rem; }
+.instalaciones-publicas .sede-tarjeta .sede-oferta-servicios { margin: -12px 0 20px; font-size: .9rem; line-height: 1.5; }
+.instalaciones-publicas .sede-oferta-servicios strong { color: var(--texto); font-weight: 600; }
 .sede-oferta-precio { margin: 0 0 20px; }
 .sede-oferta-precio dt { color: var(--texto-suave); font-size: .875rem; }
 .sede-oferta-precio dd { margin: 4px 0 0; color: var(--primario); font-size: 1.15rem; font-weight: 700; }

@@ -2,21 +2,59 @@
 {% if sede %}{% url 'instalaciones:sede_editar' sede.pk as accion_url %}{% else %}{% url 'instalaciones:sede_crear' as accion_url %}{% endif %}
 {% modal_formulario titulo action=accion_url texto_enviar=texto_boton %}
     {% if not sede %}
-        <p class="formulario-introduccion">Esta información es pública y puede verla cualquier usuario registrado.</p>
+        <p class="formulario-introduccion">Los datos generales y los servicios confirmados pueden mostrarse en el catálogo. Los teléfonos se consultan en administración.</p>
     {% endif %}
     {% if formulario.non_field_errors %}
         <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
     {% endif %}
-    {% for campo in formulario %}
-        {% if campo.name == "observaciones" %}
-            {% include "componentes/observaciones_opcionales.html" with campo=campo only %}
-        {% else %}
-            <div class="grupo-campo">
-                <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-                {{ campo }}
-                {% if campo.help_text %}<small class="formulario-ayuda">{{ campo.help_text }}</small>{% endif %}
-                {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    <div class="grupo-campo">
+        <label for="{{ formulario.nombre.id_for_label }}">{{ formulario.nombre.label }}</label>
+        {{ formulario.nombre }}
+        {% for error in formulario.nombre.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="grupo-campo">
+        <label for="{{ formulario.direccion.id_for_label }}">{{ formulario.direccion.label }}</label>
+        {{ formulario.direccion }}
+        {% for error in formulario.direccion.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+
+    <details class="formulario-desplegable"{% if formulario.abrir_servicios %} open{% endif %}>
+        <summary>
+            {% include "componentes/iconoir/chevron-abajo.html" %}
+            <span>Servicios{% if formulario.cantidad_servicios_seleccionados %} ({{ formulario.cantidad_servicios_seleccionados }}){% endif %}</span>
+        </summary>
+        <div class="formulario-desplegable-cuerpo">
+            <div class="formulario-opciones-grid">
+                {% for campo in formulario.campos_de_servicios %}
+                    <div class="grupo-campo">
+                        <label class="campo-opcion" for="{{ campo.id_for_label }}">
+                            {{ campo }}<span>{{ campo.label }}</span>
+                        </label>
+                        {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                {% endfor %}
             </div>
-        {% endif %}
-    {% endfor %}
+        </div>
+    </details>
+
+    <details class="formulario-desplegable"{% if formulario.abrir_contacto %} open{% endif %}>
+        <summary>
+            {% include "componentes/iconoir/chevron-abajo.html" %}
+            <span>Contacto{% if formulario.cantidad_telefonos_informados %} ({{ formulario.cantidad_telefonos_informados }}){% endif %}</span>
+        </summary>
+        <div class="formulario-desplegable-cuerpo">
+            <div class="formulario-fila-doble">
+                {% for campo in formulario.campos_de_contacto %}
+                    <div class="grupo-campo">
+                        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                        {{ campo }}
+                        {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+            <small class="formulario-ayuda">Opcionales. Teléfonos fijos o móviles de Argentina con código de área.</small>
+        </div>
+    </details>
+
+    {% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}
 {% endmodal_formulario %}

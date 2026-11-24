@@ -270,7 +270,7 @@ def sede_editar(request, pk):
         sede = formulario.save(commit=False)
         try:
             with transaction.atomic():
-                sede.save(update_fields=["nombre", "direccion", "observaciones", "actualizado_en"])
+                sede.save(update_fields=[*SedeForm.Meta.fields, "actualizado_en"])
         except IntegrityError as error:
             if (
                 not isinstance(error.__cause__, UniqueViolation)

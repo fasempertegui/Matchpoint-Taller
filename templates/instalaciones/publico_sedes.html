@@ -12,6 +12,9 @@
         {% include "instalaciones/_imagen_sede.html" with sede=sede only %}
         <h2>{{ sede.nombre }}</h2>
         <p>{{ sede.direccion|default:"Dirección sin informar" }}</p>
+        {% if sede.servicios_disponibles %}
+        <p class="sede-oferta-servicios"><strong>Servicios:</strong> {{ sede.servicios_disponibles|join:", " }}</p>
+        {% endif %}
         <dl class="sede-oferta-precio">
             <dt>Reserva por turno de 1 hora</dt>
             <dd>{% if sede.precio_reserva_vigente is not None %}$ {{ sede.precio_reserva_vigente|floatformat:"2g" }}{% else %}Consultar{% endif %}</dd>

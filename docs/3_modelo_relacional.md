@@ -137,13 +137,20 @@ Representa una sede física de la academia.
 | PK | `id` | `bigint` identity | | | `1` |
 | | `nombre` | `varchar(120)` | | Sí | `Sociedad Española` |
 | | `direccion` | `varchar(250)` | | | `Av. Sarmiento 320` |
+| | `tiene_estacionamiento` | `boolean` | | | `false` |
+| | `tiene_sanitarios` | `boolean` | | | `true` |
+| | `tiene_vestuarios` | `boolean` | | | `true` |
+| | `tiene_wifi` | `boolean` | | | `false` |
+| | `tiene_buffet` | `boolean` | | | `false` |
+| | `telefono_contacto_1` | `varchar(30)` | | | `+543874212345` |
+| | `telefono_contacto_2` | `varchar(30)` | | | `+5493875001220` |
 | | `precio_reserva_vigente` | `numeric(12,2)` | Sí | | `30000.00` |
 | | `observaciones` | `text` | Sí | | `Ingreso por calle lateral` |
 | | `estado` | `varchar(10)` | | | `activa` (o `inactiva`) |
 | | `creado_en` | `timestamptz` | | | `2026-10-01 09:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-01 09:00:00-03` |
 
-La unicidad de `nombre` se aplica mediante `LOWER(nombre)`. `precio_reserva_vigente` es nullable y, cuando está informado, debe ser positivo. La tarifa pertenece a la sede y no se repite en cada cancha. Los horarios utilizan su tabla dependiente `sedes_horarios`.
+La unicidad de `nombre` se aplica mediante `LOWER(nombre)`. Los indicadores de servicios (`tiene_estacionamiento`, `tiene_sanitarios`, `tiene_vestuarios`, `tiene_wifi` y `tiene_buffet`) utilizan `boolean` con valor por defecto `false`. `telefono_contacto_1` y `telefono_contacto_2` son opcionales (se almacenan como cadena vacía cuando no se informan), admiten líneas fijas o móviles de Argentina y se guardan normalizados en formato internacional E.164. `precio_reserva_vigente` es nullable y, cuando está informado, debe ser positivo. La tarifa pertenece a la sede y no se repite en cada cancha. Los horarios utilizan su tabla dependiente `sedes_horarios`.
 
 ### 4.4 `canchas`
 

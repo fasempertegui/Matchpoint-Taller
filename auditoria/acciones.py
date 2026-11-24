@@ -37,6 +37,13 @@ CAMPOS_CONCRETOS = {
     ("usuarios", "observaciones"): "Actualización de observaciones de usuario",
     ("sedes", "nombre"): "Cambio de nombre de sede",
     ("sedes", "direccion"): "Cambio de dirección de sede",
+    ("sedes", "tiene_estacionamiento"): "Actualización de estacionamiento de sede",
+    ("sedes", "tiene_sanitarios"): "Actualización de sanitarios de sede",
+    ("sedes", "tiene_vestuarios"): "Actualización de vestuarios de sede",
+    ("sedes", "tiene_wifi"): "Actualización de Wi-Fi de sede",
+    ("sedes", "tiene_buffet"): "Actualización de buffet de sede",
+    ("sedes", "telefono_contacto_1"): "Cambio de teléfono principal de sede",
+    ("sedes", "telefono_contacto_2"): "Cambio de teléfono adicional de sede",
     ("sedes", "precio_reserva_vigente"): "Actualización de precio de sede",
     ("sedes", "observaciones"): "Actualización de observaciones de sede",
     ("canchas", "nombre"): "Cambio de nombre de cancha",
@@ -77,6 +84,14 @@ ETIQUETAS_CAMPO = {
     "correo_verificado_en": "verificación de correo",
     "verificacion_solicitada_en": "solicitud de verificación",
     "cambio_email_solicitado_en": "solicitud de cambio de correo",
+    "direccion": "dirección",
+    "tiene_estacionamiento": "estacionamiento",
+    "tiene_sanitarios": "sanitarios",
+    "tiene_vestuarios": "vestuarios",
+    "tiene_wifi": "Wi-Fi",
+    "tiene_buffet": "buffet",
+    "telefono_contacto_1": "teléfono principal",
+    "telefono_contacto_2": "teléfono adicional",
     "precio_reserva_vigente": "precio por turno",
     "precio_vigente": "precio vigente",
     "precio_invitado_vigente": "precio por invitado",
@@ -92,6 +107,14 @@ ETIQUETAS_CAMPO = {
     "resultado_uso": "resultado de reserva",
 }
 
+CAMPOS_SERVICIOS_SEDE = frozenset({
+    "tiene_estacionamiento",
+    "tiene_sanitarios",
+    "tiene_vestuarios",
+    "tiene_wifi",
+    "tiene_buffet",
+})
+CAMPOS_TELEFONOS_SEDE = frozenset({"telefono_contacto_1", "telefono_contacto_2"})
 CAMPOS_HORARIO_SEDE = frozenset({"hora_inicio_1", "hora_fin_1", "hora_inicio_2", "hora_fin_2"})
 CAMPOS_ANTICIPACION = frozenset({"anticipacion_clases_minutos", "anticipacion_reservas_minutos"})
 CAMPOS_CONTINUIDAD = frozenset({
@@ -242,6 +265,14 @@ def _clasificar_modificacion_contratacion(registro, campos, anteriores, actuales
     return None
 
 
+def _clasificar_modificacion_sede(_registro, campos, _anteriores, _actuales, _objeto):
+    if len(campos) > 1 and campos <= CAMPOS_SERVICIOS_SEDE:
+        return "Actualización de servicios de sede"
+    if len(campos) > 1 and campos <= CAMPOS_TELEFONOS_SEDE:
+        return "Actualización de teléfonos de contacto de sede"
+    return None
+
+
 def _clasificar_modificacion_horario_sede(_registro, campos, _anteriores, _actuales, _objeto):
     if campos <= CAMPOS_HORARIO_SEDE:
         return "Actualización de horario de sede"
@@ -273,6 +304,7 @@ REGLAS_MODIFICACION = {
     "sesiones_caja": _clasificar_modificacion_sesion_caja,
     "planes_usuarios": _clasificar_modificacion_contratacion,
     "membresias_usuarios": _clasificar_modificacion_contratacion,
+    "sedes": _clasificar_modificacion_sede,
     "sedes_horarios": _clasificar_modificacion_horario_sede,
     "configuracion_notificaciones": _clasificar_modificacion_notificaciones,
     "membresias": _clasificar_modificacion_membresia,

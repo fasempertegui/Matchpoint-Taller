@@ -375,12 +375,13 @@ Recorrido:
 
 1. El administrador accede a la consulta.
 2. El sistema muestra las sedes.
-3. Al seleccionar una sede, muestra todas sus canchas, activas e inactivas, con sus superficies y estados.
+3. Al seleccionar una sede, muestra su dirección, el resumen de servicios disponibles, los teléfonos de contacto informados, las observaciones y todas sus canchas, activas e inactivas, con sus superficies y estados.
 
 Alternativas:
 
 - Una sede sin canchas muestra una lista vacía.
 - La consulta de sedes puede incluir registros inactivos.
+- En el catálogo de sedes activas se muestran como texto los servicios disponibles que se hayan registrado; los teléfonos de contacto se consultan en administración.
 
 - **Resultado:** jerarquía de sedes y canchas sin modificaciones.
 - **Datos:** sedes y canchas.
@@ -388,7 +389,7 @@ Alternativas:
 ```mermaid
 flowchart TD
     A[Consultar sedes] --> B[Seleccionar sede]
-    B --> C[Consultar canchas asociadas]
+    B --> C[Mostrar datos, servicios, teléfonos y canchas asociadas]
     C --> D[Mostrar superficies y estados]
 ```
 
@@ -396,24 +397,25 @@ flowchart TD
 
 - **Objetivo:** crear una sede activa.
 - **Actor:** administrador.
-- **Entradas:** nombre y dirección obligatorios; observaciones opcionales.
+- **Entradas:** nombre y dirección obligatorios; servicios disponibles (estacionamiento, sanitarios, vestuarios, Wi-Fi y buffet), hasta dos teléfonos de contacto y observaciones opcionales.
 
 Recorrido:
 
-1. El administrador completa los datos.
-2. El sistema valida que el nombre no esté vacío ni repetido, sin distinguir mayúsculas de minúsculas.
+1. El administrador completa los datos obligatorios y, bajo demanda, puede desplegar «Servicios», «Contacto» y «Observaciones».
+2. El sistema valida que el nombre no esté vacío ni repetido, sin distinguir mayúsculas de minúsculas, y que cada teléfono informado sea un número fijo o móvil argentino válido, normalizándolo a formato internacional E.164.
 3. Crea la sede con estado **Activa**.
 
 Alternativas:
 
 - Registrar la sede no crea canchas ni horario de funcionamiento automáticamente: hasta configurarlo mediante **FL-58**, la sede queda sin franjas y no funciona ningún día.
+- Si se omite algún servicio o teléfono, los servicios quedan inactivos y los teléfonos vacíos.
 
 - **Resultado:** nueva sede activa.
 - **Datos:** sedes.
 
 ```mermaid
 flowchart TD
-    A[Ingresar sede] --> B{Nombre válido y único}
+    A[Ingresar sede] --> B{Datos válidos y nombre único}
     B -->|No| C[Solicitar corrección]
     C --> A
     B -->|Sí| D[Crear sede activa]
@@ -421,20 +423,21 @@ flowchart TD
 
 #### FL-10. Actualizar una sede
 
-- **Objetivo:** modificar nombre, dirección u observaciones de una sede.
+- **Objetivo:** modificar nombre, dirección, servicios disponibles, teléfonos de contacto u observaciones de una sede.
 - **Actor:** administrador.
 - **Precondición:** sede seleccionada mediante **FL-08**.
 
 Recorrido:
 
-1. El sistema presenta los datos actuales.
+1. El sistema presenta los datos actuales, con las secciones «Servicios» y «Contacto» desplegables bajo demanda.
 2. El administrador realiza cambios.
-3. El sistema valida que el nombre sea único sin distinguir mayúsculas de minúsculas.
+3. El sistema valida que el nombre sea único sin distinguir mayúsculas de minúsculas y que los teléfonos informados sean números fijos o móviles argentinos válidos, normalizados a E.164.
 4. Guarda la sede.
 
 Alternativas:
 
 - Este flujo no cambia el estado ni modifica canchas.
+- Ante un error de validación, el formulario conserva los datos ingresados y mantiene abiertos los grupos que contienen correcciones o valores cargados.
 
 - **Resultado:** sede actualizada.
 - **Datos:** sedes.
@@ -442,7 +445,7 @@ Alternativas:
 ```mermaid
 flowchart TD
     A[Abrir sede] --> B[Modificar datos]
-    B --> C{Nombre válido y único}
+    B --> C{Datos válidos y nombre único}
     C -->|No| B
     C -->|Sí| D[Guardar sede]
 ```

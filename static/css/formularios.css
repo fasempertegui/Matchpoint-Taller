@@ -366,6 +366,60 @@
     border-top: 0;
 }
 
+.formulario-desplegable {
+    border-top: 1px solid var(--borde);
+    padding-top: 12px;
+}
+
+.formulario-desplegable > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    list-style: none;
+    color: var(--primario);
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.formulario-desplegable > summary::-webkit-details-marker {
+    display: none;
+}
+
+.formulario-desplegable > summary > svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    transition: transform 140ms ease;
+}
+
+.formulario-desplegable[open] > summary > svg {
+    transform: rotate(180deg);
+}
+
+.formulario-desplegable > summary:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: 4px;
+    border-radius: 6px;
+}
+
+.formulario-desplegable-cuerpo {
+    display: grid;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.formulario-desplegable-cuerpo .formulario-ayuda {
+    margin-top: 0;
+}
+
+.formulario-opciones-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+}
+
 .modal-acciones {
     display: flex;
     flex-wrap: wrap;
@@ -385,7 +439,8 @@
 /* 7. Responsivo */
 @media (max-width: 640px) {
     .formulario-fila-doble,
-    .formulario-fila-triple {
+    .formulario-fila-triple,
+    .formulario-opciones-grid {
         grid-template-columns: 1fr;
     }
 

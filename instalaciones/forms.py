@@ -2,6 +2,7 @@ from copy import copy
 from datetime import time
 from decimal import Decimal
 
+import phonenumbers
 from django import forms
 
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_feriados
@@ -9,11 +10,65 @@ from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_feriados
 from .models import Cancha, Sede, SedeHorario, SedeHorarioEspecial
 
 
+TIPOS_TELEFONO_SEDE = (
+    phonenumbers.PhoneNumberType.FIXED_LINE,
+    phonenumbers.PhoneNumberType.MOBILE,
+    phonenumbers.PhoneNumberType.FIXED_LINE_OR_MOBILE,
+)
+
+
+def validar_telefono_sede_ar(valor):
+    valor = (valor or "").strip()
+    if not valor:
+        return ""
+    try:
+        numero = phonenumbers.parse(valor, "AR")
+    except phonenumbers.NumberParseException:
+        raise forms.ValidationError("El formato del teléfono no es válido.")
+
+    if numero.country_code != 54:
+        raise forms.ValidationError("El teléfono debe ser argentino.")
+
+    if (
+        not phonenumbers.is_valid_number(numero)
+        or phonenumbers.number_type(numero) not in TIPOS_TELEFONO_SEDE
+    ):
+        raise forms.ValidationError(
+            "Ingresá un teléfono fijo o móvil argentino válido con código de área."
+        )
+
+    return phonenumbers.format_number(numero, phonenumbers.PhoneNumberFormat.E164)
+
+
 class SedeForm(forms.ModelForm):
+    campos_servicios = (
+        "tiene_estacionamiento",
+        "tiene_sanitarios",
+        "tiene_vestuarios",
+        "tiene_wifi",
+        "tiene_buffet",
+    )
+    campos_contacto = ("telefono_contacto_1", "telefono_contacto_2")
+
     class Meta:
         model = Sede
-        fields = ("nombre", "direccion", "observaciones")
-        labels = {"direccion": "Dirección"}
+        fields = (
+            "nombre",
+            "direccion",
+            "tiene_estacionamiento",
+            "tiene_sanitarios",
+            "tiene_vestuarios",
+            "tiene_wifi",
+            "tiene_buffet",
+            "telefono_contacto_1",
+            "telefono_contacto_2",
+            "observaciones",
+        )
+        labels = {
+            "direccion": "Dirección",
+            "telefono_contacto_1": "Teléfono principal",
+            "telefono_contacto_2": "Teléfono adicional",
+        }
         widgets = {
             "nombre": forms.TextInput(
                 attrs={
@@ -28,6 +83,22 @@ class SedeForm(forms.ModelForm):
                     "placeholder": "Avenida Sarmiento 320",
                 }
             ),
+            "telefono_contacto_1": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "type": "tel",
+                    "autocomplete": "tel",
+                    "placeholder": "387 421-2345",
+                }
+            ),
+            "telefono_contacto_2": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "type": "tel",
+                    "autocomplete": "tel",
+                    "placeholder": "387 15 500-1220",
+                }
+            ),
             "observaciones": forms.Textarea(
                 attrs={
                     "class": "form-control",
@@ -36,6 +107,34 @@ class SedeForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean_telefono_contacto_1(self):
+        return validar_telefono_sede_ar(self.cleaned_data.get("telefono_contacto_1", ""))
+
+    def clean_telefono_contacto_2(self):
+        return validar_telefono_sede_ar(self.cleaned_data.get("telefono_contacto_2", ""))
+
+    def campos_de_servicios(self):
+        return [self[nombre] for nombre in self.campos_servicios]
+
+    def campos_de_contacto(self):
+        return [self[nombre] for nombre in self.campos_contacto]
+
+    def cantidad_servicios_seleccionados(self):
+        return sum(1 for campo in self.campos_de_servicios() if bool(campo.value()))
+
+    def cantidad_telefonos_informados(self):
+        return sum(1 for campo in self.campos_de_contacto() if str(campo.value() or "").strip())
+
+    def abrir_servicios(self):
+        if any(campo.errors for campo in self.campos_de_servicios()):
+            return True
+        return self.is_bound and self.cantidad_servicios_seleccionados() > 0
+
+    def abrir_contacto(self):
+        if any(campo.errors for campo in self.campos_de_contacto()):
+            return True
+        return self.is_bound and self.cantidad_telefonos_informados() > 0
 
 
 class SedePrecioForm(forms.ModelForm):

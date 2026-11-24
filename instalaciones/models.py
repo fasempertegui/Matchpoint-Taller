@@ -59,9 +59,24 @@ class Sede(models.Model):
         ACTIVA = "activa", "Activa"
         INACTIVA = "inactiva", "Inactiva"
 
+    SERVICIOS = (
+        ("tiene_estacionamiento", "Estacionamiento"),
+        ("tiene_sanitarios", "Sanitarios"),
+        ("tiene_vestuarios", "Vestuarios"),
+        ("tiene_wifi", "Wi-Fi"),
+        ("tiene_buffet", "Buffet"),
+    )
+
     id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=120)
     direccion = models.CharField(max_length=250)
+    tiene_estacionamiento = models.BooleanField("Estacionamiento", default=False)
+    tiene_sanitarios = models.BooleanField("Sanitarios", default=False)
+    tiene_vestuarios = models.BooleanField("Vestuarios", default=False)
+    tiene_wifi = models.BooleanField("Wi-Fi", default=False)
+    tiene_buffet = models.BooleanField("Buffet", default=False)
+    telefono_contacto_1 = models.CharField("Teléfono principal", max_length=30, blank=True, default="")
+    telefono_contacto_2 = models.CharField("Teléfono adicional", max_length=30, blank=True, default="")
     precio_reserva_vigente = models.DecimalField(
         "Precio por turno (ARS)",
         max_digits=12,
@@ -103,6 +118,18 @@ class Sede(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    @property
+    def servicios_disponibles(self):
+        return [etiqueta for campo, etiqueta in self.SERVICIOS if getattr(self, campo)]
+
+    @property
+    def telefonos_contacto(self):
+        return [
+            telefono
+            for telefono in (self.telefono_contacto_1, self.telefono_contacto_2)
+            if telefono
+        ]
 
 
 class Cancha(models.Model):
