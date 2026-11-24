@@ -12,6 +12,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from caja.consultas import contexto_financiero
+from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
 from usuarios.models import Usuario
 
 from .contrataciones import (
@@ -244,12 +245,14 @@ def contratacion_anular(request, pk, tipo="plan"):
     modelo = configuracion["modelo"]
     contratacion = get_object_or_404(modelo.objects.select_related("usuario", tipo), pk=pk)
     url_detalle = reverse(f"membresias:contratacion_{tipo}_detalle", args=[pk])
+    if not es_peticion_modal(request):
+        return redirect(url_detalle)
     if contratacion.estado != modelo.Estado.ACTIVO:
         if contratacion.estado == modelo.Estado.ANULADO:
             messages.info(request, "La contratación ya está Anulada.")
         else:
             messages.error(request, "Sólo se pueden anular contrataciones Activas.")
-        return redirect(url_detalle)
+        return respuesta_modal_exito(url_detalle)
     formulario = AnulacionContratacionForm(
         request.POST if request.method == "POST" else None,
         initial={"version": version_anulacion_contratacion(actor, contratacion, tipo=tipo)},
@@ -262,14 +265,23 @@ def contratacion_anular(request, pk, tipo="plan"):
             if contratacion.estado != modelo.Estado.ACTIVO:
                 for mensaje in error.messages:
                     messages.error(request, mensaje)
-                return redirect(url_detalle)
+                return respuesta_modal_exito(url_detalle)
             formulario.add_error(None, error)
         else:
             messages.success(request, "La contratación está Anulada.")
-            return redirect(url_detalle)
-    return render(request, "membresias/contratacion_anular.html", {
-        **_contexto(tipo), "contratacion": contratacion,
-        "titulo": "Anular contratación de membresía" if tipo == "membresia" else "Anular contratación de plan",
-        "formulario": formulario,
-        "texto_boton": "Confirmar anulación", "url_cancelar": url_detalle,
-    })
+            return respuesta_modal_exito(url_detalle)
+    return respuesta_modal_html(
+        request,
+        "membresias/_modal_contratacion_anular.html",
+        {
+            **_contexto(tipo),
+            "contratacion": contratacion,
+            "titulo": "Anular contratación de membresía" if tipo == "membresia" else "Anular contratación de plan",
+            "formulario": formulario,
+            "accion_url": reverse(f"membresias:contratacion_{tipo}_anular", args=[pk]),
+        },
+        status=400 if formulario.errors else 200,
+        peligro=True,
+        amplio=True,
+        errores=bool(formulario.errors),
+    )

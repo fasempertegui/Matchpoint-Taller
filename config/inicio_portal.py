@@ -1,4 +1,5 @@
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from django.db.models import Q
 from django.urls import reverse
@@ -60,6 +61,8 @@ def contexto_inicio_portal(usuario):
             if continuidad["puede_responder"] and not contrato.respuesta_continuidad:
                 contexto["pendientes"].append({
                     "texto": f"Continuidad de {contrato.producto.nombre}",
-                    "url": continuidad["url_responder"], "accion": "Responder encuesta",
+                    "url": f"{continuidad['url_responder']}?{urlencode({'siguiente': reverse('inicio')})}",
+                    "accion": "Responder encuesta",
+                    "modal": True,
                 })
     return contexto

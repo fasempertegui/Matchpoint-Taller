@@ -110,7 +110,7 @@ class AnulacionContratacionForm(forms.Form):
     motivo = forms.CharField(
         min_length=5,
         label="Motivo de anulación",
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3, "autofocus": True}),
+        widget=forms.TextInput(attrs={"class": "form-control", "autofocus": True, "placeholder": "Ingresá al menos 5 caracteres"}),
         error_messages={"required": "Indicá el motivo de la anulación."},
     )
 
@@ -167,8 +167,12 @@ class AjusteHorasForm(forms.Form):
                                  widget=forms.Select(attrs={"class": "form-control"}))
     cantidad = forms.IntegerField(label="Cantidad de horas", min_value=1, max_value=32767,
                                   widget=forms.NumberInput(attrs={"class": "form-control", "min": 1, "step": 1}))
-    motivo = forms.CharField(min_length=5, label="Motivo", help_text="El titular podrá consultar este motivo.",
-                             widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    motivo = forms.CharField(
+        min_length=5,
+        label="Motivo",
+        help_text="El titular podrá consultar este motivo.",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ingresá al menos 5 caracteres"}),
+    )
 
 
 class RespuestaContinuidadForm(forms.Form):

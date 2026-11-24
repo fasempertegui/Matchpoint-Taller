@@ -1,6 +1,6 @@
 <div class="grupo-campo" data-usuario-selector data-url="{{ url_busqueda }}">
     <label for="buscar-{{ campo.name }}">{{ campo.label }}{% if not sin_asterisco %} <span aria-hidden="true">*</span>{% endif %}</label>
-    {% if campo.help_text %}<small class="nota-campo" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</small>{% endif %}
+    {% if campo.help_text %}<small class="formulario-ayuda" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</small>{% endif %}
     {{ campo }}
     <ul class="clase-seleccionados" data-usuario-seleccion{% if not seleccionado %} hidden{% endif %}>
         <li>

@@ -239,7 +239,6 @@
                     <div class="grupo-campo" data-operacion-motivo-anulacion>
                         <label for="{{ formulario_operacion.motivo_anulacion.id_for_label }}">{{ formulario_operacion.motivo_anulacion.label }}</label>
                         {{ formulario_operacion.motivo_anulacion }}
-                        <small class="formulario-ayuda">{{ formulario_operacion.motivo_anulacion.help_text }}</small>
                         {% for error in formulario_operacion.motivo_anulacion.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
                     </div>
 

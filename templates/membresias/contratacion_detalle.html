@@ -18,9 +18,9 @@
                 {% if pagina_finanzas %}<button type="button" data-abrir-movimientos aria-haspopup="dialog" aria-controls="movimientos-financieros">Ver movimientos ({{ pagina_finanzas.paginator.count }})</button>{% endif %}
                 <a href="{% url ruta_comprobante contratacion.pk %}">Ver comprobante</a>
                 {% if tipo == 'membresia' %}<a href="{% if propias %}{% url 'membresias:mi_membresia_uso' contratacion.pk %}{% else %}{% url 'reservas:uso_membresia' %}?usuario={{ contratacion.usuario_id }}&amp;desde={{ contratacion.fecha_inicio|date:'Y-m-d' }}&amp;hasta={{ contratacion.fecha_fin|date:'Y-m-d' }}{% endif %}">Consultar uso del mes</a>{% endif %}
-                {% if continuidad.puede_responder %}<a href="{{ continuidad.url_responder }}">{% if contratacion.respuesta_continuidad %}Cambiar respuesta de continuidad{% else %}Responder sobre continuidad{% endif %}</a>{% endif %}
+                {% if continuidad.puede_responder %}<button type="button" data-abrir-modal-url="{{ continuidad.url_responder }}">{% if contratacion.respuesta_continuidad %}Cambiar respuesta de continuidad{% else %}Responder sobre continuidad{% endif %}</button>{% endif %}
                 {% if puede_ajustar_horas %}<a href="{% url 'membresias:ajustar_horas' contratacion.pk %}">Ajustar horas</a>{% endif %}
-                {% if not propias and ruta_anular and contratacion.estado == 'activo' %}<a class="perfil-menu-peligro" href="{% url ruta_anular contratacion.pk %}">Anular contratación</a>{% endif %}
+                {% if not propias and ruta_anular and contratacion.estado == 'activo' %}<button type="button" class="perfil-menu-peligro" data-abrir-modal-url="{% url ruta_anular contratacion.pk %}">Anular contratación</button>{% endif %}
             </div>
         </details>
     </header>

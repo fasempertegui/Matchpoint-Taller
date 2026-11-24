@@ -80,9 +80,13 @@ def plan_formulario(request, pk=None):
             return redirect("membresias:plan_detalle", pk=guardado.pk)
     return render(request, "membresias/catalogo_formulario.html", {
         "formulario": formulario, "titulo": titulo,
+        "tipo_catalogo": "plan",
         "texto_boton": "Guardar plan" if pk is not None else "Crear plan",
-        "alta_catalogo": pk is None,
-        "descripcion_alta": "Los planes definen la modalidad, la frecuencia y la duración de las clases, junto con su precio mensual.",
+        "texto_volver": "Volver al detalle" if pk is not None else "Volver al listado",
+        "descripcion_cabecera": (
+            "Definí la modalidad, la frecuencia, la duración de cada encuentro y el precio mensual."
+            if pk is None else ""
+        ),
         "url_cancelar": reverse("membresias:plan_detalle", args=[pk]) if pk is not None
             else reverse("membresias:plan_lista"),
     })
@@ -160,9 +164,13 @@ def membresia_formulario(request, pk=None):
             return redirect("membresias:membresia_detalle", pk=guardado.pk)
     return render(request, "membresias/catalogo_formulario.html", {
         "formulario": formulario, "titulo": titulo,
+        "tipo_catalogo": "membresia",
         "texto_boton": "Guardar membresía" if pk is not None else "Crear membresía",
-        "alta_catalogo": pk is None,
-        "descripcion_alta": "Las membresías definen los cupos mensuales para organizar reservas y participar como invitado, su precio y el adicional sin beneficio.",
+        "texto_volver": "Volver al detalle" if pk is not None else "Volver al listado",
+        "descripcion_cabecera": (
+            "Definí los cupos mensuales para organizar reservas y participar como invitado, junto con sus precios."
+            if pk is None else ""
+        ),
         "url_cancelar": reverse("membresias:membresia_detalle", args=[pk]) if pk is not None
             else reverse("membresias:membresia_lista"),
     })

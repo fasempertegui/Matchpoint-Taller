@@ -165,7 +165,6 @@ class AgendaOperacionForm(forms.Form):
         min_length=5,
         label="Motivo de anulación",
         required=False,
-        help_text="Mínimo 5 caracteres",
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ingresá al menos 5 caracteres"}),
     )
     observaciones = forms.CharField(

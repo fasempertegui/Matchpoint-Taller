@@ -1,0 +1,27 @@
+{% load formularios tablas %}
+{% modal_formulario titulo action=accion_url peligro=True amplio=True texto_enviar="Anular contratación" %}
+    {{ formulario.version }}
+    {% tabla_datos etiqueta="Datos de la contratación" %}
+        <tr><th scope="row">Contratación</th><td>#{{ contratacion.pk }}</td></tr>
+        <tr><th scope="row">Usuario</th><td>{{ contratacion.usuario }}</td></tr>
+        <tr><th scope="row">{{ nombre_tipo|capfirst }}</th><td>{{ contratacion.producto.nombre }}</td></tr>
+        <tr><th scope="row">Cobertura</th><td>Del {{ contratacion.fecha_inicio|date:"d/m/Y" }} al {{ contratacion.fecha_fin|date:"d/m/Y" }}</td></tr>
+        <tr><th scope="row">{{ etiqueta_importe }}</th><td><strong>$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</strong></td></tr>
+    {% endtabla_datos %}
+    <div class="formulario-aviso formulario-aviso-peligro">
+        {% if tipo == 'membresia' %}
+            <p>La contratación quedará Anulada y la membresía dejará de otorgar cobertura para nuevas aplicaciones. Podés registrar un reemplazo para el mismo mes conservando la historia del titular y sus roles.</p>
+        {% else %}
+            <p>La contratación quedará Anulada y podrás registrar un reemplazo para el mismo mes. Se conservan el registro, sus importes, las clases existentes y los roles del usuario.</p>
+        {% endif %}
+    </div>
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    <div class="grupo-campo">
+        <label for="{{ formulario.motivo.id_for_label }}">{{ formulario.motivo.label }}</label>
+        {{ formulario.motivo }}
+        {% if formulario.motivo.help_text %}<small class="formulario-ayuda">{{ formulario.motivo.help_text }}</small>{% endif %}
+        {% for error in formulario.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+{% endmodal_formulario %}

@@ -52,7 +52,7 @@
     {% if pendientes %}
     <section class="tarjeta portal-pendientes" aria-labelledby="portal-pendientes-titulo">
         <header class="inicio-seccion-cabecera"><h2 id="portal-pendientes-titulo">Pendientes</h2></header>
-        <div class="inicio-cuerpo">{% for pendiente in pendientes %}<div class="portal-pendiente"><p>{{ pendiente.texto }}</p><a class="portal-enlace" href="{{ pendiente.url }}">{{ pendiente.accion }}</a></div>{% endfor %}</div>
+        <div class="inicio-cuerpo">{% for pendiente in pendientes %}<div class="portal-pendiente"><p>{{ pendiente.texto }}</p>{% if pendiente.modal %}<button type="button" class="portal-enlace portal-enlace-boton" data-abrir-modal-url="{{ pendiente.url }}">{{ pendiente.accion }}</button>{% else %}<a class="portal-enlace" href="{{ pendiente.url }}">{{ pendiente.accion }}</a>{% endif %}</div>{% endfor %}</div>
     </section>
     {% endif %}
 </div>

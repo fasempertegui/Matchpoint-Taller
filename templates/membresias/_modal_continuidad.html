@@ -1,0 +1,30 @@
+{% load encabezados formularios tablas %}
+{% texto_titulo as titulo_modal %}Continuidad para {{ continuidad.mes_consultado|date:"F \d\e Y" }}{% endtexto_titulo %}
+{% modal_formulario titulo_modal action=accion_url amplio=True texto_enviar="Guardar respuesta" %}
+    {% if siguiente %}<input type="hidden" name="siguiente" value="{{ siguiente }}">{% endif %}
+    {% tabla_datos etiqueta="Datos de la contratación" %}
+        <tr><th scope="row">{{ nombre_tipo|capfirst }}</th><td>{{ contratacion.producto.nombre }}</td></tr>
+        <tr><th scope="row">Mes cubierto</th><td>{{ contratacion.mes_cubierto|date:"F \d\e Y"|capfirst }}</td></tr>
+        <tr><th scope="row">Plazo para responder</th><td>Hasta el {{ continuidad.ultimo_dia|date:"d/m/Y" }} inclusive</td></tr>
+    {% endtabla_datos %}
+    <div class="formulario-aviso">
+        <p>Podés cambiar tu respuesta hasta el último día del plazo. Los cambios de producto y las contrataciones se coordinan con administración.</p>
+    </div>
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    <fieldset class="opciones-seleccion"{% if formulario.respuesta.errors %} aria-describedby="continuidad-respuesta-errores"{% endif %}>
+        <legend>{{ formulario.respuesta.label }}</legend>
+        {% for opcion in formulario.respuesta %}
+            <label class="opcion-tarjeta">
+                {{ opcion.tag }}
+                <span class="opcion-tarjeta-texto"><strong>{{ opcion.choice_label }}</strong></span>
+            </label>
+        {% endfor %}
+        {% if formulario.respuesta.errors %}
+            <div id="continuidad-respuesta-errores" role="alert">
+                {% for error in formulario.respuesta.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+    </fieldset>
+{% endmodal_formulario %}

@@ -1,51 +1,93 @@
-{% extends "membresias/catalogo_formulario.html" %}
-{% load static %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/contrataciones.css' %}"><link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}"><script src="{% static 'js/selector-usuario.js' %}" defer></script>{% endblock %}
-{% block clase_contenido %}contenido-membresias-configuracion contratacion-alta{% endblock %}
-{% block formulario_contexto %}
-    {% if contratacion_existente %}
-        <p><a class="enlace-texto" href="{% url ruta_detalle contratacion_existente.pk %}">Ver contratación existente del mes</a></p>
-    {% endif %}
-    <div class="contratacion-progreso" role="progressbar" aria-label="Progreso de contratación" aria-valuemin="1" aria-valuemax="2" aria-valuenow="{% if titular %}2{% else %}1{% endif %}">
-        <span class="contratacion-paso-completo" aria-hidden="true"></span>
-        <span{% if titular %} class="contratacion-paso-completo"{% endif %} aria-hidden="true"></span>
-    </div>
-    <p class="contratacion-numero">Paso {% if titular %}2{% else %}1{% endif %} de 2</p>
+{% extends "base.html" %}
+{% load encabezados formularios tablas static %}
+{% block titulo %}{{ titulo }} | Academia TM{% endblock %}
+{% block estilos %}<script src="{% static 'js/selector-usuario.js' %}" defer></script>{% endblock %}
+{% block contenido %}
+<div class="formulario-pagina">
     {% if titular %}
-        <section class="contratacion-resumen" aria-label="Selección de contratación">
-            <p class="contratacion-resumen-etiqueta">{{ nombre_tipo|default:tipo|capfirst }} {% if tipo == 'membresia' %}seleccionada{% else %}seleccionado{% endif %}</p>
-            <h2>{{ producto.nombre }}</h2>
-            <dl class="contratacion-datos">
-                <div><dt>Usuario</dt><dd>{{ titular }}<small>@{{ titular.username }}</small></dd></div>
-                <div class="contratacion-importe"><dt>Importe a aplicar</dt><dd>$ {{ precio_propuesto|floatformat:"2g" }}</dd></div>
+        {% tarjeta_titulo titulo %}
+            <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">Volver al listado</a>
+        {% endtarjeta_titulo %}
+        {% pasos_formulario 2 2 nombre="Período, fecha de alta y confirmación" etiqueta="Progreso de contratación" %}
+    {% else %}
+        {% texto_titulo as descripcion_paso %}Elegí el usuario y {% if tipo == 'membresia' %}la membresía{% else %}el plan{% endif %} para preparar la contratación mensual.{% endtexto_titulo %}
+        {% tarjeta_titulo titulo descripcion=descripcion_paso %}
+            <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">Volver al listado</a>
+        {% endtarjeta_titulo %}
+        {% if tipo == 'membresia' %}
+            {% pasos_formulario 1 2 nombre="Usuario y membresía" etiqueta="Progreso de contratación" %}
+        {% else %}
+            {% pasos_formulario 1 2 nombre="Usuario y plan" etiqueta="Progreso de contratación" %}
+        {% endif %}
+    {% endif %}
+
+    <section class="tarjeta formulario-cuerpo">
+        {% if titular %}
+            {% tabla_datos etiqueta="Selección de contratación" %}
+                <tr><th scope="row">Usuario</th><td>{{ titular }} ({{ titular.username }})</td></tr>
+                <tr><th scope="row">{{ nombre_tipo|capfirst }}</th><td>{{ producto.nombre }}</td></tr>
+                <tr><th scope="row">Importe a aplicar</th><td><strong>$ {{ precio_propuesto|floatformat:"2g" }}</strong></td></tr>
                 {% if tipo == 'membresia' %}
-                    <div><dt>Horas mensuales de organizador</dt><dd>{{ producto.horas_organizador }}</dd></div>
-                    <div><dt>Horas mensuales de invitado</dt><dd>{{ producto.horas_invitado }}</dd></div>
+                    <tr><th scope="row">Horas mensuales de organizador</th><td>{{ producto.horas_organizador }}</td></tr>
+                    <tr><th scope="row">Horas mensuales de invitado</th><td>{{ producto.horas_invitado }}</td></tr>
                 {% endif %}
-            </dl>
-        </section>
-    {% else %}
-        <p class="texto-secundario">Elegí el usuario y {% if tipo == 'membresia' %}la membresía{% else %}el plan{% endif %} para preparar la contratación mensual.</p>
-    {% endif %}
-{% endblock %}
-{% block formulario_seleccion %}
-    {% if not titular %}
-        {% for nombre, valor in borrador.items %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
-    {% endif %}
-{% endblock %}
+            {% endtabla_datos %}
+        {% endif %}
 
-{% block formulario_campos_ocultos %}
-    {% if titular %}
-        {{ block.super }}
-    {% else %}
-        {% include "componentes/selector_usuario.html" with campo=formulario.usuario seleccionado=usuario_seleccionado url_busqueda=url_buscar_usuarios sin_asterisco=True only %}
-    {% endif %}
-{% endblock %}
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if titular %}
+                {% for campo in formulario.hidden_fields %}
+                    {{ campo }}
+                    {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                {% endfor %}
+            {% else %}
+                {% for nombre, valor in borrador.items %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
+            {% endif %}
 
-{% block formulario_acciones %}
-    <div class="acciones-formulario">
-        <button class="boton boton-primario" type="submit" name="paso" value="{% if titular %}confirmar{% else %}preparar{% endif %}">{{ texto_boton }}</button>
-        {% if titular %}<button class="boton boton-secundario" type="submit" name="paso" value="editar">Volver</button>{% endif %}
-        <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-    </div>
+            {% if formulario.non_field_errors %}
+                <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+            {% endif %}
+            {% if contratacion_existente %}
+                <div class="formulario-aviso formulario-aviso-advertencia">
+                    <p><a class="enlace-texto" href="{% url ruta_detalle contratacion_existente.pk %}">Ver contratación existente del mes</a></p>
+                </div>
+            {% endif %}
+
+            {% if titular %}
+                <div class="formulario-fila-doble">
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.mes_cubierto.id_for_label }}">{{ formulario.mes_cubierto.label }}</label>
+                        {{ formulario.mes_cubierto }}
+                        {% if formulario.mes_cubierto.help_text %}<small class="formulario-ayuda">{{ formulario.mes_cubierto.help_text }}</small>{% endif %}
+                        {% for error in formulario.mes_cubierto.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.fecha_alta.id_for_label }}">{{ formulario.fecha_alta.label }}</label>
+                        {{ formulario.fecha_alta }}
+                        {% if formulario.fecha_alta.help_text %}<small class="formulario-ayuda">{{ formulario.fecha_alta.help_text }}</small>{% endif %}
+                        {% for error in formulario.fecha_alta.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+                {% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}
+            {% else %}
+                {% include "componentes/selector_usuario.html" with campo=formulario.usuario seleccionado=usuario_seleccionado url_busqueda=url_buscar_usuarios sin_asterisco=True only %}
+                {% for campo in formulario.visible_fields %}
+                    <div class="grupo-campo">
+                        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                        {{ campo }}
+                        {% if campo.help_text %}<small class="formulario-ayuda">{{ campo.help_text }}</small>{% endif %}
+                        {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+                {% if titular %}<button class="boton boton-secundario" type="submit" name="paso" value="editar">Volver</button>{% endif %}
+                <button class="boton boton-primario" type="submit" name="paso" value="{% if titular %}confirmar{% else %}preparar{% endif %}">{{ texto_boton }}</button>
+            </div>
+        </form>
+    </section>
+</div>
 {% endblock %}

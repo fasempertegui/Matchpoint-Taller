@@ -1,50 +1,97 @@
 {% extends "base.html" %}
-{% load static %}
+{% load encabezados %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
-{% block estilos %}{% if alta_catalogo %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}">{% endif %}{% endblock %}
-{% block clase_contenido %}{% if alta_catalogo %}contenido-membresias-configuracion{% endif %}{% endblock %}
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1 id="catalogo-formulario-titulo">{{ titulo }}</h1>
-    {% if alta_catalogo %}<p class="catalogo-introduccion">{{ descripcion_alta }}</p>{% endif %}
-    {% block formulario_contexto %}{% endblock %}
-    <form method="{{ metodo_formulario|default:'post' }}" novalidate aria-labelledby="catalogo-formulario-titulo">
-        {% if metodo_formulario != 'get' %}{% csrf_token %}{% endif %}
-        {% block formulario_seleccion %}{% endblock %}
-        {% block formulario_campos_ocultos %}{% for campo in formulario.hidden_fields %}{{ campo }}{% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endfor %}
-        {% endblock %}
-        {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
-        {% for campo in formulario.visible_fields %}
-            {% if campo.name == 'observaciones' %}
-                {% include "componentes/observaciones_opcionales.html" with campo=campo only %}
-            {% elif campo.name == 'descripcion' %}
-                {% if alta_catalogo %}
-                    {% include "componentes/observaciones_opcionales.html" with campo=campo texto_disparador="Agregar descripción" only %}
-                {% else %}
-                <details class="observaciones-opcionales"{% if campo.value or campo.errors %} open{% endif %}>
-                    <summary>{{ campo.label }} (opcional)</summary>
+<div class="formulario-pagina">
+    {% tarjeta_titulo titulo descripcion=descripcion_cabecera %}
+        <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">{{ texto_volver }}</a>
+    {% endtarjeta_titulo %}
+
+    <section class="tarjeta formulario-cuerpo">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% for campo in formulario.hidden_fields %}
+                {{ campo }}
+                {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            {% endfor %}
+            {% if formulario.non_field_errors %}
+                <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="grupo-campo">
+                <label for="{{ formulario.nombre.id_for_label }}">{{ formulario.nombre.label }}</label>
+                {{ formulario.nombre }}
+                {% if formulario.nombre.help_text %}<small class="formulario-ayuda">{{ formulario.nombre.help_text }}</small>{% endif %}
+                {% for error in formulario.nombre.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+
+            {% if tipo_catalogo == "plan" %}
+                <div class="formulario-fila-doble">
                     <div class="grupo-campo">
-                        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}
-                        {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                        <label for="{{ formulario.modalidad.id_for_label }}">{{ formulario.modalidad.label }}</label>
+                        {{ formulario.modalidad }}
+                        {% if formulario.modalidad.help_text %}<small class="formulario-ayuda">{{ formulario.modalidad.help_text }}</small>{% endif %}
+                        {% for error in formulario.modalidad.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
                     </div>
-                </details>
-                {% endif %}
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.frecuencia_semanal.id_for_label }}">{{ formulario.frecuencia_semanal.label }}</label>
+                        {{ formulario.frecuencia_semanal }}
+                        {% if formulario.frecuencia_semanal.help_text %}<small class="formulario-ayuda">{{ formulario.frecuencia_semanal.help_text }}</small>{% endif %}
+                        {% for error in formulario.frecuencia_semanal.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+                <div class="formulario-fila-doble">
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.cantidad_clases_por_encuentro.id_for_label }}">{{ formulario.cantidad_clases_por_encuentro.label }}</label>
+                        {{ formulario.cantidad_clases_por_encuentro }}
+                        {% if formulario.cantidad_clases_por_encuentro.help_text %}<small class="formulario-ayuda">{{ formulario.cantidad_clases_por_encuentro.help_text }}</small>{% endif %}
+                        {% for error in formulario.cantidad_clases_por_encuentro.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.precio_vigente.id_for_label }}">{{ formulario.precio_vigente.label }}</label>
+                        {{ formulario.precio_vigente }}
+                        {% if formulario.precio_vigente.help_text %}<small class="formulario-ayuda">{{ formulario.precio_vigente.help_text }}</small>{% endif %}
+                        {% for error in formulario.precio_vigente.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
             {% else %}
-                <div class="grupo-campo">
-                    <label for="{{ campo.id_for_label }}">{{ campo.label }}{% if campo.field.required and not alta_catalogo and not alta_contratacion %} <span aria-hidden="true">*</span>{% endif %}</label>
-                    {{ campo }}
-                    {% if campo.help_text %}<small class="nota-campo" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</small>{% endif %}
-                    {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                <div class="formulario-fila-doble">
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.horas_organizador.id_for_label }}">{{ formulario.horas_organizador.label }}</label>
+                        {{ formulario.horas_organizador }}
+                        {% if formulario.horas_organizador.help_text %}<small class="formulario-ayuda">{{ formulario.horas_organizador.help_text }}</small>{% endif %}
+                        {% for error in formulario.horas_organizador.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.horas_invitado.id_for_label }}">{{ formulario.horas_invitado.label }}</label>
+                        {{ formulario.horas_invitado }}
+                        {% if formulario.horas_invitado.help_text %}<small class="formulario-ayuda">{{ formulario.horas_invitado.help_text }}</small>{% endif %}
+                        {% for error in formulario.horas_invitado.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+                <div class="formulario-fila-doble">
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.precio_vigente.id_for_label }}">{{ formulario.precio_vigente.label }}</label>
+                        {{ formulario.precio_vigente }}
+                        {% if formulario.precio_vigente.help_text %}<small class="formulario-ayuda">{{ formulario.precio_vigente.help_text }}</small>{% endif %}
+                        {% for error in formulario.precio_vigente.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.precio_invitado_vigente.id_for_label }}">{{ formulario.precio_invitado_vigente.label }}</label>
+                        {{ formulario.precio_invitado_vigente }}
+                        {% if formulario.precio_invitado_vigente.help_text %}<small class="formulario-ayuda">{{ formulario.precio_invitado_vigente.help_text }}</small>{% endif %}
+                        {% for error in formulario.precio_invitado_vigente.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
                 </div>
             {% endif %}
-        {% endfor %}
-        {% block formulario_acciones %}
-        <div class="acciones-formulario">
-            {% if alta_catalogo %}<button class="boton boton-primario" type="submit">{{ texto_boton }}</button>{% endif %}
-            <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-            {% if not alta_catalogo %}<button class="boton boton-primario" type="submit">{{ texto_boton }}</button>{% endif %}
-        </div>
-        {% endblock %}
-    </form>
-</section>
+
+            {% include "componentes/observaciones_opcionales.html" with campo=formulario.descripcion texto_disparador="Agregar descripción" only %}
+
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+                <button class="boton boton-primario" type="submit">{{ texto_boton }}</button>
+            </div>
+        </form>
+    </section>
+</div>
 {% endblock %}

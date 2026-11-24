@@ -41,7 +41,7 @@
                     <form class="formulario-en-linea" method="post" action="{% url 'membresias:plan_cambiar_estado' plan.pk %}"
                           data-confirmar="{% if plan.estado == 'activo' %}¿Desactivar el plan {{ plan.nombre }}? Dejará de estar disponible para nuevas contrataciones.{% else %}¿Activar el plan {{ plan.nombre }}?{% endif %}"
                           data-confirmar-titulo="{% if plan.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} plan"
-                          data-confirmar-boton="{% if plan.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} plan">
+                          data-confirmar-boton="{% if plan.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} plan"{% if plan.estado == 'activo' %} data-confirmar-peligro{% endif %}>
                         {% csrf_token %}
                         <input type="hidden" name="version" value="{{ version }}">
                         <input type="hidden" name="estado" value="{% if plan.estado == 'activo' %}inactivo{% else %}activo{% endif %}">

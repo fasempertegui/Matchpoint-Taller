@@ -13,7 +13,6 @@ class ReservaAnulacionForm(forms.Form):
     motivo = forms.CharField(
         label="Motivo de anulación",
         min_length=5,
-        help_text="Mínimo 5 caracteres",
         error_messages={
             "required": "Indicá el motivo de la anulación.",
             "min_length": "El motivo de anulación debe tener al menos 5 caracteres.",

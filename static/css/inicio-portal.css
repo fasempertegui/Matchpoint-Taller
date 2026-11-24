@@ -17,6 +17,7 @@
 .portal-ubicacion dt { color: #e6daf0; font-size: .8rem; }
 .portal-ubicacion dd { margin: 4px 0 0; font-weight: 600; }
 .portal-enlace { color: var(--primario); font-size: .9rem; font-weight: 600; }
+.portal-enlace-boton { padding: 0; border: 0; background: transparent; font-family: inherit; cursor: pointer; }
 .portal-enlace:hover { color: var(--primario-hover); }
 .portal-sin-datos { margin: 0; color: var(--texto-suave); font-size: 1rem; line-height: 1.5; }
 .portal-contratos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }

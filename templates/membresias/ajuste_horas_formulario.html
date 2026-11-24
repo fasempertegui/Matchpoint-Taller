@@ -1,31 +1,75 @@
-{% extends "base.html" %}{% load tablas static %}
+{% extends "base.html" %}
+{% load encabezados formularios tablas %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1>{{ titulo }}</h1>
-    <p>{{ contratacion.usuario }} · {{ contratacion.mes_cubierto|date:"F Y" }}<br>{{ contratacion.membresia.nombre }}</p>
-    <form method="post">{% csrf_token %}
-        {% if revision %}
-            <h2>Revisar efecto</h2>
-            {% tabla_datos etiqueta="Resumen del ajuste de horas" %}
-                <tr><th scope="row">Tipo de horas</th><td>{{ revision.tipo_horas_texto }}</td></tr>
-                <tr><th scope="row">Operación</th><td>{{ revision.operacion_texto }} {{ revision.datos.cantidad }} hora{{ revision.datos.cantidad|pluralize }}</td></tr>
-                <tr><th scope="row">Disponibles ahora</th><td>{{ revision.saldo_actual }}</td></tr>
-                <tr><th scope="row">Disponibles después</th><td>{{ revision.saldo_resultante }}</td></tr>
-                <tr><th scope="row">Motivo visible al titular</th><td>{{ revision.datos.motivo|linebreaksbr }}</td></tr>
-            {% endtabla_datos %}
-            <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
-            <p>El ajuste afecta sólo a esta contratación y tipo de horas. No modifica el cupo base, las participaciones existentes ni los movimientos de dinero.</p>
-        {% else %}
-            {{ formulario.non_field_errors }}
-            {% for campo in formulario %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}</div>{% endfor %}
-        {% endif %}
-        <div class="acciones-formulario">
-            {% if revision %}<button class="boton boton-secundario" name="paso" value="editar">Volver</button>{% endif %}
-            <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-            <button class="boton boton-primario" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar{% else %}Revisar efecto{% endif %}</button>
-        </div>
-    </form>
-</section>
+<div class="formulario-pagina">
+    {% tarjeta_titulo titulo %}
+        <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">Volver al detalle</a>
+    {% endtarjeta_titulo %}
+
+    {% if revision %}
+        {% pasos_formulario 2 2 nombre="Revisar efecto" etiqueta="Progreso de ajuste de horas" %}
+    {% else %}
+        {% pasos_formulario 1 2 nombre="Datos del ajuste" etiqueta="Progreso de ajuste de horas" %}
+    {% endif %}
+
+    <section class="tarjeta formulario-cuerpo">
+        {% tabla_datos etiqueta="Datos de la contratación" %}
+            <tr><th scope="row">Usuario</th><td>{{ contratacion.usuario }}</td></tr>
+            <tr><th scope="row">Membresía</th><td>{{ contratacion.membresia.nombre }}</td></tr>
+            <tr><th scope="row">Período cubierto</th><td>{{ contratacion.mes_cubierto|date:"F \d\e Y"|capfirst }}</td></tr>
+        {% endtabla_datos %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if revision %}
+                <h2 class="formulario-seccion-titulo">Efecto del ajuste</h2>
+                {% tabla_datos etiqueta="Resumen del ajuste de horas" %}
+                    <tr><th scope="row">Tipo de horas</th><td>{{ revision.tipo_horas_texto }}</td></tr>
+                    <tr><th scope="row">Operación</th><td>{{ revision.operacion_texto }} {{ revision.datos.cantidad }} hora{{ revision.datos.cantidad|pluralize }}</td></tr>
+                    <tr><th scope="row">Disponibles ahora</th><td>{{ revision.saldo_actual }}</td></tr>
+                    <tr><th scope="row">Disponibles después</th><td><strong>{{ revision.saldo_resultante }}</strong></td></tr>
+                    <tr><th scope="row">Motivo visible al titular</th><td>{{ revision.datos.motivo }}</td></tr>
+                {% endtabla_datos %}
+                <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+                <div class="formulario-aviso">
+                    <p>El ajuste afecta sólo a esta contratación y tipo de horas. No modifica el cupo base, las participaciones existentes ni los movimientos de dinero.</p>
+                </div>
+            {% else %}
+                {% if formulario.non_field_errors %}
+                    <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+                {% endif %}
+                <div class="formulario-fila-triple">
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.tipo_horas.id_for_label }}">{{ formulario.tipo_horas.label }}</label>
+                        {{ formulario.tipo_horas }}
+                        {% for error in formulario.tipo_horas.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.operacion.id_for_label }}">{{ formulario.operacion.label }}</label>
+                        {{ formulario.operacion }}
+                        {% for error in formulario.operacion.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.cantidad.id_for_label }}">{{ formulario.cantidad.label }}</label>
+                        {{ formulario.cantidad }}
+                        {% for error in formulario.cantidad.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+                <div class="grupo-campo">
+                    <label for="{{ formulario.motivo.id_for_label }}">{{ formulario.motivo.label }}</label>
+                    {{ formulario.motivo }}
+                    {% if formulario.motivo.help_text %}<small class="formulario-ayuda">{{ formulario.motivo.help_text }}</small>{% endif %}
+                    {% for error in formulario.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+                {% if revision %}<button class="boton boton-secundario" type="submit" name="paso" value="editar">Volver</button>{% endif %}
+                <button class="boton boton-primario" type="submit" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar ajuste{% else %}Revisar efecto{% endif %}</button>
+            </div>
+        </form>
+    </section>
+</div>
 {% endblock %}

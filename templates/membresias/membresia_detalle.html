@@ -41,7 +41,7 @@
                     <form class="formulario-en-linea" method="post" action="{% url 'membresias:membresia_cambiar_estado' membresia.pk %}"
                           data-confirmar="{% if membresia.estado == 'activo' %}¿Desactivar la membresía {{ membresia.nombre }}? Dejará de estar disponible para nuevas contrataciones.{% else %}¿Activar la membresía {{ membresia.nombre }}?{% endif %}"
                           data-confirmar-titulo="{% if membresia.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} membresía"
-                          data-confirmar-boton="{% if membresia.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} membresía">
+                          data-confirmar-boton="{% if membresia.estado == 'activo' %}Desactivar{% else %}Activar{% endif %} membresía"{% if membresia.estado == 'activo' %} data-confirmar-peligro{% endif %}>
                         {% csrf_token %}
                         <input type="hidden" name="version" value="{{ version }}">
                         <input type="hidden" name="estado" value="{% if membresia.estado == 'activo' %}inactivo{% else %}activo{% endif %}">
