@@ -1,21 +1,22 @@
 {% extends "base.html" %}
-{% load tablas static %}
+{% load encabezados tablas static %}
 
 {% block titulo %}Quitar horario especial | Academia TM{% endblock %}
 
 {% block estilos %}
-<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
 <link rel="stylesheet" href="{% static 'css/feriado-formulario.css' %}">
 {% endblock %}
 
 {% block contenido %}
-<div class="feriado-formulario">
-    <section class="tarjeta tarjeta-formulario formulario-guiado">
-        <form method="post" aria-labelledby="quitar-horario-titulo">
+<div class="formulario-pagina formulario-pagina-amplia">
+    {% tarjeta_titulo "Quitar horario especial" subtitulo=horario.sede.nombre descripcion="Al quitar este horario especial, la sede volverá a regirse por su horario habitual para esa fecha." %}
+        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}">Volver al listado</a>
+    {% endtarjeta_titulo %}
+
+    <section class="tarjeta formulario-cuerpo">
+        <form method="post" aria-label="Quitar horario especial">
             {% csrf_token %}
             <input type="hidden" name="confirmacion" value="{{ revision.confirmacion|default:'' }}">
-            <h1 id="quitar-horario-titulo">Quitar horario especial</h1>
-            <p class="feriado-introduccion">Al quitar este horario especial, la sede volverá a regirse por su horario habitual para esa fecha.</p>
 
             {% tabla_datos etiqueta="Datos del horario especial" %}
                 <tr><th scope="row">Sede</th><td>{{ horario.sede.nombre }}</td></tr>
@@ -27,9 +28,9 @@
                         {% if horario.cerrada %}
                             Sede cerrada todo el día
                         {% else %}
-                            {{ horario.hora_inicio_1|time:"H:i" }} a {{ horario.hora_fin_1|time:"H:i" }}
+                            De {{ horario.hora_inicio_1|time:"H:i" }} a {{ horario.hora_fin_1|time:"H:i" }}
                             {% if horario.hora_inicio_2 %}
-                                y {{ horario.hora_inicio_2|time:"H:i" }} a {{ horario.hora_fin_2|time:"H:i" }}
+                                y de {{ horario.hora_inicio_2|time:"H:i" }} a {{ horario.hora_fin_2|time:"H:i" }}
                             {% endif %}
                         {% endif %}
                     </td>
@@ -37,7 +38,7 @@
             {% endtabla_datos %}
 
             {% if revision.conflictos %}
-                <div class="mensaje mensaje-error" role="alert">
+                <div class="formulario-aviso formulario-aviso-peligro" role="alert">
                     <ul>
                         {% for conflicto in revision.conflictos %}
                             <li>{{ conflicto }}</li>
@@ -51,10 +52,10 @@
             {% endif %}
 
             <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}">Cancelar</a>
                 {% if not revision.conflictos and revision.confirmacion %}
                     <button class="boton boton-confirmar-peligro" type="submit">{% if revision.eventos %}Quitar y anular actividades{% else %}Quitar horario especial{% endif %}</button>
                 {% endif %}
-                <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}">Cancelar</a>
             </div>
         </form>
     </section>

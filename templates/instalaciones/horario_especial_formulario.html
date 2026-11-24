@@ -1,30 +1,37 @@
 {% extends "base.html" %}
-{% load tablas static %}
+{% load encabezados formularios tablas static %}
 
 {% block titulo %}
 {% if revision %}Revisar horario especial{% elif es_edicion %}Editar horario especial{% else %}Nuevo horario especial{% endif %} | Academia TM
 {% endblock %}
 
 {% block estilos %}
-<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">
 <link rel="stylesheet" href="{% static 'css/sede-horarios.css' %}">
 <link rel="stylesheet" href="{% static 'css/feriado-formulario.css' %}">
 {% endblock %}
 
 {% block contenido %}
-<div class="horarios-pagina feriado-formulario">
-    <section class="tarjeta tarjeta-formulario formulario-guiado">
-        <form method="post" novalidate data-horario-especial aria-labelledby="horario-especial-titulo">
+<div class="formulario-pagina formulario-pagina-amplia horarios-pagina">
+    {% if revision %}
+        {% tarjeta_titulo "Revisar horario especial" subtitulo="Horarios especiales de sedes" %}
+            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}">Volver al listado</a>
+        {% endtarjeta_titulo %}
+        {% pasos_formulario 2 2 nombre="Revisar actividades afectadas" etiqueta="Progreso del horario especial" %}
+    {% elif es_edicion %}
+        {% tarjeta_titulo "Editar horario especial" subtitulo=horario.sede.nombre descripcion="Modificá el horario particular o el cierre de la sede para esta fecha." %}
+            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}">Volver al listado</a>
+        {% endtarjeta_titulo %}
+        {% pasos_formulario 1 2 nombre="Definir fecha y horario" etiqueta="Progreso del horario especial" %}
+    {% else %}
+        {% tarjeta_titulo "Nuevo horario especial" subtitulo="Horarios especiales de sedes" descripcion="Definí un horario particular o el cierre de una sede para una fecha puntual." %}
+            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}">Volver al listado</a>
+        {% endtarjeta_titulo %}
+        {% pasos_formulario 1 2 nombre="Definir fecha y horario" etiqueta="Progreso del horario especial" %}
+    {% endif %}
+
+    <section class="tarjeta formulario-cuerpo">
+        <form method="post" novalidate data-horario-especial aria-label="Horario especial de sede">
             {% csrf_token %}
-            <h1 id="horario-especial-titulo">
-                {% if revision %}
-                    Revisar horario especial
-                {% elif es_edicion %}
-                    Editar horario especial
-                {% else %}
-                    Nuevo horario especial
-                {% endif %}
-            </h1>
 
             {% if formulario.non_field_errors %}
                 <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
@@ -59,9 +66,9 @@
                             {% if horario_revisado.cerrada %}
                                 Sede cerrada todo el día
                             {% else %}
-                                {{ horario_revisado.hora_inicio_1|time:"H:i" }} a {{ horario_revisado.hora_fin_1|time:"H:i" }}
+                                De {{ horario_revisado.hora_inicio_1|time:"H:i" }} a {{ horario_revisado.hora_fin_1|time:"H:i" }}
                                 {% if horario_revisado.hora_inicio_2 %}
-                                    y {{ horario_revisado.hora_inicio_2|time:"H:i" }} a {{ horario_revisado.hora_fin_2|time:"H:i" }}
+                                    y de {{ horario_revisado.hora_inicio_2|time:"H:i" }} a {{ horario_revisado.hora_fin_2|time:"H:i" }}
                                 {% endif %}
                             {% endif %}
                         </td>
@@ -69,7 +76,7 @@
                 {% endtabla_datos %}
 
                 {% if revision.conflictos %}
-                    <div class="mensaje mensaje-error" role="alert">
+                    <div class="formulario-aviso formulario-aviso-peligro" role="alert">
                         <ul>
                             {% for conflicto in revision.conflictos %}
                                 <li>{{ conflicto }}</li>
@@ -83,27 +90,27 @@
                 {% endif %}
 
                 <div class="acciones-formulario">
+                    <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}">Cancelar</a>
+                    <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a editar</button>
                     {% if not revision.conflictos and revision.confirmacion %}
                         <button class="boton {% if revision.eventos %}boton-confirmar-peligro{% else %}boton-primario{% endif %}" name="paso" value="confirmar" type="submit">
                             {% if revision.eventos %}Confirmar y anular actividades{% elif es_edicion %}Guardar cambios{% else %}Confirmar horario especial{% endif %}
                         </button>
                     {% endif %}
-                    <button class="boton boton-secundario" name="paso" value="editar" type="submit">Volver a editar</button>
-                    <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}">Cancelar</a>
                 </div>
             {% else %}
-                <p class="feriado-introduccion">Definí un horario particular o el cierre de una sede para una fecha puntual.</p>
+                <div class="formulario-fila-doble">
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.sede.id_for_label }}">{{ formulario.sede.label }}</label>
+                        {{ formulario.sede }}
+                        {% for error in formulario.sede.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
 
-                <div class="grupo-campo">
-                    <label for="{{ formulario.sede.id_for_label }}">{{ formulario.sede.label }}</label>
-                    {{ formulario.sede }}
-                    {% for error in formulario.sede.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-                </div>
-
-                <div class="grupo-campo">
-                    <label for="{{ formulario.fecha.id_for_label }}">{{ formulario.fecha.label }}</label>
-                    {{ formulario.fecha }}
-                    {% for error in formulario.fecha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.fecha.id_for_label }}">{{ formulario.fecha.label }}</label>
+                        {{ formulario.fecha }}
+                        {% for error in formulario.fecha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
                 </div>
 
                 <div class="grupo-campo">
@@ -147,10 +154,10 @@
                 </fieldset>
 
                 <div class="acciones-formulario">
+                    <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}">Cancelar</a>
                     <button class="boton boton-primario" name="paso" value="revisar" type="submit">
                         {% if es_edicion %}Revisar cambios{% else %}Guardar horario especial{% endif %}
                     </button>
-                    <a class="boton boton-secundario" href="{% url 'instalaciones:horarios_especiales' %}">Cancelar</a>
                 </div>
             {% endif %}
         </form>

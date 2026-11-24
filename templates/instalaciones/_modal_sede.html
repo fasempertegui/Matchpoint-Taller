@@ -1,0 +1,22 @@
+{% load formularios %}
+{% if sede %}{% url 'instalaciones:sede_editar' sede.pk as accion_url %}{% else %}{% url 'instalaciones:sede_crear' as accion_url %}{% endif %}
+{% modal_formulario titulo action=accion_url subtitulo="Sedes" texto_enviar=texto_boton %}
+    {% if not sede %}
+        <p class="formulario-introduccion">Esta información es pública y puede verla cualquier usuario registrado.</p>
+    {% endif %}
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    {% for campo in formulario %}
+        {% if campo.name == "observaciones" %}
+            {% include "componentes/observaciones_opcionales.html" with campo=campo only %}
+        {% else %}
+            <div class="grupo-campo">
+                <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                {{ campo }}
+                {% if campo.help_text %}<small class="formulario-ayuda">{{ campo.help_text }}</small>{% endif %}
+                {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endmodal_formulario %}

@@ -66,7 +66,7 @@
                         <section class="perfil-seccion" aria-labelledby="sede-administracion-titulo">
                             <h2 id="sede-administracion-titulo">Administración</h2>
                             <div class="perfil-acciones perfil-acciones-botones">
-                                <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_editar' sede.pk %}">Editar sede</a>
+                                <button class="boton boton-secundario boton-chico" type="button" data-abrir-modal-url="{% url 'instalaciones:sede_editar' sede.pk %}">Editar sede</button>
                                 <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:sede_cambiar_estado' sede.pk %}"
                                       data-confirmar="{% if sede.estado == 'activa' %}¿Desactivar la sede {{ sede.nombre }}? Dejará de ofrecerse para nuevas clases y reservas. No puede tener reservas Programadas. Las canchas y el historial se conservan.{% else %}¿Activar la sede {{ sede.nombre }}? Volverá a ofrecerse para nuevas clases y reservas.{% endif %}"
                                       data-confirmar-titulo="{% if sede.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} sede"
@@ -89,9 +89,9 @@
             <div class="encabezado-pagina encabezado-seccion">
                 <h2>Canchas</h2>
                 {% if perms.instalaciones.add_cancha %}
-                    <a class="boton boton-primario boton-chico" href="{% url 'instalaciones:cancha_crear' sede.pk %}">
+                    <button class="boton boton-primario boton-chico" type="button" data-abrir-modal-url="{% url 'instalaciones:cancha_crear' sede.pk %}">
                         Nueva cancha
-                    </a>
+                    </button>
                 {% endif %}
             </div>
 
@@ -116,9 +116,9 @@
                                 <td class="acciones-columna">
                                     <div class="acciones">
                                         {% if perms.instalaciones.change_cancha %}
-                                            <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:cancha_editar' sede.pk cancha.pk %}">
+                                            <button class="boton boton-secundario boton-chico" type="button" data-abrir-modal-url="{% url 'instalaciones:cancha_editar' sede.pk cancha.pk %}">
                                                 Editar
-                                            </a>
+                                            </button>
                                             <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:cancha_cambiar_estado' sede.pk cancha.pk %}"
                                                   data-confirmar="{% if cancha.estado == 'activa' %}¿Desactivar la cancha {{ cancha.nombre }}? No puede tener reservas Programadas. El historial se conserva.{% else %}¿Activar la cancha {{ cancha.nombre }}?{% endif %}"
                                                   data-confirmar-titulo="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha"
@@ -192,9 +192,9 @@
                 <div class="encabezado-pagina encabezado-seccion">
                     <h2>Precio de reservas</h2>
                     {% if puede_configurar_precio %}
-                        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_precio_configurar' sede.pk %}">
+                        <button class="boton boton-secundario boton-chico" type="button" data-abrir-modal-url="{% url 'instalaciones:sede_precio_configurar' sede.pk %}">
                             {% if sede.precio_reserva_vigente is None %}Configurar precio{% else %}Actualizar precio{% endif %}
-                        </a>
+                        </button>
                     {% endif %}
                 </div>
                 {% tabla_datos etiqueta="Precio de reservas" %}

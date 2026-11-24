@@ -13,9 +13,9 @@
 {% block contenido %}
 {% tarjeta_titulo "Instalaciones" descripcion="Consultá y administrá las sedes de la academia y sus canchas." %}
     {% if perms.instalaciones.add_sede %}
-        <a class="boton boton-primario" href="{% url 'instalaciones:sede_crear' %}">
+        <button class="boton boton-primario" type="button" data-abrir-modal-url="{% url 'instalaciones:sede_crear' %}">
             Nueva sede
-        </a>
+        </button>
     {% endif %}
 {% endtarjeta_titulo %}
 

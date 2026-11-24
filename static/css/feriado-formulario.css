@@ -1,65 +1,18 @@
-.feriado-advertencia {
-    border-color: #fcd34d;
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.formulario-guiado-ayuda .feriado-advertencia,
-.formulario-guiado-ayuda .feriado-ayuda-detalle {
-    margin-top: 16px;
-}
-
-.feriado-formulario .acciones-formulario {
-    flex-wrap: wrap;
-}
-
 .feriado-revision-clases {
-    margin-top: 24px;
-    padding-top: 24px;
+    display: grid;
+    gap: 14px;
+    padding-top: 16px;
     border-top: 1px solid var(--borde);
-}
-
-.feriado-revision-clases h2 {
-    margin: 0 0 12px;
-    font-size: 1.15rem;
 }
 
 .feriado-revision-clases p {
     margin: 0;
 }
 
-.feriado-revision-clases .nota-campo,
-.feriado-revision-clases .tabla-contenedor {
-    margin-top: 16px;
+.formulario-aviso ul {
+    margin: 0;
+    padding-left: 18px;
 }
-
-.feriado-revision-clases h2 + .nota-campo {
-    margin-top: 0;
-}
-
-.feriado-revision-clases .feriado-conservacion {
-    margin-top: 16px;
-}
-
-.contenido-feriados .tarjeta,
-.contenido-feriados .boton,
-.contenido-feriados .form-control {
-    border-radius: 10px;
-}
-
-.contenido-feriados .formulario-guiado {
-    width: 100%;
-    max-width: none;
-    background: var(--superficie);
-    border-top: 3px solid var(--primario-medio);
-}
-
-.feriado-introduccion {
-    margin: 0 0 24px;
-    color: var(--texto-suave);
-}
-
-.contenido-feriados .formulario-guiado .grupo-campo { margin-bottom: 20px; }
 
 .horarios-filtro-busqueda {
     flex: 0 1 50%;
@@ -172,15 +125,6 @@
     white-space: nowrap;
 }
 
-.contenido-feriados .acciones-formulario {
-    justify-content: flex-start;
-    gap: 10px;
-    margin: 24px -20px -20px;
-    padding: 16px 20px;
-    border-top: 1px solid var(--borde);
-    border-radius: 0 0 10px 10px;
-}
-
 .feriados-lista {
     padding: 0;
     overflow: hidden;
@@ -227,21 +171,6 @@
     color: var(--primario);
 }
 
-.horarios-tipo-efectos {
-    flex: 1;
-    padding: 14px 16px;
-    border-radius: 10px;
-    background: var(--primario-suave);
-    font-size: 0.9rem;
-}
-
-.horarios-tipo-efectos ul {
-    display: grid;
-    gap: 6px;
-    margin: 8px 0 0;
-    padding-inline-start: 18px;
-}
-
 .horarios-acciones-fila {
     display: inline-flex;
     gap: 6px;
@@ -262,81 +191,4 @@
 
 @media (max-width: 720px) {
     .horarios-tipos { grid-template-columns: minmax(0, 1fr); }
-}
-
-.horario-modal.horario-modal-revision {
-    width: min(820px, calc(100% - 32px));
-}
-
-.horario-modal [data-modal-titulo]:focus {
-    outline: none;
-}
-
-.horario-modal .modal-confirmacion-contenido .feriado-introduccion {
-    margin: 0 0 16px;
-    white-space: normal;
-}
-
-.horario-modal .modal-confirmacion-contenido .error-campo {
-    margin: 6px 0 0;
-    white-space: normal;
-}
-
-.horario-modal .modal-confirmacion-contenido .horario-ayuda {
-    margin: 8px 0 0;
-    white-space: normal;
-}
-
-.horario-modal .modal-confirmacion-contenido .nota-campo {
-    margin-top: 12px;
-    white-space: normal;
-}
-
-.horario-modal .modal-confirmacion-contenido .feriado-conservacion {
-    margin-top: 16px;
-    white-space: normal;
-}
-
-.horario-modal .grupo-campo {
-    margin-bottom: 16px;
-}
-
-.horario-modal .grupo-campo:last-child,
-.horario-modal .horario-franjas {
-    margin-bottom: 0;
-}
-
-.horario-modal .mensaje {
-    margin-bottom: 16px;
-}
-
-.horario-modal .mensaje ul {
-    margin: 0;
-    padding-left: 18px;
-}
-
-.horario-modal .mensaje .errorlist {
-    padding-left: 0;
-    list-style: none;
-}
-
-.horario-modal .tabla-datos + .mensaje {
-    margin-top: 16px;
-}
-
-.horario-modal .feriado-revision-clases {
-    margin-top: 20px;
-    padding-top: 20px;
-}
-
-.horario-modal .feriado-revision-clases h2,
-.horario-modal .feriado-revision-clases h3 {
-    margin: 0 0 12px;
-    font-family: var(--fuente-titulos);
-    font-size: 1.1rem;
-}
-
-.horario-modal .feriado-revision-clases .tabla-contenedor {
-    border: 1px solid var(--borde);
-    border-radius: 10px;
 }

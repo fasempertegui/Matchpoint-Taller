@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from psycopg.errors import UniqueViolation
 
+from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
 from reservas.models import Evento
 from usuarios.models import Rol
 
@@ -77,6 +78,11 @@ def sede_precio_configurar(request, pk):
     if not request.user.tiene_rol(Rol.ADMINISTRADOR):
         raise PermissionDenied
 
+    destino = reverse("instalaciones:sede_detalle", args=[pk]) + "#precios"
+    if not es_peticion_modal(request):
+        get_object_or_404(Sede, pk=pk)
+        return redirect(destino)
+
     with transaction.atomic():
         sedes = Sede.objects.all()
         if request.method == "POST":
@@ -104,14 +110,20 @@ def sede_precio_configurar(request, pk):
                 sede = formulario.save(commit=False)
                 sede.save(update_fields=["precio_reserva_vigente", "actualizado_en"])
                 messages.success(request, "El precio por turno fue guardado.")
-                return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#precios")
+                return respuesta_modal_exito(destino)
 
-    return render(request, "instalaciones/sede_precio_formulario.html", {
-        "sede": sede,
-        "formulario": formulario,
-        "precio_actual": precio_actual,
-        "titulo": "Configurar precio por turno" if precio_actual is None else "Actualizar precio por turno",
-    })
+    return respuesta_modal_html(
+        request,
+        "instalaciones/_modal_sede_precio.html",
+        {
+            "sede": sede,
+            "formulario": formulario,
+            "precio_actual": precio_actual,
+            "titulo": "Configurar precio por turno" if precio_actual is None else "Actualizar precio por turno",
+        },
+        status=400 if formulario.errors else 200,
+        errores=bool(formulario.errors),
+    )
 
 
 @login_required
@@ -205,6 +217,10 @@ def sede_horario_configurar(request, pk, dia=None):
 @permission_required("instalaciones.add_sede", raise_exception=True)
 @require_http_methods(["GET", "POST"])
 def sede_crear(request):
+    destino = reverse("instalaciones:sede_lista")
+    if not es_peticion_modal(request):
+        return redirect(destino)
+
     formulario = SedeForm(request.POST if request.method == "POST" else None)
 
     if request.method == "POST" and formulario.is_valid():
@@ -220,16 +236,18 @@ def sede_crear(request):
             formulario.add_error("nombre", "Ya existe una sede con ese nombre.")
         else:
             messages.success(request, f'La sede "{sede.nombre}" fue creada.')
-            return redirect("instalaciones:sede_lista")
+            return respuesta_modal_exito(destino)
 
-    return render(
+    return respuesta_modal_html(
         request,
-        "instalaciones/sede_formulario.html",
+        "instalaciones/_modal_sede.html",
         {
             "formulario": formulario,
             "titulo": "Nueva sede",
             "texto_boton": "Crear sede",
         },
+        status=400 if formulario.errors else 200,
+        errores=bool(formulario.errors),
     )
 
 
@@ -238,6 +256,10 @@ def sede_crear(request):
 @require_http_methods(["GET", "POST"])
 def sede_editar(request, pk):
     sede = get_object_or_404(Sede, pk=pk)
+    destino = reverse("instalaciones:sede_detalle", args=[sede.pk])
+    if not es_peticion_modal(request):
+        return redirect(destino)
+
     titulo = f"Editar {sede.nombre}"
     formulario = SedeForm(
         request.POST if request.method == "POST" else None,
@@ -258,17 +280,19 @@ def sede_editar(request, pk):
             formulario.add_error("nombre", "Ya existe una sede con ese nombre.")
         else:
             messages.success(request, f'La sede "{sede.nombre}" fue actualizada.')
-            return redirect("instalaciones:sede_lista")
+            return respuesta_modal_exito(destino)
 
-    return render(
+    return respuesta_modal_html(
         request,
-        "instalaciones/sede_formulario.html",
+        "instalaciones/_modal_sede.html",
         {
             "formulario": formulario,
             "titulo": titulo,
             "texto_boton": "Guardar cambios",
             "sede": sede,
         },
+        status=400 if formulario.errors else 200,
+        errores=bool(formulario.errors),
     )
 
 
@@ -298,6 +322,10 @@ def sede_cambiar_estado(request, pk):
 @require_http_methods(["GET", "POST"])
 def cancha_crear(request, sede_pk):
     sede = get_object_or_404(Sede, pk=sede_pk)
+    destino = reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas"
+    if not es_peticion_modal(request):
+        return redirect(destino)
+
     formulario = CanchaForm(
         request.POST if request.method == "POST" else None,
         sede=sede,
@@ -316,17 +344,19 @@ def cancha_crear(request, sede_pk):
             formulario.add_error("nombre", "Ya existe una cancha con ese nombre en esta sede.")
         else:
             messages.success(request, f'La cancha "{cancha.nombre}" fue creada.')
-            return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas")
+            return respuesta_modal_exito(destino)
 
-    return render(
+    return respuesta_modal_html(
         request,
-        "instalaciones/cancha_formulario.html",
+        "instalaciones/_modal_cancha.html",
         {
             "formulario": formulario,
             "sede": sede,
             "titulo": "Nueva cancha",
             "texto_boton": "Crear cancha",
         },
+        status=400 if formulario.errors else 200,
+        errores=bool(formulario.errors),
     )
 
 
@@ -336,6 +366,10 @@ def cancha_crear(request, sede_pk):
 def cancha_editar(request, sede_pk, pk):
     sede = get_object_or_404(Sede, pk=sede_pk)
     cancha = get_object_or_404(Cancha, pk=pk, sede=sede)
+    destino = reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas"
+    if not es_peticion_modal(request):
+        return redirect(destino)
+
     titulo = f"Editar {cancha.nombre}"
     formulario = CanchaForm(
         request.POST if request.method == "POST" else None,
@@ -357,11 +391,11 @@ def cancha_editar(request, sede_pk, pk):
             formulario.add_error("nombre", "Ya existe una cancha con ese nombre en esta sede.")
         else:
             messages.success(request, f'La cancha "{cancha.nombre}" fue actualizada.')
-            return redirect(reverse("instalaciones:sede_detalle", args=[sede.pk]) + "#canchas")
+            return respuesta_modal_exito(destino)
 
-    return render(
+    return respuesta_modal_html(
         request,
-        "instalaciones/cancha_formulario.html",
+        "instalaciones/_modal_cancha.html",
         {
             "formulario": formulario,
             "sede": sede,
@@ -369,6 +403,8 @@ def cancha_editar(request, sede_pk, pk):
             "titulo": titulo,
             "texto_boton": "Guardar cambios",
         },
+        status=400 if formulario.errors else 200,
+        errores=bool(formulario.errors),
     )
 
 

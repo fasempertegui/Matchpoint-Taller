@@ -172,7 +172,19 @@ document.addEventListener("DOMContentLoaded", function () {
             if (resultado.ok && datos.ok) {
                 cerrarDialogo();
                 if (datos.redirect) {
-                    window.location.assign(datos.redirect);
+                    var destino = new URL(datos.redirect, window.location.href);
+                    if (
+                        destino.origin === window.location.origin
+                        && destino.pathname === window.location.pathname
+                        && destino.search === window.location.search
+                    ) {
+                        if (destino.hash) {
+                            window.history.replaceState(null, "", destino.href);
+                        }
+                        window.location.reload();
+                    } else {
+                        window.location.assign(destino.href);
+                    }
                 } else {
                     window.location.reload();
                 }

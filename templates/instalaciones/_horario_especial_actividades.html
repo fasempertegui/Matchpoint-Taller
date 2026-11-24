@@ -1,6 +1,6 @@
 {% load tablas %}
 <section class="feriado-revision-clases" aria-labelledby="eventos-titulo">
-    <h2 id="eventos-titulo">Actividades que se anularán ({{ eventos|length }})</h2>
+    <h2 class="formulario-seccion-titulo" id="eventos-titulo">Actividades que se anularán ({{ eventos|length }})</h2>
     <div class="tabla-contenedor tabla-embebida">
         {% tabla %}
             <thead><tr><th scope="col">Actividad</th><th scope="col">Cancha</th><th scope="col">Horario</th></tr></thead>
@@ -23,5 +23,7 @@
             </tbody>
         {% endtabla %}
     </div>
-    <p class="nota-campo">Se enviarán los avisos correspondientes. Si hay cobros, las devoluciones se registran por separado.</p>
+    <div class="formulario-aviso">
+        <p>Se enviarán los avisos correspondientes. Si hay cobros, las devoluciones se registran por separado.</p>
+    </div>
 </section>

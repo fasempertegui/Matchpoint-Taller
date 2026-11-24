@@ -217,6 +217,11 @@
 }
 
 /* 5. Modal unificado (confirmación, formulario breve y revisión de efecto) */
+.modal-unificado [hidden],
+.formulario-pagina [hidden] {
+    display: none;
+}
+
 .modal-unificado {
     width: min(520px, calc(100% - 32px));
     max-height: calc(100dvh - 32px);
@@ -251,13 +256,11 @@
     gap: 16px;
     padding: 18px 24px;
     background: var(--primario-suave);
-    border-top: 3px solid var(--primario);
     border-bottom: 1px solid var(--borde);
 }
 
 .modal-peligro .modal-cabecera {
     background: #fdf2f2;
-    border-top-color: var(--peligro);
 }
 
 .modal-cabecera-identidad {

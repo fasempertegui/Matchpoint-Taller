@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load encabezados static %}
 
 {% block titulo %}Horarios de {{ sede.nombre }} | Academia TM{% endblock %}
 
@@ -8,15 +8,15 @@
 {% endblock %}
 
 {% block contenido %}
-<div class="horarios-pagina formulario-guiado-distribucion">
-        <section class="tarjeta tarjeta-formulario formulario-guiado">
-            <form method="post" novalidate data-horarios aria-labelledby="horario-configuracion-titulo">
+<div class="formulario-pagina formulario-pagina-amplia horarios-pagina">
+    {% tarjeta_titulo "Horarios de funcionamiento" subtitulo=sede.nombre descripcion="Elegí los días a modificar y definí sus franjas horarias. Los horarios se aplican a todas las canchas de la sede." %}
+        <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}#horarios">Volver a la sede</a>
+    {% endtarjeta_titulo %}
+
+    <div class="horario-disposicion">
+        <section class="tarjeta formulario-cuerpo">
+            <form method="post" novalidate data-horarios aria-label="Configurar horarios de funcionamiento">
                 {% csrf_token %}
-                <header class="formulario-guiado-encabezado">
-                    <h1 id="horario-configuracion-titulo">Horarios de funcionamiento</h1>
-                    <h2>{{ sede.nombre }}</h2>
-                </header>
-                <p class="horario-introduccion">Elegí los días a modificar y definí sus horarios.</p>
 
                 {% if formulario.non_field_errors %}
                     <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
@@ -69,17 +69,15 @@
                 </div>
 
                 <div class="horario-acciones acciones-formulario">
-                    <button class="boton boton-primario horario-aplicar" type="submit" name="accion" value="aplicar" data-aplicar-horarios>Aplicar horarios</button>
-                    <button class="boton boton-secundario horario-cerrar" type="submit" name="accion" value="cerrar" data-cerrar-dias>Marcar como sin funcionamiento</button>
                     <a class="boton boton-secundario" href="{% url 'instalaciones:sede_detalle' sede.pk %}#horarios">Cancelar</a>
+                    <button class="boton boton-secundario horario-cerrar" type="submit" name="accion" value="cerrar" data-cerrar-dias>Sin funcionamiento</button>
+                    <button class="boton boton-primario horario-aplicar" type="submit" name="accion" value="aplicar" data-aplicar-horarios>Aplicar horarios</button>
                 </div>
             </form>
         </section>
 
-        <aside class="formulario-guiado-ayuda horario-semana" aria-labelledby="horario-semana-titulo">
-            <header class="horario-tarjeta-encabezado">
-                <h2 id="horario-semana-titulo">Semana configurada</h2>
-            </header>
+        <aside class="tarjeta horario-semana" aria-labelledby="horario-semana-titulo">
+            <h2 class="formulario-seccion-titulo" id="horario-semana-titulo">Semana configurada</h2>
             <div class="tabla-contenedor">
                 <table>
                     <thead>
@@ -104,8 +102,8 @@
                     </tbody>
                 </table>
             </div>
-            <p class="horario-nota">Los horarios se aplican a todas las canchas de la sede.</p>
         </aside>
+    </div>
 </div>
 <script src="{% static 'js/sede-horarios.js' %}" defer></script>
 {% endblock %}

@@ -1,0 +1,22 @@
+{% load formularios %}
+{% url 'instalaciones:sede_precio_configurar' sede.pk as accion_url %}
+{% modal_formulario titulo action=accion_url subtitulo=sede.nombre texto_enviar="Guardar precio" %}
+    {% if precio_actual is None %}
+        <p class="texto-secundario">Sin precio configurado todavía.</p>
+    {% endif %}
+    {{ formulario.precio_mostrado }}
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    {% for error in formulario.precio_mostrado.errors %}
+        <p class="error-campo" role="alert">{{ error }}</p>
+    {% endfor %}
+    {% for campo in formulario.visible_fields %}
+        <div class="grupo-campo">
+            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+            {{ campo }}
+            <small class="formulario-ayuda">El precio corresponde a una hora y se aplica a todas las canchas de la sede. Las reservas existentes conservan su importe.</small>
+            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+    {% endfor %}
+{% endmodal_formulario %}

@@ -12,19 +12,34 @@
     --horario-violeta-suave: var(--primario-suave);
     --horario-control-atenuado: var(--fondo);
     --horario-vacio: #a1a8b3;
-    --horario-alto-control: 44px;
-    --horario-ancho-etiqueta: 120px;
-    --horario-ancho-hora: 110px;
+    --horario-alto-control: 36px;
+    --horario-ancho-etiqueta: 124px;
+    --horario-ancho-hora: 74px;
 }
 
-.horario-tarjeta-encabezado {
-    margin-bottom: var(--horario-espacio-24);
+.horario-disposicion {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 290px);
+    gap: var(--espacio-componentes);
+    align-items: start;
+}
+
+@media (max-width: 720px) {
+    .horario-disposicion {
+        grid-template-columns: 1fr;
+    }
+}
+
+.horario-semana {
+    display: grid;
+    gap: 14px;
+    padding: 20px;
 }
 
 .horario-ayuda {
     margin: var(--horario-espacio-8) 0 0;
     color: var(--horario-secundario);
-    font-size: 13px;
+    font-size: 0.85rem;
     font-weight: 400;
     line-height: 1.5;
     white-space: normal;
@@ -39,52 +54,57 @@
 }
 
 .horario-dias {
-    margin-bottom: var(--horario-espacio-24);
-}
-
-.horario-dias legend,
-.horario-etiqueta,
-.horario-segunda-opcion {
-    color: var(--horario-secundario);
-    font-size: 13px;
-    font-weight: 500;
+    margin-bottom: var(--horario-espacio-8);
 }
 
 .horario-dias legend {
     margin-bottom: var(--horario-espacio-8);
     padding: 0;
+    color: var(--texto);
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.horario-etiqueta,
+.horario-segunda-opcion {
+    color: var(--texto);
+    font-size: 0.9rem;
+    font-weight: 600;
 }
 
 .horario-seleccion-dias {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: var(--horario-espacio-4);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
 .horario-dia {
     position: relative;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 0;
+    min-width: 50px;
     height: var(--horario-alto-control);
+    padding: 0 12px;
     border: 1px solid var(--horario-borde);
-    border-radius: 10px;
+    border-radius: 8px;
     background: var(--horario-fondo);
     color: var(--horario-secundario);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 0.85rem;
+    font-weight: 600;
     cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
 }
 
 .horario-dia:hover {
-    border-color: var(--horario-violeta);
+    background: var(--horario-violeta-suave);
+    color: var(--horario-violeta);
 }
 
 .horario-dia:has(input:checked) {
-    border-color: var(--horario-violeta);
-    background: var(--horario-violeta-suave);
-    color: var(--horario-violeta);
+    border-color: transparent;
+    background: var(--horario-violeta);
+    color: #ffffff;
 }
 
 .horario-solo-lectores,
@@ -104,14 +124,15 @@
 .horario-acciones .boton:focus-visible,
 .horario-segunda-opcion input:focus-visible {
     outline: 2px solid var(--horario-violeta);
-    outline-offset: var(--horario-espacio-4);
+    outline-offset: 2px;
 }
 
 .horario-atajos {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: var(--horario-espacio-12);
-    margin-top: var(--horario-espacio-8);
+    gap: 6px 14px;
+    margin-top: 10px;
 }
 
 .horario-atajos button {
@@ -122,8 +143,8 @@
     background: transparent;
     color: var(--horario-violeta);
     font: inherit;
-    font-size: 13px;
-    font-weight: 400;
+    font-size: 0.84rem;
+    font-weight: 600;
     line-height: 1.5;
     white-space: nowrap;
     cursor: pointer;
@@ -134,7 +155,9 @@
 }
 
 .horario-franjas {
-    margin-bottom: var(--horario-espacio-24);
+    display: grid;
+    gap: var(--horario-espacio-12);
+    margin: 0;
 }
 
 fieldset.horario-franjas,
@@ -148,11 +171,7 @@ fieldset.horario-franjas,
     display: grid;
     grid-template-columns: var(--horario-ancho-etiqueta) minmax(0, 1fr);
     align-items: start;
-    gap: var(--horario-espacio-8);
-}
-
-.horario-franja + .horario-franja {
-    margin-top: var(--horario-espacio-12);
+    gap: var(--horario-espacio-12);
 }
 
 .horario-etiqueta,
@@ -169,8 +188,8 @@ fieldset.horario-franjas,
 
 .horario-segunda-opcion input {
     flex-shrink: 0;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     margin: 0;
     accent-color: var(--horario-violeta);
 }
@@ -180,8 +199,8 @@ fieldset.horario-franjas,
 }
 
 .horario-franja-controles {
-    display: grid;
-    grid-template-columns: minmax(0, var(--horario-ancho-hora)) max-content minmax(0, var(--horario-ancho-hora));
+    display: inline-grid;
+    grid-template-columns: var(--horario-ancho-hora) max-content var(--horario-ancho-hora);
     gap: var(--horario-espacio-8);
     align-items: start;
 }
@@ -194,7 +213,7 @@ fieldset.horario-franjas,
     position: relative;
     height: var(--horario-alto-control);
     border: 1px solid var(--horario-borde);
-    border-radius: 10px;
+    border-radius: 8px;
     background: var(--horario-fondo);
     font-variant-numeric: tabular-nums;
 }
@@ -204,16 +223,22 @@ fieldset.horario-franjas,
     min-width: 0;
     height: 100%;
     min-height: 0;
-    padding: 0 var(--horario-espacio-12) 0 var(--horario-espacio-8);
+    padding: 0 var(--horario-espacio-8);
     border: 0;
     border-radius: inherit;
     background: transparent;
     color: var(--horario-texto);
-    font-size: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
     line-height: 1;
-    text-align: right;
+    text-align: center;
     appearance: textfield;
     -moz-appearance: textfield;
+}
+
+.horario-hora .form-control::placeholder {
+    color: var(--horario-vacio);
+    font-weight: 400;
 }
 
 .horario-hora input::-webkit-inner-spin-button,
@@ -223,8 +248,8 @@ fieldset.horario-franjas,
 }
 
 .horario-hora:focus-within {
-    outline: 2px solid var(--horario-violeta);
-    outline-offset: var(--horario-espacio-4);
+    outline: 2px solid rgba(75, 23, 109, 0.25);
+    outline-offset: 1px;
 }
 
 .horario-hora .form-control:focus {
@@ -232,7 +257,7 @@ fieldset.horario-franjas,
 }
 
 .horario-hora:has(input[aria-invalid="true"]) {
-    border-color: var(--peligro);
+    background: #fffafa;
 }
 
 .horario-hasta {
@@ -240,30 +265,20 @@ fieldset.horario-franjas,
     align-items: center;
     height: var(--horario-alto-control);
     color: var(--horario-secundario);
-    font-size: 13px;
-}
-
-.horario-introduccion {
-    margin: 0 0 20px;
-    color: var(--horario-secundario);
+    font-size: 0.88rem;
 }
 
 .horario-acciones {
     flex-wrap: wrap;
 }
 
-.horario-semana .horario-nota {
-    margin-top: 16px;
-    font-size: 0.875rem;
-}
-
 .horario-semana .tabla-contenedor {
     border: 1px solid var(--horario-borde);
-    border-radius: 10px;
+    border-radius: 8px;
 }
 
 .horario-semana tr {
-    height: 44px;
+    height: 40px;
 }
 
 .horario-semana th,
@@ -273,18 +288,17 @@ fieldset.horario-franjas,
 }
 
 .horario-semana thead th {
-    color: var(--horario-secundario);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    background: var(--primario-suave);
+    color: var(--primario);
+    font-size: 0.8rem;
+    font-weight: 600;
 }
 
 .horario-semana tbody th,
 .horario-semana tbody td {
     color: var(--horario-texto);
     font-family: var(--fuente-interfaz);
-    font-size: 14px;
+    font-size: 0.88rem;
     font-weight: 400;
     letter-spacing: normal;
     text-transform: none;
@@ -299,13 +313,9 @@ fieldset.horario-franjas,
     color: var(--horario-secundario);
 }
 
-.horario-vacio {
-    color: var(--horario-vacio);
-}
-
 .horarios-pagina .error-campo {
     margin: var(--horario-espacio-8) 0 0;
-    font-size: 13px;
+    font-size: 0.84rem;
     line-height: 1.4;
 }
 
@@ -314,14 +324,9 @@ fieldset.horario-franjas,
 }
 
 @media (max-width: 480px) {
-    .horario-atajos {
-        gap: var(--horario-espacio-8);
-        overflow-x: auto;
-        padding-bottom: var(--horario-espacio-4);
-    }
-
     .horario-franja {
         grid-template-columns: minmax(0, 1fr);
+        gap: var(--horario-espacio-8);
     }
 
     .horario-segunda-controles {
@@ -329,15 +334,7 @@ fieldset.horario-franjas,
     }
 
     .horario-franja-controles {
-        grid-template-columns: minmax(0, 1fr) max-content minmax(0, 1fr);
-    }
-
-    .horario-hora .form-control {
-        padding-left: var(--horario-espacio-4);
-        padding-right: var(--horario-espacio-8);
-    }
-
-    .horario-acciones .boton {
-        padding-inline: var(--horario-espacio-8);
+        grid-template-columns: minmax(64px, 1fr) max-content minmax(64px, 1fr);
+        width: 100%;
     }
 }
