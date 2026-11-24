@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load tablas static %}
+{% load pestanas tablas static %}
 {% block titulo %}Contratación #{{ contratacion.pk }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
 {% block contenido %}
@@ -24,8 +24,34 @@
             </div>
         </details>
     </header>
-    <div class="perfil-datos">
-        <section class="perfil-seccion" aria-labelledby="contratacion-datos-titulo">
+    <div class="perfil-datos" data-pestanas>
+        {% if historial_financiero_abierto %}
+            {% firstof "pagos-movimientos" as pestana_inicial %}
+        {% elif tipo == "membresia" and request.GET.pagina_ajustes %}
+            {% firstof "ajustes-horas" as pestana_inicial %}
+        {% else %}
+            {% firstof "detalles" as pestana_inicial %}
+        {% endif %}
+        {% pestanas "Información de la contratación" modo="paneles" %}
+            <button type="button" class="pestana-boton" id="contratacion-tab-detalles" role="tab"
+                aria-controls="contratacion-panel-detalles" data-pestana="detalles"
+                aria-selected="{% if pestana_inicial == 'detalles' %}true{% else %}false{% endif %}"{% if pestana_inicial != 'detalles' %} tabindex="-1"{% endif %}>Detalles</button>
+            <button type="button" class="pestana-boton" id="contratacion-tab-pagos-movimientos" role="tab"
+                aria-controls="contratacion-panel-pagos-movimientos" data-pestana="pagos-movimientos"
+                aria-selected="{% if pestana_inicial == 'pagos-movimientos' %}true{% else %}false{% endif %}"{% if pestana_inicial != 'pagos-movimientos' %} tabindex="-1"{% endif %}>Pagos y movimientos</button>
+            <button type="button" class="pestana-boton" id="contratacion-tab-continuidad" role="tab"
+                aria-controls="contratacion-panel-continuidad" data-pestana="continuidad" aria-selected="false" tabindex="-1">Continuidad</button>
+            {% if tipo == "membresia" %}
+                <button type="button" class="pestana-boton" id="contratacion-tab-horas-membresia" role="tab"
+                    aria-controls="contratacion-panel-horas-membresia" data-pestana="horas-membresia" aria-selected="false" tabindex="-1">Horas de membresía</button>
+                <button type="button" class="pestana-boton" id="contratacion-tab-ajustes-horas" role="tab"
+                    aria-controls="contratacion-panel-ajustes-horas" data-pestana="ajustes-horas"
+                    aria-selected="{% if pestana_inicial == 'ajustes-horas' %}true{% else %}false{% endif %}"{% if pestana_inicial != 'ajustes-horas' %} tabindex="-1"{% endif %}>Ajustes de horas</button>
+            {% endif %}
+        {% endpestanas %}
+
+        <section class="perfil-seccion pestana-panel" id="contratacion-panel-detalles" role="tabpanel"
+            aria-labelledby="contratacion-tab-detalles" data-panel="detalles" tabindex="0"{% if pestana_inicial != 'detalles' %} hidden{% endif %}>
             <div class="perfil-titulo-con-ayuda">
                 <h2 id="contratacion-datos-titulo">Datos de la contratación</h2>
                 <div class="ayuda-contextual">
@@ -73,13 +99,14 @@
                 {% endif %}
             {% endtabla_datos %}
         </section>
-        <details class="perfil-seccion-desplegable"{% if historial_financiero_abierto or historial_importes_abierto %} open{% endif %}>
-            <summary>Pagos y movimientos{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
-            <div class="perfil-seccion-desplegable-cuerpo">
-                {% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True %}
-            </div>
-        </details>
-        {% include "membresias/_continuidad.html" %}
+        <div class="pestana-panel" id="contratacion-panel-pagos-movimientos" role="tabpanel"
+            aria-labelledby="contratacion-tab-pagos-movimientos" data-panel="pagos-movimientos" tabindex="0"{% if pestana_inicial != 'pagos-movimientos' %} hidden{% endif %}>
+            {% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True %}
+        </div>
+        <div class="pestana-panel" id="contratacion-panel-continuidad" role="tabpanel"
+            aria-labelledby="contratacion-tab-continuidad" data-panel="continuidad" tabindex="0" hidden>
+            {% include "membresias/_continuidad.html" %}
+        </div>
         {% if tipo == "membresia" %}{% include "membresias/_horas_contratacion.html" %}{% endif %}
     </div>
 </article>

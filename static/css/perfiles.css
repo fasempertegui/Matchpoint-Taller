@@ -76,6 +76,8 @@
     padding: 28px 32px;
 }
 
+.perfil-datos[data-pestanas] > .pestanas { margin-top: 0; }
+
 .perfil-lateral {
     border-left: 1px solid var(--borde);
 }
@@ -182,22 +184,7 @@
 .perfil .perfil-seccion .perfil-titulo-con-ayuda h2 { margin: 0; }
 .perfil-titulo-con-ayuda .ayuda-contextual { color: var(--primario); }
 
-.perfil-seccion-desplegable { border-top: 1px solid var(--borde); margin-top: 24px; }
-.perfil-seccion-desplegable > summary {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-block: 18px;
-    list-style: none;
-    color: var(--primario);
-    font-weight: 600;
-    cursor: pointer;
-}
-.perfil-seccion-desplegable > summary::-webkit-details-marker { display: none; }
-.perfil-seccion-desplegable > summary > svg { order: -1; width: 20px; height: 20px; flex-shrink: 0; }
-.perfil-seccion-desplegable[open] > summary > svg { transform: rotate(180deg); }
-.perfil-seccion-desplegable-cuerpo { padding-bottom: 8px; }
-.perfil-seccion-desplegable-cuerpo .finanzas-sin-movimientos { margin: 8px 0 0; }
+.finanzas-sin-movimientos { margin: 8px 0 0; }
 .finanzas-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
 .finanzas-menu .perfil-menu-opciones { left: 0; right: auto; width: max-content; min-width: 220px; }
 .finanzas-ajustes { margin-top: 16px; }

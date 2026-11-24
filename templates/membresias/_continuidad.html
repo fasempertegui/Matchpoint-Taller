@@ -1,23 +1,18 @@
 {% load tablas %}
-<details class="perfil-seccion-desplegable">
-    <summary>Continuidad{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
-    <div class="perfil-seccion-desplegable-cuerpo">
-        {% tabla_datos etiqueta="Datos de continuidad" %}
-            <tr><th scope="row">Mes consultado</th><td>{{ continuidad.mes_consultado|date:"F Y"|capfirst }}</td></tr>
-            <tr>
-                <th scope="row">Respuesta</th>
-                <td>
-                    {{ continuidad.respuesta }}
-                    <span class="ayuda-contextual">
-                        <button type="button" class="ayuda-contextual-boton" aria-label="Información sobre la respuesta de continuidad" aria-describedby="continuidad-respuesta-ayuda">
-                            {% include "componentes/iconoir/informacion.html" %}
-                        </button>
-                        <span class="ayuda-contextual-texto" id="continuidad-respuesta-ayuda" role="tooltip">La respuesta informa tu intención. Los cambios y las contrataciones se coordinan con administración.</span>
-                    </span>
-                </td>
-            </tr>
-            {% if continuidad.respondida_en %}<tr><th scope="row">Fecha de respuesta</th><td>{{ continuidad.respondida_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}
-            <tr><th scope="row">Plazo</th><td>Del {{ continuidad.apertura|date:"d/m/Y" }} al {{ continuidad.ultimo_dia|date:"d/m/Y" }} inclusive.</td></tr>
-        {% endtabla_datos %}
-    </div>
-</details>
+{% tabla_datos etiqueta="Datos de continuidad" %}
+    <tr><th scope="row">Mes consultado</th><td>{{ continuidad.mes_consultado|date:"F Y"|capfirst }}</td></tr>
+    <tr>
+        <th scope="row">Respuesta</th>
+        <td>
+            {{ continuidad.respuesta }}
+            <span class="ayuda-contextual">
+                <button type="button" class="ayuda-contextual-boton" aria-label="Información sobre la respuesta de continuidad" aria-describedby="continuidad-respuesta-ayuda">
+                    {% include "componentes/iconoir/informacion.html" %}
+                </button>
+                <span class="ayuda-contextual-texto" id="continuidad-respuesta-ayuda" role="tooltip">La respuesta informa tu intención. Los cambios y las contrataciones se coordinan con administración.</span>
+            </span>
+        </td>
+    </tr>
+    {% if continuidad.respondida_en %}<tr><th scope="row">Fecha de respuesta</th><td>{{ continuidad.respondida_en|date:"d/m/Y H:i" }}</td></tr>{% endif %}
+    <tr><th scope="row">Plazo</th><td>Del {{ continuidad.apertura|date:"d/m/Y" }} al {{ continuidad.ultimo_dia|date:"d/m/Y" }} inclusive.</td></tr>
+{% endtabla_datos %}

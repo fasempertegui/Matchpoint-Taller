@@ -11,7 +11,6 @@
 .reserva-perfil .perfil-desplegable .grupo-campo { margin-bottom: 16px; }
 .reserva-acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
 .reserva-tabla-modalidad .ayuda-contextual { margin-left: 4px; }
-.reserva-contenido .finanzas-sin-movimientos { margin: 8px 0 0; }
 .reserva-invitacion-respuesta > details { margin-top: 16px; }
 .reserva-invitacion-respuesta summary { color: var(--primario); font-weight: 600; cursor: pointer; }
 @media (max-width: 640px) { .reserva-perfil .perfil-lista { grid-template-columns: minmax(0, 1fr); } }
