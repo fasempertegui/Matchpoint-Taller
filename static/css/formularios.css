@@ -420,6 +420,194 @@
     gap: 10px 16px;
 }
 
+.sede-direccion-bloque {
+    display: grid;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--fondo);
+}
+
+.sede-direccion-cabecera {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.sede-direccion-etiqueta {
+    margin: 0 0 4px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--texto);
+}
+
+.sede-direccion-valor {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.sede-direccion-origen {
+    margin: 4px 0 0;
+    font-size: 0.84rem;
+}
+
+.sede-direccion-panel {
+    display: grid;
+    gap: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--borde);
+}
+
+.sede-direccion-subpanel {
+    display: grid;
+    gap: 10px;
+}
+
+.sede-direccion-provincia-fija {
+    margin: 0;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: var(--superficie);
+    color: var(--texto);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+}
+
+.sede-direccion-busqueda-fila {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.sede-direccion-busqueda-fila > .form-control {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.sede-direccion-busqueda-fila > .boton {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.sede-direccion-estado {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.sede-direccion-estado-info {
+    background: var(--primario-suave);
+    color: var(--texto);
+}
+
+.sede-direccion-estado-exito {
+    background: var(--acento-suave);
+    color: var(--acento-texto);
+}
+
+.sede-direccion-estado-advertencia {
+    background: var(--advertencia-suave);
+    color: var(--advertencia);
+}
+
+.sede-direccion-estado-error {
+    background: #fef2f2;
+    color: #7f1d1d;
+}
+
+.sede-direccion-resultados {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sede-direccion-resultado-boton {
+    width: 100%;
+    display: grid;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: var(--superficie);
+    color: var(--texto);
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.sede-direccion-resultado-boton:hover {
+    background: #faf7fc;
+    border-color: var(--primario);
+}
+
+.sede-direccion-resultado-boton.seleccionado {
+    background: var(--primario-suave);
+    border-color: var(--primario);
+}
+
+.sede-direccion-resultado-boton strong {
+    font-size: 0.94rem;
+}
+
+.sede-direccion-resultado-boton span {
+    font-size: 0.84rem;
+    color: var(--texto-suave);
+}
+
+.sede-direccion-seleccionada {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: var(--superficie);
+    font-size: 0.9rem;
+}
+
+.sede-direccion-cambio-modo {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.sede-direccion-enlace {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--primario);
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.sede-direccion-enlace:hover {
+    color: var(--primario-hover);
+}
+
+.sede-direccion-panel-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--borde);
+}
+
 .modal-acciones {
     display: flex;
     flex-wrap: wrap;
@@ -442,6 +630,15 @@
     .formulario-fila-triple,
     .formulario-opciones-grid {
         grid-template-columns: 1fr;
+    }
+
+    .sede-direccion-cabecera {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sede-direccion-busqueda-fila {
+        flex-direction: column;
     }
 
     .tarjeta.formulario-cuerpo {

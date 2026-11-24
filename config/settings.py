@@ -247,3 +247,11 @@ if CUENTAS_LIMPIEZA_HABILITADA:
     }
 
 PASSWORD_RESET_TIMEOUT = 900
+
+GEOREF_API_URL = os.environ.get(
+    "GEOREF_API_URL",
+    "https://apis.datos.gob.ar/georef/api/direcciones",
+)
+GEOREF_TIMEOUT = float(os.environ.get("GEOREF_TIMEOUT", "5"))
+GEOREF_SELECCION_MAX_AGE = int(os.environ.get("GEOREF_SELECCION_MAX_AGE", "900"))
+GEOREF_FORMULARIO_MAX_AGE = int(os.environ.get("GEOREF_FORMULARIO_MAX_AGE", "3600"))

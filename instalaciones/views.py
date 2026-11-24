@@ -4,17 +4,23 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods
 from psycopg.errors import UniqueViolation
 
 from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
 from reservas.models import Evento
 from usuarios.models import Rol
 
+from .direcciones import (
+    ErrorServicioGeoref,
+    buscar_direcciones_georef,
+    firmar_seleccion_georef,
+    validar_token_formulario_direccion,
+)
 from .forms import CanchaForm, SedeForm, SedeHorarioForm, SedePrecioForm
 from .models import Cancha, Sede, SedeHorario
 from .servicios import cambiar_estado_cancha, cambiar_estado_sede
@@ -213,6 +219,70 @@ def sede_horario_configurar(request, pk, dia=None):
     )
 
 
+def _buscar_direccion_sede(request, *, alcance, sede_id=None):
+    try:
+        contexto_form = validar_token_formulario_direccion(
+            request.GET.get("formulario"),
+            usuario_id=request.user.pk,
+            alcance=alcance,
+            sede_id=sede_id,
+        )
+        resultados = buscar_direcciones_georef(
+            request.GET.get("consulta"),
+            request.GET.get("localidad"),
+        )
+    except ValidationError as error:
+        return JsonResponse(
+            {"ok": False, "error": error.messages[0]},
+            status=400,
+        )
+    except ErrorServicioGeoref:
+        return JsonResponse(
+            {
+                "ok": False,
+                "servicio_caido": True,
+                "error": (
+                    "No se pudo consultar el catálogo oficial de calles (Georef). "
+                    "Podés reintentar o ingresar la dirección manualmente."
+                ),
+            },
+            status=503,
+        )
+
+    coincidencias = [
+        {
+            **item,
+            "token": firmar_seleccion_georef(
+                usuario_id=request.user.pk,
+                alcance=alcance,
+                sede_id=sede_id,
+                formulario_nonce=contexto_form["nonce"],
+                localidad_codigo=item["localidad_codigo"],
+                calle_georef_id=item["calle_georef_id"],
+                calle=item["calle"],
+                altura_sugerida=item["altura"],
+            ),
+        }
+        for item in resultados
+    ]
+    return JsonResponse({"ok": True, "resultados": coincidencias})
+
+
+@login_required
+@permission_required("instalaciones.add_sede", raise_exception=True)
+@require_GET
+def sede_buscar_direccion_crear(request):
+    return _buscar_direccion_sede(request, alcance="crear", sede_id=None)
+
+
+@login_required
+@permission_required("instalaciones.change_sede", raise_exception=True)
+@require_GET
+def sede_buscar_direccion_editar(request, pk):
+    sede = get_object_or_404(Sede, pk=pk)
+    return _buscar_direccion_sede(request, alcance="editar", sede_id=sede.pk)
+
+
 @login_required
 @permission_required("instalaciones.add_sede", raise_exception=True)
 @require_http_methods(["GET", "POST"])
@@ -221,7 +291,10 @@ def sede_crear(request):
     if not es_peticion_modal(request):
         return redirect(destino)
 
-    formulario = SedeForm(request.POST if request.method == "POST" else None)
+    formulario = SedeForm(
+        request.POST if request.method == "POST" else None,
+        usuario=request.user,
+    )
 
     if request.method == "POST" and formulario.is_valid():
         try:
@@ -245,6 +318,7 @@ def sede_crear(request):
             "formulario": formulario,
             "titulo": "Nueva sede",
             "texto_boton": "Crear sede",
+            "url_buscar_direccion": reverse("instalaciones:sede_buscar_direccion_crear"),
         },
         status=400 if formulario.errors else 200,
         errores=bool(formulario.errors),
@@ -264,13 +338,26 @@ def sede_editar(request, pk):
     formulario = SedeForm(
         request.POST if request.method == "POST" else None,
         instance=sede,
+        usuario=request.user,
     )
 
     if request.method == "POST" and formulario.is_valid():
         sede = formulario.save(commit=False)
+        campos_actualizar = [*SedeForm.Meta.fields, "actualizado_en"]
+        if formulario.cleaned_data.get("direccion_cambio"):
+            campos_actualizar.extend(
+                [
+                    "direccion",
+                    "localidad_codigo",
+                    "calle",
+                    "altura",
+                    "cpa",
+                    "calle_georef_id",
+                ]
+            )
         try:
             with transaction.atomic():
-                sede.save(update_fields=[*SedeForm.Meta.fields, "actualizado_en"])
+                sede.save(update_fields=campos_actualizar)
         except IntegrityError as error:
             if (
                 not isinstance(error.__cause__, UniqueViolation)
@@ -290,6 +377,10 @@ def sede_editar(request, pk):
             "titulo": titulo,
             "texto_boton": "Guardar cambios",
             "sede": sede,
+            "url_buscar_direccion": reverse(
+                "instalaciones:sede_buscar_direccion_editar",
+                args=[sede.pk],
+            ),
         },
         status=400 if formulario.errors else 200,
         errores=bool(formulario.errors),

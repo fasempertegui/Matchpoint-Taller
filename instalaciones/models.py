@@ -9,6 +9,14 @@ from django.db.models.lookups import GreaterThanOrEqual
 
 from common.fechas import FECHA_INICIO_OPERACIONES
 
+from .direcciones import (
+    LOCALIDADES_SALTA,
+    LOCALIDAD_CHOICES,
+    PROVINCIA_NOMBRE,
+    componer_direccion,
+    etiqueta_localidad,
+)
+
 
 HORAS_EN_PUNTO = tuple(time(hora) for hora in range(24))
 
@@ -70,6 +78,22 @@ class Sede(models.Model):
     id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=120)
     direccion = models.CharField(max_length=250)
+    localidad_codigo = models.CharField(
+        "Localidad",
+        max_length=8,
+        choices=LOCALIDAD_CHOICES,
+        blank=True,
+        default="",
+    )
+    calle = models.CharField("Calle", max_length=150, blank=True, default="")
+    altura = models.CharField("Altura", max_length=20, blank=True, default="")
+    cpa = models.CharField("CPA", max_length=8, blank=True, default="")
+    calle_georef_id = models.CharField(
+        "ID de calle en Georef",
+        max_length=20,
+        blank=True,
+        default="",
+    )
     tiene_estacionamiento = models.BooleanField("Estacionamiento", default=False)
     tiene_sanitarios = models.BooleanField("Sanitarios", default=False)
     tiene_vestuarios = models.BooleanField("Vestuarios", default=False)
@@ -112,6 +136,32 @@ class Sede(models.Model):
                 name="sede_precio_reserva_positivo",
                 violation_error_message="El precio por turno debe ser positivo.",
             ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(localidad_codigo="")
+                    | models.Q(localidad_codigo__in=tuple(LOCALIDADES_SALTA))
+                ),
+                name="sede_localidad_codigo_habilitado",
+                violation_error_message="La localidad seleccionada no está habilitada.",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        localidad_codigo="",
+                        calle="",
+                        altura="",
+                        cpa="",
+                        calle_georef_id="",
+                    )
+                    | (
+                        ~models.Q(localidad_codigo="")
+                        & ~models.Q(calle="")
+                        & ~models.Q(altura="")
+                    )
+                ),
+                name="sede_direccion_estructurada_coherente",
+                violation_error_message="La dirección estructurada requiere localidad, calle y altura.",
+            ),
         ]
         verbose_name = "sede"
         verbose_name_plural = "sedes"
@@ -130,6 +180,37 @@ class Sede(models.Model):
             for telefono in (self.telefono_contacto_1, self.telefono_contacto_2)
             if telefono
         ]
+
+    @property
+    def tiene_direccion_estructurada(self):
+        return bool(self.localidad_codigo and self.calle and self.altura)
+
+    @property
+    def localidad_nombre(self):
+        return etiqueta_localidad(self.localidad_codigo)
+
+    @property
+    def provincia_nombre(self):
+        return PROVINCIA_NOMBRE if self.tiene_direccion_estructurada else ""
+
+    @property
+    def direccion_completa(self):
+        if self.tiene_direccion_estructurada:
+            return componer_direccion(
+                self.calle,
+                self.altura,
+                self.localidad_codigo,
+                self.cpa,
+            )
+        return self.direccion
+
+    @property
+    def origen_calle_display(self):
+        if not self.tiene_direccion_estructurada:
+            return ""
+        if self.calle_georef_id:
+            return "Normalizada con Georef"
+        return "Carga manual confirmada"
 
 
 class Cancha(models.Model):

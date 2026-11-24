@@ -11,7 +11,7 @@
     <article class="tarjeta sede-tarjeta">
         {% include "instalaciones/_imagen_sede.html" with sede=sede only %}
         <h2>{{ sede.nombre }}</h2>
-        <p>{{ sede.direccion|default:"Dirección sin informar" }}</p>
+        <p>{{ sede.direccion_completa|default:"Dirección sin informar" }}</p>
         {% if sede.servicios_disponibles %}
         <p class="sede-oferta-servicios"><strong>Servicios:</strong> {{ sede.servicios_disponibles|join:", " }}</p>
         {% endif %}

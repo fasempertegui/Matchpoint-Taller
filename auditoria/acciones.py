@@ -37,6 +37,11 @@ CAMPOS_CONCRETOS = {
     ("usuarios", "observaciones"): "Actualización de observaciones de usuario",
     ("sedes", "nombre"): "Cambio de nombre de sede",
     ("sedes", "direccion"): "Cambio de dirección de sede",
+    ("sedes", "localidad_codigo"): "Cambio de localidad de sede",
+    ("sedes", "calle"): "Cambio de calle de sede",
+    ("sedes", "altura"): "Cambio de altura de sede",
+    ("sedes", "cpa"): "Cambio de CPA de sede",
+    ("sedes", "calle_georef_id"): "Actualización de referencia de calle de sede",
     ("sedes", "tiene_estacionamiento"): "Actualización de estacionamiento de sede",
     ("sedes", "tiene_sanitarios"): "Actualización de sanitarios de sede",
     ("sedes", "tiene_vestuarios"): "Actualización de vestuarios de sede",
@@ -85,6 +90,11 @@ ETIQUETAS_CAMPO = {
     "verificacion_solicitada_en": "solicitud de verificación",
     "cambio_email_solicitado_en": "solicitud de cambio de correo",
     "direccion": "dirección",
+    "localidad_codigo": "localidad",
+    "calle": "calle",
+    "altura": "altura",
+    "cpa": "CPA",
+    "calle_georef_id": "identificador de calle en Georef",
     "tiene_estacionamiento": "estacionamiento",
     "tiene_sanitarios": "sanitarios",
     "tiene_vestuarios": "vestuarios",
@@ -107,6 +117,14 @@ ETIQUETAS_CAMPO = {
     "resultado_uso": "resultado de reserva",
 }
 
+CAMPOS_DIRECCION_SEDE = frozenset({
+    "direccion",
+    "localidad_codigo",
+    "calle",
+    "altura",
+    "cpa",
+    "calle_georef_id",
+})
 CAMPOS_SERVICIOS_SEDE = frozenset({
     "tiene_estacionamiento",
     "tiene_sanitarios",
@@ -266,6 +284,8 @@ def _clasificar_modificacion_contratacion(registro, campos, anteriores, actuales
 
 
 def _clasificar_modificacion_sede(_registro, campos, _anteriores, _actuales, _objeto):
+    if len(campos) > 1 and campos <= CAMPOS_DIRECCION_SEDE:
+        return "Actualización de dirección de sede"
     if len(campos) > 1 and campos <= CAMPOS_SERVICIOS_SEDE:
         return "Actualización de servicios de sede"
     if len(campos) > 1 and campos <= CAMPOS_TELEFONOS_SEDE:

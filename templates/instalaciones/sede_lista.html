@@ -6,7 +6,10 @@
 
 {% block titulo %}Instalaciones | Academia TM{% endblock %}
 
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/instalaciones.css' %}">{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/instalaciones.css' %}">
+<script src="{% static 'js/sede-direccion.js' %}" defer></script>
+{% endblock %}
 
 {% block clase_contenido %}contenido-instalaciones{% endblock %}
 
@@ -44,7 +47,7 @@
                 {% indicador_estado "habilitacion" sede.estado %}
                 {{ sede.nombre }}
             </h2>
-            <p>{{ sede.direccion|default:"Sin dirección registrada" }}</p>
+            <p>{{ sede.direccion_completa|default:"Sin dirección registrada" }}</p>
             <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}" aria-label="Ver detalles de {{ sede.nombre }}">Ver detalles</a>
         </article>
     {% empty %}

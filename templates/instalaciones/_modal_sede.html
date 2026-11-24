@@ -1,6 +1,6 @@
 {% load formularios %}
 {% if sede %}{% url 'instalaciones:sede_editar' sede.pk as accion_url %}{% else %}{% url 'instalaciones:sede_crear' as accion_url %}{% endif %}
-{% modal_formulario titulo action=accion_url texto_enviar=texto_boton %}
+{% modal_formulario titulo action=accion_url texto_enviar=texto_boton amplio=True %}
     {% if not sede %}
         <p class="formulario-introduccion">Los datos generales y los servicios confirmados pueden mostrarse en el catálogo. Los teléfonos se consultan en administración.</p>
     {% endif %}
@@ -12,11 +12,120 @@
         {{ formulario.nombre }}
         {% for error in formulario.nombre.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
     </div>
-    <div class="grupo-campo">
-        <label for="{{ formulario.direccion.id_for_label }}">{{ formulario.direccion.label }}</label>
-        {{ formulario.direccion }}
-        {% for error in formulario.direccion.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-    </div>
+
+    <section class="sede-direccion-bloque"
+             data-sede-direccion
+             data-buscar-url="{{ url_buscar_direccion }}"
+             data-es-edicion="{% if sede %}1{% else %}0{% endif %}"
+             data-sede-estructurada="{% if sede and sede.tiene_direccion_estructurada %}1{% else %}0{% endif %}"
+             data-sede-origen-georef="{% if sede and sede.calle_georef_id %}1{% else %}0{% endif %}"
+             data-provincia="{{ formulario.provincia_nombre }}">
+        <input type="hidden" name="{{ formulario.direccion_formulario_token.html_name }}" id="{{ formulario.direccion_formulario_token.id_for_label }}" value="{{ formulario.token_formulario_direccion_actual }}" data-dir-token-formulario>
+        <input type="hidden" name="{{ formulario.direccion_modo.html_name }}" id="{{ formulario.direccion_modo.id_for_label }}" value="{{ formulario.direccion_modo_actual }}" data-dir-modo>
+        <input type="hidden" name="{{ formulario.direccion_seleccion_token.html_name }}" id="{{ formulario.direccion_seleccion_token.id_for_label }}" value="{{ formulario.direccion_seleccion_token.value|default:'' }}" data-dir-token-seleccion>
+
+        <div class="sede-direccion-cabecera">
+            <div>
+                <p class="sede-direccion-etiqueta">Dirección</p>
+                <p class="sede-direccion-valor{% if not formulario.direccion_resumen_actual %} texto-secundario{% endif %}" data-dir-resumen-texto{% if formulario.abrir_direccion and not formulario.direccion_resumen_actual %} hidden{% endif %}>
+                    {{ formulario.direccion_resumen_actual|default:"Sin dirección cargada" }}
+                </p>
+                <p class="sede-direccion-origen texto-secundario" data-dir-resumen-origen{% if not formulario.direccion_origen_actual %} hidden{% endif %}>
+                    {{ formulario.direccion_origen_actual }}
+                </p>
+            </div>
+            <button type="button" class="boton boton-secundario boton-chico" data-dir-abrir aria-expanded="{% if formulario.abrir_direccion %}true{% else %}false{% endif %}" aria-controls="sede-direccion-panel"{% if formulario.abrir_direccion %} hidden{% endif %}>
+                {% if formulario.tiene_direccion_estructurada_actual %}Cambiar dirección{% else %}Cargar dirección{% endif %}
+            </button>
+        </div>
+
+        <div class="sede-direccion-panel" id="sede-direccion-panel" data-dir-panel{% if not formulario.abrir_direccion %} hidden{% endif %}>
+            <div class="mensaje mensaje-error" role="alert" data-dir-error-panel hidden></div>
+
+            <div class="formulario-fila-doble">
+                <div class="grupo-campo">
+                    <label>Provincia</label>
+                    <p class="sede-direccion-provincia-fija">{{ formulario.provincia_nombre }}</p>
+                </div>
+                <div class="grupo-campo">
+                    <label for="{{ formulario.localidad_codigo.id_for_label }}">{{ formulario.localidad_codigo.label }}</label>
+                    {{ formulario.localidad_codigo }}
+                    {% for error in formulario.localidad_codigo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <div class="sede-direccion-subpanel" data-dir-bloque-georef{% if formulario.es_modo_manual %} hidden{% endif %}>
+                <div class="grupo-campo">
+                    <label for="{{ formulario.direccion_consulta.id_for_label }}">{{ formulario.direccion_consulta.label }}</label>
+                    <div class="sede-direccion-busqueda-fila">
+                        {{ formulario.direccion_consulta }}
+                        <button type="button" class="boton boton-secundario boton-chico" data-dir-buscar>Buscar calle</button>
+                    </div>
+                    <small class="formulario-ayuda">Buscá en el nomenclador oficial de Georef. Si cambiás la localidad o el texto, volvé a buscar.</small>
+                    {% for error in formulario.direccion_consulta.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    {% for error in formulario.direccion_seleccion_token.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="sede-direccion-estado" data-dir-estado aria-live="polite" hidden></div>
+                <ul class="sede-direccion-resultados" data-dir-resultados hidden></ul>
+
+                <div class="sede-direccion-seleccionada" data-dir-seleccion-resumen{% if formulario.es_modo_manual or not formulario.calle.value %} hidden{% endif %}>
+                    <span class="texto-secundario">Calle seleccionada:</span>
+                    <strong data-dir-seleccion-calle>{{ formulario.calle.value|default:"" }}</strong>
+                </div>
+
+                <div class="sede-direccion-cambio-modo">
+                    <button type="button" class="sede-direccion-enlace" data-dir-ir-manual>Ingresar dirección manualmente</button>
+                </div>
+            </div>
+
+            <div class="sede-direccion-subpanel" data-dir-bloque-manual-cabecera{% if not formulario.es_modo_manual %} hidden{% endif %}>
+                <div class="formulario-aviso">
+                    <p>Carga manual estructurada. Cotejá el domicilio con la sede o una fuente oficial.</p>
+                </div>
+                <div class="sede-direccion-cambio-modo">
+                    <button type="button" class="sede-direccion-enlace" data-dir-ir-georef>Volver a buscar en Georef</button>
+                </div>
+            </div>
+
+            <div class="grupo-campo" data-dir-campo-calle{% if not formulario.es_modo_manual %} hidden{% endif %}>
+                <label for="{{ formulario.calle.id_for_label }}">{{ formulario.calle.label }}</label>
+                {{ formulario.calle }}
+                {% for error in formulario.calle.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+
+            <div class="formulario-fila-doble" data-dir-campos-detalle{% if not formulario.es_modo_manual and not formulario.calle.value and not formulario.altura.errors and not formulario.cpa.errors %} hidden{% endif %}>
+                <div class="grupo-campo">
+                    <label for="{{ formulario.altura.id_for_label }}">{{ formulario.altura.label }}</label>
+                    {{ formulario.altura }}
+                    <small class="formulario-ayuda">Numeración (con sufijo si corresponde), kilómetro o s/n.</small>
+                    {% for error in formulario.altura.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="grupo-campo">
+                    <label for="{{ formulario.cpa.id_for_label }}">{{ formulario.cpa.label }}</label>
+                    {{ formulario.cpa }}
+                    <small class="formulario-ayuda">
+                        8 caracteres en mayúsculas.
+                        <a href="{{ formulario.correo_argentino_cpa_url }}" target="_blank" rel="noopener noreferrer">Consultar CPA</a>
+                    </small>
+                    {% for error in formulario.cpa.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <div class="grupo-campo" data-dir-confirmacion-manual{% if not formulario.es_modo_manual and not formulario.confirmacion_direccion_manual.errors %} hidden{% endif %}>
+                <label class="campo-opcion" for="{{ formulario.confirmacion_direccion_manual.id_for_label }}">
+                    {{ formulario.confirmacion_direccion_manual }}
+                    <span>{{ formulario.confirmacion_direccion_manual.label }}</span>
+                </label>
+                {% for error in formulario.confirmacion_direccion_manual.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+
+            <div class="sede-direccion-panel-acciones">
+                <button type="button" class="boton boton-secundario boton-chico" data-dir-cancelar>Cancelar</button>
+                <button type="button" class="boton boton-primario boton-chico" data-dir-aplicar>Aplicar dirección</button>
+            </div>
+        </div>
+    </section>
 
     <details class="formulario-desplegable"{% if formulario.abrir_servicios %} open{% endif %}>
         <summary>

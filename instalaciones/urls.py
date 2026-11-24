@@ -7,6 +7,11 @@ app_name = "instalaciones"
 urlpatterns = [
     path("", views.sede_lista, name="sede_lista"),
     path("nueva/", views.sede_crear, name="sede_crear"),
+    path(
+        "nueva/buscar-direccion/",
+        views.sede_buscar_direccion_crear,
+        name="sede_buscar_direccion_crear",
+    ),
     path("horarios-especiales/", vistas_horarios_especiales.horarios_especiales_lista, name="horarios_especiales"),
     path(
         "horarios-especiales/nuevo/",
@@ -35,6 +40,11 @@ urlpatterns = [
     ),
     path("<int:pk>/", views.sede_detalle, name="sede_detalle"),
     path("<int:pk>/editar/", views.sede_editar, name="sede_editar"),
+    path(
+        "<int:pk>/editar/buscar-direccion/",
+        views.sede_buscar_direccion_editar,
+        name="sede_buscar_direccion_editar",
+    ),
     path("<int:pk>/precio/", views.sede_precio_configurar, name="sede_precio_configurar"),
     path("<int:pk>/horarios/", views.sede_horario_configurar, name="sede_horarios_configurar"),
     path(

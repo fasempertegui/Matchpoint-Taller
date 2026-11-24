@@ -136,7 +136,12 @@ Representa una sede física de la academia.
 |---|---|---|---|---|---|
 | PK | `id` | `bigint` identity | | | `1` |
 | | `nombre` | `varchar(120)` | | Sí | `Sociedad Española` |
-| | `direccion` | `varchar(250)` | | | `Av. Sarmiento 320` |
+| | `direccion` | `varchar(250)` | | | `BALCARCE 643, Ciudad de Salta, Salta` |
+| | `localidad_codigo` | `varchar(8)` | | | `66028050` |
+| | `calle` | `varchar(150)` | | | `BALCARCE` |
+| | `altura` | `varchar(20)` | | | `643` |
+| | `cpa` | `varchar(8)` | | | `A4400BKM` |
+| | `calle_georef_id` | `varchar(20)` | | | `6602805001165` |
 | | `tiene_estacionamiento` | `boolean` | | | `false` |
 | | `tiene_sanitarios` | `boolean` | | | `true` |
 | | `tiene_vestuarios` | `boolean` | | | `true` |
@@ -150,7 +155,7 @@ Representa una sede física de la academia.
 | | `creado_en` | `timestamptz` | | | `2026-10-01 09:00:00-03` |
 | | `actualizado_en` | `timestamptz` | | | `2026-10-01 09:00:00-03` |
 
-La unicidad de `nombre` se aplica mediante `LOWER(nombre)`. Los indicadores de servicios (`tiene_estacionamiento`, `tiene_sanitarios`, `tiene_vestuarios`, `tiene_wifi` y `tiene_buffet`) utilizan `boolean` con valor por defecto `false`. `telefono_contacto_1` y `telefono_contacto_2` son opcionales (se almacenan como cadena vacía cuando no se informan), admiten líneas fijas o móviles de Argentina y se guardan normalizados en formato internacional E.164. `precio_reserva_vigente` es nullable y, cuando está informado, debe ser positivo. La tarifa pertenece a la sede y no se repite en cada cancha. Los horarios utilizan su tabla dependiente `sedes_horarios`.
+La unicidad de `nombre` se aplica mediante `LOWER(nombre)`. La dirección estructurada utiliza `localidad_codigo` contra el catálogo censal habilitado de Salta (`66028050` Ciudad de Salta, `66077020` Vaqueros, `66028060` San Lorenzo y `66035010` Cerrillos), `calle`, `altura` (numeración con sufijo opcional, kilómetro o `s/n`), `cpa` opcional en mayúsculas con formato alfanumérico argentino de 8 caracteres y `calle_georef_id` (identificador de la calle cuando proviene de Georef, vacío cuando se cargó manualmente con confirmación administrativa). La provincia («Salta», código `66`) y la etiqueta de localidad se resuelven desde ese catálogo, y una composición única genera el texto legible (`calle altura, Localidad, Salta`, con el CPA entre paréntesis cuando está informado). Los indicadores de servicios (`tiene_estacionamiento`, `tiene_sanitarios`, `tiene_vestuarios`, `tiene_wifi` y `tiene_buffet`) utilizan `boolean` con valor por defecto `false`. `telefono_contacto_1` y `telefono_contacto_2` son opcionales (se almacenan como cadena vacía cuando no se informan), admiten líneas fijas o móviles de Argentina y se guardan normalizados en formato internacional E.164. `precio_reserva_vigente` es nullable y, cuando está informado, debe ser positivo. La tarifa pertenece a la sede y no se repite en cada cancha. Los horarios utilizan su tabla dependiente `sedes_horarios`.
 
 ### 4.4 `canchas`
 
