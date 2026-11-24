@@ -97,42 +97,42 @@ class AgendaReservaForm(forms.Form):
 
 class CanchasAgendaField(forms.ModelMultipleChoiceField):
     def label_from_instance(self, cancha):
-        return f"{cancha.sede.nombre} · {cancha.nombre}"
+        return f"{cancha.nombre}, {cancha.sede.nombre}"
 
 
 class AgendaOperacionForm(forms.Form):
     operacion = forms.ChoiceField(
-        label="Operación *",
+        label="Operación",
         choices=(("liberar", "Anular y liberar"), ("bloquear", "Anular y bloquear")),
         widget=forms.Select(attrs={"class": "form-control"}),
         initial="bloquear",
     )
     seleccion_sedes = forms.ChoiceField(
-        label="Sedes *",
+        label="Sedes",
         choices=(("todas", "Todas las sedes"), ("seleccionar", "Seleccionar")),
         widget=forms.Select(attrs={"class": "form-control"}),
         initial="todas",
     )
     sedes = forms.ModelMultipleChoiceField(
-        label="Elegí las sedes *",
+        label="Elegí las sedes",
         queryset=Sede.objects.order_by("nombre", "pk"),
         required=False,
         widget=forms.CheckboxSelectMultiple(),
     )
     seleccion_canchas = forms.ChoiceField(
-        label="Canchas *",
+        label="Canchas",
         choices=(("todas", "Todas las canchas de las sedes elegidas"), ("seleccionar", "Seleccionar")),
         widget=forms.Select(attrs={"class": "form-control"}),
         initial="todas",
     )
     canchas = CanchasAgendaField(
-        label="Elegí las canchas *",
+        label="Elegí las canchas",
         queryset=Cancha.objects.none(),
         required=False,
         widget=forms.CheckboxSelectMultiple(),
     )
     horario = forms.ChoiceField(
-        label="Horario *",
+        label="Horario",
         widget=forms.Select(attrs={"class": "form-control"}),
         initial="dia",
         error_messages={"invalid_choice": "Ese horario ya no está disponible. Elegí nuevamente."},
@@ -144,7 +144,7 @@ class AgendaOperacionForm(forms.Form):
         error_messages={"invalid_choice": "Elegí una hora de fin posterior al inicio y dentro del horario del día."},
     )
     actividades = forms.MultipleChoiceField(
-        label="Elegir actividades",
+        label="Elegir actividades a bloquear",
         choices=(
             ("clase_manual", "Clases creadas manualmente"),
             ("clase_generada", "Clases generadas desde la planilla"),
@@ -156,17 +156,17 @@ class AgendaOperacionForm(forms.Form):
         widget=forms.CheckboxSelectMultiple(),
     )
     motivo_bloqueo = forms.ChoiceField(
-        label="Motivo del bloqueo *",
+        label="Motivo del bloqueo",
         required=False,
         choices=(("", "Elegí un motivo"), *Bloqueo.Motivo.choices),
         widget=forms.Select(attrs={"class": "form-control"}),
     )
     motivo_anulacion = forms.CharField(
         min_length=5,
-        label="Motivo de anulación *",
+        label="Motivo de anulación",
         required=False,
         help_text="Mínimo 5 caracteres",
-        widget=forms.TextInput(attrs={"class": "form-control"}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ingresá al menos 5 caracteres"}),
     )
     observaciones = forms.CharField(
         required=False,
@@ -180,6 +180,7 @@ class AgendaOperacionForm(forms.Form):
         if fecha > fecha_maxima_eventos():
             self.fields["operacion"].choices = (("liberar", "Anular y liberar"),)
             self.fields["operacion"].initial = "liberar"
+            self.fields["actividades"].label = "Elegir actividades a liberar"
         ahora = timezone.localtime()
         horas_por_sede = {str(sede.pk): self._horas_habilitadas(sede, fecha, ahora) for sede in sedes}
         self.fields["horario"].widget.attrs["data-horas-por-sede"] = json.dumps(horas_por_sede)
@@ -264,7 +265,11 @@ class AgendaOperacionForm(forms.Form):
 class AgendaMesForm(forms.Form):
     mes = forms.DateField(
         label="Mes", input_formats=["%Y-%m"],
-        widget=forms.Select(attrs={"class": "form-control"}),
+        widget=forms.Select(attrs={
+            "class": "form-control",
+            "form": "agenda-operacion-selector",
+            "data-auto-envio-campo": "",
+        }),
     )
 
     def __init__(self, *args, **kwargs):
@@ -323,7 +328,7 @@ class AgendaOperacionMesForm(AgendaOperacionForm):
         self.fields["operacion"].choices = (("liberar", "Anular y liberar"),)
         self.fields["operacion"].initial = "liberar"
         self.fields["operacion"].disabled = True
-        self.fields["operacion"].widget.attrs["form"] = "agenda-operacion-mes"
+        self.fields["actividades"].label = "Elegir actividades a liberar"
         self.fields.pop("motivo_bloqueo")
         self.fields.pop("observaciones")
 

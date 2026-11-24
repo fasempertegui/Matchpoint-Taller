@@ -1,0 +1,36 @@
+{% load encabezados formularios tablas %}
+{% if reserva %}
+    {% texto_titulo as titulo_modal %}Anular y bloquear turno{% endtexto_titulo %}
+    {% texto_titulo as boton_enviar %}Anular y bloquear{% endtexto_titulo %}
+{% else %}
+    {% texto_titulo as titulo_modal %}Bloquear turno{% endtexto_titulo %}
+    {% texto_titulo as boton_enviar %}Bloquear turno{% endtexto_titulo %}
+{% endif %}
+{% modal_formulario titulo_modal action=accion_url peligro=reserva amplio=True texto_enviar=boton_enviar %}
+    <input type="hidden" name="siguiente" value="{{ siguiente }}">
+    {{ formulario.evento_esperado }}
+    {% tabla_datos etiqueta="Datos del turno" %}
+        <tr><th scope="row">Ubicación</th><td>{{ cancha.nombre }}, {{ cancha.sede.nombre }}</td></tr>
+        <tr><th scope="row">Fecha y horario</th><td>{{ fecha|date:"d/m/Y" }} de {{ hora|time:"H:i" }} a {{ fin|time:"H:i" }}</td></tr>
+        {% if reserva %}
+            <tr><th scope="row">Reserva afectada</th><td>{{ reserva.numero }} de {{ reserva.organizador }}</td></tr>
+        {% endif %}
+    {% endtabla_datos %}
+    {% if reserva %}
+        <div class="formulario-aviso formulario-aviso-peligro">
+            <p>Se anulará la reserva {{ reserva.numero }} de {{ reserva.organizador }} y se creará un bloqueo sobre este turno.{% if reserva.es_con_membresia %} Se liberan las horas comprometidas del organizador y de los invitados.{% endif %}</p>
+        </div>
+    {% endif %}
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    {% for error in formulario.evento_esperado.errors %}
+        <p class="error-campo" role="alert">{{ error }}</p>
+    {% endfor %}
+    <div class="grupo-campo">
+        <label for="{{ formulario.motivo.id_for_label }}">{{ formulario.motivo.label }}</label>
+        {{ formulario.motivo }}
+        {% for error in formulario.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+    {% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}
+{% endmodal_formulario %}

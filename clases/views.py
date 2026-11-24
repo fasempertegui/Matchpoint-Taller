@@ -128,45 +128,54 @@ def buscar_personas(request):
 def clase_crear(request):
     usuario = exigir_administracion_clases(request.user)
     ubicacion = ClaseTurnoForm(request.GET)
-    en_agenda = request.headers.get("X-Agenda-Clase") == "1"
     if not ubicacion.is_valid():
-        if en_agenda:
-            return JsonResponse({"errores": {"__all__": ["El turno ya no es válido. Elegí nuevamente desde Agenda."]}}, status=400)
         messages.error(request, "Elegí una cancha, fecha y hora válidas desde la agenda.")
         return redirect("agenda:agenda")
     cancha = ubicacion.cleaned_data["cancha"]
     fecha = ubicacion.cleaned_data["fecha"]
     hora = time(ubicacion.cleaned_data["hora"])
+    hora_fin = (datetime.combine(fecha, hora) + timedelta(hours=1)).time()
     url_agenda = reverse("agenda:agenda") + "?" + urlencode({
         "sede": cancha.sede_id, "cancha": cancha.pk, "fecha": fecha.isoformat(), "hora": hora.hour,
     })
-    if request.method != "POST" or not en_agenda:
-        return redirect(url_agenda + "&crear_clase=1")
-    formulario = ClaseForm(request.POST)
-    if formulario.is_valid():
+    impedimento = None
+    try:
+        validar_ubicacion_clase(cancha, fecha, hora)
+    except ValidationError as error:
+        impedimento = " ".join(error.messages)
+
+    formulario = ClaseForm(request.POST if request.method == "POST" else None)
+    revision = None
+    if request.method == "POST" and formulario.is_valid():
+        paso = request.POST.get("paso")
         try:
-            if request.POST.get("paso") == "confirmar":
-                registrar_clase(
+            if paso == "confirmar":
+                clase = registrar_clase(
                     usuario, cancha, fecha, hora, **formulario.parametros(),
                     confirmacion=request.POST.get("confirmacion", ""),
                 )
-                return JsonResponse({"url_agenda": url_agenda, "mensaje": "La clase fue creada."})
-            if request.POST.get("paso") != "revisar":
+                messages.success(request, "La clase fue creada.")
+                return redirect("clases:clase_detalle", pk=clase.pk)
+            if paso == "revisar":
+                revision = preparar_registro_clase(usuario, cancha, fecha, hora, **formulario.parametros())
+            elif paso != "editar":
                 raise ValidationError("La acción solicitada no es válida.")
-            revision = preparar_registro_clase(usuario, cancha, fecha, hora, **formulario.parametros())
         except ValidationError as error:
             formulario.add_error(None, error)
-        else:
-            resumen = render_to_string("agenda/_clase_resumen.html", {
-                "profesores": formulario.seleccionados("profesores"),
-                "participantes": formulario.seleccionados("participantes"),
-                "observaciones": formulario.cleaned_data["observaciones"],
-                "advertencias": revision["advertencias"],
-                "cancha": cancha, "fecha": fecha, "hora": hora,
-                "hora_fin": (datetime.combine(fecha, hora) + timedelta(hours=1)).time(),
-            }, request=request)
-            return JsonResponse({"resumen": resumen, "confirmacion": revision["confirmacion"]})
-    return JsonResponse({"errores": dict(formulario.errors)}, status=400)
+
+    return render(request, "clases/clase_formulario.html", {
+        "editando": False,
+        "formulario": formulario,
+        "revision": revision,
+        "impedimento": impedimento,
+        "profesores": formulario.seleccionados("profesores"),
+        "participantes": formulario.seleccionados("participantes"),
+        "cancha": cancha,
+        "fecha": fecha,
+        "hora": hora,
+        "hora_fin": hora_fin,
+        "url_cancelar": url_agenda,
+    })
 
 
 @login_required
@@ -284,34 +293,6 @@ def clase_cambiar_cancha(request, pk):
 @require_http_methods(["GET", "POST"])
 def clase_anular(request, pk, bloquear=False):
     usuario = exigir_administracion_clases(request.user)
-    if request.headers.get("X-Agenda-Anulacion") == "1":
-        if request.method != "POST":
-            return JsonResponse({"error": "La revisión requiere enviar el formulario."}, status=405)
-        formulario = ClaseAnulacionForm(request.POST, bloquear=bloquear)
-        if not formulario.is_valid():
-            return JsonResponse({"error": " ".join(error for errores in formulario.errors.values() for error in errores)}, status=400)
-        try:
-            confirmacion = preparar_anulacion_clase(
-                usuario, pk, bloquear=bloquear, **formulario.cleaned_data,
-                version=request.POST.get("version", ""),
-            )
-            clase = consultar_edicion_clase(usuario, pk)["clase"]
-        except Clase.DoesNotExist:
-            raise Http404("La clase no existe.") from None
-        except ValidationError as error:
-            return JsonResponse({"error": " ".join(error.messages)}, status=400)
-        turno = clase.evento.turno
-        motivo = formulario.cleaned_data["motivo"]
-        efecto = "El turno quedará bloqueado." if bloquear else "El turno quedará disponible."
-        mensaje = (
-            f"¿Anular la clase de {turno.cancha.sede.nombre}, {turno.cancha.nombre}, "
-            f"el {turno.fecha:%d/%m/%Y} de {turno.hora_inicio:%H:%M} a {turno.hora_fin:%H:%M}?"
-            f"\n\nMotivo: {motivo}\n\n{efecto}"
-        )
-        if formulario.cleaned_data.get("observaciones"):
-            mensaje += f"\n\nObservaciones: {formulario.cleaned_data['observaciones']}"
-        return JsonResponse({"confirmacion": confirmacion, "mensaje": mensaje})
-
     url_detalle = reverse("clases:clase_detalle", args=[pk])
     if not es_peticion_modal(request):
         return redirect(url_detalle)

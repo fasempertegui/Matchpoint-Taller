@@ -88,6 +88,12 @@ window.prepararCamposOperacion = function () {
         }
         formulario.querySelector("[data-operacion-motivo-anulacion]").hidden = bloquear;
         formulario.elements.motivo_anulacion.disabled = bloquear;
+        var tituloActividades = formulario.querySelector("[data-operacion-actividades-titulo]");
+        if (tituloActividades) {
+            tituloActividades.textContent = bloquear
+                ? "Elegir actividades a bloquear"
+                : "Elegir actividades a liberar";
+        }
         var opcionBloqueos = formulario.querySelector("[data-operacion-actividad-bloqueo]");
         if (opcionBloqueos) {
             opcionBloqueos.hidden = bloquear;
@@ -95,7 +101,9 @@ window.prepararCamposOperacion = function () {
         }
     }
 
-    formulario.addEventListener("change", actualizarCampos);
+    formulario.addEventListener("change", function (evento) {
+        if (evento.target.form === formulario) actualizarCampos();
+    });
     actualizarCampos();
 };
 

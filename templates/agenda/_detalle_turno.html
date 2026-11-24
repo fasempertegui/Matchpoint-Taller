@@ -1,7 +1,8 @@
-{% load l10n %}
 {% with detalle=agenda.detalle %}
     {% if detalle.es_invitado %}
-        <h2>Tu invitación · {{ detalle.reserva.numero }}</h2><p>{{ detalle.fecha|date:"d/m/Y" }} · {{ detalle.hora|time:"H:i" }} · {{ detalle.cancha.nombre }}</p><a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' detalle.reserva.pk %}">Ver mi invitación</a>
+        <h2>Tu invitación ({{ detalle.reserva.numero }})</h2>
+        <p>{{ detalle.cancha.nombre }}, {{ detalle.fecha|date:"d/m/Y" }} a las {{ detalle.hora|time:"H:i" }}</p>
+        <a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' detalle.reserva.pk %}">Ver mi invitación</a>
     {% elif detalle %}
         {% include "agenda/_cabecera_turno.html" %}
         {% if not detalle.evento %}<div class="agenda-creaciones">{% endif %}
@@ -30,95 +31,57 @@
         {% elif not detalle.evento %}
             <p class="agenda-impedimento">{{ detalle.impedimento }}</p>
         {% endif %}
-        {% if detalle.clase %}
-            {% if detalle.puede_anular_clase or detalle.puede_bloquear_clase %}
-                <div class="agenda-opciones-evento">
-                    {% if detalle.puede_anular_clase %}
-                        {% include "agenda/_anulacion_clase.html" with formulario=formulario_clase_liberar bloquear=False %}
-                    {% endif %}
-                    {% if detalle.puede_bloquear_clase %}
-                        {% include "agenda/_anulacion_clase.html" with formulario=formulario_clase_bloquear bloquear=True %}
-                    {% endif %}
-                </div>
-            {% endif %}
-        {% endif %}
+
         {% if detalle.puede_crear_clase %}
-            <details class="agenda-desplegable" name="agenda-accion" data-agenda-creacion="clase" data-agenda-accion="Nueva clase" data-agenda-opcion-creacion{% if request.GET.crear_clase %} open{% endif %}>
-                <summary class="agenda-opcion">
-                    {% include "agenda/_opcion_turno.html" with tipo="clase" titulo="Crear clase" descripcion="Asigná profesores y participantes al turno" only %}
-                </summary>
-                {% include "agenda/_clase_formulario.html" with formulario=formulario_clase %}
-            </details>
+            <a class="agenda-opcion" href="{{ detalle.url_crear_clase }}">
+                {% include "agenda/_opcion_turno.html" with tipo="clase" titulo="Crear clase" descripcion="Asigná profesores y participantes al turno" only %}
+            </a>
         {% endif %}
         {% if not detalle.evento %}</div>{% endif %}
+
+        {% if detalle.puede_anular_clase or detalle.puede_bloquear_clase %}
+            <div class="agenda-opciones-evento">
+                {% if detalle.puede_anular_clase %}
+                    <button class="agenda-opcion agenda-opcion-anular" type="button" data-abrir-modal-url="{{ detalle.url_anular_clase }}">
+                        {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular y liberar" descripcion="Cancelá el evento y dejá el turno disponible" only %}
+                    </button>
+                {% endif %}
+                {% if detalle.puede_bloquear_clase %}
+                    <button class="agenda-opcion agenda-opcion-anular" type="button" data-abrir-modal-url="{{ detalle.url_bloquear_clase }}">
+                        {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular y bloquear" descripcion="Cancelá el evento y marcá el turno como no disponible" only %}
+                    </button>
+                {% endif %}
+            </div>
+        {% endif %}
+
         {% if detalle.puede_anular or detalle.puede_liberar_bloqueo or detalle.puede_bloquear %}
-            <div{% if detalle.bloqueo or detalle.reserva %} class="agenda-opciones-evento"{% elif detalle.puede_anular or detalle.reserva %} class="agenda-acciones-anulacion"{% endif %}>
-            {% if detalle.puede_anular %}
-                <details class="agenda-desplegable" name="agenda-accion" data-agenda-accion="{% if es_administrador %}Anular y liberar{% else %}Anular reserva{% endif %}"{% if formulario_anulacion.is_bound %} open{% endif %}>
-                    <summary class="agenda-opcion agenda-opcion-anular">
+            <div{% if detalle.bloqueo or detalle.reserva %} class="agenda-opciones-evento"{% elif not detalle.evento %} class="agenda-bloquear-turno"{% endif %}>
+                {% if detalle.puede_anular %}
+                    <button class="agenda-opcion agenda-opcion-anular" type="button" data-abrir-modal-url="{{ detalle.url_anular_reserva }}">
                         {% if es_administrador %}
                             {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular y liberar" descripcion="Cancelá el evento y dejá el turno disponible" only %}
                         {% else %}
                             {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular reserva" descripcion="Cancelá el evento y dejá el turno disponible" only %}
                         {% endif %}
-                    </summary>
-                    <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Confirmás la anulación de la reserva {{ detalle.reserva.numero }}? {% if detalle.reserva.es_con_membresia %}{% if es_administrador %}Se liberan las horas del organizador y de los invitados.{% else %}Más de dos horas libera la hora del organizador; dos horas o menos conserva su consumo. Las horas de invitados se liberan siempre.{% endif %}{% endif %} No se devuelve dinero automáticamente." data-confirmar-titulo="Anular reserva" data-confirmar-boton="{% if es_administrador %}Anular y liberar{% else %}Anular reserva{% endif %}">
-                        {% csrf_token %}<input type="hidden" name="accion" value="anular"><input type="hidden" name="reserva" value="{{ detalle.reserva.pk }}">
-                        {{ formulario_anulacion.non_field_errors }}
-                        <div class="grupo-campo"><label for="{{ formulario_anulacion.motivo.id_for_label }}">Motivo</label>{{ formulario_anulacion.motivo }}<small class="nota-campo">{{ formulario_anulacion.motivo.help_text }}</small>{% for error in formulario_anulacion.motivo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
-                        <button class="boton boton-chico boton-confirmar-peligro" type="submit">{% if es_administrador %}Confirmar{% else %}Anular reserva{% endif %}</button>
-                        <button class="boton boton-secundario boton-chico" type="button" data-cancelar-accion>Cancelar</button>
-                    </form>
-                </details>
-            {% endif %}
-            {% if detalle.puede_liberar_bloqueo %}
-                <details class="agenda-desplegable" name="agenda-accion" data-agenda-accion="Anular y liberar"{% if formulario_liberacion.is_bound %} open{% endif %}>
-                    <summary class="agenda-opcion agenda-opcion-anular">
-                        {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular y liberar" descripcion="Cancelá el evento y dejá el turno disponible" only %}
-                    </summary>
-                    <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="¿Anular el bloqueo {{ detalle.bloqueo.numero }} y liberar el turno de {{ detalle.cancha.nombre }}, el {{ detalle.fecha|date:'d/m/Y' }} de {{ detalle.hora|time:'H:i' }} a {{ detalle.fin|time:'H:i' }}?" data-confirmar-titulo="Anular bloqueo" data-confirmar-boton="Anular y liberar">
-                        {% csrf_token %}<input type="hidden" name="accion" value="liberar_bloqueo">
-                        {{ formulario_liberacion.bloqueo }}
-                        {{ formulario_liberacion.non_field_errors }}
-                        {% for error in formulario_liberacion.bloqueo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-                        <div class="grupo-campo"><label for="{{ formulario_liberacion.motivo.id_for_label }}">Motivo de anulación</label>{{ formulario_liberacion.motivo }}{% for error in formulario_liberacion.motivo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
-                        <button class="boton boton-chico boton-confirmar-peligro" type="submit">Confirmar</button>
-                        <button class="boton boton-secundario boton-chico" type="button" data-cancelar-accion>Cancelar</button>
-                    </form>
-                </details>
-            {% endif %}
-            {% if detalle.puede_bloquear %}
-                <details class="agenda-desplegable{% if not detalle.evento %} agenda-bloquear-turno{% endif %}" name="agenda-accion"{% if detalle.evento %} data-agenda-accion="Anular y bloquear"{% else %} data-agenda-creacion="bloqueo" data-agenda-opcion-creacion{% endif %}{% if formulario_bloqueo.is_bound %} open{% endif %}>
-                    {% if detalle.reserva %}
-                        <summary class="agenda-opcion agenda-opcion-anular">
+                    </button>
+                {% endif %}
+                {% if detalle.puede_liberar_bloqueo %}
+                    <button class="agenda-opcion agenda-opcion-anular" type="button" data-abrir-modal-url="{{ detalle.url_liberar_bloqueo }}">
+                        {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular y liberar" descripcion="Cancelá el bloqueo y dejá el turno disponible" only %}
+                    </button>
+                {% endif %}
+                {% if detalle.puede_bloquear %}
+                    <button class="agenda-opcion {% if detalle.reserva %}agenda-opcion-anular{% else %}agenda-opcion-bloqueo{% endif %}" type="button" data-abrir-modal-url="{{ detalle.url_bloquear }}">
+                        {% if detalle.reserva %}
                             {% include "agenda/_opcion_turno.html" with tipo="anular" titulo="Anular y bloquear" descripcion="Cancelá el evento y marcá el turno como no disponible" only %}
-                        </summary>
-                    {% else %}
-                        <summary class="agenda-opcion agenda-opcion-bloqueo">
+                        {% else %}
                             {% include "agenda/_opcion_turno.html" with tipo="bloqueo" titulo="Bloquear turno" descripcion="Marcá este turno como no disponible" only %}
-                        </summary>
-                    {% endif %}
-                    {% if detalle.reserva %}<p class="agenda-impedimento">Se anulará la reserva de {{ detalle.reserva.organizador }} y se creará un bloqueo para este turno</p>{% endif %}
-                    <form class="agenda-formulario" method="post" action="{{ agenda.url_seleccion }}" data-confirmar="{% if detalle.reserva %}¿Anular la reserva {{ detalle.reserva.numero }} de {{ detalle.reserva.organizador }} y bloquear{% else %}¿Bloquear{% endif %} el turno de {{ detalle.cancha.nombre }}, el {{ detalle.fecha|date:'d/m/Y' }} de {{ detalle.hora|time:'H:i' }} a {{ detalle.fin|time:'H:i' }}?" data-confirmar-titulo="{% if detalle.reserva %}Anular y bloquear{% else %}Bloquear turno{% endif %}" data-confirmar-boton="{% if detalle.reserva %}Anular y bloquear{% else %}Bloquear turno{% endif %}" data-agenda-bloqueo>
-                        {% csrf_token %}<input type="hidden" name="accion" value="bloquear">
-                        {{ formulario_bloqueo.evento_esperado }}
-                        {{ formulario_bloqueo.non_field_errors }}
-                        {% for error in formulario_bloqueo.evento_esperado.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}
-                        {% for campo in formulario_bloqueo.visible_fields %}
-                            {% if campo.name != 'observaciones' %}
-                                <div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}{% for error in campo.errors %}<p class="error-campo">{{ error }}</p>{% endfor %}</div>
-                            {% endif %}
-                        {% endfor %}
-                        {% include "componentes/observaciones_opcionales.html" with campo=formulario_bloqueo.observaciones only %}
-                        <div class="agenda-formulario-acciones">
-                            <button class="boton {% if detalle.reserva %}boton-confirmar-peligro{% else %}boton-primario{% endif %} boton-chico" type="submit">{% if detalle.reserva %}Confirmar{% else %}Confirmar bloqueo{% endif %}</button>
-                            <button class="boton boton-secundario boton-chico" type="button" data-cancelar-creacion data-cancelar-accion>Cancelar</button>
-                        </div>
-                    </form>
-                </details>
-            {% endif %}
+                        {% endif %}
+                    </button>
+                {% endif %}
             </div>
         {% endif %}
+
         {% if detalle.bloqueo or detalle.reserva or detalle.clase %}
             <div class="agenda-ver-evento">
                 <a class="agenda-opcion" href="{% if detalle.bloqueo %}{% url 'agenda:bloqueo_detalle' detalle.bloqueo.pk %}{% elif detalle.reserva %}{% url 'reservas:reserva_detalle' detalle.reserva.pk %}{% else %}{% url 'clases:clase_detalle' detalle.clase.pk %}{% endif %}">

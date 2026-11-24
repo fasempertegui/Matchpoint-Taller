@@ -5,216 +5,10 @@ document.addEventListener("DOMContentLoaded", function () {
     var aviso = panel && panel.querySelector("[data-agenda-aviso]");
     var solicitudActual = null;
 
-    function prepararOrganizador() {
-        var selector = contenido && contenido.querySelector("[data-organizador-selector]");
-        if (!selector) return;
-        var entrada = selector.querySelector("[data-organizador-busqueda]");
-        var campo = selector.querySelector('input[name="organizador"]');
-        var seleccion = selector.querySelector("[data-organizador-seleccion]");
-        var buscador = selector.querySelector("[data-organizador-buscador]");
-        var nombre = selector.querySelector("[data-organizador-nombre]");
-        var usuario = selector.querySelector("[data-organizador-usuario]");
-        var resultados = selector.querySelector("[data-organizador-resultados]");
-        var estado = selector.querySelector("[data-estado]");
-        var solicitud = null;
-        var demora = null;
-
-        function limpiarBusqueda() {
-            window.clearTimeout(demora);
-            if (solicitud) solicitud.abort();
-            resultados.replaceChildren();
-            resultados.hidden = true;
-            estado.textContent = "";
-        }
-
-        function quitar() {
-            limpiarBusqueda();
-            campo.value = "";
-            nombre.textContent = "";
-            usuario.textContent = "";
-            entrada.value = "";
-            seleccion.hidden = true;
-            buscador.hidden = false;
-        }
-
-        function elegir(persona) {
-            limpiarBusqueda();
-            campo.value = persona.id;
-            nombre.textContent = persona.nombre;
-            usuario.textContent = persona.usuario;
-            entrada.value = "";
-            seleccion.hidden = false;
-            buscador.hidden = true;
-            selector.querySelector("[data-organizador-quitar]").focus();
-        }
-
-        async function buscar() {
-            var texto = entrada.value.trim();
-            if (texto.length < 2 || !selector.isConnected) return;
-            var actual = new AbortController();
-            solicitud = actual;
-            estado.textContent = "Buscando…";
-            var url = new URL(selector.dataset.url, window.location.origin);
-            url.searchParams.set("q", texto);
-            try {
-                var respuesta = await fetch(url, {signal: actual.signal, credentials: "same-origin", cache: "no-store"});
-                if (!respuesta.ok || respuesta.redirected) throw new Error();
-                var datos = await respuesta.json();
-                if (solicitud !== actual || entrada.value.trim() !== texto || !selector.isConnected) return;
-                resultados.replaceChildren();
-                datos.resultados.forEach(function (persona) {
-                    var fila = document.createElement("li");
-                    var boton = document.createElement("button");
-                    boton.type = "button";
-                    boton.textContent = persona.nombre;
-                    var detalle = document.createElement("small");
-                    detalle.textContent = persona.usuario;
-                    boton.append(detalle);
-                    boton.addEventListener("click", function () { elegir(persona); });
-                    fila.append(boton);
-                    resultados.append(fila);
-                });
-                resultados.hidden = datos.resultados.length === 0;
-                estado.textContent = datos.resultados.length ? datos.resultados.length + " coincidencias. Elegí una para agregar." : "Sin coincidencias disponibles.";
-                if (datos.hay_mas) estado.textContent += " Hay más resultados: precisá la búsqueda.";
-            } catch (error) {
-                if (error.name !== "AbortError" && solicitud === actual && selector.isConnected) {
-                    estado.textContent = "No se pudo buscar. Volvé a escribir o recargá la página si tu sesión venció.";
-                }
-            }
-        }
-
-        entrada.addEventListener("input", function () {
-            limpiarBusqueda();
-            if (entrada.value.trim().length >= 2) demora = window.setTimeout(buscar, 250);
-        });
-        selector.querySelector("[data-organizador-quitar]").addEventListener("click", function () {
-            quitar();
-            entrada.focus();
-        });
-        selector.addEventListener("organizador:limpiar", quitar);
-        selector.addEventListener("keydown", function (evento) {
-            var botones = Array.from(resultados.querySelectorAll("button"));
-            var indice = botones.indexOf(document.activeElement);
-            if (evento.key === "ArrowDown" && botones.length) {
-                evento.preventDefault();
-                botones[(indice + 1) % botones.length].focus();
-            } else if (evento.key === "ArrowUp" && indice >= 0) {
-                evento.preventDefault();
-                if (indice === 0) entrada.focus();
-                else botones[indice - 1].focus();
-            } else if (evento.key === "Escape") {
-                limpiarBusqueda();
-                if (!buscador.hidden) entrada.focus();
-            } else if (evento.key === "Enter" && evento.target === entrada) {
-                evento.preventDefault();
-                if (botones.length) botones[0].focus();
-            }
-        });
-    }
-
-    function prepararAccionesTurno() {
-        if (!contenido) return;
-        var opciones = Array.from(contenido.querySelectorAll("[data-agenda-opcion-creacion]"));
-        var formularios = Array.from(contenido.querySelectorAll("[data-agenda-creacion], [data-agenda-accion]"));
-        if (!formularios.length) return;
-        var titulo = contenido.querySelector("[data-agenda-titulo]");
-        var tituloInicial = titulo.textContent;
-        var secundarios = Array.from(contenido.children).filter(function (elemento) {
-            return !elemento.matches(".agenda-detalle-cabecera, .agenda-datos");
-        });
-
-        function actualizar() {
-            var activa = formularios.find(function (opcion) { return opcion.open; });
-            opciones.forEach(function (opcion) {
-                opcion.hidden = Boolean(activa && opcion !== activa);
-            });
-            secundarios.forEach(function (elemento) {
-                elemento.hidden = Boolean(activa && elemento !== activa && !elemento.contains(activa));
-            });
-            formularios.forEach(function (opcion) {
-                opcion.hidden = Boolean(activa && opcion !== activa);
-                opcion.querySelector("summary").hidden = opcion === activa;
-            });
-            titulo.textContent = activa ? (activa.dataset.agendaAccion || (activa.dataset.agendaCreacion === "reserva" ? "Nueva reserva" : "Nuevo bloqueo")) : tituloInicial;
-        }
-
-        formularios.forEach(function (opcion) {
-            opcion.addEventListener("toggle", function () {
-                actualizar();
-                if (opcion.open) {
-                    var campo = opcion.querySelector('[data-clase-paso="0"] [data-busqueda]')
-                        || opcion.querySelector("[data-organizador-buscador]:not([hidden]) input")
-                        || opcion.querySelector("select")
-                        || opcion.querySelector("[data-agregar-observaciones]:not([hidden])")
-                        || opcion.querySelector("textarea");
-                    if (campo) campo.focus();
-                }
-            });
-            opcion.querySelector("[data-cancelar-creacion], [data-cancelar-accion]").addEventListener("click", function () {
-                var formulario = opcion.querySelector("form");
-                formulario.reset();
-                formulario.querySelectorAll("select, textarea, input:not([type=hidden])").forEach(function (campo) {
-                    if (campo.tagName === "SELECT") campo.selectedIndex = 0;
-                    else if (campo.type === "checkbox" || campo.type === "radio") campo.checked = false;
-                    else campo.value = "";
-                });
-                formulario.querySelectorAll(".error-campo:not([data-clase-error]), .errorlist").forEach(function (error) { error.remove(); });
-                formulario.querySelectorAll("[data-observaciones]").forEach(function (bloque) {
-                    bloque.dispatchEvent(new Event("observaciones:actualizar"));
-                });
-                var selector = formulario.querySelector("[data-organizador-selector]");
-                if (selector) selector.dispatchEvent(new Event("organizador:limpiar"));
-                opcion.open = false;
-                actualizar();
-                opcion.querySelector("summary").focus();
-            });
-        });
-        actualizar();
-    }
-
-    function prepararConfirmacionReserva() {
-        var formulario = document.querySelector("[data-agenda-reserva]");
-        if (!formulario) return;
-        var mensaje = formulario.dataset.confirmar;
-        formulario.addEventListener("submit", function () {
-            var organizador = formulario.elements.organizador;
-            if (organizador && organizador.value) {
-                formulario.dataset.confirmar = mensaje + "\n\nOrganizador: " + formulario.querySelector("[data-organizador-nombre]").textContent;
-            }
-        });
-    }
-
-    function prepararConfirmacionBloqueo() {
-        var formulario = document.querySelector("[data-agenda-bloqueo]");
-        if (!formulario) return;
-        var mensaje = formulario.dataset.confirmar;
-        formulario.addEventListener("submit", function () {
-            var motivo = formulario.elements["bloqueo-motivo"];
-            formulario.dataset.confirmar = mensaje + "\n\nMotivo: " + motivo.selectedOptions[0].textContent;
-        });
-    }
-
-    function desmontarPanel() {
-        contenido.querySelectorAll("[data-clase-formulario]").forEach(function (formulario) {
-            formulario.dispatchEvent(new Event("clase:desmontar"));
-        });
-    }
-
-    function prepararPanel() {
-        if (!contenido) return;
-        prepararOrganizador();
-        prepararAccionesTurno();
-        prepararConfirmacionReserva();
-        prepararConfirmacionBloqueo();
-        window.prepararCamposOperacion();
-        contenido.dispatchEvent(new Event("clase:inicializar", {bubbles: true}));
-        contenido.dispatchEvent(new Event("observaciones:inicializar", {bubbles: true}));
-    }
-
-    async function cargarDetalle(enlace, datosFormulario, devolverFoco = true) {
+    async function cargarDetalle(enlace, devolverFoco) {
+        if (devolverFoco === undefined) devolverFoco = true;
         if (solicitudActual) solicitudActual.abort();
-        var seleccionadoAnterior = document.querySelector(".agenda-turno-seleccionado") || document.querySelector('[data-agenda-acciones][aria-expanded="true"]');
+        var seleccionadoAnterior = document.querySelector(".agenda-turno-seleccionado");
         var cerrarDetalle = enlace.matches("[data-agenda-cerrar]");
         var solicitud = new AbortController();
         solicitudActual = solicitud;
@@ -230,10 +24,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 300);
         var mensajeError = "No se pudo cargar el panel. Intentá nuevamente.";
         try {
-            var respuesta = await fetch(enlace.href || enlace.action, {
-                method: datosFormulario ? "POST" : "GET",
-                body: datosFormulario,
-                headers: {"X-Agenda-Detalle": "1"},
+            var respuesta = await fetch(enlace.href, {
+                method: "GET",
+                headers: { "X-Agenda-Detalle": "1" },
                 credentials: "same-origin",
                 cache: "no-store",
                 signal: solicitud.signal,
@@ -251,28 +44,15 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!seleccion) throw new Error();
             var html = await respuesta.text();
             if (solicitud !== solicitudActual) return;
-            desmontarPanel();
             contenido.innerHTML = html;
-            prepararPanel();
             contenido.inert = false;
             if (enlace.matches("[data-agenda-vista]")) {
                 var titulo = contenido.querySelector("[data-agenda-titulo]");
                 if (titulo) {
                     titulo.setAttribute("tabindex", "-1");
-                    titulo.focus({preventScroll: true});
+                    titulo.focus({ preventScroll: true });
                 }
             }
-            var panelAcciones = contenido.querySelector("[data-agenda-panel-acciones]");
-            if (panelAcciones && enlace.matches("[data-agenda-acciones]")) {
-                var tituloAcciones = panelAcciones.querySelector("h2");
-                tituloAcciones.setAttribute("tabindex", "-1");
-                tituloAcciones.focus({preventScroll: true});
-            }
-            document.querySelectorAll("[data-agenda-acciones]").forEach(function (boton) {
-                boton.setAttribute("aria-expanded", String(Boolean(
-                    panelAcciones && panelAcciones.dataset.agendaPanelAcciones === boton.dataset.agendaAcciones
-                )));
-            });
             var destino = new URL(seleccion, window.location.href);
             document.querySelectorAll("[data-agenda-turno]").forEach(function (turno) {
                 var urlTurno = new URL(turno.href);
@@ -286,10 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             window.history.replaceState(null, "", destino.href);
             if (cerrarDetalle && devolverFoco && seleccionadoAnterior) {
-                var control = seleccionadoAnterior.matches("[data-agenda-acciones]")
-                    ? menuAcciones.querySelector("summary")
-                    : seleccionadoAnterior;
-                control.focus({preventScroll: true});
+                seleccionadoAnterior.focus({ preventScroll: true });
             }
             aviso.hidden = true;
             aviso.textContent = "";
@@ -307,59 +84,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    document.addEventListener("agenda:actualizar", async function (evento) {
-        if (!panel) return;
-        if (solicitudActual) solicitudActual.abort();
-        var solicitud = new AbortController();
-        solicitudActual = solicitud;
-        panel.setAttribute("aria-busy", "true");
-        contenido.inert = true;
-        try {
-            var respuesta = await fetch(evento.detail.url_agenda, {
-                credentials: "same-origin", cache: "no-store", signal: solicitud.signal,
-            });
-            if (!respuesta.ok || respuesta.redirected) throw new Error();
-            var pagina = new DOMParser().parseFromString(await respuesta.text(), "text/html");
-            var calendario = pagina.querySelector("[data-agenda-calendario]");
-            var detalle = pagina.querySelector("[data-agenda-contenido]");
-            if (!calendario || !detalle) throw new Error();
-            if (solicitudActual !== solicitud) return;
-            var contenedorTabla = document.querySelector(".agenda-tabla-contenedor");
-            var desplazamiento = contenedorTabla ? contenedorTabla.scrollLeft : 0;
-            desmontarPanel();
-            document.querySelector("[data-agenda-calendario]").replaceChildren(...calendario.childNodes);
-            menuAcciones = document.querySelector("[data-agenda-menu-acciones]");
-            contenido.innerHTML = detalle.innerHTML;
-            prepararPanel();
-            contenedorTabla = document.querySelector(".agenda-tabla-contenedor");
-            if (contenedorTabla) contenedorTabla.scrollLeft = desplazamiento;
-            window.history.replaceState(null, "", evento.detail.url_agenda);
-            document.dispatchEvent(new Event("agenda:grilla-actualizada"));
-            aviso.setAttribute("role", "status");
-            aviso.textContent = evento.detail.mensaje;
-            aviso.hidden = false;
-        } catch (error) {
-            if (error.name === "AbortError" || solicitudActual !== solicitud) return;
-            aviso.setAttribute("role", "alert");
-            aviso.textContent = "La clase fue creada. No se pudo actualizar la vista; presioná Actualizar agenda para volver a intentar";
-            aviso.hidden = false;
-        } finally {
-            if (solicitudActual === solicitud) {
-                panel.removeAttribute("aria-busy");
-                contenido.inert = false;
-            }
-        }
-    });
-
     document.addEventListener("click", function (evento) {
         if (menuAcciones && !menuAcciones.contains(evento.target)) menuAcciones.open = false;
-        var enlace = evento.target.closest("[data-agenda-turno], [data-agenda-cerrar], [data-agenda-acciones], [data-agenda-vista]");
+        var enlace = evento.target.closest("[data-agenda-turno], [data-agenda-cerrar], [data-agenda-vista]");
         if (!enlace || !panel || evento.defaultPrevented || evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
         evento.preventDefault();
-        if (menuAcciones && menuAcciones.contains(enlace)) {
-            menuAcciones.open = false;
-            menuAcciones.querySelector("summary").focus({preventScroll: true});
-        }
         cargarDetalle(enlace);
     });
 
@@ -378,27 +107,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.addEventListener("change", function (evento) {
-        if (evento.target.matches('[data-agenda-sede] select, [data-agenda-mes] select[name="mes"]')) {
+        if (evento.target.matches("[data-agenda-sede] select")) {
             evento.target.form.requestSubmit();
         }
-    });
-
-    document.addEventListener("submit", function (evento) {
-        var formulario = evento.target;
-        if (!formulario.matches("[data-agenda-mes]") || evento.defaultPrevented || !panel) return;
-        evento.preventDefault();
-        var enlace = document.createElement("a");
-        var url = new URL(formulario.action, window.location.href);
-        url.search = new URLSearchParams(new FormData(formulario)).toString();
-        enlace.href = url.href;
-        cargarDetalle(enlace);
-    });
-
-    document.addEventListener("submit", function (evento) {
-        var formulario = evento.target;
-        if (!formulario.matches("[data-agenda-operacion-envio]") || evento.defaultPrevented || !panel) return;
-        evento.preventDefault();
-        cargarDetalle(formulario, new FormData(formulario));
     });
 
     var tabla = document.querySelector("[data-agenda-tabla]");
@@ -424,6 +135,4 @@ document.addEventListener("DOMContentLoaded", function () {
         document.addEventListener("agenda:grilla-actualizada", marcarHoraActual);
         window.setInterval(marcarHoraActual, 30000);
     }
-
-    prepararPanel();
 });

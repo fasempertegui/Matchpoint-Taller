@@ -10,7 +10,7 @@
     {% endtabla_datos %}
     <div class="formulario-aviso formulario-aviso-peligro">
         {% if es_administrador %}
-            <p>Se anulará la reserva y el turno quedará disponible.{% if reserva.es_con_membresia %} Se liberan las horas comprometidas del organizador y de los invitados.{% endif %} Los cobros registrados no se devuelven automáticamente.</p>
+            <p>Se anulará la reserva y el turno quedará disponible.{% if reserva.es_con_membresia %} Se liberan las horas comprometidas del organizador y de los invitados.{% endif %}</p>
         {% else %}
             <p>Podés cancelar antes del inicio.{% if reserva.es_con_membresia %} Más de dos horas de antelación libera tu hora de organizador; dos horas o menos conserva su consumo. Las horas de invitados se liberan siempre.{% endif %} La devolución de dinero se gestiona por separado.</p>
         {% endif %}

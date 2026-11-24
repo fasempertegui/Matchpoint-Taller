@@ -1,4 +1,6 @@
 from calendar import monthrange
+from datetime import datetime, time, timedelta
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -7,6 +9,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
@@ -14,21 +17,25 @@ from django.views.decorators.vary import vary_on_headers
 
 from bloqueos.forms import BloqueoAnulacionForm, BloqueoForm
 from bloqueos.models import Bloqueo
-from bloqueos.servicios import anular_bloqueo, registrar_bloqueo
-from clases.anulaciones import confirmar_anulacion_clase
-from clases.forms import ClaseAnulacionForm, ClaseForm
+from bloqueos.servicios import anular_bloqueo, registrar_bloqueo, validar_anulacion_bloqueo
+from clases.forms import ClaseTurnoForm
 from clases.permisos import exigir_acceso_clases, exigir_administracion_clases
-from clases.servicios import consultar_edicion_clase
-from common.fechas import opciones_meses_agenda
+from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, opciones_meses_agenda
+from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
 from instalaciones.models import Sede
-from reservas.disponibilidad import consultar_disponibilidad
-from reservas.forms import ReservaAnulacionForm
-from reservas.servicios import anular_reserva, exigir_acceso_reservas, finalizar_reserva, registrar_reserva
+from reservas.models import Evento
+from reservas.servicios import exigir_acceso_reservas, finalizar_reserva
 from usuarios.models import Rol
 
 from .forms import AgendaFiltroForm, AgendaMesForm, AgendaOperacionForm, AgendaOperacionMesForm, AgendaReservaForm
 from .operaciones import ejecutar_operacion, preparar_operacion
-from .servicios import construir_agenda, enlace_agenda
+from .servicios import construir_agenda, enlace_acciones, enlace_agenda
+
+
+def _destino_seguro(valor, defecto):
+    if valor and valor.startswith("/") and not valor.startswith("//"):
+        return valor
+    return defecto
 
 
 @login_required
@@ -65,13 +72,9 @@ def agenda(request):
     es_administrador = usuario.tiene_rol(Rol.ADMINISTRADOR)
     if request.method == "POST":
         exigir_acceso_reservas(usuario)
-    panel_acciones_mes = request.GET.get("panel") == "acciones_mes"
-    panel_acciones = request.GET.get("panel") in ("acciones", "acciones_mes")
     panel_historial = request.GET.get("panel") == "historial" and request.method == "GET"
     accion = request.POST.get("accion") if request.method == "POST" else None
-    if not es_administrador and (
-        panel_acciones or (request.method == "POST" and accion not in ("reservar", "anular"))
-    ):
+    if request.method == "POST" and (not es_administrador or accion != "finalizar"):
         raise PermissionDenied
 
     parametros = request.GET.copy()
@@ -80,154 +83,28 @@ def agenda(request):
     if sede_inicial is not None:
         parametros.setdefault("sede", str(sede_inicial.pk))
     formulario = AgendaFiltroForm(parametros)
-    contexto_acciones = {}
-    formulario_reserva = AgendaReservaForm(
-        request.POST if accion == "reservar" else None,
-        es_administrador=es_administrador,
-    )
-    formulario_anulacion = ReservaAnulacionForm(request.POST if accion == "anular" else None)
-    formulario_bloqueo = None
-    formulario_liberacion = None
-    formulario_clase_liberar = ClaseAnulacionForm(
-        request.POST if accion == "anular_clase" else None,
-        bloquear=False, auto_id="clase-liberar_%s",
-    )
-    formulario_clase_bloquear = ClaseAnulacionForm(
-        request.POST if accion == "bloquear_clase" else None,
-        bloquear=True, auto_id="clase-bloquear_%s",
-    )
     datos = {}
     if sede_inicial is not None and formulario.is_valid():
         filtros = formulario.cleaned_data
         argumentos = {
             "sede": filtros["sede"], "cancha": filtros["cancha"], "fecha": filtros["fecha"],
-            "hora_seleccionada": None if panel_acciones else filtros["hora"],
+            "hora_seleccionada": filtros["hora"],
             "fecha_maxima": formulario.fecha_maxima,
             "usuario": usuario, "es_administrador": es_administrador,
             "historial": panel_historial,
         }
         datos = construir_agenda(**argumentos)
-        detalle = datos["detalle"]
-        if detalle is not None and es_administrador:
-            formulario_bloqueo = BloqueoForm(
-                request.POST if accion == "bloquear" else None,
-                prefix="bloqueo",
-                initial={"evento_esperado": detalle["evento"].pk if detalle["evento"] else 0},
-            )
-            formulario_liberacion = BloqueoAnulacionForm(
-                request.POST if accion == "liberar_bloqueo" else None,
-                prefix="liberacion",
-                initial={"bloqueo": detalle["bloqueo"].pk if detalle["bloqueo"] else None},
-            )
-        if panel_acciones:
-            if panel_acciones_mes:
-                parametros_mes = request.GET.copy()
-                mes_inicial = filtros["fecha"].strftime("%Y-%m")
-                if mes_inicial not in dict(opciones_meses_agenda()):
-                    mes_inicial = timezone.localdate().strftime("%Y-%m")
-                parametros_mes.setdefault("mes", mes_inicial)
-                formulario_mes = AgendaMesForm(parametros_mes)
-                contexto_acciones = {
-                    "mensual": True, "formulario_mes": formulario_mes,
-                    "fecha": filtros["fecha"],
-                    "url_operacion": datos["url_acciones_mes"],
-                }
-                if formulario_mes.is_valid():
-                    mes = formulario_mes.cleaned_data["mes"]
-                    fin = mes.replace(day=monthrange(mes.year, mes.month)[1])
-                    datos["url_acciones_mes"] = enlace_agenda(
-                        filtros["sede"], filtros["fecha"], filtros["cancha"], acciones_mes=True, mes=mes,
-                    )
-                    contexto_acciones["url_operacion"] = datos["url_acciones_mes"]
-                    operacion = _preparar_acciones(request, mes, datos["url_cerrar"], fin)
-                    if isinstance(operacion, HttpResponseRedirect):
-                        return operacion
-                    contexto_acciones.update(operacion)
-            else:
-                contexto_acciones = _preparar_acciones(request, filtros["fecha"], datos["url_cerrar"])
-            if isinstance(contexto_acciones, HttpResponseRedirect):
-                return contexto_acciones
-            if request.method == "POST" and request.POST.get("paso") == "confirmar":
-                datos = construir_agenda(**argumentos)
-                if panel_acciones_mes:
-                    datos["url_acciones_mes"] = contexto_acciones["url_operacion"]
-        elif request.method == "POST":
+        if request.method == "POST":
             try:
                 detalle = datos["detalle"]
                 if detalle is None:
                     raise ValidationError("Seleccioná un turno en la agenda.")
-                if accion == "reservar":
-                    if not detalle["puede_reservar"]:
-                        raise ValidationError(detalle["impedimento"] or "El turno ya está ocupado. Revisá la agenda.")
-                    if formulario_reserva.is_valid():
-                        disponibilidad = consultar_disponibilidad(detalle["cancha"], detalle["fecha"])
-                        turno = next((
-                            turno for turno in disponibilidad["turnos"] if turno.hora_inicio == detalle["hora"]
-                        ), None)
-                        if turno is None:
-                            raise ValidationError("El turno ya no está disponible. Revisá la agenda.")
-                        reserva = registrar_reserva(
-                            request.user, formulario_reserva.cleaned_data.get("organizador", request.user),
-                            detalle["cancha"], detalle["fecha"], turno.pk,
-                            formulario_reserva.cleaned_data["precio_mostrado"],
-                            formulario_reserva.cleaned_data["observaciones"],
-                        )
-                        messages.success(request, f"La reserva {reserva.numero} fue registrada.")
-                        return redirect(datos["url_seleccion"])
-                elif accion in ("anular_clase", "bloquear_clase"):
-                    exigir_administracion_clases(usuario)
-                    bloquear = accion == "bloquear_clase"
-                    permiso = "puede_bloquear_clase" if bloquear else "puede_anular_clase"
-                    clase = detalle["clase"]
-                    if not detalle[permiso] or clase is None or request.POST.get("clase") != str(clase.pk):
-                        raise ValidationError("La clase o la acción disponible cambió. Revisá el turno.")
-                    formulario_clase = formulario_clase_bloquear if bloquear else formulario_clase_liberar
-                    if formulario_clase.is_valid():
-                        confirmar_anulacion_clase(
-                            usuario, clase.pk, bloquear=bloquear, **formulario_clase.cleaned_data,
-                            confirmacion=request.POST.get("confirmacion", ""),
-                        )
-                        messages.success(request, "La clase fue anulada y su turno quedó bloqueado." if bloquear else "La clase fue anulada y su turno quedó libre.")
-                        return redirect(datos["url_seleccion"])
-                elif accion == "bloquear":
-                    if not detalle["puede_bloquear"]:
-                        raise ValidationError("El turno seleccionado no admite un nuevo bloqueo. Revisá la agenda.")
-                    if formulario_bloqueo.is_valid():
-                        valores = formulario_bloqueo.cleaned_data
-                        bloqueo = registrar_bloqueo(
-                            request.user, detalle["cancha"], detalle["fecha"], detalle["hora"],
-                            valores["motivo"], valores["observaciones"], valores["evento_esperado"],
-                            usar_motivo_bloqueo=True,
-                        )
-                        messages.success(request, f"El bloqueo {bloqueo.numero} fue registrado.")
-                        return redirect(datos["url_seleccion"])
-                elif accion == "liberar_bloqueo":
-                    if not detalle["puede_liberar_bloqueo"]:
-                        raise ValidationError("El turno seleccionado no tiene un bloqueo que pueda anularse.")
-                    if formulario_liberacion.is_valid():
-                        valores = formulario_liberacion.cleaned_data
-                        if valores["bloqueo"] != detalle["bloqueo"].pk:
-                            raise ValidationError("La actividad del turno cambió. Revisá la agenda antes de confirmar.")
-                        bloqueo = anular_bloqueo(
-                            request.user, valores["bloqueo"], valores["motivo"],
-                            detalle["cancha"], detalle["fecha"], detalle["hora"],
-                        )
-                        messages.success(request, f"El bloqueo {bloqueo.numero} fue anulado. Su turno quedó liberado.")
-                        return redirect(datos["url_seleccion"])
-                elif accion in ("anular", "finalizar"):
-                    reserva = detalle["reserva"]
-                    if reserva is None or request.POST.get("reserva") != str(reserva.pk):
-                        raise ValidationError("La actividad del turno cambió. Revisá la agenda antes de confirmar.")
-                    if accion == "anular" and formulario_anulacion.is_valid():
-                        anular_reserva(request.user, reserva.pk, formulario_anulacion.cleaned_data["motivo"])
-                        messages.success(request, f"La reserva {reserva.numero} fue anulada. Su turno quedó liberado.")
-                        return redirect(datos["url_seleccion"])
-                    if accion == "finalizar":
-                        finalizar_reserva(reserva.pk, usuario=request.user)
-                        messages.success(request, f"La reserva {reserva.numero} fue finalizada.")
-                        return redirect(datos["url_seleccion"])
-                else:
-                    raise ValidationError("La acción solicitada no es válida.")
+                reserva = detalle["reserva"]
+                if reserva is None or request.POST.get("reserva") != str(reserva.pk):
+                    raise ValidationError("La actividad del turno cambió. Revisá la agenda antes de confirmar.")
+                finalizar_reserva(reserva.pk, usuario=request.user)
+                messages.success(request, f"La reserva {reserva.numero} fue finalizada.")
+                return redirect(datos["url_seleccion"])
             except ValidationError as error:
                 for mensaje in error.messages:
                     messages.error(request, mensaje)
@@ -236,57 +113,226 @@ def agenda(request):
                     argumentos["cancha"].refresh_from_db()
                 datos = construir_agenda(**argumentos)
 
-    organizador_seleccionado = None
-    if es_administrador:
-        valor = formulario_reserva["organizador"].value()
-        if valor and str(valor).isdecimal() and len(str(valor)) < 19:
-            organizador_seleccionado = formulario_reserva.fields["organizador"].queryset.filter(pk=valor).first()
-    version_clase = ""
-    detalle_actual = datos.get("detalle")
-    if detalle_actual and (detalle_actual["puede_anular_clase"] or detalle_actual["puede_bloquear_clase"]):
-        try:
-            version_clase = consultar_edicion_clase(usuario, detalle_actual["clase"].pk)["version"]
-        except ValidationError as error:
-            detalle_actual["puede_anular_clase"] = False
-            detalle_actual["puede_bloquear_clase"] = False
-            for mensaje in error.messages:
-                messages.error(request, mensaje)
     contexto = {
-        "formulario_clase": ClaseForm(),
-        "version_clase": version_clase,
-        "formulario_clase_liberar": formulario_clase_liberar,
-        "formulario_clase_bloquear": formulario_clase_bloquear,
-        "organizador_seleccionado": organizador_seleccionado,
         "formulario": formulario,
-        "formulario_reserva": formulario_reserva,
-        "formulario_anulacion": formulario_anulacion,
-        "formulario_bloqueo": formulario_bloqueo,
-        "formulario_liberacion": formulario_liberacion,
         "hay_sedes": sede_inicial is not None,
         "agenda": datos,
-        "panel_acciones": panel_acciones,
-        "panel_acciones_mes": panel_acciones_mes,
         "panel_historial": panel_historial,
-        **contexto_acciones,
         "zona_horaria": timezone.get_current_timezone_name(),
         "es_administrador": es_administrador,
     }
     if request.headers.get("X-Agenda-Detalle") == "1":
         if not datos:
             return JsonResponse({"error": "Revisá la sede, fecha y cancha seleccionadas."}, status=400)
-        plantilla = (
-            "agenda/_acciones_dia.html" if panel_acciones else
-            "agenda/_historial_turno.html" if panel_historial else "agenda/_detalle_turno.html"
-        )
+        plantilla = "agenda/_historial_turno.html" if panel_historial else "agenda/_detalle_turno.html"
         respuesta = render(request, plantilla, contexto)
         respuesta["X-Agenda-Seleccion"] = (
-            datos["url_acciones_mes"] if panel_acciones_mes else
-            datos["url_acciones"] if panel_acciones else
             datos["url_historial"] if panel_historial and datos["detalle"] else
             datos["url_seleccion"] if datos["detalle"] else datos["url_cerrar"]
         )
         return respuesta
     return render(request, "agenda/agenda.html", contexto)
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def bloqueo_crear(request):
+    usuario = exigir_administracion_clases(request.user)
+    ubicacion = ClaseTurnoForm(request.GET)
+    url_agenda = reverse("agenda:agenda")
+    destino = _destino_seguro(request.POST.get("siguiente") or request.GET.get("siguiente"), url_agenda)
+    if not es_peticion_modal(request):
+        return redirect(destino)
+
+    if not ubicacion.is_valid():
+        messages.error(request, "El turno seleccionado no admite un nuevo bloqueo. Revisá la agenda.")
+        return respuesta_modal_exito(destino)
+
+    cancha = ubicacion.cleaned_data["cancha"]
+    fecha = ubicacion.cleaned_data["fecha"]
+    hora = time(ubicacion.cleaned_data["hora"])
+    fin = (datetime.combine(fecha, hora) + timedelta(hours=1)).time()
+    url_turno = enlace_agenda(cancha.sede, fecha, cancha, hora.hour)
+    destino = _destino_seguro(request.POST.get("siguiente") or request.GET.get("siguiente"), url_turno)
+
+    evento_actual = Evento.objects.filter(
+        turno__cancha=cancha, turno__fecha=fecha, turno__hora_inicio=hora,
+    ).exclude(estado=Evento.Estado.ANULADO).select_related("reserva__organizador").first()
+    reserva = getattr(evento_actual, "reserva", None) if evento_actual and evento_actual.tipo == Evento.Tipo.RESERVA else None
+    if evento_actual is not None and reserva is None:
+        messages.error(request, "El turno seleccionado no admite un nuevo bloqueo desde esta acción.")
+        return respuesta_modal_exito(destino)
+
+    formulario = BloqueoForm(
+        request.POST if request.method == "POST" else None,
+        initial={"evento_esperado": evento_actual.pk if evento_actual else 0},
+    )
+    if request.method == "POST" and formulario.is_valid():
+        valores = formulario.cleaned_data
+        try:
+            bloqueo = registrar_bloqueo(
+                usuario,
+                cancha,
+                fecha,
+                hora,
+                valores["motivo"],
+                valores["observaciones"],
+                valores["evento_esperado"],
+                usar_motivo_bloqueo=True,
+            )
+            messages.success(request, f"El bloqueo {bloqueo.numero} fue registrado.")
+            return respuesta_modal_exito(destino)
+        except ValidationError as error:
+            formulario.add_error(None, error)
+
+    accion_url = reverse("agenda:bloqueo_crear") + "?" + urlencode({
+        "cancha": cancha.pk, "fecha": fecha.isoformat(), "hora": hora.hour,
+    })
+    return respuesta_modal_html(
+        request,
+        "agenda/_modal_bloqueo_crear.html",
+        {
+            "cancha": cancha,
+            "fecha": fecha,
+            "hora": hora,
+            "fin": fin,
+            "reserva": reserva,
+            "formulario": formulario,
+            "accion_url": accion_url,
+            "siguiente": destino,
+        },
+        status=400 if formulario.errors else 200,
+        peligro=reserva is not None,
+        amplio=True,
+        errores=bool(formulario.errors),
+    )
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def bloqueo_anular(request, pk):
+    usuario = exigir_administracion_clases(request.user)
+    bloqueo = get_object_or_404(
+        Bloqueo.objects.select_related("evento__turno__cancha__sede"),
+        pk=pk, evento__tipo="bloqueo",
+    )
+    url_detalle = reverse("agenda:bloqueo_detalle", args=[bloqueo.pk])
+    destino = _destino_seguro(request.POST.get("siguiente") or request.GET.get("siguiente"), url_detalle)
+    if not es_peticion_modal(request):
+        return redirect(destino)
+
+    try:
+        validar_anulacion_bloqueo(bloqueo, timezone.localtime())
+    except ValidationError as error:
+        messages.error(request, error.messages[0])
+        return respuesta_modal_exito(destino)
+
+    turno = bloqueo.evento.turno
+    formulario = BloqueoAnulacionForm(
+        request.POST if request.method == "POST" else None,
+        initial={"bloqueo": bloqueo.pk},
+    )
+    if request.method == "POST" and formulario.is_valid():
+        valores = formulario.cleaned_data
+        try:
+            bloqueo = anular_bloqueo(
+                usuario,
+                valores["bloqueo"],
+                valores["motivo"],
+                turno.cancha,
+                turno.fecha,
+                turno.hora_inicio,
+            )
+            messages.success(request, f"El bloqueo {bloqueo.numero} fue anulado. Su turno quedó liberado.")
+            return respuesta_modal_exito(destino)
+        except ValidationError as error:
+            formulario.add_error(None, error)
+
+    return respuesta_modal_html(
+        request,
+        "agenda/_modal_bloqueo_anular.html",
+        {
+            "bloqueo": bloqueo,
+            "turno": turno,
+            "formulario": formulario,
+            "siguiente": destino if destino != url_detalle else "",
+        },
+        status=400 if formulario.errors else 200,
+        peligro=True,
+        amplio=True,
+        errores=bool(formulario.errors),
+    )
+
+
+@login_required
+@never_cache
+@require_http_methods(["GET", "POST"])
+def agenda_acciones(request):
+    exigir_administracion_clases(request.user)
+    hoy = timezone.localdate()
+    mensual = request.GET.get("tipo") == "mes"
+
+    sede_inicial = Sede.objects.order_by("estado", "nombre").first()
+    parametros = request.GET.copy()
+    parametros.setdefault("fecha", hoy.isoformat())
+    if sede_inicial is not None:
+        parametros.setdefault("sede", str(sede_inicial.pk))
+    filtro = AgendaFiltroForm(parametros)
+    if sede_inicial is not None and filtro.is_valid():
+        sede = filtro.cleaned_data["sede"]
+        cancha = filtro.cleaned_data["cancha"]
+        fecha = filtro.cleaned_data["fecha"]
+    else:
+        sede = sede_inicial
+        cancha = None
+        fecha = hoy
+    if fecha < hoy and not mensual:
+        fecha = hoy
+
+    url_agenda = enlace_agenda(sede, fecha, cancha) if sede is not None else reverse("agenda:agenda")
+    url_tab_dia = enlace_acciones(sede, fecha, cancha, mensual=False) if sede is not None else reverse("agenda:acciones") + "?tipo=dia"
+    url_tab_mes = enlace_acciones(sede, fecha, cancha, mensual=True) if sede is not None else reverse("agenda:acciones") + "?tipo=mes"
+
+    contexto = {
+        "mensual": mensual,
+        "fecha": fecha,
+        "hoy": hoy,
+        "fecha_minima": hoy.isoformat(),
+        "fecha_maxima": fecha_maxima_agenda().isoformat(),
+        "sede": sede,
+        "cancha": cancha,
+        "url_agenda": url_agenda,
+        "url_tab_dia": url_tab_dia,
+        "url_tab_mes": url_tab_mes,
+    }
+
+    if mensual:
+        parametros_mes = request.GET.copy()
+        mes_inicial = fecha.strftime("%Y-%m")
+        if mes_inicial not in dict(opciones_meses_agenda()):
+            mes_inicial = hoy.strftime("%Y-%m")
+        parametros_mes.setdefault("mes", mes_inicial)
+        formulario_mes = AgendaMesForm(parametros_mes)
+        contexto["formulario_mes"] = formulario_mes
+        if formulario_mes.is_valid():
+            mes = formulario_mes.cleaned_data["mes"]
+            fin = mes.replace(day=monthrange(mes.year, mes.month)[1])
+            url_actual = enlace_acciones(sede, fecha, cancha, mensual=True, mes=mes) if sede is not None else reverse("agenda:acciones") + "?tipo=mes"
+            contexto["url_operacion"] = url_actual
+            operacion = _preparar_acciones(request, mes, url_agenda, fin)
+            if isinstance(operacion, HttpResponseRedirect):
+                return operacion
+            contexto.update(operacion)
+    else:
+        contexto["url_operacion"] = url_tab_dia
+        operacion = _preparar_acciones(request, fecha, url_agenda)
+        if isinstance(operacion, HttpResponseRedirect):
+            return operacion
+        contexto.update(operacion)
+
+    return render(request, "agenda/acciones_masivas.html", contexto)
 
 
 def _preparar_acciones(request, fecha, url_agenda, fecha_hasta=None):
@@ -403,7 +449,14 @@ def bloqueo_detalle(request, pk):
         pk=pk, evento__tipo="bloqueo",
     )
     turno = bloqueo.evento.turno
+    try:
+        validar_anulacion_bloqueo(bloqueo, timezone.localtime())
+    except ValidationError:
+        puede_anular = False
+    else:
+        puede_anular = True
     return render(request, "agenda/bloqueo_detalle.html", {
         "bloqueo": bloqueo, "turno": turno,
+        "puede_anular": puede_anular,
         "url_agenda": enlace_agenda(turno.cancha.sede, turno.fecha, turno.cancha, turno.hora_inicio.hour),
     })

@@ -1,45 +1,3 @@
-.agenda-operaciones {
-    font-size: .85rem;
-}
-
-@media (max-width: 720px) {
-    @supports (appearance: base-select) and (width: anchor-size(width)) and selector(::picker(select)) {
-        :is(.agenda-controles, .agenda-operaciones) select.form-control:not(:disabled),
-        :is(.agenda-controles, .agenda-operaciones) select.form-control:not(:disabled)::picker(select) {
-            appearance: base-select;
-        }
-
-        :is(.agenda-controles, .agenda-operaciones) select.form-control:not(:disabled)::picker(select) {
-            position-area: block-end span-inline-end;
-            position-try-fallbacks: none;
-            box-sizing: border-box;
-            width: anchor-size(width);
-            min-width: 0;
-            border: 1px solid var(--borde);
-            border-radius: 6px;
-            background: var(--superficie);
-            color: var(--texto);
-        }
-    }
-}
-
-.operacion-rango-fechas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.operacion-rango-fechas .grupo-campo {
-    flex: 1 1 8.5rem;
-    min-width: 0;
-}
-
-.operacion-refinamientos {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
 .operacion-canchas,
 .operacion-opciones {
     border: 0;
@@ -51,7 +9,7 @@
 .operacion-canchas legend,
 .operacion-opciones legend {
     font-weight: 700;
-    margin-bottom: 7px;
+    margin-bottom: 10px;
 }
 
 .operacion-canchas label,
@@ -59,17 +17,19 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 7px;
+    cursor: pointer;
+}
+
+.operacion-grilla-checks,
+.operacion-canchas > div,
+.operacion-dias-semana > div {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px 16px;
 }
 
 .operacion-dias-semana > div {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
-    gap: 6px 10px;
-}
-
-.operacion-dias-semana label {
-    margin-bottom: 0;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
 .agenda-operaciones input[type="checkbox"] {
@@ -77,62 +37,39 @@
     flex-shrink: 0;
 }
 
-.operacion-totales {
-    display: grid;
-    gap: 6px;
-    padding: 12px;
-    margin: 16px 0;
-    background: var(--primario-suave);
-    border-radius: 4px;
-}
-
-.operacion-desglose {
-    margin-top: 14px;
-}
-
 .operacion-desglose summary {
     color: var(--primario);
+    font-weight: 600;
     cursor: pointer;
 }
 
 .operacion-lista {
     padding: 0;
-    margin: 8px 0;
+    margin: 12px 0 0;
     list-style: none;
+    border-top: 1px solid var(--borde);
 }
 
 .operacion-lista li {
-    padding: 10px 0;
+    display: grid;
+    gap: 4px;
+    padding: 12px 0;
     border-bottom: 1px solid var(--borde);
     overflow-wrap: anywhere;
 }
 
+.operacion-lista li:last-child {
+    border-bottom: 0;
+}
+
 .operacion-lista p {
-    margin: 4px 0;
+    margin: 0;
 }
 
 .operacion-lista span,
-.operacion-motivos dt {
+.operacion-lista small {
     color: var(--texto-suave);
-}
-
-.operacion-motivos div {
-    margin-top: 10px;
-}
-
-.operacion-motivos dd {
-    margin: 4px 0 0;
-    overflow-wrap: anywhere;
-}
-
-.operacion-confirmacion {
-    display: grid;
-    gap: 10px;
-    margin-top: 18px;
-}
-
-.operacion-confirmacion .boton {
-    width: 100%;
+    font-size: 0.88rem;
 }
 
 .agenda-operaciones [hidden] {

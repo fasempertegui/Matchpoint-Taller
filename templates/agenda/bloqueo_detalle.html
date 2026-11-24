@@ -17,6 +17,7 @@
             <summary class="boton boton-secundario" aria-expanded="false" aria-controls="bloqueo-acciones">Acciones <span aria-hidden="true">⋮</span></summary>
             <div class="perfil-menu-opciones" id="bloqueo-acciones">
                 <a href="{{ url_agenda }}">Ver turno en agenda</a>
+                {% if puede_anular %}<button type="button" class="perfil-menu-peligro" data-abrir-modal-url="{% url 'agenda:bloqueo_anular' bloqueo.pk %}">Anular y liberar</button>{% endif %}
             </div>
         </details>
     </header>

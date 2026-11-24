@@ -17,21 +17,25 @@ from reservas.models import Evento, ReservaInvitado
 from reservas.servicios import validar_anulacion_reserva, validar_finalizacion_reserva
 
 
-def enlace_agenda(sede, fecha, cancha=None, hora=None, acciones=False, historial=False, acciones_mes=False, mes=None):
+def enlace_acciones(sede, fecha, cancha=None, *, mensual=False, mes=None):
+    datos = {"tipo": "mes" if mensual else "dia", "sede": sede.pk, "fecha": fecha.isoformat()}
+    if cancha is not None:
+        datos["cancha"] = cancha.pk
+    if mensual:
+        mes_elegido = (mes or fecha).strftime("%Y-%m")
+        if mes is None and mes_elegido not in dict(opciones_meses_agenda()):
+            mes_elegido = timezone.localdate().strftime("%Y-%m")
+        datos["mes"] = mes_elegido
+    return reverse("agenda:acciones") + "?" + urlencode(datos)
+
+
+def enlace_agenda(sede, fecha, cancha=None, hora=None, historial=False):
     datos = {"sede": sede.pk, "fecha": fecha.isoformat()}
     if cancha is not None:
         datos["cancha"] = cancha.pk
     if hora is not None:
         datos["hora"] = hora
-    if acciones_mes:
-        datos["panel"] = "acciones_mes"
-        mes_elegido = (mes or fecha).strftime("%Y-%m")
-        if mes is None and mes_elegido not in dict(opciones_meses_agenda()):
-            mes_elegido = timezone.localdate().strftime("%Y-%m")
-        datos["mes"] = mes_elegido
-    elif acciones:
-        datos["panel"] = "acciones"
-    elif historial:
+    if historial:
         datos["panel"] = "historial"
     return reverse("agenda:agenda") + "?" + urlencode(datos)
 
@@ -174,16 +178,32 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             and not horario.feriado
             and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
         )
+        url_turno = enlace_agenda(sede, dia, cancha, hora)
+        puede_bloquear = (
+            es_administrador and en_rango and habilitado and inicio > ahora and dia <= maxima_eventos
+            and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
+            and (evento is None or puede_anular)
+        )
+        puede_bloquear_clase = (
+            puede_anular_clase and en_rango and habilitado and dia <= maxima_eventos
+            and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
+        )
         return {
             "es_invitado": reserva is not None and not es_administrador and reserva.organizador_id != usuario.pk and evento.pk in reservas_invitadas,
             "url_crear_reserva": reverse("reservas:crear_reserva") + "?" + urlencode({"cancha": cancha.pk, "fecha": dia.isoformat(), "hora": hora}),
             "puede_crear_clase": puede_crear_clase,
             "puede_anular_clase": puede_anular_clase,
-            "puede_bloquear_clase": puede_anular_clase and en_rango and habilitado and dia <= maxima_eventos
-                and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA,
+            "puede_bloquear_clase": puede_bloquear_clase,
             "url_crear_clase": reverse("clases:clase_crear") + "?" + urlencode({
                 "cancha": cancha.pk, "fecha": dia.isoformat(), "hora": hora,
             }) if puede_crear_clase else None,
+            "url_anular_clase": reverse("clases:clase_anular", args=[clase.pk]) + "?" + urlencode({"siguiente": url_turno}) if puede_anular_clase else None,
+            "url_bloquear_clase": reverse("clases:clase_anular_bloquear", args=[clase.pk]) + "?" + urlencode({"siguiente": url_turno}) if puede_bloquear_clase else None,
+            "url_anular_reserva": reverse("reservas:reserva_anular", args=[reserva.pk]) + "?" + urlencode({"siguiente": url_turno}) if puede_anular else None,
+            "url_bloquear": reverse("agenda:bloqueo_crear") + "?" + urlencode({
+                "cancha": cancha.pk, "fecha": dia.isoformat(), "hora": hora, "siguiente": url_turno,
+            }) if puede_bloquear else None,
+            "url_liberar_bloqueo": reverse("agenda:bloqueo_anular", args=[bloqueo.pk]) + "?" + urlencode({"siguiente": url_turno}) if puede_liberar_bloqueo else None,
             "cancha": cancha, "fecha": dia, "hora": time(hora), "fin": fin.time(),
             "evento": evento if puede_ver_evento else None,
             "reserva": reserva if puede_ver_evento else None,
@@ -199,13 +219,11 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             "estado_temporal": temporal if puede_ver_evento else "",
             "puede_reservar": puede_reservar and evento is None and not impedimento,
             "puede_anular": puede_anular, "puede_finalizar": puede_finalizar,
-            "puede_bloquear": es_administrador and en_rango and habilitado and inicio > ahora and dia <= maxima_eventos
-                and sede.estado == Sede.Estado.ACTIVA and cancha.estado == Cancha.Estado.ACTIVA
-                and (evento is None or puede_anular),
+            "puede_bloquear": puede_bloquear,
             "puede_liberar_bloqueo": puede_liberar_bloqueo,
             "seleccionada": cancha.pk == (cancha_seleccionada.pk if cancha_seleccionada else None)
                 and dia == fecha and hora == hora_seleccionada,
-            "url": enlace_agenda(sede, dia, cancha, hora),
+            "url": url_turno,
             "anulados": anulados_por_turno.get((cancha.pk, dia, hora), []),
             "url_historial": enlace_agenda(sede, dia, cancha, hora, historial=True),
         }
@@ -260,8 +278,8 @@ def construir_agenda(sede, cancha, fecha, hora_seleccionada, fecha_maxima, usuar
             if fecha + salto <= fecha_maxima else None,
         "url_hoy": enlace_agenda(sede, ahora.date(), cancha),
         "url_cerrar": enlace_agenda(sede, fecha, cancha),
-        "url_acciones": enlace_agenda(sede, fecha, cancha, acciones=True),
-        "url_acciones_mes": enlace_agenda(sede, fecha, cancha, acciones_mes=True),
+        "url_acciones": enlace_acciones(sede, fecha, cancha, mensual=False),
+        "url_acciones_mes": enlace_acciones(sede, fecha, cancha, mensual=True),
         "url_seleccion": enlace_agenda(sede, fecha, cancha, hora_seleccionada),
         "url_historial": enlace_agenda(sede, fecha, cancha, hora_seleccionada, historial=True),
     }

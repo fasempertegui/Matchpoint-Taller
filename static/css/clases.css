@@ -14,7 +14,7 @@
 .clase-turno-fecha { margin-top: 20px; }
 .clase-turno-hora { font-family: var(--fuente-titulos); font-size: 1.6rem; }
 .clase-contenido { min-width: 0; }
-.clase-selector + .clase-selector { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--borde); }
+.clase-selector + .clase-selector { margin-top: 0; padding-top: 16px; border-top: 1px solid var(--borde); }
 .clase-seccion-titulo { justify-content: flex-start; }
 .clase-seccion-titulo h2 { font-size: 1.2rem; font-weight: 700; margin: 0; }
 .clase-cantidad { margin-left: 4px; color: var(--texto-suave); font-size: 1rem; font-weight: 400; }
@@ -29,7 +29,7 @@
 .clase-opciones-lista input:checked + span { background: var(--primario-suave); border-color: var(--primario); color: var(--primario); font-weight: 600; }
 .clase-opciones-lista input:focus-visible + span { outline: 2px solid var(--primario); outline-offset: 3px; }
 .clase-observaciones { overflow-wrap: anywhere; }
-.clase-vacio { font-size: .9rem; }
+.clase-vacio { margin: 8px 0 0; font-size: .9rem; }
 
 
 .clase-revision-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 16px; }

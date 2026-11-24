@@ -13,6 +13,10 @@
     max-width: 960px;
 }
 
+.formulario-pagina > .pestanas {
+    margin-block: 0;
+}
+
 .tarjeta.formulario-cuerpo {
     display: grid;
     gap: var(--espacio-componentes);
@@ -82,7 +86,7 @@
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 10px;
-    margin-top: 8px;
+    margin-top: 0;
     padding-top: 16px;
     border-top: 1px solid var(--borde);
 }

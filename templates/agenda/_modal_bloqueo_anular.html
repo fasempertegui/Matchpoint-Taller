@@ -1,0 +1,26 @@
+{% load encabezados formularios tablas %}
+{% url 'agenda:bloqueo_anular' bloqueo.pk as accion_url %}
+{% texto_titulo as titulo_modal %}Anular bloqueo {{ bloqueo.numero }}{% endtexto_titulo %}
+{% modal_formulario titulo_modal action=accion_url peligro=True amplio=True texto_enviar="Anular y liberar" %}
+    {% if siguiente %}<input type="hidden" name="siguiente" value="{{ siguiente }}">{% endif %}
+    {{ formulario.bloqueo }}
+    {% tabla_datos etiqueta="Datos del bloqueo" %}
+        <tr><th scope="row">Ubicación</th><td>{{ turno.cancha.nombre }}, {{ turno.cancha.sede.nombre }}</td></tr>
+        <tr><th scope="row">Fecha y horario</th><td>{{ turno.fecha|date:"d/m/Y" }} de {{ turno.hora_inicio|time:"H:i" }} a {{ turno.hora_fin|time:"H:i" }}</td></tr>
+        <tr><th scope="row">Motivo del bloqueo</th><td>{{ bloqueo.get_motivo_display }}</td></tr>
+    {% endtabla_datos %}
+    <div class="formulario-aviso formulario-aviso-peligro">
+        <p>El bloqueo quedará anulado conservando su historial y el turno volverá a estar disponible.</p>
+    </div>
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    {% for error in formulario.bloqueo.errors %}
+        <p class="error-campo" role="alert">{{ error }}</p>
+    {% endfor %}
+    <div class="grupo-campo">
+        <label for="{{ formulario.motivo.id_for_label }}">{{ formulario.motivo.label }}</label>
+        {{ formulario.motivo }}
+        {% for error in formulario.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+{% endmodal_formulario %}

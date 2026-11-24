@@ -5,10 +5,8 @@
 {% block titulo %}Agenda | Academia TM{% endblock %}
 
 {% block estilos %}
-<link rel="stylesheet" href="{% static 'css/clases.css' %}">
 <link rel="stylesheet" href="{% static 'vendor/flatpickr/flatpickr.min.css' %}">
 <link rel="stylesheet" href="{% static 'css/agenda.css' %}">
-<link rel="stylesheet" href="{% static 'css/agenda_operaciones.css' %}">
 {% endblock %}
 
 {% block contenido %}
@@ -60,9 +58,9 @@
                                     </summary>
                                     <div class="agenda-menu-opciones">
                                         {% if agenda.fecha >= agenda.hoy %}
-                                            <a data-agenda-acciones="dia" href="{{ agenda.url_acciones }}" aria-controls="turno-seleccionado" aria-expanded="{% if panel_acciones and not panel_acciones_mes %}true{% else %}false{% endif %}">Acciones del día</a>
+                                            <a href="{{ agenda.url_acciones }}">Acciones del día</a>
                                         {% endif %}
-                                        <a data-agenda-acciones="mes" href="{{ agenda.url_acciones_mes }}" aria-controls="turno-seleccionado" aria-expanded="{{ panel_acciones_mes|yesno:'true,false' }}">Acciones del mes</a>
+                                        <a href="{{ agenda.url_acciones_mes }}">Acciones del mes</a>
                                     </div>
                                 </details>
                             {% endif %}
@@ -85,7 +83,7 @@
                                 <tbody>
                                     {% for fila in agenda.filas %}
                                         {% if fila.pausa %}
-                                            <tr class="agenda-pausa"><td colspan="{{ agenda.columnas|length|add:'1' }}">{{ fila.inicio|time:"H:i" }} a {{ fila.fin|time:"H:i" }} · Fuera del horario de funcionamiento</td></tr>
+                                            <tr class="agenda-pausa"><td colspan="{{ agenda.columnas|length|add:'1' }}">De {{ fila.inicio|time:"H:i" }} a {{ fila.fin|time:"H:i" }} fuera del horario de funcionamiento</td></tr>
                                         {% else %}
                                             <tr>
                                                 <th scope="row" data-hora-fila="{{ fila.hora.hour }}"{% if fila.ahora %} class="agenda-hora-actual"{% endif %}>
@@ -152,7 +150,7 @@
             </section>
             <aside class="agenda-detalle" id="turno-seleccionado" aria-label="Panel de agenda" data-agenda-detalle>
                 <p class="agenda-aviso" data-agenda-aviso role="status" aria-live="polite" hidden></p>
-                <div data-agenda-contenido>{% if panel_acciones %}{% include "agenda/_acciones_dia.html" %}{% elif panel_historial %}{% include "agenda/_historial_turno.html" %}{% else %}{% include "agenda/_detalle_turno.html" %}{% endif %}</div>
+                <div data-agenda-contenido>{% if panel_historial %}{% include "agenda/_historial_turno.html" %}{% else %}{% include "agenda/_detalle_turno.html" %}{% endif %}</div>
             </aside>
         </div>
         <dialog id="agenda-selector-fecha" class="modal-confirmacion agenda-selector-fecha" aria-labelledby="agenda-selector-fecha-titulo"
@@ -167,10 +165,7 @@
 {% else %}
     <p class="tarjeta estado-vacio">{% if es_administrador %}Registrá una sede y sus canchas para consultar la agenda.{% else %}No hay sedes disponibles para consultar la agenda.{% endif %}</p>
 {% endif %}
-<script src="{% static 'js/clase-formulario.js' %}" defer></script>
-<script src="{% static 'js/agenda-clase-pasos.js' %}" defer></script>
-<script src="{% static 'js/agenda_operaciones.js' %}?v=20261122-sedes" defer></script>
-<script src="{% static 'js/agenda.js' %}?v=20261122-controles" defer></script>
+<script src="{% static 'js/agenda.js' %}" defer></script>
 {% if agenda %}
     <script src="{% static 'vendor/flatpickr/flatpickr.min.js' %}" defer></script>
     <script src="{% static 'vendor/flatpickr/es.js' %}" defer></script>
