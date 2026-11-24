@@ -41,13 +41,15 @@ def registrar_movimiento(actor, sesion_id, *, clase, operacion_id, concepto, mon
     if tipo_origen != "general" and tipo_origen not in ORIGENES:
         raise ValidationError("Elegí un tipo de origen válido.")
     es_devolucion = clase == "egreso" and categoria_egreso == "devoluciones"
+    if es_devolucion and (tipo_origen == "general" or origen_id is None):
+        raise ValidationError("Las devoluciones deben vincularse a una reserva o contratación. Para otros reintegros registrá un egreso de categoría Otros.")
     if (tipo_origen == "general") != (origen_id is None) or (clase != "ingreso" and not es_devolucion and tipo_origen != "general"):
         raise ValidationError("Sólo los ingresos y las devoluciones admiten un vínculo comercial, como máximo uno.")
     if revision_devolucion is not None and not es_devolucion:
         raise ValidationError("La revisión corresponde únicamente a una devolución.")
     if (revision_excedente is not None or motivo_excedente) and (clase != "ingreso" or tipo_origen == "general"):
         raise ValidationError("El cobro con excedente requiere una reserva o contratación.")
-    if tipo_origen == "general" and (clase == "ingreso" or es_devolucion) and sin_vinculo_confirmado is not True:
+    if tipo_origen == "general" and clase == "ingreso" and sin_vinculo_confirmado is not True:
         raise ValidationError("Confirmá que el movimiento no corresponde a una reserva ni a una contratación.")
     if clase == MovimientoFondo.Clase.INGRESO:
         categoria_esperada = ORIGENES[tipo_origen][2] if tipo_origen != "general" else MovimientoFondo.CategoriaIngreso.OTROS
@@ -115,11 +117,11 @@ def registrar_movimiento(actor, sesion_id, *, clase, operacion_id, concepto, mon
         elif monto > maximo:
             raise ValidationError(f"El monto supera lo pendiente de cubrir. El máximo para este ingreso es ARS {maximo:.2f}.")
     if es_devolucion:
-        situacion = resumen_financiero(tipo_origen, origen) if origen else None
-        if situacion is not None and monto > situacion["maximo_devolucion"]:
+        situacion = resumen_financiero(tipo_origen, origen)
+        if monto > situacion["maximo_devolucion"]:
             raise ValidationError(f"El máximo disponible para devolver es ARS {situacion['maximo_devolucion']:.2f}.")
         if revision_devolucion is not None:
-            revisados = {**datos, "operacion_id": operacion, "verificado": verificado, "sin_vinculo_confirmado": sin_vinculo_confirmado}
+            revisados = {**datos, "operacion_id": operacion, "verificado": verificado}
             validar_revision_devolucion(actor, sesion_id, tipo_origen, origen_id, revisados, situacion, revision_devolucion)
     if efectivo_esperado(sesion) + movimiento.efecto_efectivo < 0:
         raise ValidationError("El efectivo disponible no alcanza para esta salida.")

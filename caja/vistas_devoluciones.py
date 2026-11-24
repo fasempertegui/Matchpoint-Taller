@@ -47,66 +47,60 @@ def devolucion_crear(request, pk):
     contexto = {
         "devolucion": True, "titulo": "Registrar devolución", "sesion": sesion,
         "tipo": tipo, "tipo_previo": tipo_previo, "borrador": borrador,
-        "total_pasos": 3 if tipo == "general" else 4,
-        "pasos": range(1, 4 if tipo == "general" else 5), "numero_paso": 1, "nombre_paso": "Origen de la devolución",
+        "total_pasos": 4,
+        "pasos": range(1, 5), "numero_paso": 1, "nombre_paso": "Origen de la devolución",
         "opciones_origen": [
             ("reserva", "Reserva", "Devolvé dinero de una reserva concreta"),
             ("plan", "Contratación de plan", "Devolvé dinero de una contratación de plan"),
             ("membresia", "Contratación de membresía", "Devolvé dinero de una contratación de membresía"),
-            ("general", "Devolución sin vínculo", "Registrá el reintegro con un concepto que explique el motivo"),
         ],
     }
     if tipo is None:
         return render(request, "caja/ingreso_origen.html", contexto)
-    if tipo != "general" and tipo not in ORIGENES:
+    if tipo not in ORIGENES:
         raise Http404
     contexto["tipo_texto"] = dict((valor, nombre) for valor, nombre, _ in contexto["opciones_origen"])[tipo]
-    origen = None
-    situacion = None
-    if tipo != "general":
-        seleccion = SeleccionOrigenMovimientoForm(datos if datos.get("origen") else None, tipo=tipo, devolucion=True)
-        contexto.update({"seleccion": seleccion, "numero_paso": 2, "nombre_paso": "Seleccionar registro"})
-        if paso in ("volver", "buscar") or "pagina_origen" in datos or not datos.get("origen") or not seleccion.is_valid():
-            busqueda = datos.get("q", "").strip()[:100]
-            consulta = filtrar_origenes(seleccion.fields["origen"].queryset, tipo, busqueda)
-            contexto.update({"busqueda": busqueda, "registros": Paginator(consulta.order_by("-pk"), 8).get_page(datos.get("pagina_origen")),
-                             "origen_seleccionado": str(datos.get("origen", ""))})
-            return render(request, "caja/ingreso_origen.html", contexto)
-        origen = seleccion.cleaned_data["origen"]
-        situacion = resumen_financiero(tipo, origen)
-        contexto.update({"origen": origen, "situacion": situacion, "categoria_texto": "Devoluciones",
-                         "importe_aplicado": origen.importe_acordado})
-    contexto.update({"numero_paso": contexto["total_pasos"] - 1, "nombre_paso": "Datos de la devolución"})
-    formulario = DevolucionForm(datos if paso in ("revisar", "confirmar", "editar") else None, initial=borrador, sin_vinculo=tipo == "general")
+    seleccion = SeleccionOrigenMovimientoForm(datos if datos.get("origen") else None, tipo=tipo, devolucion=True)
+    contexto.update({"seleccion": seleccion, "numero_paso": 2, "nombre_paso": "Seleccionar registro"})
+    if paso in ("volver", "buscar") or "pagina_origen" in datos or not datos.get("origen") or not seleccion.is_valid():
+        busqueda = datos.get("q", "").strip()[:100]
+        consulta = filtrar_origenes(seleccion.fields["origen"].queryset, tipo, busqueda)
+        contexto.update({"busqueda": busqueda, "registros": Paginator(consulta.order_by("-pk"), 8).get_page(datos.get("pagina_origen")),
+                         "origen_seleccionado": str(datos.get("origen", ""))})
+        return render(request, "caja/ingreso_origen.html", contexto)
+    origen = seleccion.cleaned_data["origen"]
+    situacion = resumen_financiero(tipo, origen)
+    contexto.update({"origen": origen, "situacion": situacion, "categoria_texto": "Devoluciones",
+                     "importe_aplicado": origen.importe_acordado,
+                     "numero_paso": 3, "nombre_paso": "Datos de la devolución"})
+    formulario = DevolucionForm(datos if paso in ("revisar", "confirmar", "editar") else None, initial=borrador)
     contexto["formulario"] = formulario
-    if situacion:
-        formulario.fields["monto"].widget.attrs["max"] = format(situacion["maximo_devolucion"], ".2f")
+    formulario.fields["monto"].widget.attrs["max"] = format(situacion["maximo_devolucion"], ".2f")
     if paso in ("revisar", "confirmar") and formulario.is_valid():
         campos = formulario.cleaned_data
         if paso == "confirmar":
             try:
                 movimiento = registrar_movimiento(actor, pk, clase="egreso", categoria_egreso="devoluciones", tipo_origen=tipo,
-                                                  origen_id=origen.pk if origen else None, revision_devolucion=request.POST.get("confirmacion"), **campos)
+                                                  origen_id=origen.pk, revision_devolucion=request.POST.get("confirmacion"), **campos)
             except ValidationError as error:
                 sesion.refresh_from_db(fields=["estado"])
                 if sesion.estado != "abierta":
                     messages.error(request, error.messages[0])
                     return redirect("caja:sesion_detalle", pk=pk)
                 formulario.add_error(None, error.messages)
-                if origen:
-                    origen.refresh_from_db()
-                    situacion = resumen_financiero(tipo, origen)
-                    contexto["situacion"] = situacion
-                    formulario.fields["monto"].widget.attrs["max"] = format(situacion["maximo_devolucion"], ".2f")
+                origen.refresh_from_db()
+                situacion = resumen_financiero(tipo, origen)
+                contexto["situacion"] = situacion
+                formulario.fields["monto"].widget.attrs["max"] = format(situacion["maximo_devolucion"], ".2f")
             else:
                 messages.success(request, f"La devolución {movimiento.numero} fue registrada.")
                 return redirect("caja:movimiento_detalle", pk=movimiento.pk)
-        elif situacion is not None and campos["monto"] > situacion["maximo_devolucion"]:
+        elif campos["monto"] > situacion["maximo_devolucion"]:
             formulario.add_error("monto", f"El máximo disponible es ARS {situacion['maximo_devolucion']:.2f}.")
         elif campos["medio_pago"] == "efectivo" and campos["monto"] > efectivo_esperado(sesion):
             formulario.add_error("monto", "El efectivo disponible no alcanza para esta devolución.")
         else:
-            contexto.update({"numero_paso": contexto["total_pasos"], "nombre_paso": "Revisar devolución", "revision": campos,
+            contexto.update({"numero_paso": 4, "nombre_paso": "Revisar devolución", "revision": campos,
                              "medio_texto": dict(formulario.fields["medio_pago"].choices)[campos["medio_pago"]],
-                             "confirmacion": revision_devolucion(actor, pk, tipo, origen.pk if origen else None, campos, situacion)})
+                             "confirmacion": revision_devolucion(actor, pk, tipo, origen.pk, campos, situacion)})
     return render(request, "caja/devolucion_formulario.html", contexto)

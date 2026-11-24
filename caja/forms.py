@@ -80,8 +80,6 @@ class MovimientoCajaForm(IngresoForm):
         self.fields["categoria_egreso"].choices = [("", "Elegí una categoría"), *MovimientoFondo.CategoriaEgreso.choices]
         if clase == "egreso":
             self.fields["categoria_egreso"].required = True
-            if "sin_vinculo_confirmado" not in self.fields:
-                self.fields["sin_vinculo_confirmado"] = forms.BooleanField(label="Si es una devolución sin vínculo, confirmo que no corresponde a una reserva ni a una contratación.", required=False)
         else:
             for nombre in ("categoria_egreso", "destinatario", "medio_pago", "referencia", "verificado"):
                 self.fields.pop(nombre)
@@ -91,17 +89,15 @@ class MovimientoCajaForm(IngresoForm):
         datos = super().clean()
         if self.clase in ("aporte", "retiro"):
             datos["medio_pago"] = "efectivo"
-        if datos.get("categoria_egreso") == "devoluciones" and not datos.get("sin_vinculo_confirmado"):
-            self.add_error("sin_vinculo_confirmado", "Vinculá la operación o confirmá que corresponde a otro concepto.")
+        if datos.get("categoria_egreso") == "devoluciones":
+            self.add_error("categoria_egreso", "Las devoluciones deben vincularse a una reserva o contratación. Usá «Vincular operación» o elegí la categoría Otros.")
         return datos
 
 
 class DevolucionForm(MovimientoCajaForm):
-    def __init__(self, *args, sin_vinculo=False, **kwargs):
-        super().__init__(*args, clase="egreso", sin_vinculo=sin_vinculo, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, clase="egreso", **kwargs)
         self.fields.pop("categoria_egreso")
-        if not sin_vinculo:
-            self.fields.pop("sin_vinculo_confirmado")
         self.fields["concepto"].help_text = "Explicá el motivo de la devolución."
         self.fields["monto"].label = "Monto a devolver"
 

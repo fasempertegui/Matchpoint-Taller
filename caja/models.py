@@ -136,7 +136,7 @@ class MovimientoFondo(models.Model):
                     | models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=False)
                 ))
                 | (models.Q(plan_usuario__isnull=True, membresia_usuario__isnull=True, reserva__isnull=True, categoria_ingreso="") & (
-                    models.Q(clase="egreso", categoria_egreso__in=("alquiler", "servicios", "profesores", "insumos", "mantenimiento", "publicidad", "otros", "devoluciones"))
+                    models.Q(clase="egreso", categoria_egreso__in=("alquiler", "servicios", "profesores", "insumos", "mantenimiento", "publicidad", "otros"))
                     | models.Q(clase__in=("aporte", "retiro"), medio_pago="efectivo", categoria_egreso="", destinatario="")
                 ))
             ), name="caja_movimiento_campos_coherentes"),

@@ -141,7 +141,7 @@ def ingreso_crear(request, pk):
             ("reserva", "Reserva", "Cobrá un turno de cancha"),
             ("plan", "Contratación de plan", "Cobrá un plan contratado"),
             ("membresia", "Contratación de membresía", "Cobrá una membresía contratada"),
-            ("general", "Ingreso sin vínculo", "Registrá cobros en general"),
+            ("general", "Otros", "Registrá cobros en general"),
         ],
         "numero_paso": 1, "total_pasos": 3, "nombre_paso": "Origen del ingreso",
     }

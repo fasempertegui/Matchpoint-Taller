@@ -29,7 +29,7 @@
             </div>
 
             <div class="formulario-aviso" data-devolucion-vinculo{% if formulario.categoria_egreso.value != "devoluciones" %} hidden{% endif %}>
-                <p>Las devoluciones de reservas y contrataciones deben vincularse a su operación.</p>
+                <p>Las devoluciones deben vincularse a una reserva o contratación. Para otros reintegros, elegí la categoría Otros.</p>
                 <p><button class="boton boton-secundario boton-chico" type="submit" name="paso" value="vincular_devolucion" formnovalidate>Vincular operación</button></p>
             </div>
 
@@ -66,15 +66,6 @@
                 </label>
                 {% for error in formulario.verificado.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
             </div>
-
-            {% if formulario.sin_vinculo_confirmado %}
-                <div class="grupo-campo" data-devolucion-vinculo{% if formulario.categoria_egreso.value != "devoluciones" %} hidden{% endif %}>
-                    <label class="campo-opcion" for="{{ formulario.sin_vinculo_confirmado.id_for_label }}">
-                        {{ formulario.sin_vinculo_confirmado }}<span>{{ formulario.sin_vinculo_confirmado.label }}</span>
-                    </label>
-                    {% for error in formulario.sin_vinculo_confirmado.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
-                </div>
-            {% endif %}
 
             <details class="observaciones-opcionales"{% if formulario.destinatario.value or formulario.destinatario.errors %} open{% endif %}>
                 <summary>Agregar destinatario</summary>

@@ -9,7 +9,7 @@ from .ingresos import ORIGENES
 from .models import AjusteImporte, MovimientoFondo
 
 
-CAMPOS_DEVOLUCION = ("concepto", "monto", "medio_pago", "referencia", "verificado", "destinatario", "operacion_id", "sin_vinculo_confirmado")
+CAMPOS_DEVOLUCION = ("concepto", "monto", "medio_pago", "referencia", "verificado", "destinatario", "operacion_id")
 
 
 def origenes_con_pendiente(consulta, tipo):
@@ -69,10 +69,9 @@ def resumen_financiero(tipo, origen):
 
 def _datos_revision(actor, sesion_id, tipo, origen_id, datos, situacion):
     campos = {campo: datos.get(campo, "") for campo in CAMPOS_DEVOLUCION}
-    campos["sin_vinculo_confirmado"] = datos.get("sin_vinculo_confirmado", False)
     campos["monto"] = format(Decimal(campos["monto"]), ".2f")
     campos["operacion_id"] = str(campos["operacion_id"])
-    saldo = {campo: format(situacion[campo], ".2f") for campo in ("ingresos", "devoluciones", "neto_recibido", "importe_acordado", "maximo_devolucion")} if situacion else None
+    saldo = {campo: format(situacion[campo], ".2f") for campo in ("ingresos", "devoluciones", "neto_recibido", "importe_acordado", "maximo_devolucion")}
     return {"actor": actor.pk, "sesion": sesion_id, "tipo": tipo, "origen": origen_id, "datos": campos, "situacion": saldo}
 
 
