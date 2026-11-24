@@ -20,9 +20,9 @@
 .auditoria-tabla > thead th:nth-child(5) { width: 22%; }
 .auditoria-tabla > thead th:last-child { width: 14%; }
 
-.auditoria-tabla-cambios > thead th:nth-child(1) { width: 23%; }
-.auditoria-tabla-cambios > thead th:nth-child(2) { width: 41%; }
-.auditoria-tabla-cambios > thead th:nth-child(3) { width: 20%; }
+.auditoria-tabla-cambios > thead th:nth-child(1) { width: 16%; }
+.auditoria-tabla-cambios > thead th:nth-child(2) { width: 28%; }
+.auditoria-tabla-cambios > thead th:nth-child(3) { width: 40%; }
 .auditoria-tabla-cambios > thead th:nth-child(4) { width: 16%; }
 
 .auditoria-registro > td {

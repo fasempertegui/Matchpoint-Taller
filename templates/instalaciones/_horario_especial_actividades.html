@@ -17,7 +17,7 @@
                             {% endif %}
                         </td>
                         <td>{{ evento.turno.cancha.nombre }}</td>
-                        <td class="tabla-fecha">{{ evento.turno.hora_inicio|time:"H:i" }} a {{ evento.turno.hora_fin|time:"H:i" }}</td>
+                        <td class="tabla-numero">{{ evento.turno.hora_inicio|time:"H:i" }} a {{ evento.turno.hora_fin|time:"H:i" }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

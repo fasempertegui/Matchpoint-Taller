@@ -26,7 +26,7 @@
         <thead><tr><th scope="col">Sesión</th><th scope="col">Responsable</th><th scope="col">Apertura</th><th scope="col">Cierre</th><th scope="col">Efectivo contado</th></tr></thead>
         <tbody>{% for sesion in pagina %}<tr>
             <td><span class="estado-identidad">{% indicador_estado "sesion" sesion.estado %} <a class="enlace-tabla" href="{% url 'caja:sesion_detalle' sesion.pk %}">{{ sesion.numero }}</a></span></td>
-            <td>{{ sesion.responsable }}<span class="tabla-secundario">@{{ sesion.responsable.username }}</span></td>
+            <td><strong>{{ sesion.responsable }}</strong><span class="tabla-secundario">@{{ sesion.responsable.username }}</span></td>
             <td class="tabla-fecha">{{ sesion.creado_en|date:"d/m/Y" }}<span class="tabla-secundario">{{ sesion.creado_en|date:"H:i" }}</span></td>
             <td class="tabla-fecha">{% if sesion.cerrada_en %}{{ sesion.cerrada_en|date:"d/m/Y" }}<span class="tabla-secundario">{{ sesion.cerrada_en|date:"H:i" }}</span>{% else %}<span class="texto-secundario">—</span>{% endif %}</td>
             <td class="tabla-numero">{% if sesion.estado == 'cerrada' %}$ {{ sesion.efectivo_contado|floatformat:"2g" }}{% else %}<span class="texto-secundario">—</span>{% endif %}</td>

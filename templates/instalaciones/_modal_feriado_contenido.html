@@ -49,7 +49,7 @@
                             {% for clase in clases %}
                                 <tr>
                                     <td><strong>{{ clase.sede }}</strong><span class="tabla-secundario">{{ clase.cancha }}</span></td>
-                                    <td class="tabla-fecha">{{ clase.hora|time:"H:i" }} a {{ clase.hora_fin|time:"H:i" }}</td>
+                                    <td class="tabla-numero">{{ clase.hora|time:"H:i" }} a {{ clase.hora_fin|time:"H:i" }}</td>
                                     <td>{% if clase.profesores %}{{ clase.profesores|join:", " }}{% else %}<span class="texto-secundario">—</span>{% endif %}</td>
                                     <td>{% if clase.participantes %}{{ clase.participantes|join:", " }}{% else %}<span class="texto-secundario">—</span>{% endif %}</td>
                                     <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' clase.id %}">Ver clase</a></td>

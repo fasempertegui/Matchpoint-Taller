@@ -167,14 +167,14 @@
                         {% for dia in horarios_semana %}
                             <tr>
                                 <td><strong>{{ dia.nombre }}</strong></td>
-                                <td class="tabla-fecha">
+                                <td class="tabla-numero">
                                     {% if dia.horario %}
                                         {{ dia.horario.hora_inicio_1|time:"H:i" }} a {{ dia.horario.hora_fin_1|time:"H:i" }}
                                     {% else %}
                                         <span class="texto-secundario">Sin funcionamiento</span>
                                     {% endif %}
                                 </td>
-                                <td class="tabla-fecha">
+                                <td class="tabla-numero">
                                     {% if dia.horario.hora_inicio_2 %}
                                         {{ dia.horario.hora_inicio_2|time:"H:i" }} a {{ dia.horario.hora_fin_2|time:"H:i" }}
                                     {% else %}

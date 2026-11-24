@@ -98,9 +98,15 @@ def _referencia_breve(objeto):
             return f"{objeto.get_tipo_display()} · Evento #{objeto.pk}"
         return _referencia_breve(actividad)
     if isinstance(objeto, ReservaInvitado):
-        return f"{objeto.reserva.numero} · {_relacion(objeto, 'usuario')}"
-    if isinstance(objeto, (Reserva, Bloqueo, SesionCaja, MovimientoFondo)):
-        return objeto.numero
+        return f"Reserva {objeto.reserva.numero} · {_relacion(objeto, 'usuario')}"
+    if isinstance(objeto, Reserva):
+        return f"Reserva {objeto.numero}"
+    if isinstance(objeto, Bloqueo):
+        return f"Bloqueo {objeto.numero}"
+    if isinstance(objeto, SesionCaja):
+        return f"Sesión de caja {objeto.numero}"
+    if isinstance(objeto, MovimientoFondo):
+        return f"Movimiento {objeto.numero}"
     if isinstance(objeto, Clase):
         return f"Clase #{objeto.pk}"
     if isinstance(objeto, Turno):
@@ -108,7 +114,7 @@ def _referencia_breve(objeto):
     if isinstance(objeto, TurnoPlanilla):
         return f"Turno de planilla #{objeto.pk}"
     if isinstance(objeto, Feriado):
-        return f"{objeto.fecha:%d/%m/%Y}"
+        return f"Feriado {objeto.fecha:%d/%m/%Y}"
     if isinstance(objeto, (TurnoPlanillaProfesor, TurnoPlanillaAlumno)):
         persona = "profesor" if isinstance(objeto, TurnoPlanillaProfesor) else "usuario"
         return f"{_relacion(objeto, persona)} · Turno de planilla #{objeto.turno_planilla_id}"
@@ -232,11 +238,15 @@ def _referencia_eliminada(registro, clave):
         return f"Usuario #{datos['usuario_id']} · Rol #{datos['rol_id']}"
     if registro.tabla == "feriados" and datos.get("fecha"):
         fecha = parse_date(datos["fecha"])
-        return f"{fecha:%d/%m/%Y}" if fecha else clave
+        return f"Feriado {fecha:%d/%m/%Y}" if fecha else clave
     if registro.tabla == "reservas":
-        return f"R-{registro.clave_registro['id']:06d}"
+        return f"Reserva R-{registro.clave_registro['id']:06d}"
     if registro.tabla == "bloqueos":
-        return f"B-{registro.clave_registro['id']:06d}"
+        return f"Bloqueo B-{registro.clave_registro['id']:06d}"
+    if registro.tabla == "sesiones_caja":
+        return f"Sesión de caja C-{registro.clave_registro['id']:06d}"
+    if registro.tabla == "movimientos_fondos":
+        return f"Movimiento M-{registro.clave_registro['id']:06d}"
     return clave
 
 

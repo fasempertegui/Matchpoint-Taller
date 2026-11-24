@@ -719,6 +719,14 @@ tbody tr:last-child td {
     font-variant-numeric: tabular-nums;
 }
 
+.tabla-fecha {
+    font-weight: 700;
+}
+
+.tabla-fecha .texto-secundario {
+    font-weight: 400;
+}
+
 .tabla-embebida {
     border: 1px solid var(--borde);
     border-radius: 10px;

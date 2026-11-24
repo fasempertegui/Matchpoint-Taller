@@ -20,15 +20,21 @@
 {% tabla clases="auditoria-tabla auditoria-tabla-cambios" %}
     <thead>
         <tr>
+            <th scope="col">Fecha y hora</th>
             <th scope="col">Responsable</th>
             <th scope="col">Operación</th>
-            <th scope="col">Fecha y hora</th>
             <th scope="col">Detalle</th>
         </tr>
     </thead>
     <tbody>
 {% for fila in filas %}
     <tr class="auditoria-registro">
+        <td class="tabla-fecha">
+            <time datetime="{{ fila.registro.realizado_en|date:'c' }}">
+                {{ fila.registro.realizado_en|date:"d/m/Y" }}
+                <span class="tabla-secundario">{{ fila.registro.realizado_en|date:"H:i:s" }}</span>
+            </time>
+        </td>
         <td>
             {% if fila.registro.usuario %}
                 <strong>{{ fila.registro.usuario }}</strong>
@@ -38,24 +44,11 @@
             {% elif fila.registro.origen == "tarea" %}
                 <strong>Proceso automático</strong>
             {% else %}
-                <strong>{{ fila.registro.usuario_bd }}</strong>
-                <span class="tabla-secundario">PostgreSQL</span>
+                <strong>PostgreSQL</strong>
+                <span class="tabla-secundario">@{{ fila.registro.usuario_bd }}</span>
             {% endif %}
         </td>
-        <td>
-            <span>{{ fila.accion }}</span>
-            {% if fila.accion != "Inicio de sesión" and fila.registro.accion != "eliminacion" %}
-            <span class="tabla-secundario">
-                {{ fila.tipo }} · {% if fila.url %}<a class="enlace-tabla" href="{{ fila.url }}">{{ fila.referencia }}</a>{% else %}{{ fila.referencia }}{% endif %}
-            </span>
-            {% endif %}
-        </td>
-        <td class="tabla-fecha">
-            <time datetime="{{ fila.registro.realizado_en|date:'c' }}">
-                {{ fila.registro.realizado_en|date:"d/m/Y" }}
-                <span class="tabla-secundario">{{ fila.registro.realizado_en|date:"H:i:s" }}</span>
-            </time>
-        </td>
+        <td>{{ fila.accion }}</td>
         <td>
             <button type="button" class="boton boton-secundario boton-chico auditoria-desplegar"
                 aria-expanded="false" aria-controls="auditoria-detalle-{{ fila.registro.pk }}"
@@ -71,6 +64,9 @@
             <p class="texto-secundario">Este evento no guarda la contraseña ni su hash.</p>
             {% endif %}
             {% tabla_datos etiqueta="Información técnica" clases="auditoria-metadatos" %}
+                {% if fila.accion != "Inicio de sesión" %}
+                <tr><th scope="row">Entidad afectada</th><td>{% if fila.url %}<a class="enlace-tabla" href="{{ fila.url }}">{{ fila.referencia }}</a>{% else %}{{ fila.referencia }}{% endif %}</td></tr>
+                {% endif %}
                 <tr><th scope="row">Tabla</th><td><code>{{ fila.registro.tabla }}</code></td></tr>
                 <tr><th scope="row">Clave del registro</th><td><code>{{ fila.clave }}</code></td></tr>
                 <tr><th scope="row">Origen</th><td>{{ fila.registro.get_origen_display }}</td></tr>
