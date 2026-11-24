@@ -14,6 +14,8 @@ class SesionCaja(models.Model):
     responsable = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="sesiones_caja")
     creado_en = models.DateTimeField(auto_now_add=True)
     efectivo_inicial = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal("0"))])
+    efectivo_anterior = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal("0"))])
+    diferencia_apertura = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     motivo_apertura = models.TextField(blank=True, default="")
     cerrada_en = models.DateTimeField(null=True, blank=True)
     efectivo_esperado = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal("0"))])
@@ -31,6 +33,17 @@ class SesionCaja(models.Model):
             models.UniqueConstraint(fields=("estado",), condition=models.Q(estado="abierta"), name="caja_sesion_abierta_unica"),
             models.CheckConstraint(condition=models.Q(efectivo_inicial__gte=0), name="caja_inicial_no_negativo"),
             models.CheckConstraint(condition=(
+                models.Q(efectivo_anterior__isnull=True, diferencia_apertura__isnull=True, motivo_apertura="")
+                | (models.Q(
+                    efectivo_anterior__isnull=False, efectivo_anterior__gte=0,
+                    diferencia_apertura__isnull=False,
+                    diferencia_apertura=models.F("efectivo_inicial") - models.F("efectivo_anterior"),
+                ) & (
+                    models.Q(diferencia_apertura=0, motivo_apertura="")
+                    | (~models.Q(diferencia_apertura=0) & models.Q(motivo_apertura__regex=r"\S"))
+                ))
+            ), name="caja_apertura_coherente"),
+            models.CheckConstraint(condition=(
                 models.Q(estado="abierta", cerrada_en__isnull=True, efectivo_esperado__isnull=True,
                          efectivo_contado__isnull=True, diferencia__isnull=True, motivo_diferencia="")
                 | (models.Q(estado="cerrada", cerrada_en__isnull=False, cerrada_en__gte=models.F("creado_en"),
@@ -45,8 +58,45 @@ class SesionCaja(models.Model):
     def numero(self):
         return f"C-{self.pk:06d}"
 
+    @property
+    def tiene_diferencia_apertura(self):
+        return bool(self.diferencia_apertura)
+
+    @property
+    def tiene_diferencia_cierre(self):
+        return bool(self.diferencia)
+
     def __str__(self):
         return self.numero
+
+
+class RevisionDiferenciaCaja(models.Model):
+    class Momento(models.TextChoices):
+        APERTURA = "apertura", "Apertura"
+        CIERRE = "cierre", "Cierre"
+
+    sesion = models.ForeignKey(SesionCaja, on_delete=models.PROTECT, related_name="revisiones_diferencias")
+    momento = models.CharField(max_length=10, choices=Momento.choices)
+    conclusion = models.TextField()
+    revisada_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="revisiones_diferencias_caja")
+    revisada_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "revisiones_diferencias_caja"
+        ordering = ("-revisada_en", "-pk")
+        default_permissions = ()
+        verbose_name = "revisión de diferencia de caja"
+        verbose_name_plural = "revisiones de diferencias de caja"
+        constraints = [
+            models.UniqueConstraint(fields=("sesion", "momento"), name="caja_revision_diferencia_unica"),
+            models.CheckConstraint(
+                condition=models.Q(momento__in=("apertura", "cierre"), conclusion__regex=r"\S"),
+                name="caja_revision_diferencia_valida",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.sesion.numero} · {self.get_momento_display()}"
 
 
 class MovimientoFondo(models.Model):

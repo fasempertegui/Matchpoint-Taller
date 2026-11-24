@@ -2,13 +2,42 @@ from urllib.parse import urlencode
 
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
+from django.db.models import Exists, OuterRef, Q
 from django.urls import reverse
 
 from usuarios.models import Rol
 
 from .finanzas import resumen_financiero
 from .ingresos import ORIGENES
-from .models import MovimientoFondo, SesionCaja
+from .models import MovimientoFondo, RevisionDiferenciaCaja, SesionCaja
+
+
+def anotar_revision_diferencias(consulta):
+    rev_apertura = RevisionDiferenciaCaja.objects.filter(
+        sesion_id=OuterRef("pk"), momento=RevisionDiferenciaCaja.Momento.APERTURA,
+    )
+    rev_cierre = RevisionDiferenciaCaja.objects.filter(
+        sesion_id=OuterRef("pk"), momento=RevisionDiferenciaCaja.Momento.CIERRE,
+    )
+    return consulta.annotate(_rev_apertura=Exists(rev_apertura), _rev_cierre=Exists(rev_cierre))
+
+
+def filtrar_sesiones_por_revision(consulta, estado_revision):
+    tiene_dif_apertura = Q(diferencia_apertura__isnull=False) & ~Q(diferencia_apertura=0)
+    tiene_dif_cierre = Q(diferencia__isnull=False) & ~Q(diferencia=0)
+    if estado_revision == "sin_diferencias":
+        return consulta.exclude(tiene_dif_apertura | tiene_dif_cierre)
+    consulta = anotar_revision_diferencias(consulta)
+    pendiente = (tiene_dif_apertura & Q(_rev_apertura=False)) | (tiene_dif_cierre & Q(_rev_cierre=False))
+    if estado_revision == "pendiente":
+        return consulta.filter(pendiente)
+    if estado_revision == "revisada":
+        return consulta.filter(tiene_dif_apertura | tiene_dif_cierre).exclude(pendiente)
+    return consulta
+
+
+def sesiones_con_diferencia_pendiente_queryset():
+    return filtrar_sesiones_por_revision(SesionCaja.objects.all(), "pendiente")
 
 
 def contexto_financiero(actor, tipo, origen, parametros):

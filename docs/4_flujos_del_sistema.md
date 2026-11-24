@@ -110,6 +110,7 @@ El middleware conserva como máximo un intento por solicitud y lo persiste al sa
 | Caja | FL-80 | Registrar una devolución vinculada |
 | Caja | CJ-05 | Registrar un cobro con excedente |
 | Importes | CJ-06 | Ajustar el importe acordado |
+| Caja | CJ-07 | Revisar diferencia de caja |
 
 Los recorridos de cuenta incluyen CU-01 (verificar correo) y CU-02 (reenviar/corregir correo inicial).
 
@@ -1433,7 +1434,7 @@ Recorrido:
 1. Solicita Abrir caja y consulta el contado del último cierre como referencia.
 2. Declara efectivo inicial. Si difiere, se muestra un aviso y solicita explicación breve; si coincide o es la primera apertura, el motivo queda vacío.
 3. Ingresa su contraseña. Al confirmar, el servicio verifica acceso, contraseña vigente del administrador, importe, último cierre y motivo, e intenta crear la sesión en una transacción. La contraseña no se guarda en la sesión de caja ni en la auditoría.
-4. Guarda responsable fijo, momento del servidor, inicial y motivo y muestra la sesión abierta.
+4. Guarda responsable fijo, momento del servidor, inicial, contado de referencia y diferencia de apertura (cuando existe cierre anterior) y motivo, y muestra la sesión abierta. Si `diferencia_apertura` no es cero, la diferencia queda Pendiente de revisión.
 
 Alternativas:
 
@@ -1549,7 +1550,7 @@ Recorrido:
 1. Solicita Cerrar caja y revisa el resumen por clase y medio.
 2. Declara contado, explica la diferencia cuando corresponde e ingresa su contraseña.
 3. Al confirmar, el servicio verifica el acceso y la contraseña vigente del responsable, bloquea la sesión y recalcula esperado: `efectivo_inicial + ingresos en efectivo + aportes − egresos en efectivo − retiros`, considerando solo movimientos Vigentes. Los egresos por devoluciones en efectivo restan; los medios digitales no intervienen. La contraseña no se guarda en la sesión de caja ni en la auditoría.
-4. Calcula `diferencia = contado − esperado`, positiva para sobrante y negativa para faltante. Valida contado y motivo y guarda esperado, contado, diferencia, motivo y momento del servidor; cambia a Cerrada.
+4. Calcula `diferencia = contado − esperado`, positiva para sobrante y negativa para faltante. Valida contado y motivo y guarda esperado, contado, diferencia, motivo y momento del servidor; cambia a Cerrada. Si `diferencia` no es cero, queda Pendiente de revisión.
 5. Muestra el cierre confirmado. El cambio participa de la auditoría transversal.
 
 Alternativas:
@@ -2084,13 +2085,13 @@ flowchart TD
 
 - **Objetivo:** consultar resumen de sesión, historial de sesiones y listado de movimientos.
 - **Actor:** Administrador con las condiciones de acceso de 3.11; no se exige ser responsable para consultar.
-- **Entradas:** fecha de apertura y estado para sesiones; fecha de registro, sesión, clase, categoría, medio y estado para movimientos.
+- **Entradas:** fecha de apertura, estado y estado de revisión de diferencias (*Todos*, *Pendiente de revisión*, *Revisada*, *Sin diferencias*) para sesiones; fecha de registro, sesión, clase, categoría, medio y estado para movimientos.
 
 Recorrido:
 
 1. El administrador elige historial, resumen de sesión o movimientos y sus filtros.
-2. El sistema consulta sesiones y movimientos coincidentes y muestra filas compactas.
-3. Al seleccionar una sesión muestra responsable, apertura, cierre, inicial, totales por clase y medio, ingresos por categoría y, si está cerrada, esperado, contado, diferencia y motivo. Los ingresos, aportes y retiros se distinguen de los egresos; las devoluciones se muestran separadas de los gastos operativos. El motivo de apertura se consulta cuando existe.
+2. El sistema consulta sesiones y movimientos coincidentes y muestra filas compactas, indicando el estado de revisión cuando una sesión registra diferencias.
+3. Al seleccionar una sesión muestra responsable, apertura, cierre, inicial, totales por clase y medio, ingresos por categoría, diferencia y motivo de apertura cuando existen y, si está cerrada, esperado, contado, diferencia y motivo de cierre. Cada diferencia muestra su estado de revisión, los datos de la revisión registrada o el disparador para ejecutar CJ-07 si está pendiente. Los ingresos, aportes y retiros se distinguen de los egresos; las devoluciones se muestran separadas de los gastos operativos.
 4. Al seleccionar un movimiento muestra clase, concepto, monto, medio, referencia, destinatario y categoría cuando corresponden, vínculo comercial, responsable, fecha de registro, estado y datos de anulación si corresponde. La acción FL-44 se revela bajo demanda solo si está vigente y el actor es responsable de la sesión abierta actual.
 
 Alternativas:
@@ -2460,6 +2461,30 @@ La anulación de un ingreso por FL-44 conserva las devoluciones aunque revele ne
 3. Confirma bajo el bloqueo común de personas y origen. Si el importe ya está cubierto o excedido, rechaza el ajuste. Los demás cambios de importe, cobros, devoluciones o anulación exigen nueva revisión.
 4. Guarda el ajuste con importe anterior y nuevo, motivo, responsable, fecha e identificador único. La confirmación guarda un único aviso al titular con importes anterior y nuevo, motivo y acceso a su operación. Reenviar la misma confirmación no duplica el ajuste ni el aviso.
 5. El último ajuste fija el importe hasta otro ajuste, incluso si cambian participantes o condiciones de socios. Conserva catálogo, tarifas aplicadas y movimientos. Se consulta en detalles, comprobantes y reportes; el historial propio y administrativo se despliega bajo demanda y se pagina de a 25 registros. Otro ajuste sólo se admite mientras quede importe por cubrir.
+
+#### CJ-07. Revisar diferencia de caja
+
+- **Objetivo:** dejar constancia administrativa de la revisión de una diferencia de apertura o cierre de una sesión de caja.
+- **Actor:** Administrador con las condiciones de acceso de 3.11; no se exige ser el responsable de la sesión.
+- **Entradas:** sesión, momento (`apertura` o `cierre`) y conclusión obligatoria (al menos cinco caracteres).
+- **Precondición:** la sesión registra una diferencia distinta de cero en ese momento (en `cierre`, además, sesión Cerrada) y aún no tiene revisión registrada.
+
+Recorrido:
+
+1. Desde el detalle de la sesión, el administrador solicita Registrar revisión sobre la diferencia pendiente de apertura o cierre.
+2. El sistema abre un modal con el resumen de la diferencia (momento, importe de referencia o esperado, inicial o contado, diferencia y motivo declarado) y el campo de conclusión.
+3. El administrador ingresa la conclusión y confirma.
+4. Dentro de `transaction.atomic`, el servicio bloquea al administrador y a la sesión con `select_for_update`, revalida acceso, existencia de diferencia distinta de cero, estado de sesión cuando corresponde, conclusión y unicidad de la revisión.
+5. Guarda un registro inmutable en `revisiones_diferencias_caja` con responsable y momento del servidor, sin modificar `sesiones_caja` ni generar movimientos. La diferencia pasa de Pendiente de revisión a Revisada.
+
+Alternativas:
+
+- Si otra solicitud revisó la misma diferencia primero, se rechaza y se conserva la revisión ya registrada.
+- No se admiten ediciones, eliminaciones ni segundas revisiones sobre el mismo momento de una sesión.
+- Una sesión con diferencia tanto de apertura como de cierre revisa cada momento de forma independiente.
+
+- **Resultado:** revisión inmutable registrada y diferencia marcada como Revisada.
+- **Datos:** sesiones_caja, revisiones_diferencias_caja y usuarios.
 
 ## 4. Procesos automáticos
 

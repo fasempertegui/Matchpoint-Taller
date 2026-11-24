@@ -9,7 +9,7 @@ from django.utils import timezone
 from auditoria.contexto import contexto_auditoria
 from usuarios.models import Rol, Usuario
 
-from .models import MovimientoFondo, SesionCaja
+from .models import MovimientoFondo, RevisionDiferenciaCaja, SesionCaja
 
 
 def exigir_acceso_caja(actor, *, bloquear=False):
@@ -67,10 +67,18 @@ def abrir_caja(actor, *, efectivo_inicial, motivo_apertura="", revision, contras
         raise ValidationError("La revisión de apertura venció o no es válida. Revisá nuevamente.") from None
     if datos != _referencia_apertura(actor, cierre):
         raise ValidationError("Cambió el último cierre. Revisá su contado antes de abrir caja.")
-    motivo = motivo_apertura.strip() if cierre and inicial != cierre.efectivo_contado else ""
-    if cierre and inicial != cierre.efectivo_contado:
+    anterior = cierre.efectivo_contado if cierre else None
+    diferencia_apertura = inicial - anterior if cierre else None
+    motivo = motivo_apertura.strip() if diferencia_apertura else ""
+    if diferencia_apertura:
         validar_motivo(motivo)
-    sesion = SesionCaja(responsable=actor, efectivo_inicial=inicial, motivo_apertura=motivo)
+    sesion = SesionCaja(
+        responsable=actor,
+        efectivo_inicial=inicial,
+        efectivo_anterior=anterior,
+        diferencia_apertura=diferencia_apertura,
+        motivo_apertura=motivo,
+    )
     try:
         with transaction.atomic(), contexto_auditoria(actor):
             sesion.full_clean(validate_constraints=False)
@@ -110,6 +118,42 @@ def cerrar_caja(actor, sesion_id, *, efectivo_contado, motivo_diferencia="", con
     with contexto_auditoria(actor):
         sesion.save(update_fields=["estado", "cerrada_en", "efectivo_esperado", "efectivo_contado", "diferencia", "motivo_diferencia"])
     return sesion
+
+
+@transaction.atomic
+def revisar_diferencia(actor, sesion_id, *, momento, conclusion):
+    actor = exigir_acceso_caja(actor, bloquear=True)
+    if momento not in RevisionDiferenciaCaja.Momento.values:
+        raise ValidationError("Elegí un momento de diferencia válido.")
+    try:
+        sesion = SesionCaja.objects.select_for_update().get(pk=sesion_id)
+    except SesionCaja.DoesNotExist:
+        raise ValidationError("La sesión de caja no existe.") from None
+    if momento == RevisionDiferenciaCaja.Momento.APERTURA:
+        if not sesion.tiene_diferencia_apertura:
+            raise ValidationError("Esta sesión no tiene una diferencia de apertura para revisar.")
+    else:
+        if sesion.estado != SesionCaja.Estado.CERRADA:
+            raise ValidationError("La diferencia de cierre sólo puede revisarse cuando la sesión está cerrada.")
+        if not sesion.tiene_diferencia_cierre:
+            raise ValidationError("Esta sesión no tiene una diferencia de cierre para revisar.")
+    conclusion = conclusion.strip()
+    validar_motivo(conclusion)
+    if RevisionDiferenciaCaja.objects.filter(sesion=sesion, momento=momento).exists():
+        raise ValidationError("Esta diferencia ya fue revisada.")
+    revision = RevisionDiferenciaCaja(
+        sesion=sesion,
+        momento=momento,
+        conclusion=conclusion,
+        revisada_por=actor,
+    )
+    try:
+        with transaction.atomic(), contexto_auditoria(actor):
+            revision.full_clean()
+            revision.save()
+    except IntegrityError:
+        raise ValidationError("Esta diferencia ya fue revisada.") from None
+    return revision
 
 
 def movimientos_validos_sesion(sesion):

@@ -534,6 +534,8 @@ Representa una sesión de la única caja de la academia. El administrador que ab
 | FK | `responsable_id` | `bigint` | | | `4` |
 | | `creado_en` | `timestamptz` | | | `2026-10-29 08:00:00-03` |
 | | `efectivo_inicial` | `numeric(12,2)` | | | `20000.00` |
+| | `efectivo_anterior` | `numeric(12,2)` | Sí | | `25000.00` |
+| | `diferencia_apertura` | `numeric(12,2)` | Sí | | `-5000.00` |
 | | `motivo_apertura` | `text` | | | `Retiro personal entre sesiones` |
 | | `cerrada_en` | `timestamptz` | Sí | | `NULL` |
 | | `efectivo_esperado` | `numeric(12,2)` | Sí | | `NULL` |
@@ -543,7 +545,7 @@ Representa una sesión de la única caja de la academia. El administrador que ab
 
 Un índice único parcial sobre `estado`, con condición `estado = 'abierta'`, permite como máximo una sesión abierta. El número legible `C-000015` se deriva del identificador.
 
-`efectivo_inicial` y `efectivo_contado` son no negativos. `motivo_apertura` es obligatorio cuando el inicial difiere del último contado; si coincide o es la primera apertura queda vacío. No crea un movimiento automático. Las fechas las fija el servidor. En Abierta los campos de cierre son nulos y el motivo de diferencia está vacío; en Cerrada están informados, `cerrada_en >= creado_en` y la diferencia es contado menos esperado. Si la diferencia no es cero, el motivo es obligatorio.
+`efectivo_inicial`, `efectivo_anterior` y `efectivo_contado` son no negativos. En la primera apertura `efectivo_anterior` y `diferencia_apertura` quedan nulos y `motivo_apertura` vacío; en aperturas posteriores `efectivo_anterior` conserva el `efectivo_contado` del último cierre, `diferencia_apertura` equivale a `efectivo_inicial − efectivo_anterior` y `motivo_apertura` es obligatorio cuando `diferencia_apertura` no es cero (vacío cuando coincide). No crea un movimiento automático. Las fechas las fija el servidor. En Abierta los campos de cierre son nulos y el motivo de diferencia está vacío; en Cerrada están informados, `cerrada_en >= creado_en` y la diferencia es contado menos esperado. Si la diferencia no es cero, el motivo es obligatorio. Las revisiones de diferencias de apertura y cierre se registran en `revisiones_diferencias_caja` sin modificar esta fila.
 
 El efectivo esperado de una sesión abierta se calcula con sus movimientos Vigentes: `efectivo_inicial + ingresos en efectivo + aportes − egresos en efectivo − retiros`. Los medios digitales no intervienen. Los egresos en efectivo de categoría devoluciones cuentan como salidas. Al cerrar se guardan esperado, contado y diferencia; una diferencia positiva indica sobrante y una negativa, faltante. Una diferencia no genera un movimiento. Los totales por clase y medio se consultan desde los movimientos; no se almacena una fotografía JSON.
 
@@ -833,6 +835,21 @@ Define el horario efectivo de una sede para una fecha puntual.
 
 Un cierre completo deja las cuatro horas vacías. Las franjas abiertas usan horas en punto, cierre posterior a apertura y una pausa de al menos una hora si hay dos franjas. El horario especial prevalece sobre `sedes_horarios` en su sede y fecha. El feriado global conserva su propia regla de clases y puede coincidir con cualquier horario especial. Las modificaciones y eliminaciones participan del trigger común de auditoría.
 
+### 4.35 `revisiones_diferencias_caja`
+
+Conserva la revisión administrativa de una diferencia registrada al abrir o cerrar una sesión de caja, preservando la inmutabilidad de `sesiones_caja`.
+
+| Clave | Columna | Tipo de dato | Nullable | Unique | Ejemplo |
+|---|---|---|---|---|---|
+| PK | `id` | `bigint` identity | | | `1` |
+| FK | `sesion_id` | `bigint` | | | `15` |
+| | `momento` | `varchar(10)` | | | `apertura` (o `cierre`) |
+| | `conclusion` | `text` | | | `Diferencia originada por retiro registrado en la sesión siguiente` |
+| FK | `revisada_por_id` | `bigint` | | | `4` |
+| | `revisada_en` | `timestamptz` | | | `2026-10-29 19:20:00-03` |
+
+`sesion_id` referencia `sesiones_caja.id` y `revisada_por_id` referencia `usuarios.id`, ambos protegidos contra eliminación. La restricción única `(sesion_id, momento)` garantiza como máximo una revisión por diferencia de apertura y una por diferencia de cierre. `momento` admite `apertura` o `cierre` y `conclusion` exige texto no vacío (al menos cinco caracteres en el servicio). El servicio valida que exista una diferencia distinta de cero para el momento indicado (y que la sesión esté Cerrada si el momento es `cierre`), bajo bloqueo `select_for_update` sobre la sesión. La ausencia de fila para una diferencia existente representa el estado Pendiente de revisión; su existencia representa Revisada. Un trigger impide `UPDATE`, `DELETE` y `TRUNCATE`, y el trigger común registra intentos sobre la tabla.
+
 ## 5. Dependencias referenciales y eliminación
 
 - Las referencias a usuarios, sedes, canchas, productos y contrataciones protegen los registros que tienen datos dependientes. Cada contratación referencia obligatoriamente a su usuario y producto.
@@ -846,6 +863,6 @@ Un cierre completo deja las cuatro horas vacías. Las franjas abiertas usan hora
 - `bloqueos.evento_origen_id` protege al evento de origen mientras exista la referencia de trazabilidad.
 - `log_auditoria.usuario_id` conserva el identificador del actor sin FK, de modo que limpiar una cuenta inicial no obliga a borrar ni actualizar el historial inmutable.
 - `intentos_auditoria.usuario_id` conserva el identificador del actor autenticado sin FK; los intentos permanecen inmutables aunque esa cuenta inicial se elimine.
-- Las sesiones de caja protegen al responsable y los movimientos protegen su sesión, responsables y orígenes comerciales. No se ofrecen eliminaciones físicas. Los vínculos comerciales apuntan a las contrataciones concretas o a la reserva. La protección de historia se valida en servicios y ambas tablas participan de la auditoría transversal; los ajustes de importe conservan además su protección contra modificaciones y borrado.
+- Las sesiones de caja protegen al responsable y los movimientos protegen su sesión, responsables y orígenes comerciales. Las revisiones de diferencias protegen su sesión y al administrador que revisó. No se ofrecen eliminaciones físicas. Los vínculos comerciales apuntan a las contrataciones concretas o a la reserva. La protección de historia se valida en servicios y las tablas participan de la auditoría transversal; los ajustes de importe y las revisiones de diferencias conservan además protección contra modificaciones y borrado en PostgreSQL.
 
 Las clases manuales y generadas no admiten eliminación física desde la aplicación. La anulación conserva la clase, su evento y sus asignaciones conforme a criterios, 2.1 y 2.12. Los turnos pueden ser compartidos por eventos históricos.
