@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load estados tablas static %}
+{% load estados pestanas tablas static %}
 {% block titulo %}Reserva {{ reserva.numero }} | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/reservas-portal.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-reservas reserva-perfil{% endblock %}
@@ -20,7 +20,15 @@
     </div>
 </details>
     </header>
-    <div class="reserva-contenido">
+    <div class="reserva-contenido" data-pestanas>
+        {% pestanas "Información de la reserva" modo="paneles" %}
+            <button type="button" class="pestana-boton" id="reserva-tab-detalles" role="tab" aria-controls="reserva-panel-detalles" data-pestana="detalles" aria-selected="{{ historial_financiero_abierto|yesno:'false,true' }}"{% if historial_financiero_abierto %} tabindex="-1"{% endif %}>Detalles</button>
+            <button type="button" class="pestana-boton" id="reserva-tab-invitados" role="tab" aria-controls="reserva-panel-invitados" data-pestana="invitados" aria-selected="false" tabindex="-1">Invitados</button>
+            <button type="button" class="pestana-boton" id="reserva-tab-pagos-movimientos" role="tab" aria-controls="reserva-panel-pagos-movimientos" data-pestana="pagos-movimientos" aria-selected="{{ historial_financiero_abierto|yesno:'true,false' }}"{% if not historial_financiero_abierto %} tabindex="-1"{% endif %}>Pagos y movimientos</button>
+            <button type="button" class="pestana-boton" id="reserva-tab-modalidad-uso" role="tab" aria-controls="reserva-panel-modalidad-uso" data-pestana="modalidad-uso" aria-selected="false" tabindex="-1">Modalidad y uso</button>
+        {% endpestanas %}
+
+        <div class="pestana-panel" id="reserva-panel-detalles" role="tabpanel" aria-labelledby="reserva-tab-detalles" tabindex="0" data-panel="detalles"{% if historial_financiero_abierto %} hidden{% endif %}>
             <section class="perfil-seccion" aria-labelledby="reserva-datos-titulo">
                 <div class="perfil-titulo-con-ayuda">
                     <h2 id="reserva-datos-titulo">Datos de la reserva</h2>
@@ -45,7 +53,6 @@
                 {% include "reservas/_datos_reserva.html" with reserva=reserva total=total mostrar_total=True mostrar_observaciones=True only %}
             </section>
 
-
             {% if reserva.evento.estado == "anulado" %}
                 <section class="perfil-seccion" aria-labelledby="reserva-motivo-titulo">
                     <h2 id="reserva-motivo-titulo">Motivo de anulación</h2>
@@ -53,10 +60,16 @@
                 </section>
             {% endif %}
 
-        <details class="perfil-seccion-desplegable">
-            <summary>Invitados{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
-            <div class="perfil-seccion-desplegable-cuerpo">
-                {% if invitados %}
+            {% if mi_invitacion %}
+                <section class="perfil-seccion">
+                    <h2>Tu participación</h2>
+                    {% include "reservas/_respuesta_invitacion.html" with invitacion=mi_invitacion %}
+                </section>
+            {% endif %}
+        </div>
+
+        <div class="pestana-panel" id="reserva-panel-invitados" role="tabpanel" aria-labelledby="reserva-tab-invitados" tabindex="0" data-panel="invitados" hidden>
+            {% if invitados %}
                 <div class="tabla-contenedor tabla-listado tabla-listado-sin-centrado tabla-embebida">
                     <table aria-label="Invitados de la reserva">
                         <thead>
@@ -76,12 +89,17 @@
                         </tbody>
                     </table>
                 </div>
-                {% else %}<p class="texto-secundario">Sin invitados</p>{% endif %}
-            </div>
-        </details>
-        <details class="perfil-seccion-desplegable"{% if historial_financiero_abierto %} open{% endif %}><summary>Pagos y movimientos{% include "componentes/iconoir/chevron-abajo.html" %}</summary><div class="perfil-seccion-desplegable-cuerpo">{% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True %}</div></details>
-        <details class="perfil-seccion-desplegable"><summary>Modalidad y uso{% include "componentes/iconoir/chevron-abajo.html" %}</summary><div class="perfil-seccion-desplegable-cuerpo">
-            {% tabla_datos clases="reserva-tabla-modalidad" %}
+            {% else %}
+                <p class="texto-secundario">Sin invitados</p>
+            {% endif %}
+        </div>
+
+        <div class="pestana-panel" id="reserva-panel-pagos-movimientos" role="tabpanel" aria-labelledby="reserva-tab-pagos-movimientos" tabindex="0" data-panel="pagos-movimientos"{% if not historial_financiero_abierto %} hidden{% endif %}>
+            {% include "caja/_situacion_financiera.html" with sin_titulo_financiero=True %}
+        </div>
+
+        <div class="pestana-panel" id="reserva-panel-modalidad-uso" role="tabpanel" aria-labelledby="reserva-tab-modalidad-uso" tabindex="0" data-panel="modalidad-uso" hidden>
+            {% tabla_datos etiqueta="Modalidad y uso" clases="reserva-tabla-modalidad" %}
                 <tr><th scope="row">Modalidad</th><td>{% if reserva.es_con_membresia %}Con membresía{% else %}Reserva normal{% endif %}</td></tr>
                 {% if reserva.es_con_membresia %}
                 <tr><th scope="row">Membresía aplicada</th><td>{{ reserva.membresia_usuario.membresia.nombre }}</td></tr>
@@ -115,9 +133,7 @@
                 {% if reserva.resultado_original %}<tr><th scope="row">Resultado original</th><td>{{ reserva.resultado_original_texto }}</td></tr>{% endif %}
                 {% endif %}
             {% endtabla_datos %}
-        </div></details>
-        {% if mi_invitacion %}<section class="perfil-seccion"><h2>Tu participación</h2>{% include "reservas/_respuesta_invitacion.html" with invitacion=mi_invitacion %}</section>{% endif %}
-
+        </div>
     </div>
 </article>
 {% include "caja/_modal_movimientos.html" %}

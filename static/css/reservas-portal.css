@@ -2,6 +2,7 @@
 .reserva-perfil > .perfil { border: 0; border-top: 3px solid var(--primario-medio); }
 .reserva-perfil .perfil-cabecera { padding: 24px; border-radius: 8px 8px 0 0; }
 .reserva-contenido { padding: 24px; }
+.reserva-contenido > .pestanas { margin-top: 0; }
 .reserva-perfil .perfil-seccion + .perfil-seccion { margin-top: 24px; padding-top: 24px; }
 .reserva-perfil .perfil-seccion h2 { margin-bottom: 16px; }
 .reserva-perfil .perfil-lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; }
@@ -10,15 +11,10 @@
 .reserva-perfil .perfil-desplegable .grupo-campo { margin-bottom: 16px; }
 .reserva-acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
 .reserva-tabla-modalidad .ayuda-contextual { margin-left: 4px; }
-.perfil-seccion-desplegable-cuerpo > .perfil-seccion { margin: 0; padding: 0; border: 0; }
+.reserva-contenido .finanzas-sin-movimientos { margin: 8px 0 0; }
 .reserva-invitacion-respuesta > details { margin-top: 16px; }
 .reserva-invitacion-respuesta summary { color: var(--primario); font-weight: 600; cursor: pointer; }
 @media (max-width: 640px) { .reserva-perfil .perfil-lista { grid-template-columns: minmax(0, 1fr); } }
-
-.reserva-contenido > .perfil-seccion-desplegable + .perfil-seccion { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--borde); }
-
-
-
 
 .reserva-menu-impedimento { margin: 0; padding: 10px 12px; border-top: 1px solid var(--borde); color: var(--texto-suave); font-size: .8rem; }
 .reserva-modal-anulacion { border-radius: 10px; }

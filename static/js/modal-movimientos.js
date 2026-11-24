@@ -12,5 +12,10 @@ modalMovimientos.addEventListener("close", () => {
 });
 
 if (modalMovimientos.hasAttribute("data-abrir-inicialmente")) {
-    modalMovimientos.showModal();
+    document.addEventListener("DOMContentLoaded", () => {
+        const panelPagos = document.querySelector('[data-panel="pagos-movimientos"]');
+        if (!panelPagos || !panelPagos.hidden) {
+            modalMovimientos.showModal();
+        }
+    });
 }

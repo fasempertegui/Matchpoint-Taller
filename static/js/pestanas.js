@@ -34,10 +34,10 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        var inicial = location.hash ? location.hash.slice(1) : null;
-        var existeInicial = Array.from(botones).some(function (boton) {
-            return boton.dataset.pestana === inicial;
-        });
-        activar(existeInicial ? inicial : botones[0].dataset.pestana);
+        var fragmento = location.hash.slice(1);
+        var inicial = Array.from(botones).find(function (boton) {
+            return boton.dataset.pestana === fragmento;
+        }) || contenedor.querySelector('.pestana-boton[aria-selected="true"]') || botones[0];
+        activar(inicial.dataset.pestana);
     });
 });
