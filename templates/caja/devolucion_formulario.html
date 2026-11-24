@@ -1,42 +1,135 @@
-{% extends "base.html" %}{% load tablas static %}
+{% extends "base.html" %}
+{% load encabezados formularios tablas static %}
 {% block titulo %}Registrar devolución | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script><link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
-{% block clase_contenido %}contenido-caja{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script>{% endblock %}
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1>Registrar devolución</h1>
-    {% include "caja/_ingreso_contexto.html" %}
-    {% if origen %}<p>{% if tipo == 'reserva' %}{{ origen.numero }} · {{ origen.organizador }} · {{ origen.evento.get_estado_display }}{% else %}{{ origen.producto.nombre }} · {{ origen.usuario }} · {{ origen.mes_cubierto|date:"F Y" }} · {{ origen.get_estado_display }}{% endif %}</p>
-        {% tabla_datos etiqueta="Resumen para devolución" %}
-            <tr><th scope="row">Ingresos vigentes</th><td>$ {{ situacion.ingresos|floatformat:"2g" }}</td></tr>
-            <tr><th scope="row">Devoluciones vigentes</th><td>$ {{ situacion.devoluciones|floatformat:"2g" }}</td></tr>
-            <tr><th scope="row">Máximo disponible para devolver</th><td><strong>$ {{ situacion.maximo_devolucion|floatformat:"2g" }}</strong></td></tr>
+<div class="formulario-pagina">
+    {% tarjeta_titulo "Registrar devolución" %}
+        <a class="boton boton-secundario boton-chico" href="{% url 'caja:sesion_detalle' sesion.pk %}">Volver a caja</a>
+    {% endtarjeta_titulo %}
+
+    {% pasos_formulario numero_paso total_pasos nombre=nombre_paso etiqueta="Progreso de la devolución" %}
+
+    <section class="tarjeta formulario-cuerpo">
+        {% tabla_datos etiqueta="Contexto de la devolución" %}
+            <tr><th scope="row">Sesión</th><td>{{ sesion.numero }}</td></tr>
+            <tr><th scope="row">Origen</th><td>{{ tipo_texto }}</td></tr>
+            {% if origen %}
+                {% if tipo == 'reserva' %}
+                    <tr><th scope="row">Reserva</th><td>{{ origen.numero }} de {{ origen.organizador }} ({{ origen.evento.get_estado_display }})</td></tr>
+                {% else %}
+                    <tr><th scope="row">Contratación</th><td>{{ origen.producto.nombre }} de {{ origen.usuario }} para {{ origen.mes_cubierto|date:"F \d\e Y"|capfirst }} ({{ origen.get_estado_display }})</td></tr>
+                {% endif %}
+                <tr><th scope="row">Ingresos vigentes</th><td>$ {{ situacion.ingresos|floatformat:"2g" }}</td></tr>
+                <tr><th scope="row">Devoluciones vigentes</th><td>$ {{ situacion.devoluciones|floatformat:"2g" }}</td></tr>
+                <tr><th scope="row">Máximo disponible para devolver</th><td><strong>$ {{ situacion.maximo_devolucion|floatformat:"2g" }}</strong></td></tr>
+            {% endif %}
         {% endtabla_datos %}
-    {% else %}<p>Devolución sin vínculo a una reserva o contratación. El concepto debe explicar el motivo.</p>{% endif %}
-    {% if origen and not situacion.operacion_anulada %}<p>Esta operación sólo permite devolver el excedente sobre el importe acordado.</p>{% endif %}
-    <form method="post" action="?tipo={{ tipo }}"{% if not revision %}{% if not origen or situacion.maximo_devolucion > 0 %} data-ingreso-formulario{% endif %}{% endif %} novalidate>{% csrf_token %}
-        {% if origen %}<input type="hidden" name="origen" value="{{ origen.pk }}">{% endif %}
-        {% include "caja/_errores_movimiento.html" %}
-        {% if revision %}
-            <h2>Revisar devolución</h2>
-            <p>{{ revision.concepto|linebreaksbr }}</p><p><strong>$ {{ revision.monto|floatformat:"2g" }}</strong> · {{ medio_texto }}</p>
-            {% if revision.referencia %}<p>Referencia: {{ revision.referencia }}</p>{% endif %}
-            {% if revision.destinatario %}<p>Destinatario: {{ revision.destinatario }}</p>{% endif %}
-            <p>Se registra un egreso nuevo en esta sesión. Los ingresos originales y los cierres anteriores se conservan.</p>
-            <input type="hidden" name="confirmacion" value="{{ confirmacion }}">
-        {% elif origen and situacion.maximo_devolucion <= 0 %}
-            {% for campo in formulario %}<input type="hidden" name="{{ campo.name }}" value="{{ campo.value|default_if_none:'' }}">{% endfor %}
-        {% else %}
-            {% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{{ campo.errors }}
-            {% elif campo.name == 'destinatario' %}<details{% if campo.value or campo.errors %} open{% endif %}><summary>Agregar destinatario</summary><div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div></details>
-            {% else %}<div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>{% if campo.name == 'verificado' or campo.name == 'sin_vinculo_confirmado' %}<label class="campo-opcion">{{ campo }}<span>{{ campo.label }}</span></label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}{{ campo.errors }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}
+
+        {% if not origen %}
+            <div class="formulario-aviso">
+                <p>Devolución sin vínculo a una reserva o contratación. El concepto debe explicar el motivo.</p>
+            </div>
+        {% elif not situacion.operacion_anulada %}
+            <div class="formulario-aviso">
+                <p>Esta operación sólo permite devolver el excedente sobre el importe acordado.</p>
+            </div>
         {% endif %}
-        <div class="acciones-formulario">
-            {% if not origen or situacion.maximo_devolucion > 0 %}<button class="boton boton-primario" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar devolución{% else %}Revisar devolución{% endif %}</button>{% endif %}
-            {% if revision %}<button class="boton boton-secundario" name="paso" value="editar">Volver</button>{% else %}<button class="boton boton-secundario" name="paso" value="{% if origen %}volver{% else %}volver_tipo{% endif %}" formnovalidate>Volver</button>{% endif %}
-            <a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>
-        </div>
-        {% if origen and situacion.maximo_devolucion <= 0 %}<p>No hay importe disponible para una nueva devolución vinculada.</p>{% endif %}
-    </form>
-</section>
+
+        <form method="post" action="?tipo={{ tipo }}"{% if not revision %}{% if not origen or situacion.maximo_devolucion > 0 %} data-ingreso-formulario{% endif %}{% endif %} novalidate>
+            {% csrf_token %}
+            {% if origen %}<input type="hidden" name="origen" value="{{ origen.pk }}">{% endif %}
+            {% include "caja/_errores_movimiento.html" %}
+
+            {% if revision %}
+                <h2 class="formulario-seccion-titulo">Resumen de la devolución</h2>
+                {% tabla_datos etiqueta="Detalle de la devolución" %}
+                    <tr><th scope="row">Concepto</th><td>{{ revision.concepto }}</td></tr>
+                    <tr><th scope="row">Monto a devolver</th><td><strong>$ {{ revision.monto|floatformat:"2g" }}</strong></td></tr>
+                    <tr><th scope="row">Medio de pago</th><td>{{ medio_texto }}</td></tr>
+                    {% if revision.referencia %}<tr><th scope="row">Referencia</th><td>{{ revision.referencia }}</td></tr>{% endif %}
+                    {% if revision.destinatario %}<tr><th scope="row">Destinatario</th><td>{{ revision.destinatario }}</td></tr>{% endif %}
+                {% endtabla_datos %}
+                <div class="formulario-aviso">
+                    <p>Se registra un egreso nuevo en esta sesión. Los ingresos originales y los cierres anteriores se conservan.</p>
+                </div>
+                <input type="hidden" name="confirmacion" value="{{ confirmacion }}">
+            {% elif origen and situacion.maximo_devolucion <= 0 %}
+                {% for campo in formulario %}<input type="hidden" name="{{ campo.name }}" value="{{ campo.value|default_if_none:'' }}">{% endfor %}
+                <div class="formulario-aviso formulario-aviso-advertencia">
+                    <p>No hay importe disponible para una nueva devolución vinculada.</p>
+                </div>
+            {% else %}
+                {% for campo in formulario.hidden_fields %}
+                    {{ campo }}
+                    {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                {% endfor %}
+
+                <div class="grupo-campo">
+                    <label for="{{ formulario.concepto.id_for_label }}">{{ formulario.concepto.label }}</label>
+                    {{ formulario.concepto }}
+                    {% if formulario.concepto.help_text %}<small class="formulario-ayuda">{{ formulario.concepto.help_text }}</small>{% endif %}
+                    {% for error in formulario.concepto.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="formulario-fila-doble">
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.monto.id_for_label }}">{{ formulario.monto.label }}</label>
+                        {{ formulario.monto }}
+                        {% if formulario.monto.help_text %}<small class="formulario-ayuda">{{ formulario.monto.help_text }}</small>{% endif %}
+                        {% for error in formulario.monto.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.medio_pago.id_for_label }}">{{ formulario.medio_pago.label }}</label>
+                        {{ formulario.medio_pago }}
+                        {% for error in formulario.medio_pago.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="grupo-campo" data-ingreso-no-efectivo>
+                    <label for="{{ formulario.referencia.id_for_label }}">{{ formulario.referencia.label }}</label>
+                    {{ formulario.referencia }}
+                    {% for error in formulario.referencia.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="grupo-campo" data-ingreso-no-efectivo>
+                    <label class="campo-opcion" for="{{ formulario.verificado.id_for_label }}">
+                        {{ formulario.verificado }}<span>{{ formulario.verificado.label }}</span>
+                    </label>
+                    {% for error in formulario.verificado.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                {% if formulario.sin_vinculo_confirmado %}
+                    <div class="grupo-campo">
+                        <label class="campo-opcion" for="{{ formulario.sin_vinculo_confirmado.id_for_label }}">
+                            {{ formulario.sin_vinculo_confirmado }}<span>{{ formulario.sin_vinculo_confirmado.label }}</span>
+                        </label>
+                        {% for error in formulario.sin_vinculo_confirmado.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                {% endif %}
+
+                <details class="observaciones-opcionales"{% if formulario.destinatario.value or formulario.destinatario.errors %} open{% endif %}>
+                    <summary>Agregar destinatario</summary>
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.destinatario.id_for_label }}">{{ formulario.destinatario.label }}</label>
+                        {{ formulario.destinatario }}
+                        {% for error in formulario.destinatario.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </details>
+            {% endif %}
+
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>
+                {% if revision %}
+                    <button class="boton boton-secundario" type="submit" name="paso" value="editar">Volver</button>
+                {% else %}
+                    <button class="boton boton-secundario" type="submit" name="paso" value="{% if origen %}volver{% else %}volver_tipo{% endif %}" formnovalidate>Volver</button>
+                {% endif %}
+                {% if not origen or situacion.maximo_devolucion > 0 %}
+                    <button class="boton boton-primario" type="submit" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar devolución{% else %}Revisar devolución{% endif %}</button>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+</div>
 {% endblock %}

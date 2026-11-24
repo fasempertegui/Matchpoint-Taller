@@ -1,31 +1,85 @@
-{% extends "base.html" %}{% load static %}
+{% extends "base.html" %}
+{% load encabezados formularios tablas static %}
 {% block titulo %}Cobro con excedente | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script>{% endblock %}
+{% block estilos %}<script src="{% static 'js/ingreso-caja.js' %}" defer></script>{% endblock %}
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1>Registrar cobro con excedente</h1><p>{{ sesion.numero }} · {{ origen }}</p>
-    {% include "caja/_resumen_financiero.html" %}
-    <p>Registrá el importe completo efectivamente recibido. El excedente queda disponible para devolver a esta misma operación.</p>
-    <form method="post"{% if not revision %} data-ingreso-formulario{% endif %} novalidate>{% csrf_token %}
-        {% include "caja/_errores_movimiento.html" %}
-        {% if revision %}
-            <h2>Revisar cobro</h2><p>{{ revision.concepto|linebreaksbr }}</p>
-            <p>Importe recibido: <strong>$ {{ revision.monto|floatformat:"2g" }}</strong> · {{ medio_texto }}</p>
-            {% if revision.referencia %}<p>Referencia: {{ revision.referencia }}</p>{% endif %}
-            <p>Motivo: {{ revision.motivo_excedente|linebreaksbr }}</p>
-            <p>Excedente resultante: <strong>$ {{ excedente_resultante|floatformat:"2g" }}</strong></p>
-            <input type="hidden" name="confirmacion" value="{{ confirmacion }}">
-        {% else %}
-            {% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{% else %}
-            <div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
-                {% if campo.name == 'verificado' or campo.name == 'sin_vinculo_confirmado' %}<label class="campo-opcion">{{ campo }}<span>{{ campo.label }}</span></label>{% else %}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{% endif %}{{ campo.errors }}
-            </div>{% endif %}{% endfor %}
-        {% endif %}
-        <div class="acciones-formulario">
-            <button class="boton boton-primario" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar dinero recibido{% else %}Revisar cobro{% endif %}</button>
-            {% if revision %}<button class="boton boton-secundario" name="paso" value="editar">Volver</button>{% endif %}
-            <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-        </div>
-    </form>
-</section>
+<div class="formulario-pagina">
+    {% tarjeta_titulo "Registrar cobro con excedente" descripcion="Registrá el importe completo efectivamente recibido. El excedente queda disponible para devolver a esta misma operación." %}
+        <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">Volver al detalle</a>
+    {% endtarjeta_titulo %}
+
+    {% if revision %}
+        {% pasos_formulario 2 2 nombre="Revisar cobro" etiqueta="Progreso de cobro con excedente" %}
+    {% else %}
+        {% pasos_formulario 1 2 nombre="Datos del cobro" etiqueta="Progreso de cobro con excedente" %}
+    {% endif %}
+
+    <section class="tarjeta formulario-cuerpo">
+        {% tabla_datos etiqueta="Datos de la operación" %}
+            <tr><th scope="row">Sesión</th><td>{{ sesion.numero }}</td></tr>
+            <tr><th scope="row">Operación</th><td>{{ origen }}</td></tr>
+        {% endtabla_datos %}
+
+        {% include "caja/_resumen_financiero.html" %}
+
+        <form method="post"{% if not revision %} data-ingreso-formulario{% endif %} novalidate>
+            {% csrf_token %}
+            {% include "caja/_errores_movimiento.html" %}
+            {% if revision %}
+                <h2 class="formulario-seccion-titulo">Resumen del cobro</h2>
+                {% tabla_datos etiqueta="Detalle del cobro con excedente" %}
+                    <tr><th scope="row">Concepto</th><td>{{ revision.concepto }}</td></tr>
+                    <tr><th scope="row">Importe recibido</th><td><strong>$ {{ revision.monto|floatformat:"2g" }}</strong></td></tr>
+                    <tr><th scope="row">Medio de pago</th><td>{{ medio_texto }}</td></tr>
+                    {% if revision.referencia %}<tr><th scope="row">Referencia</th><td>{{ revision.referencia }}</td></tr>{% endif %}
+                    <tr><th scope="row">Motivo del excedente</th><td>{{ revision.motivo_excedente }}</td></tr>
+                    <tr><th scope="row">Excedente resultante</th><td><strong>$ {{ excedente_resultante|floatformat:"2g" }}</strong></td></tr>
+                {% endtabla_datos %}
+                <input type="hidden" name="confirmacion" value="{{ confirmacion }}">
+            {% else %}
+                {% for campo in formulario.hidden_fields %}{{ campo }}{% endfor %}
+                <div class="grupo-campo">
+                    <label for="{{ formulario.concepto.id_for_label }}">{{ formulario.concepto.label }}</label>
+                    {{ formulario.concepto }}
+                    {% if formulario.concepto.help_text %}<small class="formulario-ayuda">{{ formulario.concepto.help_text }}</small>{% endif %}
+                    {% for error in formulario.concepto.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="formulario-fila-doble">
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.monto.id_for_label }}">{{ formulario.monto.label }}</label>
+                        {{ formulario.monto }}
+                        {% for error in formulario.monto.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.medio_pago.id_for_label }}">{{ formulario.medio_pago.label }}</label>
+                        {{ formulario.medio_pago }}
+                        {% for error in formulario.medio_pago.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+                <div class="grupo-campo" data-ingreso-no-efectivo>
+                    <label for="{{ formulario.referencia.id_for_label }}">{{ formulario.referencia.label }}</label>
+                    {{ formulario.referencia }}
+                    {% for error in formulario.referencia.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="grupo-campo" data-ingreso-no-efectivo>
+                    <label class="campo-opcion" for="{{ formulario.verificado.id_for_label }}">
+                        {{ formulario.verificado }}<span>{{ formulario.verificado.label }}</span>
+                    </label>
+                    {% for error in formulario.verificado.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="grupo-campo">
+                    <label for="{{ formulario.motivo_excedente.id_for_label }}">{{ formulario.motivo_excedente.label }}</label>
+                    {{ formulario.motivo_excedente }}
+                    {% for error in formulario.motivo_excedente.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+                {% if revision %}<button class="boton boton-secundario" type="submit" name="paso" value="editar">Volver</button>{% endif %}
+                <button class="boton boton-primario" type="submit" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar dinero recibido{% else %}Revisar cobro{% endif %}</button>
+            </div>
+        </form>
+    </section>
+</div>
 {% endblock %}

@@ -1353,6 +1353,17 @@ html.modal-abierto {
     background: var(--advertencia-suave);
 }
 
+.boton-confirmar-advertencia {
+    color: #ffffff;
+    border-color: var(--advertencia);
+    background: var(--advertencia);
+}
+
+.boton-confirmar-advertencia:hover {
+    color: #ffffff;
+    background: #6a420d;
+}
+
 .boton-peligro { color: var(--peligro); border-color: var(--peligro); background: #ffffff; }
 .boton-peligro:hover { color: var(--peligro); background: var(--fondo); }
 .boton-confirmar-peligro { color: #ffffff; border-color: var(--peligro); background: var(--peligro); }

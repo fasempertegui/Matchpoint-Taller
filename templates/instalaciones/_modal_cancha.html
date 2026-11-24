@@ -1,6 +1,6 @@
 {% load formularios %}
 {% if cancha %}{% url 'instalaciones:cancha_editar' sede.pk cancha.pk as accion_url %}{% else %}{% url 'instalaciones:cancha_crear' sede.pk as accion_url %}{% endif %}
-{% modal_formulario titulo action=accion_url subtitulo=sede.nombre texto_enviar=texto_boton %}
+{% modal_formulario titulo action=accion_url texto_enviar=texto_boton %}
     {% if formulario.non_field_errors %}
         <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
     {% endif %}

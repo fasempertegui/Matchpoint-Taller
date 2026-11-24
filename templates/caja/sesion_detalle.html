@@ -3,7 +3,7 @@
 {% load filtros %}
 {% load static %}
 {% block titulo %}Caja {{ sesion.numero }} | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
 {% tarjeta_titulo "Caja" descripcion="Consultá el efectivo y los movimientos de cada sesión." %}{% endtarjeta_titulo %}
@@ -15,7 +15,26 @@
             <span class="caja-estado{% if sesion.estado == 'abierta' %} caja-estado-abierta{% endif %}">{{ sesion.get_estado_display }}</span>
             {% include "caja/_estado_informacion.html" with sesion=sesion only %}
         </div>
-        {% if puede_cerrar %}<div class="caja-sesion-acciones"><a class="boton boton-primario" href="{% url 'caja:movimiento_crear' sesion.pk %}">Registrar movimiento</a><a class="boton boton-advertencia" href="{% url 'caja:caja_cerrar' sesion.pk %}">Cerrar caja</a></div>{% endif %}
+        {% if puede_cerrar %}
+        <div class="caja-sesion-acciones">
+            <details class="perfil-menu" data-menu-contextual>
+                <summary class="boton boton-primario" aria-expanded="false">Registrar movimiento <span aria-hidden="true">▾</span></summary>
+                <div class="perfil-menu-opciones">
+                    <a href="{% url 'caja:ingreso_crear' sesion.pk %}">Ingreso</a>
+                    <a href="{% url 'caja:movimiento_crear' sesion.pk %}?clase=egreso">Egreso o devolución</a>
+                    <button type="button" data-abrir-modal-url="{% url 'caja:movimiento_crear' sesion.pk %}?clase=aporte">Aporte de efectivo</button>
+                    <button type="button" data-abrir-modal-url="{% url 'caja:movimiento_crear' sesion.pk %}?clase=retiro">Retiro de efectivo</button>
+                </div>
+            </details>
+            <form class="formulario-en-linea" method="get" action="{% url 'caja:caja_cerrar' sesion.pk %}"
+                  data-confirmar="¿Querés iniciar el cierre de la caja {{ sesion.numero }}? Vas a pasar al formulario de arqueo para confirmar el cierre."
+                  data-confirmar-titulo="Cerrar caja"
+                  data-confirmar-boton="Continuar"
+                  data-confirmar-advertencia>
+                <button class="boton boton-advertencia" type="submit">Cerrar caja</button>
+            </form>
+        </div>
+        {% endif %}
     </div>
     <dl class="caja-importes{% if sesion.estado == 'cerrada' %} caja-importes-cerrada{% endif %}">
         <div class="caja-importe-principal"><dt>Efectivo esperado</dt><dd>$ {{ esperado|floatformat:"2g" }}</dd><dd class="caja-importe-nota">El efectivo esperado incluye sólo movimientos en efectivo</dd></div>
@@ -43,4 +62,5 @@
 <section class="tarjeta caja-listado" data-resultados-filtros aria-label="Movimientos de esta caja">
     {% include "caja/_movimientos.html" with pagina=pagina_movimientos tabla_listado=True %}
 </section>
+<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 {% endblock %}

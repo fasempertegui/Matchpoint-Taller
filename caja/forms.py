@@ -9,14 +9,14 @@ from .models import MovimientoFondo, SesionCaja
 
 class AperturaCajaForm(forms.Form):
     efectivo_inicial = forms.DecimalField(label="Efectivo inicial", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
-    motivo_apertura = forms.CharField(min_length=5, label="Motivo si difiere del último contado", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    motivo_apertura = forms.CharField(min_length=5, label="Motivo si difiere del último contado", required=False, strip=True, widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ingresá al menos 5 caracteres"}))
     revision = forms.CharField(widget=forms.HiddenInput())
     contrasena = forms.CharField(label="Tu contraseña", strip=False, widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "current-password"}), help_text="Confirmá tu contraseña para abrir la caja.")
 
 
 class CierreCajaForm(forms.Form):
     efectivo_contado = forms.DecimalField(label="Efectivo contado", min_value=Decimal("0"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
-    motivo_diferencia = forms.CharField(min_length=5, label="Motivo si hay diferencia", required=False, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    motivo_diferencia = forms.CharField(min_length=5, label="Motivo si hay diferencia", required=False, strip=True, widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ingresá al menos 5 caracteres"}))
     contrasena = forms.CharField(label="Tu contraseña", strip=False, widget=forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "current-password"}), help_text="Confirmá tu contraseña para cerrar la caja.")
 
 
@@ -28,7 +28,7 @@ class SeleccionOrigenMovimientoForm(forms.Form):
         modelo = ORIGENES[tipo][0]
         if tipo == "reserva":
             consulta = modelo.objects.all().select_related("organizador", "evento__turno__cancha__sede").prefetch_related("invitados")
-            self.fields["origen"].label_from_instance = lambda r: f"{r.numero} · {r.organizador} · {r.evento.turno}"
+            self.fields["origen"].label_from_instance = lambda r: f"{r.numero}, {r.organizador}, {r.evento.turno}"
         else:
             consulta = modelo.objects.all().select_related("usuario", "plan" if tipo == "plan" else "membresia")
         if not devolucion:
@@ -68,7 +68,13 @@ class MovimientoCajaForm(IngresoForm):
     def __init__(self, *args, clase, **kwargs):
         super().__init__(*args, **kwargs)
         self.clase = clase
-        self.fields["concepto"].help_text = "Describí el pago realizado." if clase == "egreso" else "Explicá el aporte o retiro de efectivo."
+        self.fields["concepto"].widget = forms.TextInput(attrs={"class": "form-control", "autofocus": clase in ("aporte", "retiro")})
+        if clase == "egreso":
+            self.fields["concepto"].help_text = "Describí el pago realizado."
+        elif clase == "aporte":
+            self.fields["concepto"].help_text = "Explicá el aporte de efectivo."
+        else:
+            self.fields["concepto"].help_text = "Explicá el retiro de efectivo."
         self.fields["monto"].label = "Monto"
         self.fields["verificado"].label = "Verifiqué el pago realizado o la aprobación de la operación con tarjeta"
         self.fields["categoria_egreso"].choices = [("", "Elegí una categoría"), *MovimientoFondo.CategoriaEgreso.choices]
@@ -101,12 +107,21 @@ class DevolucionForm(MovimientoCajaForm):
 
 
 class ExcedenteForm(IngresoForm):
-    motivo_excedente = forms.CharField(label="Motivo del cobro con excedente", min_length=5, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    motivo_excedente = forms.CharField(
+        label="Motivo del cobro con excedente",
+        min_length=5,
+        strip=True,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ingresá al menos 5 caracteres"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["concepto"].widget = forms.TextInput(attrs={"class": "form-control"})
 
 
 class AjusteImporteForm(forms.Form):
-    importe_nuevo = forms.DecimalField(label="Nuevo importe acordado", min_value=Decimal("0.00"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}))
-    motivo = forms.CharField(label="Motivo", min_length=5, strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    importe_nuevo = forms.DecimalField(label="Nuevo importe acordado", min_value=Decimal("0.00"), max_digits=12, decimal_places=2, widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "placeholder": "Pesos argentinos"}))
+    motivo = forms.CharField(label="Motivo", min_length=5, strip=True, widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ingresá al menos 5 caracteres"}))
     operacion_id = forms.UUIDField(widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
@@ -115,7 +130,12 @@ class AjusteImporteForm(forms.Form):
 
 
 class AnulacionMovimientoForm(forms.Form):
-    motivo = forms.CharField(min_length=5, label="Motivo de anulación", strip=True, widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}))
+    motivo = forms.CharField(
+        min_length=5,
+        label="Motivo de anulación",
+        strip=True,
+        widget=forms.TextInput(attrs={"class": "form-control", "autofocus": True, "placeholder": "Ingresá al menos 5 caracteres"}),
+    )
     revision = forms.CharField(widget=forms.HiddenInput())
 
 

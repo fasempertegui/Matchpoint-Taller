@@ -1,21 +1,11 @@
-.clase-encabezado,
 .clase-seccion-titulo {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 16px;
 }
 
-.clase-encabezado { margin-bottom: 24px; }
-.clase-encabezado p { margin: 0 0 4px; }
-.clase-distribucion { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 24px; align-items: start; }
-.clase-turno { position: sticky; top: 20px; }
-.clase-turno h2 { font-size: 1rem; }
-.clase-turno-fecha { margin-top: 20px; }
-.clase-turno-hora { font-family: var(--fuente-titulos); font-size: 1.6rem; }
-.clase-contenido { min-width: 0; }
 .clase-selector + .clase-selector { margin-top: 0; padding-top: 16px; border-top: 1px solid var(--borde); }
-.clase-seccion-titulo { justify-content: flex-start; }
 .clase-seccion-titulo h2 { font-size: 1.2rem; font-weight: 700; margin: 0; }
 .clase-cantidad { margin-left: 4px; color: var(--texto-suave); font-size: 1rem; font-weight: 400; }
 .clase-ampliar { margin-top: 8px; }
@@ -31,33 +21,20 @@
 .clase-observaciones { overflow-wrap: anywhere; }
 .clase-vacio { margin: 8px 0 0; font-size: .9rem; }
 
-
-.clase-revision-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.clase-revision-cabecera h2 { margin: 0; font-size: 1.1rem; }
-.clase-revision-personas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; margin-top: 28px; }
+.clase-revision-personas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
 .clase-revision h3 { margin: 0 0 12px; font-size: .95rem; }
 .clase-revision-personas h3 { display: flex; align-items: center; gap: 6px; }
 .clase-revision-personas h3 span { color: var(--texto-suave); font-size: .9rem; font-weight: 400; }
 .clase-revision-nombres { display: grid; gap: 0 24px; list-style: none; padding: 0; margin: 0; }
 .clase-revision-nombres-columnas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.clase-revision-persona { min-width: 0; padding: 10px 0; overflow-wrap: anywhere; }
+.clase-revision-persona { min-width: 0; padding: 8px 0; overflow-wrap: anywhere; }
 .clase-revision-vacio { margin: 0; padding: 14px; border: 1px dashed var(--borde); border-radius: 8px; color: var(--texto-suave); font-size: .9rem; }
-.clase-revision-observaciones { margin-top: 24px; }
+.clase-revision-observaciones { margin-top: 16px; }
 .clase-revision-observaciones p { margin-bottom: 0; }
-.clase-revision .mensaje { margin-top: 24px; }
-.clase-revision-acciones { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--borde); }
-
-@media (max-width: 760px) {
-    .clase-distribucion { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-    .clase-turno { position: static; }
-    .clase-turno-fecha { margin-top: 12px; }
-    .clase-encabezado { align-items: flex-start; flex-direction: column; }
-}
 
 @media (max-width: 560px) {
     .clase-revision-nombres-columnas { grid-template-columns: minmax(0, 1fr); }
 }
-
 
 .asistencia-agregar { margin-top: 24px; }
 .asistencia-agregar [hidden],

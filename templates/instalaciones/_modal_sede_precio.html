@@ -1,6 +1,6 @@
 {% load formularios %}
 {% url 'instalaciones:sede_precio_configurar' sede.pk as accion_url %}
-{% modal_formulario titulo action=accion_url subtitulo=sede.nombre texto_enviar="Guardar precio" %}
+{% modal_formulario titulo action=accion_url texto_enviar="Guardar precio" %}
     {% if precio_actual is None %}
         <p class="texto-secundario">Sin precio configurado todavía.</p>
     {% endif %}

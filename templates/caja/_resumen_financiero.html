@@ -1,9 +1,8 @@
 {% load tablas %}
 {% if finanzas.operacion_anulada %}
-<p class="nota-campo nota-campo-ambar">
-    {% if mostrar_estado_origen != False %}<strong>Operación anulada.</strong>{% endif %}
-    El neto es lo cobrado menos lo devuelto. No hay saldo por cobrar y cualquier devolución se evalúa por separado.
-</p>
+<div class="formulario-aviso formulario-aviso-advertencia">
+    <p>{% if mostrar_estado_origen != False %}<strong>Operación anulada.</strong> {% endif %}El neto es lo cobrado menos lo devuelto. No hay saldo por cobrar y cualquier devolución se evalúa por separado.</p>
+</div>
 {% endif %}
 {% tabla_datos etiqueta="Resumen de pagos" %}
     <tr><th scope="row">Importe acordado</th><td>$ {{ finanzas.importe_acordado|floatformat:"2g" }}</td></tr>

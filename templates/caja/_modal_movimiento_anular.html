@@ -1,0 +1,42 @@
+{% load encabezados formularios tablas %}
+{% url 'caja:movimiento_anular' movimiento.pk as accion_url %}
+{% texto_titulo as titulo_modal %}Anular {{ movimiento.numero }}{% endtexto_titulo %}
+{% modal_formulario titulo_modal action=accion_url peligro=True amplio=True texto_enviar="Anular movimiento" %}
+    {{ formulario.revision }}
+    {% tabla_datos etiqueta="Resumen del movimiento y efecto" %}
+        <tr><th scope="row">Movimiento</th><td>{{ movimiento.get_clase_display }} de $ {{ movimiento.monto|floatformat:"2g" }} ({{ movimiento.get_medio_pago_display }})</td></tr>
+        <tr><th scope="row">Concepto</th><td>{{ movimiento.concepto }}</td></tr>
+        <tr><th scope="row">Sesión de origen</th><td>{{ movimiento.sesion.numero }} ({{ movimiento.sesion.get_estado_display }})</td></tr>
+        <tr><th scope="row">Sesión actual</th><td>{{ actual.numero }}</td></tr>
+        {% if movimiento.sesion.estado == 'abierta' %}
+            <tr><th scope="row">Cambio en efectivo esperado</th><td>$ {{ efecto|floatformat:"2g" }}</td></tr>
+            <tr><th scope="row">Efectivo esperado resultante</th><td><strong>$ {{ esperado_resultante|floatformat:"2g" }}</strong></td></tr>
+        {% endif %}
+        {% if neto_resultante != None %}
+            <tr><th scope="row">Neto resultante de la operación</th><td><strong>$ {{ neto_resultante|floatformat:"2g" }}</strong></td></tr>
+        {% endif %}
+    {% endtabla_datos %}
+    <div class="formulario-aviso formulario-aviso-peligro">
+        {% if movimiento.sesion.estado == 'cerrada' %}
+            <p>El cierre de origen conserva sus importes y totales históricos. Esta anulación no modifica el efectivo de la sesión actual.</p>
+        {% endif %}
+        <p>Se invalida esta carga y se conservan sus datos originales. Anular no entrega dinero; una corrección se registra como otro movimiento.</p>
+        {% if neto_resultante != None %}
+            <p>Los demás ingresos y devoluciones conservan su asociación y vigencia.</p>
+        {% endif %}
+    </div>
+    {% if neto_resultante != None and neto_resultante < 0 %}
+        <div class="formulario-aviso formulario-aviso-advertencia" role="status">
+            <p>El neto negativo queda como diferencia para revisión administrativa. La corrección del ingreso puede confirmarse si cumple las validaciones de caja.</p>
+        </div>
+    {% endif %}
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    {% for error in formulario.revision.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    <div class="grupo-campo">
+        <label for="{{ formulario.motivo.id_for_label }}">{{ formulario.motivo.label }}</label>
+        {{ formulario.motivo }}
+        {% for error in formulario.motivo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+{% endmodal_formulario %}

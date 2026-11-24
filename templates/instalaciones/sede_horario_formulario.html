@@ -9,7 +9,8 @@
 
 {% block contenido %}
 <div class="formulario-pagina formulario-pagina-amplia horarios-pagina">
-    {% tarjeta_titulo "Horarios de funcionamiento" subtitulo=sede.nombre descripcion="Elegí los días a modificar y definí sus franjas horarias. Los horarios se aplican a todas las canchas de la sede." %}
+    {% texto_titulo as descripcion_horarios %}Elegí los días a modificar y definí sus franjas horarias para {{ sede.nombre }}. Los horarios se aplican a todas las canchas de la sede.{% endtexto_titulo %}
+    {% tarjeta_titulo "Horarios de funcionamiento" descripcion=descripcion_horarios %}
         <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}#horarios">Volver a la sede</a>
     {% endtarjeta_titulo %}
 

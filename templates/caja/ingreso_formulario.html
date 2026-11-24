@@ -1,47 +1,104 @@
-{% extends "base.html" %}{% load static %}
+{% extends "base.html" %}
+{% load encabezados formularios tablas static %}
 {% block titulo %}Registrar ingreso | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><link rel="stylesheet" href="{% static 'css/perfiles.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script><link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
-{% block clase_contenido %}contenido-caja{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><script src="{% static 'js/ingreso-caja.js' %}" defer></script>{% endblock %}
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1>Registrar ingreso</h1>
-    {% include "caja/_ingreso_contexto.html" %}
-    {% if origen %}{% include "caja/_resumen_financiero.html" %}{% endif %}
-    <form method="post" action="?tipo={{ tipo }}"{% if not origen or finanzas.maximo_ingreso > 0 %} data-ingreso-formulario{% endif %} novalidate>
-        {% csrf_token %}
-        {% if origen %}<input type="hidden" name="origen" value="{{ origen.pk }}">{% endif %}
-        {% for campo in formulario.hidden_fields %}{{ campo }}{% endfor %}
-        {% include "caja/_errores_movimiento.html" %}
-        {% if not origen or finanzas.maximo_ingreso > 0 %}
-        <h2 class="ingreso-seccion-titulo">Datos del cobro</h2>
-        {% for campo in formulario.visible_fields %}
-            <div class="grupo-campo"{% if campo.name == 'referencia' or campo.name == 'verificado' %} data-ingreso-no-efectivo{% endif %}>
-                {% if campo.name == 'verificado' or campo.name == 'sin_vinculo_confirmado' %}
-                    <label class="campo-opcion" for="{{ campo.id_for_label }}">{{ campo }}<span>{% if campo.name == 'verificado' %}Verifiqué la recepción o aprobación del pago{% else %}{{ campo.label }}{% endif %}</span></label>
+<div class="formulario-pagina">
+    {% tarjeta_titulo "Registrar ingreso" %}
+        <a class="boton boton-secundario boton-chico" href="{% url 'caja:sesion_detalle' sesion.pk %}">Volver a caja</a>
+    {% endtarjeta_titulo %}
+
+    {% pasos_formulario numero_paso total_pasos nombre=nombre_paso etiqueta="Progreso del ingreso" %}
+
+    <section class="tarjeta formulario-cuerpo">
+        {% tabla_datos etiqueta="Contexto del ingreso" %}
+            <tr><th scope="row">Sesión</th><td>{{ sesion.numero }}</td></tr>
+            <tr><th scope="row">Origen</th><td>{{ tipo_texto }}</td></tr>
+            {% if origen %}
+                {% if tipo == 'reserva' %}
+                    <tr><th scope="row">Reserva</th><td>{{ origen.numero }} de {{ origen.organizador }} ({{ origen.organizador.username }})</td></tr>
+                    <tr><th scope="row">Turno</th><td>{{ origen.evento.turno.cancha.nombre }}, {{ origen.evento.turno.cancha.sede.nombre }}, {{ origen.evento.turno.fecha|date:"d/m/Y" }} a las {{ origen.evento.turno.hora_inicio|time:"H:i" }}</td></tr>
                 {% else %}
-                    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-                    {{ campo }}
+                    <tr><th scope="row">Titular</th><td>{{ origen.usuario }} ({{ origen.usuario.username }})</td></tr>
+                    <tr><th scope="row">Producto</th><td>{{ origen.producto.nombre }} para {{ origen.mes_cubierto|date:"F \d\e Y"|capfirst }}</td></tr>
                 {% endif %}
-                {% if campo.help_text %}<small class="nota-campo" id="{{ campo.auto_id }}_helptext">{{ campo.help_text }}</small>{% endif %}
-                {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                <tr><th scope="row">Categoría</th><td>{{ categoria_texto }}</td></tr>
+            {% endif %}
+        {% endtabla_datos %}
+
+        {% if origen %}{% include "caja/_resumen_financiero.html" %}{% endif %}
+
+        <form method="post" action="?tipo={{ tipo }}"{% if not origen or finanzas.maximo_ingreso > 0 %} data-ingreso-formulario{% endif %} novalidate>
+            {% csrf_token %}
+            {% if origen %}<input type="hidden" name="origen" value="{{ origen.pk }}">{% endif %}
+            {% for campo in formulario.hidden_fields %}{{ campo }}{% endfor %}
+            {% include "caja/_errores_movimiento.html" %}
+
+            {% if not origen or finanzas.maximo_ingreso > 0 %}
+                <h2 class="formulario-seccion-titulo">Datos del cobro</h2>
+                <div class="grupo-campo">
+                    <label for="{{ formulario.concepto.id_for_label }}">{{ formulario.concepto.label }}</label>
+                    {{ formulario.concepto }}
+                    {% if formulario.concepto.help_text %}<small class="formulario-ayuda">{{ formulario.concepto.help_text }}</small>{% endif %}
+                    {% for error in formulario.concepto.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="formulario-fila-doble">
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.monto.id_for_label }}">{{ formulario.monto.label }}</label>
+                        {{ formulario.monto }}
+                        {% if formulario.monto.help_text %}<small class="formulario-ayuda">{{ formulario.monto.help_text }}</small>{% endif %}
+                        {% for error in formulario.monto.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                    <div class="grupo-campo">
+                        <label for="{{ formulario.medio_pago.id_for_label }}">{{ formulario.medio_pago.label }}</label>
+                        {{ formulario.medio_pago }}
+                        {% for error in formulario.medio_pago.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="grupo-campo" data-ingreso-no-efectivo>
+                    <label for="{{ formulario.referencia.id_for_label }}">{{ formulario.referencia.label }}</label>
+                    {{ formulario.referencia }}
+                    {% for error in formulario.referencia.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                <div class="grupo-campo" data-ingreso-no-efectivo>
+                    <label class="campo-opcion" for="{{ formulario.verificado.id_for_label }}">
+                        {{ formulario.verificado }}<span>Verifiqué la recepción o aprobación del pago</span>
+                    </label>
+                    {% for error in formulario.verificado.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+
+                {% if formulario.sin_vinculo_confirmado %}
+                    <div class="grupo-campo">
+                        <label class="campo-opcion" for="{{ formulario.sin_vinculo_confirmado.id_for_label }}">
+                            {{ formulario.sin_vinculo_confirmado }}<span>{{ formulario.sin_vinculo_confirmado.label }}</span>
+                        </label>
+                        {% for error in formulario.sin_vinculo_confirmado.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                {% endif %}
+            {% elif not finanzas.operacion_anulada %}
+                <div class="formulario-aviso" role="status">
+                    <p>El importe acordado ya está cubierto. No admite nuevos ingresos vinculados.</p>
+                </div>
+            {% endif %}
+
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>
+                {% if origen %}<button class="boton boton-secundario" type="submit" name="paso" value="volver" formnovalidate>Volver</button>{% else %}<button class="boton boton-secundario" type="submit" name="paso" value="volver_tipo" formnovalidate>Volver</button>{% endif %}
+                {% if not origen or finanzas.maximo_ingreso > 0 %}<button class="boton boton-primario" type="submit" name="paso" value="registrar">Registrar ingreso</button>{% endif %}
             </div>
-        {% endfor %}
-        {% elif not finanzas.operacion_anulada %}
-            <p role="status">El importe acordado ya está cubierto. No admite nuevos ingresos vinculados.</p>
-        {% endif %}
-        <div class="acciones-formulario">
-            {% if not origen or finanzas.maximo_ingreso > 0 %}<button class="boton boton-primario" name="paso" value="registrar">Registrar ingreso</button>{% endif %}
-            {% if origen %}<button class="boton boton-secundario" name="paso" value="volver" formnovalidate>Volver</button>{% else %}<button class="boton boton-secundario" name="paso" value="volver_tipo" formnovalidate>Volver</button>{% endif %}
-            <a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>
-        </div>
-    </form>
-</section>
-{% if origen %}
-<details class="tarjeta ingreso-cobros"{% if request.GET.pagina %} open{% endif %}>
-    <summary>Cobros registrados <span>({{ pagina_cobros.paginator.count }})</span>{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
-    <div class="ingreso-cobros-cuerpo">
-        {% if pagina_cobros %}{% include "caja/_movimientos.html" with pagina=pagina_cobros tabla_listado=True %}{% else %}<p class="texto-secundario">Este registro todavía no tiene cobros vigentes.</p>{% endif %}
-    </div>
-</details>
-{% endif %}
+        </form>
+    </section>
+
+    {% if origen %}
+        <details class="tarjeta ingreso-cobros"{% if request.GET.pagina %} open{% endif %}>
+            <summary>Cobros registrados <span>({{ pagina_cobros.paginator.count }})</span>{% include "componentes/iconoir/chevron-abajo.html" %}</summary>
+            <div class="ingreso-cobros-cuerpo">
+                {% if pagina_cobros %}{% include "caja/_movimientos.html" with pagina=pagina_cobros tabla_listado=True %}{% else %}<p class="texto-secundario">Este registro todavía no tiene cobros vigentes.</p>{% endif %}
+            </div>
+        </details>
+    {% endif %}
+</div>
 {% endblock %}

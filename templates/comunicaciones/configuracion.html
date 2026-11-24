@@ -45,7 +45,7 @@
                         {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
                     </div>
                     {% endfor %}
-                    <div class="acciones-formulario"><button class="boton boton-primario boton-chico" type="submit">Guardar regla</button><a class="boton boton-secundario boton-chico" href="{% url 'comunicaciones:configuracion_notificaciones' %}#regla-{{ regla.campo }}">Cancelar</a></div>
+                    <div class="acciones-formulario"><a class="boton boton-secundario boton-chico" href="{% url 'comunicaciones:configuracion_notificaciones' %}#regla-{{ regla.campo }}">Cancelar</a><button class="boton boton-primario boton-chico" type="submit">Guardar regla</button></div>
                 </form>
             </td>
             {% else %}

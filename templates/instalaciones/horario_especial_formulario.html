@@ -13,17 +13,17 @@
 {% block contenido %}
 <div class="formulario-pagina formulario-pagina-amplia horarios-pagina">
     {% if revision %}
-        {% tarjeta_titulo "Revisar horario especial" subtitulo="Horarios especiales de sedes" %}
+        {% tarjeta_titulo "Revisar horario especial" %}
             <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}">Volver al listado</a>
         {% endtarjeta_titulo %}
         {% pasos_formulario 2 2 nombre="Revisar actividades afectadas" etiqueta="Progreso del horario especial" %}
     {% elif es_edicion %}
-        {% tarjeta_titulo "Editar horario especial" subtitulo=horario.sede.nombre descripcion="Modificá el horario particular o el cierre de la sede para esta fecha." %}
+        {% tarjeta_titulo "Editar horario especial" descripcion="Modificá el horario particular o el cierre de la sede para esta fecha." %}
             <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}">Volver al listado</a>
         {% endtarjeta_titulo %}
         {% pasos_formulario 1 2 nombre="Definir fecha y horario" etiqueta="Progreso del horario especial" %}
     {% else %}
-        {% tarjeta_titulo "Nuevo horario especial" subtitulo="Horarios especiales de sedes" descripcion="Definí un horario particular o el cierre de una sede para una fecha puntual." %}
+        {% tarjeta_titulo "Nuevo horario especial" descripcion="Definí un horario particular o el cierre de una sede para una fecha puntual." %}
             <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}">Volver al listado</a>
         {% endtarjeta_titulo %}
         {% pasos_formulario 1 2 nombre="Definir fecha y horario" etiqueta="Progreso del horario especial" %}

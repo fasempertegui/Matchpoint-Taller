@@ -1,26 +1,60 @@
-{% extends "base.html" %}{% load static %}
+{% extends "base.html" %}
+{% load encabezados formularios tablas %}
 {% block titulo %}Ajustar importe | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/perfiles.css' %}">{% endblock %}
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1>Ajustar importe acordado</h1><p>{{ origen }}</p>
-    {% include "caja/_resumen_financiero.html" %}
-    <p>El importe acordado queda fijo hasta otro ajuste, incluso si cambian los participantes de una reserva. Los precios del catálogo y las tarifas aplicadas se conservan.</p>
-    <form method="post" novalidate>{% csrf_token %}
-        {% include "caja/_errores_movimiento.html" %}
-        {% if revision %}
-            <h2>Revisar ajuste</h2>
-            <p>Importe acordado: $ {{ revision.finanzas.importe_acordado|floatformat:"2g" }} → <strong>$ {{ revision.importe_nuevo|floatformat:"2g" }}</strong></p>
-            <p>{{ revision.motivo|linebreaksbr }}</p><p>Este ajuste no registra un cobro ni una devolución.</p>
-            <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
-        {% else %}
-            {% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{% else %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}</div>{% endif %}{% endfor %}
-        {% endif %}
-        <div class="acciones-formulario">
-            <button class="boton boton-primario" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar ajuste{% else %}Revisar ajuste{% endif %}</button>
-            {% if revision %}<button class="boton boton-secundario" name="paso" value="editar">Volver</button>{% endif %}
-            <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-        </div>
-    </form>
-</section>
+<div class="formulario-pagina">
+    {% tarjeta_titulo "Ajustar importe acordado" descripcion="El importe acordado queda fijo hasta otro ajuste, incluso si cambian los participantes de una reserva. Los precios del catálogo y las tarifas aplicadas se conservan." %}
+        <a class="boton boton-secundario boton-chico" href="{{ url_cancelar }}">Volver al detalle</a>
+    {% endtarjeta_titulo %}
+
+    {% if revision %}
+        {% pasos_formulario 2 2 nombre="Revisar ajuste" etiqueta="Progreso de ajuste de importe" %}
+    {% else %}
+        {% pasos_formulario 1 2 nombre="Datos del ajuste" etiqueta="Progreso de ajuste de importe" %}
+    {% endif %}
+
+    <section class="tarjeta formulario-cuerpo">
+        {% tabla_datos etiqueta="Operación" %}
+            <tr><th scope="row">Operación</th><td>{{ origen }}</td></tr>
+        {% endtabla_datos %}
+
+        {% include "caja/_resumen_financiero.html" %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% include "caja/_errores_movimiento.html" %}
+            {% if revision %}
+                <h2 class="formulario-seccion-titulo">Resumen del ajuste</h2>
+                {% tabla_datos etiqueta="Detalle del ajuste de importe" %}
+                    <tr><th scope="row">Importe acordado actual</th><td>$ {{ revision.finanzas.importe_acordado|floatformat:"2g" }}</td></tr>
+                    <tr><th scope="row">Nuevo importe acordado</th><td><strong>$ {{ revision.importe_nuevo|floatformat:"2g" }}</strong></td></tr>
+                    <tr><th scope="row">Motivo</th><td>{{ revision.motivo }}</td></tr>
+                {% endtabla_datos %}
+                <div class="formulario-aviso">
+                    <p>Este ajuste no registra un cobro ni una devolución.</p>
+                </div>
+                <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
+            {% else %}
+                {% for campo in formulario %}
+                    {% if campo.is_hidden %}
+                        {{ campo }}
+                    {% else %}
+                        <div class="grupo-campo">
+                            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                            {{ campo }}
+                            {% if campo.help_text %}<small class="formulario-ayuda">{{ campo.help_text }}</small>{% endif %}
+                            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
+                {% if revision %}<button class="boton boton-secundario" type="submit" name="paso" value="editar">Volver</button>{% endif %}
+                <button class="boton boton-primario" type="submit" name="paso" value="{% if revision %}confirmar{% else %}revisar{% endif %}">{% if revision %}Confirmar ajuste{% else %}Revisar ajuste{% endif %}</button>
+            </div>
+        </form>
+    </section>
+</div>
 {% endblock %}

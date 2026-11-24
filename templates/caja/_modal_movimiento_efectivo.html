@@ -1,0 +1,25 @@
+{% load formularios tablas %}
+{% modal_formulario titulo action=accion_url amplio=True texto_enviar=texto_boton %}
+    {% tabla_datos etiqueta="Datos de la sesión" %}
+        <tr><th scope="row">Sesión</th><td>{{ sesion.numero }}</td></tr>
+        <tr><th scope="row">Efectivo disponible</th><td><strong>$ {{ disponible|floatformat:"2g" }}</strong></td></tr>
+    {% endtabla_datos %}
+    <div class="formulario-aviso">
+        <p>Este movimiento es exclusivamente en efectivo y se registra por separado de los cobros y egresos operativos.</p>
+    </div>
+    {% for campo in formulario.hidden_fields %}
+        {{ campo }}
+        {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+    {% endfor %}
+    {% if formulario.non_field_errors %}
+        <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+    {% endif %}
+    {% for campo in formulario.visible_fields %}
+        <div class="grupo-campo">
+            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+            {{ campo }}
+            {% if campo.help_text %}<small class="formulario-ayuda">{{ campo.help_text }}</small>{% endif %}
+            {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+    {% endfor %}
+{% endmodal_formulario %}

@@ -7,12 +7,12 @@
 <article class="tarjeta perfil">
     <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-reticula">
         <h1>{{ movimiento.get_clase_display }} {{ movimiento.numero }}</h1>
-        <details class="perfil-menu">
-            <summary class="boton boton-secundario">Acciones <span aria-hidden="true">⋮</span></summary>
+        <details class="perfil-menu" data-menu-contextual>
+            <summary class="boton boton-secundario" aria-expanded="false">Acciones <span aria-hidden="true">⋮</span></summary>
             <div class="perfil-menu-opciones">
                 <a href="{% url 'caja:sesion_detalle' movimiento.sesion_id %}">Ver sesión de caja</a>
                 {% if url_origen %}<a href="{{ url_origen }}">Ver operación de origen</a>{% endif %}
-                {% if puede_anular %}<a class="perfil-menu-peligro" href="{% url 'caja:movimiento_anular' movimiento.pk %}">Anular movimiento</a>{% endif %}
+                {% if puede_anular %}<button type="button" class="perfil-menu-peligro" data-abrir-modal-url="{% url 'caja:movimiento_anular' movimiento.pk %}">Anular movimiento</button>{% endif %}
             </div>
         </details>
     </header>
@@ -53,15 +53,15 @@
         <h2 id="movimiento-origen-titulo">Origen del movimiento</h2>
         {% with origen=movimiento.origen %}
             {% if tipo_origen == "reserva" %}
-                <p>Reserva de <strong>{{ origen.organizador }}</strong> · {{ origen.numero }}</p>
-                <p class="nota-campo{% if origen.evento.estado == 'anulado' %} nota-campo-ambar{% endif %}">
-                    <strong>Estado de la reserva:</strong> {% if origen.evento.estado == 'anulado' %}Anulada{% elif origen.evento.estado == 'finalizado' %}Finalizada{% else %}Programada{% endif %}
-                </p>
+                <p>Reserva {{ origen.numero }} de <strong>{{ origen.organizador }}</strong></p>
+                <div class="formulario-aviso{% if origen.evento.estado == 'anulado' %} formulario-aviso-advertencia{% endif %}">
+                    <p><strong>Estado de la reserva:</strong> {% if origen.evento.estado == 'anulado' %}Anulada{% elif origen.evento.estado == 'finalizado' %}Finalizada{% else %}Programada{% endif %}</p>
+                </div>
             {% else %}
                 <p>Contratación de <strong>{{ origen.producto.nombre }}</strong> de <strong>{{ origen.usuario }}</strong></p>
-                <p class="nota-campo{% if origen.estado == 'anulado' or origen.estado == 'vencido' %} nota-campo-ambar{% endif %}">
-                    <strong>Estado de la contratación:</strong> {% if origen.estado == 'anulado' %}Anulada{% elif origen.estado == 'vencido' %}Vencida{% else %}Activa{% endif %}
-                </p>
+                <div class="formulario-aviso{% if origen.estado == 'anulado' or origen.estado == 'vencido' %} formulario-aviso-advertencia{% endif %}">
+                    <p><strong>Estado de la contratación:</strong> {% if origen.estado == 'anulado' %}Anulada{% elif origen.estado == 'vencido' %}Vencida{% else %}Activa{% endif %}</p>
+                </div>
             {% endif %}
         {% endwith %}
     </div>
@@ -71,4 +71,5 @@
     </div>
 </section>
 {% endif %}
+<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 {% endblock %}

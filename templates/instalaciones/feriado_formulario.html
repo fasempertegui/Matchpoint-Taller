@@ -11,12 +11,12 @@
 {% block contenido %}
 <div class="formulario-pagina formulario-pagina-amplia">
     {% if revision %}
-        {% tarjeta_titulo "Revisar feriado" subtitulo="Feriados para todas las sedes" %}
+        {% tarjeta_titulo "Revisar feriado" %}
             <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}">Volver al listado</a>
         {% endtarjeta_titulo %}
         {% pasos_formulario 2 2 nombre="Revisar clases afectadas" etiqueta="Progreso de registro de feriado" %}
     {% else %}
-        {% tarjeta_titulo "Registrar feriado" subtitulo="Feriados para todas las sedes" descripcion="El feriado suspende las clases en todas las sedes. Si hay clases programadas que todavía no empezaron, podrás revisarlas antes de confirmar. Las reservas, los bloqueos y el horario de cada sede se conservan." %}
+        {% tarjeta_titulo "Registrar feriado" descripcion="El feriado suspende las clases en todas las sedes. Si hay clases programadas que todavía no empezaron, podrás revisarlas antes de confirmar. Las reservas, los bloqueos y el horario de cada sede se conservan." %}
             <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}">Volver al listado</a>
         {% endtarjeta_titulo %}
         {% pasos_formulario 1 2 nombre="Datos del feriado" etiqueta="Progreso de registro de feriado" %}

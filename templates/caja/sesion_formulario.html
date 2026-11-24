@@ -1,26 +1,67 @@
 {% extends "base.html" %}
-{% load static %}
+{% load encabezados tablas %}
 {% block titulo %}{{ titulo }} | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
-{% block clase_contenido %}contenido-caja{% endblock %}
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario"><h1>{{ titulo }}</h1>
-{% if sesion %}
-<dl class="caja-formulario-contexto">
-    <div><dt>Sesión</dt><dd>{{ sesion.numero }}</dd></div>
-    <div class="caja-contexto-importe"><dt>Efectivo esperado</dt><dd>$ {{ esperado|floatformat:"2g" }}</dd></div>
-</dl>
-<p>Contá el efectivo disponible. Si difiere del esperado, explicá el motivo.</p>
-{% elif ultimo_cierre %}
-<dl class="caja-formulario-contexto">
-    <div><dt>Último cierre</dt><dd>{{ ultimo_cierre.numero }}</dd></div>
-    <div class="caja-contexto-importe"><dt>Efectivo contado</dt><dd>$ {{ ultimo_cierre.efectivo_contado|floatformat:"2g" }}</dd></div>
-</dl>
-<p>Declará el efectivo inicial. Si difiere del último contado, explicá el motivo.</p>
-{% else %}<p>Declará el efectivo inicial para abrir la primera sesión.</p>{% endif %}
-<form method="post" novalidate>{% csrf_token %}
-{% include "caja/_errores_movimiento.html" %}
-{% for campo in formulario %}{% if campo.is_hidden %}{{ campo }}{% else %}<div class="grupo-campo"><label for="{{ campo.id_for_label }}">{{ campo.label }}</label>{{ campo }}{{ campo.errors }}{% if campo.help_text %}<small class="nota-campo">{{ campo.help_text }}</small>{% endif %}</div>{% endif %}{% endfor %}
-<div class="acciones-formulario"><button class="boton boton-primario" type="submit">Confirmar {% if sesion %}cierre{% else %}apertura{% endif %}</button><a class="boton boton-secundario" href="{% if sesion %}{% url 'caja:sesion_detalle' sesion.pk %}{% else %}{% url 'caja:caja_actual' %}{% endif %}">Cancelar</a></div>
-</form></section>
+<div class="formulario-pagina">
+    {% if sesion %}
+        {% tarjeta_titulo titulo descripcion="Contá el efectivo disponible. Si difiere del esperado, explicá el motivo." %}
+            <a class="boton boton-secundario boton-chico" href="{% url 'caja:sesion_detalle' sesion.pk %}">Volver a caja</a>
+        {% endtarjeta_titulo %}
+    {% elif ultimo_cierre %}
+        {% tarjeta_titulo titulo descripcion="Declará el efectivo inicial. Si difiere del último contado, explicá el motivo." %}
+            <a class="boton boton-secundario boton-chico" href="{% url 'caja:caja_actual' %}">Volver a caja</a>
+        {% endtarjeta_titulo %}
+    {% else %}
+        {% tarjeta_titulo titulo descripcion="Declará el efectivo inicial para abrir la primera sesión." %}
+            <a class="boton boton-secundario boton-chico" href="{% url 'caja:caja_actual' %}">Volver a caja</a>
+        {% endtarjeta_titulo %}
+    {% endif %}
+
+    <section class="tarjeta formulario-cuerpo">
+        {% if sesion %}
+            {% tabla_datos etiqueta="Datos de la sesión" %}
+                <tr><th scope="row">Sesión</th><td>{{ sesion.numero }}</td></tr>
+                <tr><th scope="row">Efectivo esperado</th><td><strong>$ {{ esperado|floatformat:"2g" }}</strong></td></tr>
+            {% endtabla_datos %}
+        {% elif ultimo_cierre %}
+            {% tabla_datos etiqueta="Último cierre registrado" %}
+                <tr><th scope="row">Último cierre</th><td>{{ ultimo_cierre.numero }}</td></tr>
+                <tr><th scope="row">Efectivo contado</th><td><strong>$ {{ ultimo_cierre.efectivo_contado|floatformat:"2g" }}</strong></td></tr>
+            {% endtabla_datos %}
+        {% endif %}
+
+        <form method="post" novalidate{% if sesion %}
+              data-confirmar="Estás a punto de cerrar la caja {{ sesion.numero }}."
+              data-confirmar-titulo="Cerrar caja"
+              data-confirmar-boton="Cerrar caja"
+              data-confirmar-advertencia{% endif %}>
+            {% csrf_token %}
+            {% if sesion %}
+            <template data-confirmar-detalle>
+                <div class="modal-confirmacion-detalle formulario-aviso formulario-aviso-advertencia">
+                    <p>Una vez cerrada, la sesión quedará fija y no podrás registrar nuevos movimientos en ella.</p>
+                    <p>Verificá que el efectivo contado y la justificación de diferencia sean correctos antes de continuar.</p>
+                </div>
+            </template>
+            {% endif %}
+            {% include "caja/_errores_movimiento.html" %}
+            {% for campo in formulario %}
+                {% if campo.is_hidden %}
+                    {{ campo }}
+                {% else %}
+                    <div class="grupo-campo">
+                        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                        {{ campo }}
+                        {% if campo.help_text %}<small class="formulario-ayuda">{{ campo.help_text }}</small>{% endif %}
+                        {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <div class="acciones-formulario">
+                <a class="boton boton-secundario" href="{% if sesion %}{% url 'caja:sesion_detalle' sesion.pk %}{% else %}{% url 'caja:caja_actual' %}{% endif %}">Cancelar</a>
+                <button class="boton {% if sesion %}boton-confirmar-advertencia{% else %}boton-primario{% endif %}" type="submit">Confirmar {% if sesion %}cierre{% else %}apertura{% endif %}</button>
+            </div>
+        </form>
+    </section>
+</div>
 {% endblock %}

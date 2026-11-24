@@ -9,7 +9,7 @@
 
 {% block contenido %}
 <div class="formulario-pagina formulario-pagina-amplia">
-    {% tarjeta_titulo "Quitar horario especial" subtitulo=horario.sede.nombre descripcion="Al quitar este horario especial, la sede volverá a regirse por su horario habitual para esa fecha." %}
+    {% tarjeta_titulo "Quitar horario especial" descripcion="Al quitar este horario especial, la sede volverá a regirse por su horario habitual para esa fecha." %}
         <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:horarios_especiales' %}">Volver al listado</a>
     {% endtarjeta_titulo %}
 

@@ -269,6 +269,10 @@
     background: #fdf2f2;
 }
 
+.modal-advertencia .modal-cabecera {
+    background: var(--advertencia-suave);
+}
+
 .modal-cabecera-identidad {
     min-width: 0;
 }
@@ -313,6 +317,11 @@
 .modal-peligro .modal-cerrar:hover {
     background: rgb(180 35 24 / 10%);
     color: var(--peligro);
+}
+
+.modal-advertencia .modal-cerrar:hover {
+    background: rgb(128 82 18 / 12%);
+    color: var(--advertencia);
 }
 
 .modal-cerrar:focus-visible,

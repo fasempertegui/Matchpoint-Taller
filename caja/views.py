@@ -11,6 +11,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 from django.views.decorators.debug import sensitive_post_parameters
 
+from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
+
 from .forms import (
     AnulacionMovimientoForm, AperturaCajaForm, CierreCajaForm, HistorialMovimientosForm,
     HistorialSesionesForm, IngresoForm, MovimientoCajaForm, MovimientosSesionForm, SeleccionOrigenMovimientoForm,
@@ -228,16 +230,48 @@ def movimiento_crear(request, pk):
     sesion = get_object_or_404(SesionCaja, pk=pk)
     if sesion.responsable_id != actor.pk:
         raise PermissionDenied
-    if sesion.estado != "abierta" and request.method == "GET":
-        messages.error(request, "La sesión está cerrada y no admite movimientos nuevos.")
-        return redirect("caja:sesion_detalle", pk=pk)
+    url_sesion = reverse("caja:sesion_detalle", args=[pk])
     clase = request.GET.get("clase")
     if clase is None:
-        return render(request, "caja/movimiento_tipo.html", {"sesion": sesion})
+        return redirect(url_sesion)
     if clase not in ("egreso", "aporte", "retiro"):
         raise Http404
+    if clase in ("aporte", "retiro"):
+        if not es_peticion_modal(request):
+            return redirect(url_sesion)
+        if sesion.estado != "abierta":
+            messages.error(request, "La sesión está cerrada y no admite movimientos nuevos.")
+            return respuesta_modal_exito(url_sesion)
+        formulario = MovimientoCajaForm(request.POST if request.method == "POST" else None, clase=clase)
+        if request.method == "POST" and formulario.is_valid():
+            try:
+                movimiento = registrar_movimiento(actor, pk, clase=clase, **formulario.cleaned_data)
+            except ValidationError as error:
+                formulario.add_error(None, error.messages)
+            else:
+                messages.success(request, f"El movimiento {movimiento.numero} está registrado.")
+                return respuesta_modal_exito(url_sesion)
+        return respuesta_modal_html(
+            request,
+            "caja/_modal_movimiento_efectivo.html",
+            {
+                "sesion": sesion,
+                "formulario": formulario,
+                "clase": clase,
+                "titulo": "Registrar aporte de efectivo" if clase == "aporte" else "Registrar retiro de efectivo",
+                "texto_boton": "Registrar aporte" if clase == "aporte" else "Registrar retiro",
+                "accion_url": f"{reverse('caja:movimiento_crear', args=[pk])}?clase={clase}",
+                "disponible": efectivo_esperado(sesion),
+            },
+            status=400 if formulario.errors else 200,
+            amplio=True,
+            errores=bool(formulario.errors),
+        )
+    if sesion.estado != "abierta" and request.method == "GET":
+        messages.error(request, "La sesión está cerrada y no admite movimientos nuevos.")
+        return redirect(url_sesion)
     paso = request.POST.get("paso")
-    if clase == "egreso" and paso == "vincular_devolucion" and request.POST.get("categoria_egreso") == "devoluciones":
+    if paso == "vincular_devolucion" and request.POST.get("categoria_egreso") == "devoluciones":
         from .vistas_devoluciones import devolucion_crear
         return devolucion_crear(request, pk)
     actualizar = paso == "actualizar_categoria"
@@ -253,7 +287,7 @@ def movimiento_crear(request, pk):
             return redirect("caja:movimiento_detalle", pk=movimiento.pk)
     return render(request, "caja/movimiento_formulario.html", {
         "sesion": sesion, "formulario": formulario, "clase": clase,
-        "titulo": f"Registrar {dict(MovimientoFondo.Clase.choices)[clase].lower()}",
+        "titulo": "Registrar egreso",
         "disponible": efectivo_esperado(sesion),
     })
 
@@ -267,9 +301,12 @@ def movimiento_anular(request, pk):
     if actual is None:
         raise PermissionDenied
     movimiento = get_object_or_404(MovimientoFondo.objects.select_related("sesion"), pk=pk)
-    if movimiento.estado != "vigente" and request.method == "GET":
+    url_detalle = reverse("caja:movimiento_detalle", args=[pk])
+    if not es_peticion_modal(request):
+        return redirect(url_detalle)
+    if movimiento.estado != "vigente":
         messages.info(request, "El movimiento ya está Anulado.")
-        return redirect("caja:movimiento_detalle", pk=pk)
+        return respuesta_modal_exito(url_detalle)
     formulario = AnulacionMovimientoForm(request.POST if request.method == "POST" else None, initial={"revision": revision_anulacion(actor, movimiento, actual)})
     if request.method == "POST" and formulario.is_valid():
         try:
@@ -278,19 +315,27 @@ def movimiento_anular(request, pk):
             formulario.add_error(None, error.messages)
         else:
             messages.success(request, "El movimiento fue Anulado. Sus datos originales se conservan.")
-            return redirect("caja:movimiento_detalle", pk=pk)
+            return respuesta_modal_exito(url_detalle)
     origen = movimiento.sesion
     tipo, origen_id = origen_del_movimiento(movimiento)
     neto_resultante = None
     if origen_id:
         neto = situacion_financiera(tipo, origen_id)["neto_recibido"]
         neto_resultante = neto - movimiento.monto if movimiento.clase == "ingreso" else neto + movimiento.monto
-    return render(request, "caja/movimiento_anular.html", {
-        "neto_resultante": neto_resultante,
-        "movimiento": movimiento, "actual": actual, "formulario": formulario,
-        "efecto": -movimiento.efecto_efectivo,
-        "esperado_resultante": efectivo_esperado(origen) - movimiento.efecto_efectivo if origen.estado == "abierta" else None,
-    })
+    return respuesta_modal_html(
+        request,
+        "caja/_modal_movimiento_anular.html",
+        {
+            "neto_resultante": neto_resultante,
+            "movimiento": movimiento, "actual": actual, "formulario": formulario,
+            "efecto": -movimiento.efecto_efectivo,
+            "esperado_resultante": efectivo_esperado(origen) - movimiento.efecto_efectivo if origen.estado == "abierta" else None,
+        },
+        status=400 if formulario.errors else 200,
+        peligro=True,
+        amplio=True,
+        errores=bool(formulario.errors),
+    )
 
 
 def _filtrar_fechas(consulta, datos):

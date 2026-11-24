@@ -109,7 +109,9 @@
         flex-direction: column;
         width: 100%;
     }
-    .caja-sesion-acciones .boton {
+    .caja-sesion-acciones .boton,
+    .caja-sesion-acciones .perfil-menu,
+    .caja-sesion-acciones .formulario-en-linea {
         width: 100%;
     }
     .caja-importes,
@@ -117,29 +119,6 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
-
-.contenido-caja .tarjeta-formulario {
-    width: 100%;
-    max-width: none;
-    border-top: 3px solid var(--primario-medio);
-}
-.contenido-caja .tarjeta-formulario h1 { margin-bottom: 20px; }
-.contenido-caja .tarjeta-formulario .grupo-campo { margin-bottom: 20px; }
-.contenido-caja .tarjeta-formulario .acciones-formulario {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 24px -20px -20px;
-    padding: 16px 20px;
-    border-top: 1px solid var(--borde);
-    border-radius: 0 0 10px 10px;
-}
-.caja-tipos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--espacio-componentes); margin-top: 24px; }
-.caja-tipos a { display: block; padding: 20px; text-decoration: none; border: 1px solid var(--borde); border-radius: 10px; }
-.caja-tipos a:hover { background: var(--primario-suave); border-color: var(--primario); }
-.caja-tipos strong { display: block; color: var(--primario); }
-.caja-tipos span { display: block; margin-top: 6px; color: var(--texto-suave); font-size: .9rem; }
-.caja-tipos a:focus-visible { outline: 2px solid var(--primario); outline-offset: 3px; }
 
 .contenido-caja .caja-filtros-movimientos {
     display: grid;
@@ -175,21 +154,6 @@
 @media (max-width: 1100px) {
     .caja-resumen-bloques { grid-template-columns: minmax(0, 1fr); }
 }
-
-.caja-formulario-contexto {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: center;
-    gap: 24px;
-    margin: 0 0 24px;
-    padding: 20px;
-    background: var(--primario-suave);
-    border-radius: 10px;
-}
-.caja-formulario-contexto dt { color: var(--texto-suave); font-size: .85rem; }
-.caja-formulario-contexto dd { margin: 6px 0 0; font-size: 1.2rem; font-weight: 600; }
-.caja-formulario-contexto .caja-contexto-importe dd { color: var(--primario); font-size: 1.6rem; font-variant-numeric: tabular-nums; }
-
 
 .caja-estado-informacion { margin-left: -8px; color: var(--texto-suave); font-size: .85rem; }
 

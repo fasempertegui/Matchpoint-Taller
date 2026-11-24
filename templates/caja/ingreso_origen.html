@@ -1,57 +1,95 @@
-{% extends "base.html" %}{% load static %}
+{% extends "base.html" %}
+{% load encabezados formularios tablas static %}
 {% block titulo %}{{ titulo|default:"Registrar ingreso" }} | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}"><link rel="stylesheet" href="{% static 'css/caja.css' %}">{% endblock %}
-{% block clase_contenido %}contenido-caja{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/ingreso-caja.css' %}">{% endblock %}
 {% block contenido %}
-<section class="tarjeta tarjeta-formulario">
-    <h1>{{ titulo|default:"Registrar ingreso" }}</h1>
-    {% include "caja/_ingreso_contexto.html" %}
-    {% if seleccion %}
-        <h2 class="ingreso-seccion-titulo">{% if tipo == 'reserva' %}Elegí la reserva{% elif tipo == 'plan' %}Elegí la contratación de plan{% else %}Elegí la contratación de membresía{% endif %}</h2>
-        <form method="post" action="?tipo={{ tipo }}">{% csrf_token %}
-            {% for nombre, valor in borrador.items %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
-            <div class="ingreso-busqueda">
-                <div class="grupo-campo"><label for="buscar-origen">Buscar registro</label><input class="form-control" type="search" id="buscar-origen" name="q" value="{{ busqueda }}" maxlength="100" placeholder="{% if tipo == 'reserva' %}Nombre, usuario, número o cancha{% else %}Nombre, usuario o producto{% endif %}"></div>
-                <button class="boton boton-secundario" type="submit" name="paso" value="buscar" formnovalidate>Buscar</button>
-            </div>
-            {% if seleccion.errors %}<div class="mensaje mensaje-error" role="alert"><div>{% for error in seleccion.origen.errors %}<p class="ingreso-error">{{ error }}</p>{% endfor %}</div></div>{% endif %}
-            <fieldset class="ingreso-opciones ingreso-registros">
-                <legend class="clase-etiqueta-oculta">{% if devolucion %}Registro de la devolución{% else %}Registro a cobrar{% endif %}</legend>
-                {% for registro in registros %}
-                    <label class="ingreso-opcion ingreso-registro">
-                        <input type="radio" name="origen" value="{{ registro.pk }}" required{% if origen_seleccionado == registro.pk|stringformat:'s' %} checked{% endif %}>
-                        <svg class="ingreso-check" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
-                        <span class="ingreso-registro-persona">{% if tipo == 'reserva' %}{{ registro.organizador }}{% else %}{{ registro.usuario }}{% endif %}</span>
-                        <span class="ingreso-registro-detalle">{% if tipo == 'reserva' %}{{ registro.numero }}{% else %}{{ registro.producto.nombre }}{% endif %}</span>
-                        <span class="ingreso-registro-fecha">{% if tipo == 'reserva' %}{{ registro.evento.turno.fecha|date:"d/m/Y" }} a las {{ registro.evento.turno.hora_inicio|time:"H:i" }}{% else %}{{ registro.mes_cubierto|date:"F Y"|capfirst }}{% endif %}</span>
-                        <strong class="ingreso-registro-importe">{% if devolucion %}Importe acordado: $ {{ registro.importe_acordado|floatformat:"2g" }}{% else %}Por cubrir: $ {{ registro.pendiente_cobro|floatformat:"2g" }}{% endif %}</strong>
-                        {% if devolucion %}<span>{% if tipo == 'reserva' %}{{ registro.evento.get_estado_display }}{% else %}{{ registro.get_estado_display }}{% endif %}</span>{% endif %}
-                        {% if tipo == 'reserva' %}<span class="ingreso-registro-lugar">{{ registro.evento.turno.cancha.nombre }}<small>{{ registro.evento.turno.cancha.sede.nombre }}</small></span>{% endif %}
-                    </label>
-                {% empty %}<p class="texto-secundario">{% if busqueda %}No hay registros que coincidan con la búsqueda.{% else %}No hay registros disponibles en esta categoría.{% endif %}</p>{% endfor %}
-            </fieldset>
-            {% if registros.has_other_pages %}<nav class="ingreso-paginacion" aria-label="Páginas de registros">
-                {% if registros.has_previous %}<button class="enlace-boton" name="pagina_origen" value="{{ registros.previous_page_number }}" formnovalidate>Anterior</button>{% endif %}
-                <span>{{ registros.number }} de {{ registros.paginator.num_pages }}</span>
-                {% if registros.has_next %}<button class="enlace-boton" name="pagina_origen" value="{{ registros.next_page_number }}" formnovalidate>Más registros</button>{% endif %}
-            </nav>{% endif %}
-            <div class="acciones-formulario"><button class="boton boton-secundario" name="paso" value="volver_tipo" formnovalidate>Volver</button><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>{% if registros %}<button class="boton boton-primario" name="paso" value="datos">Siguiente</button>{% endif %}</div>
-        </form>
+<div class="formulario-pagina">
+    {% if devolucion %}
+        {% tarjeta_titulo "Registrar devolución" %}
+            <a class="boton boton-secundario boton-chico" href="{% url 'caja:sesion_detalle' sesion.pk %}">Volver a caja</a>
+        {% endtarjeta_titulo %}
+        {% pasos_formulario numero_paso total_pasos nombre=nombre_paso etiqueta="Progreso de la devolución" %}
     {% else %}
-        <form method="post" action="{% if devolucion %}{% url 'caja:devolucion_crear' sesion.pk %}{% else %}{% url 'caja:ingreso_crear' sesion.pk %}{% endif %}">
-            {% csrf_token %}
-            {% for nombre, valor in borrador.items %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
-            <fieldset class="ingreso-opciones"><legend class="ingreso-seccion-titulo">{% if devolucion %}¿A qué operación corresponde la devolución?{% else %}¿Qué cobro vas a registrar?{% endif %}</legend>
-                {% for valor, nombre, descripcion in opciones_origen %}
-                    <label class="ingreso-opcion">
-                        <input type="radio" name="tipo" value="{{ valor }}" required{% if tipo_previo == valor %} checked{% endif %}>
-                        <svg class="ingreso-check" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
-                        <strong>{{ nombre }}</strong><span>{{ descripcion }}</span>
-                    </label>
-                {% endfor %}
-            </fieldset>
-            <div class="acciones-formulario"><button class="boton boton-primario">Siguiente</button><a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a></div>
-        </form>
+        {% tarjeta_titulo "Registrar ingreso" %}
+            <a class="boton boton-secundario boton-chico" href="{% url 'caja:sesion_detalle' sesion.pk %}">Volver a caja</a>
+        {% endtarjeta_titulo %}
+        {% pasos_formulario numero_paso total_pasos nombre=nombre_paso etiqueta="Progreso del ingreso" %}
     {% endif %}
-</section>
+
+    <section class="tarjeta formulario-cuerpo">
+        {% tabla_datos etiqueta="Contexto de la operación" %}
+            <tr><th scope="row">Sesión</th><td>{{ sesion.numero }}</td></tr>
+            {% if tipo %}<tr><th scope="row">Origen</th><td>{{ tipo_texto }}</td></tr>{% endif %}
+        {% endtabla_datos %}
+
+        {% if seleccion %}
+            <h2 class="formulario-seccion-titulo">{% if tipo == 'reserva' %}Elegí la reserva{% elif tipo == 'plan' %}Elegí la contratación de plan{% else %}Elegí la contratación de membresía{% endif %}</h2>
+            <form method="post" action="?tipo={{ tipo }}">
+                {% csrf_token %}
+                {% for nombre, valor in borrador.items %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
+                <div class="ingreso-busqueda">
+                    <div class="grupo-campo">
+                        <label for="buscar-origen">Buscar registro</label>
+                        <input class="form-control" type="search" id="buscar-origen" name="q" value="{{ busqueda }}" maxlength="100" placeholder="{% if tipo == 'reserva' %}Nombre, usuario, número o cancha{% else %}Nombre, usuario o producto{% endif %}">
+                    </div>
+                    <button class="boton boton-secundario" type="submit" name="paso" value="buscar" formnovalidate>Buscar</button>
+                </div>
+                {% if seleccion.errors %}
+                    <div class="mensaje mensaje-error" role="alert">
+                        <div>{% for error in seleccion.origen.errors %}<p class="ingreso-error">{{ error }}</p>{% endfor %}</div>
+                    </div>
+                {% endif %}
+                <fieldset class="ingreso-opciones ingreso-registros">
+                    <legend class="clase-etiqueta-oculta">{% if devolucion %}Registro de la devolución{% else %}Registro a cobrar{% endif %}</legend>
+                    {% for registro in registros %}
+                        <label class="ingreso-opcion ingreso-registro">
+                            <input type="radio" name="origen" value="{{ registro.pk }}" required{% if origen_seleccionado == registro.pk|stringformat:'s' %} checked{% endif %}>
+                            <svg class="ingreso-check" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                            <span class="ingreso-registro-persona">{% if tipo == 'reserva' %}{{ registro.organizador }}{% else %}{{ registro.usuario }}{% endif %}</span>
+                            <span class="ingreso-registro-detalle">{% if tipo == 'reserva' %}{{ registro.numero }}{% else %}{{ registro.producto.nombre }}{% endif %}</span>
+                            <span class="ingreso-registro-fecha">{% if tipo == 'reserva' %}{{ registro.evento.turno.fecha|date:"d/m/Y" }} a las {{ registro.evento.turno.hora_inicio|time:"H:i" }}{% else %}{{ registro.mes_cubierto|date:"F \d\e Y"|capfirst }}{% endif %}</span>
+                            <strong class="ingreso-registro-importe">{% if devolucion %}Importe acordado: $ {{ registro.importe_acordado|floatformat:"2g" }}{% else %}Por cubrir: $ {{ registro.pendiente_cobro|floatformat:"2g" }}{% endif %}</strong>
+                            {% if devolucion %}<span>{% if tipo == 'reserva' %}{{ registro.evento.get_estado_display }}{% else %}{{ registro.get_estado_display }}{% endif %}</span>{% endif %}
+                            {% if tipo == 'reserva' %}<span class="ingreso-registro-lugar">{{ registro.evento.turno.cancha.nombre }}<small>{{ registro.evento.turno.cancha.sede.nombre }}</small></span>{% endif %}
+                        </label>
+                    {% empty %}
+                        <p class="texto-secundario">{% if busqueda %}No hay registros que coincidan con la búsqueda.{% else %}No hay registros disponibles en esta categoría.{% endif %}</p>
+                    {% endfor %}
+                </fieldset>
+                {% if registros.has_other_pages %}
+                    <nav class="ingreso-paginacion" aria-label="Páginas de registros">
+                        {% if registros.has_previous %}<button class="enlace-boton" type="submit" name="pagina_origen" value="{{ registros.previous_page_number }}" formnovalidate>Anterior</button>{% endif %}
+                        <span>{{ registros.number }} de {{ registros.paginator.num_pages }}</span>
+                        {% if registros.has_next %}<button class="enlace-boton" type="submit" name="pagina_origen" value="{{ registros.next_page_number }}" formnovalidate>Más registros</button>{% endif %}
+                    </nav>
+                {% endif %}
+                <div class="acciones-formulario">
+                    <a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>
+                    <button class="boton boton-secundario" type="submit" name="paso" value="volver_tipo" formnovalidate>Volver</button>
+                    {% if registros %}<button class="boton boton-primario" type="submit" name="paso" value="datos">Siguiente</button>{% endif %}
+                </div>
+            </form>
+        {% else %}
+            <form method="post" action="{% if devolucion %}{% url 'caja:devolucion_crear' sesion.pk %}{% else %}{% url 'caja:ingreso_crear' sesion.pk %}{% endif %}">
+                {% csrf_token %}
+                {% for nombre, valor in borrador.items %}<input type="hidden" name="{{ nombre }}" value="{{ valor }}">{% endfor %}
+                <fieldset class="ingreso-opciones">
+                    <legend class="formulario-seccion-titulo">{% if devolucion %}¿A qué operación corresponde la devolución?{% else %}¿Qué cobro vas a registrar?{% endif %}</legend>
+                    {% for valor, nombre, descripcion in opciones_origen %}
+                        <label class="ingreso-opcion">
+                            <input type="radio" name="tipo" value="{{ valor }}" required{% if tipo_previo == valor %} checked{% endif %}>
+                            <svg class="ingreso-check" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>
+                            <strong>{{ nombre }}</strong>
+                            <span>{{ descripcion }}</span>
+                        </label>
+                    {% endfor %}
+                </fieldset>
+                <div class="acciones-formulario">
+                    <a class="boton boton-secundario" href="{% url 'caja:sesion_detalle' sesion.pk %}">Cancelar</a>
+                    <button class="boton boton-primario" type="submit">Siguiente</button>
+                </div>
+            </form>
+        {% endif %}
+    </section>
+</div>
 {% endblock %}

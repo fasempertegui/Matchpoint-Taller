@@ -14,30 +14,6 @@
 
 .catalogo-estado-activo { background: var(--acento); }
 
-.contenido-membresias-configuracion .tarjeta-formulario {
-    width: 100%;
-    max-width: none;
-    border-top: 3px solid var(--primario-medio);
-}
-
-.catalogo-introduccion { margin: 0 0 24px; color: var(--texto-suave); }
-.contenido-membresias-configuracion .grupo-campo { margin-bottom: 20px; }
-
-.contenido-membresias-configuracion .acciones-formulario {
-    justify-content: flex-start;
-    gap: 10px;
-    margin: 24px -20px -20px;
-    padding: 16px 20px;
-    border-top: 1px solid var(--borde);
-    border-radius: 0 0 10px 10px;
-}
-
-.contenido-membresias-configuracion .clase-observaciones-edicion {
-    margin-top: 0;
-    padding-top: 0;
-    border-top: 0;
-}
-
 .catalogo-listado .tarjeta-busqueda .grupo-campo {
     margin-bottom: 0;
 }

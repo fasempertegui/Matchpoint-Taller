@@ -1,6 +1,6 @@
 {% load formularios %}
 {% if sede %}{% url 'instalaciones:sede_editar' sede.pk as accion_url %}{% else %}{% url 'instalaciones:sede_crear' as accion_url %}{% endif %}
-{% modal_formulario titulo action=accion_url subtitulo="Sedes" texto_enviar=texto_boton %}
+{% modal_formulario titulo action=accion_url texto_enviar=texto_boton %}
     {% if not sede %}
         <p class="formulario-introduccion">Esta información es pública y puede verla cualquier usuario registrado.</p>
     {% endif %}
