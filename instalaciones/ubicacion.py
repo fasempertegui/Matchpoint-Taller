@@ -130,20 +130,12 @@ def punto_en_localidad(localidad_codigo, latitud, longitud):
     return bool(datos["geometria"].covers(punto))
 
 
-def enlaces_mapa(latitud, longitud):
+def enlace_como_llegar(latitud, longitud):
     if latitud is None or longitud is None:
-        return None
+        return ""
     lat_str = f"{cuantizar_coordenada(latitud):.6f}"
     lon_str = f"{cuantizar_coordenada(longitud):.6f}"
-    return {
-        "openstreetmap": (
-            f"https://www.openstreetmap.org/?mlat={lat_str}&mlon={lon_str}"
-            f"#map=17/{lat_str}/{lon_str}"
-        ),
-        "google_maps": (
-            f"https://www.google.com/maps/dir/?api=1&destination={lat_str},{lon_str}"
-        ),
-    }
+    return f"https://www.google.com/maps/dir/?api=1&destination={lat_str},{lon_str}"
 
 
 def configuracion_mapa():

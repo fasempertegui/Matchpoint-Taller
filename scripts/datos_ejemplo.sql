@@ -13,7 +13,7 @@ BEGIN
 
     FOR sede_numero IN 1..2 LOOP
         INSERT INTO sedes (
-            nombre, direccion,
+            nombre,
             localidad_codigo, calle, altura, cpa, calle_georef_id,
             latitud, longitud,
             tiene_estacionamiento, tiene_sanitarios, tiene_vestuarios, tiene_wifi, tiene_buffet,
@@ -21,9 +21,13 @@ BEGIN
             precio_reserva_vigente, observaciones, estado, creado_en, actualizado_en
         ) VALUES (
             CASE sede_numero WHEN 1 THEN 'Sociedad Española' ELSE 'Sirio Libanesa' END,
-            CASE sede_numero WHEN 1 THEN 'Balcarce 643' ELSE 'San Martin 673' END,
-            '', '', '', '', '',
-            NULL, NULL,
+            '66028050',
+            CASE sede_numero WHEN 1 THEN 'Balcarce' ELSE 'Av. Gral. Jose de San Martin' END,
+            CASE sede_numero WHEN 1 THEN '653' ELSE '673' END,
+            CASE sede_numero WHEN 1 THEN 'A4400EJM' ELSE 'A4402AEG' END,
+            CASE sede_numero WHEN 1 THEN '6602805001165' ELSE '6602805000825' END,
+            CASE sede_numero WHEN 1 THEN -24.781771 ELSE -24.793449 END,
+            CASE sede_numero WHEN 1 THEN -65.411636 ELSE -65.412148 END,
             false, false, false, false, false,
             '', '',
             25000, '', 'activa', now(), now()

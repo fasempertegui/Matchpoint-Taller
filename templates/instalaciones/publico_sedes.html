@@ -18,7 +18,7 @@
     <article class="tarjeta sede-tarjeta">
         {% include "instalaciones/_imagen_sede.html" with sede=sede only %}
         <h2>{{ sede.nombre }}</h2>
-        <p>{{ sede.direccion_completa|default:"Dirección sin informar" }}</p>
+        <p>{{ sede.direccion_completa }}</p>
         {% if sede.servicios_disponibles %}
         <p class="sede-oferta-servicios"><strong>Servicios:</strong> {{ sede.servicios_disponibles|join:", " }}</p>
         {% endif %}
@@ -31,13 +31,10 @@
                     class="boton boton-secundario boton-chico"
                     data-ver-ubicacion-sede
                     data-sede-nombre="{{ sede.nombre }}"
-                    data-sede-direccion="{{ sede.direccion_completa|default:'Dirección sin informar' }}"
-                    {% if sede.tiene_ubicacion %}
-                        data-sede-lat="{{ sede.latitud|stringformat:'.6f' }}"
-                        data-sede-lon="{{ sede.longitud|stringformat:'.6f' }}"
-                        data-sede-url-osm="{{ sede.enlaces_ubicacion.openstreetmap }}"
-                        data-sede-url-google="{{ sede.enlaces_ubicacion.google_maps }}"
-                    {% endif %}
+                    data-sede-direccion="{{ sede.direccion_completa }}"
+                    data-sede-lat="{{ sede.latitud|stringformat:'.6f' }}"
+                    data-sede-lon="{{ sede.longitud|stringformat:'.6f' }}"
+                    data-sede-url-como-llegar="{{ sede.url_como_llegar }}"
                     {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
                         data-sede-url-agenda="{% url 'agenda:agenda' %}?sede={{ sede.pk }}"
                     {% endif %}
@@ -74,13 +71,12 @@
             <div class="sede-mapa-contenedor" data-sede-mapa-bloque hidden>
                 <div class="sede-minimapa" data-sede-mapa-canvas role="region" aria-label="Mapa de ubicación de la sede"></div>
                 <p class="sede-mapa-aviso texto-secundario" data-mapa-aviso-teselas role="status" hidden>
-                    El mapa no pudo cargarse en este momento. La dirección y los enlaces externos siguen disponibles.
+                    El mapa no pudo cargarse en este momento. La dirección y el enlace para llegar siguen disponibles.
                 </p>
             </div>
             <p class="texto-secundario" data-sede-mapa-sin-pin hidden>Esta sede todavía no tiene un pin de entrada cargado.</p>
             <div class="sede-mapa-enlaces" data-sede-mapa-enlaces hidden>
-                <a class="boton boton-secundario boton-chico" data-sede-mapa-osm target="_blank" rel="noopener noreferrer">Ver en OpenStreetMap</a>
-                <a class="boton boton-secundario boton-chico" data-sede-mapa-google target="_blank" rel="noopener noreferrer">Cómo llegar con Google Maps</a>
+                <a class="boton boton-secundario boton-chico" data-sede-mapa-como-llegar target="_blank" rel="noopener noreferrer">Cómo llegar</a>
             </div>
         </div>
         <footer class="modal-acciones">

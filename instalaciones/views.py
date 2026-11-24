@@ -352,7 +352,6 @@ def sede_editar(request, pk):
             if formulario.cleaned_data.get("direccion_cambio"):
                 campos_actualizar.extend(
                     [
-                        "direccion",
                         "localidad_codigo",
                         "calle",
                         "altura",

@@ -612,19 +612,6 @@
     margin-top: 0;
 }
 
-.sede-ubicacion-acciones {
-    align-items: center;
-    justify-content: space-between;
-}
-
-.sede-ubicacion-acciones-principales {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-left: auto;
-}
-
 .sede-mapa-contenedor {
     display: grid;
     gap: 8px;

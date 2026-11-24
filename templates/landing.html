@@ -36,8 +36,9 @@
         </div>
     </section>
 
+    {% if sedes %}
     <section class="venues shell" id="sedes" aria-labelledby="sedes-titulo">
-        <h2 id="sedes-titulo">Dos sedes en Salta</h2>
+        <h2 id="sedes-titulo">{% if sedes|length == 2 %}Dos sedes en Salta{% else %}Nuestras sedes en Salta{% endif %}</h2>
         <div class="venue-grid">
             {% for sede in sedes %}
                 <article class="venue">
@@ -47,13 +48,17 @@
                     <div class="venue-details">
                         <h3>{{ sede.nombre }}</h3>
                         <p class="venue-address">{{ sede.direccion }}</p>
-                        <p class="venue-courts">{{ sede.canchas }}</p>
-                        <p class="venue-surface venue-surface--{{ sede.tipo_superficie }}">{{ sede.superficie }}</p>
+                        {% if sede.canchas %}<p class="venue-courts">{{ sede.canchas }}</p>{% endif %}
+                        {% if sede.superficie %}<p class="venue-surface venue-surface--{{ sede.tipo_superficie }}">{{ sede.superficie }}</p>{% endif %}
+                        {% if sede.url_como_llegar %}
+                            <a class="button button--primary venue-action" href="{{ sede.url_como_llegar }}" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar a {{ sede.nombre }}">Cómo llegar</a>
+                        {% endif %}
                     </div>
                 </article>
             {% endfor %}
         </div>
     </section>
+    {% endif %}
 
     <section class="play-section" id="jugar" aria-labelledby="jugar-titulo">
         <div class="shell">

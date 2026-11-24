@@ -21,7 +21,7 @@ from .ubicacion import (
     LATITUD_MIN,
     LONGITUD_MAX,
     LONGITUD_MIN,
-    enlaces_mapa,
+    enlace_como_llegar,
 )
 
 
@@ -84,16 +84,13 @@ class Sede(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=120)
-    direccion = models.CharField(max_length=250)
     localidad_codigo = models.CharField(
         "Localidad",
         max_length=8,
         choices=LOCALIDAD_CHOICES,
-        blank=True,
-        default="",
     )
-    calle = models.CharField("Calle", max_length=150, blank=True, default="")
-    altura = models.CharField("Altura", max_length=20, blank=True, default="")
+    calle = models.CharField("Calle", max_length=150)
+    altura = models.CharField("Altura", max_length=20)
     cpa = models.CharField("CPA", max_length=8, blank=True, default="")
     calle_georef_id = models.CharField(
         "ID de calle en Georef",
@@ -105,15 +102,11 @@ class Sede(models.Model):
         "Latitud",
         max_digits=9,
         decimal_places=6,
-        blank=True,
-        null=True,
     )
     longitud = models.DecimalField(
         "Longitud",
         max_digits=9,
         decimal_places=6,
-        blank=True,
-        null=True,
     )
     tiene_estacionamiento = models.BooleanField("Estacionamiento", default=False)
     tiene_sanitarios = models.BooleanField("Sanitarios", default=False)
@@ -158,52 +151,25 @@ class Sede(models.Model):
                 violation_error_message="El precio por turno debe ser positivo.",
             ),
             models.CheckConstraint(
-                condition=(
-                    models.Q(localidad_codigo="")
-                    | models.Q(localidad_codigo__in=tuple(LOCALIDADES_SALTA))
-                ),
+                condition=models.Q(localidad_codigo__in=tuple(LOCALIDADES_SALTA)),
                 name="sede_localidad_codigo_habilitado",
                 violation_error_message="La localidad seleccionada no está habilitada.",
             ),
             models.CheckConstraint(
                 condition=(
-                    models.Q(
-                        localidad_codigo="",
-                        calle="",
-                        altura="",
-                        cpa="",
-                        calle_georef_id="",
-                    )
-                    | (
-                        ~models.Q(localidad_codigo="")
-                        & ~models.Q(calle="")
-                        & ~models.Q(altura="")
-                    )
+                    models.Q(calle__regex=r"\S")
+                    & models.Q(altura__regex=r"\S")
                 ),
-                name="sede_direccion_estructurada_coherente",
+                name="sede_direccion_estructurada_completa",
                 violation_error_message="La dirección estructurada requiere localidad, calle y altura.",
             ),
             models.CheckConstraint(
-                condition=(
-                    models.Q(latitud__isnull=True, longitud__isnull=True)
-                    | models.Q(latitud__isnull=False, longitud__isnull=False)
-                ),
-                name="sede_coordenadas_completas",
-                violation_error_message="La latitud y la longitud deben informarse juntas.",
-            ),
-            models.CheckConstraint(
-                condition=(
-                    models.Q(latitud__isnull=True)
-                    | models.Q(latitud__gte=LATITUD_MIN, latitud__lte=LATITUD_MAX)
-                ),
+                condition=models.Q(latitud__gte=LATITUD_MIN, latitud__lte=LATITUD_MAX),
                 name="sede_latitud_rango",
                 violation_error_message="La latitud debe estar entre -90 y 90.",
             ),
             models.CheckConstraint(
-                condition=(
-                    models.Q(longitud__isnull=True)
-                    | models.Q(longitud__gte=LONGITUD_MIN, longitud__lte=LONGITUD_MAX)
-                ),
+                condition=models.Q(longitud__gte=LONGITUD_MIN, longitud__lte=LONGITUD_MAX),
                 name="sede_longitud_rango",
                 violation_error_message="La longitud debe estar entre -180 y 180.",
             ),
@@ -227,43 +193,39 @@ class Sede(models.Model):
         ]
 
     @property
-    def tiene_direccion_estructurada(self):
-        return bool(self.localidad_codigo and self.calle and self.altura)
-
-    @property
     def localidad_nombre(self):
         return etiqueta_localidad(self.localidad_codigo)
 
     @property
     def provincia_nombre(self):
-        return PROVINCIA_NOMBRE if self.tiene_direccion_estructurada else ""
+        return PROVINCIA_NOMBRE
 
     @property
     def direccion_completa(self):
-        if self.tiene_direccion_estructurada:
-            return componer_direccion(
-                self.calle,
-                self.altura,
-                self.localidad_codigo,
-                self.cpa,
-            )
-        return self.direccion
+        return componer_direccion(
+            self.calle,
+            self.altura,
+            self.localidad_codigo,
+            self.cpa,
+        )
+
+    @property
+    def direccion_sin_cpa(self):
+        return componer_direccion(
+            self.calle,
+            self.altura,
+            self.localidad_codigo,
+        )
 
     @property
     def origen_calle_display(self):
-        if not self.tiene_direccion_estructurada:
-            return ""
         if self.calle_georef_id:
             return "Normalizada con Georef"
         return "Carga manual confirmada"
 
     @property
-    def tiene_ubicacion(self):
-        return self.latitud is not None and self.longitud is not None
-
-    @property
-    def enlaces_ubicacion(self):
-        return enlaces_mapa(self.latitud, self.longitud)
+    def url_como_llegar(self):
+        return enlace_como_llegar(self.latitud, self.longitud)
 
 
 class Cancha(models.Model):

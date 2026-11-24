@@ -17,7 +17,7 @@
              data-sede-direccion
              data-buscar-url="{{ url_buscar_direccion }}"
              data-es-edicion="{% if sede %}1{% else %}0{% endif %}"
-             data-sede-estructurada="{% if sede and sede.tiene_direccion_estructurada %}1{% else %}0{% endif %}"
+             data-sede-estructurada="{% if sede %}1{% else %}0{% endif %}"
              data-sede-origen-georef="{% if sede and sede.calle_georef_id %}1{% else %}0{% endif %}"
              data-provincia="{{ formulario.provincia_nombre }}">
         <input type="hidden" name="{{ formulario.direccion_formulario_token.html_name }}" id="{{ formulario.direccion_formulario_token.id_for_label }}" value="{{ formulario.token_formulario_direccion_actual }}" data-dir-token-formulario>
@@ -131,7 +131,7 @@
              data-sede-ubicacion
              data-es-edicion="{% if sede %}1{% else %}0{% endif %}"
              data-sede-localidad="{% if sede %}{{ sede.localidad_codigo }}{% endif %}"
-             data-sede-tiene-pin="{% if sede and sede.tiene_ubicacion %}1{% else %}0{% endif %}"
+             data-sede-tiene-pin="{% if sede %}1{% else %}0{% endif %}"
              data-teselas-url="{{ mapa_config.teselas_url }}"
              data-atribucion="{{ mapa_config.atribucion }}"
              data-zoom-max="{{ mapa_config.zoom_max }}"
@@ -180,12 +180,9 @@
                 </div>
             </div>
 
-            <div class="sede-direccion-panel-acciones sede-ubicacion-acciones">
-                <button type="button" class="sede-direccion-enlace" data-ubic-quitar{% if not formulario.tiene_ubicacion_actual %} hidden{% endif %}>Quitar pin</button>
-                <div class="sede-ubicacion-acciones-principales">
-                    <button type="button" class="boton boton-secundario boton-chico" data-ubic-cancelar>Cancelar</button>
-                    <button type="button" class="boton boton-primario boton-chico" data-ubic-confirmar>Confirmar ubicación</button>
-                </div>
+            <div class="sede-direccion-panel-acciones">
+                <button type="button" class="boton boton-secundario boton-chico" data-ubic-cancelar>Cancelar</button>
+                <button type="button" class="boton boton-primario boton-chico" data-ubic-confirmar>Confirmar ubicación</button>
             </div>
         </div>
     </section>

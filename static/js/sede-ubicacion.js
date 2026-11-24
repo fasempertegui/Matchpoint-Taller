@@ -63,7 +63,6 @@ document.addEventListener("DOMContentLoaded", function () {
         var errorPanel = bloque.querySelector("[data-ubic-error-panel]");
         var contenedorMapa = bloque.querySelector("[data-ubic-mapa]");
         var avisoTeselas = bloque.querySelector("[data-ubic-aviso-teselas]");
-        var botonQuitar = bloque.querySelector("[data-ubic-quitar]");
         var botonCancelar = bloque.querySelector("[data-ubic-cancelar]");
         var botonConfirmar = bloque.querySelector("[data-ubic-confirmar]");
 
@@ -153,7 +152,6 @@ document.addEventListener("DOMContentLoaded", function () {
             inputLon.value = formatearCoordenada(lon);
             inputModo.value = "marcar";
             localidadPin = localidadSeleccionada();
-            if (botonQuitar) botonQuitar.hidden = false;
             colocarMarcador(lat, lon, false);
         }
 
@@ -241,7 +239,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 resumenVacio: resumenTexto.classList.contains("texto-secundario"),
                 resumenOrigenOculto: resumenOrigen.hidden,
                 botonTexto: botonAbrir.textContent,
-                quitarOculto: botonQuitar ? botonQuitar.hidden : true,
             };
         }
 
@@ -255,7 +252,6 @@ document.addEventListener("DOMContentLoaded", function () {
             resumenTexto.classList.toggle("texto-secundario", instantanea.resumenVacio);
             resumenOrigen.hidden = instantanea.resumenOrigenOculto;
             botonAbrir.textContent = instantanea.botonTexto;
-            if (botonQuitar) botonQuitar.hidden = instantanea.quitarOculto;
             instantanea = null;
         }
 
@@ -290,16 +286,14 @@ document.addEventListener("DOMContentLoaded", function () {
             var lat = parsearCoordenada(inputLat.value);
             var lon = parsearCoordenada(inputLon.value);
             if (!inputLat.value.trim() && !inputLon.value.trim()) {
-                inputModo.value = "quitar";
+                inputModo.value = "marcar";
                 if (marcador && mapa) {
                     mapa.removeLayer(marcador);
                     marcador = null;
                 }
-                if (botonQuitar) botonQuitar.hidden = true;
                 return;
             }
             inputModo.value = "marcar";
-            if (botonQuitar) botonQuitar.hidden = false;
             if (
                 lat !== null && lon !== null
                 && lat >= -90 && lat <= 90
@@ -315,22 +309,6 @@ document.addEventListener("DOMContentLoaded", function () {
         inputLat.addEventListener("input", sincronizarDesdeEntradas);
         inputLon.addEventListener("input", sincronizarDesdeEntradas);
 
-        if (botonQuitar) {
-            botonQuitar.addEventListener("click", function () {
-                mostrarErrorPanel("");
-                limpiarErroresServidorPanel();
-                inputLat.value = "";
-                inputLon.value = "";
-                inputModo.value = "quitar";
-                localidadPin = "";
-                if (marcador && mapa) {
-                    mapa.removeLayer(marcador);
-                    marcador = null;
-                }
-                botonQuitar.hidden = true;
-            });
-        }
-
         botonCancelar.addEventListener("click", function () {
             restaurarInstantanea();
             cerrarPanel(true);
@@ -341,20 +319,8 @@ document.addEventListener("DOMContentLoaded", function () {
             var latTxt = inputLat.value.trim();
             var lonTxt = inputLon.value.trim();
 
-            if (!latTxt && !lonTxt) {
-                inputModo.value = "quitar";
-                localidadPin = "";
-                resumenTexto.textContent = "Sin ubicación marcada";
-                resumenTexto.classList.add("texto-secundario");
-                resumenOrigen.hidden = true;
-                botonAbrir.textContent = "Marcar ubicación";
-                instantanea = null;
-                cerrarPanel(true);
-                return;
-            }
-
             if (!latTxt || !lonTxt) {
-                mostrarErrorPanel("Ingresá tanto la latitud como la longitud, o dejá ambos campos vacíos.");
+                mostrarErrorPanel("Marcá la entrada en el mapa o ingresá latitud y longitud.");
                 (latTxt ? inputLon : inputLat).focus();
                 return;
             }

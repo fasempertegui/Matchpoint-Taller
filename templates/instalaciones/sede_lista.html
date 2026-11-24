@@ -50,7 +50,7 @@
                 {% indicador_estado "habilitacion" sede.estado %}
                 {{ sede.nombre }}
             </h2>
-            <p>{{ sede.direccion_completa|default:"Sin dirección registrada" }}</p>
+            <p>{{ sede.direccion_sin_cpa }}</p>
             <a class="boton boton-secundario boton-chico" href="{% url 'instalaciones:sede_detalle' sede.pk %}" aria-label="Ver detalles de {{ sede.nombre }}">Ver detalles</a>
         </article>
     {% empty %}

@@ -89,6 +89,7 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
 .play-grid article:hover, .venue:hover { border-color: rgb(182 213 50 / .4); }
 .venue-art { width: 100%; height: 180px; margin-bottom: 1.75rem; overflow: hidden; }
 .venue-art img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: left bottom; mix-blend-mode: lighten; transform: scale(1.2); transform-origin: left bottom; }
+.venue-details { display: flex; flex-direction: column; align-items: flex-start; flex: 1; width: 100%; }
 .venue-details h3 { color: var(--crema); font-size: 1.5rem; font-weight: 700; }
 .venue-address, .venue-courts, .venue-surface { display: grid; grid-template-columns: 1.125rem auto; align-items: center; justify-content: start; gap: .625rem; margin-top: .625rem; color: var(--crema); }
 .venue-address::before, .venue-courts::before, .venue-surface::before { justify-self: center; }
@@ -119,6 +120,8 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
   background: var(--color-superficie);
   transform: rotate(45deg) scale(.8);
 }
+.venue-action { margin-top: auto; padding-inline: 22px; }
+.venue-details > .venue-action { margin-top: 1.35rem; }
 
 .booking-section { text-align: center; }
 .booking-section p { margin-top: .85rem; color: var(--texto-secundario); }

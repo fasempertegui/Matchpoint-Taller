@@ -375,13 +375,13 @@ Recorrido:
 
 1. El administrador accede a la consulta.
 2. El sistema muestra las sedes con su dirección legible; desde «Ver detalles» accede al detalle completo.
-3. Al seleccionar una sede, muestra su dirección, el origen de la calle (normalizada con Georef o carga manual confirmada), el resumen de servicios disponibles, los teléfonos de contacto informados, el minimapa de solo lectura con el pin de entrada y los enlaces externos a OpenStreetMap y «Cómo llegar con Google Maps» cuando tiene ubicación cargada, las observaciones y todas sus canchas, activas e inactivas, con sus superficies y estados.
+3. Al seleccionar una sede, muestra su dirección, el origen de la calle (normalizada con Georef o carga manual confirmada), el resumen de servicios disponibles, los teléfonos de contacto informados, las observaciones, el minimapa de solo lectura con el pin de entrada y el enlace «Cómo llegar» a Google Maps, junto con todas sus canchas, activas e inactivas, con sus superficies y estados.
 
 Alternativas:
 
 - Una sede sin canchas muestra una lista vacía.
 - La consulta de sedes puede incluir registros inactivos.
-- En el catálogo de sedes activas se muestran la dirección legible, los servicios disponibles registrados como texto y el disparador «Ver ubicación», que abre un panel compartido de solo lectura con la dirección, el mapa del pin, los enlaces externos y el acceso «Ver agenda» para cuentas habilitadas. Si fallan las teselas del mapa, la dirección y los enlaces externos permanecen disponibles. Los teléfonos de contacto y el origen de la calle se consultan en administración.
+- La portada pública presenta la dirección sin CPA y el botón «Cómo llegar» de las sedes activas registradas; las tarjetas del listado administrativo también omiten el CPA. En el catálogo de sedes activas se muestran la dirección legible, los servicios disponibles registrados como texto y el disparador «Ver ubicación», que abre un panel compartido de solo lectura con la dirección, el mapa del pin, el enlace «Cómo llegar» y el acceso «Ver agenda» para cuentas habilitadas. Si fallan las teselas del mapa, la dirección y el enlace «Cómo llegar» permanecen disponibles. Los teléfonos de contacto y el origen de la calle se consultan en administración.
 
 - **Resultado:** jerarquía de sedes y canchas sin modificaciones.
 - **Datos:** sedes y canchas.
@@ -397,7 +397,7 @@ flowchart TD
 
 - **Objetivo:** crear una sede activa.
 - **Actor:** administrador.
-- **Entradas:** nombre y dirección estructurada obligatorios (localidad habilitada de Salta, calle o ruta y altura; CPA opcional); pin de entrada en coordenadas WGS 84 (`latitud`, `longitud`), servicios disponibles (estacionamiento, sanitarios, vestuarios, Wi-Fi y buffet), hasta dos teléfonos de contacto y observaciones opcionales.
+- **Entradas:** nombre, dirección estructurada (localidad habilitada de Salta, calle o ruta y altura; CPA opcional) y pin de entrada en coordenadas WGS 84 (`latitud`, `longitud`) obligatorios; servicios disponibles (estacionamiento, sanitarios, vestuarios, Wi-Fi y buffet), hasta dos teléfonos de contacto y observaciones opcionales.
 
 Recorrido:
 
@@ -406,7 +406,7 @@ Recorrido:
 3. Abre bajo demanda «Marcar ubicación» para señalar la entrada en el mapa de Leaflet (con clic, toque o carga manual de coordenadas), centrado inicialmente en el pin de la localidad, la ubicación aproximada de Georef si está dentro de la localidad o el centro de la localidad, en ese orden. Solo se guarda un pin que el administrador marca o confirma.
 4. Opcionalmente despliega «Servicios», «Contacto» y «Observaciones».
 5. El sistema valida en la misma transacción el nombre único (sin distinguir mayúsculas de minúsculas), la dirección estructurada (localidad, selección firmada de Georef o confirmación manual, calle, altura y CPA opcional), el par completo de coordenadas dentro de la geometría censal del INDEC de la localidad elegida (incluido su borde) y los teléfonos argentinos opcionales normalizados a E.164.
-6. Crea la sede con estado **Activa** y compone el texto de dirección a partir de los campos estructurados.
+6. Crea la sede con estado **Activa**. La dirección legible se compone a partir de los campos estructurados en todas las vistas.
 
 Alternativas:
 

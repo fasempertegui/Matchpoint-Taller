@@ -58,6 +58,58 @@ _RE_ALTURA_KM = re.compile(
 _RE_ALTURA_SN = re.compile(r"^s\s*/\s*n\.?$", re.IGNORECASE)
 _RE_CPA = re.compile(r"^[A-HJ-NP-Z]\d{4}[A-Z]{3}$")
 _RE_LETRA = re.compile(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]")
+_RE_ROMANO = re.compile(r"^(?:M{0,3})(?:CM|CD|D?C{0,3})(?:XC|XL|L?X{0,3})(?:IX|IV|V?I{0,3})$")
+
+_CONECTORES_CALLE = frozenset(
+    {"a", "al", "con", "de", "del", "e", "el", "en", "la", "las", "los", "o", "para", "por", "sin", "u", "y"}
+)
+_ABREVIATURAS_CALLE = {
+    "AV": "Av.",
+    "AVDA": "Avda.",
+    "BV": "Bv.",
+    "BVD": "Bv.",
+    "CNEL": "Cnel.",
+    "DR": "Dr.",
+    "DRA": "Dra.",
+    "GRAL": "Gral.",
+    "GRL": "Gral.",
+    "ING": "Ing.",
+    "NAC": "Nac.",
+    "PJE": "Pje.",
+    "PROV": "Prov.",
+    "PSJE": "Pje.",
+    "RN": "RN",
+    "RP": "RP",
+    "TTE": "Tte.",
+}
+
+
+def formatear_nombre_calle(valor):
+    texto = " ".join((valor or "").split())
+    if not texto:
+        return ""
+    if texto != texto.upper() or not _RE_LETRA.search(texto):
+        return texto
+
+    palabras = texto.split(" ")
+    resultado = []
+    inicio_tramo = True
+    for palabra in palabras:
+        if palabra in ("/", "-"):
+            resultado.append(palabra)
+            inicio_tramo = True
+            continue
+        limpia = palabra.rstrip(".")
+        if limpia in _ABREVIATURAS_CALLE:
+            resultado.append(_ABREVIATURAS_CALLE[limpia])
+        elif len(limpia) > 1 and _RE_ROMANO.match(limpia):
+            resultado.append(palabra)
+        elif not inicio_tramo and limpia.lower() in _CONECTORES_CALLE:
+            resultado.append(palabra.lower())
+        else:
+            resultado.append(palabra.capitalize())
+        inicio_tramo = False
+    return " ".join(resultado)
 
 
 class ErrorServicioGeoref(Exception):
@@ -135,7 +187,7 @@ def validar_cpa(valor):
 
 def componer_direccion(calle, altura, localidad_codigo, cpa=""):
     localidad = etiqueta_localidad(localidad_codigo)
-    calle_limpia = " ".join((calle or "").split())
+    calle_limpia = formatear_nombre_calle(calle)
     altura_limpia = " ".join((altura or "").split())
     if not (calle_limpia and altura_limpia and localidad):
         return ""
@@ -390,7 +442,7 @@ def buscar_direcciones_georef(consulta, localidad_codigo, *, limite=5):
             continue
 
         calle_georef_id = str(calle_datos.get("id") or "").strip()
-        calle_nombre = " ".join(str(calle_datos.get("nombre") or "").split())
+        calle_nombre = formatear_nombre_calle(str(calle_datos.get("nombre") or ""))
         if not calle_georef_id or not calle_nombre:
             continue
         if len(calle_georef_id) > 20 or len(calle_nombre) > 150:

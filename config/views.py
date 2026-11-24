@@ -4,10 +4,64 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 
+from instalaciones.models import Cancha, Sede
 from usuarios.models import Rol
 
 from .inicio_administracion import contexto_inicio_administracion
 from .inicio_portal import contexto_inicio_portal
+
+
+def _ilustracion_sede_portada(nombre):
+    texto = nombre.lower()
+    if "española" in texto or "espanola" in texto:
+        return "img/landing-sociedad-espanola.png"
+    if "sirio" in texto:
+        return "img/landing-union-sirio-libanesa.png"
+    return "img/sedes-geometria.svg"
+
+
+def _sedes_destacadas_portada():
+    sedes_activas = (
+        Sede.objects.filter(estado=Sede.Estado.ACTIVA)
+        .prefetch_related("canchas")
+        .order_by("pk")
+    )
+    tarjetas = []
+    for sede in sedes_activas:
+        canchas_activas = [
+            cancha for cancha in sede.canchas.all() if cancha.estado == Cancha.Estado.ACTIVA
+        ]
+        cantidad = len(canchas_activas)
+        superficies = {cancha.superficie for cancha in canchas_activas}
+        if superficies == {Cancha.Superficie.CEMENTO}:
+            superficie = "Cemento"
+            tipo_superficie = "cemento"
+        elif superficies == {Cancha.Superficie.POLVO_LADRILLO}:
+            superficie = "Polvo de ladrillo"
+            tipo_superficie = "ladrillo"
+        elif superficies:
+            superficie = "Cemento y polvo de ladrillo"
+            tipo_superficie = "cemento"
+        else:
+            superficie = ""
+            tipo_superficie = ""
+
+        tarjetas.append(
+            {
+                "nombre": sede.nombre,
+                "direccion": sede.direccion_sin_cpa,
+                "url_como_llegar": sede.url_como_llegar,
+                "canchas": (
+                    f"{cantidad} {'cancha' if cantidad == 1 else 'canchas'}"
+                    if cantidad
+                    else ""
+                ),
+                "superficie": superficie,
+                "tipo_superficie": tipo_superficie,
+                "ilustracion": _ilustracion_sede_portada(sede.nombre),
+            }
+        )
+    return tarjetas
 
 
 @require_GET
@@ -53,24 +107,7 @@ def landing(request):
             "url": url_membresias,
         },
     ]
-    sedes = [
-        {
-            "nombre": "Sociedad Española",
-            "superficie": "Cemento",
-            "tipo_superficie": "cemento",
-            "canchas": "2 canchas",
-            "ilustracion": "img/landing-sociedad-espanola.png",
-            "direccion": "Balcarce 643, Salta",
-        },
-        {
-            "nombre": "Unión Sirio Libanesa",
-            "superficie": "Polvo de ladrillo",
-            "tipo_superficie": "ladrillo",
-            "canchas": "2 canchas",
-            "ilustracion": "img/landing-union-sirio-libanesa.png",
-            "direccion": "San Martin 673, Salta",
-        },
-    ]
+    sedes = _sedes_destacadas_portada()
     return render(request, "landing.html", {
         "modalidades": modalidades,
         "sedes": sedes,

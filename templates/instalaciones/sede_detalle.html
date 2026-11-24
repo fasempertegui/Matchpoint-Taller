@@ -44,17 +44,8 @@
                     <section class="perfil-seccion" aria-labelledby="sede-datos-titulo">
                         <h2 id="sede-datos-titulo">Datos de la sede</h2>
                         {% tabla_datos etiqueta_por="sede-datos-titulo" %}
-                            <tr><th scope="row">Dirección</th><td>{{ sede.direccion_completa|default:"Sin dirección informada" }}</td></tr>
-                            <tr>
-                                <th scope="row">Origen de la calle</th>
-                                <td>
-                                    {% if sede.tiene_direccion_estructurada %}
-                                        {{ sede.origen_calle_display }}
-                                    {% else %}
-                                        <span class="texto-secundario">Pendiente de estructurar</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
+                            <tr><th scope="row">Dirección</th><td>{{ sede.direccion_completa }}</td></tr>
+                            <tr><th scope="row">Origen de la calle</th><td>{{ sede.origen_calle_display }}</td></tr>
                             <tr>
                                 <th scope="row">Servicios</th>
                                 <td>
@@ -89,31 +80,26 @@
                     </section>
                     <section class="perfil-seccion" aria-labelledby="sede-ubicacion-titulo">
                         <h2 id="sede-ubicacion-titulo">Ubicación de entrada</h2>
-                        {% if sede.tiene_ubicacion %}
-                            <div class="sede-mapa-contenedor">
-                                <div class="sede-minimapa"
-                                     data-sede-minimapa
-                                     data-lat="{{ sede.latitud|stringformat:'.6f' }}"
-                                     data-lon="{{ sede.longitud|stringformat:'.6f' }}"
-                                     data-teselas-url="{{ mapa_config.teselas_url }}"
-                                     data-atribucion="{{ mapa_config.atribucion }}"
-                                     data-zoom-max="{{ mapa_config.zoom_max }}"
-                                     data-marker-icon="{% static 'vendor/leaflet/images/marker-icon.png' %}"
-                                     data-marker-icon-2x="{% static 'vendor/leaflet/images/marker-icon-2x.png' %}"
-                                     data-marker-shadow="{% static 'vendor/leaflet/images/marker-shadow.png' %}"
-                                     role="region"
-                                     aria-label="Mapa con la ubicación de entrada de {{ sede.nombre }}"></div>
-                                <p class="sede-mapa-aviso texto-secundario" data-mapa-aviso-teselas role="status" hidden>
-                                    El mapa no pudo cargarse en este momento. La dirección y los enlaces externos siguen disponibles.
-                                </p>
-                            </div>
-                            <div class="sede-mapa-enlaces">
-                                <a class="boton boton-secundario boton-chico" href="{{ sede.enlaces_ubicacion.openstreetmap }}" target="_blank" rel="noopener noreferrer">Ver en OpenStreetMap</a>
-                                <a class="boton boton-secundario boton-chico" href="{{ sede.enlaces_ubicacion.google_maps }}" target="_blank" rel="noopener noreferrer">Cómo llegar con Google Maps</a>
-                            </div>
-                        {% else %}
-                            <p class="texto-secundario">Ubicación de entrada sin marcar.</p>
-                        {% endif %}
+                        <div class="sede-mapa-contenedor">
+                            <div class="sede-minimapa"
+                                 data-sede-minimapa
+                                 data-lat="{{ sede.latitud|stringformat:'.6f' }}"
+                                 data-lon="{{ sede.longitud|stringformat:'.6f' }}"
+                                 data-teselas-url="{{ mapa_config.teselas_url }}"
+                                 data-atribucion="{{ mapa_config.atribucion }}"
+                                 data-zoom-max="{{ mapa_config.zoom_max }}"
+                                 data-marker-icon="{% static 'vendor/leaflet/images/marker-icon.png' %}"
+                                 data-marker-icon-2x="{% static 'vendor/leaflet/images/marker-icon-2x.png' %}"
+                                 data-marker-shadow="{% static 'vendor/leaflet/images/marker-shadow.png' %}"
+                                 role="region"
+                                 aria-label="Mapa con la ubicación de entrada de {{ sede.nombre }}"></div>
+                            <p class="sede-mapa-aviso texto-secundario" data-mapa-aviso-teselas role="status" hidden>
+                                El mapa no pudo cargarse en este momento. La dirección y el enlace para llegar siguen disponibles.
+                            </p>
+                        </div>
+                        <div class="sede-mapa-enlaces">
+                            <a class="boton boton-secundario boton-chico" href="{{ sede.url_como_llegar }}" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar a {{ sede.nombre }} con Google Maps">Cómo llegar</a>
+                        </div>
                     </section>
                 </div>
 

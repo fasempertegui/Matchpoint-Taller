@@ -76,8 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var avisoTeselas = modal.querySelector("[data-mapa-aviso-teselas]");
     var sinPin = modal.querySelector("[data-sede-mapa-sin-pin]");
     var enlacesBloque = modal.querySelector("[data-sede-mapa-enlaces]");
-    var enlaceOsm = modal.querySelector("[data-sede-mapa-osm]");
-    var enlaceGoogle = modal.querySelector("[data-sede-mapa-google]");
+    var enlaceComoLlegar = modal.querySelector("[data-sede-mapa-como-llegar]");
     var enlaceAgenda = modal.querySelector("[data-sede-mapa-agenda]");
 
     var mapaModal = null;
@@ -117,11 +116,9 @@ document.addEventListener("DOMContentLoaded", function () {
         enlacesBloque.hidden = !tienePin;
 
         if (tienePin) {
-            enlaceOsm.href = boton.dataset.sedeUrlOsm || "#";
-            enlaceGoogle.href = boton.dataset.sedeUrlGoogle || "#";
+            enlaceComoLlegar.href = boton.dataset.sedeUrlComoLlegar || "#";
         } else {
-            enlaceOsm.removeAttribute("href");
-            enlaceGoogle.removeAttribute("href");
+            enlaceComoLlegar.removeAttribute("href");
         }
 
         var urlAgenda = boton.dataset.sedeUrlAgenda || "";
