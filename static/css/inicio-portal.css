@@ -19,7 +19,7 @@
 .portal-hora { margin: 0 0 8px; color: var(--acento); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 700; line-height: 1.15; }
 .portal-fecha { margin: 0; font-size: 1.05rem; }
 .portal-ubicacion { display: flex; flex-wrap: wrap; gap: 16px 32px; margin: 24px 0 0; }
-.portal-ubicacion dt { color: #e6daf0; font-size: .8rem; }
+.portal-ubicacion dt { color: var(--primario-medio); font-size: .8rem; }
 .portal-ubicacion dd { margin: 4px 0 0; font-weight: 600; }
 .portal-enlace { color: var(--primario); font-size: .9rem; font-weight: 600; }
 .portal-enlace-boton { padding: 0; border: 0; background: transparent; font-family: inherit; cursor: pointer; }
@@ -53,7 +53,7 @@
 
 .portal-reservas-destacada .portal-sin-datos,
 .portal-reservas-destacada .portal-actividad div > span,
-.portal-reservas-destacada .portal-actividad small { color: #e6daf0; }
+.portal-reservas-destacada .portal-actividad small { color: var(--primario-medio); }
 .portal-reservas-destacada .portal-actividad strong { color: var(--acento); }
 .portal-reservas-destacada .portal-actividad + .portal-actividad { border-color: var(--borde-inverso); }
 .portal-reservas-destacada .portal-actividad:hover { background: var(--realce-inverso); }

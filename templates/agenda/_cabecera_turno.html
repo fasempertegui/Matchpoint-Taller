@@ -1,4 +1,4 @@
-        <header class="agenda-detalle-cabecera agenda-resumen-tarjeta{% if detalle.clase %} agenda-resumen-clase{% elif detalle.reserva %} agenda-resumen-reserva{% elif detalle.bloqueo %} agenda-resumen-bloqueo{% endif %}{% if not detalle.evento or detalle.bloqueo or detalle.reserva or detalle.clase %} agenda-resumen-compacto{% endif %}">
+        <header class="agenda-detalle-cabecera agenda-resumen-tarjeta{% if detalle.ocupado_por_tercero %} agenda-resumen-ocupado{% elif detalle.clase %} agenda-resumen-clase{% elif detalle.reserva %} agenda-resumen-reserva{% elif detalle.bloqueo %} agenda-resumen-bloqueo{% endif %}{% if not detalle.evento or detalle.bloqueo or detalle.reserva or detalle.clase %} agenda-resumen-compacto{% endif %}">
             <div class="agenda-resumen-seleccion">
                 {% if not detalle.evento or detalle.bloqueo or detalle.reserva or detalle.clase %}
                     {% if detalle.reserva or detalle.clase %}
@@ -7,7 +7,7 @@
                             {% include "agenda/_estado_evento.html" with evento=detalle.evento estado_temporal=detalle.estado_temporal only %}
                         </h2>
                     {% else %}
-                        <h2 class="agenda-resumen-estado" data-agenda-titulo>{% if detalle.bloqueo %}{{ detalle.bloqueo.get_motivo_display }}{% else %}Turno libre{% endif %}</h2>
+                        <h2 class="agenda-resumen-estado" data-agenda-titulo>{% if detalle.ocupado_por_tercero %}No disponible{% elif detalle.bloqueo %}{{ detalle.bloqueo.get_motivo_display }}{% else %}Turno libre{% endif %}</h2>
                     {% endif %}
                     <p class="agenda-resumen-horario">{{ detalle.hora|time:"H:i" }} – {{ detalle.fin|time:"H:i" }}</p>
                     <p class="agenda-resumen-cancha">{{ detalle.cancha.nombre }}</p>

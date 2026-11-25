@@ -28,6 +28,7 @@
     --agenda-clase-texto: #1e4976;
     --agenda-clase-fondo: color-mix(in srgb, var(--agenda-clase-texto) 10%, var(--superficie));
     --agenda-reserva-texto: #7c3c25;
+    --agenda-reserva-fondo: color-mix(in srgb, var(--agenda-reserva-texto) 10%, var(--superficie));
 
     --sombra-seleccion: 0 1px 2px color-mix(in srgb, var(--texto) 12%, transparent);
     --sombra-tarjeta: 0 4px 16px color-mix(in srgb, var(--texto) 8%, transparent);

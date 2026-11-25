@@ -89,6 +89,9 @@
                                     {% endif %}
                                 </div>
                                 <div class="dashboard-eje-x-celda">
+                                    {% if item.es_actual %}
+                                        <span class="dashboard-muestra dashboard-muestra-actual" role="img" aria-label="Hora actual, {{ item.hora }} h"></span>
+                                    {% endif %}
                                     {% if item.etiqueta %}
                                         <span class="dashboard-eje-x-etiqueta">{{ item.etiqueta }}</span>
                                     {% endif %}
@@ -119,15 +122,15 @@
             <svg class="dashboard-sparkline" viewBox="0 0 360 72" data-sparkline aria-label="Evolución acumulada de usuarios en los últimos 30 días">
                 <defs>
                     <linearGradient id="grad-usuarios" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#4b176d" stop-opacity="0.22"/>
-                        <stop offset="100%" stop-color="#4b176d" stop-opacity="0"/>
+                        <stop offset="0%" stop-color="currentColor" stop-opacity="0.22"/>
+                        <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
                     </linearGradient>
                 </defs>
                 <path d="{{ usuarios.sparkline.area_d }}" fill="url(#grad-usuarios)"/>
-                <path d="{{ usuarios.sparkline.linea_d }}" fill="none" stroke="#4b176d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle class="dashboard-spark-hover" r="4" fill="#ffffff" stroke="#4b176d" stroke-width="2" data-spark-punto/>
-                <circle cx="{{ usuarios.sparkline.ultimo_x }}" cy="{{ usuarios.sparkline.ultimo_y }}" r="7" fill="#4b176d" fill-opacity="0.14"/>
-                <circle cx="{{ usuarios.sparkline.ultimo_x }}" cy="{{ usuarios.sparkline.ultimo_y }}" r="3.8" fill="#4b176d" stroke="#ffffff" stroke-width="1.8"/>
+                <path d="{{ usuarios.sparkline.linea_d }}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle class="dashboard-spark-hover" r="4" fill="var(--superficie)" stroke="currentColor" stroke-width="2" data-spark-punto/>
+                <circle cx="{{ usuarios.sparkline.ultimo_x }}" cy="{{ usuarios.sparkline.ultimo_y }}" r="7" fill="currentColor" fill-opacity="0.14"/>
+                <circle cx="{{ usuarios.sparkline.ultimo_x }}" cy="{{ usuarios.sparkline.ultimo_y }}" r="3.8" fill="currentColor" stroke="var(--superficie)" stroke-width="1.8"/>
                 {% for zona in usuarios.sparkline.zonas %}
                     <rect class="dashboard-spark-zona" x="{{ zona.x }}" y="0" width="{{ zona.ancho }}" height="72" fill="transparent" data-tooltip="{{ zona.tooltip }}" data-cx="{{ zona.cx }}" data-cy="{{ zona.cy }}"{% if zona.es_ultimo %} data-ultimo="1"{% endif %}/>
                 {% endfor %}
@@ -151,15 +154,15 @@
             <svg class="dashboard-sparkline" viewBox="0 0 360 72" data-sparkline aria-label="Evolución de socios activos en los últimos 6 meses">
                 <defs>
                     <linearGradient id="grad-socios" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#4b176d" stop-opacity="0.22"/>
-                        <stop offset="100%" stop-color="#4b176d" stop-opacity="0"/>
+                        <stop offset="0%" stop-color="currentColor" stop-opacity="0.22"/>
+                        <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
                     </linearGradient>
                 </defs>
                 <path d="{{ socios.sparkline.area_d }}" fill="url(#grad-socios)"/>
-                <path d="{{ socios.sparkline.linea_d }}" fill="none" stroke="#4b176d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle class="dashboard-spark-hover" r="4" fill="#ffffff" stroke="#4b176d" stroke-width="2" data-spark-punto/>
-                <circle cx="{{ socios.sparkline.ultimo_x }}" cy="{{ socios.sparkline.ultimo_y }}" r="7" fill="#4b176d" fill-opacity="0.14"/>
-                <circle cx="{{ socios.sparkline.ultimo_x }}" cy="{{ socios.sparkline.ultimo_y }}" r="3.8" fill="#4b176d" stroke="#ffffff" stroke-width="1.8"/>
+                <path d="{{ socios.sparkline.linea_d }}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle class="dashboard-spark-hover" r="4" fill="var(--superficie)" stroke="currentColor" stroke-width="2" data-spark-punto/>
+                <circle cx="{{ socios.sparkline.ultimo_x }}" cy="{{ socios.sparkline.ultimo_y }}" r="7" fill="currentColor" fill-opacity="0.14"/>
+                <circle cx="{{ socios.sparkline.ultimo_x }}" cy="{{ socios.sparkline.ultimo_y }}" r="3.8" fill="currentColor" stroke="var(--superficie)" stroke-width="1.8"/>
                 {% for zona in socios.sparkline.zonas %}
                     <rect class="dashboard-spark-zona" x="{{ zona.x }}" y="0" width="{{ zona.ancho }}" height="72" fill="transparent" data-tooltip="{{ zona.tooltip }}" data-cx="{{ zona.cx }}" data-cy="{{ zona.cy }}"{% if zona.es_ultimo %} data-ultimo="1"{% endif %}/>
                 {% endfor %}
@@ -183,15 +186,15 @@
             <svg class="dashboard-sparkline" viewBox="0 0 360 72" data-sparkline aria-label="Evolución de alumnos con plan activo en los últimos 6 meses">
                 <defs>
                     <linearGradient id="grad-planes" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#4b176d" stop-opacity="0.22"/>
-                        <stop offset="100%" stop-color="#4b176d" stop-opacity="0"/>
+                        <stop offset="0%" stop-color="currentColor" stop-opacity="0.22"/>
+                        <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
                     </linearGradient>
                 </defs>
                 <path d="{{ planes.sparkline.area_d }}" fill="url(#grad-planes)"/>
-                <path d="{{ planes.sparkline.linea_d }}" fill="none" stroke="#4b176d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle class="dashboard-spark-hover" r="4" fill="#ffffff" stroke="#4b176d" stroke-width="2" data-spark-punto/>
-                <circle cx="{{ planes.sparkline.ultimo_x }}" cy="{{ planes.sparkline.ultimo_y }}" r="7" fill="#4b176d" fill-opacity="0.14"/>
-                <circle cx="{{ planes.sparkline.ultimo_x }}" cy="{{ planes.sparkline.ultimo_y }}" r="3.8" fill="#4b176d" stroke="#ffffff" stroke-width="1.8"/>
+                <path d="{{ planes.sparkline.linea_d }}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle class="dashboard-spark-hover" r="4" fill="var(--superficie)" stroke="currentColor" stroke-width="2" data-spark-punto/>
+                <circle cx="{{ planes.sparkline.ultimo_x }}" cy="{{ planes.sparkline.ultimo_y }}" r="7" fill="currentColor" fill-opacity="0.14"/>
+                <circle cx="{{ planes.sparkline.ultimo_x }}" cy="{{ planes.sparkline.ultimo_y }}" r="3.8" fill="currentColor" stroke="var(--superficie)" stroke-width="1.8"/>
                 {% for zona in planes.sparkline.zonas %}
                     <rect class="dashboard-spark-zona" x="{{ zona.x }}" y="0" width="{{ zona.ancho }}" height="72" fill="transparent" data-tooltip="{{ zona.tooltip }}" data-cx="{{ zona.cx }}" data-cy="{{ zona.cy }}"{% if zona.es_ultimo %} data-ultimo="1"{% endif %}/>
                 {% endfor %}

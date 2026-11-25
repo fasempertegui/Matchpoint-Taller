@@ -1,12 +1,3 @@
-:root {
-    --agenda-clase-borde: #537eac;
-    --agenda-reserva-fondo: #f7ece5;
-    --agenda-reserva-borde: #9b4f32;
-    --agenda-bloqueo-fondo: #ece8f0;
-    --agenda-bloqueo-texto: #574c63;
-    --agenda-bloqueo-borde: #d5cdde;
-}
-
 .agenda-detalle-cabecera {
     display: flex;
     align-items: center;
@@ -398,51 +389,37 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     background-color: var(--agenda-evento-fondo, var(--primario-suave));
 }
 
-.agenda-turno-ocupado {
-    background: var(--fondo);
-    color: var(--texto-suave);
-}
-
 .agenda-turno-clase,
 .agenda-resumen-clase {
     --agenda-evento-fondo: var(--agenda-clase-fondo);
     --agenda-evento-texto: var(--agenda-clase-texto);
-    --agenda-evento-borde: var(--agenda-clase-borde);
 }
 
 .agenda-turno-reserva,
 .agenda-resumen-reserva {
     --agenda-evento-fondo: var(--agenda-reserva-fondo);
     --agenda-evento-texto: var(--agenda-reserva-texto);
-    --agenda-evento-borde: var(--agenda-reserva-borde);
 }
 
+.agenda-turno-ocupado,
+.agenda-resumen-ocupado,
 .agenda-turno-bloqueo,
 .agenda-resumen-bloqueo {
-    --agenda-evento-fondo: var(--agenda-bloqueo-fondo);
-    --agenda-evento-texto: var(--agenda-bloqueo-texto);
-    --agenda-evento-borde: var(--agenda-bloqueo-borde);
+    --agenda-evento-fondo: var(--estado-inactivo-fondo);
+    --agenda-evento-texto: var(--texto-suave);
 }
 
 .agenda-turno-clase,
 .agenda-turno-reserva,
+.agenda-turno-ocupado,
 .agenda-turno-bloqueo {
     background-color: var(--agenda-evento-fondo);
-    border-color: var(--agenda-evento-borde);
+    border-color: var(--agenda-evento-texto);
     color: var(--agenda-evento-texto);
 }
 
-
-.agenda-turno-pasado.agenda-turno-clase:not(.agenda-turno-seleccionado) {
-    --agenda-evento-texto: #07182a;
-}
-
-.agenda-turno-pasado.agenda-turno-reserva:not(.agenda-turno-seleccionado) {
-    --agenda-evento-texto: #1a0803;
-}
-
-.agenda-turno-pasado.agenda-turno-bloqueo:not(.agenda-turno-seleccionado) {
-    --agenda-evento-texto: #030103;
+.agenda-turno-pasado:not(.agenda-turno-seleccionado) {
+    color: var(--texto);
 }
 
 .agenda-tipo {
@@ -483,13 +460,13 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
 }
 
 .agenda-turno-pasado {
-    opacity: .6;
+    opacity: .8;
 }
 
 .agenda-turno:focus-visible,
 .agenda-turno-seleccionado {
-    outline: 2px solid var(--agenda-evento-texto, var(--primario));
-    outline-offset: -1px;
+    outline: 2px solid var(--primario);
+    outline-offset: -4px;
     opacity: 1;
 }
 
@@ -724,19 +701,19 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--agenda-reserva-borde);
 }
 
+.agenda-leyenda .agenda-leyenda-reserva {
+    background: var(--agenda-reserva-texto);
+}
+
+.agenda-leyenda .agenda-leyenda-bloqueo,
 .agenda-leyenda .agenda-leyenda-ocupado {
     background: var(--texto-suave);
 }
 
 .agenda-leyenda .agenda-leyenda-clase {
-    background: var(--agenda-clase-borde);
-}
-
-.agenda-leyenda .agenda-leyenda-bloqueo {
-    background: var(--agenda-bloqueo-texto);
+    background: var(--agenda-clase-texto);
 }
 
 @media (max-width: 900px) {
@@ -785,8 +762,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
 .agenda-detalle [hidden] { display: none; }
 
 .agenda-resumen-compacto {
-    --resumen-lila: var(--agenda-evento-texto, #cdb8e6);
-    --resumen-cancha: var(--agenda-evento-texto, #e6daf3);
+    --resumen-texto-secundario: var(--agenda-evento-texto, var(--primario-medio));
     position: relative;
     display: block;
     padding: 16px 18px;
@@ -799,7 +775,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     font-weight: 600;
     letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--resumen-lila);
+    color: var(--resumen-texto-secundario);
 }
 
 .agenda-resumen-compacto p.agenda-resumen-horario {
@@ -815,14 +791,14 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     margin-top: 8px;
     font-size: 14px;
     font-weight: 400;
-    color: var(--resumen-cancha);
+    color: var(--resumen-texto-secundario);
 }
 
 .agenda-resumen-compacto .agenda-cerrar {
     position: absolute;
     top: 10px;
     right: 10px;
-    color: var(--resumen-lila);
+    color: var(--resumen-texto-secundario);
     background: transparent;
 }
 
@@ -831,7 +807,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
 }
 
 .agenda-resumen-compacto .agenda-cerrar:focus-visible {
-    outline: 2px solid var(--resumen-lila);
+    outline: 2px solid var(--resumen-texto-secundario);
     outline-offset: 2px;
 }
 
@@ -961,7 +937,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     align-items: center;
     gap: 8px;
     padding-inline-end: 32px;
-    color: var(--resumen-lila);
+    color: var(--resumen-texto-secundario);
 }
 
 .agenda-estado-icono {
@@ -981,12 +957,12 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
 .agenda-resumen-personas {
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid var(--agenda-evento-borde, var(--borde-inverso));
+    border-top: 1px solid var(--agenda-evento-texto, var(--borde-inverso));
     font-size: 14px;
 }
 
 .agenda-resumen-personas span {
-    color: var(--resumen-lila);
+    color: var(--resumen-texto-secundario);
     font-size: 12px;
     font-weight: 700;
 }
@@ -1008,12 +984,14 @@ button.agenda-opcion:hover {
 
 .agenda-resumen-clase,
 .agenda-resumen-reserva,
+.agenda-resumen-ocupado,
 .agenda-resumen-bloqueo {
-    box-shadow: inset 0 0 0 1px var(--agenda-evento-borde);
+    box-shadow: inset 0 0 0 1px var(--agenda-evento-texto);
 }
 
 .agenda-resumen-clase .agenda-cerrar:hover,
 .agenda-resumen-reserva .agenda-cerrar:hover,
+.agenda-resumen-ocupado .agenda-cerrar:hover,
 .agenda-resumen-bloqueo .agenda-cerrar:hover {
     background: color-mix(in srgb, var(--agenda-evento-texto) 10%, transparent);
 }

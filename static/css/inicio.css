@@ -248,12 +248,16 @@
     font-size: .95rem;
 }
 
-.dashboard-marcador-clases {
-    background: var(--primario);
+.dashboard-marcador-clases,
+.dashboard-muestra-clases,
+.dashboard-barra-clases {
+    background: var(--agenda-clase-texto);
 }
 
-.dashboard-marcador-reservas {
-    background: #9a6bb8;
+.dashboard-marcador-reservas,
+.dashboard-muestra-reservas,
+.dashboard-barra-reservas {
+    background: var(--agenda-reserva-texto);
 }
 
 .dashboard-desglose {
@@ -332,15 +336,9 @@
     border-radius: 3px;
 }
 
-.dashboard-muestra-clases {
-    background: var(--primario);
-}
-
-.dashboard-muestra-reservas {
-    background: #9a6bb8;
-}
-
 .dashboard-muestra-actual {
+    border: 1px solid var(--acento-texto);
+    border-radius: 50%;
     background: var(--acento);
 }
 
@@ -426,22 +424,6 @@
     pointer-events: none;
 }
 
-.dashboard-barra-clases {
-    background: var(--primario);
-}
-
-.dashboard-barra-reservas {
-    background: #9a6bb8;
-}
-
-.dashboard-hora-actual .dashboard-barra-clases {
-    background: var(--acento);
-}
-
-.dashboard-hora-actual .dashboard-barra-reservas {
-    background: #dce996;
-}
-
 .dashboard-barra:hover,
 .dashboard-barra:focus-visible {
     filter: brightness(1.08);
@@ -474,6 +456,15 @@
     line-height: 1;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+}
+
+.dashboard-eje-x-celda .dashboard-muestra-actual {
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    transform: translateX(-50%);
 }
 
 .dashboard-hora-actual .dashboard-eje-x-etiqueta {
@@ -528,6 +519,7 @@
 
 .dashboard-sparkline {
     display: block;
+    color: var(--primario);
     width: 100%;
     height: 72px;
 }
@@ -672,17 +664,17 @@
 
 .dashboard-hm-lvl-0 {
     background: var(--fondo-pagina);
-    box-shadow: inset 0 0 0 1px #ebe4f3;
+    box-shadow: inset 0 0 0 1px var(--borde);
 }
 
-.dashboard-hm-lvl-1 { background: #dfd1ed; }
-.dashboard-hm-lvl-2 { background: #ba99d6; }
-.dashboard-hm-lvl-3 { background: #8352aa; }
-.dashboard-hm-lvl-4 { background: #4b176d; }
+.dashboard-hm-lvl-1 { background: color-mix(in srgb, var(--primario) 25%, var(--fondo-pagina)); }
+.dashboard-hm-lvl-2 { background: color-mix(in srgb, var(--primario) 50%, var(--fondo-pagina)); }
+.dashboard-hm-lvl-3 { background: color-mix(in srgb, var(--primario) 75%, var(--fondo-pagina)); }
+.dashboard-hm-lvl-4 { background: var(--primario); }
 
 .dashboard-hm-cerrada {
-    background: repeating-linear-gradient(-45deg, #f1eef5 0 2px, #fbfafc 2px 5px);
-    box-shadow: inset 0 0 0 1px #e4dfec;
+    background: repeating-linear-gradient(-45deg, var(--borde) 0 2px, var(--superficie) 2px 5px);
+    box-shadow: inset 0 0 0 1px var(--borde);
 }
 
 .dashboard-hm-eje-x {
