@@ -58,7 +58,6 @@
                         <button class="boton boton-secundario boton-chico" type="button" data-limpiar-seleccion>Cancelar</button>
                     </div>
                 </form>
-                <p class="planilla-aviso-seleccion" role="status" aria-live="polite" data-planilla-aviso hidden></p>
             {% endif %}
         </header>
         {% for error in formulario.sede.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
@@ -114,5 +113,5 @@
     <div data-quitar-valores></div>
 </form>
 {% endif %}
-<script src="{% static 'js/planilla.js' %}?v=20261124-planilla-2" defer></script>
+<script src="{% static 'js/planilla.js' %}?v=20261125-planilla-3" defer></script>
 {% endblock %}

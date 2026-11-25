@@ -157,16 +157,6 @@ button.planilla-celda-seleccionada { background: var(--primario-suave); color: v
 
 button.planilla-celda-ocupada { background: var(--primario-suave); color: var(--texto); }
 .planilla-seleccion [hidden] { display: none; }
-.planilla-aviso-seleccion {
-    margin: 10px 0 0;
-    padding: 8px 12px;
-    border-radius: 6px;
-    border-left: 3px solid var(--advertencia);
-    background: var(--advertencia-suave);
-    color: var(--advertencia);
-    font-size: .875rem;
-}
-.planilla-aviso-seleccion[hidden] { display: none; }
 
 .planilla-seleccion .boton { min-height: 40px; border-radius: 10px; padding: 8px 14px; font-size: .92rem; white-space: nowrap; }
 .planilla-seleccion .boton-secundario { background: var(--superficie); }

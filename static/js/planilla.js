@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
     var encabezadoNormal = document.querySelector("[data-planilla-normal]");
     var celdas = Array.from(tabla.querySelectorAll("[data-seleccionar-turno]"));
     var porCoordenada = new Map(celdas.map(function (celda) { return [celda.dataset.seleccionarTurno, celda]; }));
-    var aviso = document.querySelector("[data-planilla-aviso]");
     var crear = barra.querySelector("[data-crear-horarios]");
     var quitar = barra.querySelector("[data-quitar-horarios]");
     var formularioQuitar = document.querySelector("[data-quitar-formulario]");
@@ -49,9 +48,14 @@ document.addEventListener("DOMContentLoaded", function () {
     var arrastre = null;
     var omitirClick = false;
 
-    function informar(texto) {
-        aviso.textContent = texto;
-        aviso.hidden = !texto;
+    function advertir(texto) {
+        if (window.Mensajes && texto) {
+            window.Mensajes.mostrar({
+                texto: texto,
+                nivel: "warning",
+                clave: "planilla-seleccion",
+            });
+        }
     }
 
     function compatible(celda) {
@@ -121,10 +125,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function alternar(celda) {
         if (!compatible(celda)) {
-            informar("No se pueden mezclar horarios libres y creados. Limpiá la selección para cambiar de tipo.");
+            advertir("Limpiá la selección para cambiar entre horarios libres y creados");
             return;
         }
-        informar("");
         var valor = celda.dataset.seleccionarTurno;
         if (seleccion.has(valor)) seleccion.delete(valor);
         else {
@@ -146,12 +149,16 @@ document.addEventListener("DOMContentLoaded", function () {
         var fila = celdas.filter(function (item) { return item.closest("td").dataset.hora === hora.dataset.seleccionarHora; });
         var tipos = new Set(fila.map(function (item) { return item.dataset.tipoTurno; }));
         if (!tipo && tipos.size > 1) {
-            informar("Seleccioná primero una celda libre o creada para elegir qué horarios sumar de esta fila.");
+            advertir("Elegí primero una celda de la fila");
             return;
         }
         if (!tipo && fila.length) tipo = fila[0].dataset.tipoTurno;
-        fila.filter(compatible).forEach(function (item) { seleccion.add(item.dataset.seleccionarTurno); });
-        informar("");
+        var compatibles = fila.filter(compatible);
+        if (fila.length && !compatibles.length) {
+            advertir("Limpiá la selección para cambiar entre horarios libres y creados");
+            return;
+        }
+        compatibles.forEach(function (item) { seleccion.add(item.dataset.seleccionarTurno); });
         actualizar();
     });
 
@@ -159,10 +166,9 @@ document.addEventListener("DOMContentLoaded", function () {
         var celda = evento.target.closest("[data-seleccionar-turno]");
         if (arrastre || !celda || evento.button !== 0 || !evento.isPrimary) return;
         if (!compatible(celda)) {
-            informar("No se pueden mezclar horarios libres y creados. Limpiá la selección para cambiar de tipo.");
+            advertir("Limpiá la selección para cambiar entre horarios libres y creados");
             return;
         }
-        informar("");
         var posicion = celda.closest("td");
         arrastre = {
             pointerId: evento.pointerId, celda: celda,
@@ -221,7 +227,6 @@ document.addEventListener("DOMContentLoaded", function () {
     barra.querySelector("[data-limpiar-seleccion]").addEventListener("click", function () {
         var primera = seleccion.size ? porCoordenada.get(seleccion.values().next().value) : celdas[0];
         seleccion.clear();
-        informar("");
         actualizar();
         if (primera) primera.focus();
     });
