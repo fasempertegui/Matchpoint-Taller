@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var observaciones = editor.querySelector("textarea");
     var filaActual = null;
     var confirmacion = document.querySelector("[data-asistencia-confirmacion]");
+    var botonConfirmar = confirmacion.querySelector("[data-confirmacion-boton]");
     var cambioPendiente = null;
     var guardando = false;
     var estadoGuardado = formulario.querySelector("[data-estado-guardado]");
@@ -21,6 +22,16 @@ document.addEventListener("DOMContentLoaded", function () {
     [editor, confirmacion].forEach(function (modal) {
         modal.addEventListener("cancel", function (evento) { if (guardando) evento.preventDefault(); });
     });
+
+    function disparadorDe(fila) {
+        return fila ? fila.querySelector("[data-asistencia-disparador]") : null;
+    }
+
+    function cerrarMenu(fila) {
+        var menu = fila ? fila.querySelector("details[data-menu-contextual]") : null;
+        if (menu) menu.open = false;
+    }
+
     function mostrarExitoGuardado(fila) {
         if (window.Mensajes) {
             window.Mensajes.mostrar({
@@ -45,7 +56,9 @@ document.addEventListener("DOMContentLoaded", function () {
         guardando = true;
         var controles = Array.from(formulario.querySelectorAll("button"))
             .concat(Array.from(editor.querySelectorAll("button")), Array.from(confirmacion.querySelectorAll("button")));
+        var disparadores = Array.from(formulario.querySelectorAll("[data-asistencia-disparador]"));
         controles.forEach(function (control) { control.disabled = true; });
+        disparadores.forEach(function (disparador) { disparador.setAttribute("aria-disabled", "true"); });
         estadoGuardado.hidden = false;
         estadoGuardado.textContent = "Guardando asistencia…";
         formulario.setAttribute("aria-busy", "true");
@@ -99,15 +112,23 @@ document.addEventListener("DOMContentLoaded", function () {
             estadoGuardado.textContent = "";
             formulario.removeAttribute("aria-busy");
             controles.forEach(function (control) { control.disabled = false; });
+            disparadores.forEach(function (disparador) { disparador.removeAttribute("aria-disabled"); });
         }
     }
+
     function campo(fila, nombre) { return fila.querySelector('[name$="-' + nombre + '"]'); }
+
     function actualizarFilas() {
         Array.from(filas.children).forEach(function (fila, indice) {
             fila.querySelectorAll("[name]").forEach(function (control) {
                 control.name = control.name.replace(/asistencias-\d+-/, "asistencias-" + indice + "-");
                 control.id = control.id.replace(/asistencias-\d+-/, "asistencias-" + indice + "-");
             });
+            var menuId = "asistencia-menu-asistencias-" + indice;
+            var disparador = disparadorDe(fila);
+            var panel = fila.querySelector(".asistencia-menu-opciones");
+            if (panel) panel.id = menuId;
+            if (disparador) disparador.setAttribute("aria-controls", menuId);
         });
         var cantidad = filas.children.length;
         formulario.elements["asistencias-TOTAL_FORMS"].value = cantidad;
@@ -115,20 +136,30 @@ document.addEventListener("DOMContentLoaded", function () {
         formulario.querySelector("[data-asistencia-vacio]").hidden = cantidad > 0;
         formulario.querySelector("[data-asistencia-tabla]").hidden = cantidad === 0;
     }
+
     function pintarFila(fila) {
         var estado = campo(fila, "estado").value;
         fila.querySelectorAll("[data-asistencia-estado]").forEach(function (indicador) {
             indicador.hidden = indicador.dataset.asistenciaEstado !== estado;
         });
         fila.querySelectorAll("[data-marcar-asistencia]").forEach(function (boton) {
-            boton.setAttribute("aria-pressed", String(boton.dataset.marcarAsistencia === estado));
+            var activo = boton.dataset.marcarAsistencia === estado;
+            boton.setAttribute("aria-pressed", String(activo));
+            var marca = boton.querySelector("[data-estado-actual]");
+            if (marca) marca.hidden = !activo;
         });
+        var quitarFila = fila.querySelector("[data-quitar-marca-fila]");
+        if (quitarFila) {
+            quitarFila.hidden = estado !== "presente" && estado !== "ausente";
+        }
         var nota = fila.querySelector("[data-observacion]");
         nota.textContent = campo(fila, "observaciones").value;
         nota.hidden = !nota.textContent.trim();
     }
+
     function abrirEditor(fila) {
         if (guardando) return;
+        cerrarMenu(fila);
         var error = editor.querySelector("[data-error-observaciones]");
         error.hidden = true;
         error.textContent = "";
@@ -140,25 +171,50 @@ document.addEventListener("DOMContentLoaded", function () {
         editor.querySelector("[data-observaciones]").dispatchEvent(new Event("observaciones:actualizar"));
         editor.querySelector("[data-quitar-marca]").hidden = campo(fila, "estado").value === "sin_registrar";
     }
-    filas.addEventListener("click", function (evento) {
-        var boton = evento.target.closest("[data-editar-asistencia]");
-        if (boton) abrirEditor(boton.closest("[data-asistencia-fila]"));
-    });
-    function solicitarCambio(fila, estado, origen) {
+
+    function solicitarCambio(fila, estado) {
         if (guardando) return;
-        cambioPendiente = {fila: fila, estado: estado, origen: origen};
+        cerrarMenu(fila);
+        cambioPendiente = { fila: fila, estado: estado };
+        var etiqueta = estado === "sin_registrar"
+            ? "Quitar marca"
+            : "Marcar " + (estado === "presente" ? "presente" : "ausente");
         confirmacion.querySelector("[data-confirmacion-titulo]").textContent = estado === "sin_registrar"
-            ? "Quitar marca de asistencia" : "Marcar " + (estado === "presente" ? "presente" : "ausente");
+            ? "Quitar marca de asistencia"
+            : etiqueta;
         confirmacion.querySelector("[data-confirmacion-mensaje]").textContent = estado === "sin_registrar"
             ? "¿Dejar sin registrar la asistencia de " + fila.dataset.nombre + "?"
             : "¿Marcar a " + fila.dataset.nombre + " como " + estado + "?";
+        if (botonConfirmar) {
+            botonConfirmar.textContent = etiqueta;
+            botonConfirmar.classList.toggle("boton-confirmar-peligro", estado === "ausente");
+            botonConfirmar.classList.toggle("boton-primario", estado !== "ausente");
+        }
         confirmacion.returnValue = "cancelar";
         confirmacion.showModal();
     }
+
     filas.addEventListener("click", function (evento) {
-        var boton = evento.target.closest("[data-marcar-asistencia]");
-        if (boton) solicitarCambio(boton.closest("[data-asistencia-fila]"), boton.dataset.marcarAsistencia, boton);
+        if (guardando && evento.target.closest("[data-asistencia-disparador]")) {
+            evento.preventDefault();
+            return;
+        }
+        var botonEditar = evento.target.closest("[data-editar-asistencia]");
+        if (botonEditar) {
+            abrirEditor(botonEditar.closest("[data-asistencia-fila]"));
+            return;
+        }
+        var botonMarcar = evento.target.closest("[data-marcar-asistencia]");
+        if (botonMarcar) {
+            solicitarCambio(botonMarcar.closest("[data-asistencia-fila]"), botonMarcar.dataset.marcarAsistencia);
+            return;
+        }
+        var botonQuitar = evento.target.closest("[data-quitar-marca-fila]");
+        if (botonQuitar) {
+            solicitarCambio(botonQuitar.closest("[data-asistencia-fila]"), "sin_registrar");
+        }
     });
+
     confirmacion.addEventListener("close", async function () {
         var cambio = cambioPendiente;
         cambioPendiente = null;
@@ -171,13 +227,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 mostrarErrorGuardado(resultado.error);
             }
         }
-        cambio.origen.focus();
+        var disparador = disparadorDe(cambio.fila);
+        if (disparador && disparador.isConnected) disparador.focus({ preventScroll: true });
     });
+
     editor.querySelector("[data-quitar-marca]").addEventListener("click", function () {
         var fila = filaActual;
+        filaActual = null;
         editor.close();
-        solicitarCambio(fila, "sin_registrar", fila.querySelector("[data-editar-asistencia]"));
+        solicitarCambio(fila, "sin_registrar");
     });
+
     editor.querySelector("form").addEventListener("submit", async function (evento) {
         if (!evento.submitter || evento.submitter.value !== "guardar") return;
         evento.preventDefault();
@@ -200,6 +260,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
+
     editor.querySelector("[data-quitar-de-carga]").addEventListener("click", function () {
         if (filaActual && filaActual.dataset.quitable === "true") {
             filaActual.remove();
@@ -209,16 +270,23 @@ document.addEventListener("DOMContentLoaded", function () {
             formulario.querySelector("[data-abrir-busqueda]").focus();
         }
     });
+
     editor.addEventListener("close", function () {
-        if (filaActual && filaActual.isConnected) filaActual.querySelector("[data-editar-asistencia]").focus();
+        var fila = filaActual;
         filaActual = null;
+        var disparador = disparadorDe(fila);
+        if (disparador && disparador.isConnected) disparador.focus({ preventScroll: true });
     });
-    formulario.querySelector("[data-abrir-busqueda]").addEventListener("click", function () {
+
+    var botonAbrirBusqueda = formulario.querySelector("[data-abrir-busqueda]");
+    botonAbrirBusqueda.addEventListener("click", function () {
         buscador.hidden = !buscador.hidden;
-        this.setAttribute("aria-expanded", String(!buscador.hidden));
+        botonAbrirBusqueda.setAttribute("aria-expanded", String(!buscador.hidden));
+        botonAbrirBusqueda.textContent = buscador.hidden ? "Agregar persona" : "Ocultar buscador";
         if (!buscador.hidden) entrada.focus();
         else cerrarBusqueda();
     });
+
     function cerrarBusqueda() {
         if (solicitud) solicitud.abort();
         window.clearTimeout(demora);
@@ -226,6 +294,7 @@ document.addEventListener("DOMContentLoaded", function () {
         resultados.hidden = true;
         estadoBusqueda.textContent = "";
     }
+
     function agregar(persona) {
         if (guardando) return;
         if (Array.from(filas.children).some(function (fila) { return fila.dataset.usuario === String(persona.id); })) return;
@@ -241,7 +310,10 @@ document.addEventListener("DOMContentLoaded", function () {
             usuarioNombre.textContent = "@" + persona.usuario;
             usuarioNombre.hidden = false;
         }
-        fila.querySelector("[data-editar-asistencia]").setAttribute("aria-label", "Observaciones de " + persona.nombre);
+        var disparador = disparadorDe(fila);
+        if (disparador) {
+            disparador.setAttribute("aria-label", "Acciones de asistencia de " + persona.nombre);
+        }
         campo(fila, "usuario").value = persona.id;
         campo(fila, "estado").value = "sin_registrar";
         filas.append(fila);
@@ -251,13 +323,15 @@ document.addEventListener("DOMContentLoaded", function () {
         var botonBorrar = entrada.nextElementSibling;
         if (botonBorrar && botonBorrar.matches("[data-borrar-busqueda]")) botonBorrar.hidden = true;
         cerrarBusqueda();
-        fila.querySelector("[data-marcar-asistencia]").focus();
+        if (disparador) disparador.focus();
     }
+
     async function buscar() {
         var texto = entrada.value.trim();
         if (texto.length < 2) return;
         var actual = new AbortController();
         solicitud = actual;
+        buscador.setAttribute("aria-busy", "true");
         var url = new URL(buscador.dataset.url, window.location.origin);
         url.searchParams.set("q", texto);
         Array.from(filas.children).forEach(function (fila) { url.searchParams.append("excluir", fila.dataset.usuario); });
@@ -286,8 +360,11 @@ document.addEventListener("DOMContentLoaded", function () {
             if (datos.hay_mas) estadoBusqueda.textContent += " Hay más resultados: precisá la búsqueda.";
         } catch (error) {
             if (error.name !== "AbortError" && solicitud === actual) estadoBusqueda.textContent = "No se pudo buscar. Volvé a escribir o recargá la página si tu acceso cambió.";
+        } finally {
+            if (solicitud === actual) buscador.removeAttribute("aria-busy");
         }
     }
+
     entrada.addEventListener("input", function () {
         cerrarBusqueda();
         if (entrada.value.trim().length >= 2) demora = window.setTimeout(buscar, 250);

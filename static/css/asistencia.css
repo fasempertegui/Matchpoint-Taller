@@ -9,19 +9,93 @@
 .contenido-asistencia [data-editor-nombre] { font-size: 1.1rem; font-weight: 600; }
 @media (max-width: 900px) { .asistencia-contexto dl { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-.asistencia-fila-acciones { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
-.asistencia-marcar { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 7px; border: 1px solid transparent; border-radius: 8px; background: transparent; cursor: pointer; }
-.asistencia-marcar-presente { color: var(--estado-positivo); }
-.asistencia-marcar-ausente { color: var(--peligro); }
-.asistencia-marcar-presente:hover, .asistencia-marcar-presente[aria-pressed="true"] { background: var(--acento-suave); border-color: currentColor; }
-.asistencia-marcar-ausente:hover, .asistencia-marcar-ausente[aria-pressed="true"] { background: var(--peligro-suave); border-color: currentColor; }
-.asistencia-marcar:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.asistencia-menu-opciones { min-width: 230px; }
+.asistencia-menu-opciones .asistencia-opcion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+}
+.asistencia-menu-opciones .asistencia-opcion + .asistencia-opcion { margin-top: 4px; }
+.asistencia-opcion-icono { display: inline-flex; flex-shrink: 0; }
+.asistencia-opcion-icono svg { display: block; width: 18px; height: 18px; }
+.asistencia-opcion-texto { flex: 1; }
+.asistencia-opcion-estado {
+    flex-shrink: 0;
+    padding: 1px 7px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    background: var(--superficie);
+    font-size: .75rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.asistencia-menu-opciones .asistencia-opcion-presente { color: var(--estado-positivo); }
+.asistencia-menu-opciones .asistencia-opcion-presente[aria-pressed="true"] {
+    background: var(--acento-suave);
+    border-color: var(--estado-positivo);
+    color: var(--estado-positivo);
+    font-weight: 700;
+}
+
+.asistencia-menu-opciones .asistencia-opcion-ausente { color: var(--peligro); }
+.asistencia-menu-opciones .asistencia-opcion-ausente[aria-pressed="true"] {
+    background: var(--peligro-suave);
+    border-color: var(--peligro);
+    color: var(--peligro);
+    font-weight: 700;
+}
+
+.asistencia-menu-opciones .asistencia-opcion-observaciones { color: var(--primario); }
+
+.asistencia-menu-opciones .asistencia-opcion.asistencia-opcion-quitar {
+    position: relative;
+    margin-top: 11px;
+    color: var(--texto-suave);
+}
+.asistencia-menu-opciones .asistencia-opcion-quitar::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: -6px;
+    height: 1px;
+    background: var(--borde);
+    pointer-events: none;
+}
+
+@media (hover: hover) {
+    .asistencia-menu-opciones .asistencia-opcion-presente:not(:disabled):hover {
+        background: var(--acento-suave);
+        border-color: var(--estado-positivo);
+        color: var(--estado-positivo);
+    }
+
+    .asistencia-menu-opciones .asistencia-opcion-ausente:not(:disabled):hover {
+        background: var(--peligro-suave);
+        border-color: var(--peligro);
+        color: var(--peligro);
+    }
+
+    .asistencia-menu-opciones .asistencia-opcion-observaciones:not(:disabled):hover {
+        background: var(--primario-suave);
+        border-color: var(--primario);
+        color: var(--primario);
+    }
+
+    .asistencia-menu-opciones .asistencia-opcion-quitar:not(:disabled):hover {
+        background: var(--primario-suave);
+        border-color: transparent;
+        color: var(--primario);
+    }
+}
+
 .contenido-asistencia .asistencia-agregar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
 .asistencia-ayuda-recuperacion { flex: 1; min-width: 240px; margin: 0; color: var(--texto-suave); font-size: .9rem; }
 .asistencia-agregar > [data-asistencia-buscador] { flex-basis: 100%; }
-
-.asistencia-observaciones-boton { color: var(--primario); }
-.asistencia-observaciones-boton:hover { background: var(--primario-suave); border-color: currentColor; }
 
 .contenido-asistencia [data-asistencia-tabla] th:nth-child(2),
 .contenido-asistencia [data-asistencia-tabla] td:nth-child(2) { text-align: center; }

@@ -1312,10 +1312,10 @@ flowchart TD
 Recorrido:
 
 1. El sistema muestra las personas asignadas y las asistencias guardadas con su versión de carga.
-2. El actor elige Presente o Ausente en una fila y confirma en un modal. Cancelar no modifica el registro.
+2. El actor abre el menú de acciones de asistencia de una persona, donde se indica el estado actual, y elige Marcar presente o Marcar ausente. El menú se cierra antes de abrir el modal de confirmación; cancelar devuelve el foco al disparador sin modificar el registro.
 3. El servidor bloquea personas, instalaciones, turno y evento según el orden común, valida autorización, versión y fin del turno. Si la clase sigue Programada, la finaliza; si ya está Finalizada, conserva ese estado. Guarda únicamente la persona elegida y devuelve su estado, observaciones y la nueva versión dentro de la misma transacción.
 4. Durante la escritura la pantalla indica «Guardando asistencia…». Al recibir la confirmación del servidor, actualiza la fila sin recargar ni requerir un guardado general y comunica el resultado en un toast de éxito con el nombre de la persona, reutilizando el mismo toast y reiniciando su tiempo de lectura ante guardados sucesivos. Las demás filas permanecen intactas.
-5. Para cambiar observaciones abre su modal y solicita Guardar observaciones; cancelar no cambia el texto guardado. Los errores de validación corregibles se muestran dentro del diálogo junto al campo de observaciones. Quitar la marca vuelve a Sin registrar mediante confirmación y guardado individual, conservando el registro.
+5. Desde el mismo menú puede abrir Observaciones para editarlas y solicitar Guardar observaciones (cancelar devuelve el foco al disparador sin cambiar el texto guardado y los errores de validación corregibles se muestran dentro del diálogo junto al campo) o elegir Quitar marca cuando la persona ya tiene una marca registrada para volver a Sin registrar mediante confirmación y guardado individual, conservando el registro.
 6. Puede buscar una persona no asignada y agregarla a la pantalla para registrar su asistencia. Agregarla por sí solo no escribe asistencia ni modifica asignaciones.
 
 Alternativas:
@@ -1336,7 +1336,7 @@ Alternativas:
 
 ```mermaid
 flowchart TD
-    A[Abrir asistencia] --> B[Elegir persona y estado]
+    A[Abrir asistencia] --> B[Abrir acciones de una persona y elegir estado]
     B --> C{Confirmar cambio}
     C -->|No| D[Conservar datos]
     C -->|Sí| E[Validar permisos, fin del turno y versión bajo bloqueo]

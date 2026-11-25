@@ -337,6 +337,11 @@ form[aria-busy="true"] .boton:disabled {
     margin: 0;
 }
 
+.menu-contextual-opciones [hidden],
+.perfil-menu-opciones [hidden] {
+    display: none;
+}
+
 .menu-contextual-opciones a,
 .menu-contextual-opciones button,
 .perfil-menu-opciones a,
