@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
 
+from clases.consultas import clases_sin_asistencia_profesor_queryset
 from clases.models import Clase
 from membresias.continuidad import contexto_continuidad
 from membresias.models import MembresiaUsuario, PlanUsuario
@@ -46,6 +47,17 @@ def contexto_inicio_portal(usuario):
                 "url": reverse("reservas:mis_invitaciones", query={"vista": "por_responder"}),
                 "accion": "Ver invitaciones",
             })
+    asistencia_pendiente = clases_sin_asistencia_profesor_queryset(usuario).count()
+    if asistencia_pendiente:
+        contexto["pendientes"].append({
+            "texto": f"Clases con asistencia pendiente: {asistencia_pendiente}",
+            "url": reverse(
+                "clases:actividad_clases",
+                args=[usuario.pk],
+                query={"funcion": "profesor", "vista": "asistencia_pendiente", "mes": ""},
+            ),
+            "accion": "Ver clases",
+        })
     for tipo, modelo in (("plan", PlanUsuario), ("membresia", MembresiaUsuario)):
         contratos = modelo.objects.filter(
             usuario=usuario, mes_cubierto__in=(mes, (mes - timedelta(days=1)).replace(day=1)),

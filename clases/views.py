@@ -505,24 +505,41 @@ def actividad_clases(request, usuario_id):
     hoy = timezone.localdate()
     parametros = request.GET.copy()
     if not consulta_administrativa:
+        asistencia_pendiente = ver_docencia and request.GET.get("vista") == "asistencia_pendiente"
         mes_actual = max(hoy, FECHA_INICIO_OPERACIONES).strftime("%Y-%m")
-        parametros.setdefault("mes", mes_actual)
+        parametros.setdefault("mes", "" if asistencia_pendiente else mes_actual)
         formulario = MisClasesFiltrosForm(parametros)
+        if asistencia_pendiente:
+            formulario.fields.pop("estado", None)
         pagina = None
         enlaces = {"funcion": funcion} if es_profesor else {}
+        if asistencia_pendiente:
+            enlaces["vista"] = "asistencia_pendiente"
         url_limpiar = request.path + ("?" + urlencode(enlaces) if enlaces else "")
         if formulario.is_valid():
             filtros = formulario.cleaned_data
             funcion_consulta = "profesor" if ver_docencia else "participante" if ver_asistencia else None
             pagina = consultar_mis_clases(
-                usuario, **filtros, funcion=funcion_consulta, numero_pagina=request.GET.get("pagina"),
+                usuario,
+                mes=filtros["mes"],
+                estado=filtros.get("estado", ""),
+                funcion=funcion_consulta,
+                numero_pagina=request.GET.get("pagina"),
+                asistencia_pendiente=asistencia_pendiente,
             )
             enlaces.update(filtros)
+        url_todas = request.path + "?" + urlencode({"funcion": "profesor"}) if ver_docencia else ""
+        url_asistencia_pendiente = (
+            request.path + "?" + urlencode({"funcion": "profesor", "vista": "asistencia_pendiente", "mes": ""})
+            if ver_docencia else ""
+        )
         return render(request, "clases/actividad_clases.html", {
             "titular": titular, "formulario": formulario, "pagina": pagina,
-            "es_profesor": es_profesor, "funcion": funcion, "ver_asistencia": ver_asistencia,
+            "es_profesor": es_profesor, "funcion": funcion, "ver_docencia": ver_docencia,
+            "ver_asistencia": ver_asistencia, "asistencia_pendiente": asistencia_pendiente,
+            "url_todas": url_todas, "url_asistencia_pendiente": url_asistencia_pendiente,
             "url_limpiar": url_limpiar, "parametros_paginacion": urlencode(enlaces),
-            "mostrar_listado": pagina is not None, "mostrar_estado": True,
+            "mostrar_listado": pagina is not None, "mostrar_estado": not asistencia_pendiente,
         })
 
     parametros.setdefault("fecha_desde", max(hoy.replace(day=1), FECHA_INICIO_OPERACIONES).isoformat())

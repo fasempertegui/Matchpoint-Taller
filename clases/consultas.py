@@ -48,6 +48,16 @@ def clases_sin_asistencia_queryset():
     )
 
 
+def clases_sin_asistencia_profesor_queryset(usuario):
+    if usuario is None or not getattr(usuario, "is_authenticated", False):
+        return Clase.objects.none()
+    if not usuario.esta_habilitado or usuario.debe_cambiar_contrasena or not usuario.tiene_rol(Rol.PROFESOR):
+        return Clase.objects.none()
+    return clases_sin_asistencia_queryset().filter(
+        Exists(ClaseProfesor.objects.filter(clase_id=OuterRef("pk"), profesor_id=usuario.pk)),
+    )
+
+
 def consultar_clase(usuario, clase_id):
     usuario = exigir_acceso_clases(usuario)
     clase = Clase.objects.select_related("evento__turno__cancha__sede").get(
@@ -320,23 +330,29 @@ def _fila_actividad_clase(clase):
     }
 
 
-def consultar_mis_clases(usuario, *, mes, estado, funcion, numero_pagina):
+def consultar_mis_clases(usuario, *, mes, estado, funcion, numero_pagina, asistencia_pendiente=False):
     usuario = exigir_acceso_clases(usuario)
-    desde, hasta = FECHA_INICIO_OPERACIONES, fecha_maxima_eventos()
+    clases = _clases_de_actividad(usuario.pk)
     if mes:
         inicio_mes = date.fromisoformat(f"{mes}-01")
         fin_mes = inicio_mes.replace(day=monthrange(inicio_mes.year, inicio_mes.month)[1])
-        desde, hasta = max(desde, inicio_mes), min(hasta, fin_mes)
+        desde = max(FECHA_INICIO_OPERACIONES, inicio_mes)
+        hasta = min(fecha_maxima_eventos(), fin_mes)
+        clases = clases.filter(evento__turno__fecha__range=(desde, hasta))
+    elif not asistencia_pendiente:
+        clases = clases.filter(evento__turno__fecha__range=(FECHA_INICIO_OPERACIONES, fecha_maxima_eventos()))
 
-    clases = _clases_de_actividad(usuario.pk).filter(evento__turno__fecha__range=(desde, hasta))
-    if funcion == "profesor":
-        clases = clases.filter(tiene_docencia=True)
-    elif funcion == "participante":
-        clases = clases.filter(Q(tiene_participacion=True) | Q(tiene_asistencia=True))
+    if asistencia_pendiente:
+        clases = clases.filter(pk__in=clases_sin_asistencia_profesor_queryset(usuario).values("pk"))
     else:
-        clases = clases.filter(Q(tiene_docencia=True) | Q(tiene_participacion=True) | Q(tiene_asistencia=True))
-    if estado:
-        clases = clases.filter(evento__estado=estado)
+        if funcion == "profesor":
+            clases = clases.filter(tiene_docencia=True)
+        elif funcion == "participante":
+            clases = clases.filter(Q(tiene_participacion=True) | Q(tiene_asistencia=True))
+        else:
+            clases = clases.filter(Q(tiene_docencia=True) | Q(tiene_participacion=True) | Q(tiene_asistencia=True))
+        if estado:
+            clases = clases.filter(evento__estado=estado)
 
     clases = clases.order_by("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
     pagina = Paginator(clases, 10).get_page(numero_pagina)

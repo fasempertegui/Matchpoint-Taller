@@ -2036,7 +2036,7 @@ flowchart TD
 
 - **Objetivo:** conocer a cuántas clases fue asignado un usuario y a cuántas asistió durante un período.
 - **Actores:** administrador; cualquier titular autenticado, limitado a su propia actividad desde el portal, sin exigir rol Alumno. El titular también consulta sus próximas clases como participante; los profesores consultan las clases que dictan según sus asignaciones.
-- **Entradas:** en administración, usuario, fecha inicial y fecha final. Los rangos admiten hasta 366 días corridos inclusive dentro del calendario operativo; un período mayor se consulta por tramos. En Mis clases, el usuario es siempre el titular autenticado y puede elegir un mes y año o todos los meses del calendario operativo. La consulta personal abre en el mes actual con todos los estados y permite filtrar por Finalizadas, Programadas o Anuladas.
+- **Entradas:** en administración, usuario, fecha inicial y fecha final. Los rangos admiten hasta 366 días corridos inclusive dentro del calendario operativo; un período mayor se consulta por tramos. En Mis clases, el usuario es siempre el titular autenticado y puede elegir un mes y año o todos los meses del calendario operativo. La consulta personal abre en el mes actual con todos los estados y permite filtrar por Finalizadas, Programadas o Anuladas. En la función Profesor ofrece además las pestañas Todas y Asistencia pendiente.
 
 Recorrido:
 
@@ -2047,6 +2047,7 @@ Recorrido:
 
 Alternativas:
 
+- Desde el contador de Inicio o desde Mis clases en función Profesor, el docente abre la pestaña Asistencia pendiente, que selecciona por defecto todos los meses y reúne las clases Finalizadas asignadas a él con carga incompleta (cada clase aparece una vez). Cada fila ofrece Registrar asistencia hacia la carga existente y, al completar las marcas, la clase sale del listado y del contador.
 - Una asistencia como presente sin asignación previa suma asistencia, pero no suma clase asignada.
 - Las clases anuladas se pueden consultar por estado y no se consideran dictadas.
 - La consulta no intenta atribuir cada clase a un plan: los planes sólo dan derecho a participar.

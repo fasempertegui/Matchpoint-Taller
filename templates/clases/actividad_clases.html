@@ -24,7 +24,7 @@
             <input type="hidden" name="vista" value="{{ formulario.vista.value }}">
             {% else %}
             <input type="hidden" name="mes" value="{{ formulario.mes.value|default_if_none:'' }}">
-            <input type="hidden" name="estado" value="{{ formulario.estado.value|default_if_none:'' }}">
+            {% if not asistencia_pendiente %}<input type="hidden" name="estado" value="{{ formulario.estado.value|default_if_none:'' }}">{% endif %}
             {% endif %}
             <label class="clase-etiqueta-oculta" for="actividad-funcion">Función en la clase</label>
             <select class="form-control" id="actividad-funcion" name="funcion">
@@ -77,9 +77,16 @@
     </form>
 {% endtarjeta_filtros %}
 {% else %}
+{% if ver_docencia %}
+{% pestanas "Clases como profesor" %}
+    <a href="{{ url_todas }}"{% if not asistencia_pendiente %} aria-current="page"{% endif %}>Todas</a>
+    <a href="{{ url_asistencia_pendiente }}"{% if asistencia_pendiente %} aria-current="page"{% endif %}>Asistencia pendiente</a>
+{% endpestanas %}
+{% endif %}
 {% tarjeta_filtros %}
     <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de clases">
         {% if es_profesor %}<input type="hidden" name="funcion" value="{{ funcion }}">{% endif %}
+        {% if asistencia_pendiente %}<input type="hidden" name="vista" value="asistencia_pendiente">{% endif %}
         {% for campo in formulario %}
             <div class="grupo-campo">
                 {{ campo.label_tag }}{{ campo }}
@@ -114,13 +121,19 @@
                             {% if fila.observaciones_asistencia %}<p class="actividad-nota tabla-secundario">{{ fila.observaciones_asistencia|linebreaksbr }}</p>{% endif %}
                         {% else %}<span class="texto-secundario">—</span>{% endif %}
                     </td>{% endif %}
-                    <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' fila.id %}" aria-label="Ver clase {{ fila.id }} del {{ fila.fecha|date:'d/m/Y' }}">Ver clase</a></td>
+                    <td class="acciones-columna">
+                        {% if asistencia_pendiente %}
+                        <a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_asistencia' fila.id %}" aria-label="Registrar asistencia de la clase {{ fila.id }} del {{ fila.fecha|date:'d/m/Y' }}">Registrar asistencia</a>
+                        {% else %}
+                        <a class="boton boton-secundario boton-chico" href="{% url 'clases:clase_detalle' fila.id %}" aria-label="Ver clase {{ fila.id }} del {{ fila.fecha|date:'d/m/Y' }}">Ver clase</a>
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}</tbody>
         {% endtabla %}
     </div>
     {% else %}
-        <p class="estado-vacio">{% if not consulta_administrativa %}No hay clases para los filtros seleccionados.{% elif formulario.vista.value == 'proximas' %}No hay próximas clases asignadas en este período.{% elif formulario.vista.value == 'anuladas' %}No hay clases anuladas en este período.{% else %}No hay clases en el historial de este período.{% endif %}</p>
+        <p class="estado-vacio">{% if asistencia_pendiente %}{% if formulario.mes.value %}No tenés clases con asistencia pendiente en el mes seleccionado.{% else %}No tenés clases con asistencia pendiente.{% endif %}{% elif not consulta_administrativa %}No hay clases para los filtros seleccionados.{% elif formulario.vista.value == 'proximas' %}No hay próximas clases asignadas en este período.{% elif formulario.vista.value == 'anuladas' %}No hay clases anuladas en este período.{% else %}No hay clases en el historial de este período.{% endif %}</p>
     {% endif %}
     {% include "componentes/paginacion.html" with pagina=pagina entidad="clases" parametros=parametros_paginacion only %}
 </section>
