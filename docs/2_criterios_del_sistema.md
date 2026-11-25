@@ -74,7 +74,7 @@ Todos estos límites se validan en el servidor y se exponen además en los contr
 
 ### 2.1 Gestión de clases
 
-El detalle de clase presenta sede, cancha, fecha y horario en una tabla de campo y valor; el origen se muestra sólo a administración. Mantiene el estado visible, las observaciones y el motivo de anulación. Profesores y participantes se presentan en tablas compactas; respuesta de participación y asistencia ocupan columnas independientes, sujetas a los permisos de consulta. Los datos del registro se despliegan bajo demanda y las acciones se agrupan en un menú de cabecera según los permisos, la asignación y el estado temporal de la clase. El aviso No asisto solicita confirmación con su efecto y carácter irreversible. El detalle usa borde superior lima y no agrega borde inferior.
+El detalle de clase presenta sede, cancha, fecha y horario en una tabla de campo y valor; el origen se muestra sólo a administración. Mantiene el estado visible, las observaciones y el motivo de anulación. Profesores y participantes se presentan en tablas compactas; la lista de participantes reúne a las personas asignadas y a las que tienen asistencia guardada (mostrando `—` en participación cuando no hubo asignación previa), y respuesta de participación y asistencia ocupan columnas independientes, sujetas a los permisos de consulta. Los datos del registro se despliegan bajo demanda y las acciones se agrupan en un menú de cabecera según los permisos, la asignación y el estado temporal de la clase. El aviso No asisto solicita confirmación con su efecto y carácter irreversible. El detalle usa borde superior lima y no agrega borde inferior.
 
 
 El sistema incluirá la gestión de clases de la academia.

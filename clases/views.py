@@ -58,11 +58,27 @@ def clase_detalle(request, pk):
             if clase[campo] is not None
         })
     asistencias = {fila["usuario_id"]: fila for fila in clase["asistencias"]}
+    participantes_ids = set()
     for participante in clase["participantes"]:
+        participantes_ids.add(participante["usuario_id"])
         asistencia = asistencias.get(participante["usuario_id"], {"estado": Asistencia.Estado.SIN_REGISTRAR})
         participante["asistencia_texto"] = Asistencia.Estado(asistencia["estado"]).label
         participante["asistencia_estado"] = asistencia["estado"]
         participante["observaciones_asistencia"] = asistencia.get("observaciones")
+    for usuario_id, asistencia in asistencias.items():
+        if usuario_id in participantes_ids:
+            continue
+        clase["participantes"].append({
+            "usuario_id": usuario_id,
+            "nombre": asistencia["nombre"],
+            "username": asistencia["username"],
+            "observaciones": "",
+            "respuesta_texto": None,
+            "respuesta": None,
+            "asistencia_texto": Asistencia.Estado(asistencia["estado"]).label,
+            "asistencia_estado": asistencia["estado"],
+            "observaciones_asistencia": asistencia.get("observaciones"),
+        })
 
     for seccion in ("profesores", "participantes"):
         clase[seccion].sort(key=lambda persona: (persona["nombre"].casefold(), persona["usuario_id"]))

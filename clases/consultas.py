@@ -126,6 +126,7 @@ def consultar_clase(usuario, clase_id):
             {
                 "usuario_id": asistencia.usuario_id,
                 "nombre": str(asistencia.usuario),
+                "username": asistencia.usuario.username,
                 "estado": asistencia.estado,
                 "observaciones": asistencia.observaciones,
                 "registrada_por_id": asistencia.registrada_por_id if puede_consultar_grupo else None,
