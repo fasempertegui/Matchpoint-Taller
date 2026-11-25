@@ -671,7 +671,7 @@ flowchart TD
 
 Recorrido:
 
-1. El actor elige el catálogo y los filtros.
+1. El actor elige el catálogo de planes o membresías (desde **Catálogo** en administración, con pestañas Planes y Membresías, o desde **Oferta** en el portal) y los filtros.
 2. El sistema consulta `planes` o `membresias`, según lo seleccionado.
 3. En administración muestra nombre, descripción, configuración y precio vigente, con acceso al detalle. En el portal presenta tarjetas con los datos comerciales y hasta dos líneas de descripción; si existe texto, Leer descripción abre un modal con el contenido completo, sin navegar a una pantalla de detalle. Las tarjetas sin descripción no ofrecen esa acción.
 
@@ -2397,7 +2397,7 @@ La ventana se calcula con la configuración de notificaciones: apertura a las 00
 - **Actor:** Administrador.
 - **Entradas:** mes cubierto, tipo de producto y respuesta, incluido Sin responder.
 
-1. Abre Continuidad desde Planes y membresías o desde Inicio.
+1. Abre Continuidad desde **Contrataciones** o desde **Inicio**.
 2. Selecciona filtros y consulta todas las contrataciones del alcance elegido, incluso sin titular en planilla.
 3. Revisa titular, producto, mes, estado, respuesta y fecha en filas compactas y paginadas.
 4. Abre el detalle autorizado para consultar el contrato y su respuesta. Administración no responde por el titular.

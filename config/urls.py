@@ -33,6 +33,10 @@ urlpatterns = [
     path('reportes/', include('reportes.urls')),
     path('auditoria/', include('auditoria.urls')),
     path('comunicaciones/', include('comunicaciones.urls')),
-    path('membresias/', include('membresias.urls')),
+    path('', include(([
+        path('contrataciones/', include('membresias.urls_contrataciones')),
+        path('catalogo/', include('membresias.urls_catalogo')),
+        path('membresias/', include('membresias.urls')),
+    ], 'membresias'))),
     path('oferta/', include('config.urls_oferta')),
 ]

@@ -13,14 +13,22 @@
         {% elif propias %}Consultá tus planes y membresías contratados, sus períodos e importes.
         {% else %}Consultá y registrá las contrataciones mensuales de {{ plural }} de cada usuario.{% endif %}{% endtexto_titulo %}
 {% tarjeta_titulo titulo_lista descripcion=descripcion_tarjeta %}
-    {% if titular %}<a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>{% elif not propias %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
+    {% if titular %}
+        <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>
+    {% elif not propias %}
+        <a class="boton boton-secundario" href="{% url 'membresias:continuidad_lista' %}">Continuidad</a>
+        <a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>
+    {% endif %}
 {% endtarjeta_titulo %}
-{% if propias or titular %}
 {% pestanas "Tipo de contratación" %}
-    <a href="{{ request.path }}?tipo=plan"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
-    <a href="{{ request.path }}?tipo=membresia"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
+    {% if propias or titular %}
+        <a href="{{ request.path }}?tipo=plan"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
+        <a href="{{ request.path }}?tipo=membresia"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
+    {% else %}
+        <a href="{% url 'membresias:contratacion_plan_lista' %}"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
+        <a href="{% url 'membresias:contratacion_membresia_lista' %}"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
+    {% endif %}
 {% endpestanas %}
-{% endif %}
 {% if hay_contrataciones %}
     {% tarjeta_filtros %}
         <form class="tarjeta-busqueda filtros-compactos" method="get">

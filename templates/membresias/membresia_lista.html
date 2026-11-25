@@ -1,16 +1,21 @@
 {% extends "base.html" %}
 {% load encabezados %}
+{% load pestanas %}
 {% load tablas %}
 {% load filtros %}
 {% load estados %}
 {% load static %}
-{% block titulo %}Membresías de socios | Academia TM{% endblock %}
+{% block titulo %}Catálogo | Academia TM{% endblock %}
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/membresias-configuracion.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-membresias-configuracion catalogo-listado{% endblock %}
 {% block contenido %}
-{% tarjeta_titulo "Membresías de socios" %}
+{% tarjeta_titulo "Catálogo" descripcion="Configurá los planes de clases y las membresías de socios disponibles en la academia." %}
     <a class="boton boton-primario" href="{% url 'membresias:membresia_crear' %}">Nueva membresía</a>
 {% endtarjeta_titulo %}
+{% pestanas "Catálogo de oferta" %}
+    <a href="{% url 'membresias:plan_lista' %}">Planes</a>
+    <a href="{% url 'membresias:membresia_lista' %}" aria-current="page">Membresías</a>
+{% endpestanas %}
 {% if hay_membresias %}
     {% tarjeta_filtros %}
         <form class="tarjeta-busqueda filtros-compactos" method="get">

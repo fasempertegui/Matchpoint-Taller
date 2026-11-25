@@ -21,14 +21,6 @@ from .servicios import (
 @login_required
 @never_cache
 @require_GET
-def catalogos(request):
-    exigir_administracion_membresias(request.user)
-    return render(request, "membresias/catalogos.html")
-
-
-@login_required
-@never_cache
-@require_GET
 def plan_lista(request):
     exigir_administracion_membresias(request.user)
     planes = Plan.objects.all()

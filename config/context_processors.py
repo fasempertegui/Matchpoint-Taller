@@ -13,11 +13,12 @@ DESTINOS_NAVEGACION = {
     "reservas:mis_invitaciones": ("correo", "actividad"),
     "membresias:mis_contrataciones": ("cartera", "actividad"),
     "usuarios:usuario_lista": ("usuarios", "gestion"),
-    "membresias:catalogos": ("libro", "gestion"),
+    "membresias:contratacion_plan_lista": ("cartera", "gestion"),
     "caja:caja_actual": ("dinero-cuadrado", "gestion"),
     "reportes:inicio": ("auditoria", "seguimiento"),
     "instalaciones:sede_lista": ("ciudad", "academia"),
     "instalaciones:horarios_especiales": ("reloj", "academia"),
+    "membresias:plan_lista": ("libro", "academia"),
     "clases:feriado_lista": ("calendario", "academia"),
     "oferta:inicio": ("libro", "academia"),
     "comunicaciones:envios_lista": ("correo", "seguimiento"),
@@ -58,6 +59,12 @@ def navegacion(request):
         "mis_contrataciones", "mi_plan_contratado", "mi_membresia_contratado",
         "mi_plan_comprobante", "mi_membresia_comprobante", "mi_plan_continuidad", "mi_membresia_continuidad",
         "mi_membresia_uso",
+    )
+    catalogo_oferta_activo = namespace == "membresias" and ruta.url_name.startswith(("plan_", "membresia_"))
+    contrataciones_admin_activo = (
+        namespace == "membresias"
+        and not contrataciones_propias_activo
+        and not catalogo_oferta_activo
     )
 
     def enlace(nombre, destino, activo, descripcion, kwargs=None):
@@ -114,18 +121,21 @@ def navegacion(request):
             "Instalaciones", "instalaciones:sede_lista", sedes_activo,
             "Consulta y gestión de sedes, canchas, horarios y precios.",
         ))
-    membresias = None
+    catalogo_oferta = None
     if administrador:
-        membresias = enlace(
-            "Planes y membresías", "membresias:catalogos",
-            namespace == "membresias" and not ruta.url_name.startswith("oferta") and not contrataciones_propias_activo,
-            "Planes, membresías de socios y contrataciones.",
-        )
-        administracion.append(membresias)
+        administracion.append(enlace(
+            "Contrataciones", "membresias:contratacion_plan_lista", contrataciones_admin_activo,
+            "Registro y consulta de contrataciones de planes y membresías.",
+        ))
         administracion.append(enlace(
             "Horarios especiales", "instalaciones:horarios_especiales", horarios_especiales_activo,
             "Feriados globales y horarios particulares por sede.",
         ))
+        catalogo_oferta = enlace(
+            "Catálogo", "membresias:plan_lista", catalogo_oferta_activo,
+            "Configuración de planes de clases y membresías de socios.",
+        )
+        administracion.append(catalogo_oferta)
     if administrador:
         administracion.append(enlace("Caja", "caja:caja_actual", namespace == "caja", "Apertura, consulta y cierre de la sesión de caja."))
         administracion.append(enlace(
@@ -139,7 +149,7 @@ def navegacion(request):
     modulos_inicio = [{"nombre": "Agenda", "descripcion": agenda["descripcion"], "destino": agenda}] if agenda else []
     modulos_inicio.extend(
         {"nombre": item["nombre"], "descripcion": item["descripcion"], "destino": item}
-        for item in administracion if item["destino"] not in ("clases:feriado_lista", "instalaciones:horarios_especiales", "membresias:catalogos")
+        for item in administracion if item["destino"] not in ("clases:feriado_lista", "instalaciones:horarios_especiales", "membresias:plan_lista")
     )
     if clases:
         modulos_inicio.append({
@@ -147,11 +157,11 @@ def navegacion(request):
             "descripcion": "Programación de clases, asignación de profesores y alumnos, y registro de asistencia.",
             "destino": clases[0], "boton": "Ver planilla semanal" if administrador else "Mi actividad",
         })
-    if membresias:
+    if catalogo_oferta:
         modulos_inicio.append({
-            "nombre": membresias["nombre"], "descripcion": membresias["descripcion"],
-            "destino": membresias,
-            "boton": "Ver membresías",
+            "nombre": catalogo_oferta["nombre"], "descripcion": catalogo_oferta["descripcion"],
+            "destino": catalogo_oferta,
+            "boton": "Ver catálogo",
         })
     if oferta:
         modulos_inicio.append({

@@ -10,7 +10,9 @@
 {% endblock %}
 {% block clase_contenido %}contenido-membresias-configuracion catalogo-listado{% endblock %}
 {% block contenido %}
-{% tarjeta_titulo "Continuidad" descripcion="Consultá las respuestas de los titulares sobre la continuidad de sus planes y membresías el mes siguiente. Sin responder no indica una baja." %}{% endtarjeta_titulo %}
+{% tarjeta_titulo "Continuidad" descripcion="Consultá las respuestas de los titulares sobre la continuidad de sus planes y membresías el mes siguiente. Sin responder no indica una baja." %}
+    <a class="boton boton-secundario" href="{% url 'membresias:contratacion_plan_lista' %}">Volver a contrataciones</a>
+{% endtarjeta_titulo %}
 {% tarjeta_filtros %}
     <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de continuidad">
         {% if formulario.non_field_errors %}<div class="mensaje mensaje-error">{{ formulario.non_field_errors }}</div>{% endif %}
