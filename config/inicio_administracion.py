@@ -278,7 +278,7 @@ def _contexto_para_revisar():
             "texto": "Contrataciones con diferencia por cubrir",
             "cantidad": contrataciones_diferencia,
             "badge_clase": "advertencia" if contrataciones_diferencia else "sube",
-            "url": reverse("membresias:contrataciones_por_cubrir"),
+            "url": f"{reverse('membresias:contratacion_general_lista')}?cobro=faltante",
         },
         {
             "texto": "Sesiones de caja con diferencia pendiente",

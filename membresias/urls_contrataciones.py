@@ -3,9 +3,9 @@ from django.urls import path
 from . import vistas_ajustes, vistas_continuidad, vistas_contrataciones
 
 urlpatterns = [
+    path("", vistas_contrataciones.contratacion_general_lista, name="contratacion_general_lista"),
     path("continuidad/", vistas_continuidad.lista, name="continuidad_lista"),
     path("usuario/<int:usuario_id>/", vistas_contrataciones.contratacion_lista, name="contrataciones_usuario"),
-    path("por-cubrir/", vistas_contrataciones.contrataciones_por_cubrir, name="contrataciones_por_cubrir"),
     path("planes/", vistas_contrataciones.contratacion_lista, name="contratacion_plan_lista"),
     path("planes/buscar-usuarios/", vistas_contrataciones.buscar_usuarios_contratacion, name="contratacion_plan_buscar_usuarios"),
     path("planes/nueva/", vistas_contrataciones.contratacion_crear, name="contratacion_plan_crear"),

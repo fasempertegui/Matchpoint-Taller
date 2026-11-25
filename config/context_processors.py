@@ -13,7 +13,7 @@ DESTINOS_NAVEGACION = {
     "reservas:mis_invitaciones": ("correo", "actividad"),
     "membresias:mis_contrataciones": ("cartera", "actividad"),
     "usuarios:usuario_lista": ("usuarios", "gestion"),
-    "membresias:contratacion_plan_lista": ("cartera", "gestion"),
+    "membresias:contratacion_general_lista": ("cartera", "gestion"),
     "caja:caja_actual": ("dinero-cuadrado", "gestion"),
     "reportes:inicio": ("auditoria", "seguimiento"),
     "instalaciones:sede_lista": ("ciudad", "academia"),
@@ -124,7 +124,7 @@ def navegacion(request):
     catalogo_oferta = None
     if administrador:
         administracion.append(enlace(
-            "Contrataciones", "membresias:contratacion_plan_lista", contrataciones_admin_activo,
+            "Contrataciones", "membresias:contratacion_general_lista", contrataciones_admin_activo,
             "Registro y consulta de contrataciones de planes y membresías.",
         ))
         administracion.append(enlace(

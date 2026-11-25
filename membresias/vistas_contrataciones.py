@@ -22,7 +22,7 @@ from .contrataciones import (
     revision_precio_contratacion, version_anulacion_contratacion,
 )
 from .ajustes import contexto_horas_contratacion
-from .consultas import listar_contrataciones, listar_contrataciones_con_diferencia
+from .consultas import listar_contrataciones, listar_contrataciones_administracion
 from .continuidad import contexto_continuidad
 from .forms import (
     AnulacionContratacionForm, ContratacionMembresiaForm, ContratacionPlanForm,
@@ -64,54 +64,78 @@ def _contexto(tipo):
     }
 
 
+def _parametros_filtros_administracion(datos):
+    return urlencode({
+        clave: valor
+        for clave, valor in (
+            ("q", datos["busqueda"]),
+            ("mes", datos["mes_actual"]),
+            ("estado", datos["estado_actual"]),
+            ("cobro", datos["cobro_actual"]),
+        )
+        if valor
+    })
+
+
+def _render_listado_administracion(request, tipo):
+    datos = listar_contrataciones_administracion(request.GET, tipo=tipo)
+    parametros = _parametros_filtros_administracion(datos)
+    sufijo = f"?{parametros}" if parametros else ""
+    contexto = {
+        "vista_administrativa": True,
+        "tipo": tipo,
+        "titulo_lista": "Contrataciones",
+        "url_tab_todas": f"{reverse('membresias:contratacion_general_lista')}{sufijo}",
+        "url_tab_planes": f"{reverse('membresias:contratacion_plan_lista')}{sufijo}",
+        "url_tab_membresias": f"{reverse('membresias:contratacion_membresia_lista')}{sufijo}",
+        "parametros": parametros,
+        **datos,
+    }
+    if tipo == "todas":
+        contexto.update({
+            "plural": "contrataciones",
+            "url_lista": reverse("membresias:contratacion_general_lista"),
+            "url_crear": "",
+        })
+    else:
+        contexto.update(_contexto(tipo))
+        contexto["titulo_lista"] = "Contrataciones"
+    return render(request, "membresias/contratacion_lista.html", contexto)
+
+
+@login_required
+@never_cache
+@require_GET
+def contratacion_general_lista(request):
+    exigir_administracion_membresias(request.user)
+    return _render_listado_administracion(request, "todas")
+
+
 @login_required
 @never_cache
 @require_GET
 def contratacion_lista(request, tipo="plan", usuario_id=None):
     exigir_administracion_membresias(request.user)
-    titular = None
-    if usuario_id is not None:
-        titular = get_object_or_404(Usuario, pk=usuario_id)
-        tipo = request.GET.get("tipo", "plan")
-        if tipo not in CONFIGURACION_CONTRATACIONES:
-            tipo = "plan"
+    if usuario_id is None:
+        return _render_listado_administracion(request, tipo)
+    titular = get_object_or_404(Usuario, pk=usuario_id)
+    tipo = request.GET.get("tipo", "plan")
+    if tipo not in CONFIGURACION_CONTRATACIONES:
+        tipo = "plan"
     modelo = CONFIGURACION_CONTRATACIONES[tipo]["modelo"]
-    contrataciones = modelo.objects.select_related("usuario", tipo)
+    contrataciones = modelo.objects.select_related("usuario", tipo).filter(usuario=titular)
     contexto = _contexto(tipo)
     parametros = request.GET.copy()
     parametros.pop("pagina", None)
-    if titular is not None:
-        contrataciones = contrataciones.filter(usuario=titular)
-        parametros["tipo"] = tipo
-        contexto.update({
-            "titular": titular,
-            "titulo_lista": f"Contrataciones de {titular}",
-            "url_lista": f"{request.path}?tipo={tipo}",
-        })
+    parametros["tipo"] = tipo
+    contexto.update({
+        "titular": titular,
+        "titulo_lista": f"Contrataciones de {titular}",
+        "url_lista": f"{request.path}?tipo={tipo}",
+    })
     return render(request, "membresias/contratacion_lista.html", {
         "parametros": parametros.urlencode(),
-        **contexto, **listar_contrataciones(contrataciones, request.GET, tipo=tipo, buscar_usuario=titular is None),
-    })
-
-
-@login_required
-@never_cache
-@require_GET
-def contrataciones_por_cubrir(request):
-    exigir_administracion_membresias(request.user)
-    datos = listar_contrataciones_con_diferencia(request.GET)
-    parametros = urlencode({
-        clave: valor
-        for clave, valor in (
-            ("q", datos["busqueda"]),
-            ("tipo", datos["tipo_actual"]),
-            ("estado", datos["estado_actual"]),
-        )
-        if valor
-    })
-    return render(request, "membresias/contrataciones_por_cubrir.html", {
-        "parametros": parametros,
-        **datos,
+        **contexto, **listar_contrataciones(contrataciones, request.GET, tipo=tipo, buscar_usuario=False),
     })
 
 

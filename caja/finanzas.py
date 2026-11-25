@@ -12,7 +12,7 @@ from .models import AjusteImporte, MovimientoFondo
 CAMPOS_DEVOLUCION = ("concepto", "monto", "medio_pago", "referencia", "verificado", "destinatario", "operacion_id")
 
 
-def origenes_con_pendiente(consulta, tipo):
+def anotar_situacion_financiera(consulta, tipo):
     from reservas.models import ReservaInvitado
 
     campo = ORIGENES[tipo][1]
@@ -37,7 +37,11 @@ def origenes_con_pendiente(consulta, tipo):
     return consulta.annotate(
         importe_financiero=Coalesce(Subquery(ajustes.values("importe_nuevo")[:1]), importe_base, output_field=decimal),
         neto_financiero=Coalesce(Subquery(movimientos.values("neto")), Value(Decimal("0.00")), output_field=decimal),
-    ).annotate(pendiente_cobro=F("importe_financiero") - F("neto_financiero")).filter(pendiente_cobro__gt=0)
+    ).annotate(pendiente_cobro=F("importe_financiero") - F("neto_financiero"))
+
+
+def origenes_con_pendiente(consulta, tipo):
+    return anotar_situacion_financiera(consulta, tipo).filter(pendiente_cobro__gt=0)
 
 
 def situacion_financiera(tipo, origen_id):

@@ -11,27 +11,30 @@
 {% block contenido %}
 {% texto_titulo as descripcion_tarjeta %}{% if titular %}Consultá los planes y membresías contratados por este usuario, sus períodos e importes.
         {% elif propias %}Consultá tus planes y membresías contratados, sus períodos e importes.
-        {% else %}Consultá y registrá las contrataciones mensuales de {{ plural }} de cada usuario.{% endif %}{% endtexto_titulo %}
+        {% else %}Consultá y registrá las contrataciones mensuales de planes y membresías.{% endif %}{% endtexto_titulo %}
 {% tarjeta_titulo titulo_lista descripcion=descripcion_tarjeta %}
     {% if titular %}
         <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' titular.pk %}">Ver perfil</a>
-    {% elif not propias %}
+    {% elif vista_administrativa %}
         <a class="boton boton-secundario" href="{% url 'membresias:continuidad_lista' %}">Continuidad</a>
-        <a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>
+        {% if url_crear %}<a class="boton boton-primario" href="{{ url_crear }}">Registrar contratación</a>{% endif %}
     {% endif %}
 {% endtarjeta_titulo %}
-{% pestanas "Tipo de contratación" %}
-    {% if propias or titular %}
+{% if vista_administrativa %}
+    {% pestanas "Tipo de contratación" resultados_filtros="pestanas" %}
+        <a href="{{ url_tab_todas }}"{% if tipo == 'todas' %} aria-current="page"{% endif %}>Todas</a>
+        <a href="{{ url_tab_planes }}"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
+        <a href="{{ url_tab_membresias }}"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
+    {% endpestanas %}
+{% else %}
+    {% pestanas "Tipo de contratación" %}
         <a href="{{ request.path }}?tipo=plan"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
         <a href="{{ request.path }}?tipo=membresia"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
-    {% else %}
-        <a href="{% url 'membresias:contratacion_plan_lista' %}"{% if tipo == 'plan' %} aria-current="page"{% endif %}>Planes</a>
-        <a href="{% url 'membresias:contratacion_membresia_lista' %}"{% if tipo == 'membresia' %} aria-current="page"{% endif %}>Membresías</a>
-    {% endif %}
-{% endpestanas %}
+    {% endpestanas %}
+{% endif %}
 {% if hay_contrataciones %}
     {% tarjeta_filtros %}
-        <form class="tarjeta-busqueda filtros-compactos" method="get">
+        <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de contrataciones">
             {% if propias or titular %}<input type="hidden" name="tipo" value="{{ tipo }}">{% endif %}
             <div class="grupo-campo">
                 <label for="contratacion-busqueda">Buscar</label>
@@ -51,28 +54,82 @@
                     {% for valor, etiqueta in estados %}<option value="{{ valor }}"{% if estado_actual == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
                 </select>
             </div>
+            {% if vista_administrativa %}
+                <div class="grupo-campo">
+                    <label for="contratacion-cobro">Situación de cobro</label>
+                    <select class="form-control" id="contratacion-cobro" name="cobro">
+                        <option value="">Todas</option>
+                        {% for valor, etiqueta in situaciones_cobro %}<option value="{{ valor }}"{% if cobro_actual == valor %} selected{% endif %}>{{ etiqueta }}</option>{% endfor %}
+                    </select>
+                </div>
+            {% endif %}
             <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ url_lista }}" data-limpiar-filtros>Limpiar filtros</a></div>
         </form>
     {% endtarjeta_filtros %}
-    <section class="tarjeta tabla-contenedor" data-resultados-filtros aria-label="Contrataciones de {{ plural }}">
-        {% tabla %}
-            <thead><tr>{% if not propias and not titular %}<th scope="col">Usuario</th>{% endif %}<th scope="col">{{ nombre_tipo|default:tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
-            <tbody>
-                {% for contratacion in pagina %}
+    {% if vista_administrativa %}
+        <section class="tarjeta tabla-contenedor" data-resultados-filtros="tabla" aria-label="{% if tipo == 'todas' %}Contrataciones{% else %}Contrataciones de {{ plural }}{% endif %}">
+            {% tabla %}
+                <thead>
                     <tr>
-                        {% if not propias and not titular %}<td><strong>{{ contratacion.usuario }}</strong><span class="tabla-secundario">@{{ contratacion.usuario.username }}</span></td>{% endif %}
-                        <td>{% if propias or titular %}<strong>{{ contratacion.producto.nombre }}</strong>{% else %}{{ contratacion.producto.nombre }}{% endif %}</td>
-                        <td>{{ contratacion.mes_cubierto|date:"F Y"|capfirst }}</td>
-                        <td class="tabla-numero">$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
-                        <td>{% indicador_estado "contratacion" contratacion.estado %}</td>
-                        <td class="acciones-columna"><div class="acciones">
-                            {% if propias and tipo == 'membresia' %}<a class="boton boton-secundario boton-chico" href="{% url 'membresias:mi_membresia_uso' contratacion.pk %}">Ver uso</a>{% endif %}
-                            <a class="boton boton-secundario boton-chico" href="{% url ruta_detalle contratacion.pk %}" aria-label="Ver contratación de {{ contratacion.usuario }} para {{ contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></div></td>
+                        <th scope="col">Usuario</th>
+                        <th scope="col">{% if tipo == 'todas' %}Producto{% else %}{{ nombre_tipo|capfirst }}{% endif %}</th>
+                        <th scope="col">Mes cubierto</th>
+                        <th scope="col">Importe acordado</th>
+                        <th scope="col">Por cubrir</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col" class="acciones-columna">Acciones</th>
                     </tr>
-                {% empty %}<tr><td class="estado-vacio" colspan="{% if propias or titular %}5{% else %}6{% endif %}">No hay contrataciones de {{ plural }} que coincidan con los filtros.</td></tr>{% endfor %}
-            </tbody>
-        {% endtabla %}
-        {% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=parametros only %}
-    </section>
-{% else %}<p class="tarjeta estado-vacio">{% if propias %}Todavía no tenés contrataciones de {{ plural }} registradas.{% elif titular %}Este usuario todavía no tiene contrataciones de {{ plural }} registradas.{% else %}Todavía no hay contrataciones de {{ plural }} registradas.{% endif %}</p>{% endif %}
+                </thead>
+                <tbody>
+                    {% for fila in filas %}
+                        <tr>
+                            <td><strong>{{ fila.usuario_nombre }}</strong><span class="tabla-secundario">@{{ fila.usuario_username }}</span></td>
+                            <td>{{ fila.producto_nombre }}{% if tipo == 'todas' %}<span class="tabla-secundario">{{ fila.tipo_texto }}</span>{% endif %}</td>
+                            <td>{{ fila.mes_cubierto|date:"F Y"|capfirst }}</td>
+                            <td class="tabla-numero">$ {{ fila.importe_financiero|floatformat:"2g" }}</td>
+                            <td class="tabla-numero">
+                                {% if fila.por_cubrir_tipo == 'faltante' %}
+                                    <span class="contratacion-por-cubrir-faltante">$ {{ fila.por_cubrir_monto|floatformat:"2g" }}</span>
+                                {% elif fila.por_cubrir_tipo == 'excedente' %}
+                                    <span class="contratacion-por-cubrir-excedente">$ {{ fila.por_cubrir_monto|floatformat:"2g" }}</span><span class="tabla-secundario contratacion-por-cubrir-excedente-etiqueta">Excedente</span>
+                                {% elif fila.por_cubrir_tipo == 'cubierto' %}
+                                    <span class="texto-secundario">$ 0,00</span>
+                                {% else %}
+                                    <span class="texto-secundario">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{% indicador_estado "contratacion" fila.estado %}</td>
+                            <td class="acciones-columna">
+                                <a class="boton boton-secundario boton-chico" href="{{ fila.url_detalle }}" aria-label="Ver contratación de {{ fila.usuario_nombre }} para {{ fila.mes_cubierto|date:'F Y' }}">Detalles</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td class="estado-vacio" colspan="7">No hay {% if tipo == 'todas' %}contrataciones{% else %}contrataciones de {{ plural }}{% endif %} que coincidan con los filtros.</td></tr>
+                    {% endfor %}
+                </tbody>
+            {% endtabla %}
+            {% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=parametros only %}
+        </section>
+    {% else %}
+        <section class="tarjeta tabla-contenedor" data-resultados-filtros aria-label="Contrataciones de {{ plural }}">
+            {% tabla %}
+                <thead><tr><th scope="col">{{ nombre_tipo|default:tipo|capfirst }}</th><th scope="col">Mes cubierto</th><th scope="col">{{ etiqueta_importe }}</th><th scope="col">Estado</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead>
+                <tbody>
+                    {% for contratacion in pagina %}
+                        <tr>
+                            <td><strong>{{ contratacion.producto.nombre }}</strong></td>
+                            <td>{{ contratacion.mes_cubierto|date:"F Y"|capfirst }}</td>
+                            <td class="tabla-numero">$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
+                            <td>{% indicador_estado "contratacion" contratacion.estado %}</td>
+                            <td class="acciones-columna"><div class="acciones">
+                                {% if propias and tipo == 'membresia' %}<a class="boton boton-secundario boton-chico" href="{% url 'membresias:mi_membresia_uso' contratacion.pk %}">Ver uso</a>{% endif %}
+                                <a class="boton boton-secundario boton-chico" href="{% url ruta_detalle contratacion.pk %}" aria-label="Ver contratación de {{ contratacion.usuario }} para {{ contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></div></td>
+                        </tr>
+                    {% empty %}<tr><td class="estado-vacio" colspan="5">No hay contrataciones de {{ plural }} que coincidan con los filtros.</td></tr>{% endfor %}
+                </tbody>
+            {% endtabla %}
+            {% include "componentes/paginacion.html" with pagina=pagina entidad="contrataciones" parametros=parametros only %}
+        </section>
+    {% endif %}
+{% else %}<p class="tarjeta estado-vacio">{% if propias %}Todavía no tenés contrataciones de {{ plural }} registradas.{% elif titular %}Este usuario todavía no tiene contrataciones de {{ plural }} registradas.{% elif tipo == 'todas' %}Todavía no hay contrataciones registradas.{% else %}Todavía no hay contrataciones de {{ plural }} registradas.{% endif %}</p>{% endif %}
 {% endblock %}

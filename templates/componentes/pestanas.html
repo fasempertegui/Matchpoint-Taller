@@ -3,7 +3,7 @@
     {{ contenido }}
 </div>
 {% else %}
-<nav class="pestanas{% if clases %} {{ clases }}{% endif %}" aria-label="{{ etiqueta }}">
+<nav class="pestanas{% if clases %} {{ clases }}{% endif %}" aria-label="{{ etiqueta }}"{% if resultados_filtros %} data-resultados-filtros="{{ resultados_filtros }}"{% endif %}>
     {{ contenido }}
 </nav>
 {% endif %}

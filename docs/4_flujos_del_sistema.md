@@ -785,11 +785,11 @@ flowchart TD
 
 - **Objetivo:** consultar una contratación mensual y sus cobros o usos.
 - **Actores:** Administrador, sobre todas; titular autenticado, sólo sobre las propias.
-- **Entradas:** tipo de contratación y filtros por usuario, producto, mes o estado.
+- **Entradas:** pestaña de tipo (`Todas`, `Planes` o `Membresías` en administración; `Planes` o `Membresías` en el portal o historial de un usuario) y filtros por usuario, producto, mes, estado y, en administración, situación de cobro (`Falta cobrar`, `Cubierto` o `Excedente por resolver`).
 
 Recorrido:
 
-1. El sistema consulta `planes_usuarios` o `membresias_usuarios` y limita el alcance según el actor.
+1. El sistema consulta `planes_usuarios`, `membresias_usuarios` o ambas combinadas y limita el alcance según el actor. En administración, las pestañas conservan los filtros vigentes y muestran usuario, producto, mes cubierto, importe acordado, saldo por cubrir o excedente y estado; filtrar por situación de cobro excluye contrataciones Anuladas.
 2. El actor selecciona una contratación.
 3. Muestra producto, mes, período calculado, importe aplicado, estado y cobros vinculados vigentes. Administración consulta además responsables, observaciones y motivo de anulación; el titular sólo sus fechas y datos comerciales, sin información interna.
 4. Para membresías, muestra por separado los cupos de organizador e invitado conservados en la contratación, ajustes, horas comprometidas, consumidas y disponibles, junto al historial de ajustes visible para el titular. El saldo incluye usos conservados del titular y mes de contrataciones Anuladas.
