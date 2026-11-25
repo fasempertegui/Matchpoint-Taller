@@ -269,12 +269,11 @@
             var demora = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 180;
             window.setTimeout(function () {
                 toast.remove();
-                document.removeEventListener("visibilitychange", actualizar);
             }, demora);
         }
 
         function estaPausado() {
-            return document.hidden || toast.matches(":hover") || toast.contains(document.activeElement);
+            return toast.matches(":hover") || toast.contains(document.activeElement);
         }
 
         function pausar() {
@@ -345,7 +344,6 @@
         toast.addEventListener("focusout", function () {
             window.setTimeout(actualizar, 0);
         });
-        document.addEventListener("visibilitychange", actualizar);
 
         if (duracion > 0) {
             actualizar();

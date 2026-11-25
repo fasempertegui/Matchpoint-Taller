@@ -50,6 +50,29 @@ def envios_lista(request):
     })
 
 
+CATEGORIAS_NOTIFICACION = {
+    EnvioEmail.Tipo.RESERVA_CREADA: ("reserva", "reserva"),
+    EnvioEmail.Tipo.INVITACION: ("reserva", "reserva"),
+    EnvioEmail.Tipo.RESPUESTA_INVITACION: ("reserva", "reserva"),
+    EnvioEmail.Tipo.RECORDATORIO_RESERVA: ("reserva", "reserva"),
+    EnvioEmail.Tipo.RETIRADA_INVITACION: ("reserva", "alerta"),
+    EnvioEmail.Tipo.RESERVA_ANULADA: ("reserva", "alerta"),
+    EnvioEmail.Tipo.ASIGNACION_CLASE: ("clase", "clase"),
+    EnvioEmail.Tipo.GENERACION_CLASES: ("clase", "clase"),
+    EnvioEmail.Tipo.CANCHA_CAMBIADA: ("clase", "clase"),
+    EnvioEmail.Tipo.RECORDATORIO_CLASE: ("clase", "clase"),
+    EnvioEmail.Tipo.NO_ASISTO: ("clase", "advertencia"),
+    EnvioEmail.Tipo.RETIRADA_CLASE: ("clase", "alerta"),
+    EnvioEmail.Tipo.CLASE_ANULADA: ("clase", "alerta"),
+    EnvioEmail.Tipo.CONTRATACION: ("finanzas", "positivo"),
+    EnvioEmail.Tipo.MOVIMIENTO: ("finanzas", "positivo"),
+    EnvioEmail.Tipo.AJUSTE_HORAS: ("finanzas", "cuenta"),
+    EnvioEmail.Tipo.AJUSTE_IMPORTE: ("finanzas", "cuenta"),
+    EnvioEmail.Tipo.CONTINUIDAD: ("finanzas", "cuenta"),
+    EnvioEmail.Tipo.CONTRATACION_ANULADA: ("finanzas", "alerta"),
+}
+
+
 @login_required
 @never_cache
 @require_GET
@@ -61,8 +84,13 @@ def notificaciones_lista(request):
         registros = registros.filter(leida=estado == "leidas")
     else:
         estado = ""
+    pagina = Paginator(registros, 25).get_page(request.GET.get("pagina"))
+    for notificacion in pagina:
+        notificacion.icono_categoria, notificacion.tono_categoria = CATEGORIAS_NOTIFICACION.get(
+            notificacion.tipo, ("cuenta", "cuenta"),
+        )
     return render(request, "comunicaciones/notificaciones_lista.html", {
-        "pagina": Paginator(registros, 25).get_page(request.GET.get("pagina")),
+        "pagina": pagina,
         "estado_actual": estado, "filtros": f"estado={estado}" if estado else "",
     })
 
@@ -73,11 +101,15 @@ def notificaciones_lista(request):
 def notificacion_leer(request, pk):
     usuario = exigir_acceso_operativo(request.user)
     notificacion = get_object_or_404(Notificacion, pk=pk, destinatario=usuario)
-    Notificacion.objects.filter(pk=notificacion.pk, destinatario=usuario, leida=False).update(
+    actualizadas = Notificacion.objects.filter(pk=notificacion.pk, destinatario=usuario, leida=False).update(
         leida=True, fecha_lectura=timezone.now(),
     )
     if notificacion.ruta:
         return redirect(notificacion.ruta)
+    if actualizadas:
+        messages.success(request, "Notificación marcada como leída.")
+    else:
+        messages.info(request, "La notificación ya estaba marcada como leída.")
     return redirect("comunicaciones:notificaciones_lista")
 
 
@@ -86,9 +118,15 @@ def notificacion_leer(request, pk):
 @require_POST
 def notificaciones_leer_todas(request):
     usuario = exigir_acceso_operativo(request.user)
-    Notificacion.objects.filter(destinatario=usuario, leida=False).update(
+    actualizadas = Notificacion.objects.filter(destinatario=usuario, leida=False).update(
         leida=True, fecha_lectura=timezone.now(),
     )
+    if actualizadas == 1:
+        messages.success(request, "Se marcó 1 notificación como leída.")
+    elif actualizadas > 1:
+        messages.success(request, f"Se marcaron {actualizadas} notificaciones como leídas.")
+    else:
+        messages.info(request, "No había notificaciones pendientes de lectura.")
     return redirect("comunicaciones:notificaciones_lista")
 
 

@@ -6,10 +6,7 @@
 {% block contenido %}
 {% tarjeta_titulo "Notificaciones" descripcion="Avisos sobre tu cuenta y tu actividad en la academia." %}
     {% if navegacion_app.notificaciones_no_leidas %}
-    <details class="notificaciones-acciones">
-        <summary class="boton boton-secundario boton-chico">Acciones</summary>
-        <form method="post" action="{% url 'comunicaciones:notificaciones_leer_todas' %}">{% csrf_token %}<button class="boton boton-secundario boton-chico" type="submit">Marcar todas como leídas</button></form>
-    </details>
+    <form class="notificaciones-acciones" method="post" action="{% url 'comunicaciones:notificaciones_leer_todas' %}">{% csrf_token %}<button class="boton boton-secundario" type="submit">Marcar todas como leídas</button></form>
     {% endif %}
 {% endtarjeta_titulo %}
 {% pestanas "Filtrar notificaciones" clases="notificaciones-filtros" %}
@@ -20,11 +17,38 @@
 <section class="tarjeta notificaciones-bandeja" aria-label="Bandeja de notificaciones">
     <ul class="notificaciones-lista">
     {% for notificacion in pagina %}
-        <li class="notificacion-fila{% if not notificacion.leida %} notificacion-pendiente{% endif %}">
+        <li class="notificacion-fila{% if not notificacion.leida %} notificacion-pendiente{% else %} notificacion-leida{% endif %}">
+            <span class="notificacion-icono notificacion-tono-{{ notificacion.tono_categoria }}" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                    {% if notificacion.icono_categoria == 'reserva' %}
+                        <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4m8-4v4M3 10h18"/>
+                    {% elif notificacion.icono_categoria == 'clase' %}
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    {% elif notificacion.icono_categoria == 'finanzas' %}
+                        <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+                    {% else %}
+                        <path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/>
+                    {% endif %}
+                </svg>
+            </span>
             <div class="notificacion-contenido">
-                <div class="notificacion-titulo"><strong>{{ notificacion.get_tipo_display }}</strong>{% if not notificacion.leida %}<span class="notificacion-sin-leer">Sin leer</span>{% endif %}</div>
-                <p>{{ notificacion.mensaje }}</p>
-                <small class="texto-secundario"><time datetime="{{ notificacion.creado_en|date:'c' }}">{{ notificacion.creado_en|date:"d/m/Y H:i" }}</time>{% if notificacion.fecha_lectura %} · Leída el {{ notificacion.fecha_lectura|date:"d/m/Y H:i" }}{% endif %}</small>
+                <div class="notificacion-titulo">
+                    <strong>{{ notificacion.get_tipo_display }}</strong>
+                    {% if not notificacion.leida %}<span class="notificacion-sin-leer">Sin leer</span>{% endif %}
+                </div>
+                <p class="notificacion-mensaje">{{ notificacion.mensaje }}</p>
+                <div class="notificacion-meta">
+                    <span class="notificacion-dato">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        <time datetime="{{ notificacion.creado_en|date:'c' }}">{{ notificacion.creado_en|date:"d/m/Y" }} a las {{ notificacion.creado_en|date:"H:i" }}</time>
+                    </span>
+                    {% if notificacion.fecha_lectura %}
+                    <span class="notificacion-dato notificacion-lectura">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 13 4 4L19 7"/></svg>
+                        Leída el <time datetime="{{ notificacion.fecha_lectura|date:'c' }}">{{ notificacion.fecha_lectura|date:"d/m/Y" }} a las {{ notificacion.fecha_lectura|date:"H:i" }}</time>
+                    </span>
+                    {% endif %}
+                </div>
             </div>
             {% if not notificacion.leida %}
             <form method="post" action="{% url 'comunicaciones:notificacion_leer' notificacion.pk %}">{% csrf_token %}<button class="boton boton-secundario boton-chico" type="submit">{% if notificacion.ruta %}Abrir{% else %}Marcar leída{% endif %}</button></form>
