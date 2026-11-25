@@ -81,7 +81,7 @@
 }
 
 .reserva-modalidad:not(:has(input:disabled)):hover {
-    background: #faf7fc;
+    background: var(--primario-suave);
 }
 
 .reserva-modalidad:has(input:focus-visible) {

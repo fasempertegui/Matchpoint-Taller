@@ -38,7 +38,7 @@
     border: 1px solid var(--borde);
     border-radius: 10px;
     background: var(--superficie);
-    box-shadow: 0 6px 20px #00000018;
+    box-shadow: var(--sombra-flotante);
 }
 
 .agenda-menu-opciones a {
@@ -497,7 +497,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
 .agenda-tabla .agenda-hora-actual {
     vertical-align: middle;
     padding: 6px 2px;
-    color: #fff;
+    color: var(--texto-inverso);
     background: var(--primario);
 }
 
@@ -557,11 +557,11 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     padding: 16px;
     border-radius: 6px;
     background-color: var(--agenda-evento-fondo, var(--primario));
-    color: var(--agenda-evento-texto, #ffffff);
+    color: var(--agenda-evento-texto, var(--texto-inverso));
 }
 
 .agenda-detalle-cabecera.agenda-resumen-tarjeta p {
-    color: var(--agenda-evento-texto, #ffffff);
+    color: var(--agenda-evento-texto, var(--texto-inverso));
 }
 
 .agenda-resumen-tarjeta .agenda-cerrar {
@@ -573,7 +573,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     height: 32px;
     padding: 0;
     border-radius: 6px;
-    background: #ffffff;
+    background: var(--superficie);
     color: var(--peligro);
 }
 
@@ -809,7 +809,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     font-weight: 600;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
-    color: var(--agenda-evento-texto, #ffffff);
+    color: var(--agenda-evento-texto, var(--texto-inverso));
 }
 
 .agenda-resumen-compacto p.agenda-resumen-cancha {
@@ -828,7 +828,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
 }
 
 .agenda-resumen-compacto .agenda-cerrar:hover {
-    background: rgba(255, 255, 255, .15);
+    background: var(--realce-inverso);
 }
 
 .agenda-resumen-compacto .agenda-cerrar:focus-visible {
@@ -979,7 +979,7 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
 .agenda-resumen-personas {
     margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid var(--agenda-evento-borde, rgba(255, 255, 255, .25));
+    border-top: 1px solid var(--agenda-evento-borde, var(--borde-inverso));
     font-size: 14px;
 }
 

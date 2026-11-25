@@ -43,7 +43,7 @@
     border: 0;
     border-radius: 50%;
     background: var(--primario);
-    color: #fff;
+    color: var(--texto-inverso);
     font: inherit;
     line-height: 1;
     cursor: pointer;

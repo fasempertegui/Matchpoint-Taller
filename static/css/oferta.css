@@ -4,14 +4,14 @@
     min-height: 440px;
     background: var(--superficie);
     border: 1px solid var(--borde);
-    box-shadow: 0 8px 24px rgba(26, 32, 40, .08);
+    box-shadow: var(--sombra-tarjeta);
     transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .oferta-tarjeta:focus-within {
     transform: translateY(-3px);
     border-color: var(--primario);
-    box-shadow: 0 8px 24px rgba(26, 32, 40, .15);
+    box-shadow: var(--sombra-flotante);
 }
 
 .oferta-tarjeta h2 {
@@ -247,5 +247,5 @@
 
 .contenido-oferta .oferta-producto,
 .contenido-oferta .sede-tarjeta {
-    background-image: linear-gradient(to top, #4b176d16 0%, #4b176d08 25%, transparent 52%);
+    background-image: linear-gradient(to top, var(--primario-suave) 0%, transparent 52%);
 }

@@ -6,11 +6,16 @@
 .portal-inicio-grid .inicio-pie { gap: 20px; flex-wrap: wrap; }
 .portal-inicio-grid a { text-decoration: none; }
 .portal-inicio-grid .inicio-pie a:hover { text-decoration: none; }
-.portal-inicio-grid > .portal-proxima-destacada { background: var(--primario); color: white; border-color: var(--primario); }
-.portal-proxima-destacada .inicio-pie { border-color: #ffffff26; background: #00000012; }
-.portal-proxima-destacada .inicio-pie a { color: white; }
-.portal-proxima-destacada .inicio-pie a:hover { color: var(--acento); }
-.portal-proxima-destacada .inicio-pie a:focus-visible { outline-color: var(--acento); }
+.portal-inicio-grid > .portal-proxima-destacada,
+.portal-inicio-grid > .portal-reservas-destacada { background: var(--primario); color: var(--texto-inverso); border-color: var(--primario); }
+.portal-proxima-destacada .inicio-pie,
+.portal-reservas-destacada .inicio-pie { border-color: var(--borde-inverso); background: color-mix(in srgb, var(--texto) 8%, transparent); }
+.portal-proxima-destacada .inicio-pie a,
+.portal-reservas-destacada .inicio-pie a { color: var(--texto-inverso); }
+.portal-proxima-destacada .inicio-pie a:hover,
+.portal-reservas-destacada .inicio-pie a:hover { color: var(--acento); }
+.portal-proxima-destacada .inicio-pie a:focus-visible,
+.portal-reservas-destacada .inicio-pie a:focus-visible { outline-color: var(--acento); }
 .portal-hora { margin: 0 0 8px; color: var(--acento); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 700; line-height: 1.15; }
 .portal-fecha { margin: 0; font-size: 1.05rem; }
 .portal-ubicacion { display: flex; flex-wrap: wrap; gap: 16px 32px; margin: 24px 0 0; }
@@ -46,14 +51,9 @@
     .portal-contrato + .portal-contrato { border-left: 0; border-top: 1px solid var(--borde); padding: 16px 0 0; }
 }
 
-.portal-inicio-grid > .portal-reservas-destacada { background: var(--primario); color: white; border-color: var(--primario); }
 .portal-reservas-destacada .portal-sin-datos,
 .portal-reservas-destacada .portal-actividad div > span,
 .portal-reservas-destacada .portal-actividad small { color: #e6daf0; }
 .portal-reservas-destacada .portal-actividad strong { color: var(--acento); }
-.portal-reservas-destacada .portal-actividad + .portal-actividad { border-color: #ffffff26; }
-.portal-reservas-destacada .portal-actividad:hover { background: #ffffff0a; }
-.portal-reservas-destacada .inicio-pie { border-color: #ffffff26; background: #00000012; }
-.portal-reservas-destacada .inicio-pie a { color: white; }
-.portal-reservas-destacada .inicio-pie a:hover { color: var(--acento); }
-.portal-reservas-destacada .inicio-pie a:focus-visible { outline-color: var(--acento); }
+.portal-reservas-destacada .portal-actividad + .portal-actividad { border-color: var(--borde-inverso); }
+.portal-reservas-destacada .portal-actividad:hover { background: var(--realce-inverso); }

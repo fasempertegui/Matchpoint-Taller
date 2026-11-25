@@ -22,7 +22,7 @@
 .perfil-menu { position: relative; flex-shrink: 0; }
 .perfil-menu > summary { list-style: none; cursor: pointer; gap: 10px; }
 .perfil-menu > summary::-webkit-details-marker { display: none; }
-.perfil-menu-opciones { position: absolute; z-index: 30; right: 0; top: calc(100% + 8px); width: 240px; padding: 6px; border: 1px solid var(--borde); border-radius: 10px; background: var(--superficie); box-shadow: 0 6px 20px #00000018; }
+.perfil-menu-opciones { position: absolute; z-index: 30; right: 0; top: calc(100% + 8px); width: 240px; padding: 6px; border: 1px solid var(--borde); border-radius: 10px; background: var(--superficie); box-shadow: var(--sombra-flotante); }
 .perfil-menu-opciones a, .perfil-menu-opciones button { display: block; width: 100%; padding: 10px 12px; border: 0; border-radius: 6px; background: transparent; color: var(--texto); font: inherit; font-size: .9rem; text-align: left; text-decoration: none; cursor: pointer; }
 .perfil-menu-opciones a:hover, .perfil-menu-opciones button:hover { background: var(--primario-suave); color: var(--primario); }
 .perfil-menu-opciones a:focus-visible, .perfil-menu-opciones button:focus-visible, .perfil-menu > summary:focus-visible { outline: 2px solid var(--primario); outline-offset: -2px; }
@@ -408,7 +408,7 @@
     height: 44px;
     border-radius: 50%;
     background: var(--primario);
-    color: #fff;
+    color: var(--texto-inverso);
     font-size: 0.875rem;
     font-weight: 700;
 }

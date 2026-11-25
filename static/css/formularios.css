@@ -111,7 +111,7 @@
 .pasos-formulario-segmento {
     height: 6px;
     border-radius: 999px;
-    background: #e6e0ee;
+    background: var(--borde);
 }
 
 .pasos-formulario-segmento.activo {
@@ -191,7 +191,7 @@
 }
 
 .opcion-tarjeta:hover {
-    background: #faf7fc;
+    background: var(--primario-suave);
 }
 
 .opcion-tarjeta:has(input:checked) {
@@ -237,7 +237,7 @@
     border-radius: 10px;
     background: var(--superficie);
     color: var(--texto);
-    box-shadow: 0 20px 60px rgba(26, 32, 40, 0.22);
+    box-shadow: var(--sombra-dialogo);
 }
 
 .modal-unificado.modal-amplio {
@@ -245,7 +245,7 @@
 }
 
 .modal-unificado::backdrop {
-    background: rgba(26, 32, 40, 0.5);
+    background: var(--velo-modal);
 }
 
 .modal-unificado-estructura {
@@ -310,7 +310,7 @@
 }
 
 .modal-cerrar:hover {
-    background: rgb(75 23 109 / 10%);
+    background: color-mix(in srgb, var(--primario) 10%, transparent);
     color: var(--primario);
 }
 
@@ -547,8 +547,7 @@
 }
 
 .sede-direccion-resultado-boton:hover {
-    background: #faf7fc;
-    border-color: var(--primario);
+    background: var(--primario-suave);
 }
 
 .sede-direccion-resultado-boton.seleccionado {

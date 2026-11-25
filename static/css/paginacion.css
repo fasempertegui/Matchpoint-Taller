@@ -4,7 +4,7 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px 24px;
-    background: #faf9fc;
+    background: var(--fondo-pagina);
     margin: 0;
     padding: 16px 20px;
     border-top: 1px solid var(--borde);

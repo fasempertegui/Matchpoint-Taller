@@ -19,7 +19,7 @@
 .planilla-encabezado-grilla.planilla-encabezado-seleccion {
     background: var(--primario-suave);
     border-bottom-color: var(--primario-medio);
-    box-shadow: 0 4px 12px rgb(75 23 109 / 10%);
+    box-shadow: var(--sombra-flotante);
 }
 
 .planilla-encabezado-normal {
@@ -188,7 +188,7 @@ button.planilla-celda-ocupada { background: var(--primario-suave); color: var(--
     border: 1px solid var(--borde);
     border-radius: 10px;
     background: var(--superficie);
-    box-shadow: 0 6px 20px #4b176d24;
+    box-shadow: var(--sombra-flotante);
 }
 .planilla-menu-opciones button {
     display: block;

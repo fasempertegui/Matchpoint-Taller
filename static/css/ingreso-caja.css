@@ -44,7 +44,7 @@
 }
 
 .ingreso-opcion:hover {
-    background: #faf7fc;
+    background: var(--primario-suave);
 }
 
 .ingreso-opcion:has(input:checked) {

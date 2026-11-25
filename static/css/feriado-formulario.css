@@ -88,7 +88,7 @@
 .horarios-tipos-opciones input:checked + .horarios-tipo-opcion {
     background: var(--superficie);
     color: var(--texto);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+    box-shadow: var(--sombra-seleccion);
 }
 
 .horarios-tipos-opciones input:focus-visible + .horarios-tipo-opcion {

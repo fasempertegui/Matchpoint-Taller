@@ -3,7 +3,7 @@
 .contenido-envios .form-control { border-radius: 10px; }
 .contenido-envios td:nth-child(2) { overflow-wrap: anywhere; }
 .envio-entrega[hidden] { display: none; }
-.envio-entrega td { background: #faf9fc; }
+.envio-entrega td { background: var(--primario-suave); }
 .envio-entrega dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px 24px; margin: 0; }
 .envio-entrega dl > div { min-width: 0; }
 .envio-entrega dt { color: var(--texto-suave); font-size: .85rem; }

@@ -28,7 +28,7 @@
     padding-inline: 5px;
     border-radius: 20px;
     background: var(--primario);
-    color: white;
+    color: var(--texto-inverso);
     font-size: 12px;
     font-weight: 700;
 }

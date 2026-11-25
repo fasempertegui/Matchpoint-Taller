@@ -29,7 +29,7 @@ a {
 
 .barra-superior {
     background: var(--primario);
-    color: #ffffff;
+    color: var(--texto-inverso);
 }
 
 .navegacion {
@@ -52,17 +52,17 @@ a {
 .navegacion-destinos { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 .navegacion a, .enlace-boton { text-decoration: none; }
 .navegacion-destinos > a, .navegacion-grupo > summary {
-    color: #fff; font: inherit; font-size: .95rem; padding: 9px 12px; border-radius: 6px;
+    color: var(--texto-inverso); font: inherit; font-size: .95rem; padding: 9px 12px; border-radius: 6px;
 }
 .navegacion-destinos > a:hover, .navegacion-grupo > summary:hover,
-.navegacion-grupo[open] > summary { background: #ffffff18; color: #fff; }
+.navegacion-grupo[open] > summary { background: var(--realce-inverso); color: var(--texto-inverso); }
 .navegacion-destinos > a[aria-current], .navegacion-destinos > .navegacion-activa,
-.navegacion summary.navegacion-activa { background: #ffffff20; box-shadow: inset 0 -2px var(--acento); }
+.navegacion summary.navegacion-activa { background: var(--realce-inverso); box-shadow: inset 0 -2px var(--acento); }
 .navegacion-grupo { position: relative; }
 .navegacion-grupo summary { display: flex; align-items: center; gap: 8px; list-style: none; cursor: pointer; }
 .navegacion-grupo summary::-webkit-details-marker { display: none; }
 .navegacion-grupo summary:focus-visible, .navegacion-destinos > a:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
-.navegacion-grupo ul { position: absolute; z-index: 30; top: 100%; left: 0; min-width: 190px; margin: 8px 0 0; padding: 5px; list-style: none; border: 1px solid var(--borde); border-radius: 8px; background: var(--superficie); color: var(--texto); box-shadow: 0 8px 24px #00000018; }
+.navegacion-grupo ul { position: absolute; z-index: 30; top: 100%; left: 0; min-width: 190px; margin: 8px 0 0; padding: 5px; list-style: none; border: 1px solid var(--borde); border-radius: 8px; background: var(--superficie); color: var(--texto); box-shadow: var(--sombra-flotante); }
 .navegacion-grupo li a, .navegacion-grupo li button { display: block; width: 100%; padding: 9px 12px; border: 0; border-radius: 5px; background: transparent; color: inherit; font: inherit; font-size: .95rem; text-align: left; cursor: pointer; }
 .navegacion-grupo li a:hover, .navegacion-grupo li button:hover,
 .navegacion-grupo li a:focus-visible, .navegacion-grupo li button:focus-visible,
@@ -389,7 +389,7 @@ h2 {
     height: 24px;
     border-radius: 50%;
     background: var(--primario);
-    color: #ffffff;
+    color: var(--texto-inverso);
     font-size: 0.75rem;
     font-weight: 700;
     line-height: 1;
@@ -820,7 +820,7 @@ tbody tr:last-child td {
 
 .boton-primario {
     background: var(--primario);
-    color: #ffffff;
+    color: var(--texto-inverso);
 }
 
 .boton-primario:hover {
@@ -987,9 +987,9 @@ input[type="checkbox"] {
     width: 100%;
     min-height: 44px;
     padding: 10px 12px;
-    border: 1px solid #cbd2dc;
+    border: 1px solid var(--borde-control);
     border-radius: 10px;
-    background: #ffffff;
+    background: var(--superficie);
     color: var(--texto);
     font: inherit;
 }
@@ -1047,7 +1047,7 @@ textarea.form-control {
 
 .form-control:focus,
 .grupo-campo input:focus {
-    outline: 2px solid rgba(75, 23, 109, 0.2);
+    outline: 2px solid var(--primario);
     border-color: var(--primario);
 }
 
@@ -1185,11 +1185,11 @@ html.modal-abierto {
     border-radius: 6px;
     background: var(--superficie);
     color: var(--texto);
-    box-shadow: 0 20px 60px rgba(26, 32, 40, 0.2);
+    box-shadow: var(--sombra-dialogo);
 }
 
 .modal-confirmacion::backdrop {
-    background: rgba(26, 32, 40, 0.5);
+    background: var(--velo-modal);
 }
 
 .modal-confirmacion-formulario {
@@ -1336,20 +1336,20 @@ html.modal-abierto {
 }
 
 .boton-confirmar-advertencia {
-    color: #ffffff;
+    color: var(--texto-inverso);
     border-color: var(--advertencia);
     background: var(--advertencia);
 }
 
 .boton-confirmar-advertencia:hover {
-    color: #ffffff;
+    color: var(--texto-inverso);
     background: #6a420d;
 }
 
-.boton-peligro { color: var(--peligro); border-color: var(--peligro); background: #ffffff; }
+.boton-peligro { color: var(--peligro); border-color: var(--peligro); background: var(--superficie); }
 .boton-peligro:hover { color: var(--peligro); background: var(--fondo); }
-.boton-confirmar-peligro { color: #ffffff; border-color: var(--peligro); background: var(--peligro); }
-.boton-confirmar-peligro:hover { color: #ffffff; background: var(--peligro); }
+.boton-confirmar-peligro { color: var(--texto-inverso); border-color: var(--peligro); background: var(--peligro); }
+.boton-confirmar-peligro:hover { color: var(--texto-inverso); background: var(--peligro); }
 .acciones-anulacion { display: grid; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--borde); }
 
 .accion-finalizar-clase { display: grid; }

@@ -1,6 +1,6 @@
 .contenido-reportes .tarjeta, .contenido-reportes .boton, .contenido-reportes .form-control { border-radius: 10px; }
 .reportes-catalogo { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--espacio-componentes); }
-.reporte-opcion { display: flex; flex-direction: column; min-width: 0; padding: 0; background-image: linear-gradient(to top, #4b176d12, transparent 55%); }
+.reporte-opcion { display: flex; flex-direction: column; min-width: 0; padding: 0; background-image: linear-gradient(to top, var(--primario-suave), transparent 55%); }
 .reporte-opcion h2 { margin: 0; padding: 24px 24px 0; font-size: 1.2rem; line-height: 1.35; }
 .reporte-opcion-descripcion { flex: 1; margin: 16px 0 0; padding: 0 24px 24px; color: var(--texto-suave); font-size: .95rem; }
 .reporte-opcion-pie { display: flex; justify-content: flex-end; padding: 14px 24px; border-top: 1px solid var(--borde); }

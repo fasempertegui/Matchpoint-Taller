@@ -17,7 +17,7 @@
     border-radius: 8px;
     background: var(--superficie);
     color: var(--texto);
-    box-shadow: 0 6px 20px #00000018;
+    box-shadow: var(--sombra-flotante);
     font-size: .875rem;
     font-weight: 400;
     line-height: 1.5;
