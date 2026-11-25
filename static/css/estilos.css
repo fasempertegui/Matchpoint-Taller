@@ -512,15 +512,10 @@ h2 {
 }
 
 .tarjeta-filtros-contenido .form-control:where(:not([type="checkbox"], [type="radio"], [type="hidden"])),
-.tarjeta-filtros-contenido .boton {
+.tarjeta-filtros-contenido .boton:not(.filtro-borrar-texto) {
     min-height: var(--altura-control-filtro);
     padding: 6px 10px;
     font-size: 0.9rem;
-}
-
-.tarjeta-filtros-contenido .boton:focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: 2px;
 }
 
 .filtro-campo-texto {
@@ -531,7 +526,7 @@ h2 {
     padding-inline-end: 36px;
 }
 
-.filtro-campo-texto input::-webkit-search-cancel-button {
+.form-control[type="search"]::-webkit-search-cancel-button {
     display: none;
 }
 
@@ -539,22 +534,16 @@ h2 {
     position: absolute;
     inset-block: 0;
     inset-inline-end: 0;
-    width: 36px;
-    padding: 0;
-    border: 0;
-    border-radius: 10px;
-    background: transparent;
-    color: var(--peligro);
-    cursor: pointer;
+    height: auto;
+    min-height: 0;
+    border-radius: 0 10px 10px 0;
 }
 
-.filtro-borrar-texto:not([hidden]) {
-    display: grid;
-    place-items: center;
+.filtro-borrar-texto[hidden] {
+    display: none;
 }
 
 .filtro-borrar-texto:focus-visible {
-    outline: 2px solid currentColor;
     outline-offset: -3px;
 }
 

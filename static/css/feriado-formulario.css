@@ -27,6 +27,8 @@
     position: absolute;
     top: 50%;
     inset-inline-start: 10px;
+    width: 18px;
+    height: 18px;
     transform: translateY(-50%);
     color: var(--texto-suave);
     pointer-events: none;

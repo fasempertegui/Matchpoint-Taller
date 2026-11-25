@@ -47,12 +47,3 @@
     padding: 6px 8px;
 }
 
-.paginacion .boton {
-    border-radius: 10px;
-    background: var(--superficie);
-}
-
-.paginacion .boton:hover {
-    background: var(--primario-suave);
-}
-

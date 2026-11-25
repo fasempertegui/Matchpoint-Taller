@@ -30,7 +30,10 @@
                 <div class="ingreso-busqueda">
                     <div class="grupo-campo">
                         <label for="buscar-origen">Buscar registro</label>
-                        <input class="form-control" type="search" id="buscar-origen" name="q" value="{{ busqueda }}" maxlength="100" placeholder="{% if tipo == 'reserva' %}Nombre, usuario, número o cancha{% else %}Nombre, usuario o producto{% endif %}">
+                        <div class="filtro-campo-texto">
+                            <input class="form-control" type="search" id="buscar-origen" name="q" value="{{ busqueda }}" maxlength="100" placeholder="{% if tipo == 'reserva' %}Nombre, usuario, número o cancha{% else %}Nombre, usuario o producto{% endif %}">
+                            <button type="button" class="boton boton-utilidad boton-icono filtro-borrar-texto" data-borrar-busqueda aria-label="Borrar búsqueda"{% if not busqueda %} hidden{% endif %}>{% include "componentes/iconoir/cruz.html" %}</button>
+                        </div>
                     </div>
                     <button class="boton boton-secundario" type="submit" name="paso" value="buscar" formnovalidate>Buscar</button>
                 </div>

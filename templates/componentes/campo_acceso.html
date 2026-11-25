@@ -7,12 +7,13 @@
         <div class="acceso-campo-sensible">
             {{ campo }}
             <button
-                class="acceso-visibilidad"
+                class="boton boton-utilidad boton-icono acceso-visibilidad"
                 type="button"
                 data-toggle-password
                 data-etiqueta="{{ campo.label|lower }}"
                 aria-label="Mostrar {{ campo.label|lower }}"
                 aria-controls="{{ campo.id_for_label }}"
+                aria-pressed="false"
             >
                 <span data-icono-mostrar>{% include "componentes/iconoir/ojo.html" %}</span>
                 <span data-icono-ocultar hidden>{% include "componentes/iconoir/ojo-cerrado.html" %}</span>

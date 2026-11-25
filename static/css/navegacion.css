@@ -66,12 +66,10 @@
     display: inline-flex;
 }
 
-.sidebar-boton-icono.barra-app-alternar {
-    color: var(--primario);
-}
-
-.sidebar-boton-icono.barra-app-alternar:hover {
-    color: var(--primario-hover);
+.barra-app-alternar[aria-expanded="true"] {
+    border-color: transparent;
+    background: transparent;
+    color: var(--texto-suave);
 }
 
 .barra-app-salir {
@@ -82,10 +80,10 @@
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    min-height: 34px;
+    min-height: 36px;
     padding: 6px 10px;
     border: 0;
-    border-radius: 7px;
+    border-radius: 10px;
     background: transparent;
     color: var(--primario);
     font: inherit;
@@ -94,14 +92,21 @@
     cursor: pointer;
 }
 
-.barra-app-salir-boton:hover {
-    background: var(--primario-suave);
-    color: var(--primario-hover);
+@media (hover: hover) {
+    .barra-app-alternar[aria-expanded="true"]:hover {
+        background: var(--primario-suave);
+        color: var(--primario);
+    }
+
+    .barra-app-salir-boton:hover {
+        background: var(--primario-suave);
+        color: var(--primario-hover);
+    }
 }
 
 .barra-app-salir-boton:focus-visible {
     outline: 2px solid var(--primario);
-    outline-offset: 3px;
+    outline-offset: 2px;
 }
 
 .sidebar {
@@ -141,27 +146,6 @@
 .sidebar-marca img {
     object-fit: contain;
     flex-shrink: 0;
-}
-
-.sidebar-boton-icono {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 34px;
-    height: 34px;
-    padding: 5px;
-    border: 0;
-    border-radius: 7px;
-    background: transparent;
-    color: var(--texto-suave);
-    cursor: pointer;
-    text-decoration: none;
-}
-
-.sidebar-boton-icono:hover {
-    background: var(--primario-suave);
-    color: var(--primario);
 }
 
 .sidebar-cerrar {
@@ -287,10 +271,9 @@
 
 .sidebar-enlace:focus-visible,
 .sidebar-perfil:focus-visible,
-.sidebar-boton-icono:focus-visible,
 .sidebar-marca:focus-visible {
     outline: 2px solid var(--primario);
-    outline-offset: 3px;
+    outline-offset: 2px;
 }
 
 .sidebar-solo-lector,
@@ -451,9 +434,9 @@
     }
 
     .barra-app-salir-boton {
-        width: 34px;
+        width: 36px;
         justify-content: center;
-        padding: 5px;
+        padding: 0;
     }
 }
 

@@ -1,4 +1,23 @@
 document.addEventListener("DOMContentLoaded", function () {
+    function crearIconoCruz() {
+        var ns = "http://www.w3.org/2000/svg";
+        var svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("aria-hidden", "true");
+        svg.setAttribute("focusable", "false");
+        svg.setAttribute("width", "24");
+        svg.setAttribute("height", "24");
+        svg.setAttribute("stroke-width", "1.5");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        var path = document.createElementNS(ns, "path");
+        path.setAttribute("d", "M6.75827 17.2426L12.0009 12M17.2435 6.75736L12.0009 12M12.0009 12L6.75827 6.75736M12.0009 12L17.2435 17.2426");
+        path.setAttribute("stroke", "currentColor");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        svg.append(path);
+        return svg;
+    }
+
     function preparar(raiz) {
         raiz.querySelectorAll("[data-clase-formulario]").forEach(prepararFormulario);
     }
@@ -56,16 +75,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 valor.value = persona.id;
                 var quitar = document.createElement("button");
                 quitar.type = "button";
-                quitar.className = "clase-quitar";
+                quitar.className = "boton boton-utilidad boton-icono boton-chico clase-quitar";
                 quitar.dataset.quitar = "";
                 quitar.setAttribute("aria-label", "Quitar a " + persona.nombre);
-                quitar.textContent = "×";
+                quitar.append(crearIconoCruz());
                 fila.append(nombre, valor, quitar);
                 seleccionados.append(fila);
                 if (solicitud) solicitud.abort();
                 window.clearTimeout(demora);
                 cerrarResultados();
                 entrada.value = "";
+                var botonBorrar = entrada.nextElementSibling;
+                if (botonBorrar && botonBorrar.matches("[data-borrar-busqueda]")) botonBorrar.hidden = true;
                 estado.textContent = "";
                 actualizarCantidad();
                 entrada.focus();
@@ -76,6 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (texto.length < 2 || !selector.isConnected) return;
                 var actual = new AbortController();
                 solicitud = actual;
+                selector.setAttribute("aria-busy", "true");
                 estado.textContent = "Buscando…";
                 var url = new URL(selector.dataset.url, window.location.origin);
                 url.searchParams.set("q", texto);
@@ -126,6 +148,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         cerrarResultados();
                         estado.textContent = "No se pudo buscar. Volvé a escribir o recargá la página si tu sesión venció.";
                     }
+                } finally {
+                    if (solicitud === actual) selector.removeAttribute("aria-busy");
                 }
             }
 

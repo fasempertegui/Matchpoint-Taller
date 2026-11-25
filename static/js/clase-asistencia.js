@@ -248,6 +248,8 @@ document.addEventListener("DOMContentLoaded", function () {
         actualizarFilas();
         pintarFila(fila);
         entrada.value = "";
+        var botonBorrar = entrada.nextElementSibling;
+        if (botonBorrar && botonBorrar.matches("[data-borrar-busqueda]")) botonBorrar.hidden = true;
         cerrarBusqueda();
         fila.querySelector("[data-marcar-asistencia]").focus();
     }

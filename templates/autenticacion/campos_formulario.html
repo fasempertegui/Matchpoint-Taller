@@ -7,8 +7,8 @@
         {% if mostrar_contrasena_por_campo %}
             <div class="contrasena-control">
                 {{ campo }}
-                <button class="contrasena-visibilidad" type="button" tabindex="-1" data-mostrar-contrasena
-                        aria-controls="{{ campo.id_for_label }}" aria-label="Mostrar {{ campo.label|lower }}" hidden>
+                <button class="boton boton-utilidad boton-icono contrasena-visibilidad" type="button" data-mostrar-contrasena
+                        aria-controls="{{ campo.id_for_label }}" aria-label="Mostrar {{ campo.label|lower }}" aria-pressed="false" hidden>
                     <span data-icono-mostrar>{% include "componentes/iconoir/ojo.html" %}</span>
                     <span data-icono-ocultar hidden>{% include "componentes/iconoir/ojo-cerrado.html" %}</span>
                 </button>

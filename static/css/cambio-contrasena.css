@@ -8,32 +8,28 @@
 
 .contrasena-visibilidad {
     position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    padding: 0;
-    border: 0;
+    inset: 0 0 0 auto;
+    height: auto;
+    min-height: 0;
     border-radius: 0 10px 10px 0;
-    background: transparent;
-    color: var(--texto-suave);
-    cursor: pointer;
 }
 
-.contrasena-visibilidad:hover {
-    color: var(--primario);
+.contrasena-visibilidad[aria-pressed="true"] {
+    border-color: transparent;
 }
 
 .contrasena-visibilidad:focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: -4px;
+    outline-offset: -3px;
 }
 
 .contrasena-visibilidad span {
     display: flex;
+}
+
+.contrasena-visibilidad svg {
+    display: block;
+    width: 20px;
+    height: 20px;
 }
 
 .contrasena-control [hidden] {

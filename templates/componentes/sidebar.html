@@ -1,7 +1,7 @@
 {% load static %}
 <header class="barra-app" id="barra-app">
     <div class="barra-app-izquierda">
-        <button type="button" class="sidebar-boton-icono barra-app-alternar" id="sidebar-alternar" aria-label="Ocultar barra lateral" aria-controls="sidebar" aria-expanded="true" data-tooltip="Ocultar barra lateral">
+        <button type="button" class="boton boton-utilidad boton-icono boton-chico barra-app-alternar" id="sidebar-alternar" aria-label="Ocultar barra lateral" aria-controls="sidebar" aria-expanded="true" data-tooltip="Ocultar barra lateral">
             <svg class="sidebar-icono" aria-hidden="true" width="20" height="20"><use href="{% static 'img/navegacion.svg' %}#plegar"/></svg>
         </button>
         {% if navegacion_app.seccion_actual %}
@@ -26,8 +26,8 @@
 <aside class="sidebar" id="sidebar" aria-label="Navegación de Academia TM">
     <div class="sidebar-cabecera">
         <a class="sidebar-marca" href="{% url 'inicio' %}" aria-label="Academia TM · Inicio"><img src="{% static 'img/logo.png' %}" width="36" height="36" alt=""><span class="sidebar-texto">Academia TM</span></a>
-        <button type="button" class="sidebar-boton-icono sidebar-cerrar" id="sidebar-cerrar" aria-label="Cerrar navegación">
-            <svg class="sidebar-icono" aria-hidden="true" width="22" height="22"><use href="{% static 'img/navegacion.svg' %}#cerrar"/></svg>
+        <button type="button" class="boton boton-utilidad boton-icono boton-chico sidebar-cerrar" id="sidebar-cerrar" aria-label="Cerrar navegación">
+            {% include "componentes/iconoir/cruz.html" %}
         </button>
     </div>
     <div class="sidebar-contenido" id="sidebar-contenido">

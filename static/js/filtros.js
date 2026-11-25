@@ -1,4 +1,23 @@
 document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("input", function (evento) {
+        var campo = evento.target;
+        var boton = campo.nextElementSibling;
+        if (boton && boton.matches("[data-borrar-busqueda]")) {
+            boton.hidden = !campo.value;
+        }
+    });
+
+    document.addEventListener("click", function (evento) {
+        var boton = evento.target.closest("[data-borrar-busqueda]");
+        if (!boton) return;
+        var campo = boton.previousElementSibling;
+        if (!campo) return;
+        campo.value = "";
+        boton.hidden = true;
+        campo.dispatchEvent(new Event("input", {bubbles: true}));
+        campo.focus({preventScroll: true});
+    });
+
     var pagina = document.getElementById("contenido-principal");
     var contenido = pagina?.querySelector(".tarjeta-filtros-contenido");
     if (!contenido) return;
@@ -13,11 +32,22 @@ document.addEventListener("DOMContentLoaded", function () {
     var demora;
     var solicitud;
 
+    function etiquetaCampo(campo) {
+        if (campo.id) {
+            var label = formulario.querySelector('label[for="' + CSS.escape(campo.id) + '"]');
+            if (label && label.textContent.trim()) return label.textContent.trim().toLowerCase();
+        }
+        var aria = campo.getAttribute("aria-label");
+        return aria ? aria.trim().toLowerCase() : "";
+    }
+
     function prepararCampos() {
         formulario.querySelectorAll(selectorTexto).forEach(function (campo) {
             var contenedor = document.createElement("div");
             contenedor.className = "filtro-campo-texto";
             var boton = plantilla.content.firstElementChild.cloneNode(true);
+            var etiqueta = etiquetaCampo(campo);
+            if (etiqueta) boton.setAttribute("aria-label", "Borrar " + etiqueta);
             boton.hidden = !campo.value;
             campo.before(contenedor);
             contenedor.append(campo, boton);
@@ -33,6 +63,9 @@ document.addEventListener("DOMContentLoaded", function () {
         cancelarPendientes();
         var actual = new AbortController();
         solicitud = actual;
+        var regionesActivas = Array.from(pagina.querySelectorAll(selectorResultados));
+        formulario.setAttribute("aria-busy", "true");
+        regionesActivas.forEach(function (region) { region.setAttribute("aria-busy", "true"); });
 
         try {
             var respuesta = await fetch(url, {signal: actual.signal, cache: "no-store"});
@@ -93,7 +126,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
             }
         } finally {
-            if (solicitud === actual) solicitud = null;
+            if (solicitud === actual) {
+                solicitud = null;
+                formulario.removeAttribute("aria-busy");
+                regionesActivas.forEach(function (region) {
+                    if (region.isConnected) region.removeAttribute("aria-busy");
+                });
+            }
         }
     }
 

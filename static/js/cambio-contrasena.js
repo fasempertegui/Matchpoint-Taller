@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var mostrar = campo.type === "password";
             campo.type = mostrar ? "text" : "password";
             boton.setAttribute("aria-label", (mostrar ? "Ocultar " : "Mostrar ") + etiqueta);
+            boton.setAttribute("aria-pressed", String(mostrar));
             iconoMostrar.hidden = mostrar;
             iconoOcultar.hidden = !mostrar;
         });

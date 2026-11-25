@@ -39,8 +39,9 @@
                 <div class="clase-buscador" id="asistencia-busqueda" data-asistencia-buscador data-url="{% url 'clases:buscar_personas_asistencia' clase.pk %}" hidden>
                     <label class="clase-etiqueta-oculta" for="asistencia-buscar">Buscar una persona</label>
                     <div class="clase-campo-busqueda">
-                        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+                        {% include "componentes/iconoir/buscar.html" %}
                         <input class="form-control" id="asistencia-buscar" type="search" maxlength="100" autocomplete="off" placeholder="Buscar por nombre, apellido o usuario (mín. 2 letras)" aria-controls="asistencia-resultados" data-busqueda>
+                        <button type="button" class="boton boton-utilidad boton-icono filtro-borrar-texto" data-borrar-busqueda aria-label="Borrar búsqueda" hidden>{% include "componentes/iconoir/cruz.html" %}</button>
                     </div>
                     <p class="texto-secundario">Registrar asistencia no agrega a la persona a las asignaciones de la clase.</p>
                     <ul class="clase-resultados" id="asistencia-resultados" data-resultados hidden></ul>

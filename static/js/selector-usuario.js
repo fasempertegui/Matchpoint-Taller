@@ -1,4 +1,23 @@
 document.addEventListener("DOMContentLoaded", function () {
+    function crearIconoCruz() {
+        var ns = "http://www.w3.org/2000/svg";
+        var svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("aria-hidden", "true");
+        svg.setAttribute("focusable", "false");
+        svg.setAttribute("width", "24");
+        svg.setAttribute("height", "24");
+        svg.setAttribute("stroke-width", "1.5");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        var path = document.createElementNS(ns, "path");
+        path.setAttribute("d", "M6.75827 17.2426L12.0009 12M17.2435 6.75736L12.0009 12M12.0009 12L6.75827 6.75736M12.0009 12L17.2435 17.2426");
+        path.setAttribute("stroke", "currentColor");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        svg.append(path);
+        return svg;
+    }
+
     document.querySelectorAll("[data-usuario-selector]").forEach(function (selector) {
         var entrada = selector.querySelector("[data-usuario-busqueda]");
         var multiple = selector.hasAttribute("data-usuario-multiple");
@@ -20,12 +39,18 @@ document.addEventListener("DOMContentLoaded", function () {
             estado.textContent = "";
         }
 
+        function limpiarEntrada() {
+            entrada.value = "";
+            var botonBorrar = entrada.nextElementSibling;
+            if (botonBorrar && botonBorrar.matches("[data-borrar-busqueda]")) botonBorrar.hidden = true;
+        }
+
         function quitar() {
             limpiarBusqueda();
             campo.value = "";
             nombre.textContent = "";
             usuario.textContent = "";
-            entrada.value = "";
+            limpiarEntrada();
             seleccion.hidden = true;
             buscador.hidden = false;
         }
@@ -46,25 +71,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 valor.value = persona.id;
                 var boton = document.createElement("button");
                 boton.type = "button";
-                boton.className = "clase-quitar";
+                boton.className = "boton boton-utilidad boton-icono boton-chico clase-quitar";
                 boton.dataset.usuarioQuitar = "";
                 boton.setAttribute("aria-label", "Quitar a " + persona.nombre);
-                boton.textContent = "×";
+                boton.append(crearIconoCruz());
                 fila.append(texto, valor, boton);
                 seleccion.append(fila);
                 seleccion.hidden = false;
                 selector.querySelector("[data-usuario-vacio]").hidden = true;
-                entrada.value = "";
+                limpiarEntrada();
                 entrada.focus();
                 return;
             }
             campo.value = persona.id;
             nombre.textContent = persona.nombre;
             usuario.textContent = persona.usuario;
-            entrada.value = "";
+            limpiarEntrada();
             seleccion.hidden = false;
             buscador.hidden = true;
-            selector.querySelector("[data-usuario-quitar]").focus();
+            var botonQuitar = selector.querySelector("[data-usuario-quitar]");
+            botonQuitar.setAttribute("aria-label", "Quitar a " + persona.nombre);
+            botonQuitar.focus();
         }
 
         async function buscar() {
@@ -72,6 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (texto.length < 2 || !selector.isConnected) return;
             var actual = new AbortController();
             solicitud = actual;
+            buscador.setAttribute("aria-busy", "true");
             estado.textContent = "Buscando…";
             var url = new URL(selector.dataset.url, window.location.origin);
             url.searchParams.set("q", texto);
@@ -101,6 +129,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (error.name !== "AbortError" && solicitud === actual && selector.isConnected) {
                     estado.textContent = "No se pudo buscar. Volvé a escribir o recargá la página si tu sesión venció.";
                 }
+            } finally {
+                if (solicitud === actual) buscador.removeAttribute("aria-busy");
             }
         }
 
@@ -113,10 +143,10 @@ document.addEventListener("DOMContentLoaded", function () {
             alternar.addEventListener("click", function () {
                 buscador.hidden = !buscador.hidden;
                 alternar.setAttribute("aria-expanded", String(!buscador.hidden));
-                alternar.setAttribute("aria-label", buscador.hidden ? "Agregar invitados" : "Cerrar buscador");
+                alternar.textContent = buscador.hidden ? "Agregar invitados" : "Ocultar buscador";
                 if (buscador.hidden) {
                     limpiarBusqueda();
-                    entrada.value = "";
+                    limpiarEntrada();
                 } else {
                     entrada.focus();
                 }
