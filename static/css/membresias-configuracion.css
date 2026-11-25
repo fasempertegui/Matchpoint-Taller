@@ -12,7 +12,7 @@
     background: var(--texto-suave);
 }
 
-.catalogo-estado-activo { background: var(--acento); }
+.catalogo-estado-activo { background: var(--estado-positivo); }
 
 .catalogo-listado .tarjeta-busqueda .grupo-campo {
     margin-bottom: 0;

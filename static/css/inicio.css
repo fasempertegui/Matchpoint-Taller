@@ -122,7 +122,7 @@
 }
 
 .dashboard-punto-activo {
-    background: var(--acento);
+    background: var(--estado-positivo);
     box-shadow: 0 0 0 3px var(--acento-suave);
 }
 
@@ -144,7 +144,7 @@
 
 .dashboard-delta-sube {
     background: var(--acento-suave);
-    color: var(--acento-texto);
+    color: var(--estado-positivo);
 }
 
 .dashboard-delta-baja {
@@ -163,7 +163,7 @@
 }
 
 .dashboard-delta-igual {
-    background: var(--primario-suave);
+    background: var(--estado-inactivo-fondo);
     color: var(--texto-suave);
 }
 

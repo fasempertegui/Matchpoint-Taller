@@ -27,7 +27,7 @@
 
 .reserva-invitado-socio {
     background: var(--acento-suave);
-    color: var(--acento-texto);
+    color: var(--estado-positivo);
 }
 
 .reserva-invitado-no-socio {

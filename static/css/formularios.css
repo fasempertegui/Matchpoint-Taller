@@ -135,7 +135,7 @@
     border: 0;
     border-radius: 8px;
     background: var(--primario-suave);
-    color: var(--texto);
+    color: var(--primario);
     font-size: 0.9rem;
     line-height: 1.45;
 }
@@ -149,8 +149,8 @@
 }
 
 .formulario-aviso-peligro {
-    background: #fef2f2;
-    color: #7f1d1d;
+    background: var(--peligro-suave);
+    color: var(--peligro);
 }
 
 .formulario-aviso-advertencia {
@@ -160,7 +160,7 @@
 
 .formulario-aviso-positivo {
     background: var(--acento-suave);
-    color: var(--acento-texto);
+    color: var(--estado-positivo);
 }
 
 /* 4. Opciones seleccionables (radio y tarjetas compactas) */
@@ -266,11 +266,13 @@
 }
 
 .modal-peligro .modal-cabecera {
-    background: #fdf2f2;
+    background: var(--peligro-suave);
+    color: var(--peligro);
 }
 
 .modal-advertencia .modal-cabecera {
     background: var(--advertencia-suave);
+    color: var(--advertencia);
 }
 
 .modal-cabecera-identidad {
@@ -289,7 +291,7 @@
     font-family: var(--fuente-titulos);
     font-size: 1.25rem;
     line-height: 1.25;
-    color: var(--texto);
+    color: inherit;
 }
 
 .modal-cerrar {
@@ -315,12 +317,12 @@
 }
 
 .modal-peligro .modal-cerrar:hover {
-    background: rgb(180 35 24 / 10%);
+    background: color-mix(in srgb, var(--peligro) 10%, transparent);
     color: var(--peligro);
 }
 
 .modal-advertencia .modal-cerrar:hover {
-    background: rgb(128 82 18 / 12%);
+    background: color-mix(in srgb, var(--advertencia) 10%, transparent);
     color: var(--advertencia);
 }
 
@@ -505,12 +507,12 @@
 
 .sede-direccion-estado-info {
     background: var(--primario-suave);
-    color: var(--texto);
+    color: var(--primario);
 }
 
 .sede-direccion-estado-exito {
     background: var(--acento-suave);
-    color: var(--acento-texto);
+    color: var(--estado-positivo);
 }
 
 .sede-direccion-estado-advertencia {
@@ -519,8 +521,8 @@
 }
 
 .sede-direccion-estado-error {
-    background: #fef2f2;
-    color: #7f1d1d;
+    background: var(--peligro-suave);
+    color: var(--peligro);
 }
 
 .sede-direccion-resultados {
@@ -658,7 +660,7 @@
 /* 6. Error visual en controles */
 .form-control[aria-invalid="true"],
 .grupo-campo input[aria-invalid="true"] {
-    background: #fffafa;
+    background: var(--peligro-suave);
 }
 
 /* 7. Responsivo */

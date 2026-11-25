@@ -70,7 +70,7 @@
 }
 
 .contrasena-reglas [data-cumple="true"] .contrasena-regla-estado {
-    color: #287044;
+    color: var(--estado-positivo);
 }
 
 .contrasena-regla-ayuda { flex-shrink: 0; color: var(--primario); font-size: 18px; }

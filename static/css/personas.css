@@ -114,7 +114,7 @@
 }
 
 .usuario-estado-punto-activo {
-    background: var(--acento);
+    background: var(--estado-positivo);
 }
 
 .usuario-campos {
@@ -148,7 +148,7 @@
 .perfil-usuario .perfil-seccion h2 { margin-bottom: 16px; }
 .perfil-usuario .perfil-roles li { border-color: transparent; font-weight: 600; }
 .perfil-usuario .perfil-rol-administrador { background: var(--primario-suave); color: var(--primario); }
-.perfil-usuario .perfil-rol-profesor { background: #e8f1fc; color: #244c79; }
-.perfil-usuario .perfil-rol-alumno { background: #e7f5ed; color: #245d40; }
+.perfil-usuario .perfil-rol-profesor { background: var(--agenda-clase-fondo); color: var(--agenda-clase-texto); }
+.perfil-usuario .perfil-rol-alumno { background: var(--acento-suave); color: var(--estado-positivo); }
 .perfil-usuario .perfil-rol-reservas { background: var(--advertencia-suave); color: var(--advertencia); }
 .perfil-usuario .perfil-rol-publico { background: var(--estado-inactivo-fondo); color: var(--estado-inactivo-texto); }

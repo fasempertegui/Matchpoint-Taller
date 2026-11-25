@@ -421,9 +421,8 @@
 }
 
 .perfil-modal .perfil-modal-advertencia {
-    border-color: #fcd34d;
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--advertencia-suave);
+    color: var(--advertencia);
 }
 
 .perfil-modal,
@@ -458,25 +457,20 @@
 
 .perfil-estado-advertencia {
     padding: 16px 18px;
-    border: 1px solid #fcd34d;
     border-radius: 10px;
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--advertencia-suave);
+    color: var(--advertencia);
     font-size: 0.9rem;
     line-height: 1.6;
 }
 
-.perfil-estado-advertencia li::marker {
-    color: #b45309;
-}
-
 .boton-activar {
-    border-color: #287044;
+    border-color: var(--estado-positivo);
     background: var(--superficie);
-    color: #287044;
+    color: var(--estado-positivo);
 }
 
 .boton-activar:hover {
-    background: #edf7f0;
-    color: #287044;
+    background: var(--acento-suave);
+    color: var(--estado-positivo);
 }

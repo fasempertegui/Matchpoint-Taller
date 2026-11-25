@@ -26,6 +26,7 @@
     --advertencia-suave: #fff2d8;
 
     --agenda-clase-texto: #1e4976;
+    --agenda-clase-fondo: color-mix(in srgb, var(--agenda-clase-texto) 10%, var(--superficie));
     --agenda-reserva-texto: #7c3c25;
 
     --sombra-seleccion: 0 1px 2px color-mix(in srgb, var(--texto) 12%, transparent);

@@ -4,18 +4,20 @@
     gap: 8px;
     padding: 8px 12px;
     border-radius: 8px;
-    color: var(--primario);
+    color: var(--texto-inverso);
     text-decoration: none;
     font-size: 14px;
 }
 
 .notificaciones-acceso:hover,
+.notificaciones-acceso:focus-visible,
 .notificaciones-acceso[aria-current] {
     background: var(--primario-suave);
+    color: var(--primario);
 }
 
 .notificaciones-acceso:focus-visible {
-    outline: 2px solid var(--primario);
+    outline: 2px solid var(--texto-inverso);
     outline-offset: 3px;
 }
 
@@ -35,13 +37,12 @@
 
 .barra-app-notificaciones {
     position: relative;
-    color: #c28400;
 }
 
-.barra-app-notificaciones:hover,
+.barra-app-notificaciones:focus-visible,
 .barra-app-notificaciones-activa {
-    background: var(--advertencia-suave);
-    color: #a16207;
+    background: var(--primario-suave);
+    color: var(--primario);
 }
 
 .barra-app-notificaciones .notificaciones-contador {

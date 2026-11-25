@@ -41,8 +41,8 @@
     margin: 0;
     padding: 5px 9px;
     border-radius: 6px;
-    background: var(--acento-suave);
-    color: var(--acento-texto);
+    background: var(--primario-suave);
+    color: var(--primario);
     font-size: .875rem;
 }
 

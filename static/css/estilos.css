@@ -303,9 +303,9 @@ h2 {
     align-items: center;
     gap: 12px;
     padding: 16px;
-    border-color: #e0e8ba;
-    background: var(--acento-suave);
-    color: var(--acento-texto);
+    border-color: transparent;
+    background: var(--primario-suave);
+    color: var(--primario);
     font-size: .9rem;
 }
 
@@ -770,23 +770,22 @@ tbody tr:last-child td {
 .badge-estado-activo,
 .badge-estado-finalizada {
     background: var(--acento-suave);
-    color: var(--acento-texto);
+    color: var(--estado-positivo);
 }
 
-.badge-estado-activo::before,
-.badge-estado-finalizada::before {
-    background: var(--acento);
+.badge-estado-inactivo {
+    background: var(--estado-inactivo-fondo);
+    color: var(--estado-inactivo-texto);
 }
 
-.badge-estado-inactivo,
 .badge-estado-anulada {
-    background: #eceaf0;
-    color: #4b4755;
+    background: var(--peligro-suave);
+    color: var(--peligro);
 }
 
-.badge-estado-inactivo::before,
-.badge-estado-anulada::before {
-    background: #9a94a6;
+.badge-estado-vencido {
+    background: var(--advertencia-suave);
+    color: var(--advertencia);
 }
 
 .badge-estado-programada {
@@ -794,8 +793,13 @@ tbody tr:last-child td {
     color: var(--primario);
 }
 
+.badge-estado-activo::before,
+.badge-estado-finalizada::before,
+.badge-estado-inactivo::before,
+.badge-estado-vencido::before,
+.badge-estado-anulada::before,
 .badge-estado-programada::before {
-    background: var(--primario);
+    background: currentColor;
 }
 
 .estado-vacio {
@@ -1036,7 +1040,7 @@ input[type="checkbox"] {
     padding: 8px 10px;
     border-left: 3px solid var(--primario);
     background: var(--primario-suave);
-    color: var(--texto-suave);
+    color: var(--primario);
     font-size: 0.88rem;
 }
 
@@ -1116,28 +1120,24 @@ textarea.form-control {
 }
 
 .mensaje-success {
-    border-color: var(--acento);
     background: var(--acento-suave);
-    color: var(--acento-texto);
+    color: var(--estado-positivo);
 }
 
 .mensaje-error {
-    border-color: #fca5a5;
     background: var(--peligro-suave);
-    color: #991b1b;
+    color: var(--peligro);
 }
 
 .mensaje-warning {
-    border-color: #fcd34d;
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--advertencia-suave);
+    color: var(--advertencia);
 }
 
 .mensaje-info,
 .mensaje-debug {
-    border-color: #93c5fd;
-    background: #dbeafe;
-    color: #1e40af;
+    background: var(--primario-suave);
+    color: var(--primario);
 }
 
 .detalle-grid {
@@ -1343,7 +1343,7 @@ html.modal-abierto {
 
 .boton-confirmar-advertencia:hover {
     color: var(--texto-inverso);
-    background: #6a420d;
+    background: color-mix(in srgb, var(--advertencia) 85%, var(--texto));
 }
 
 .boton-peligro { color: var(--peligro); border-color: var(--peligro); background: var(--superficie); }

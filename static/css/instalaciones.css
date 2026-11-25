@@ -12,7 +12,7 @@
     background: var(--texto-suave);
 }
 
-.instalacion-estado-punto-activa { background: var(--acento); }
+.instalacion-estado-punto-activa { background: var(--estado-positivo); }
 
 .sedes-tarjetas {
     display: grid;

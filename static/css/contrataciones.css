@@ -16,5 +16,5 @@
     background: var(--texto-suave);
 }
 
-.contratacion-estado-activo::before { background: var(--acento); }
+.contratacion-estado-activo::before { background: var(--estado-positivo); }
 .contratacion-estado-anulado::before { background: var(--peligro); }

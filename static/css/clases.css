@@ -30,7 +30,7 @@
 .clase-revision-persona { min-width: 0; padding: 8px 0; overflow-wrap: anywhere; }
 .planilla-participante { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
 .planilla-continuidad { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: .85rem; font-weight: 600; line-height: 1.35; }
-.planilla-continuidad-positivo { background: var(--acento-suave); color: var(--acento-texto); }
+.planilla-continuidad-positivo { background: var(--acento-suave); color: var(--estado-positivo); }
 .planilla-continuidad-advertencia { background: var(--advertencia-suave); color: var(--advertencia); }
 .generacion-aviso-participantes .perfil-desplegable { margin-top: 10px; }
 .generacion-aviso-participantes .perfil-desplegable summary { color: inherit; }

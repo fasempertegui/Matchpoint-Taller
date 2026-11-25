@@ -1,5 +1,4 @@
 :root {
-    --agenda-clase-fondo: #e8f1fc;
     --agenda-clase-borde: #537eac;
     --agenda-reserva-fondo: #f7ece5;
     --agenda-reserva-borde: #9b4f32;
@@ -924,8 +923,11 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     color: var(--advertencia);
 }
 
-.agenda-opcion-bloqueo:hover,
 .agenda-opcion-anular:hover {
+    background: var(--peligro-suave);
+}
+
+.agenda-opcion-bloqueo:hover {
     background: var(--advertencia-suave);
 }
 

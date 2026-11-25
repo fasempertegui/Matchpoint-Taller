@@ -256,7 +256,7 @@ fieldset.horario-franjas,
 }
 
 .horario-hora:has(input[aria-invalid="true"]) {
-    background: #fffafa;
+    background: var(--peligro-suave);
 }
 
 .horario-hasta {
