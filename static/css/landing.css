@@ -8,10 +8,10 @@
   top: 0;
   z-index: 10;
   margin-bottom: calc(-1 * var(--header-h));
-  background: rgb(27 16 51 / .28);
+  background: color-mix(in srgb, var(--violeta-oscuro) 28%, transparent);
   backdrop-filter: blur(14px) saturate(1.15);
   -webkit-backdrop-filter: blur(14px) saturate(1.15);
-  border-bottom: 1px solid rgb(255 255 255 / .1);
+  border-bottom: 1px solid var(--borde-divisor);
 }
 .header-inner { min-height: calc(var(--header-h) - 1px); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .header-inner .button { min-height: 34px; padding: 5px 14px; font-size: .875rem; }
@@ -35,7 +35,7 @@
   background-color: var(--fondo-cancha);
   background-image:
     linear-gradient(to bottom, transparent 70%, var(--violeta-oscuro) 100%),
-    linear-gradient(270deg, rgb(35 10 52 / 88%) 0%, rgb(35 10 52 / 64%) 38%, rgb(35 10 52 / 18%) 62%, transparent 80%),
+    linear-gradient(270deg, color-mix(in srgb, var(--violeta-oscuro) 88%, transparent) 0%, color-mix(in srgb, var(--violeta-oscuro) 64%, transparent) 38%, color-mix(in srgb, var(--violeta-oscuro) 18%, transparent) 62%, transparent 80%),
     var(--foto-cancha);
   background-position: center 53%;
   background-size: cover;
@@ -86,7 +86,7 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
 
 .venue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 26px; }
 .venue { display: flex; flex-direction: column; align-items: flex-start; padding: clamp(20px, 3vw, 36px); text-align: left; }
-.play-grid article:hover, .venue:hover { border-color: rgb(182 213 50 / .4); }
+.play-grid article:hover, .venue:hover { border-color: color-mix(in srgb, var(--acento) 40%, transparent); }
 .venue-art { width: 100%; height: 180px; margin-bottom: 1.75rem; overflow: hidden; }
 .venue-art img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: left bottom; mix-blend-mode: lighten; transform: scale(1.2); transform-origin: left bottom; }
 .venue-details { display: flex; flex-direction: column; align-items: flex-start; flex: 1; width: 100%; }
@@ -109,8 +109,8 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
   background: var(--acento);
   mask: url("../img/cancha-tenis.svg") center / contain no-repeat;
 }
-.venue-surface--cemento { --color-superficie: #5b6777; }
-.venue-surface--ladrillo { --color-superficie: #b05035; }
+.venue-surface--cemento { --color-superficie: var(--texto-suave); }
+.venue-surface--ladrillo { --color-superficie: var(--agenda-reserva-texto); }
 .venue-surface::before {
   content: "";
   width: .75rem;
@@ -127,7 +127,7 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
 .booking-section p { margin-top: .85rem; color: var(--texto-secundario); }
 .booking-section .button { margin-top: 1.5rem; }
 
-.site-footer { border-top: 1px solid rgb(255 255 255 / .1); text-align: center; }
+.site-footer { border-top: 1px solid var(--borde-divisor); text-align: center; }
 .footer-inner { display: grid; gap: .75rem; padding-block: 26px; }
 .footer-contact { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .25rem; }
 .footer-whatsapp { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; color: var(--acento); white-space: nowrap; }
@@ -159,7 +159,7 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
   .venue-art img { object-position: center; transform-origin: center; }
   .hero::before {
     background-image:
-      linear-gradient(to bottom, rgb(27 16 51 / .58) 0%, rgb(27 16 51 / .76) 72%, var(--violeta-oscuro) 100%),
+      linear-gradient(to bottom, color-mix(in srgb, var(--violeta-oscuro) 58%, transparent) 0%, color-mix(in srgb, var(--violeta-oscuro) 76%, transparent) 72%, var(--violeta-oscuro) 100%),
       var(--foto-cancha);
   }
   .hero-copy { width: 100%; margin-inline-start: 0; }

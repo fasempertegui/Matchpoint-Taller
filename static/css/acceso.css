@@ -27,7 +27,7 @@
   z-index: -1;
   background-color: var(--fondo-cancha);
   background-image:
-    linear-gradient(270deg, rgb(35 10 52 / 90%) 0%, rgb(35 10 52 / 72%) var(--scrim-medio, 40%), rgb(35 10 52 / 20%) var(--scrim-suave, 65%), transparent var(--scrim-fin, 82%)),
+    linear-gradient(270deg, color-mix(in srgb, var(--violeta-oscuro) 90%, transparent) 0%, color-mix(in srgb, var(--violeta-oscuro) 72%, transparent) var(--scrim-medio, 40%), color-mix(in srgb, var(--violeta-oscuro) 20%, transparent) var(--scrim-suave, 65%), transparent var(--scrim-fin, 82%)),
     var(--foto-cancha);
   background-position: center 53%;
   background-size: cover;
@@ -83,7 +83,7 @@
   width: 100%;
   min-height: 44px;
   padding: .625rem .75rem;
-  border: 1px solid rgb(255 255 255 / .35);
+  border: 1px solid color-mix(in srgb, var(--texto-inverso) 35%, transparent);
   border-radius: 8px;
   background: var(--violeta-oscuro);
   color: var(--crema);
@@ -96,7 +96,7 @@
 .acceso-campo input:focus { border-color: var(--acento); }
 .acceso-campo input:focus-visible {
   outline-color: transparent;
-  box-shadow: 0 0 0 3px rgba(181, 213, 50, .25);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 25%, transparent);
 }
 .acceso-campo-sensible { position: relative; }
 .acceso-campo-sensible input { padding-inline-end: 3rem; }
@@ -125,13 +125,13 @@
 .acceso-panel > .acceso-alternativa {
   margin-top: .25rem;
   padding-top: var(--espacio-bloque);
-  border-top: 1px solid rgb(255 255 255 / .2);
+  border-top: 1px solid var(--borde-inverso);
   text-align: center;
   color: var(--crema);
 }
 .acceso-error { color: var(--peligro-en-oscuro); font-size: .9rem; }
 .acceso-alerta { padding: .75rem 1rem; border: 1px solid currentColor; border-radius: 8px; }
-.acceso-alerta--exito { color: var(--acento); border-color: rgb(182 213 50 / .5); background: rgb(182 213 50 / .08); }
+.acceso-alerta--exito { color: var(--acento); border-color: color-mix(in srgb, var(--acento) 50%, transparent); background: color-mix(in srgb, var(--acento) 10%, transparent); }
 .acceso--registro .acceso-alerta { margin-bottom: var(--espacio-controles); }
 .acceso-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; }
 .acceso-panel a:not(.button) { text-underline-offset: 4px; }
@@ -142,7 +142,7 @@
 @media (max-width: 800px) {
   .acceso--dividido::before {
     background-image:
-      linear-gradient(rgb(27 16 51 / .78), rgb(27 16 51 / .86)),
+      linear-gradient(color-mix(in srgb, var(--violeta-oscuro) 78%, transparent), color-mix(in srgb, var(--violeta-oscuro) 86%, transparent)),
       var(--foto-cancha);
   }
   .acceso--dividido .acceso-panel {

@@ -1,8 +1,9 @@
 :root {
   --header-h: 65px;
-  --fondo-cancha: #252034;
-  --texto-secundario: #d4ccdf;
-  --borde-tarjeta: rgb(255 255 255 / .08);
+  --fondo-cancha: var(--violeta-oscuro);
+  --texto-secundario: var(--primario-medio);
+  --borde-tarjeta: color-mix(in srgb, var(--texto-inverso) 8%, transparent);
+  --borde-divisor: color-mix(in srgb, var(--texto-inverso) 10%, transparent);
   --foto-cancha: url("../img/tenis-cancha-violeta.png");
 
   --fuente-interfaz: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
@@ -59,7 +60,7 @@ button, input, select, textarea { font: inherit; }
   text-decoration: none;
   cursor: pointer;
 }
-.button--primary { color: var(--fondo); background: var(--primario); }
+.button--primary { color: var(--texto-inverso); background: var(--primario); }
 .button--primary:hover { background: var(--primario-hover); }
 .button--outline { color: var(--crema); background: transparent; border-color: currentColor; }
 .button--outline:enabled:hover, a.button--outline:hover { color: var(--acento); }
