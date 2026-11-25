@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
     var panel = document.querySelector("[data-agenda-detalle]");
-    var menuAcciones = document.querySelector("[data-agenda-menu-acciones]");
     var contenido = panel && panel.querySelector("[data-agenda-contenido]");
     var aviso = panel && panel.querySelector("[data-agenda-aviso]");
     var solicitudActual = null;
@@ -103,7 +102,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     document.addEventListener("click", function (evento) {
-        if (menuAcciones && !menuAcciones.contains(evento.target)) menuAcciones.open = false;
         var enlace = evento.target.closest("[data-agenda-turno], [data-agenda-cerrar], [data-agenda-vista]");
         if (!enlace || !panel || evento.defaultPrevented || evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
         evento.preventDefault();
@@ -111,13 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.addEventListener("keydown", function (evento) {
-        if (evento.key !== "Escape" || evento.defaultPrevented || document.querySelector("dialog[open]")) return;
-        if (menuAcciones && menuAcciones.open) {
-            evento.preventDefault();
-            menuAcciones.open = false;
-            menuAcciones.querySelector("summary").focus();
-            return;
-        }
+        if (evento.key !== "Escape" || evento.defaultPrevented || document.querySelector("dialog[open], [data-menu-contextual][open]")) return;
         var cerrar = contenido && contenido.querySelector("[data-agenda-cerrar]");
         if (!cerrar) return;
         evento.preventDefault();

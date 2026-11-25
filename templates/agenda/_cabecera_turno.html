@@ -34,5 +34,5 @@
                 <p>{{ detalle.cancha.nombre }}</p>
                 {% endif %}
             </div>
-            <a class="agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar detalle" aria-keyshortcuts="Escape" data-tooltip="Cerrar detalle (Escape)">×</a>
+            <a class="boton boton-utilidad boton-icono boton-chico agenda-cerrar" data-agenda-cerrar href="{{ agenda.url_cerrar }}" aria-label="Cerrar detalle" aria-keyshortcuts="Escape" data-tooltip="Cerrar detalle (Escape)">{% include "componentes/iconoir/cruz.html" %}</a>
         </header>

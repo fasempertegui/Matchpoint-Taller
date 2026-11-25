@@ -39,14 +39,14 @@
                         <button class="boton boton-primario boton-chico" type="submit" data-crear-horarios>Crear horarios</button>
                         <input type="hidden" name="funcion" data-funcion-personas disabled>
                         <details class="planilla-menu-personas" data-menu-personas hidden>
-                            <summary class="boton boton-primario boton-chico" aria-expanded="false" aria-controls="planilla-menu-profesores">Profesores <span class="planilla-menu-indicador" aria-hidden="true">⋮</span></summary>
+                            <summary class="boton boton-primario boton-chico" aria-expanded="false" aria-controls="planilla-menu-profesores">Profesores {% include "componentes/iconoir/chevron-abajo.html" %}</summary>
                             <div class="planilla-menu-opciones" id="planilla-menu-profesores">
                                 <button type="submit" name="accion" value="agregar" data-funcion="profesores" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Agregar profesores</button>
                                 <button type="submit" name="accion" value="quitar" data-funcion="profesores" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Quitar profesores</button>
                             </div>
                         </details>
                         <details class="planilla-menu-personas" data-menu-personas hidden>
-                            <summary class="boton boton-secundario boton-chico" aria-expanded="false" aria-controls="planilla-menu-participantes">Participantes <span class="planilla-menu-indicador" aria-hidden="true">⋮</span></summary>
+                            <summary class="boton boton-secundario boton-chico" aria-expanded="false" aria-controls="planilla-menu-participantes">Participantes {% include "componentes/iconoir/chevron-abajo.html" %}</summary>
                             <div class="planilla-menu-opciones" id="planilla-menu-participantes">
                                 <button type="submit" name="accion" value="agregar" data-funcion="participantes" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Agregar participantes</button>
                                 <button type="submit" name="accion" value="quitar" data-funcion="participantes" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Quitar participantes</button>
@@ -54,7 +54,7 @@
                         </details>
                         <a class="boton boton-secundario boton-chico" data-ver-horario hidden>Detalles</a>
                         <span class="planilla-seleccion-separador" data-separador-quitar aria-hidden="true" hidden></span>
-                        <button class="boton boton-peligro boton-chico" type="submit" form="planilla-quitar-horarios" data-quitar-horarios hidden disabled>Quitar</button>
+                        <button class="boton boton-peligro boton-chico" type="submit" form="planilla-quitar-horarios" data-quitar-horarios hidden disabled>Quitar horarios</button>
                         <button class="boton boton-secundario boton-chico" type="button" data-limpiar-seleccion>Cancelar</button>
                     </div>
                 </form>

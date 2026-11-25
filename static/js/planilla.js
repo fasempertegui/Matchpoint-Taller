@@ -78,8 +78,13 @@ document.addEventListener("DOMContentLoaded", function () {
             : seleccion.size + " horarios seleccionados";
         crear.hidden = tipo !== "libre";
         crear.disabled = tipo !== "libre";
+        crear.textContent = seleccion.size === 1 ? "Crear horario" : "Crear horarios";
         quitar.hidden = tipo !== "creado";
         quitar.disabled = tipo !== "creado";
+        var textoQuitar = seleccion.size === 1 ? "Quitar horario" : "Quitar horarios";
+        quitar.textContent = textoQuitar;
+        formularioQuitar.dataset.confirmarTitulo = textoQuitar;
+        formularioQuitar.dataset.confirmarBoton = textoQuitar;
         var valoresQuitar = formularioQuitar.querySelector("[data-quitar-valores]");
         valoresQuitar.replaceChildren();
         if (tipo === "creado") {

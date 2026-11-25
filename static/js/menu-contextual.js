@@ -76,7 +76,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.addEventListener("keydown", function (evento) {
         if (evento.key !== "Escape") return;
-        document.querySelectorAll("[data-menu-contextual][open]").forEach(function (menu) {
+        var abiertos = document.querySelectorAll("[data-menu-contextual][open]");
+        if (!abiertos.length) return;
+        evento.preventDefault();
+        abiertos.forEach(function (menu) {
             menu.open = false;
             var disparador = menu.querySelector("summary");
             if (disparador) disparador.focus({ preventScroll: true });
