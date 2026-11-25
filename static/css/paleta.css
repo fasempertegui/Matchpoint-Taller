@@ -1,0 +1,35 @@
+:root {
+    --superficie: #ffffff;
+    --fondo: var(--superficie);
+    --fondo-pagina: #f4f1f8;
+    --texto: #1a2028;
+    --texto-suave: #596474;
+    --borde: #d9dee5;
+    --estado-inactivo-fondo: #eef1f5;
+    --estado-inactivo-texto: var(--texto-suave);
+
+    --primario: #4b176d;
+    --primario-hover: #391052;
+    --primario-suave: #f5eff9;
+    --primario-medio: #c9b9d3;
+
+    --acento: #b6d532;
+    --acento-suave: #f4f8e2;
+    --acento-texto: #3d4b0c;
+
+    --estado-positivo: #3d6b16;
+    --peligro: #b42318;
+    --peligro-suave: #fee2e2;
+    --advertencia: #805212;
+    --advertencia-suave: #fff2d8;
+
+    --agenda-clase-texto: #1e4976;
+    --agenda-reserva-texto: #7c3c25;
+}
+
+.tema-publico {
+    --violeta-oscuro: #1b1033;
+    --tarjeta: #241846;
+    --crema: #faf6f0;
+    --peligro-en-oscuro: #ffc2c7;
+}

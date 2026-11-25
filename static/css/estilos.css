@@ -2,24 +2,6 @@
     --fuente-interfaz: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     --fuente-titulos: "Bricolage Grotesque", var(--fuente-interfaz);
     --fuente-detalles: var(--fuente-interfaz);
-    --fondo: #ffffff;
-    --fondo-pagina: #f4f1f8;
-    --superficie: #ffffff;
-    --texto: #1a2028;
-    --texto-suave: #596474;
-    --borde: #d9dee5;
-    --primario: #4b176d;
-    --primario-hover: #391052;
-    --primario-suave: #f5eff9;
-    --primario-medio: #c9b9d3;
-    --acento: #b6d532;
-    --acento-suave: #f4f8e2;
-    --acento-texto: #3d4b0c;
-    --peligro: #b42318;
-    --advertencia: #805212;
-    --advertencia-suave: #fff2d8;
-    --estado-inactivo-fondo: #eef1f5;
-    --estado-inactivo-texto: #596474;
     --espacio-componentes: 16px;
     --espacio-secciones: 24px;
 }
@@ -1141,7 +1123,7 @@ textarea.form-control {
 
 .mensaje-error {
     border-color: #fca5a5;
-    background: #fee2e2;
+    background: var(--peligro-suave);
     color: #991b1b;
 }
 

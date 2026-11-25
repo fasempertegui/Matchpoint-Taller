@@ -148,7 +148,7 @@
 }
 
 .dashboard-delta-baja {
-    background: #fee2e2;
+    background: var(--peligro-suave);
     color: var(--peligro);
 }
 

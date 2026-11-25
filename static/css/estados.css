@@ -1,4 +1,3 @@
-:root { --estado-positivo: #3d6b16; }
 .indicador-estado { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 18px; height: 18px; vertical-align: middle; cursor: help; }
 .indicador-estado svg { width: 18px; height: 18px; }
 .indicador-estado-positivo { color: var(--estado-positivo); }

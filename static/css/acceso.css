@@ -92,7 +92,7 @@
 .acceso :is(input, button, .button):focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
 .acceso .button:focus-visible { border-color: var(--acento); }
 .acceso-campo input[aria-invalid="true"],
-.acceso-campo--error input { border-color: #ffc2c7; }
+.acceso-campo--error input { border-color: var(--peligro-en-oscuro); }
 .acceso-campo input:focus { border-color: var(--acento); }
 .acceso-campo input:focus-visible {
   outline-color: transparent;
@@ -120,7 +120,7 @@
 .acceso-formulario > .acceso-check { justify-self: start; font-size: .875rem; }
 .acceso-check input[type="checkbox"] { flex: none; width: 1.1rem; height: 1.1rem; min-height: 0; margin: .15rem 0 0; padding: 0; accent-color: var(--acento); }
 .acceso-check input[aria-invalid="true"],
-.acceso-campo--error .acceso-check input[type="checkbox"] { outline: 1px solid #ffc2c7; outline-offset: 2px; }
+.acceso-campo--error .acceso-check input[type="checkbox"] { outline: 1px solid var(--peligro-en-oscuro); outline-offset: 2px; }
 .acceso--registro .acceso-check { font-size: .875rem; font-weight: 400; }
 .acceso-panel > .acceso-alternativa {
   margin-top: .25rem;
@@ -129,7 +129,7 @@
   text-align: center;
   color: var(--crema);
 }
-.acceso-error { color: #ffc2c7; font-size: .9rem; }
+.acceso-error { color: var(--peligro-en-oscuro); font-size: .9rem; }
 .acceso-alerta { padding: .75rem 1rem; border: 1px solid currentColor; border-radius: 8px; }
 .acceso-alerta--exito { color: var(--acento); border-color: rgb(182 213 50 / .5); background: rgb(182 213 50 / .08); }
 .acceso--registro .acceso-alerta { margin-bottom: var(--espacio-controles); }

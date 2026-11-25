@@ -1,19 +1,6 @@
 :root {
-  --fondo: #ffffff;
-  --texto: #1a2028;
-  --texto-suave: #596474;
-  --borde: #d9dee5;
-  --primario: #4b176d;
-  --primario-hover: #391052;
-  --primario-suave: #f5eff9;
-  --primario-medio: #c9b9d3;
-  --acento: #b6d532;
-
   --header-h: 65px;
-  --violeta-oscuro: #1b1033;
   --fondo-cancha: #252034;
-  --crema: #faf6f0;
-  --tarjeta: #241846;
   --texto-secundario: #d4ccdf;
   --borde-tarjeta: rgb(255 255 255 / .08);
   --foto-cancha: url("../img/tenis-cancha-violeta.png");

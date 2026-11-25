@@ -1,6 +1,6 @@
 {% load static %}
 <!doctype html>
-<html lang="es">
+<html lang="es" class="tema-publico">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,6 +8,7 @@
     <title>{% block titulo %}Academia de Tenis TM · Salta{% endblock %}</title>
     <link rel="icon" type="image/vnd.microsoft.icon" sizes="16x16 32x32 48x48" href="{% static 'img/favicon.ico' %}">
     <link rel="stylesheet" href="{% static 'css/fuentes.css' %}">
+    <link rel="stylesheet" href="{% static 'css/paleta.css' %}">
     <link rel="stylesheet" href="{% static 'css/publica.css' %}">
     {% block estilos %}{% endblock %}
 </head>
