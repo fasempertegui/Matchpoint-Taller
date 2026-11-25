@@ -13,7 +13,6 @@ document.addEventListener("DOMContentLoaded", function () {
     var errorCampo = modal.querySelector("[data-correo-error]");
     var errorContrasena = modal.querySelector("[data-correo-contrasena-error]");
     var errorGeneral = modal.querySelector("[data-correo-error-general]");
-    var aviso = document.querySelector("[data-correo-guardado]");
     var valorGuardado = campo.value;
     var enviando = false;
 
@@ -32,7 +31,6 @@ document.addEventListener("DOMContentLoaded", function () {
         campo.value = valorGuardado;
         contrasena.value = "";
         limpiarErrores();
-        aviso.hidden = true;
         document.documentElement.classList.add("modal-abierto");
         modal.showModal();
         campo.focus();
@@ -93,9 +91,10 @@ document.addEventListener("DOMContentLoaded", function () {
             if (typeof datos.email !== "string") throw new Error("No se pudo confirmar el correo guardado");
             valorGuardado = datos.email;
             correoActual.textContent = valorGuardado || "Sin informar";
-            aviso.textContent = datos.mensaje;
-            aviso.hidden = false;
             modal.close();
+            if (window.Mensajes && datos.mensaje) {
+                window.Mensajes.mostrar({ texto: datos.mensaje, nivel: "success" });
+            }
         } catch (error) {
             errorGeneral.textContent = error.message;
             errorGeneral.hidden = false;

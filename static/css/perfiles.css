@@ -443,8 +443,7 @@
     margin-top: 16px;
 }
 
-.perfil-modal [hidden],
-[data-correo-guardado][hidden] {
+.perfil-modal [hidden] {
     display: none;
 }
 
