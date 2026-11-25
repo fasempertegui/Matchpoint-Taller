@@ -14,7 +14,6 @@
   border-bottom: 1px solid var(--borde-divisor);
 }
 .header-inner { min-height: calc(var(--header-h) - 1px); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.header-inner .button { min-height: 34px; padding: 5px 14px; font-size: .875rem; }
 .header-actions { display: flex; align-items: center; gap: 8px; }
 
 .hero {
@@ -47,13 +46,6 @@ h1 { font-size: clamp(1.85rem, min(6.8vw, 13svh), 7.5rem); line-height: .9; }
 h1 span { color: var(--acento); }
 .hero-copy > p { max-width: 34ch; margin-top: clamp(6px, 3svh, 24px); font-size: clamp(1.05rem, 1.6vw, 1.24rem); line-height: 1.55; }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: clamp(12px, 3.5svh, 28px); }
-.hero .button--primary, .booking-section .button {
-  background: var(--acento);
-  border-color: var(--acento);
-  color: var(--violeta-oscuro);
-}
-.hero .button--primary:hover, .booking-section .button:hover { background: var(--crema); border-color: var(--crema); }
-.hero a:focus-visible { outline-color: var(--crema); }
 
 .venues { padding-block-start: var(--espacio-seccion-compacto); }
 .play-section { padding-block-start: var(--espacio-seccion); }
@@ -125,7 +117,7 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
 
 .booking-section { text-align: center; }
 .booking-section p { margin-top: .85rem; color: var(--texto-secundario); }
-.booking-section .button { margin-top: 1.5rem; }
+.booking-section .boton { margin-top: 1.5rem; }
 
 .site-footer { border-top: 1px solid var(--borde-divisor); text-align: center; }
 .footer-inner { display: grid; gap: .75rem; padding-block: 26px; }
@@ -153,7 +145,10 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
   line-height: 1;
   text-decoration: none;
 }
-.back-to-top:hover { background: var(--crema); }
+.back-to-top:focus-visible { outline: 2px solid var(--crema); outline-offset: 2px; }
+@media (hover: hover) {
+  .back-to-top:hover { background: var(--crema); }
+}
 
 @media (max-width: 800px) {
   .venue-art img { object-position: center; transform-origin: center; }
@@ -169,6 +164,6 @@ h3 { font-size: clamp(1.25rem, 2vw, 1.65rem); }
 
 @media (max-width: 520px) {
   .header-actions { gap: 6px; }
-  .header-actions .button { padding-inline: 10px; }
+  .header-actions .boton { padding-inline: 10px; }
   .venue-grid { grid-template-columns: 1fr; gap: 20px; }
 }

@@ -236,14 +236,6 @@
     outline-offset: 4px;
 }
 
-.perfil-desplegable summary.perfil-accion-desactivar {
-    list-style: none;
-}
-
-.perfil-desplegable summary.perfil-accion-desactivar::-webkit-details-marker {
-    display: none;
-}
-
 .perfil-formulario {
     margin-top: 16px;
 }
@@ -324,12 +316,6 @@
     font-family: inherit;
     text-decoration: underline;
     cursor: pointer;
-}
-
-.perfil-accion-desactivar,
-.perfil-accion-desactivar:hover,
-.perfil-desplegable summary.perfil-accion-desactivar {
-    color: var(--peligro);
 }
 
 @media (max-width: 900px) {

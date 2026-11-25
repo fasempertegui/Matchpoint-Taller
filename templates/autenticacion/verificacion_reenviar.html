@@ -6,9 +6,9 @@
     <p>{{ resultado }}</p>
     <div class="acceso-acciones">
         {% if request.user.is_authenticated %}
-            <a class="button button--primary" href="{% url 'inicio' %}">Ir al inicio</a>
+            <a class="boton boton-primario" href="{% url 'inicio' %}">Ir al inicio</a>
         {% else %}
-            <a class="button button--primary" href="{% url 'login' %}">Iniciar sesión</a>
+            <a class="boton boton-primario" href="{% url 'login' %}">Iniciar sesión</a>
         {% endif %}
         <a href="{% url 'landing' %}">Volver a la portada</a>
     </div>
@@ -26,7 +26,7 @@
             {% include "componentes/campo_acceso.html" with campo=formulario.email %}
         </div>
         <div class="acceso-acciones">
-            <button class="button button--primary" type="submit">Enviar</button>
+            <button class="boton boton-primario" type="submit">Enviar</button>
             <a href="{% url 'login' %}">Volver a iniciar sesión</a>
         </div>
     </form>

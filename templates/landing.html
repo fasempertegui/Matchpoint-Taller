@@ -13,10 +13,10 @@
         </a>
         <div class="header-actions">
             {% if request.user.is_authenticated %}
-                <a class="button button--outline" href="{% url 'inicio' %}">Ir al inicio</a>
+                <a class="boton boton-secundario boton-chico" href="{% url 'inicio' %}">Ir al inicio</a>
             {% else %}
-                <a class="button button--outline" href="{% url 'login' %}">Ingresar</a>
-                <a class="button button--outline" href="{% url 'registro' %}">Registrarse</a>
+                <a class="boton boton-secundario boton-chico" href="{% url 'login' %}">Ingresar</a>
+                <a class="boton boton-secundario boton-chico" href="{% url 'registro' %}">Registrarse</a>
             {% endif %}
         </div>
     </div>
@@ -29,8 +29,8 @@
                 <h1 id="titulo">Nos vemos<br>en la cancha<span>.</span></h1>
                 <p>Entrená, reservá un turno o hacete socio.</p>
                 <div class="hero-actions">
-                    <a class="button button--primary" href="#sedes">Conocé las sedes</a>
-                    <a class="button button--outline" href="#jugar">Clases y reservas</a>
+                    <a class="boton boton-primario" href="#sedes">Conocé las sedes</a>
+                    <a class="boton boton-secundario" href="#jugar">Clases y reservas</a>
                 </div>
             </div>
         </div>
@@ -51,7 +51,7 @@
                         {% if sede.canchas %}<p class="venue-courts">{{ sede.canchas }}</p>{% endif %}
                         {% if sede.superficie %}<p class="venue-surface venue-surface--{{ sede.tipo_superficie }}">{{ sede.superficie }}</p>{% endif %}
                         {% if sede.url_como_llegar %}
-                            <a class="button button--primary venue-action" href="{{ sede.url_como_llegar }}" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar a {{ sede.nombre }}">Cómo llegar</a>
+                            <a class="boton boton-secundario venue-action" href="{{ sede.url_como_llegar }}" target="_blank" rel="noopener noreferrer" aria-label="Cómo llegar a {{ sede.nombre }}">Cómo llegar</a>
                         {% endif %}
                     </div>
                 </article>
@@ -79,7 +79,7 @@
         <div class="shell">
             <h2 id="reservar-titulo">¿Listo para jugar?</h2>
             <p>Elegí tu sede y nos vemos en la cancha.</p>
-            <a class="button button--primary" href="{{ url_reservar }}">Reservá tu turno</a>
+            <a class="boton boton-primario" href="{{ url_reservar }}">Reservá tu turno</a>
         </div>
     </section>
 </main>

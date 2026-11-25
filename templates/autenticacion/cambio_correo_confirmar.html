@@ -10,7 +10,7 @@
         {% csrf_token %}
         <input type="hidden" name="token" value="{{ token }}">
         <div class="acceso-acciones">
-            <button class="button button--primary" type="submit">Confirmar cambio</button>
+            <button class="boton boton-primario" type="submit">Confirmar cambio</button>
             <a href="{% url 'landing' %}">Volver a la portada</a>
         </div>
     </form>
@@ -18,9 +18,9 @@
     <p>{{ resultado }}</p>
     <div class="acceso-acciones">
         {% if request.user.is_authenticated %}
-            <a class="button button--primary" href="{% url 'inicio' %}">Ir al inicio</a>
+            <a class="boton boton-primario" href="{% url 'inicio' %}">Ir al inicio</a>
         {% else %}
-            <a class="button button--primary" href="{% url 'login' %}">Iniciar sesión</a>
+            <a class="boton boton-primario" href="{% url 'login' %}">Iniciar sesión</a>
         {% endif %}
         <a href="{% url 'landing' %}">Volver a la portada</a>
     </div>

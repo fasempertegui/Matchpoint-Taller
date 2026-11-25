@@ -89,8 +89,7 @@
   color: var(--crema);
   color-scheme: dark;
 }
-.acceso :is(input, button, .button):focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
-.acceso .button:focus-visible { border-color: var(--acento); }
+.acceso input:focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; }
 .acceso-campo input[aria-invalid="true"],
 .acceso-campo--error input { border-color: var(--peligro-en-oscuro); }
 .acceso-campo input:focus { border-color: var(--acento); }
@@ -132,10 +131,10 @@
 .acceso-alerta { padding: .75rem 1rem; border: 1px solid currentColor; border-radius: 8px; }
 .acceso--registro .acceso-alerta { margin-bottom: var(--espacio-controles); }
 .acceso-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; }
-.acceso-panel a:not(.button) { text-underline-offset: 4px; }
-.acceso-panel a:not(.button):hover { color: var(--acento); }
-.acceso-panel .button--primary { border-color: var(--acento); background: var(--acento); color: var(--violeta-oscuro); }
-.acceso-panel .button--primary:enabled:hover, .acceso-panel a.button--primary:hover { background: var(--crema); border-color: var(--crema); }
+.acceso-panel a:not(.boton) { text-underline-offset: 4px; }
+@media (hover: hover) {
+  .acceso-panel a:not(.boton):hover { color: var(--acento); }
+}
 
 @media (max-width: 800px) {
   .acceso--dividido::before {

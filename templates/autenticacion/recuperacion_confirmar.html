@@ -14,13 +14,13 @@
             {% include "componentes/campo_acceso.html" with campo=form.new_password1 %}
             {% include "componentes/campo_acceso.html" with campo=form.new_password2 %}
         </div>
-        <button class="button button--primary" type="submit">Guardar contraseña</button>
+        <button class="boton boton-primario" type="submit">Guardar contraseña</button>
     </form>
 {% else %}
     <h1 id="acceso-titulo">El enlace ya no es válido</h1>
     <p>Solicitá un enlace nuevo para cambiar tu contraseña.</p>
     <div class="acceso-acciones">
-        <a class="button button--primary" href="{% url 'password_reset' %}">Solicitar otro enlace</a>
+        <a class="boton boton-primario" href="{% url 'password_reset' %}">Solicitar otro enlace</a>
         <a href="{% url 'landing' %}">Volver a la portada</a>
     </div>
 {% endif %}

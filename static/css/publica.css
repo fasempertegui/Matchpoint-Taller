@@ -47,25 +47,6 @@ button, input, select, textarea { font: inherit; }
 .brand { display: inline-flex; align-items: center; color: var(--crema); text-decoration: none; }
 .logotipo-imagen { display: block; height: 28px; width: auto; }
 
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 46px;
-  border: 1px solid var(--primario);
-  border-radius: 100px;
-  padding: 10px 22px;
-  font: inherit;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-}
-.button--primary { color: var(--texto-inverso); background: var(--primario); }
-.button--primary:hover { background: var(--primario-hover); }
-.button--outline { color: var(--crema); background: transparent; border-color: currentColor; }
-.button--outline:enabled:hover, a.button--outline:hover { color: var(--acento); }
-.button:disabled { opacity: .65; cursor: not-allowed; }
-
 @media (max-width: 800px) {
   .shell { width: calc(100% - 40px); }
 }

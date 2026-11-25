@@ -7,13 +7,13 @@
 {% if request.user.is_authenticated and request.user.correo_verificado_en %}
     <p>Tu correo está verificado.</p>
     <div class="acceso-acciones">
-        <a class="button button--primary" href="{% url 'inicio' %}">Ir al inicio</a>
+        <a class="boton boton-primario" href="{% url 'inicio' %}">Ir al inicio</a>
         <a href="{% url 'landing' %}">Volver a la portada</a>
     </div>
 {% else %}
     <p>Verificá tu correo para habilitar las operaciones de tu cuenta. El enlace dura quince minutos desde su emisión.</p>
     <div class="acceso-acciones">
-        <a class="button button--primary" href="{% url 'solicitar_verificacion' %}">Reenviar verificación</a>
+        <a class="boton boton-primario" href="{% url 'solicitar_verificacion' %}">Reenviar verificación</a>
         {% if request.user.is_authenticated %}
             <a href="{% url 'corregir_correo' %}">Corregir mi correo</a>
         {% else %}
