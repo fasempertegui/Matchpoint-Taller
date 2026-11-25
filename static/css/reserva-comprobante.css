@@ -156,7 +156,6 @@
     }
 
     .barra-superior,
-    .mensajes,
     .comprobante-acciones {
         display: none;
     }

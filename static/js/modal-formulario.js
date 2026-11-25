@@ -67,11 +67,33 @@ document.addEventListener("DOMContentLoaded", function () {
         if (destino) destino.focus();
     }
 
+    function navegarDestino(redirect) {
+        if (!redirect) {
+            window.location.reload();
+            return;
+        }
+        var destino = new URL(redirect, window.location.href);
+        if (
+            destino.origin === window.location.origin
+            && destino.pathname === window.location.pathname
+            && destino.search === window.location.search
+        ) {
+            if (destino.hash !== window.location.hash) {
+                window.history.replaceState(null, "", destino.href);
+            }
+            window.location.reload();
+        } else {
+            window.location.assign(destino.href);
+        }
+    }
+
     function renderizar(datos) {
         if (!datos || typeof datos.html !== "string") {
             throw new Error("No se pudo cargar el formulario. Actualizá la página y volvé a intentar.");
         }
+        if (window.Mensajes) window.Mensajes.desmontarDe(modal);
         modal.innerHTML = datos.html;
+        if (modal.open && window.Mensajes) window.Mensajes.sincronizarContenedor(modal);
         aplicarVariantes(datos);
         marcarCamposInvalidos();
         modal.dispatchEvent(new CustomEvent("observaciones:inicializar", { bubbles: true }));
@@ -121,13 +143,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 window.location.assign(resultado.redirigir);
                 return;
             }
-            if (resultado.datos && resultado.datos.error) {
+            var datos = resultado.datos || {};
+            if (resultado.ok && datos.ok && typeof datos.html !== "string") {
+                navegarDestino(datos.redirect);
+                return;
+            }
+            if (datos.error) {
                 window.location.assign(url);
                 return;
             }
-            renderizar(resultado.datos);
+            renderizar(datos);
             abrirDialogo();
-            enfocarContenido(Boolean(resultado.datos.errores));
+            enfocarContenido(Boolean(datos.errores));
         } catch (error) {
             window.location.assign(url);
         } finally {
@@ -172,25 +199,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
             var datos = resultado.datos || {};
-            if (resultado.ok && datos.ok) {
+            if (resultado.ok && datos.ok && typeof datos.html !== "string") {
                 cerrarDialogo();
-                if (datos.redirect) {
-                    var destino = new URL(datos.redirect, window.location.href);
-                    if (
-                        destino.origin === window.location.origin
-                        && destino.pathname === window.location.pathname
-                        && destino.search === window.location.search
-                    ) {
-                        if (destino.hash) {
-                            window.history.replaceState(null, "", destino.href);
-                        }
-                        window.location.reload();
-                    } else {
-                        window.location.assign(destino.href);
-                    }
-                } else {
-                    window.location.reload();
-                }
+                navegarDestino(datos.redirect);
                 return;
             }
             if (typeof datos.html === "string") {
@@ -214,8 +225,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     modal.addEventListener("close", function () {
         document.documentElement.classList.remove("modal-abierto");
+        if (window.Mensajes) window.Mensajes.desmontarDe(modal);
         modal.innerHTML = "";
         modal.classList.remove("modal-peligro", "modal-amplio");
+        if (window.Mensajes) window.Mensajes.sincronizarContenedor();
         var foco = devolverFoco;
         devolverFoco = null;
         if (foco && foco.isConnected) {

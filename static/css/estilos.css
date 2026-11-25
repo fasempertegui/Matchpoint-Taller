@@ -115,7 +115,7 @@ a {
         padding-block: 32px;
     }
 
-    #contenido-principal > :where(.tarjeta, .pestanas, .mensajes, .oferta-catalogo-encabezado, .clase-encabezado, p),
+    #contenido-principal > :where(.tarjeta, .pestanas, .oferta-catalogo-encabezado, .clase-encabezado, p),
     #contenido-principal > div[data-resultados-filtros] > :where(.tarjeta, nav) {
         margin-block: 0;
     }
@@ -1089,34 +1089,6 @@ textarea.form-control {
     padding: 12px 16px;
     border: 1px solid transparent;
     border-radius: 10px;
-    transition: opacity 200ms ease;
-}
-
-.mensaje-saliendo {
-    opacity: 0;
-}
-
-.mensaje-cerrar {
-    flex-shrink: 0;
-    padding: 0 4px;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    font-size: 1.25rem;
-    line-height: 1.2;
-    cursor: pointer;
-}
-
-.mensaje-cerrar:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 3px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .mensaje {
-        transition: none;
-    }
 }
 
 .mensaje-success {

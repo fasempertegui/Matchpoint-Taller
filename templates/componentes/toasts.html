@@ -1,0 +1,41 @@
+<section class="toasts" aria-label="Avisos del sistema" data-toasts>
+    <div class="toast-solo-lector" role="status" aria-live="polite" aria-atomic="true" data-toast-anuncio-estado></div>
+    <div class="toast-solo-lector" role="alert" aria-live="assertive" aria-atomic="true" data-toast-anuncio-alerta></div>
+    <div class="toasts-lista" data-toasts-lista>
+        {% for message in messages %}
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                <div class="toast toast-error" data-toast data-toast-servidor data-toast-nivel="error">
+                    <span class="toast-icono" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg>
+                    </span>
+                    <p class="toast-texto" role="alert">{{ message }}</p>
+                    <button type="button" class="toast-cerrar" aria-label="Cerrar aviso" hidden>{% include "componentes/iconoir/cruz.html" %}</button>
+                </div>
+            {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+                <div class="toast toast-warning" data-toast data-toast-servidor data-toast-nivel="warning" data-autocierre="8000">
+                    <span class="toast-icono" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+                    </span>
+                    <p class="toast-texto" role="status">{{ message }}</p>
+                    <button type="button" class="toast-cerrar" aria-label="Cerrar aviso" hidden>{% include "componentes/iconoir/cruz.html" %}</button>
+                </div>
+            {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                <div class="toast toast-success" data-toast data-toast-servidor data-toast-nivel="success" data-autocierre="5000">
+                    <span class="toast-icono" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>
+                    </span>
+                    <p class="toast-texto" role="status">{{ message }}</p>
+                    <button type="button" class="toast-cerrar" aria-label="Cerrar aviso" hidden>{% include "componentes/iconoir/cruz.html" %}</button>
+                </div>
+            {% else %}
+                <div class="toast toast-info" data-toast data-toast-servidor data-toast-nivel="info" data-autocierre="5000">
+                    <span class="toast-icono" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5"/><path d="M12 8h.01"/></svg>
+                    </span>
+                    <p class="toast-texto" role="status">{{ message }}</p>
+                    <button type="button" class="toast-cerrar" aria-label="Cerrar aviso" hidden>{% include "componentes/iconoir/cruz.html" %}</button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>

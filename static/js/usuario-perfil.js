@@ -4,14 +4,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const abrirRoles = document.querySelector("[data-abrir-roles]");
         const menuRoles = abrirRoles.closest("details");
 
+        const abrirDialogoRoles = () => {
+            gestion.showModal();
+            if (window.Mensajes) window.Mensajes.sincronizarContenedor(gestion);
+        };
+
         abrirRoles.addEventListener("click", () => {
             menuRoles.open = false;
-            gestion.showModal();
+            abrirDialogoRoles();
         });
         gestion.addEventListener("close", () => {
             menuRoles.querySelector("summary").focus({ preventScroll: true });
         });
-        if (window.location.hash === "#roles") gestion.showModal();
+        if (window.location.hash === "#roles") abrirDialogoRoles();
     }
 
     const modalEstado = document.querySelector("[data-modal-estado]");

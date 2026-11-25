@@ -131,7 +131,6 @@
 }
 .acceso-error { color: var(--peligro-en-oscuro); font-size: .9rem; }
 .acceso-alerta { padding: .75rem 1rem; border: 1px solid currentColor; border-radius: 8px; }
-.acceso-alerta--exito { color: var(--acento); border-color: color-mix(in srgb, var(--acento) 50%, transparent); background: color-mix(in srgb, var(--acento) 10%, transparent); }
 .acceso--registro .acceso-alerta { margin-bottom: var(--espacio-controles); }
 .acceso-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; }
 .acceso-panel a:not(.button) { text-underline-offset: 4px; }

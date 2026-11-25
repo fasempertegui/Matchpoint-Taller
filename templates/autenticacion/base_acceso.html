@@ -1,8 +1,14 @@
 {% extends "base_publica.html" %}
 {% load static %}
 
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/acceso.css' %}">{% endblock %}
-{% block scripts %}<script src="{% static 'js/acceso.js' %}" defer></script>{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{% static 'css/acceso.css' %}">
+<link rel="stylesheet" href="{% static 'css/toasts.css' %}">
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/acceso.js' %}" defer></script>
+<script src="{% static 'js/mensajes.js' %}" defer></script>
+{% endblock %}
 
 {% block body %}
 <a class="skip-link" href="#contenido">Ir al contenido</a>
@@ -13,14 +19,8 @@
         </a>
     </header>
     <main class="acceso-panel" id="contenido" tabindex="-1" aria-labelledby="acceso-titulo">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="acceso-alerta{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %} acceso-error{% else %} acceso-alerta--exito{% endif %}" role="{% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}alert{% else %}status{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
         {% block acceso_contenido %}{% endblock %}
     </main>
 </div>
+{% include "componentes/toasts.html" %}
 {% endblock %}
