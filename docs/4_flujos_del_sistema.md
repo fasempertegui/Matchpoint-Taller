@@ -318,7 +318,7 @@ Un enlace usado informa “El correo ya está verificado” y no restituye un ro
 
 #### CU-02. Reenviar verificación y corregir el correo inicial
 
-La pantalla informativa muestra el estado y los disparadores; no presenta formularios abiertos. Reenviar solicita correo y devuelve idéntica respuesta exista o no la cuenta. Bajo bloqueo sólo crea otro aviso si sigue sin verificar y pasaron cinco minutos desde la solicitud anterior; los enlaces del mismo correo conservan sus plazos individuales.
+La pantalla informativa muestra el estado, el correo registrado cuando hay sesión y los disparadores; no presenta formularios abiertos. Para una cuenta de autorregistro, el inicio del portal presenta esa misma bienvenida con **Verificá tu correo**, **Reenviar enlace**, **Corregir mi correo** y el acceso secundario **Explorar la oferta**, devolviendo al titular al inicio tras corregir o cancelar. Reenviar solicita correo y devuelve idéntica respuesta exista o no la cuenta. Bajo bloqueo sólo crea otro aviso si sigue sin verificar y pasaron cinco minutos desde la solicitud anterior; los enlaces del mismo correo conservan sus plazos individuales.
 
 Corregir exige sesión y contraseña vigente al titular. Comprueba unicidad del correo bajo transacción, actualiza la dirección y registra otro email de verificación; los enlaces del correo anterior dejan de ser válidos. Administración utiliza esa misma corrección inicial para una cuenta sin verificar, con permiso de edición y la contraseña vigente del administrador que realiza la acción, sin pedir la contraseña del titular. El cambio de una cuenta ya verificada sigue **FL-04**. La corrección no cambia roles, habilitación, provisoria ni fecha de alta. Los formularios se muestran sólo al elegir su acción.
 

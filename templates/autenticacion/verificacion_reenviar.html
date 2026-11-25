@@ -6,7 +6,7 @@
     <p>{{ resultado }}</p>
     <div class="acceso-acciones">
         {% if request.user.is_authenticated %}
-            <a class="boton boton-primario" href="{% url 'inicio' %}">Ir al inicio</a>
+            <a class="boton boton-primario" href="{% url destino_retorno|default:'inicio' %}">{% if destino_retorno == 'estado_verificacion' %}Volver a verificación{% else %}Ir al inicio{% endif %}</a>
         {% else %}
             <a class="boton boton-primario" href="{% url 'login' %}">Iniciar sesión</a>
         {% endif %}
@@ -27,7 +27,11 @@
         </div>
         <div class="acceso-acciones">
             <button class="boton boton-primario" type="submit">Enviar</button>
-            <a href="{% url 'login' %}">Volver a iniciar sesión</a>
+            {% if request.user.is_authenticated %}
+                <a href="{% url destino_retorno|default:'inicio' %}">Cancelar</a>
+            {% else %}
+                <a href="{% url 'login' %}">Volver a iniciar sesión</a>
+            {% endif %}
         </div>
     </form>
 {% endif %}

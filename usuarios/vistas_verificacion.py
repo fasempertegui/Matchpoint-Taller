@@ -7,7 +7,16 @@ from django.views.decorators.http import require_GET, require_http_methods
 
 from .forms import CorregirCorreoForm, ReenvioVerificacionForm
 from .limites_autenticacion import limitar_solicitudes
+from .models import Rol
 from .verificacion import corregir_correo_inicial, reenviar_verificacion, verificar_correo
+
+
+def _destino_pendiente_verificacion(usuario):
+    if usuario.is_authenticated and usuario.correo_verificado_en is None:
+        if usuario.debe_cambiar_contrasena or usuario.tiene_rol(Rol.ADMINISTRADOR):
+            return "estado_verificacion"
+        return "inicio"
+    return "estado_verificacion"
 
 
 @never_cache
@@ -25,10 +34,18 @@ def confirmar_verificacion(request):
     except ValidationError as error:
         resultado = error.messages[0]
         error_verificacion = True
+    else:
+        if request.user.is_authenticated:
+            request.user.refresh_from_db(fields=["correo_verificado_en", "debe_cambiar_contrasena"])
+    es_administrador = request.user.is_authenticated and request.user.tiene_rol(Rol.ADMINISTRADOR)
     return render(
         request,
         "autenticacion/verificacion_confirmar.html",
-        {"resultado": resultado, "error_verificacion": error_verificacion},
+        {
+            "resultado": resultado,
+            "error_verificacion": error_verificacion,
+            "es_administrador": es_administrador,
+        },
     )
 
 
@@ -41,7 +58,12 @@ def solicitar_verificacion(request):
     if request.method == "POST" and formulario.is_valid():
         resultado = reenviar_verificacion(formulario.cleaned_data["email"])
         formulario = None
-    return render(request, "autenticacion/verificacion_reenviar.html", {"formulario": formulario, "resultado": resultado})
+    destino_retorno = _destino_pendiente_verificacion(request.user) if request.user.is_authenticated else "login"
+    return render(
+        request,
+        "autenticacion/verificacion_reenviar.html",
+        {"formulario": formulario, "resultado": resultado, "destino_retorno": destino_retorno},
+    )
 
 
 @login_required
@@ -49,7 +71,8 @@ def solicitar_verificacion(request):
 @require_http_methods(["GET", "POST"])
 def corregir_correo(request):
     if request.user.correo_verificado_en is not None:
-        return redirect("estado_verificacion")
+        return redirect("inicio")
+    destino_retorno = _destino_pendiente_verificacion(request.user)
     formulario = CorregirCorreoForm(request.POST or None)
     if request.method == "POST" and formulario.is_valid():
         try:
@@ -58,8 +81,12 @@ def corregir_correo(request):
             formulario.add_error(None, error)
         else:
             messages.success(request, "Enviamos la verificación al correo corregido.")
-            return redirect("estado_verificacion")
-    return render(request, "autenticacion/verificacion_corregir.html", {"formulario": formulario})
+            return redirect(destino_retorno)
+    return render(
+        request,
+        "autenticacion/verificacion_corregir.html",
+        {"formulario": formulario, "destino_retorno": destino_retorno},
+    )
 
 
 @never_cache

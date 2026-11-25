@@ -114,6 +114,11 @@ class CambioContrasenaView(auth_views.PasswordChangeView):
     form_class = CambioContrasenaForm
     success_url = reverse_lazy("password_change_done")
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.correo_verificado_en is None and request.user.debe_cambiar_contrasena:
+            return redirect("estado_verificacion")
+        return super().dispatch(request, *args, **kwargs)
+
     def post(self, request, *args, **kwargs):
         with contexto_auditoria(request.user, accion=LogAuditoria.Accion.ACTUALIZACION_HASH):
             return super().post(request, *args, **kwargs)

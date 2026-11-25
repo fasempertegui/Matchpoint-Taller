@@ -1,5 +1,28 @@
 .portal-inicio-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--espacio-componentes); align-items: stretch; }
-.contenido-inicio-portal .tarjeta, .contenido-inicio-portal .boton { border-radius: 10px; }
+.portal-bienvenida { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--espacio-secciones); align-items: stretch; }
+.portal-bienvenida-tarjeta {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+    box-shadow: var(--sombra-tarjeta);
+}
+.portal-bienvenida-tarjeta::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1.5px;
+    background: var(--primario-medio);
+    pointer-events: none;
+}
+.portal-bienvenida-texto { margin: 0; color: var(--texto); line-height: 1.6; }
+.portal-bienvenida-correo { overflow-wrap: anywhere; }
+.portal-bienvenida-acciones { margin-top: auto; padding-top: 4px; }
 .portal-inicio-grid > .tarjeta { display: flex; flex-direction: column; min-width: 0; padding: 0; }
 .portal-inicio-grid h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }
 .portal-inicio-grid .inicio-cuerpo { min-width: 0; }
@@ -43,9 +66,13 @@
 .portal-pendiente { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .portal-pendiente + .portal-pendiente { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--borde); }
 .portal-pendiente p { margin: 0; }
-.portal-verificacion { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.portal-verificacion p { margin: 0; }
-@media (max-width: 900px) { .portal-inicio-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 900px) {
+    .portal-inicio-grid,
+    .portal-bienvenida { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+    .portal-bienvenida-tarjeta { padding: 18px; }
+}
 @media (max-width: 640px) {
     .portal-contratos { grid-template-columns: minmax(0, 1fr); }
     .portal-contrato + .portal-contrato { border-left: 0; border-top: 1px solid var(--borde); padding: 16px 0 0; }

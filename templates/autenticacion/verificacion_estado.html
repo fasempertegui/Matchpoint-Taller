@@ -7,13 +7,24 @@
 {% if request.user.is_authenticated and request.user.correo_verificado_en %}
     <p>Tu correo está verificado.</p>
     <div class="acceso-acciones">
-        <a class="boton boton-primario" href="{% url 'inicio' %}">Ir al inicio</a>
+        {% if request.user.debe_cambiar_contrasena %}
+            <a class="boton boton-primario" href="{% url 'password_change' %}">Elegir mi contraseña</a>
+        {% else %}
+            <a class="boton boton-primario" href="{% url 'inicio' %}">Ir al inicio</a>
+        {% endif %}
         <a href="{% url 'landing' %}">Volver a la portada</a>
     </div>
 {% else %}
-    <p>Verificá tu correo para habilitar las operaciones de tu cuenta. El enlace dura quince minutos desde su emisión.</p>
+    {% if request.user.is_authenticated and request.user.email %}
+        <p>Abrí el enlace que te enviamos a <strong>{{ request.user.email }}</strong> para habilitar las operaciones de tu cuenta. Cada enlace dura 15 minutos.</p>
+    {% else %}
+        <p>Verificá tu correo para habilitar las operaciones de tu cuenta. Cada enlace dura 15 minutos desde su emisión.</p>
+    {% endif %}
+    {% if request.user.is_authenticated and request.user.debe_cambiar_contrasena %}
+        <p>Después de confirmar el correo vas a elegir una contraseña propia para comenzar a operar.</p>
+    {% endif %}
     <div class="acceso-acciones">
-        <a class="boton boton-primario" href="{% url 'solicitar_verificacion' %}">Reenviar verificación</a>
+        <a class="boton boton-primario" href="{% url 'solicitar_verificacion' %}">Reenviar enlace</a>
         {% if request.user.is_authenticated %}
             <a href="{% url 'corregir_correo' %}">Corregir mi correo</a>
         {% else %}

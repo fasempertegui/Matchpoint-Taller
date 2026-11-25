@@ -5,11 +5,32 @@
 {% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}"><link rel="stylesheet" href="{% static 'css/inicio-portal.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-inicio contenido-inicio-portal{% endblock %}
 {% block contenido %}
-{% texto_titulo as titulo_tarjeta %}Hola, {{ request.user.first_name|default:request.user.username }}{% endtexto_titulo %}
+{% texto_titulo as titulo_tarjeta %}¡Hola, {{ request.user.first_name|default:request.user.username }}!{% endtexto_titulo %}
 {% texto_titulo as subtitulo_tarjeta %}{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}{% endtexto_titulo %}
 {% tarjeta_titulo titulo_tarjeta subtitulo=subtitulo_tarjeta %}{% endtarjeta_titulo %}
 {% if not request.user.correo_verificado_en %}
-<section class="tarjeta portal-verificacion"><p>Verificá tu correo para acceder a tus actividades y reservas</p><a class="boton boton-primario" href="{% url 'estado_verificacion' %}">Verificar mi correo</a></section>
+<div class="portal-bienvenida">
+    <section class="tarjeta portal-bienvenida-tarjeta" aria-labelledby="portal-verificacion-titulo">
+        <div class="dashboard-tarjeta-cabecera">
+            <h2 class="dashboard-etiqueta" id="portal-verificacion-titulo">Verificá tu correo</h2>
+            <span class="dashboard-delta dashboard-delta-advertencia">Pendiente</span>
+        </div>
+        <p class="portal-bienvenida-texto">Abrí el enlace que te enviamos a <strong class="portal-bienvenida-correo">{{ request.user.email }}</strong> para habilitar tus reservas. Cada enlace dura 15 minutos.</p>
+        <div class="acciones portal-bienvenida-acciones">
+            <a class="boton boton-primario" href="{% url 'solicitar_verificacion' %}">Reenviar enlace</a>
+            <a class="boton boton-secundario" href="{% url 'corregir_correo' %}">Corregir mi correo</a>
+        </div>
+    </section>
+    <section class="tarjeta portal-bienvenida-tarjeta" aria-labelledby="portal-oferta-titulo">
+        <div class="dashboard-tarjeta-cabecera">
+            <h2 class="dashboard-etiqueta" id="portal-oferta-titulo">Mientras tanto</h2>
+        </div>
+        <p class="portal-bienvenida-texto">Conocé nuestras sedes y canchas con sus precios, además de los planes de clases y membresías de socios.</p>
+        <div class="acciones portal-bienvenida-acciones">
+            <a class="boton boton-secundario" href="{% url 'oferta:inicio' %}">Explorar la oferta</a>
+        </div>
+    </section>
+</div>
 {% else %}
 <div class="portal-inicio-grid">
     <section class="tarjeta portal-proxima{% if proxima_clase %} portal-proxima-destacada{% endif %}" aria-labelledby="portal-proxima-titulo">

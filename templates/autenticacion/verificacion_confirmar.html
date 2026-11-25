@@ -12,10 +12,18 @@
     </div>
 {% else %}
     <h1 id="acceso-titulo">Correo verificado</h1>
-    <p>{{ resultado }} Ya podés acceder a las reservas.</p>
+    {% if request.user.is_authenticated and request.user.debe_cambiar_contrasena %}
+        <p>{{ resultado }} Antes de comenzar a operar, elegí una contraseña propia.</p>
+    {% elif es_administrador %}
+        <p>{{ resultado }} Ya podés acceder al sistema.</p>
+    {% else %}
+        <p>{{ resultado }} Ya podés acceder a las reservas.</p>
+    {% endif %}
     <p>Si ya tenés el portal abierto en otra pestaña, podés cerrar esta.</p>
     <div class="acceso-acciones">
-        {% if request.user.is_authenticated %}
+        {% if request.user.is_authenticated and request.user.debe_cambiar_contrasena %}
+            <a class="boton boton-primario" href="{% url 'password_change' %}">Elegir mi contraseña</a>
+        {% elif request.user.is_authenticated %}
             <a class="boton boton-primario" href="{% url 'inicio' %}">Ir al inicio</a>
         {% else %}
             <a class="boton boton-primario" href="{% url 'login' %}">Iniciar sesión</a>

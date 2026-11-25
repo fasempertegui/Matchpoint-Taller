@@ -28,7 +28,7 @@ class CambioContrasenaObligatorioMiddleware:
             if ruta.url_name in self.urls_cuenta and not ruta.namespace:
                 return self.get_response(request)
             if usuario.correo_verificado_en is None:
-                if usuario.tiene_rol(Rol.ADMINISTRADOR):
+                if usuario.tiene_rol(Rol.ADMINISTRADOR) or usuario.debe_cambiar_contrasena:
                     return redirect("estado_verificacion")
                 lectura = request.method == "GET" and (
                     ruta.view_name == "inicio"
