@@ -160,7 +160,12 @@
     </section>
 
     {% if cantidad_kpis %}
-    <section class="portal-kpis" aria-label="Resumen de {{ hoy|date:'F'|lower }}">
+    <section class="portal-seccion-mes" aria-labelledby="portal-mes-titulo">
+        <div class="portal-seccion-cabecera">
+            <h2 class="dashboard-etiqueta" id="portal-mes-titulo">Mi mes · {{ hoy|date:"F \d\e Y"|capfirst }}</h2>
+            <a class="dashboard-enlace" href="{% url 'mi_actividad_mensual' %}">Mi actividad mensual</a>
+        </div>
+        <div class="portal-kpis">
         {% if horas_membresia %}
         <article class="tarjeta portal-tarjeta portal-kpi" aria-labelledby="portal-horas-titulo">
             <div class="dashboard-tarjeta-cabecera">
@@ -283,6 +288,7 @@
         {% if revisar_en_kpis %}
             {% include "componentes/dashboard_revisar.html" with para_revisar=para_revisar clases="portal-tarjeta" only %}
         {% endif %}
+        </div>
     </section>
     {% endif %}
 

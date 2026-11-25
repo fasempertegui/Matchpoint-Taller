@@ -183,6 +183,8 @@ def navegacion(request):
     if not seccion_actual:
         if perfil_activo:
             seccion_actual = "Mi perfil"
+        elif nombre_vista == "mi_actividad_mensual":
+            seccion_actual = "Mi actividad mensual"
         elif nombre_vista == "comunicaciones:notificaciones_lista":
             seccion_actual = "Notificaciones"
         elif nombre_vista in ("password_change", "password_change_done"):

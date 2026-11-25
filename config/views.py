@@ -7,6 +7,7 @@ from django.views.decorators.http import require_GET
 from instalaciones.models import Cancha, Sede
 from usuarios.models import Rol
 
+from .actividad_mensual import contexto_mi_actividad_mensual
 from .inicio_administracion import contexto_inicio_administracion
 from .inicio_portal import contexto_inicio_portal
 
@@ -141,3 +142,10 @@ def inicio(request):
     else:
         contexto.update(contexto_inicio_portal(request.user))
     return render(request, "inicio_administracion.html" if administrador else "inicio_portal.html", contexto)
+
+
+@login_required
+@never_cache
+@require_GET
+def mi_actividad_mensual(request):
+    return render(request, "mi_actividad_mensual.html", contexto_mi_actividad_mensual(request))

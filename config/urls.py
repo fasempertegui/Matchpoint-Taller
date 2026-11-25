@@ -21,6 +21,7 @@ from . import views
 urlpatterns = [
     path('', views.landing, name='landing'),
     path('inicio/', views.inicio, name='inicio'),
+    path('mi-actividad/', views.mi_actividad_mensual, name='mi_actividad_mensual'),
     path('privacidad/', views.privacidad, name='privacidad'),
     path('terminos/', views.terminos, name='terminos'),
     path('', include('usuarios.urls_autenticacion')),

@@ -430,6 +430,9 @@ def contexto_inicio_portal(usuario):
     )
     contexto["es_cuenta_nueva"] = not actividades and not hay_actividad_mes and not hay_pendientes
     if contexto["es_cuenta_nueva"] and _tiene_historial(usuario):
+        contexto["accesos_historial"].append({
+            "texto": "Mi actividad mensual", "url": reverse("mi_actividad_mensual"),
+        })
         if usuario.puede_reservar and (usuario.reservas.exists() or usuario.invitaciones_reserva.exists()):
             contexto["accesos_historial"].append({
                 "texto": "Mis reservas", "url": reverse("reservas:mis_reservas"),

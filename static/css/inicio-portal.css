@@ -307,6 +307,19 @@
 }
 
 /* Mi mes (tarjetas KPI y barras de uso) */
+.portal-seccion-mes {
+    display: grid;
+    gap: 12px;
+}
+
+.portal-seccion-cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
+
 .portal-kpis {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -518,4 +531,32 @@
     .portal-contrataciones {
         padding: 18px;
     }
+}
+
+/* Reporte personal: Mi actividad mensual */
+.actividad-mensual-resumen {
+    margin-bottom: var(--espacio-secciones);
+}
+
+.actividad-mensual-tabla {
+    padding: 0;
+}
+
+.actividad-mensual-tabla > .estado-vacio {
+    margin: 0;
+    padding: 24px 20px;
+}
+
+.actividad-mensual-detalle {
+    display: grid;
+    gap: 2px;
+    font-size: .85rem;
+}
+
+.actividad-mensual-nota {
+    margin: 0;
+    padding: 12px 20px;
+    border-top: 1px solid var(--borde);
+    color: var(--texto-suave);
+    font-size: .85rem;
 }

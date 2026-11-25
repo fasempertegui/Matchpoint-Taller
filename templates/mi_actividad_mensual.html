@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load encabezados %}
+{% load filtros %}
+{% load tablas %}
+{% load estados %}
+{% load static %}
+{% block titulo %}Mi actividad mensual | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/inicio.css' %}"><link rel="stylesheet" href="{% static 'css/inicio-portal.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-actividad-mensual{% endblock %}
+{% block contenido %}
+{% tarjeta_titulo "Mi actividad mensual" descripcion="Consultá el resumen y el detalle de tus clases y reservas del mes seleccionado." %}
+    <a class="boton boton-secundario" href="{% url 'inicio' %}">Volver al inicio</a>
+{% endtarjeta_titulo %}
+
+{% tarjeta_filtros abierto=formulario.errors|default:None %}
+    <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Seleccionar período">
+        {% for campo in formulario %}
+            <div class="grupo-campo">
+                {{ campo.label_tag }}{{ campo }}
+                {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+        {% endfor %}
+        <div class="filtros-acciones">
+            <a class="boton boton-secundario" href="{% url 'mi_actividad_mensual' %}" data-limpiar-filtros>Mes actual</a>
+        </div>
+    </form>
+{% endtarjeta_filtros %}
+
+<div data-resultados-filtros>
+{% if datos %}
+    <section class="portal-kpis actividad-mensual-resumen" aria-label="Resumen de {{ mes_etiqueta }}">
+        {% if datos.mostrar_participante %}
+        <article class="tarjeta portal-tarjeta portal-kpi" aria-labelledby="resumen-participante-titulo">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="resumen-participante-titulo">Clases como participante</h2>
+                {% if datos.participante.proximas %}
+                    <span class="dashboard-delta dashboard-delta-info">{{ datos.participante.proximas }} próxima{{ datos.participante.proximas|pluralize:"s" }}</span>
+                {% endif %}
+            </div>
+            <div class="portal-kpi-resumen">
+                <div class="dashboard-kpi-fila">
+                    <p class="dashboard-kpi-valor{% if not datos.participante.finalizadas %} dashboard-valor-cero{% endif %}">{{ datos.participante.presentes }} <span class="portal-kpi-de">de {{ datos.participante.finalizadas }}</span></p>
+                </div>
+                <p class="dashboard-kpi-detalle">asistencias en clases finalizadas</p>
+            </div>
+            <dl class="portal-metricas-mini">
+                <div><dt>Presentes</dt><dd>{{ datos.participante.presentes }}</dd></div>
+                <div><dt>Ausentes</dt><dd>{{ datos.participante.ausentes }}</dd></div>
+                <div><dt>Sin registrar</dt><dd>{{ datos.participante.sin_registrar }}</dd></div>
+            </dl>
+        </article>
+        {% endif %}
+
+        {% if datos.mostrar_profesor %}
+        <article class="tarjeta portal-tarjeta portal-kpi" aria-labelledby="resumen-profesor-titulo">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="resumen-profesor-titulo">Clases como profesor</h2>
+            </div>
+            <div class="portal-kpi-resumen">
+                <div class="dashboard-kpi-fila">
+                    <p class="dashboard-kpi-valor{% if not datos.profesor.total %} dashboard-valor-cero{% endif %}">{{ datos.profesor.total }}</p>
+                    <span class="dashboard-total-texto">clase{{ datos.profesor.total|pluralize }} a cargo</span>
+                </div>
+                <p class="dashboard-kpi-detalle">excluye clases anuladas</p>
+            </div>
+            <div class="dashboard-desglose">
+                <div>
+                    <span class="dashboard-subetiqueta"><span class="dashboard-marcador-clases" aria-hidden="true"></span>Finalizadas</span>
+                    <p class="dashboard-valor-secundario{% if not datos.profesor.dictadas %} dashboard-valor-cero{% endif %}">{{ datos.profesor.dictadas }}</p>
+                </div>
+                <div>
+                    <span class="dashboard-subetiqueta">Próximas</span>
+                    <p class="dashboard-valor-secundario{% if not datos.profesor.proximas %} dashboard-valor-cero{% endif %}">{{ datos.profesor.proximas }}</p>
+                </div>
+            </div>
+        </article>
+        {% endif %}
+
+        {% if datos.mostrar_reservas %}
+        <article class="tarjeta portal-tarjeta portal-kpi" aria-labelledby="resumen-reservas-titulo">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="resumen-reservas-titulo">Reservas</h2>
+            </div>
+            <div class="portal-kpi-resumen">
+                <div class="dashboard-kpi-fila">
+                    <p class="dashboard-kpi-valor{% if not datos.reservas.total %} dashboard-valor-cero{% endif %}">{{ datos.reservas.total }}</p>
+                    <span class="dashboard-total-texto">turno{{ datos.reservas.total|pluralize }} en el mes</span>
+                </div>
+                <p class="dashboard-kpi-detalle">excluye reservas anuladas</p>
+            </div>
+            <div class="dashboard-desglose">
+                <div>
+                    <span class="dashboard-subetiqueta"><span class="dashboard-marcador-reservas" aria-hidden="true"></span>Organizadas</span>
+                    <p class="dashboard-valor-secundario{% if not datos.reservas.organizadas %} dashboard-valor-cero{% endif %}">{{ datos.reservas.organizadas }}</p>
+                </div>
+                <div>
+                    <span class="dashboard-subetiqueta">Invitaciones aceptadas</span>
+                    <p class="dashboard-valor-secundario{% if not datos.reservas.invitaciones %} dashboard-valor-cero{% endif %}">{{ datos.reservas.invitaciones }}</p>
+                </div>
+            </div>
+        </article>
+        {% endif %}
+    </section>
+
+    <section class="tarjeta tabla-contenedor actividad-mensual-tabla" aria-label="Detalle de actividades de {{ mes_etiqueta }}">
+        {% if datos.pagina %}
+            {% tabla %}
+                <thead>
+                    <tr>
+                        <th scope="col">Fecha y horario</th>
+                        <th scope="col">Actividad</th>
+                        <th scope="col">Sede y cancha</th>
+                        <th scope="col">Función</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Detalle</th>
+                        <th scope="col" class="acciones-columna">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fila in datos.pagina %}
+                    <tr>
+                        <td class="tabla-fecha">
+                            <strong>{{ fila.fecha|date:"d/m/Y" }}</strong>
+                            <span class="tabla-secundario">{{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ fila.tipo }}</strong>
+                            {% if fila.referencia %}<span class="tabla-secundario">{{ fila.referencia }}</span>{% endif %}
+                        </td>
+                        <td>
+                            {{ fila.sede }}
+                            <span class="tabla-secundario">{{ fila.cancha }}</span>
+                        </td>
+                        <td>
+                            <span class="portal-funcion portal-funcion-{{ fila.funcion_clase }}">{{ fila.funcion }}</span>
+                        </td>
+                        <td>{% indicador_estado "evento" fila.estado texto=fila.estado_texto %}</td>
+                        <td>
+                            {% if fila.asistencia_texto or fila.aviso_previo or fila.sin_asignacion or fila.resultado_uso or fila.condicion_invitado %}
+                                <div class="actividad-mensual-detalle">
+                                    {% if fila.asistencia_texto %}<span>Asistencia: <strong>{{ fila.asistencia_texto }}</strong></span>{% endif %}
+                                    {% if fila.aviso_previo %}<span class="tabla-secundario">{{ fila.aviso_previo }}</span>{% endif %}
+                                    {% if fila.sin_asignacion %}<span class="tabla-secundario">Sin asignación previa</span>{% endif %}
+                                    {% if fila.resultado_uso %}<span>Resultado: <strong>{{ fila.resultado_uso }}</strong></span>{% endif %}
+                                    {% if fila.condicion_invitado %}<span class="tabla-secundario">Condición: {{ fila.condicion_invitado }}</span>{% endif %}
+                                </div>
+                            {% else %}
+                                <span class="texto-secundario">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="acciones-columna">
+                            {% if fila.url %}
+                                <a class="boton boton-secundario boton-chico" href="{{ fila.url }}">{{ fila.accion_texto }}</a>
+                            {% else %}
+                                <span class="texto-secundario">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            {% endtabla %}
+            <p class="actividad-mensual-nota">Los totales corresponden al mes completo ({{ mes_etiqueta }}). El aviso previo de no asistencia no reemplaza la asistencia efectiva; en reservas finalizadas sólo se informa el resultado de uso cuando está registrado y corresponde al titular.</p>
+            {% include "componentes/paginacion.html" with pagina=datos.pagina entidad="actividades" parametros=datos.parametros only %}
+        {% else %}
+            <p class="estado-vacio">No registrás clases ni reservas en {{ mes_etiqueta }}.</p>
+        {% endif %}
+    </section>
+{% endif %}
+</div>
+{% endblock %}
