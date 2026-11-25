@@ -9,6 +9,7 @@ from clases.models import Clase
 from membresias.continuidad import contexto_continuidad
 from membresias.models import MembresiaUsuario, PlanUsuario
 from reservas.models import Evento, Reserva
+from reservas.servicios import invitaciones_por_responder
 from usuarios.models import Rol
 
 
@@ -38,14 +39,12 @@ def contexto_inicio_portal(usuario):
         ).select_related("evento__turno__cancha__sede").distinct().order_by(
             "evento__turno__fecha", "evento__turno__hora_inicio", "pk",
         )[:3])
-        invitaciones = Reserva.objects.filter(
-            futuras, evento__estado=Evento.Estado.PROGRAMADO,
-            invitados__usuario=usuario, invitados__respuesta="pendiente",
-        ).exclude(organizador=usuario).distinct().count()
+        invitaciones = invitaciones_por_responder(usuario, ahora).count()
         if invitaciones:
             contexto["pendientes"].append({
                 "texto": f"Invitaciones por responder: {invitaciones}",
-                "url": reverse("reservas:mis_reservas"), "accion": "Ver invitaciones",
+                "url": reverse("reservas:mis_invitaciones", query={"vista": "por_responder"}),
+                "accion": "Ver invitaciones",
             })
     for tipo, modelo in (("plan", PlanUsuario), ("membresia", MembresiaUsuario)):
         contratos = modelo.objects.filter(

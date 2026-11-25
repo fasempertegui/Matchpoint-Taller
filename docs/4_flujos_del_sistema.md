@@ -2070,7 +2070,7 @@ Agenda es la entrada única para las actividades y permite abrir el detalle y co
 
 - **Objetivo:** localizar y visualizar reservas existentes, normales o con membresía.
 - **Actores:** administrador, sin restricción; usuario con rol Reservas, limitado a las propias, desde el portal.
-- **Entradas:** para el administrador, filtros opcionales por usuario organizador, sede, cancha, fecha o estado; un usuario con rol Reservas no ingresa criterios, ve directamente las suyas.
+- **Entradas:** en administración, filtros opcionales por usuario organizador, sede, cancha, fecha o estado. En el portal, el titular consulta Mis reservas o Mis invitaciones y puede filtrar por estado del evento. Mis invitaciones ofrece además la pestaña Por responder.
 
 Recorrido:
 
@@ -2082,6 +2082,7 @@ Recorrido:
 Alternativas:
 
 - El organizador consulta sus reservas y solicita las acciones propias autorizadas. Un invitado dispone de consulta de su participación y respuesta, sin comprobante, cobros ni datos financieros de terceros.
+- Desde el contador de Inicio o desde Mis invitaciones, el invitado abre Por responder. La lista muestra sus invitaciones pendientes a reservas programadas con inicio futuro, primero la más próxima. Detalles abre la invitación y desde allí se responde por **FL-72**. Al aceptar, la reserva pasa a las próximas del titular. Al responder, anularse la reserva o comenzar el turno, la invitación sale del listado de pendientes.
 - Esta consulta es la vía para localizar una reserva y ejecutar **FL-60** o **FL-61**; una reserva cancelada conserva su historia y otra reserva se crea por **FL-40** o **FL-51**, con independencia de sus cobros y participantes. La finalización se realiza automáticamente mediante 4.3 o por el administrador mediante **FL-42** cuando terminó el turno.
 
 - **Resultado:** listado y detalle de reservas sin modificaciones.

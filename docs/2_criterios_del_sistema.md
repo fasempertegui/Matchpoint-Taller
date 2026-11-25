@@ -464,6 +464,8 @@ Los cambios se aplican a las siguientes evaluaciones y a la ventana de respuesta
 
 ### 2.7 Portal de usuarios
 
+Mis invitaciones ofrece las pestañas Todas y Por responder. Todas permite filtrar por estado del evento. Por responder reúne las invitaciones Pendientes del titular a reservas Programadas cuyo turno comienza después del momento local de consulta. Se ordenan por fecha y hora de inicio ascendente. El contador de Inicio usa la misma selección y abre directamente esa pestaña. Al paginar se conserva la pestaña elegida.
+
 Mis reservas e invitaciones separa número, fecha y horario, sede y cancha, función del titular, respuesta de invitación y estado del evento. Permite filtrar por participación y estado, y conserva los filtros al paginar. El detalle presenta primero organizador, ubicación, turno e importe en una tabla de campo y valor, con el estado visible en la cabecera. Un menú contextual de Acciones en la cabecera ofrece sólo las operaciones aplicables y los accesos a Agenda y comprobante. Los invitados se muestran en filas compactas; pagos y movimientos, modalidad y uso, y datos del registro se despliegan bajo demanda. La anulación conserva su motivo visible y abre su formulario en un modal sólo por solicitud o ante errores de validación. El invitado consulta únicamente los datos autorizados de su invitación y abre el formulario de respuesta cuando lo solicita. Los detalles usan el mismo estilo del perfil de usuario, con borde superior lima y sin borde inferior.
 
 

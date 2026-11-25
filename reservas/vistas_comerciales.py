@@ -27,7 +27,7 @@ from .comercial import (
 from .forms import InvitadosReservaForm, OrganizadorReservaForm, ResultadoReservaForm, TurnoReservaForm, UsoMembresiaForm
 from .horas import horas_disponibles_organizador, resumen_horas_del_mes
 from .models import Evento, Reserva, ReservaInvitado
-from .servicios import exigir_acceso_reservas
+from .servicios import exigir_acceso_reservas, invitaciones_por_responder
 from .views import _obtener_reserva_para_consulta
 
 
@@ -323,31 +323,37 @@ def mis_reservas(request, usuario_id=None, *, solo_invitaciones=False):
         if not administrador:
             raise PermissionDenied
         titular = get_object_or_404(Usuario, pk=usuario_id)
-    consulta = Reserva.objects.filter(
-        Q(organizador=titular) | Q(invitados__usuario=titular),
-    ).distinct().select_related("evento__turno__cancha__sede").prefetch_related(
-        Prefetch("invitados", queryset=ReservaInvitado.objects.filter(usuario=titular), to_attr="invitaciones_titular"),
-    ).order_by("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
     if usuario_id is not None:
         participacion = request.GET.get("participacion", "")
     else:
         participacion = "invitado" if solo_invitaciones else "organizador"
-    estado = request.GET.get("estado", "")
-    if participacion == "organizador":
-        consulta = consulta.filter(organizador=titular)
-    elif participacion == "invitado":
-        consulta = consulta.exclude(organizador=titular)
+    por_responder = solo_invitaciones and request.GET.get("vista") == "por_responder"
+    estado = ""
+    parametros = {}
+    if por_responder:
+        consulta = invitaciones_por_responder(titular, timezone.localtime())
+        parametros["vista"] = "por_responder"
     else:
-        participacion = ""
-    if estado in Evento.Estado.values:
-        consulta = consulta.filter(evento__estado=estado)
-    else:
-        estado = ""
-    parametros = {"estado": estado}
+        if participacion == "organizador":
+            consulta = Reserva.objects.filter(organizador=titular)
+        elif participacion == "invitado":
+            consulta = Reserva.objects.filter(invitados__usuario=titular).exclude(organizador=titular)
+        else:
+            participacion = ""
+            consulta = Reserva.objects.filter(Q(organizador=titular) | Q(invitados__usuario=titular)).distinct()
+        consulta = consulta.order_by("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
+        estado_solicitado = request.GET.get("estado")
+        if estado_solicitado in Evento.Estado.values:
+            estado = estado_solicitado
+            consulta = consulta.filter(evento__estado=estado)
+            parametros["estado"] = estado
+    consulta = consulta.select_related("evento__turno__cancha__sede").prefetch_related(
+        Prefetch("invitados", queryset=ReservaInvitado.objects.filter(usuario=titular), to_attr="invitaciones_titular"),
+    )
     if usuario_id is not None:
         parametros["participacion"] = participacion
     return render(request, "reservas/mis_reservas.html", {
-        "solo_invitaciones": solo_invitaciones,
+        "solo_invitaciones": solo_invitaciones, "por_responder": por_responder,
         "titular": titular, "consulta_administrativa": usuario_id is not None,
         "pagina": Paginator(consulta, 25).get_page(request.GET.get("pagina")),
         "participacion": participacion, "estado": estado, "estados": Evento.Estado.choices,

@@ -15,7 +15,19 @@ from usuarios.models import Rol, Usuario
 from usuarios.acceso import exigir_acceso_operativo
 
 from .disponibilidad import consultar_disponibilidad
-from .models import Evento, Reserva, Turno
+from .models import Evento, Reserva, ReservaInvitado, Turno
+
+
+def invitaciones_por_responder(titular, ahora):
+    turno_futuro = Q(evento__turno__fecha__gt=ahora.date()) | Q(
+        evento__turno__fecha=ahora.date(), evento__turno__hora_inicio__gt=ahora.time(),
+    )
+    return Reserva.objects.filter(
+        turno_futuro,
+        evento__estado=Evento.Estado.PROGRAMADO,
+        invitados__usuario=titular,
+        invitados__respuesta=ReservaInvitado.Respuesta.PENDIENTE,
+    ).exclude(organizador=titular).order_by("evento__turno__fecha", "evento__turno__hora_inicio", "pk")
 
 
 def reservas_sin_resultado_queryset():

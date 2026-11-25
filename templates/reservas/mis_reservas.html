@@ -2,9 +2,9 @@
 {% load encabezados %}
 {% load tablas %}
 {% load filtros %}
-{% load static estados %}
+{% load pestanas %}
+{% load estados %}
 {% block titulo %}{% if consulta_administrativa %}Reservas de {{ titular }}{% elif solo_invitaciones %}Mis invitaciones{% else %}Mis reservas{% endif %} | Academia TM{% endblock %}
-{% block estilos %}<link rel="stylesheet" href="{% static 'css/reservas-portal.css' %}">{% endblock %}
 {% block clase_contenido %}contenido-reservas reservas-listado{% endblock %}
 {% block contenido %}
 {% if consulta_administrativa %}
@@ -19,6 +19,13 @@
     <a class="boton boton-primario" href="{% url 'agenda:agenda' %}">Ver agenda</a>
 {% endtarjeta_titulo %}
 {% endif %}
+{% if solo_invitaciones %}
+{% pestanas "Invitaciones recibidas" %}
+    <a href="{{ request.path }}"{% if not por_responder %} aria-current="page"{% endif %}>Todas</a>
+    <a href="{{ request.path }}?vista=por_responder"{% if por_responder %} aria-current="page"{% endif %}>Por responder</a>
+{% endpestanas %}
+{% endif %}
+{% if not por_responder %}
 {% tarjeta_filtros %}
     <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de reservas">
         {% if consulta_administrativa %}
@@ -28,6 +35,7 @@
         <a class="boton boton-secundario" href="{{ request.path }}" data-limpiar-filtros>Limpiar filtros</a>
     </form>
 {% endtarjeta_filtros %}
+{% endif %}
 <section class="tarjeta reservas-tabla tabla-contenedor" data-resultados-filtros aria-label="{% if consulta_administrativa %}Reservas e invitaciones{% elif solo_invitaciones %}Mis invitaciones{% else %}Mis reservas{% endif %}">
 {% tabla %}<thead><tr><th scope="col">Reserva</th><th scope="col">Fecha y horario</th><th scope="col">Sede y cancha</th>{% if consulta_administrativa %}<th scope="col">Participación</th>{% endif %}{% if consulta_administrativa or solo_invitaciones %}<th scope="col">Respuesta</th>{% endif %}<th scope="col">Estado</th><th scope="col" class="acciones-columna">Acciones</th></tr></thead><tbody>
 {% for reserva in pagina %}<tr>
@@ -38,7 +46,7 @@
     {% if consulta_administrativa or solo_invitaciones %}<td>{% if reserva.organizador_id != titular.pk %}{% for invitacion in reserva.invitaciones_titular %}{% indicador_estado "respuesta" invitacion.respuesta %}{% endfor %}{% else %}<span class="texto-secundario">—</span>{% endif %}</td>{% endif %}
     <td>{% indicador_estado "evento" reserva.evento.estado %}</td>
     <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_detalle' reserva.pk %}" aria-label="Ver detalles de {{ reserva.numero }}">Detalles</a></td>
-</tr>{% empty %}<tr><td class="estado-vacio" colspan="{% if consulta_administrativa %}7{% elif solo_invitaciones %}6{% else %}5{% endif %}">No hay {% if consulta_administrativa %}reservas ni invitaciones{% elif solo_invitaciones %}invitaciones{% else %}reservas{% endif %} para esta consulta.</td></tr>{% endfor %}
+</tr>{% empty %}<tr><td class="estado-vacio" colspan="{% if consulta_administrativa %}7{% elif solo_invitaciones %}6{% else %}5{% endif %}">{% if por_responder %}No tenés invitaciones por responder.{% else %}No hay {% if consulta_administrativa %}reservas ni invitaciones{% elif solo_invitaciones %}invitaciones{% else %}reservas{% endif %} para esta consulta.{% endif %}</td></tr>{% endfor %}
 </tbody>{% endtabla %}
 {% if solo_invitaciones %}
     {% include "componentes/paginacion.html" with pagina=pagina entidad="invitaciones" parametros=parametros only %}
