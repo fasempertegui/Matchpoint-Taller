@@ -65,8 +65,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 else turno.removeAttribute("aria-current");
             });
             window.history.replaceState(null, "", destino.href);
-            if (cerrarDetalle && devolverFoco && seleccionadoAnterior) {
-                seleccionadoAnterior.focus({ preventScroll: true });
+            if (cerrarDetalle && seleccionadoAnterior) {
+                if (devolverFoco) {
+                    seleccionadoAnterior.focus({ preventScroll: true });
+                } else if (document.activeElement === seleccionadoAnterior) {
+                    seleccionadoAnterior.blur();
+                }
             }
             aviso.hidden = true;
             aviso.textContent = "";
@@ -89,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var enlace = evento.target.closest("[data-agenda-turno], [data-agenda-cerrar], [data-agenda-vista]");
         if (!enlace || !panel || evento.defaultPrevented || evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
         evento.preventDefault();
-        cargarDetalle(enlace);
+        cargarDetalle(enlace, evento.detail === 0);
     });
 
     document.addEventListener("keydown", function (evento) {
@@ -103,7 +107,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var cerrar = contenido && contenido.querySelector("[data-agenda-cerrar]");
         if (!cerrar) return;
         evento.preventDefault();
-        cargarDetalle(cerrar);
+        cargarDetalle(cerrar, Boolean(panel && panel.contains(document.activeElement)));
     });
 
     document.addEventListener("change", function (evento) {
