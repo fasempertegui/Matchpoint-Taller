@@ -1313,8 +1313,8 @@ Recorrido:
 1. El sistema muestra las personas asignadas y las asistencias guardadas con su versión de carga.
 2. El actor elige Presente o Ausente en una fila y confirma en un modal. Cancelar no modifica el registro.
 3. El servidor bloquea personas, instalaciones, turno y evento según el orden común, valida autorización, versión y fin del turno. Si la clase sigue Programada, la finaliza; si ya está Finalizada, conserva ese estado. Guarda únicamente la persona elegida y devuelve su estado, observaciones y la nueva versión dentro de la misma transacción.
-4. La pantalla actualiza la fila al recibir la confirmación del servidor, sin recargar ni requerir un guardado general. Las demás filas permanecen intactas.
-5. Para cambiar observaciones abre su modal y solicita Guardar observaciones; cancelar no cambia el texto guardado. Quitar la marca vuelve a Sin registrar mediante confirmación y guardado individual, conservando el registro.
+4. Durante la escritura la pantalla indica «Guardando asistencia…». Al recibir la confirmación del servidor, actualiza la fila sin recargar ni requerir un guardado general y comunica el resultado en un toast de éxito con el nombre de la persona, reutilizando el mismo toast y reiniciando su tiempo de lectura ante guardados sucesivos. Las demás filas permanecen intactas.
+5. Para cambiar observaciones abre su modal y solicita Guardar observaciones; cancelar no cambia el texto guardado. Los errores de validación corregibles se muestran dentro del diálogo junto al campo de observaciones. Quitar la marca vuelve a Sin registrar mediante confirmación y guardado individual, conservando el registro.
 6. Puede buscar una persona no asignada y agregarla a la pantalla para registrar su asistencia. Agregarla por sí solo no escribe asistencia ni modifica asignaciones.
 
 Alternativas:
@@ -1325,8 +1325,8 @@ Alternativas:
 - Presente y Ausente conservan responsable y momento. Sin registrar no se interpreta como ausencia. Las correcciones conservan auditoría y actualizan la fecha de modificación.
 - Si cambian la clase, sus asignaciones o la asistencia, o vence la carga, se rechaza la nueva escritura y se solicita consultar el estado actual. La pantalla no renueva automáticamente una versión rechazada.
 - Una finalización automática simultánea no invalida la operación si las asignaciones y asistencias conservan la versión revisada. La tarea automática no marca presentes ni ausentes.
-- Un error revierte la operación individual completa, incluida su finalización si correspondía; los guardados anteriores son independientes y se conservan.
-- La pérdida de conexión no se presenta como éxito ni provoca un reintento automático de escritura; se ofrece recargar para conocer el estado efectivo.
+- Un error revierte la operación individual completa, incluida su finalización si correspondía; los guardados anteriores son independientes y se conservan. Los rechazos del servidor en la grilla o por cambio concurrente se comunican en un toast de error con el motivo devuelto, coordinando los anuncios para emitir un único resultado por intento.
+- La pérdida de conexión no se presenta como éxito ni provoca un reintento automático de escritura; se comunica en un toast de error invitando a recargar para consultar el estado actual.
 - Agregar asistencia no incorpora al alumno a futuros turnos ni exige Alumno o contratación. El sistema no clasifica la asistencia como recuperación.
 - Sólo las personas agregadas a la pantalla y todavía no guardadas se pueden quitar de la carga local. Una asistencia guardada se corrige sin borrarse.
 

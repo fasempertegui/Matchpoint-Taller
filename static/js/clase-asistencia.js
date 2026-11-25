@@ -21,14 +21,32 @@ document.addEventListener("DOMContentLoaded", function () {
     [editor, confirmacion].forEach(function (modal) {
         modal.addEventListener("cancel", function (evento) { if (guardando) evento.preventDefault(); });
     });
+    function mostrarExitoGuardado(fila) {
+        if (window.Mensajes) {
+            window.Mensajes.mostrar({
+                texto: "Asistencia de " + fila.dataset.nombre + " guardada",
+                nivel: "success",
+                clave: "asistencia-guardada",
+            });
+        }
+    }
+
+    function mostrarErrorGuardado(mensaje) {
+        if (window.Mensajes) {
+            window.Mensajes.mostrar({
+                texto: mensaje,
+                nivel: "error",
+            });
+        }
+    }
+
     async function guardarFila(fila, estado, nota) {
-        if (guardando) return false;
+        if (guardando) return { ok: false, cancelado: true };
         guardando = true;
         var controles = Array.from(formulario.querySelectorAll("button"))
             .concat(Array.from(editor.querySelectorAll("button")), Array.from(confirmacion.querySelectorAll("button")));
         controles.forEach(function (control) { control.disabled = true; });
         estadoGuardado.hidden = false;
-        estadoGuardado.classList.remove("error-campo");
         estadoGuardado.textContent = "Guardando asistencia…";
         formulario.setAttribute("aria-busy", "true");
         var datos = new FormData();
@@ -43,10 +61,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 headers: {"Accept": "application/json"},
             });
             if (respuesta.redirected || !(respuesta.headers.get("Content-Type") || "").includes("application/json")) {
-                throw new Error("No se pudo confirmar el guardado. Revisá tu sesión y recargá la asistencia.");
+                return {
+                    ok: false,
+                    corregible: false,
+                    error: "No se pudo confirmar el guardado. Revisá tu sesión y recargá la asistencia.",
+                };
             }
             var resultado = await respuesta.json();
-            if (!respuesta.ok) throw new Error(resultado.error || "No se pudo guardar la asistencia.");
+            if (!respuesta.ok) {
+                return {
+                    ok: false,
+                    corregible: respuesta.status === 400,
+                    error: resultado.error || "No se pudo guardar la asistencia.",
+                };
+            }
             formulario.elements.version.value = resultado.version;
             campo(fila, "estado").value = resultado.estado;
             campo(fila, "observaciones").value = resultado.observaciones;
@@ -56,16 +84,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 var aviso = document.querySelector("[data-aviso-finalizacion]");
                 if (aviso) aviso.hidden = true;
             }
-            estadoGuardado.textContent = "Asistencia de " + fila.dataset.nombre + " guardada";
-            return true;
+            return { ok: true };
         } catch (error) {
-            estadoGuardado.classList.add("error-campo");
-            estadoGuardado.textContent = error instanceof TypeError || error instanceof SyntaxError
-                ? "No se pudo confirmar el guardado. Recargá para consultar el estado actual."
-                : error.message || "No se pudo guardar la asistencia.";
-            return false;
+            return {
+                ok: false,
+                corregible: false,
+                error: error instanceof TypeError || error instanceof SyntaxError
+                    ? "No se pudo confirmar el guardado. Recargá para consultar el estado actual"
+                    : error.message || "No se pudo guardar la asistencia.",
+            };
         } finally {
             guardando = false;
+            estadoGuardado.hidden = true;
+            estadoGuardado.textContent = "";
             formulario.removeAttribute("aria-busy");
             controles.forEach(function (control) { control.disabled = false; });
         }
@@ -98,7 +129,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     function abrirEditor(fila) {
         if (guardando) return;
-        editor.querySelector("[data-error-observaciones]").hidden = true;
+        var error = editor.querySelector("[data-error-observaciones]");
+        error.hidden = true;
+        error.textContent = "";
         filaActual = fila;
         editor.querySelector("[data-editor-nombre]").textContent = fila.dataset.nombre;
         observaciones.value = campo(fila, "observaciones").value;
@@ -131,7 +164,12 @@ document.addEventListener("DOMContentLoaded", function () {
         cambioPendiente = null;
         if (!cambio || !cambio.fila.isConnected) return;
         if (confirmacion.returnValue === "confirmar") {
-            await guardarFila(cambio.fila, cambio.estado, campo(cambio.fila, "observaciones").value);
+            var resultado = await guardarFila(cambio.fila, cambio.estado, campo(cambio.fila, "observaciones").value);
+            if (resultado.ok) {
+                mostrarExitoGuardado(cambio.fila);
+            } else if (!resultado.cancelado) {
+                mostrarErrorGuardado(resultado.error);
+            }
         }
         cambio.origen.focus();
     });
@@ -144,13 +182,22 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!evento.submitter || evento.submitter.value !== "guardar") return;
         evento.preventDefault();
         if (!filaActual || guardando) return;
+        var fila = filaActual;
         var error = editor.querySelector("[data-error-observaciones]");
         error.hidden = true;
-        if (await guardarFila(filaActual, campo(filaActual, "estado").value, observaciones.value)) {
+        error.textContent = "";
+        var resultado = await guardarFila(fila, campo(fila, "estado").value, observaciones.value);
+        if (resultado.ok) {
             editor.close();
-        } else {
-            error.textContent = estadoGuardado.textContent;
-            error.hidden = false;
+            mostrarExitoGuardado(fila);
+        } else if (!resultado.cancelado) {
+            if (resultado.corregible) {
+                error.textContent = resultado.error;
+                error.hidden = false;
+                observaciones.focus();
+            } else {
+                mostrarErrorGuardado(resultado.error);
+            }
         }
     });
     editor.querySelector("[data-quitar-de-carga]").addEventListener("click", function () {
