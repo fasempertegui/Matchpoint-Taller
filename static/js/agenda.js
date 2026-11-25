@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", function () {
         aviso.textContent = "";
         var demoraAviso = window.setTimeout(function () {
             if (solicitud !== solicitudActual) return;
-            aviso.setAttribute("role", "status");
             aviso.textContent = "Cargando…";
             aviso.hidden = false;
         }, 300);
@@ -36,8 +35,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 throw new Error();
             }
             if (!respuesta.ok) {
-                if (respuesta.status === 403) mensajeError = "No se pudo autorizar la consulta. Recargá la página para continuar.";
-                if (respuesta.status === 400) mensajeError = (await respuesta.json()).error;
+                if (respuesta.status === 403) {
+                    mensajeError = "No se pudo autorizar la consulta. Recargá la página para continuar.";
+                } else if (respuesta.status === 400) {
+                    try {
+                        var cuerpo = await respuesta.json();
+                        if (cuerpo && cuerpo.error) mensajeError = cuerpo.error;
+                    } catch {
+                        // Conserva el mensaje general si el cuerpo no es JSON.
+                    }
+                }
                 throw new Error();
             }
             var seleccion = respuesta.headers.get("X-Agenda-Seleccion");
@@ -72,16 +79,23 @@ document.addEventListener("DOMContentLoaded", function () {
                     seleccionadoAnterior.blur();
                 }
             }
-            aviso.hidden = true;
-            aviso.textContent = "";
         } catch (error) {
             if (error.name === "AbortError" || solicitud !== solicitudActual) return;
-            aviso.setAttribute("role", "alert");
-            aviso.textContent = mensajeError;
-            aviso.hidden = false;
+            var textoError = error instanceof TypeError
+                ? "No se pudo conectar con el servidor. Revisá tu conexión e intentá nuevamente."
+                : mensajeError;
+            if (window.Mensajes) {
+                window.Mensajes.mostrar({
+                    texto: textoError,
+                    nivel: "error",
+                    clave: "agenda-panel-error",
+                });
+            }
         } finally {
             window.clearTimeout(demoraAviso);
             if (solicitud === solicitudActual) {
+                aviso.hidden = true;
+                aviso.textContent = "";
                 panel.removeAttribute("aria-busy");
                 contenido.inert = false;
             }

@@ -24,10 +24,6 @@
     {% endif %}
 
     <section class="tarjeta formulario-cuerpo">
-        {% for aviso in avisos_operacion %}
-            <div class="mensaje mensaje-error" role="alert">{{ aviso }}</div>
-        {% endfor %}
-
         {% if previa != None %}
             <h2 class="formulario-seccion-titulo">Resumen del alcance</h2>
             {% tabla_datos etiqueta="Resumen de la operación" %}

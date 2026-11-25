@@ -121,15 +121,23 @@ def generacion_clases(request):
                 _validar_alcance_confirmacion(request.POST.get("confirmacion", ""), usuario, datos)
             if paso == "generar":
                 resultado = generar_clases(usuario, request.POST.get("confirmacion", ""))
+                cantidad_creadas = len(resultado["clases_ids"])
+                cantidad_omitidas = len(resultado["omitidas"])
                 request.session["resultado_generacion_clases"] = {
                     "sede": sede.pk, "desde": resultado["desde_efectivo"].isoformat(), "hasta": datos["fecha_hasta"].isoformat(),
-                    "clases_ids": resultado["clases_ids"], "omitidas": len(resultado["omitidas"]),
+                    "clases_ids": resultado["clases_ids"], "omitidas": cantidad_omitidas,
                     "detalle_omitidas": [
                         {**fila, "fecha": fila["fecha"].isoformat(), "hora_inicio": fila["hora_inicio"].isoformat()}
                         for fila in resultado["omitidas"]
                     ],
                     "cancha": request.GET.get("cancha"),
                 }
+                parte_creadas = "Se creó 1 clase" if cantidad_creadas == 1 else f"Se crearon {cantidad_creadas} clases"
+                if cantidad_omitidas:
+                    parte_omitidas = "se omitió 1" if cantidad_omitidas == 1 else f"se omitieron {cantidad_omitidas}"
+                    messages.warning(request, f"{parte_creadas} y {parte_omitidas}.")
+                else:
+                    messages.success(request, f"{parte_creadas}.")
                 return redirect("clases:generacion_resultado")
             if paso == "confirmar_revision":
                 revision = confirmar_generacion(usuario, request.POST.get("confirmacion", ""))

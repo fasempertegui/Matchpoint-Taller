@@ -755,10 +755,6 @@ a.agenda-turno:not(.agenda-turno-anulado):hover {
     font-size: .85rem;
 }
 
-.agenda-aviso[role="alert"] {
-    color: var(--peligro);
-}
-
 .agenda-aviso[hidden] {
     display: none;
 }

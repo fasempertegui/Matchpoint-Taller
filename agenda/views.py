@@ -336,7 +336,6 @@ def agenda_acciones(request):
 
 
 def _preparar_acciones(request, fecha, url_agenda, fecha_hasta=None):
-    avisos = []
     mensual = fecha_hasta is not None
     sal = "agenda.acciones-mes" if mensual else "agenda.acciones-dia"
     paso = request.POST.get("paso") if request.method == "POST" else None
@@ -364,7 +363,7 @@ def _preparar_acciones(request, fecha, url_agenda, fecha_hasta=None):
                     datos[nombre] = valor
             datos["horario"] = confirmacion["parametros"]["hora_desde"] or "dia"
         except (signing.BadSignature, KeyError, TypeError, ValueError):
-            avisos.append("La vista previa venció o no corresponde a esta selección. Preparala nuevamente.")
+            messages.error(request, "La vista previa venció o no corresponde a esta selección. Revisá y prepará la operación nuevamente.")
             datos = None
             paso = None
 
@@ -385,8 +384,10 @@ def _preparar_acciones(request, fecha, url_agenda, fecha_hasta=None):
                         raise ValidationError("El alcance cambió desde la vista previa. Revisá nuevamente las acciones.")
                     resultado = ejecutar_operacion(request.user, fecha, parametros, confirmacion["huella"], fecha_hasta)
                 except ValidationError as error:
-                    for mensaje in error.messages:
-                        avisos.append(mensaje)
+                    motivos = " ".join(mensaje.strip() for mensaje in error.messages if mensaje and mensaje.strip())
+                    if motivos and "revis" not in motivos.casefold():
+                        motivos = f"{motivos} Revisá la vista previa antes de confirmar."
+                    messages.error(request, motivos or "No se pudo ejecutar la operación. Revisá la vista previa antes de confirmar.")
                 else:
                     messages.success(
                         request,
@@ -430,7 +431,7 @@ def _preparar_acciones(request, fecha, url_agenda, fecha_hasta=None):
     return {
         "fecha": fecha, "mensual": mensual,
         "formulario_operacion": formulario, "previa": previa, "confirmacion": token, "parametros_operacion": parametros,
-        "avisos_operacion": avisos, "alcance_operacion": alcance,
+        "alcance_operacion": alcance,
         "motivo_bloqueo": dict(formulario.fields["motivo_bloqueo"].choices).get(parametros["motivo_bloqueo"], "")
             if parametros and not mensual else "",
     }

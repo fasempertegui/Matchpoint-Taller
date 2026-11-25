@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", function () {
     var selectorResultados = "[data-resultados-filtros]";
     var selectorEnlace = "[data-limpiar-filtros], [data-consulta-filtros]";
     var plantilla = contenido.querySelector("[data-filtro-borrar-texto]");
-    var aviso = contenido.querySelector("[data-aviso-filtros]");
     var formulario = contenido.querySelector(":scope > form");
     var navegacion = formulario.hasAttribute("data-filtros-navegacion");
     var demora;
@@ -34,7 +33,6 @@ document.addEventListener("DOMContentLoaded", function () {
         cancelarPendientes();
         var actual = new AbortController();
         solicitud = actual;
-        aviso.textContent = "";
 
         try {
             var respuesta = await fetch(url, {signal: actual.signal, cache: "no-store"});
@@ -87,7 +85,13 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch {
             if (actual.signal.aborted) return;
             alFallar?.();
-            aviso.textContent = "No se pudieron actualizar los resultados. Volvé a intentar.";
+            if (window.Mensajes) {
+                window.Mensajes.mostrar({
+                    texto: "No se pudieron actualizar los resultados. Volvé a intentar",
+                    nivel: "error",
+                    clave: "filtros-error",
+                });
+            }
         } finally {
             if (solicitud === actual) solicitud = null;
         }
