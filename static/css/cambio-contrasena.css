@@ -91,9 +91,3 @@
 .contrasena-reglas-separador {
     border-top: 1px solid var(--borde);
 }
-
-[data-cambio-contrasena] .boton-primario:disabled {
-    background: var(--primario);
-    opacity: 0.5;
-    cursor: not-allowed;
-}

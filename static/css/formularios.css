@@ -295,41 +295,39 @@
 }
 
 .modal-cerrar {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
     margin: -4px -6px 0 0;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--texto-suave);
-    font-size: 1.35rem;
-    line-height: 1;
-    cursor: pointer;
 }
 
-.modal-cerrar:hover {
-    background: color-mix(in srgb, var(--primario) 10%, transparent);
+@media (hover: hover) {
+    .modal-cabecera .modal-cerrar:not(:disabled):hover {
+        background: color-mix(in srgb, var(--primario) 12%, transparent);
+        color: var(--primario);
+    }
+
+    .modal-peligro .modal-cerrar:not(:disabled):hover {
+        background: color-mix(in srgb, var(--peligro) 12%, transparent);
+        color: var(--peligro);
+    }
+
+    .modal-advertencia .modal-cerrar:not(:disabled):hover {
+        background: color-mix(in srgb, var(--advertencia) 12%, transparent);
+        color: var(--advertencia);
+    }
+}
+
+.modal-cabecera .modal-cerrar:not(:disabled):active {
+    background: color-mix(in srgb, var(--primario) 18%, transparent);
     color: var(--primario);
 }
 
-.modal-peligro .modal-cerrar:hover {
-    background: color-mix(in srgb, var(--peligro) 10%, transparent);
+.modal-peligro .modal-cerrar:not(:disabled):active {
+    background: color-mix(in srgb, var(--peligro) 18%, transparent);
     color: var(--peligro);
 }
 
-.modal-advertencia .modal-cerrar:hover {
-    background: color-mix(in srgb, var(--advertencia) 10%, transparent);
+.modal-advertencia .modal-cerrar:not(:disabled):active {
+    background: color-mix(in srgb, var(--advertencia) 18%, transparent);
     color: var(--advertencia);
-}
-
-.modal-cerrar:focus-visible,
-.modal-unificado .boton:focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: 2px;
 }
 
 .modal-cuerpo {

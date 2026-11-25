@@ -433,7 +433,7 @@ h2 {
 }
 
 .formulario-guiado .acciones-formulario {
-    justify-content: flex-start;
+    justify-content: flex-end;
     margin-top: 24px;
     margin-inline: -20px;
     margin-bottom: -20px;
@@ -808,46 +808,6 @@ tbody tr:last-child td {
     text-align: center;
 }
 
-.boton {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 42px;
-    padding: 9px 16px;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    font: inherit;
-    font-weight: 700;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.boton-primario {
-    background: var(--primario);
-    color: var(--texto-inverso);
-}
-
-.boton-primario:hover {
-    background: var(--primario-hover);
-}
-
-.boton-secundario {
-    border-color: var(--primario);
-    background: var(--superficie);
-    color: var(--primario);
-}
-
-.boton-secundario:hover {
-    border-color: var(--primario-hover);
-    background: var(--primario-suave);
-}
-
-.boton-chico {
-    min-height: 34px;
-    padding: 6px 10px;
-    font-size: 0.86rem;
-}
-
 .selector-contexto {
     display: inline-flex;
     position: relative;
@@ -878,15 +838,6 @@ tbody tr:last-child td {
 
 .selector-contexto .boton {
     line-height: 1rem;
-}
-
-.selector-contexto .boton:focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: 2px;
-}
-
-.boton-bloque {
-    width: 100%;
 }
 
 .grupo-campo {
@@ -1013,19 +964,6 @@ input[type="checkbox"] {
     flex: 1;
     width: auto;
     min-width: 0;
-}
-
-.boton-icono {
-    flex: 0 0 44px;
-    width: 44px;
-    height: 44px;
-    min-height: 44px;
-    padding: 0;
-}
-
-.boton-icono:disabled {
-    cursor: wait;
-    opacity: 0.6;
 }
 
 .aviso-campo {
@@ -1296,32 +1234,6 @@ html.modal-abierto {
     }
 }
 
-.boton-advertencia {
-    color: var(--advertencia);
-    border-color: var(--advertencia);
-    background: var(--superficie);
-}
-
-.boton-advertencia:hover {
-    color: var(--advertencia);
-    background: var(--advertencia-suave);
-}
-
-.boton-confirmar-advertencia {
-    color: var(--texto-inverso);
-    border-color: var(--advertencia);
-    background: var(--advertencia);
-}
-
-.boton-confirmar-advertencia:hover {
-    color: var(--texto-inverso);
-    background: color-mix(in srgb, var(--advertencia) 85%, var(--texto));
-}
-
-.boton-peligro { color: var(--peligro); border-color: var(--peligro); background: var(--superficie); }
-.boton-peligro:hover { color: var(--peligro); background: var(--fondo); }
-.boton-confirmar-peligro { color: var(--texto-inverso); border-color: var(--peligro); background: var(--peligro); }
-.boton-confirmar-peligro:hover { color: var(--texto-inverso); background: var(--peligro); }
 .acciones-anulacion { display: grid; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--borde); }
 
 .accion-finalizar-clase { display: grid; }

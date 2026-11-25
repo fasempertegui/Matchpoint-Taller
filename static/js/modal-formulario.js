@@ -26,8 +26,10 @@ document.addEventListener("DOMContentLoaded", function () {
     function aplicarVariantes(datos) {
         var form = modal.querySelector("[data-modal-formulario-form]");
         var esPeligro = Boolean((datos && datos.peligro) || (form && form.hasAttribute("data-modal-peligro")));
+        var esAdvertencia = !esPeligro && Boolean((datos && datos.advertencia) || (form && form.hasAttribute("data-modal-advertencia")));
         var esAmplio = Boolean((datos && datos.amplio) || (form && form.hasAttribute("data-modal-amplio")));
         modal.classList.toggle("modal-peligro", esPeligro);
+        modal.classList.toggle("modal-advertencia", esAdvertencia);
         modal.classList.toggle("modal-amplio", esAmplio);
     }
 
@@ -135,7 +137,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (menu) menu.open = false;
 
         cargando = true;
-        devolverFoco = disparador;
+        devolverFoco = menu ? (menu.querySelector("summary") || disparador) : disparador;
         disparador.setAttribute("aria-busy", "true");
         try {
             var resultado = await solicitar(url, { method: "GET" });
@@ -164,9 +166,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     modal.addEventListener("click", function (evento) {
-        if (evento.target.closest("[data-modal-cerrar]")) {
+        if (evento.target.closest("[data-modal-cerrar]") && !enviando) {
             cerrarDialogo();
         }
+    });
+
+    modal.addEventListener("cancel", function (evento) {
+        if (enviando) evento.preventDefault();
     });
 
     modal.addEventListener("submit", async function (evento) {
@@ -227,7 +233,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.documentElement.classList.remove("modal-abierto");
         if (window.Mensajes) window.Mensajes.desmontarDe(modal);
         modal.innerHTML = "";
-        modal.classList.remove("modal-peligro", "modal-amplio");
+        modal.classList.remove("modal-peligro", "modal-advertencia", "modal-amplio");
         if (window.Mensajes) window.Mensajes.sincronizarContenedor();
         var foco = devolverFoco;
         devolverFoco = null;

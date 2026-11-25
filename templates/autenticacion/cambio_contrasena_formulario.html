@@ -21,10 +21,10 @@
             {% csrf_token %}
             {% include "autenticacion/campos_formulario.html" with mostrar_contrasena_por_campo=True %}
             <div class="acciones-formulario">
-                <button class="boton boton-primario" type="submit">Guardar contraseña</button>
                 {% if not request.user.debe_cambiar_contrasena %}
                     <a class="boton boton-secundario" href="{% url 'usuarios:usuario_detalle' request.user.pk %}">Cancelar</a>
                 {% endif %}
+                <button class="boton boton-primario" type="submit">Guardar contraseña</button>
             </div>
         </form>
     </section>

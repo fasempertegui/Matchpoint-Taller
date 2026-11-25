@@ -54,7 +54,7 @@
                     {% endif %}
                     <div class="acciones-formulario">
                         <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-                        <button class="boton boton-primario" name="paso" value="organizador">Continuar</button>
+                        <button class="boton boton-primario" type="submit" name="paso" value="organizador">Continuar</button>
                     </div>
                 </form>
             {% elif not modalidad %}
@@ -115,8 +115,8 @@
                     <input type="hidden" name="confirmacion" value="{{ revision.confirmacion }}">
                     <div class="acciones-formulario">
                         <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-                        <button class="boton boton-secundario" name="paso" value="editar">Volver</button>
-                        <button class="boton boton-primario" name="paso" value="confirmar">Confirmar reserva</button>
+                        <button class="boton boton-secundario" type="submit" name="paso" value="editar">Volver</button>
+                        <button class="boton boton-primario" type="submit" name="paso" value="confirmar">Confirmar reserva</button>
                     </div>
                 </form>
             {% else %}
@@ -136,8 +136,8 @@
                     {% include "componentes/observaciones_opcionales.html" with campo=formulario.observaciones only %}
                     <div class="acciones-formulario">
                         <a class="boton boton-secundario" href="{{ url_cancelar }}">Cancelar</a>
-                        <button class="boton boton-secundario" name="paso" value="organizador">Volver</button>
-                        <button class="boton boton-primario" name="paso" value="revisar">Revisar reserva</button>
+                        <button class="boton boton-secundario" type="submit" name="paso" value="organizador">Volver</button>
+                        <button class="boton boton-primario" type="submit" name="paso" value="revisar">Revisar reserva</button>
                     </div>
                 </form>
             {% endif %}

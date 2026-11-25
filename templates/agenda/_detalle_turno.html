@@ -17,7 +17,7 @@
             {% endif %}
         {% elif detalle.clase %}
             {% if detalle.datos_clase.puede_finalizar %}
-                <form class="agenda-formulario" method="post" action="{% url 'clases:clase_finalizar' detalle.clase.pk %}" data-confirmar="¿Finalizar la clase {{ detalle.clase.pk }}? Se conservan el turno y las asignaciones. La asistencia no se modifica." data-confirmar-titulo="Finalizar clase" data-confirmar-boton="Confirmar">
+                <form class="agenda-formulario" method="post" action="{% url 'clases:clase_finalizar' detalle.clase.pk %}" data-confirmar="¿Finalizar la clase {{ detalle.clase.pk }}? Se conservan el turno y las asignaciones. La asistencia no se modifica." data-confirmar-titulo="Finalizar clase" data-confirmar-boton="Finalizar clase">
                     {% csrf_token %}
                     <button class="agenda-opcion" type="submit">
                         {% include "agenda/_opcion_turno.html" with tipo="finalizar" titulo="Finalizar clase" descripcion="Marcá la clase como finalizada" only %}

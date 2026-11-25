@@ -51,7 +51,7 @@
                 <a class="boton boton-secundario boton-chico" href="{{ url_planilla }}">Volver a la planilla</a>
             </div>
             <div class="acciones-anulacion">
-                <form class="perfil-acciones perfil-acciones-botones" method="post" data-confirmar="¿Quitar el horario del {{ turno.get_dia_semana_display }}, de {{ turno.hora_inicio|time:'H:i' }} a {{ hora_fin|time:'H:i' }}, en {{ turno.cancha.sede.nombre }}, {{ turno.cancha.nombre }}? Las clases existentes se conservan. Esta acción no se puede deshacer." data-confirmar-titulo="Quitar horario" data-confirmar-boton="Confirmar" data-confirmar-peligro>
+                <form class="perfil-acciones perfil-acciones-botones" method="post" data-confirmar="¿Quitar el horario del {{ turno.get_dia_semana_display }}, de {{ turno.hora_inicio|time:'H:i' }} a {{ hora_fin|time:'H:i' }}, en {{ turno.cancha.sede.nombre }}, {{ turno.cancha.nombre }}? Las clases existentes se conservan. Esta acción no se puede deshacer." data-confirmar-titulo="Quitar horario" data-confirmar-boton="Quitar horario" data-confirmar-peligro>
                     {% csrf_token %}<input type="hidden" name="accion" value="quitar"><input type="hidden" name="version" value="{{ version }}">
                     <button class="boton boton-peligro boton-chico" type="submit">Quitar horario</button>
                 </form>

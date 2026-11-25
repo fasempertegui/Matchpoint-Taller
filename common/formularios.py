@@ -25,6 +25,7 @@ def modal_formulario(
     action="",
     subtitulo="",
     peligro=False,
+    advertencia=False,
     amplio=False,
     texto_enviar="Guardar",
     texto_cancelar="Cancelar",
@@ -34,7 +35,12 @@ def modal_formulario(
     id_titulo="modal-formulario-titulo",
 ):
     if not clase_enviar:
-        clase_enviar = "boton-confirmar-peligro" if peligro else "boton-primario"
+        if peligro:
+            clase_enviar = "boton-confirmar-peligro"
+        elif advertencia:
+            clase_enviar = "boton-confirmar-advertencia"
+        else:
+            clase_enviar = "boton-primario"
     return render_to_string(
         "componentes/modal_formulario.html",
         {
@@ -42,6 +48,7 @@ def modal_formulario(
             "subtitulo": subtitulo,
             "action": action,
             "peligro": bool(peligro),
+            "advertencia": bool(advertencia) and not bool(peligro),
             "amplio": bool(amplio),
             "texto_enviar": texto_enviar,
             "texto_cancelar": texto_cancelar,

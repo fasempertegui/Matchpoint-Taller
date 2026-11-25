@@ -430,11 +430,6 @@
     border-radius: 10px;
 }
 
-.perfil-modal .modal-confirmacion-acciones {
-    justify-content: flex-start;
-}
-
-
 .perfil-modal .form-control {
     border-radius: 10px;
 }
@@ -461,15 +456,4 @@
     color: var(--advertencia);
     font-size: 0.9rem;
     line-height: 1.6;
-}
-
-.boton-activar {
-    border-color: var(--estado-positivo);
-    background: var(--superficie);
-    color: var(--estado-positivo);
-}
-
-.boton-activar:hover {
-    background: var(--acento-suave);
-    color: var(--estado-positivo);
 }

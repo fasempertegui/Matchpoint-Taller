@@ -1,0 +1,278 @@
+/* Variantes compartidas de botones sobre tema claro y oscuro */
+
+.boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 9px 16px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 700;
+    line-height: 1.25;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.boton > svg {
+    display: block;
+    flex-shrink: 0;
+}
+
+.boton-chico {
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: 0.86rem;
+}
+
+.boton-bloque {
+    width: 100%;
+}
+
+.boton-icono {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+}
+
+.boton-icono > svg {
+    width: 20px;
+    height: 20px;
+}
+
+.boton-icono.boton-chico {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+}
+
+.boton-icono.boton-chico > svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Variantes de intención en tema claro */
+
+.boton-primario {
+    border-color: var(--primario);
+    background: var(--primario);
+    color: var(--texto-inverso);
+}
+
+.boton-primario:not(:disabled):not([aria-disabled="true"]):active {
+    border-color: color-mix(in srgb, var(--primario-hover) 85%, var(--texto));
+    background: color-mix(in srgb, var(--primario-hover) 85%, var(--texto));
+}
+
+.boton-secundario {
+    border-color: var(--primario);
+    background: var(--superficie);
+    color: var(--primario);
+}
+
+.boton-secundario:not(:disabled):not([aria-disabled="true"]):active {
+    border-color: var(--primario-hover);
+    background: color-mix(in srgb, var(--primario) 15%, var(--superficie));
+}
+
+.boton-secundario:is([aria-pressed="true"], [aria-expanded="true"]) {
+    border-color: var(--primario-hover);
+    background: var(--primario-suave);
+    box-shadow: inset 0 0 0 1px var(--primario-hover);
+}
+
+.boton-utilidad {
+    border-color: transparent;
+    background: transparent;
+    color: var(--texto-suave);
+}
+
+.boton-utilidad:not(:disabled):not([aria-disabled="true"]):active {
+    background: color-mix(in srgb, var(--primario) 15%, var(--superficie));
+    color: var(--primario);
+}
+
+.boton-utilidad:is([aria-pressed="true"], [aria-expanded="true"]) {
+    border-color: var(--primario);
+    background: var(--primario-suave);
+    color: var(--primario);
+}
+
+.boton-peligro {
+    border-color: var(--peligro);
+    background: var(--superficie);
+    color: var(--peligro);
+}
+
+.boton-peligro:not(:disabled):not([aria-disabled="true"]):active {
+    background: color-mix(in srgb, var(--peligro) 18%, var(--superficie));
+}
+
+.boton-confirmar-peligro {
+    border-color: var(--peligro);
+    background: var(--peligro);
+    color: var(--texto-inverso);
+}
+
+.boton-confirmar-peligro:not(:disabled):not([aria-disabled="true"]):active {
+    border-color: color-mix(in srgb, var(--peligro) 75%, var(--texto));
+    background: color-mix(in srgb, var(--peligro) 75%, var(--texto));
+}
+
+.boton-advertencia {
+    border-color: var(--advertencia);
+    background: var(--superficie);
+    color: var(--advertencia);
+}
+
+.boton-advertencia:not(:disabled):not([aria-disabled="true"]):active {
+    background: color-mix(in srgb, var(--advertencia) 18%, var(--superficie));
+}
+
+.boton-confirmar-advertencia {
+    border-color: var(--advertencia);
+    background: var(--advertencia);
+    color: var(--texto-inverso);
+}
+
+.boton-confirmar-advertencia:not(:disabled):not([aria-disabled="true"]):active {
+    border-color: color-mix(in srgb, var(--advertencia) 75%, var(--texto));
+    background: color-mix(in srgb, var(--advertencia) 75%, var(--texto));
+}
+
+/* Variantes sobre tema oscuro */
+
+.tema-publico .boton-primario {
+    border-color: var(--acento);
+    background: var(--acento);
+    color: var(--violeta-oscuro);
+}
+
+.tema-publico .boton-primario:not(:disabled):not([aria-disabled="true"]):active {
+    border-color: color-mix(in srgb, var(--crema) 85%, var(--violeta-oscuro));
+    background: color-mix(in srgb, var(--crema) 85%, var(--violeta-oscuro));
+}
+
+.tema-publico .boton-secundario {
+    border-color: var(--crema);
+    background: transparent;
+    color: var(--crema);
+}
+
+.tema-publico .boton-secundario:not(:disabled):not([aria-disabled="true"]):active {
+    border-color: var(--acento);
+    background: color-mix(in srgb, var(--texto-inverso) 18%, transparent);
+    color: var(--acento);
+}
+
+.tema-publico .boton-utilidad {
+    border-color: transparent;
+    background: transparent;
+    color: var(--crema);
+}
+
+.tema-publico .boton-utilidad:not(:disabled):not([aria-disabled="true"]):active {
+    background: color-mix(in srgb, var(--texto-inverso) 18%, transparent);
+    color: var(--acento);
+}
+
+/* Hover solo para punteros con capacidad hover */
+
+@media (hover: hover) {
+    .boton-primario:not(:disabled):not([aria-disabled="true"]):hover {
+        border-color: var(--primario-hover);
+        background: var(--primario-hover);
+        color: var(--texto-inverso);
+    }
+
+    .boton-secundario:not(:disabled):not([aria-disabled="true"]):hover {
+        border-color: var(--primario-hover);
+        background: var(--primario-suave);
+        color: var(--primario);
+    }
+
+    .boton-utilidad:not(:disabled):not([aria-disabled="true"]):hover {
+        background: var(--primario-suave);
+        color: var(--primario);
+    }
+
+    .boton-peligro:not(:disabled):not([aria-disabled="true"]):hover {
+        border-color: var(--peligro);
+        background: var(--peligro-suave);
+        color: var(--peligro);
+    }
+
+    .boton-confirmar-peligro:not(:disabled):not([aria-disabled="true"]):hover {
+        border-color: color-mix(in srgb, var(--peligro) 85%, var(--texto));
+        background: color-mix(in srgb, var(--peligro) 85%, var(--texto));
+        color: var(--texto-inverso);
+    }
+
+    .boton-advertencia:not(:disabled):not([aria-disabled="true"]):hover {
+        border-color: var(--advertencia);
+        background: var(--advertencia-suave);
+        color: var(--advertencia);
+    }
+
+    .boton-confirmar-advertencia:not(:disabled):not([aria-disabled="true"]):hover {
+        border-color: color-mix(in srgb, var(--advertencia) 85%, var(--texto));
+        background: color-mix(in srgb, var(--advertencia) 85%, var(--texto));
+        color: var(--texto-inverso);
+    }
+
+    .tema-publico .boton-primario:not(:disabled):not([aria-disabled="true"]):hover {
+        border-color: var(--crema);
+        background: var(--crema);
+        color: var(--violeta-oscuro);
+    }
+
+    .tema-publico .boton-secundario:not(:disabled):not([aria-disabled="true"]):hover {
+        border-color: var(--acento);
+        background: var(--realce-inverso);
+        color: var(--acento);
+    }
+
+    .tema-publico .boton-utilidad:not(:disabled):not([aria-disabled="true"]):hover {
+        background: var(--realce-inverso);
+        color: var(--acento);
+    }
+}
+
+/* Foco visible y disponibilidad */
+
+.boton:focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: 2px;
+}
+
+.barra-superior .boton:focus-visible,
+.tema-publico .boton:focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
+}
+
+.boton:disabled,
+.boton[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.boton[aria-busy="true"],
+form[aria-busy="true"] .boton:disabled {
+    cursor: wait;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .boton {
+        transition: none;
+    }
+}

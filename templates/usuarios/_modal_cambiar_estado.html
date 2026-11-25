@@ -21,8 +21,8 @@
             {% endif %}
         </div>
         <footer class="modal-confirmacion-acciones">
-            <button class="boton {% if usuario_obj.is_active %}boton-peligro{% else %}boton-activar{% endif %}" type="submit" data-estado-confirmar>{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %}</button>
             <button class="boton boton-secundario" type="button" data-estado-cancelar autofocus>Cancelar</button>
+            <button class="boton {% if usuario_obj.is_active %}boton-confirmar-peligro{% else %}boton-primario{% endif %}" type="submit" data-estado-confirmar>{% if usuario_obj.is_active %}Desactivar{% else %}Activar{% endif %} cuenta</button>
         </footer>
     </form>
 </dialog>

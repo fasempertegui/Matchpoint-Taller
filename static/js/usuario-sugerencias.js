@@ -57,6 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var errorContrasena = formulario.querySelector("[data-error-contrasena]");
     botonContrasena.addEventListener("click", function () {
         botonContrasena.disabled = true;
+        botonContrasena.setAttribute("aria-busy", "true");
         errorContrasena.hidden = true;
 
         fetch(botonContrasena.dataset.url, {headers: {Accept: "application/json"}, cache: "no-store"})
@@ -75,6 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .finally(function () {
                 botonContrasena.disabled = false;
+                botonContrasena.removeAttribute("aria-busy");
             });
     });
 });

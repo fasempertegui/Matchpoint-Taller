@@ -1,11 +1,11 @@
-<form class="modal-unificado-estructura" method="{{ metodo }}"{% if action %} action="{{ action }}"{% endif %} data-modal-formulario-form{% if peligro %} data-modal-peligro{% endif %}{% if amplio %} data-modal-amplio{% endif %} novalidate>
+<form class="modal-unificado-estructura" method="{{ metodo }}"{% if action %} action="{{ action }}"{% endif %} data-modal-formulario-form{% if peligro %} data-modal-peligro{% endif %}{% if advertencia %} data-modal-advertencia{% endif %}{% if amplio %} data-modal-amplio{% endif %} novalidate>
     {% if metodo == "post" %}{% csrf_token %}{% endif %}
     <header class="modal-cabecera">
         <div class="modal-cabecera-identidad">
             {% if subtitulo %}<p class="modal-subtitulo">{{ subtitulo }}</p>{% endif %}
             <h2 id="{{ id_titulo }}" class="modal-titulo" tabindex="-1" data-modal-titulo>{{ titulo }}</h2>
         </div>
-        <button type="button" class="modal-cerrar" data-modal-cerrar aria-label="Cerrar">&times;</button>
+        <button type="button" class="boton boton-utilidad boton-icono boton-chico modal-cerrar" data-modal-cerrar aria-label="Cerrar">{% include "componentes/iconoir/cruz.html" %}</button>
     </header>
     <div class="modal-cuerpo">
         <div class="mensaje mensaje-error" data-modal-error-general role="alert" hidden></div>

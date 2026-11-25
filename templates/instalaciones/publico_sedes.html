@@ -83,7 +83,7 @@
                 <p class="modal-subtitulo">Ubicación de la sede</p>
                 <h2 id="sede-mapa-modal-titulo" class="modal-titulo" tabindex="-1" data-sede-mapa-titulo>Ubicación</h2>
             </div>
-            <button type="button" class="modal-cerrar" data-sede-mapa-cerrar aria-label="Cerrar">&times;</button>
+            <button type="button" class="boton boton-utilidad boton-icono boton-chico modal-cerrar" data-sede-mapa-cerrar aria-label="Cerrar">{% include "componentes/iconoir/cruz.html" %}</button>
         </header>
         <div class="modal-cuerpo">
             <p class="sede-mapa-modal-direccion" data-sede-mapa-direccion></p>
@@ -99,8 +99,8 @@
             </div>
         </div>
         <footer class="modal-acciones">
-            <a class="boton boton-primario" data-sede-mapa-agenda hidden>Ver agenda</a>
             <button type="button" class="boton boton-secundario" data-sede-mapa-cerrar>Cerrar</button>
+            <a class="boton boton-primario" data-sede-mapa-agenda hidden>Ver agenda</a>
         </footer>
     </div>
 </dialog>

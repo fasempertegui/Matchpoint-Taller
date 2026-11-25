@@ -37,7 +37,7 @@
         <form method="post" novalidate{% if accion == 'agregar' %} data-clase-formulario{% endif %}
               data-confirmar="¿{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} los {{ funcion }} seleccionados en {{ turnos|length }} horario{{ turnos|length|pluralize }}?"
               data-confirmar-titulo="{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} {{ funcion }}"
-              data-confirmar-boton="{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %}"{% if accion == 'quitar' %} data-confirmar-peligro{% endif %}>
+              data-confirmar-boton="{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} {{ funcion }}"{% if accion == 'quitar' %} data-confirmar-peligro{% endif %}>
             {% csrf_token %}
             <input type="hidden" name="seleccion" value="{{ seleccion }}">
             {% if accion %}<input type="hidden" name="accion" value="{{ accion }}">{% endif %}
@@ -54,7 +54,7 @@
 
             <div class="acciones-formulario">
                 <a class="boton boton-secundario" href="{{ url_planilla }}">Cancelar</a>
-                {% if accion == 'agregar' or disponibles %}<button class="boton {% if accion == 'quitar' %}boton-confirmar-peligro{% else %}boton-primario{% endif %}" name="paso" value="guardar">{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} {{ funcion }}</button>{% endif %}
+                {% if accion == 'agregar' or disponibles %}<button class="boton {% if accion == 'quitar' %}boton-confirmar-peligro{% else %}boton-primario{% endif %}" type="submit" name="paso" value="guardar">{% if accion == 'agregar' %}Agregar{% else %}Quitar{% endif %} {{ funcion }}</button>{% endif %}
             </div>
         </form>
     </section>

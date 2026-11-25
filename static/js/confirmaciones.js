@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     var modal = document.querySelector("[data-modal-confirmacion]");
+    if (!modal) return;
     var titulo = modal.querySelector("[data-modal-titulo]");
     var mensaje = modal.querySelector("[data-modal-mensaje]");
     var detalle = modal.querySelector("[data-modal-confirmar-detalle]");
@@ -7,13 +8,27 @@ document.addEventListener("DOMContentLoaded", function () {
     var confirmacionPendiente = null;
     var formularioAutorizado = null;
 
+    window.addEventListener("pageshow", function () {
+        document.querySelectorAll("form[data-enviando-confirmacion]").forEach(function (formulario) {
+            delete formulario.dataset.enviandoConfirmacion;
+            formulario.removeAttribute("aria-busy");
+        });
+    });
+
     document.addEventListener("submit", function (evento) {
         var formulario = evento.target;
         if (!formulario.matches("form[data-confirmar]") || evento.defaultPrevented) return;
         if (evento.submitter && evento.submitter.hasAttribute("data-sin-confirmar")) return;
 
+        if (formulario.dataset.enviandoConfirmacion === "1") {
+            evento.preventDefault();
+            return;
+        }
+
         if (formularioAutorizado === formulario) {
             formularioAutorizado = null;
+            formulario.dataset.enviandoConfirmacion = "1";
+            formulario.setAttribute("aria-busy", "true");
             return;
         }
 
@@ -23,7 +38,16 @@ document.addEventListener("DOMContentLoaded", function () {
         evento.preventDefault();
         if (confirmacionPendiente) return;
 
-        confirmacionPendiente = { formulario: formulario, boton: evento.submitter };
+        var disparador = evento.submitter || null;
+        var menu = disparador ? disparador.closest("details[data-menu-contextual]") : null;
+        if (menu) menu.open = false;
+        var focoRetorno = menu ? (menu.querySelector("summary") || disparador) : disparador;
+
+        confirmacionPendiente = {
+            formulario: formulario,
+            boton: disparador,
+            foco: focoRetorno,
+        };
         titulo.textContent = formulario.dataset.confirmarTitulo || "Confirmar acción";
         mensaje.textContent = formulario.dataset.confirmar;
         var plantilla = formulario.querySelector("template[data-confirmar-detalle]");
@@ -47,7 +71,12 @@ document.addEventListener("DOMContentLoaded", function () {
         var confirmacion = confirmacionPendiente;
         confirmacionPendiente = null;
         document.documentElement.classList.remove("modal-abierto");
-        if (modal.returnValue !== "confirmar" || !confirmacion) return;
+        if (modal.returnValue !== "confirmar" || !confirmacion) {
+            if (confirmacion && confirmacion.foco && confirmacion.foco.isConnected) {
+                confirmacion.foco.focus({ preventScroll: true });
+            }
+            return;
+        }
 
         formularioAutorizado = confirmacion.formulario;
         try {

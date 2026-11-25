@@ -74,8 +74,8 @@
 
             <div class="acciones-formulario">
                 <a class="boton boton-secundario" href="{% url 'reservas:reserva_detalle' reserva.pk %}">Cancelar</a>
-                {% if revision %}<button class="boton boton-secundario" name="paso" value="editar">Volver</button>{% endif %}
-                {% if revision.cambios %}<button class="boton boton-primario" name="paso" value="confirmar">Confirmar cambios</button>{% elif not revision %}<button class="boton boton-primario" name="paso" value="revisar">Revisar cambios</button>{% endif %}
+                {% if revision %}<button class="boton boton-secundario" type="submit" name="paso" value="editar">Volver</button>{% endif %}
+                {% if revision.cambios %}<button class="boton boton-primario" type="submit" name="paso" value="confirmar">Confirmar cambios</button>{% elif not revision %}<button class="boton boton-primario" type="submit" name="paso" value="revisar">Revisar cambios</button>{% endif %}
             </div>
         </form>
     </section>
