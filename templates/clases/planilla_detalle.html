@@ -24,7 +24,23 @@
         </section>
         <section class="perfil-seccion">
             <h2>Participantes ({{ participantes|length }})</h2>
-            {% if participantes %}<ul class="clase-revision-nombres">{% for persona in participantes %}{% include "clases/_fila_persona_revision.html" with persona=persona only %}{% endfor %}</ul>{% else %}<p class="texto-secundario">Sin participantes asignados.</p>{% endif %}
+            {% if participantes %}
+                <ul class="clase-revision-nombres">
+                    {% for participante in participantes %}
+                        <li class="clase-revision-persona planilla-participante">
+                            <span>{{ participante.usuario }}</span>
+                            {% if participante.plan_id %}
+                                <a class="enlace-tabla" href="{% url 'membresias:contratacion_plan_detalle' participante.plan_id %}" aria-label="Plan activo de {{ participante.usuario }}">Plan activo</a>
+                            {% else %}
+                                <span class="texto-secundario">Sin plan activo</span>
+                            {% endif %}
+                            {% if participante.continuidad_texto %}
+                                <span class="planilla-continuidad planilla-continuidad-{{ participante.continuidad_tono }}">{{ participante.continuidad_texto }}</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}<p class="texto-secundario">Sin participantes asignados.</p>{% endif %}
         </section>
     </div>
     <aside class="perfil-lateral" aria-labelledby="acciones-titulo">

@@ -131,7 +131,7 @@ def registrar_turnos_planilla(
         validar_datos_planilla(dia, hora, observaciones)
     usuarios = bloquear_usuarios_clase(profesores_ids | participantes_ids | {registrado_por.pk})
     registrado_por = exigir_administracion_clases(usuarios.get(registrado_por.pk))
-    validar_usuarios_clase(usuarios, profesores_ids, participantes_ids, exigir_profesor=False)
+    validar_usuarios_clase(usuarios, profesores_ids, participantes_ids, exigir_profesor=False, exigir_plan_activo=True)
     sede = Sede.objects.select_for_update().get(pk=cancha.sede_id)
     cancha = Cancha.objects.select_for_update().get(pk=cancha.pk, sede=sede)
     _validar_instalaciones_planilla(sede, cancha)
@@ -171,7 +171,8 @@ def editar_turno_planilla(usuario, turno_id, profesores_ids, participantes_ids, 
     validar_horario_planilla(sede, turno.dia_semana, turno.hora_inicio)
     validar_usuarios_clase(
         usuarios, profesores_ids, participantes_ids,
-        profesores_actuales=profesores, participantes_actuales=participantes, exigir_profesor=False,
+        profesores_actuales=profesores, participantes_actuales=participantes,
+        exigir_profesor=False, exigir_plan_activo=True,
     )
     if (
         profesores == profesores_ids and participantes == participantes_ids

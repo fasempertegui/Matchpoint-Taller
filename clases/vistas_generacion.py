@@ -13,9 +13,11 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
 from instalaciones.models import Cancha, Sede
+from membresias.models import RespuestaContinuidad
 from reservas.models import Evento
 from usuarios.models import Usuario
 
+from .consultas import resumen_comercial_participantes
 from .forms import GeneracionClasesForm
 from .generacion import (
     confirmar_generacion, generar_clases, preparar_generacion,
@@ -48,6 +50,38 @@ def _filas_revision(filas):
     ]
 
 
+def _avisos_participantes_generacion(candidatas, mes_objetivo):
+    participantes_ids = {pk for fila in candidatas for pk in fila["participantes_ids"]}
+    if not participantes_ids:
+        return None
+    resumenes = resumen_comercial_participantes(participantes_ids, mes_objetivo=mes_objetivo)
+    usuarios = Usuario.objects.in_bulk(participantes_ids)
+    ordenados = sorted(
+        (usuarios[pk] for pk in participantes_ids if pk in usuarios),
+        key=lambda persona: (str(persona).casefold(), persona.pk),
+    )
+    no_continuar = [
+        str(persona) for persona in ordenados
+        if resumenes[persona.pk]["continuidad_codigo"] == RespuestaContinuidad.NO_CONTINUAR
+    ]
+    sin_plan = [
+        str(persona) for persona in ordenados
+        if resumenes[persona.pk]["plan_activo"] is None
+    ]
+    afectados = {
+        persona.pk for persona in ordenados
+        if resumenes[persona.pk]["continuidad_codigo"] == RespuestaContinuidad.NO_CONTINUAR
+        or resumenes[persona.pk]["plan_activo"] is None
+    }
+    if not afectados:
+        return None
+    return {
+        "total": len(afectados),
+        "no_continuar": no_continuar,
+        "sin_plan": sin_plan,
+    }
+
+
 def _validar_alcance_confirmacion(token, usuario, datos):
     try:
         firmado = signing.loads(token, salt="clases.generacion", max_age=900)
@@ -76,6 +110,7 @@ def generacion_clases(request):
     confirmacion_final = False
     candidatas = []
     omitidas = []
+    avisos_participantes = None
     sede = None
     if request.method == "POST" and formulario.is_valid():
         datos = formulario.cleaned_data
@@ -106,6 +141,9 @@ def generacion_clases(request):
             if revision:
                 candidatas = _filas_revision(revision["candidatas"])
                 omitidas = _filas_revision(revision["omitidas"])
+                avisos_participantes = _avisos_participantes_generacion(
+                    revision["candidatas"], revision["fecha_desde"],
+                )
         except Sede.DoesNotExist:
             formulario.add_error(None, "La sede ya no está disponible. Revisá nuevamente la generación.")
             revision = None
@@ -120,7 +158,8 @@ def generacion_clases(request):
     return render(request, "clases/generacion_formulario.html", {
         "formulario": formulario, "revision": revision, "confirmacion_final": confirmacion_final,
         "titulo": titulo, "hay_cambios": bool(candidatas),
-        "candidatas": candidatas, "omitidas": omitidas, "sede": sede, "url_planilla": url_planilla,
+        "candidatas": candidatas, "omitidas": omitidas, "avisos_participantes": avisos_participantes,
+        "sede": sede, "url_planilla": url_planilla,
     })
 
 

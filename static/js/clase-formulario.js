@@ -80,6 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var url = new URL(selector.dataset.url, window.location.origin);
                 url.searchParams.set("q", texto);
                 url.searchParams.set("tipo", selector.dataset.tipo);
+                if (selector.dataset.planilla === "1") url.searchParams.set("planilla", "1");
                 if (todos && todos.checked) url.searchParams.set("todos", "1");
                 idsSeleccionados().forEach(function (id) { url.searchParams.append("excluir", id); });
                 try {
@@ -97,6 +98,20 @@ document.addEventListener("DOMContentLoaded", function () {
                         var usuario = document.createElement("small");
                         usuario.textContent = persona.usuario;
                         boton.append(usuario);
+                        if (persona.plan || persona.continuidad) {
+                            var comercial = document.createElement("small");
+                            if (persona.plan) comercial.append(document.createTextNode(persona.plan));
+                            if (persona.continuidad) {
+                                if (persona.plan) comercial.append(document.createTextNode(" — "));
+                                var continuidad = document.createElement("span");
+                                continuidad.textContent = persona.continuidad;
+                                if (persona.continuidad_tono === "advertencia") {
+                                    continuidad.className = "clase-resultado-continuidad-advertencia";
+                                }
+                                comercial.append(continuidad);
+                            }
+                            boton.append(comercial);
+                        }
                         boton.addEventListener("click", function () { agregar(persona); });
                         fila.append(boton);
                         resultados.append(fila);

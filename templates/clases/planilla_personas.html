@@ -44,7 +44,7 @@
             {% if formulario.non_field_errors %}<div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>{% endif %}
 
             {% if accion == 'agregar' %}
-                {% include "clases/_selector_personas.html" with campo=campo seleccionados=personas titulo=funcion|capfirst etiqueta="Buscar persona" vacio="Todavía no seleccionaste personas." ampliar_busqueda=formulario.buscar_todos.value sin_asterisco=True only %}
+                {% include "clases/_selector_personas.html" with campo=campo seleccionados=personas titulo=funcion|capfirst etiqueta="Buscar persona" vacio="Todavía no seleccionaste personas." sin_asterisco=True es_planilla=True only %}
             {% else %}
                 <div class="planilla-personas-opciones">{% for fila in disponibles %}
                     <label><input type="checkbox" name="{{ funcion }}" value="{{ fila.persona.pk }}"{% if fila.elegida %} checked{% endif %}><span><strong>{{ fila.persona }}</strong><small>Asignado en {{ fila.cantidad }} de {{ turnos|length }} horarios</small></span></label>

@@ -43,7 +43,8 @@ def validar_horario_clase(sede, fecha, hora_inicio):
 
 def validar_usuarios_clase(
     usuarios, profesores_ids, participantes_ids,
-    profesores_actuales=frozenset(), participantes_actuales=frozenset(), *, exigir_profesor=True,
+    profesores_actuales=frozenset(), participantes_actuales=frozenset(), *,
+    exigir_profesor=True, exigir_plan_activo=False,
 ):
     if exigir_profesor and not profesores_ids:
         raise ValidationError("Agregá al menos un profesor.")
@@ -59,6 +60,18 @@ def validar_usuarios_clase(
             asignacion.rol.codigo == Rol.PROFESOR for asignacion in usuario.roles.all()
         ):
             raise ValidationError(f"{usuario} no tiene el rol Profesor.")
+    if exigir_plan_activo and nuevos_participantes:
+        from membresias.models import PlanUsuario
+        from .consultas import meses_habilitados_planilla
+
+        con_plan = set(PlanUsuario.objects.filter(
+            usuario_id__in=nuevos_participantes,
+            estado=PlanUsuario.Estado.ACTIVO,
+            mes_cubierto__in=meses_habilitados_planilla(),
+        ).values_list("usuario_id", flat=True))
+        for usuario_id in sorted(nuevos_participantes - con_plan):
+            usuario = usuarios[usuario_id]
+            raise ValidationError(f"{usuario} no tiene un plan activo para el mes actual o el siguiente.")
 
 
 def validar_conflictos_clase(usuarios, profesores_ids, participantes_ids, fecha, hora_inicio, clase_id=None):

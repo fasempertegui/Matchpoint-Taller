@@ -1,4 +1,4 @@
-<section class="clase-selector" data-selector-personas data-tipo="{{ campo.name }}" data-url="{% url 'clases:buscar_personas' %}">
+<section class="clase-selector" data-selector-personas data-tipo="{{ campo.name }}" data-url="{% url 'clases:buscar_personas' %}"{% if es_planilla and campo.name == 'participantes' %} data-planilla="1"{% endif %}>
     <div class="clase-seccion-titulo">
         <h2 id="{{ campo.name }}-titulo">{{ titulo }} <span class="clase-cantidad">(<span data-cantidad>{{ seleccionados|length }}</span>)</span>{% if campo.field.required and not aviso_profesores and not sin_asterisco %} <span aria-hidden="true">*</span>{% endif %}</h2>
     </div>
@@ -11,10 +11,14 @@
                    placeholder="Buscar por nombre, apellido o usuario (mín. 2 letras)" aria-controls="resultados-{{ campo.name }}" data-busqueda>
         </div>
         {% if campo.name == 'participantes' %}
-            <div class="campo-opcion clase-ampliar">
-                <input id="participantes-todos" name="buscar_todos" type="checkbox" data-todos{% if ampliar_busqueda %} checked{% endif %}>
-                <label for="participantes-todos">Buscar también fuera de alumnos</label>
-            </div>
+            {% if es_planilla %}
+                <p class="clase-nota-planilla texto-secundario">Solo se listan usuarios con plan activo en el mes actual o el siguiente.</p>
+            {% else %}
+                <div class="campo-opcion clase-ampliar">
+                    <input id="participantes-todos" name="buscar_todos" type="checkbox" data-todos{% if ampliar_busqueda %} checked{% endif %}>
+                    <label for="participantes-todos">Buscar también fuera de alumnos</label>
+                </div>
+            {% endif %}
         {% endif %}
         <ul class="clase-resultados" id="resultados-{{ campo.name }}" aria-label="Coincidencias" data-resultados hidden></ul>
         <p class="clase-busqueda-estado" role="status" aria-live="polite" data-estado></p>

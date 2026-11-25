@@ -12,6 +12,7 @@ from instalaciones.models import Cancha, Sede
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
+from .consultas import participantes_planilla_queryset
 from .models import Asistencia, TurnoPlanilla
 from .validaciones import validar_datos_feriado, validar_periodo_actividad_clases, validar_periodo_generacion
 
@@ -290,6 +291,7 @@ class PersonasPlanillaForm(ClaseForm):
         super().__init__(*args, **kwargs)
         self.fields.pop("participantes" if funcion == "profesores" else "profesores")
         self.fields.pop("observaciones")
+        self.fields.pop("buscar_todos", None)
         self.fields[funcion].required = True
         self.fields[funcion].error_messages["required"] = "Seleccioná al menos una persona."
         if accion == "quitar":
@@ -299,6 +301,11 @@ class PersonasPlanillaForm(ClaseForm):
                 for vinculo in (turno.profesores.all() if funcion == "profesores" else turno.alumnos.all())
             }
             self.fields[funcion].queryset = Usuario.objects.filter(pk__in=ids)
+        elif funcion == "participantes":
+            self.fields["participantes"].queryset = participantes_planilla_queryset()
+            self.fields["participantes"].error_messages["invalid_choice"] = (
+                "Revisá los participantes seleccionados: alguno no está habilitado o no tiene un plan activo para el mes actual o el siguiente."
+            )
 
 
 class ObservacionesPlanillaForm(forms.Form):

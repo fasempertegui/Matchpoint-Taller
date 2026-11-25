@@ -1,19 +1,31 @@
 from calendar import monthrange
 from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Exists, OuterRef, Prefetch, Q
-from django.utils import timezone
+from django.utils import formats, timezone
 
 from instalaciones.models import Cancha, Sede
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_eventos
+from membresias.fechas import mes_siguiente
+from membresias.models import PlanUsuario, RespuestaContinuidad
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
 from .models import Asistencia, Clase, ClaseAlumno, ClaseProfesor
 from .permisos import exigir_acceso_clases, exigir_administracion_clases, puede_dictar_clase
 from .validaciones import validar_horario_clase, validar_periodo_actividad_clases
+
+ZONA_SALTA = ZoneInfo("America/Argentina/Salta")
+
+ETIQUETAS_CONTINUIDAD_CORTAS = {
+    RespuestaContinuidad.CONTINUAR: "Continuar",
+    RespuestaContinuidad.CAMBIAR: "Cambiar",
+    RespuestaContinuidad.INDECISO: "Todavía no sé",
+    RespuestaContinuidad.NO_CONTINUAR: "No continuar",
+}
 
 
 def clases_sin_asistencia_queryset():
@@ -160,6 +172,101 @@ def consultar_participantes(usuario, busqueda="", incluir_todos=False):
     if not incluir_todos:
         participantes = participantes.filter(roles__rol__codigo=Rol.ALUMNO)
     return _buscar_usuarios(participantes, busqueda)
+
+
+def _mes_anterior(mes):
+    if mes.month == 1:
+        return date(mes.year - 1, 12, 1)
+    return date(mes.year, mes.month - 1, 1)
+
+
+def meses_habilitados_planilla():
+    mes_actual = timezone.now().astimezone(ZONA_SALTA).date().replace(day=1)
+    return (mes_actual, mes_siguiente(mes_actual))
+
+
+def participantes_planilla_queryset():
+    meses = meses_habilitados_planilla()
+    plan_activo = PlanUsuario.objects.filter(
+        usuario_id=OuterRef("pk"),
+        estado=PlanUsuario.Estado.ACTIVO,
+        mes_cubierto__in=meses,
+    )
+    return Usuario.objects.habilitados().filter(Exists(plan_activo))
+
+
+def consultar_participantes_planilla(usuario, busqueda=""):
+    exigir_administracion_clases(usuario)
+    return _buscar_usuarios(participantes_planilla_queryset(), busqueda)
+
+
+def resumen_comercial_participantes(usuarios_ids, *, mes_objetivo=None):
+    ids = list(dict.fromkeys(usuarios_ids))
+    if not ids:
+        return {}
+    if mes_objetivo is None:
+        mes_actual, mes_sig = meses_habilitados_planilla()
+        mes_ant = _mes_anterior(mes_actual)
+        meses_consulta = (mes_ant, mes_actual, mes_sig)
+    else:
+        mes_ref = mes_objetivo.replace(day=1)
+        mes_ant = _mes_anterior(mes_ref)
+        meses_consulta = (mes_ant, mes_ref)
+
+    contratos_por_usuario = {}
+    contrataciones = PlanUsuario.objects.filter(
+        usuario_id__in=ids,
+        mes_cubierto__in=meses_consulta,
+    ).exclude(
+        estado=PlanUsuario.Estado.ANULADO,
+    ).select_related("plan")
+    for contrato in contrataciones:
+        contratos_por_usuario.setdefault(contrato.usuario_id, {})[contrato.mes_cubierto] = contrato
+
+    resumen = {}
+    for usuario_id in ids:
+        por_mes = contratos_por_usuario.get(usuario_id, {})
+        if mes_objetivo is None:
+            contrato_actual = por_mes.get(mes_actual)
+            contrato_siguiente = por_mes.get(mes_sig)
+            if contrato_actual and contrato_actual.estado == PlanUsuario.Estado.ACTIVO:
+                plan_activo = contrato_actual
+            elif contrato_siguiente and contrato_siguiente.estado == PlanUsuario.Estado.ACTIVO:
+                plan_activo = contrato_siguiente
+            else:
+                plan_activo = None
+            contrato_continuidad = contrato_actual if contrato_actual is not None else por_mes.get(mes_ant)
+        else:
+            contrato_mes = por_mes.get(mes_ref)
+            plan_activo = (
+                contrato_mes if contrato_mes and contrato_mes.estado == PlanUsuario.Estado.ACTIVO else None
+            )
+            contrato_continuidad = por_mes.get(mes_ant)
+
+        codigo = contrato_continuidad.respuesta_continuidad if contrato_continuidad else ""
+        etiqueta = ETIQUETAS_CONTINUIDAD_CORTAS.get(codigo)
+        if codigo == RespuestaContinuidad.CONTINUAR:
+            tono = "positivo"
+        elif etiqueta:
+            tono = "advertencia"
+        else:
+            tono = None
+
+        plan_texto = None
+        if plan_activo is not None:
+            mes_texto = formats.date_format(plan_activo.mes_cubierto, "F Y").lower()
+            plan_texto = f"{plan_activo.plan.nombre}, {mes_texto}"
+
+        resumen[usuario_id] = {
+            "plan_activo": plan_activo,
+            "plan_id": plan_activo.pk if plan_activo is not None else None,
+            "plan_texto": plan_texto,
+            "continuidad_codigo": codigo or None,
+            "continuidad_etiqueta": etiqueta,
+            "continuidad_texto": f"Respondió: {etiqueta}" if etiqueta else None,
+            "continuidad_tono": tono,
+        }
+    return resumen
 
 
 def _clases_de_actividad(usuario_id):

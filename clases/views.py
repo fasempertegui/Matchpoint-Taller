@@ -24,7 +24,8 @@ from usuarios.models import Rol, Usuario
 from .anulaciones import confirmar_anulacion_clase, preparar_anulacion_clase, validar_accion_anulacion
 from .consultas import (
     clases_sin_asistencia_queryset, consultar_actividad_clases, consultar_clase, consultar_mis_clases,
-    consultar_participantes, consultar_profesores,
+    consultar_participantes, consultar_participantes_planilla, consultar_profesores,
+    resumen_comercial_participantes,
 )
 from .forms import (
     ActividadClasesForm, AsistenciaEditorForm, AsistenciaFilaForm, AsistenciaFormSet,
@@ -100,8 +101,11 @@ def buscar_personas(request):
         return JsonResponse({"error": "Elegí profesores o participantes."}, status=400)
     if len(busqueda) < 2:
         return JsonResponse({"resultados": [], "hay_mas": False})
+    planilla = request.GET.get("planilla") == "1"
     if tipo == "profesores":
         personas = consultar_profesores(request.user, busqueda)
+    elif planilla:
+        personas = consultar_participantes_planilla(request.user, busqueda)
     else:
         personas = consultar_participantes(request.user, busqueda, request.GET.get("todos") == "1")
     excluidos = [
@@ -109,15 +113,27 @@ def buscar_personas(request):
         if valor.isdecimal() and len(valor) < 19
     ]
     filas = list(personas.exclude(pk__in=excluidos)[:11])
+    visibles = filas[:10]
+    resumenes = (
+        resumen_comercial_participantes([fila["id"] for fila in visibles])
+        if tipo == "participantes" and planilla
+        else {}
+    )
+    resultados = []
+    for fila in visibles:
+        resultado = {
+            "id": fila["id"],
+            "nombre": f"{fila['first_name']} {fila['last_name']}".strip() or fila["username"],
+            "usuario": fila["username"],
+        }
+        if tipo == "participantes" and planilla:
+            comercial = resumenes.get(fila["id"], {})
+            resultado["plan"] = comercial.get("plan_texto") or ""
+            resultado["continuidad"] = comercial.get("continuidad_texto") or ""
+            resultado["continuidad_tono"] = comercial.get("continuidad_tono") or ""
+        resultados.append(resultado)
     return JsonResponse({
-        "resultados": [
-            {
-                "id": fila["id"],
-                "nombre": f"{fila['first_name']} {fila['last_name']}".strip() or fila["username"],
-                "usuario": fila["username"],
-            }
-            for fila in filas[:10]
-        ],
+        "resultados": resultados,
         "hay_mas": len(filas) > 10,
     })
 

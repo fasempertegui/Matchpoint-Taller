@@ -1,11 +1,37 @@
 .planilla-encabezado-grilla {
+    position: sticky;
+    top: var(--planilla-top-sticky, 0px);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 80px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--borde);
+    border-radius: 9px 9px 0 0;
+    background: var(--superficie);
+}
+
+.con-sidebar .planilla-encabezado-grilla {
+    --planilla-top-sticky: 56px;
+}
+
+.planilla-encabezado-grilla.planilla-encabezado-seleccion {
+    background: var(--primario-suave);
+    border-bottom-color: var(--primario-medio);
+    box-shadow: 0 4px 12px rgb(75 23 109 / 10%);
+}
+
+.planilla-encabezado-normal {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 10px 20px;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--borde);
+}
+
+.planilla-encabezado-normal[hidden] {
+    display: none;
 }
 
 .planilla-nota {
@@ -109,36 +135,54 @@ button.planilla-celda-seleccionada { background: var(--primario-suave); color: v
     font: inherit;
     cursor: pointer;
 }
-.planilla-seleccion { position: fixed; z-index: 20; bottom: 16px; left: calc(50% + var(--planilla-desplazamiento, 0px) / 2); transform: translateX(-50%); display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 12px; width: max-content; max-width: calc(100% - var(--planilla-desplazamiento, 0px) - 32px); margin: 0; padding: 16px; border: 1px solid var(--primario); border-radius: 10px; background: var(--primario-suave); box-shadow: 0 6px 20px #4b176d24; }
-.con-sidebar .planilla-seleccion { --planilla-desplazamiento: var(--ancho-sidebar); }
-@media (max-width: 900px) {
-    .con-sidebar .planilla-seleccion { --planilla-desplazamiento: 0px; }
+.planilla-seleccion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    margin: 0;
 }
 .planilla-seleccion[hidden] { display: none; }
 .planilla-seleccion [data-seleccion-valores] { display: none; }
-.planilla-con-seleccion { padding-bottom: 160px; }
+.planilla-seleccion-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
 
 .planilla-tabla .planilla-pausa td { padding: 6px; border-left: 0; text-align: center; color: var(--advertencia); font-size: .75rem; background: var(--advertencia-suave); }
 
 
 button.planilla-celda-ocupada { background: var(--primario-suave); color: var(--texto); }
 .planilla-seleccion [hidden] { display: none; }
-.planilla-aviso-seleccion { padding: 12px 16px; border-left: 3px solid var(--advertencia); background: var(--advertencia-suave); color: var(--advertencia); }
+.planilla-aviso-seleccion {
+    margin: 10px 0 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid var(--advertencia);
+    background: var(--advertencia-suave);
+    color: var(--advertencia);
+    font-size: .875rem;
+}
+.planilla-aviso-seleccion[hidden] { display: none; }
 
-.planilla-seleccion .boton { border-radius: 10px; padding-inline: 12px; white-space: nowrap; }
+.planilla-seleccion .boton { min-height: 40px; border-radius: 10px; padding: 8px 14px; font-size: .92rem; white-space: nowrap; }
 .planilla-seleccion .boton-secundario { background: var(--superficie); }
 .planilla-seleccion .boton-secundario:hover { background: var(--primario-suave); }
-.planilla-seleccion [data-seleccion-cantidad] { flex-shrink: 0; white-space: nowrap; color: var(--primario); font-weight: 600; }
+.planilla-seleccion [data-seleccion-cantidad] { flex-shrink: 0; white-space: nowrap; color: var(--primario); font-size: .98rem; font-weight: 600; }
 
 .planilla-menu-personas { position: relative; }
-.planilla-menu-personas > summary { gap: 8px; list-style: none; cursor: pointer; }
-.planilla-menu-indicador { font-size: 1.2rem; line-height: 1; }
+.planilla-menu-personas > summary { gap: 6px; list-style: none; cursor: pointer; }
+.planilla-menu-indicador { font-size: 1.1rem; line-height: 1; }
 .planilla-menu-personas > summary::-webkit-details-marker { display: none; }
 .planilla-menu-personas > summary:focus-visible { outline: 2px solid var(--primario); outline-offset: 3px; }
 .planilla-menu-opciones {
     position: absolute;
-    right: 0;
-    bottom: calc(100% + 12px);
+    left: 0;
+    top: calc(100% + 8px);
+    z-index: 30;
     min-width: 200px;
     padding: 6px;
     border: 1px solid var(--borde);
@@ -163,6 +207,6 @@ button.planilla-celda-ocupada { background: var(--primario-suave); color: var(--
 .planilla-menu-opciones button:focus-visible { background: var(--primario-suave); color: var(--primario); }
 .planilla-menu-opciones button:focus-visible { outline: 2px solid var(--primario); outline-offset: -2px; }
 
-.planilla-seleccion-separador { align-self: stretch; flex: 0 0 1px; background: var(--borde); }
+.planilla-seleccion-separador { flex: 0 0 1px; height: 26px; background: var(--borde); }
 
 button.planilla-celda-vacia:not(.planilla-celda-seleccionada):hover { background: var(--acento-suave); color: var(--acento-texto); }

@@ -11,22 +11,55 @@
 {% endtarjeta_titulo %}
 {% if hay_sedes %}
     <section class="tarjeta planilla-listado" aria-label="Planilla semanal">
-        <header class="planilla-encabezado-grilla">
-            <form class="planilla-contexto" method="get" data-planilla-contexto>
-                {% for campo in formulario %}
-                    {% if campo.name == 'sede' or hay_canchas %}
-                        <div class="selector-contexto">
-                            <label class="clase-etiqueta-oculta" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-                            {{ campo }}
-                            {% include "componentes/iconoir/chevron-abajo.html" %}
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            </form>
-            <p class="planilla-nota">
-                {% include "componentes/iconoir/informacion.html" %}
-                Cada cancha tiene su propia planilla semanal
-            </p>
+        <header class="planilla-encabezado-grilla" data-planilla-encabezado>
+            <div class="planilla-encabezado-normal" data-planilla-normal>
+                <form class="planilla-contexto" method="get" data-planilla-contexto>
+                    {% for campo in formulario %}
+                        {% if campo.name == 'sede' or hay_canchas %}
+                            <div class="selector-contexto">
+                                <label class="clase-etiqueta-oculta" for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                                {{ campo }}
+                                {% include "componentes/iconoir/chevron-abajo.html" %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </form>
+                <p class="planilla-nota">
+                    {% include "componentes/iconoir/informacion.html" %}
+                    Cada cancha tiene su propia planilla semanal
+                </p>
+            </div>
+            {% if cancha %}
+                <form class="planilla-seleccion" action="{% url 'clases:planilla_crear' %}" method="post" data-planilla-seleccion hidden>
+                    {% csrf_token %}
+                    <input type="hidden" name="cancha" value="{{ cancha.pk }}">
+                    <span role="status" aria-live="polite" data-seleccion-cantidad></span>
+                    <div data-seleccion-valores></div>
+                    <div class="planilla-seleccion-acciones">
+                        <button class="boton boton-primario boton-chico" type="submit" data-crear-horarios>Crear horarios</button>
+                        <input type="hidden" name="funcion" data-funcion-personas disabled>
+                        <details class="planilla-menu-personas" data-menu-personas hidden>
+                            <summary class="boton boton-primario boton-chico" aria-expanded="false" aria-controls="planilla-menu-profesores">Profesores <span class="planilla-menu-indicador" aria-hidden="true">⋮</span></summary>
+                            <div class="planilla-menu-opciones" id="planilla-menu-profesores">
+                                <button type="submit" name="accion" value="agregar" data-funcion="profesores" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Agregar profesores</button>
+                                <button type="submit" name="accion" value="quitar" data-funcion="profesores" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Quitar profesores</button>
+                            </div>
+                        </details>
+                        <details class="planilla-menu-personas" data-menu-personas hidden>
+                            <summary class="boton boton-secundario boton-chico" aria-expanded="false" aria-controls="planilla-menu-participantes">Participantes <span class="planilla-menu-indicador" aria-hidden="true">⋮</span></summary>
+                            <div class="planilla-menu-opciones" id="planilla-menu-participantes">
+                                <button type="submit" name="accion" value="agregar" data-funcion="participantes" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Agregar participantes</button>
+                                <button type="submit" name="accion" value="quitar" data-funcion="participantes" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Quitar participantes</button>
+                            </div>
+                        </details>
+                        <a class="boton boton-secundario boton-chico" data-ver-horario hidden>Detalles</a>
+                        <span class="planilla-seleccion-separador" data-separador-quitar aria-hidden="true" hidden></span>
+                        <button class="boton boton-peligro boton-chico" type="submit" form="planilla-quitar-horarios" data-quitar-horarios hidden disabled>Quitar</button>
+                        <button class="boton boton-secundario boton-chico" type="button" data-limpiar-seleccion>Cancelar</button>
+                    </div>
+                </form>
+                <p class="planilla-aviso-seleccion" role="status" aria-live="polite" data-planilla-aviso hidden></p>
+            {% endif %}
         </header>
         {% for error in formulario.sede.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
         {% if hay_canchas %}{% for error in formulario.cancha.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}{% endif %}
@@ -75,38 +108,11 @@
     </section>
 {% else %}<p class="tarjeta texto-secundario">No hay sedes registradas.</p>{% endif %}
 {% if cancha %}
-<p class="planilla-aviso-seleccion" role="status" aria-live="polite" data-planilla-aviso hidden></p>
-<form class="tarjeta planilla-seleccion" action="{% url 'clases:planilla_crear' %}" method="post" data-planilla-seleccion hidden>
-    {% csrf_token %}
-    <input type="hidden" name="cancha" value="{{ cancha.pk }}">
-    <span role="status" aria-live="polite" data-seleccion-cantidad></span>
-    <div data-seleccion-valores></div>
-    <button class="boton boton-primario" type="submit" data-crear-horarios>Crear horarios</button>
-    <input type="hidden" name="funcion" data-funcion-personas disabled>
-    <details class="planilla-menu-personas" data-menu-personas hidden>
-        <summary class="boton boton-primario" aria-expanded="false" aria-controls="planilla-menu-profesores">Profesores <span class="planilla-menu-indicador" aria-hidden="true">⋮</span></summary>
-        <div class="planilla-menu-opciones" id="planilla-menu-profesores">
-            <button type="submit" name="accion" value="agregar" data-funcion="profesores" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Agregar profesores</button>
-            <button type="submit" name="accion" value="quitar" data-funcion="profesores" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Quitar profesores</button>
-        </div>
-    </details>
-    <details class="planilla-menu-personas" data-menu-personas hidden>
-        <summary class="boton boton-secundario" aria-expanded="false" aria-controls="planilla-menu-participantes">Participantes <span class="planilla-menu-indicador" aria-hidden="true">⋮</span></summary>
-        <div class="planilla-menu-opciones" id="planilla-menu-participantes">
-            <button type="submit" name="accion" value="agregar" data-funcion="participantes" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Agregar participantes</button>
-            <button type="submit" name="accion" value="quitar" data-funcion="participantes" formaction="{% url 'clases:planilla_personas' %}" data-gestionar-personas disabled>Quitar participantes</button>
-        </div>
-    </details>
-    <a class="boton boton-secundario" data-ver-horario hidden>Detalles</a>
-    <span class="planilla-seleccion-separador" data-separador-quitar aria-hidden="true" hidden></span>
-    <button class="boton boton-peligro" type="submit" form="planilla-quitar-horarios" data-quitar-horarios hidden disabled>Quitar</button>
-    <button class="boton boton-secundario" type="button" data-limpiar-seleccion>Cancelar</button>
-</form>
 <form id="planilla-quitar-horarios" action="{% url 'clases:planilla_quitar' %}" method="post" data-quitar-formulario data-confirmar="" data-confirmar-titulo="Quitar horarios" data-confirmar-boton="Quitar horarios" data-confirmar-peligro hidden>
     {% csrf_token %}
     <input type="hidden" name="cancha" value="{{ cancha.pk }}">
     <div data-quitar-valores></div>
 </form>
 {% endif %}
-<script src="{% static 'js/planilla.js' %}?v=20261124-planilla" defer></script>
+<script src="{% static 'js/planilla.js' %}?v=20261124-planilla-2" defer></script>
 {% endblock %}

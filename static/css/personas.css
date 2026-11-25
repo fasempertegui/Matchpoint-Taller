@@ -18,6 +18,8 @@
 .clase-resultados button:hover,
 .clase-resultados button:focus { background: var(--primario-suave); }
 .clase-resultados small { display: block; margin-top: 3px; color: var(--texto-suave); }
+.clase-resultado-continuidad-advertencia { color: var(--advertencia); font-weight: 600; }
+.clase-nota-planilla { margin: 8px 0 0; font-size: .85rem; }
 .clase-buscador [data-estado]:empty { display: none; }
 
 .selector-usuarios-titulo {

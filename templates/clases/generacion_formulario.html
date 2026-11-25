@@ -48,6 +48,37 @@
                     <p>La generación abarca todas las canchas de {{ sede.nombre }} y utiliza la programación habitual actual.</p>
                 </div>
 
+                {% if avisos_participantes %}
+                    <div class="formulario-aviso formulario-aviso-advertencia generacion-aviso-participantes">
+                        <p>
+                            <strong>Participantes a revisar para {{ revision.fecha_desde|date:"F Y" }}:</strong>
+                            {% if avisos_participantes.no_continuar and avisos_participantes.sin_plan %}
+                                {{ avisos_participantes.no_continuar|length }} con respuesta «No continuar» y {{ avisos_participantes.sin_plan|length }} sin plan activo.
+                            {% elif avisos_participantes.no_continuar %}
+                                {{ avisos_participantes.no_continuar|length }} con respuesta «No continuar».
+                            {% else %}
+                                {{ avisos_participantes.sin_plan|length }} sin plan activo.
+                            {% endif %}
+                        </p>
+                        <p>Este aviso es informativo y no impide confirmar la generación.</p>
+                        <details class="perfil-desplegable">
+                            <summary>Ver participantes afectados ({{ avisos_participantes.total }})</summary>
+                            {% if avisos_participantes.no_continuar %}
+                                <div class="generacion-aviso-grupo">
+                                    <p><strong>Respondieron «No continuar» ({{ avisos_participantes.no_continuar|length }})</strong></p>
+                                    <ul>{% for nombre in avisos_participantes.no_continuar %}<li>{{ nombre }}</li>{% endfor %}</ul>
+                                </div>
+                            {% endif %}
+                            {% if avisos_participantes.sin_plan %}
+                                <div class="generacion-aviso-grupo">
+                                    <p><strong>Sin plan activo ({{ avisos_participantes.sin_plan|length }})</strong></p>
+                                    <ul>{% for nombre in avisos_participantes.sin_plan %}<li>{{ nombre }}</li>{% endfor %}</ul>
+                                </div>
+                            {% endif %}
+                        </details>
+                    </div>
+                {% endif %}
+
                 {% if candidatas %}
                     <details class="perfil-desplegable"><summary>Clases a crear ({{ candidatas|length }})</summary>
                         {% include "clases/_generacion_tabla.html" with filas=candidatas mostrar_motivo=False only %}

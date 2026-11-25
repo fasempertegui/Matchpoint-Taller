@@ -94,7 +94,8 @@ def calcular_cambios(seleccion, accion, personas_ids, usuarios):
         try:
             validar_usuarios_clase(
                 usuarios, nuevos_profesores, nuevos_participantes,
-                profesores_actuales=profesores, participantes_actuales=participantes, exigir_profesor=False,
+                profesores_actuales=profesores, participantes_actuales=participantes,
+                exigir_profesor=False, exigir_plan_activo=True,
             )
         except ValidationError as error:
             raise ValidationError([

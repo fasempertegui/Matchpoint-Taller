@@ -13,6 +13,7 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
 from instalaciones.models import Cancha, Sede
 
+from .consultas import resumen_comercial_participantes
 from .forms import ObservacionesPlanillaForm, PlanillaFiltroForm
 from .models import TurnoPlanilla
 from .permisos import exigir_administracion_clases
@@ -109,10 +110,16 @@ def planilla_detalle(request, pk):
             for mensaje in error.messages:
                 messages.error(request, mensaje)
             return redirect("clases:planilla_detalle", pk=pk)
+    alumnos = [v.usuario for v in turno.alumnos.select_related("usuario").order_by("usuario_id")]
+    resumenes = resumen_comercial_participantes([alumno.pk for alumno in alumnos])
+    participantes = [
+        {"usuario": alumno, **resumenes.get(alumno.pk, {})}
+        for alumno in alumnos
+    ]
     return render(request, "clases/planilla_detalle.html", {
         "turno": turno, "hora_fin": time(turno.hora_inicio.hour + 1),
         "profesores": [v.profesor for v in turno.profesores.select_related("profesor").order_by("profesor_id")],
-        "participantes": [v.usuario for v in turno.alumnos.select_related("usuario").order_by("usuario_id")],
+        "participantes": participantes,
         "version": version_turno_planilla(turno), "url_planilla": _url_planilla(turno.cancha),
         "puede_editar": turno.cancha.estado == Cancha.Estado.ACTIVA and turno.cancha.sede.estado == Sede.Estado.ACTIVA,
     })

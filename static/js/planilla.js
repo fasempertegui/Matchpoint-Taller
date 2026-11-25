@@ -10,6 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
     var tabla = document.querySelector(".planilla-tabla");
     var barra = document.querySelector("[data-planilla-seleccion]");
     if (!tabla || !barra) return;
+    var encabezado = document.querySelector("[data-planilla-encabezado]");
+    var encabezadoNormal = document.querySelector("[data-planilla-normal]");
     var celdas = Array.from(tabla.querySelectorAll("[data-seleccionar-turno]"));
     var porCoordenada = new Map(celdas.map(function (celda) { return [celda.dataset.seleccionarTurno, celda]; }));
     var aviso = document.querySelector("[data-planilla-aviso]");
@@ -63,7 +65,10 @@ document.addEventListener("DOMContentLoaded", function () {
             celda.classList.toggle("planilla-celda-seleccionada", elegida);
             celda.setAttribute("aria-pressed", String(elegida));
         });
-        barra.hidden = seleccion.size === 0;
+        var haySeleccion = seleccion.size > 0;
+        barra.hidden = !haySeleccion;
+        if (encabezadoNormal) encabezadoNormal.hidden = haySeleccion;
+        if (encabezado) encabezado.classList.toggle("planilla-encabezado-seleccion", haySeleccion);
         barra.querySelector("[data-seleccion-cantidad]").textContent = seleccion.size === 1
             ? "1 horario seleccionado"
             : seleccion.size + " horarios seleccionados";
@@ -112,7 +117,6 @@ document.addEventListener("DOMContentLoaded", function () {
             entrada.value = valor;
             valores.append(entrada);
         });
-        document.body.classList.toggle("planilla-con-seleccion", seleccion.size > 0);
     }
 
     function alternar(celda) {
@@ -215,10 +219,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     barra.querySelector("[data-limpiar-seleccion]").addEventListener("click", function () {
+        var primera = seleccion.size ? porCoordenada.get(seleccion.values().next().value) : celdas[0];
         seleccion.clear();
         informar("");
         actualizar();
-        if (celdas.length) celdas[0].focus();
+        if (primera) primera.focus();
     });
     formularioQuitar.addEventListener("submit", function (evento) {
         if (!seleccion.size || tipo !== "creado") evento.preventDefault();
