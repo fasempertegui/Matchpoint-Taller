@@ -18,8 +18,8 @@
         {% if puede_cerrar %}
         <div class="caja-sesion-acciones">
             <details class="perfil-menu" data-menu-contextual>
-                <summary class="boton boton-primario" aria-expanded="false">Registrar movimiento <span aria-hidden="true">▾</span></summary>
-                <div class="perfil-menu-opciones">
+                <summary class="boton boton-primario" aria-expanded="false" aria-controls="caja-registrar-movimiento">Registrar movimiento {% include "componentes/iconoir/chevron-abajo.html" %}</summary>
+                <div class="perfil-menu-opciones" id="caja-registrar-movimiento">
                     <a href="{% url 'caja:ingreso_crear' sesion.pk %}">Ingreso</a>
                     <a href="{% url 'caja:movimiento_crear' sesion.pk %}?clase=egreso">Egreso o devolución</a>
                     <button type="button" data-abrir-modal-url="{% url 'caja:movimiento_crear' sesion.pk %}?clase=aporte">Aporte de efectivo</button>
@@ -105,5 +105,4 @@
 <section class="tarjeta caja-listado" data-resultados-filtros aria-label="Movimientos de esta caja">
     {% include "caja/_movimientos.html" with pagina=pagina_movimientos tabla_listado=True %}
 </section>
-<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 {% endblock %}

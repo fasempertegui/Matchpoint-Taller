@@ -13,8 +13,8 @@
             </div>
         </div>
         <details class="perfil-menu" data-menu-contextual>
-            <summary class="boton boton-secundario" aria-expanded="false">Acciones <span aria-hidden="true">⋮</span></summary>
-            <div class="perfil-menu-opciones">
+            <summary class="boton boton-secundario" aria-expanded="false" aria-controls="contratacion-acciones">Acciones {% include "componentes/iconoir/mas-vertical.html" %}</summary>
+            <div class="perfil-menu-opciones" id="contratacion-acciones">
                 {% if pagina_finanzas %}<button type="button" data-abrir-movimientos aria-haspopup="dialog" aria-controls="movimientos-financieros">Ver movimientos ({{ pagina_finanzas.paginator.count }})</button>{% endif %}
                 <a href="{% url ruta_comprobante contratacion.pk %}">Ver comprobante</a>
                 {% if tipo == 'membresia' %}<a href="{% if propias %}{% url 'membresias:mi_membresia_uso' contratacion.pk %}{% else %}{% url 'reservas:uso_membresia' %}?usuario={{ contratacion.usuario_id }}&amp;desde={{ contratacion.fecha_inicio|date:'Y-m-d' }}&amp;hasta={{ contratacion.fecha_fin|date:'Y-m-d' }}{% endif %}">Consultar uso del mes</a>{% endif %}
@@ -111,5 +111,4 @@
     </div>
 </article>
 {% include "caja/_modal_movimientos.html" %}
-<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 {% endblock %}

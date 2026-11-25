@@ -71,7 +71,8 @@
                 <td class="acciones-columna">
                     <div class="acciones">
                         <a class="boton boton-secundario boton-chico"
-                            href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}">
+                            href="{% url 'usuarios:usuario_detalle' usuario_obj.pk %}"
+                            aria-label="Ver detalles de {{ usuario_obj.get_full_name|default:usuario_obj.username }}">
                             Detalles
                         </a>
                     </div>

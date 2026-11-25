@@ -4,9 +4,6 @@
 .reporte-opcion h2 { margin: 0; padding: 24px 24px 0; font-size: 1.2rem; line-height: 1.35; }
 .reporte-opcion-descripcion { flex: 1; margin: 16px 0 0; padding: 0 24px 24px; color: var(--texto-suave); font-size: .95rem; }
 .reporte-opcion-pie { display: flex; justify-content: flex-end; padding: 14px 24px; border-top: 1px solid var(--borde); }
-.reporte-opcion-pie a { color: var(--primario); font-size: .9rem; font-weight: 600; text-decoration: none; }
-.reporte-opcion-pie a:hover { color: var(--primario-hover); }
-.reporte-opcion-pie a:focus-visible { outline: 2px solid var(--primario); outline-offset: 4px; border-radius: 2px; }
 .reporte-alcance { padding: 20px; }
 .reporte-consulta-actual h2 { margin: 0 0 12px; font-size: 1rem; }
 .reporte-filtros-aplicados { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }

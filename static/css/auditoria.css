@@ -39,11 +39,6 @@
     white-space: normal;
 }
 
-.auditoria-desplegar:focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: 2px;
-}
-
 .auditoria-registro:has(.auditoria-desplegar[aria-expanded="true"]),
 .auditoria-fila-detalle {
     background: var(--primario-suave);

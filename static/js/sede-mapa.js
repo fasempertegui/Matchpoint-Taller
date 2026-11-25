@@ -101,7 +101,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!boton) return;
 
         liberarMapaModal();
-        disparadorActual = boton;
+        var menu = boton.closest("details[data-menu-contextual]");
+        if (menu) menu.open = false;
+        disparadorActual = menu ? (menu.querySelector("summary") || boton) : boton;
 
         titulo.textContent = boton.dataset.sedeNombre || "Ubicación de la sede";
         direccion.textContent = boton.dataset.sedeDireccion || "Dirección sin informar";

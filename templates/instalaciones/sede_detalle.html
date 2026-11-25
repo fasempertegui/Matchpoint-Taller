@@ -157,7 +157,7 @@
                             <th scope="col">Nombre</th>
                             <th scope="col">Superficie</th>
                             <th scope="col">Estado</th>
-                            <th scope="col" class="acciones-columna">Acciones</th>
+                            {% if perms.instalaciones.change_cancha %}<th scope="col" class="acciones-columna">Acciones</th>{% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -168,29 +168,32 @@
                                 <td>
                                     {% indicador_estado "habilitacion" cancha.estado %}
                                 </td>
+                                {% if perms.instalaciones.change_cancha %}
                                 <td class="acciones-columna">
-                                    <div class="acciones">
-                                        {% if perms.instalaciones.change_cancha %}
-                                            <button class="boton boton-secundario boton-chico" type="button" data-abrir-modal-url="{% url 'instalaciones:cancha_editar' sede.pk cancha.pk %}">
-                                                Editar
-                                            </button>
+                                    <details class="menu-contextual" data-menu-contextual>
+                                        <summary class="boton boton-utilidad boton-icono boton-chico" aria-expanded="false" aria-controls="cancha-acciones-{{ cancha.pk }}" aria-label="Acciones de {{ cancha.nombre }}" data-tooltip="Acciones">
+                                            {% include "componentes/iconoir/mas-vertical.html" %}
+                                        </summary>
+                                        <div class="menu-contextual-opciones" id="cancha-acciones-{{ cancha.pk }}">
+                                            <button type="button" data-abrir-modal-url="{% url 'instalaciones:cancha_editar' sede.pk cancha.pk %}">Editar</button>
                                             <form class="formulario-en-linea" method="post" action="{% url 'instalaciones:cancha_cambiar_estado' sede.pk cancha.pk %}"
                                                   data-confirmar="{% if cancha.estado == 'activa' %}¿Desactivar la cancha {{ cancha.nombre }}? No puede tener reservas Programadas. El historial se conserva.{% else %}¿Activar la cancha {{ cancha.nombre }}?{% endif %}"
                                                   data-confirmar-titulo="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha"
                                                   data-confirmar-boton="{% if cancha.estado == 'activa' %}Desactivar{% else %}Activar{% endif %} cancha"{% if cancha.estado == 'activa' %} data-confirmar-peligro{% endif %}>
                                                 {% csrf_token %}
                                                 <input type="hidden" name="estado" value="{% if cancha.estado == 'activa' %}inactiva{% else %}activa{% endif %}">
-                                                <button class="boton boton-chico {% if cancha.estado == 'activa' %}boton-peligro{% else %}boton-secundario{% endif %}" type="submit">
+                                                <button type="submit"{% if cancha.estado == 'activa' %} class="menu-contextual-peligro"{% endif %}>
                                                     {% if cancha.estado == "activa" %}Desactivar{% else %}Activar{% endif %}
                                                 </button>
                                             </form>
-                                        {% endif %}
-                                    </div>
+                                        </div>
+                                    </details>
                                 </td>
+                                {% endif %}
                             </tr>
                         {% empty %}
                             <tr>
-                                <td class="estado-vacio" colspan="4">
+                                <td class="estado-vacio" colspan="{% if perms.instalaciones.change_cancha %}4{% else %}3{% endif %}">
                                     Esta sede todavía no tiene canchas.
                                 </td>
                             </tr>

@@ -41,9 +41,9 @@
                 </table>
             </div>
 {% if pagina_finanzas.has_other_pages %}<nav aria-label="Páginas de movimientos financieros">
-{% if pagina_finanzas.has_previous %}<a href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_finanzas={{ pagina_finanzas.previous_page_number }}">Anterior</a>{% endif %}
+{% if pagina_finanzas.has_previous %}<a class="boton boton-secundario boton-chico" href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_finanzas={{ pagina_finanzas.previous_page_number }}">Anterior</a>{% endif %}
 <span>{{ pagina_finanzas.number }} de {{ pagina_finanzas.paginator.num_pages }}</span>
-{% if pagina_finanzas.has_next %}<a href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_finanzas={{ pagina_finanzas.next_page_number }}">Siguiente</a>{% endif %}
+{% if pagina_finanzas.has_next %}<a class="boton boton-secundario boton-chico" href="?{% if parametros_finanzas %}{{ parametros_finanzas }}&amp;{% endif %}pagina_finanzas={{ pagina_finanzas.next_page_number }}">Siguiente</a>{% endif %}
 </nav>{% endif %}
         </div>
         <form method="dialog" class="modal-confirmacion-acciones">

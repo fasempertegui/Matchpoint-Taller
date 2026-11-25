@@ -7,7 +7,7 @@
 {% block clase_contenido %}contenido-reportes{% endblock %}
 {% block contenido %}
 {% tarjeta_titulo reporte.titulo descripcion=reporte.descripcion %}
-    <div class="acciones" data-resultados-filtros="acciones">{% if totales_tabla %}<a class="boton boton-primario" href="{% url 'reportes:pdf' tipo %}?{{ parametros }}">Descargar PDF</a>{% endif %}<a class="boton boton-secundario" href="{% url 'reportes:inicio' %}">Ver reportes</a></div>
+    <div class="acciones" data-resultados-filtros="acciones"><a class="boton boton-secundario" href="{% url 'reportes:inicio' %}">Ver reportes</a>{% if totales_tabla %}<a class="boton boton-primario" href="{% url 'reportes:pdf' tipo %}?{{ parametros }}">Descargar PDF</a>{% endif %}</div>
 {% endtarjeta_titulo %}
 <section class="tarjeta reporte-alcance" data-resultados-filtros="alcance" aria-label="Alcance del reporte">
     <div class="reporte-consulta-actual"><h2>Consulta actual</h2>

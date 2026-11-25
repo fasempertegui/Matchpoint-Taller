@@ -11,7 +11,7 @@
     <article class="tarjeta reporte-opcion">
         <h2>{{ reporte.titulo }}</h2>
         <p class="reporte-opcion-descripcion">{{ reporte.descripcion }}</p>
-        <footer class="reporte-opcion-pie"><a href="{% url 'reportes:detalle' tipo %}">Ver reporte</a></footer>
+        <footer class="reporte-opcion-pie"><a class="boton boton-secundario boton-chico" href="{% url 'reportes:detalle' tipo %}" aria-label="Ver reporte: {{ reporte.titulo }}">Ver reporte</a></footer>
     </article>
     {% endfor %}
 </section>

@@ -171,24 +171,6 @@
     color: var(--primario);
 }
 
-.horarios-acciones-fila {
-    display: inline-flex;
-    gap: 6px;
-}
-
-.horarios-acciones-fila .boton {
-    min-width: 36px;
-    min-height: 36px;
-    padding: 0;
-}
-
-.horarios-acciones-fila .boton[aria-disabled="true"] {
-    color: var(--texto-suave);
-    background: var(--superficie);
-    border-color: var(--borde);
-    cursor: not-allowed;
-}
-
 @media (max-width: 720px) {
     .horarios-tipos { grid-template-columns: minmax(0, 1fr); }
 }

@@ -8,7 +8,7 @@
     <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-reticula">
         <div><p class="perfil-contexto">Reserva</p><div class="perfil-identidad"><h1>{{ reserva.numero }}</h1>{% include "componentes/badge_estado.html" with estado=reserva.evento.estado texto=reserva.evento.get_estado_display only %}</div></div>
         <details class="perfil-menu" data-menu-contextual>
-    <summary class="boton boton-secundario" aria-expanded="false" aria-controls="reserva-menu-opciones">Acciones <span aria-hidden="true">⋮</span></summary>
+    <summary class="boton boton-secundario" aria-expanded="false" aria-controls="reserva-menu-opciones">Acciones {% include "componentes/iconoir/mas-vertical.html" %}</summary>
     <div class="perfil-menu-opciones" id="reserva-menu-opciones">
         {% if pagina_finanzas %}<button type="button" data-abrir-movimientos aria-haspopup="dialog" aria-controls="movimientos-financieros">Ver movimientos ({{ pagina_finanzas.paginator.count }})</button>{% endif %}
         <a href="{% url 'agenda:agenda' %}?sede={{ turno.cancha.sede_id }}&amp;cancha={{ turno.cancha_id }}&amp;fecha={{ turno.fecha|date:'Y-m-d' }}&amp;hora={{ turno.hora_inicio.hour }}">Ver turno en agenda</a>
@@ -137,5 +137,4 @@
     </div>
 </article>
 {% include "caja/_modal_movimientos.html" %}
-<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 {% endblock %}

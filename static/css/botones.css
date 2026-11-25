@@ -276,3 +276,148 @@ form[aria-busy="true"] .boton:disabled {
         transition: none;
     }
 }
+
+/* Menú contextual de acciones en filas, tarjetas y cabeceras */
+
+.menu-contextual,
+.perfil-menu {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.menu-contextual > summary,
+.perfil-menu > summary {
+    list-style: none;
+}
+
+.menu-contextual > summary::-webkit-details-marker,
+.perfil-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.menu-contextual > summary > svg,
+.perfil-menu > summary > svg {
+    width: 18px;
+    height: 18px;
+}
+
+.menu-contextual > summary.boton-utilidad {
+    border-color: var(--primario-medio);
+    background: var(--superficie);
+    color: var(--primario);
+}
+
+.menu-contextual > summary.boton-utilidad:is([aria-pressed="true"], [aria-expanded="true"]) {
+    border-color: var(--primario);
+    background: var(--primario-suave);
+    color: var(--primario);
+}
+
+.menu-contextual-opciones,
+.perfil-menu-opciones {
+    position: absolute;
+    z-index: 40;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: 210px;
+    max-width: min(260px, calc(100vw - 16px));
+    padding: 6px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: var(--superficie);
+    color: var(--texto);
+    box-shadow: var(--sombra-flotante);
+    text-align: left;
+}
+
+.menu-contextual-opciones form,
+.perfil-menu-opciones form {
+    display: block;
+    margin: 0;
+}
+
+.menu-contextual-opciones a,
+.menu-contextual-opciones button,
+.perfil-menu-opciones a,
+.perfil-menu-opciones button {
+    display: block;
+    width: 100%;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--texto);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.35;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu-contextual-opciones :is(a, button):focus-visible,
+.perfil-menu-opciones :is(a, button):focus-visible {
+    outline: 2px solid var(--primario);
+    outline-offset: -2px;
+}
+
+.menu-contextual-opciones .menu-contextual-peligro,
+.perfil-menu-opciones .perfil-menu-peligro {
+    color: var(--peligro);
+}
+
+.menu-contextual-opciones > :not(.menu-contextual-peligro):not(:has(> .menu-contextual-peligro)) + .menu-contextual-peligro,
+.menu-contextual-opciones > :not(.menu-contextual-peligro):not(:has(> .menu-contextual-peligro)) + form:has(> .menu-contextual-peligro),
+.perfil-menu-opciones > :not(.perfil-menu-peligro):not(:has(> .perfil-menu-peligro)) + .perfil-menu-peligro,
+.perfil-menu-opciones > :not(.perfil-menu-peligro):not(:has(> .perfil-menu-peligro)) + form:has(> .perfil-menu-peligro) {
+    position: relative;
+    margin-top: 9px;
+}
+
+.menu-contextual-opciones > :not(.menu-contextual-peligro):not(:has(> .menu-contextual-peligro)) + .menu-contextual-peligro::before,
+.menu-contextual-opciones > :not(.menu-contextual-peligro):not(:has(> .menu-contextual-peligro)) + form:has(> .menu-contextual-peligro)::before,
+.perfil-menu-opciones > :not(.perfil-menu-peligro):not(:has(> .perfil-menu-peligro)) + .perfil-menu-peligro::before,
+.perfil-menu-opciones > :not(.perfil-menu-peligro):not(:has(> .perfil-menu-peligro)) + form:has(> .perfil-menu-peligro)::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: -5px;
+    height: 1px;
+    background: var(--borde);
+    pointer-events: none;
+}
+
+.menu-contextual-opciones .menu-contextual-advertencia,
+.perfil-menu-opciones .perfil-menu-advertencia {
+    color: var(--advertencia);
+}
+
+@media (hover: hover) {
+    .menu-contextual > summary.boton-utilidad:not(:disabled):not([aria-disabled="true"]):hover {
+        border-color: var(--primario);
+        background: var(--primario-suave);
+        color: var(--primario);
+    }
+
+    .menu-contextual-opciones :is(a, button):not(:disabled):not([aria-disabled="true"]):hover,
+    .perfil-menu-opciones :is(a, button):not(:disabled):not([aria-disabled="true"]):hover {
+        background: var(--primario-suave);
+        color: var(--primario);
+    }
+
+    .menu-contextual-opciones .menu-contextual-peligro:not(:disabled):not([aria-disabled="true"]):hover,
+    .perfil-menu-opciones .perfil-menu-peligro:not(:disabled):not([aria-disabled="true"]):hover {
+        background: var(--peligro-suave);
+        color: var(--peligro);
+    }
+
+    .menu-contextual-opciones .menu-contextual-advertencia:not(:disabled):not([aria-disabled="true"]):hover,
+    .perfil-menu-opciones .perfil-menu-advertencia:not(:disabled):not([aria-disabled="true"]):hover {
+        background: var(--advertencia-suave);
+        color: var(--advertencia);
+    }
+}
+

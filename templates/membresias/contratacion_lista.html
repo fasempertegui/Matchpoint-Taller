@@ -121,9 +121,21 @@
                             <td>{{ contratacion.mes_cubierto|date:"F Y"|capfirst }}</td>
                             <td class="tabla-numero">$ {{ contratacion.precio_aplicado|floatformat:"2g" }}</td>
                             <td>{% indicador_estado "contratacion" contratacion.estado %}</td>
-                            <td class="acciones-columna"><div class="acciones">
-                                {% if propias and tipo == 'membresia' %}<a class="boton boton-secundario boton-chico" href="{% url 'membresias:mi_membresia_uso' contratacion.pk %}">Ver uso</a>{% endif %}
-                                <a class="boton boton-secundario boton-chico" href="{% url ruta_detalle contratacion.pk %}" aria-label="Ver contratación de {{ contratacion.usuario }} para {{ contratacion.mes_cubierto|date:'F Y' }}">Detalles</a></div></td>
+                            <td class="acciones-columna">
+                                {% if propias and tipo == 'membresia' %}
+                                    <details class="menu-contextual" data-menu-contextual>
+                                        <summary class="boton boton-utilidad boton-icono boton-chico" aria-expanded="false" aria-controls="contratacion-acciones-{{ contratacion.pk }}" aria-label="Acciones de {{ contratacion.producto.nombre }} ({{ contratacion.mes_cubierto|date:'F Y' }})" data-tooltip="Acciones">
+                                            {% include "componentes/iconoir/mas-vertical.html" %}
+                                        </summary>
+                                        <div class="menu-contextual-opciones" id="contratacion-acciones-{{ contratacion.pk }}">
+                                            <a href="{% url ruta_detalle contratacion.pk %}">Detalles</a>
+                                            <a href="{% url 'membresias:mi_membresia_uso' contratacion.pk %}">Ver uso</a>
+                                        </div>
+                                    </details>
+                                {% else %}
+                                    <a class="boton boton-secundario boton-chico" href="{% url ruta_detalle contratacion.pk %}" aria-label="Ver contratación de {{ contratacion.usuario }} para {{ contratacion.mes_cubierto|date:'F Y' }}">Detalles</a>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% empty %}<tr><td class="estado-vacio" colspan="5">No hay contrataciones de {{ plural }} que coincidan con los filtros.</td></tr>{% endfor %}
                 </tbody>

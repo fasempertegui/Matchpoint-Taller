@@ -55,7 +55,7 @@
                             <td>{{ ajuste.get_operacion_display }}</td>
                             <td class="tabla-numero">{{ ajuste.cantidad }}</td>
                             <td>
-                                <details>
+                                <details class="finanzas-ajuste-motivo">
                                     <summary>Ver detalle</summary>
                                     <p>Motivo: {{ ajuste.motivo|linebreaksbr }}</p>
                                     <p>Registrado por {{ ajuste.registrado_por }}</p>
@@ -67,10 +67,10 @@
             </table>
         </div>
         {% if ajustes_horas.has_other_pages %}
-            <nav aria-label="Páginas de ajustes de horas">
-                {% if ajustes_horas.has_previous %}<a href="?pagina_ajustes={{ ajustes_horas.previous_page_number }}#ajustes-horas">Anterior</a>{% endif %}
+            <nav class="finanzas-ajustes-paginacion" aria-label="Páginas de ajustes de horas">
+                {% if ajustes_horas.has_previous %}<a class="boton boton-secundario boton-chico" href="?pagina_ajustes={{ ajustes_horas.previous_page_number }}#ajustes-horas">Anterior</a>{% endif %}
                 <span>Página {{ ajustes_horas.number }} de {{ ajustes_horas.paginator.num_pages }}</span>
-                {% if ajustes_horas.has_next %}<a href="?pagina_ajustes={{ ajustes_horas.next_page_number }}#ajustes-horas">Siguiente</a>{% endif %}
+                {% if ajustes_horas.has_next %}<a class="boton boton-secundario boton-chico" href="?pagina_ajustes={{ ajustes_horas.next_page_number }}#ajustes-horas">Siguiente</a>{% endif %}
             </nav>
         {% endif %}
     {% else %}

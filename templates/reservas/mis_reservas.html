@@ -37,7 +37,7 @@
     {% if consulta_administrativa %}<td>{% if reserva.organizador_id == titular.pk %}Organizador{% else %}Invitado{% endif %}</td>{% endif %}
     {% if consulta_administrativa or solo_invitaciones %}<td>{% if reserva.organizador_id != titular.pk %}{% for invitacion in reserva.invitaciones_titular %}{% indicador_estado "respuesta" invitacion.respuesta %}{% endfor %}{% else %}<span class="texto-secundario">—</span>{% endif %}</td>{% endif %}
     <td>{% indicador_estado "evento" reserva.evento.estado %}</td>
-    <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_detalle' reserva.pk %}">Detalles</a></td>
+    <td class="acciones-columna"><a class="boton boton-secundario boton-chico" href="{% url 'reservas:reserva_detalle' reserva.pk %}" aria-label="Ver detalles de {{ reserva.numero }}">Detalles</a></td>
 </tr>{% empty %}<tr><td class="estado-vacio" colspan="{% if consulta_administrativa %}7{% elif solo_invitaciones %}6{% else %}5{% endif %}">No hay {% if consulta_administrativa %}reservas ni invitaciones{% elif solo_invitaciones %}invitaciones{% else %}reservas{% endif %} para esta consulta.</td></tr>{% endfor %}
 </tbody>{% endtabla %}
 {% if solo_invitaciones %}

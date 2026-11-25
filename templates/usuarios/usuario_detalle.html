@@ -11,7 +11,7 @@
 
 {% block contenido %}
 {% if usuario_obj.email_pendiente %}<p class="mensaje mensaje-info">Hay un cambio de correo pendiente de confirmación.</p>{% endif %}
-{% if request.user.pk == usuario_obj.pk and not usuario_obj.correo_verificado_en %}<section class="tarjeta"><p>Tu correo todavía no está verificado.</p><a href="{% url 'estado_verificacion' %}">Verificar mi correo</a></section>{% endif %}
+{% if request.user.pk == usuario_obj.pk and not usuario_obj.correo_verificado_en %}<section class="tarjeta"><p>Tu correo todavía no está verificado.</p><a class="boton boton-primario boton-chico" href="{% url 'estado_verificacion' %}">Verificar mi correo</a></section>{% endif %}
 <article class="tarjeta perfil">
     <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-orbitas">
         <div>
@@ -23,7 +23,7 @@
         </div>
         {% if request.user.pk == usuario_obj.pk or perms.usuarios.change_usuario or puede_consultar_actividad %}
         <details class="perfil-menu" data-menu-contextual>
-            <summary class="boton boton-secundario" aria-expanded="false" aria-controls="usuario-acciones">Acciones <span aria-hidden="true">⋮</span></summary>
+            <summary class="boton boton-secundario" aria-expanded="false" aria-controls="usuario-acciones">Acciones {% include "componentes/iconoir/mas-vertical.html" %}</summary>
             <div class="perfil-menu-opciones" id="usuario-acciones">
                 {% if puede_consultar_actividad %}
                 <a href="{% url 'clases:actividad_clases' usuario_obj.pk %}">Ver clases</a>
@@ -99,10 +99,10 @@
                         <form class="formulario-en-linea" method="post" action="{% url 'usuarios:usuario_gestionar_rol' usuario_obj.pk rol.codigo %}"
                               data-confirmar="{% if rol.asignado %}¿Quitar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% else %}¿Asignar el rol {{ rol.nombre }} a {{ usuario_obj }}?{% endif %}"
                               data-confirmar-titulo="{% if rol.asignado %}Quitar rol{% else %}Asignar rol{% endif %}"
-                              data-confirmar-boton="{% if rol.asignado %}Quitar {{ rol.nombre }}{% else %}Asignar {{ rol.nombre }}{% endif %}">
+                              data-confirmar-boton="{% if rol.asignado %}Quitar {{ rol.nombre }}{% else %}Asignar {{ rol.nombre }}{% endif %}"{% if rol.asignado %} data-confirmar-peligro{% endif %}>
                             {% csrf_token %}
                             <input type="hidden" name="accion" value="{% if rol.asignado %}quitar{% else %}asignar{% endif %}">
-                            <button class="boton boton-secundario boton-chico" type="submit">
+                            <button class="boton boton-chico {% if rol.asignado %}boton-peligro{% else %}boton-secundario{% endif %}" type="submit">
                                 {% if rol.asignado %}Quitar {{ rol.nombre }}{% else %}Asignar {{ rol.nombre }}{% endif %}
                             </button>
                         </form>
@@ -123,6 +123,5 @@
     {% include "usuarios/_modal_modificar_correo.html" %}
     <script src="{% static 'js/usuario-correo.js' %}" defer></script>
 {% endif %}
-<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 <script src="{% static 'js/usuario-perfil.js' %}" defer></script>
 {% endblock %}

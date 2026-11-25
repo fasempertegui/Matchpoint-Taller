@@ -8,7 +8,7 @@
     <header class="perfil-cabecera encabezado-geometrico encabezado-geometrico-reticula">
         <div><p class="perfil-contexto">Detalle de clase</p><div class="perfil-identidad"><h1>Clase {{ clase.id }}</h1>{% include "componentes/badge_estado.html" with estado=clase.estado texto=clase.estado_texto only %}</div></div>
         <details class="perfil-menu" data-menu-contextual>
-            <summary class="boton boton-secundario" aria-expanded="false" aria-controls="clase-acciones">Acciones <span aria-hidden="true">⋮</span></summary>
+            <summary class="boton boton-secundario" aria-expanded="false" aria-controls="clase-acciones">Acciones {% include "componentes/iconoir/mas-vertical.html" %}</summary>
             <div class="perfil-menu-opciones" id="clase-acciones">
                 <a href="{{ url_agenda }}">Ver en agenda</a>
                 {% if clase.puede_registrar_asistencia or clase.puede_finalizar %}<a href="{% url 'clases:clase_asistencia' clase.id %}">{% if clase.puede_finalizar %}Finalizar y registrar asistencia{% elif hay_asistencia %}Revisar asistencia{% else %}Registrar asistencia{% endif %}</a>{% endif %}
@@ -17,7 +17,7 @@
                 {% if clase.puede_cambiar_cancha %}<button type="button" data-abrir-modal-url="{% url 'clases:clase_cambiar_cancha' clase.id %}">Cambiar de cancha</button>{% endif %}
                 {% if clase.puede_responder %}
                 <form method="post" action="{% url 'clases:clase_responder' clase.id %}" data-confirmar="Este aviso libera tu disponibilidad para este horario y no se puede modificar. Si cambiás de opinión, comunicate con tu profesor. Si finalmente asistís, tu presencia puede registrarse sin modificar el aviso." data-confirmar-titulo="Avisar que no asistís" data-confirmar-boton="No asisto" data-confirmar-peligro>
-                    {% csrf_token %}<input type="hidden" name="respuesta" value="no_asistira"><input type="hidden" name="identidad" value="{{ clase.mi_respuesta.identidad }}"><button type="submit">No asisto</button>
+                    {% csrf_token %}<input type="hidden" name="respuesta" value="no_asistira"><input type="hidden" name="identidad" value="{{ clase.mi_respuesta.identidad }}"><button type="submit" class="perfil-menu-peligro">No asisto</button>
                 </form>
                 {% endif %}
                 {% if clase.puede_anular %}<button type="button" class="perfil-menu-peligro" data-abrir-modal-url="{% url 'clases:clase_anular' clase.id %}">Anular y liberar</button>{% endif %}
@@ -71,5 +71,4 @@
         {% if puede_consultar_grupo or clase.participantes %}{% include "clases/_asignaciones_clase.html" with identificador="participantes" titulo=titulo_participantes personas=clase.participantes vigentes=clase.participantes_vigentes vacio="Sin participantes en la clase" solo_propios=solo_propios mostrar_asistencia=mostrar_asistencia only %}{% endif %}
     </div>
 </article>
-<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 {% endblock %}

@@ -8,8 +8,8 @@
     {% if url_devolver %}<a class="boton boton-secundario boton-chico" href="{{ url_devolver }}">Devolver hasta $ {{ finanzas.maximo_devolucion|floatformat:"2g" }}</a>{% endif %}
     {% if url_excedente or url_ajustar_importe %}
     <details class="perfil-menu finanzas-menu" data-menu-contextual>
-        <summary class="boton boton-secundario boton-chico" aria-expanded="false">Más acciones <span aria-hidden="true">⋮</span></summary>
-        <div class="perfil-menu-opciones">
+        <summary class="boton boton-secundario boton-chico" aria-expanded="false" aria-controls="finanzas-mas-acciones">Más acciones {% include "componentes/iconoir/mas-vertical.html" %}</summary>
+        <div class="perfil-menu-opciones" id="finanzas-mas-acciones">
             {% if url_excedente %}<a href="{{ url_excedente }}">Registrar cobro con excedente</a>{% endif %}
             {% if url_ajustar_importe %}<a href="{{ url_ajustar_importe }}">Ajustar importe acordado</a>{% endif %}
         </div>

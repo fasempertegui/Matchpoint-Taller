@@ -19,22 +19,37 @@
         <header class="sede-tarjeta-cabecera">
             <h2>{{ sede.nombre }}</h2>
             <div class="sede-tarjeta-acciones">
-                <button type="button"
-                        class="boton boton-secundario boton-chico"
-                        data-ver-ubicacion-sede
-                        data-sede-nombre="{{ sede.nombre }}"
-                        data-sede-direccion="{{ sede.direccion_completa }}"
-                        data-sede-lat="{{ sede.latitud|stringformat:'.6f' }}"
-                        data-sede-lon="{{ sede.longitud|stringformat:'.6f' }}"
-                        data-sede-url-como-llegar="{{ sede.url_como_llegar }}"
-                        {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
-                            data-sede-url-agenda="{% url 'agenda:agenda' %}?sede={{ sede.pk }}"
-                        {% endif %}
-                        aria-label="Ver ubicación de {{ sede.nombre }}">
-                    Ver ubicación
-                </button>
                 {% if request.user.esta_habilitado and not request.user.debe_cambiar_contrasena %}
-                <a class="boton boton-primario boton-chico" href="{% url 'agenda:agenda' %}?sede={{ sede.pk }}" aria-label="Ver agenda de {{ sede.nombre }}">Ver agenda</a>
+                    <details class="menu-contextual" data-menu-contextual>
+                        <summary class="boton boton-utilidad boton-icono boton-chico" aria-expanded="false" aria-controls="sede-publica-acciones-{{ sede.pk }}" aria-label="Acciones de {{ sede.nombre }}" data-tooltip="Acciones">
+                            {% include "componentes/iconoir/mas-vertical.html" %}
+                        </summary>
+                        <div class="menu-contextual-opciones" id="sede-publica-acciones-{{ sede.pk }}">
+                            <button type="button"
+                                    data-ver-ubicacion-sede
+                                    data-sede-nombre="{{ sede.nombre }}"
+                                    data-sede-direccion="{{ sede.direccion_completa }}"
+                                    data-sede-lat="{{ sede.latitud|stringformat:'.6f' }}"
+                                    data-sede-lon="{{ sede.longitud|stringformat:'.6f' }}"
+                                    data-sede-url-como-llegar="{{ sede.url_como_llegar }}"
+                                    data-sede-url-agenda="{% url 'agenda:agenda' %}?sede={{ sede.pk }}">
+                                Ver ubicación
+                            </button>
+                            <a href="{% url 'agenda:agenda' %}?sede={{ sede.pk }}">Ver agenda</a>
+                        </div>
+                    </details>
+                {% else %}
+                    <button type="button"
+                            class="boton boton-secundario boton-chico"
+                            data-ver-ubicacion-sede
+                            data-sede-nombre="{{ sede.nombre }}"
+                            data-sede-direccion="{{ sede.direccion_completa }}"
+                            data-sede-lat="{{ sede.latitud|stringformat:'.6f' }}"
+                            data-sede-lon="{{ sede.longitud|stringformat:'.6f' }}"
+                            data-sede-url-como-llegar="{{ sede.url_como_llegar }}"
+                            aria-label="Ver ubicación de {{ sede.nombre }}">
+                        Ver ubicación
+                    </button>
                 {% endif %}
             </div>
         </header>

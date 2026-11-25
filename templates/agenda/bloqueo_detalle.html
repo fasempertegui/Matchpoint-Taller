@@ -14,7 +14,7 @@
             </div>
         </div>
         <details class="perfil-menu" data-menu-contextual>
-            <summary class="boton boton-secundario" aria-expanded="false" aria-controls="bloqueo-acciones">Acciones <span aria-hidden="true">⋮</span></summary>
+            <summary class="boton boton-secundario" aria-expanded="false" aria-controls="bloqueo-acciones">Acciones {% include "componentes/iconoir/mas-vertical.html" %}</summary>
             <div class="perfil-menu-opciones" id="bloqueo-acciones">
                 <a href="{{ url_agenda }}">Ver turno en agenda</a>
                 {% if puede_anular %}<button type="button" class="perfil-menu-peligro" data-abrir-modal-url="{% url 'agenda:bloqueo_anular' bloqueo.pk %}">Anular y liberar</button>{% endif %}
@@ -63,5 +63,4 @@
         {% endtabla_datos %}
     </section>
 </article>
-<script src="{% static 'js/menu-contextual.js' %}" defer></script>
 {% endblock %}

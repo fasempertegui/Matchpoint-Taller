@@ -118,12 +118,6 @@
     width: 100%;
     align-self: stretch;
     margin-top: 0;
-    border-radius: 6px;
-}
-
-.oferta-descripcion-abrir:focus-visible {
-    outline: 2px solid var(--primario);
-    outline-offset: 4px;
 }
 
 .oferta-descripcion-cuerpo {
