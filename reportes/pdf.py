@@ -9,6 +9,11 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+COLOR_PRIMARIO = colors.HexColor("#4b176d")
+COLOR_FONDO_PAGINA = colors.HexColor("#f4f1f8")
+COLOR_ACENTO_SUAVE = colors.HexColor("#f4f8e2")
+COLOR_BORDE = colors.HexColor("#d9dee5")
+
 
 def generar_pdf(contexto, usuario):
     salida = BytesIO()
@@ -38,7 +43,7 @@ def generar_pdf(contexto, usuario):
 
     def pagina(canvas, doc):
         canvas.saveState()
-        canvas.setFillColor(colors.HexColor("#4b176d"))
+        canvas.setFillColor(COLOR_PRIMARIO)
         canvas.rect(0, alto - 8, ancho, 8, fill=1, stroke=0)
         logo = settings.BASE_DIR / "static" / "img" / "logo.png"
         if logo.exists():
@@ -47,7 +52,7 @@ def generar_pdf(contexto, usuario):
         canvas.drawString(66, alto - 31, "Academia TM")
         canvas.setFont("Helvetica", 10)
         canvas.drawString(66, alto - 48, contexto["reporte"]["titulo"])
-        canvas.setStrokeColor(colors.HexColor("#d9dee5"))
+        canvas.setStrokeColor(COLOR_BORDE)
         canvas.line(24, alto_pie + 5, ancho - 24, alto_pie + 5)
         filtros_pdf.drawOn(canvas, 24, base_filtros)
         usuario_pdf.drawOn(canvas, 24, 12)
@@ -73,13 +78,13 @@ def generar_pdf(contexto, usuario):
     datos.append([parrafo(resumen, nota)] + [""] * (len(columnas) - 1))
     tabla = Table(datos, colWidths=anchuras, repeatRows=1, hAlign="LEFT")
     instrucciones = [
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4b176d")),
+        ("BACKGROUND", (0, 0), (-1, 0), COLOR_PRIMARIO),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("LEFTPADDING", (0, 0), (-1, -1), 5), ("RIGHTPADDING", (0, 0), (-1, -1), 5),
         ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-        ("LINEBELOW", (0, 0), (-1, -1), 0.3, colors.HexColor("#d9dee5")),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -3), [colors.white, colors.HexColor("#f5f3f7")]),
-        ("BACKGROUND", (0, -2), (-1, -2), colors.HexColor("#f0f5db")),
+        ("LINEBELOW", (0, 0), (-1, -1), 0.3, COLOR_BORDE),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -3), [colors.white, COLOR_FONDO_PAGINA]),
+        ("BACKGROUND", (0, -2), (-1, -2), COLOR_ACENTO_SUAVE),
         ("SPAN", (0, -1), (-1, -1)),
         ("NOSPLIT", (0, -3), (-1, -1)),
     ]
