@@ -1,6 +1,7 @@
-{% with turno=actividad.evento.turno %}
-<a class="portal-actividad" href="{% url ruta actividad.pk %}">
-    <div><strong>{{ turno.hora_inicio|time:"H:i" }}–{{ turno.hora_fin|time:"H:i" }}</strong><span>{{ turno.fecha|date:"l j \d\e F"|capfirst }}</span></div>
-    <div><span>{{ turno.cancha.sede.nombre }}</span><small>{{ turno.cancha.nombre }}</small></div>
+<a class="portal-actividad-fila" href="{{ actividad.url }}">
+    <div class="portal-actividad-horario">
+        <strong>{{ actividad.referencia }} · {{ actividad.hora_inicio|time:"H:i" }}–{{ actividad.hora_fin|time:"H:i" }}</strong>
+        <span>{{ actividad.sede }} · {{ actividad.cancha }}</span>
+    </div>
+    <span class="portal-funcion portal-funcion-{{ actividad.funcion_clase }}">{{ actividad.funcion }}</span>
 </a>
-{% endwith %}

@@ -330,6 +330,55 @@ def _fila_actividad_clase(clase):
     }
 
 
+def resumen_clases_mes(usuario, mes):
+    clases = (
+        _clases_de_actividad(usuario.pk)
+        .filter(
+            Q(tiene_docencia=True) | Q(tiene_participacion=True) | Q(tiene_asistencia=True),
+            evento__turno__fecha__year=mes.year,
+            evento__turno__fecha__month=mes.month,
+        )
+        .exclude(evento__estado=Evento.Estado.ANULADO)
+    )
+    presentes = ausentes = sin_registrar = proximas_participante = 0
+    dictadas = proximas_profesor = 0
+    for clase in clases:
+        fila = _fila_actividad_clase(clase)
+        if fila["asignacion_profesor"]:
+            if clase.evento.estado == Evento.Estado.FINALIZADO:
+                dictadas += 1
+            elif clase.evento.estado == Evento.Estado.PROGRAMADO:
+                proximas_profesor += 1
+        if fila["asignacion_participante"] or fila["asistencia"] is not None:
+            if clase.evento.estado == Evento.Estado.FINALIZADO:
+                if fila["asistencia"] == Asistencia.Estado.PRESENTE:
+                    presentes += 1
+                elif fila["asistencia"] == Asistencia.Estado.AUSENTE:
+                    ausentes += 1
+                elif fila["asistencia"] == Asistencia.Estado.SIN_REGISTRAR:
+                    sin_registrar += 1
+            elif clase.evento.estado == Evento.Estado.PROGRAMADO and fila["asignacion_participante"]:
+                proximas_participante += 1
+    finalizadas_participante = presentes + ausentes + sin_registrar
+    total_profesor = dictadas + proximas_profesor
+    return {
+        "participante": {
+            "presentes": presentes,
+            "ausentes": ausentes,
+            "sin_registrar": sin_registrar,
+            "finalizadas": finalizadas_participante,
+            "proximas": proximas_participante,
+            "tiene_actividad": finalizadas_participante > 0 or proximas_participante > 0,
+        },
+        "profesor": {
+            "dictadas": dictadas,
+            "proximas": proximas_profesor,
+            "total": total_profesor,
+            "tiene_actividad": total_profesor > 0,
+        },
+    }
+
+
 def consultar_mis_clases(usuario, *, mes, estado, funcion, numero_pagina, asistencia_pendiente=False):
     usuario = exigir_acceso_clases(usuario)
     clases = _clases_de_actividad(usuario.pk)

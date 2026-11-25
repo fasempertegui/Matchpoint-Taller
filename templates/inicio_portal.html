@@ -7,10 +7,27 @@
 {% block contenido %}
 {% texto_titulo as titulo_tarjeta %}¡Hola, {{ request.user.first_name|default:request.user.username }}!{% endtexto_titulo %}
 {% texto_titulo as subtitulo_tarjeta %}{{ hoy|date:"l j \d\e F \d\e Y"|capfirst }}{% endtexto_titulo %}
-{% tarjeta_titulo titulo_tarjeta subtitulo=subtitulo_tarjeta %}{% endtarjeta_titulo %}
+{% tarjeta_titulo titulo_tarjeta subtitulo=subtitulo_tarjeta %}
+    {% if request.user.correo_verificado_en %}
+        {% for pill in pills_estado %}
+            {% if pill.modal %}
+                <button type="button" class="dashboard-pill" data-abrir-modal-url="{{ pill.url }}">
+                    <span class="dashboard-punto dashboard-punto-{{ pill.punto_clase }}" aria-hidden="true"></span>
+                    {{ pill.texto }}
+                </button>
+            {% else %}
+                <a class="dashboard-pill" href="{{ pill.url }}">
+                    <span class="dashboard-punto dashboard-punto-{{ pill.punto_clase }}" aria-hidden="true"></span>
+                    {{ pill.texto }}
+                </a>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+{% endtarjeta_titulo %}
+
 {% if not request.user.correo_verificado_en %}
 <div class="portal-bienvenida">
-    <section class="tarjeta portal-bienvenida-tarjeta" aria-labelledby="portal-verificacion-titulo">
+    <section class="tarjeta portal-tarjeta portal-bienvenida-tarjeta" aria-labelledby="portal-verificacion-titulo">
         <div class="dashboard-tarjeta-cabecera">
             <h2 class="dashboard-etiqueta" id="portal-verificacion-titulo">Verificá tu correo</h2>
             <span class="dashboard-delta dashboard-delta-advertencia">Pendiente</span>
@@ -21,7 +38,7 @@
             <a class="boton boton-secundario" href="{% url 'corregir_correo' %}">Corregir mi correo</a>
         </div>
     </section>
-    <section class="tarjeta portal-bienvenida-tarjeta" aria-labelledby="portal-oferta-titulo">
+    <section class="tarjeta portal-tarjeta portal-bienvenida-tarjeta" aria-labelledby="portal-oferta-titulo">
         <div class="dashboard-tarjeta-cabecera">
             <h2 class="dashboard-etiqueta" id="portal-oferta-titulo">Mientras tanto</h2>
         </div>
@@ -31,49 +48,272 @@
         </div>
     </section>
 </div>
+{% elif es_cuenta_nueva %}
+<div class="portal-bienvenida">
+    <section class="tarjeta portal-tarjeta portal-bienvenida-tarjeta" aria-labelledby="portal-listo-titulo">
+        <div class="dashboard-tarjeta-cabecera">
+            <h2 class="dashboard-etiqueta" id="portal-listo-titulo">Tu cuenta está lista</h2>
+            <span class="dashboard-delta dashboard-delta-sube">Habilitada</span>
+        </div>
+        <p class="portal-bienvenida-texto">Todavía no tenés actividades ni contrataciones vigentes para {{ hoy|date:"F"|lower }}.{% if puede_reservar %} Podés consultar los horarios disponibles para reservar una cancha{% if puede_ver_oferta %} o explorar los planes y membresías de la academia{% endif %}.{% elif puede_ver_oferta %} Podés explorar nuestras sedes, planes de clases y membresías.{% endif %}</p>
+        <div class="acciones portal-bienvenida-acciones">
+            {% if puede_reservar %}<a class="boton boton-primario" href="{% url 'agenda:agenda' %}">Ver horarios disponibles</a>{% endif %}
+            {% if puede_ver_oferta %}<a class="boton {% if puede_reservar %}boton-secundario{% else %}boton-primario{% endif %}" href="{% url 'oferta:inicio' %}">Explorar la oferta</a>{% endif %}
+        </div>
+    </section>
+    {% if accesos_historial %}
+    <section class="tarjeta portal-tarjeta portal-bienvenida-tarjeta" aria-labelledby="portal-historial-titulo">
+        <div class="dashboard-tarjeta-cabecera">
+            <h2 class="dashboard-etiqueta" id="portal-historial-titulo">Actividad anterior</h2>
+        </div>
+        <p class="portal-bienvenida-texto">Podés consultar tus registros de meses anteriores en cualquier momento.</p>
+        <div class="acciones portal-bienvenida-acciones">
+            {% for acceso in accesos_historial %}
+                <a class="boton boton-secundario boton-chico" href="{{ acceso.url }}">{{ acceso.texto }}</a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
 {% else %}
-<div class="portal-inicio-grid">
-    <section class="tarjeta portal-proxima{% if proxima_clase %} portal-proxima-destacada{% endif %}" aria-labelledby="portal-proxima-titulo">
-        <header class="inicio-seccion-cabecera"><h2 id="portal-proxima-titulo">Próxima clase</h2></header>
-        <div class="inicio-cuerpo">
-            {% if proxima_clase %}
-            {% with turno=proxima_clase.evento.turno %}
-            <p class="portal-hora">{{ turno.hora_inicio|time:"H:i" }}–{{ turno.hora_fin|time:"H:i" }}</p>
-            <p class="portal-fecha">{{ turno.fecha|date:"l j \d\e F"|capfirst }}</p>
-            <dl class="portal-ubicacion"><div><dt>Sede</dt><dd>{{ turno.cancha.sede.nombre }}</dd></div><div><dt>Cancha</dt><dd>{{ turno.cancha.nombre }}</dd></div></dl>
-            {% endwith %}
-            {% else %}<p class="portal-sin-datos">No tenés clases próximas</p>{% endif %}
-        </div>
-        <footer class="inicio-pie">{% if proxima_clase %}<a href="{% url 'clases:clase_detalle' proxima_clase.pk %}">Ver clase</a>{% else %}<a href="{% url 'agenda:agenda' %}">Ver agenda</a>{% endif %}</footer>
+<div class="dashboard-portal">
+    <section class="dashboard-eventos" aria-label="Próximas actividades">
+        <article class="tarjeta portal-tarjeta portal-proxima" aria-labelledby="portal-proxima-titulo">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="portal-proxima-titulo">Próxima actividad</h2>
+                {% if proxima_actividad %}
+                    <a class="dashboard-enlace" href="{{ proxima_actividad.url }}">Ver detalle</a>
+                {% elif not puede_reservar %}
+                    <a class="dashboard-enlace" href="{% url 'agenda:agenda' %}">Ver agenda</a>
+                {% endif %}
+            </div>
+
+            {% if proxima_actividad %}
+                <div class="portal-proxima-etiquetas">
+                    <span class="dashboard-delta {% if proxima_actividad.referencia == 'Hoy' %}dashboard-delta-sube{% else %}dashboard-delta-info{% endif %}">{{ proxima_actividad.referencia }}</span>
+                    <span class="portal-funcion portal-funcion-{{ proxima_actividad.funcion_clase }}">{{ proxima_actividad.funcion }}</span>
+                </div>
+
+                <div class="portal-proxima-horario">
+                    <p class="portal-proxima-hora">{{ proxima_actividad.hora_inicio|time:"H:i" }}–{{ proxima_actividad.hora_fin|time:"H:i" }}</p>
+                    <p class="portal-proxima-fecha">{{ proxima_actividad.fecha|date:"l j \d\e F"|capfirst }}</p>
+                </div>
+
+                {% if proxima_actividad.avisos_ausencia %}
+                    <p class="portal-proxima-aviso">
+                        <span class="dashboard-delta dashboard-delta-advertencia">{{ proxima_actividad.avisos_ausencia }} aviso{{ proxima_actividad.avisos_ausencia|pluralize:"s" }} de ausencia</span>
+                    </p>
+                {% endif %}
+
+                <div class="dashboard-eventos-separador" aria-hidden="true"></div>
+
+                <dl class="portal-ubicacion">
+                    <div><dt>Sede</dt><dd>{{ proxima_actividad.sede }}</dd></div>
+                    <div><dt>Cancha</dt><dd>{{ proxima_actividad.cancha }}</dd></div>
+                </dl>
+            {% else %}
+                <div class="portal-proxima-vacia">
+                    <p class="portal-sin-datos">No tenés clases ni reservas programadas por ahora.</p>
+                    {% if puede_reservar %}
+                        <a class="boton boton-secundario boton-chico" href="{% url 'agenda:agenda' %}">Ver horarios disponibles</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </article>
+
+        <article class="tarjeta portal-tarjeta portal-semana" aria-labelledby="portal-semana-titulo">
+            <div class="dashboard-grafico-cabecera">
+                <h2 class="dashboard-etiqueta" id="portal-semana-titulo">Próximos 7 días</h2>
+                <div class="dashboard-leyenda" aria-hidden="true">
+                    <span><i class="dashboard-muestra dashboard-muestra-clases"></i>Clases</span>
+                    {% if puede_reservar %}<span><i class="dashboard-muestra dashboard-muestra-reservas"></i>Reservas</span>{% endif %}
+                    <span><i class="dashboard-muestra dashboard-muestra-actual"></i>Hoy</span>
+                </div>
+            </div>
+
+            <div class="portal-tira-semana" role="list" aria-label="Resumen de turnos en los próximos 7 días">
+                {% for dia in proximos_7_dias %}
+                    <div class="portal-dia{% if dia.es_hoy %} portal-dia-hoy{% endif %}{% if dia.total %} portal-dia-activo{% endif %}" role="listitem" tabindex="0" data-tooltip="{{ dia.tooltip }}" aria-label="{{ dia.tooltip }}">
+                        <span class="portal-dia-nombre">{{ dia.dia_corto }}</span>
+                        <strong class="portal-dia-numero">{{ dia.numero }}</strong>
+                        <span class="portal-dia-marcas" aria-hidden="true">
+                            {% if dia.clases %}<i class="portal-dia-punto portal-dia-punto-clase"></i>{% endif %}
+                            {% if dia.reservas %}<i class="portal-dia-punto portal-dia-punto-reserva"></i>{% endif %}
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="portal-siguientes">
+                {% if siguientes_actividades %}
+                    <p class="portal-siguientes-titulo">Siguientes turnos</p>
+                    <div class="portal-siguientes-lista">
+                        {% for actividad in siguientes_actividades %}
+                            {% include "componentes/inicio_actividad.html" with actividad=actividad only %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="portal-sin-datos">{% if proxima_actividad %}No tenés otros turnos programados después del próximo.{% else %}No tenés turnos programados en los próximos días.{% endif %}</p>
+                {% endif %}
+            </div>
+        </article>
     </section>
-    {% if puede_reservar %}
-    <section class="tarjeta portal-lista portal-reservas-destacada" aria-labelledby="portal-reservas-titulo">
-        <header class="inicio-seccion-cabecera"><h2 id="portal-reservas-titulo">Reservas próximas</h2></header>
-        <div class="inicio-cuerpo">
-            {% for reserva in reservas_proximas %}{% include "componentes/inicio_actividad.html" with actividad=reserva ruta="reservas:reserva_detalle" only %}{% empty %}<p class="portal-sin-datos">No tenés reservas próximas</p>{% endfor %}
-        </div>
-        <footer class="inicio-pie"><a href="{% url 'reservas:mis_reservas' %}">Mis reservas</a><a href="{% url 'agenda:agenda' %}">Reservar cancha</a></footer>
+
+    {% if cantidad_kpis %}
+    <section class="portal-kpis" aria-label="Resumen de {{ hoy|date:'F'|lower }}">
+        {% if horas_membresia %}
+        <article class="tarjeta portal-tarjeta portal-kpi" aria-labelledby="portal-horas-titulo">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="portal-horas-titulo">Horas de membresía</h2>
+                <a class="dashboard-enlace" href="{{ horas_membresia.url_uso }}">Ver uso</a>
+            </div>
+            <div class="portal-barras-lista">
+                {% for fila in horas_membresia.filas %}
+                    <div class="portal-barra-bloque" tabindex="0" data-tooltip="{{ fila.tooltip }}" aria-label="{{ fila.tooltip }}">
+                        <div class="portal-barra-cabecera">
+                            <span class="portal-barra-etiqueta">{{ fila.rol }}</span>
+                            <span class="portal-barra-dato"><strong>{{ fila.disponibles }}</strong> de {{ fila.limite }} h disponibles</span>
+                        </div>
+                        <div class="portal-barra-pista" aria-hidden="true">
+                            {% if fila.consumidas %}<span class="portal-barra-seg portal-barra-primario" style="width: {{ fila.pct_consumidas }};"></span>{% endif %}
+                            {% if fila.comprometidas %}<span class="portal-barra-seg portal-barra-medio" style="width: {{ fila.pct_comprometidas }};"></span>{% endif %}
+                        </div>
+                        <p class="dashboard-kpi-detalle">{{ fila.consumidas }} consumida{{ fila.consumidas|pluralize:"s" }} · {{ fila.comprometidas }} comprometida{{ fila.comprometidas|pluralize:"s" }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+        {% endif %}
+
+        {% if asistencia_mes %}
+        <article class="tarjeta portal-tarjeta portal-kpi" aria-labelledby="portal-asistencia-titulo">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="portal-asistencia-titulo">Mi asistencia · {{ hoy|date:"F"|capfirst }}</h2>
+                <a class="dashboard-enlace" href="{{ asistencia_mes.url_clases }}">Mis clases</a>
+            </div>
+            <div class="portal-kpi-resumen">
+                {% if asistencia_mes.finalizadas %}
+                    <div class="dashboard-kpi-fila">
+                        <p class="dashboard-kpi-valor">{{ asistencia_mes.presentes }} <span class="portal-kpi-de">de {{ asistencia_mes.finalizadas }}</span></p>
+                        {% if asistencia_mes.proximas %}
+                            <span class="dashboard-delta dashboard-delta-info">{{ asistencia_mes.proximas }} próxima{{ asistencia_mes.proximas|pluralize:"s" }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="dashboard-kpi-detalle">clases finalizadas con asistencia registrada</p>
+                    <div class="portal-barra-pista" aria-hidden="true">
+                        {% if asistencia_mes.presentes %}<span class="portal-barra-seg portal-barra-positivo" style="width: {{ asistencia_mes.pct_presentes }};"></span>{% endif %}
+                        {% if asistencia_mes.ausentes %}<span class="portal-barra-seg portal-barra-peligro" style="width: {{ asistencia_mes.pct_ausentes }};"></span>{% endif %}
+                        {% if asistencia_mes.sin_registrar %}<span class="portal-barra-seg portal-barra-neutra" style="width: {{ asistencia_mes.pct_sin_registrar }};"></span>{% endif %}
+                    </div>
+                {% else %}
+                    <div class="dashboard-kpi-fila">
+                        <p class="dashboard-kpi-valor{% if not asistencia_mes.proximas %} dashboard-valor-cero{% endif %}">{{ asistencia_mes.proximas }}</p>
+                        <span class="dashboard-delta dashboard-delta-info">programada{{ asistencia_mes.proximas|pluralize:"s" }}</span>
+                    </div>
+                    <p class="dashboard-kpi-detalle">sin clases finalizadas todavía este mes</p>
+                {% endif %}
+            </div>
+            <dl class="portal-metricas-mini">
+                <div><dt>Presentes</dt><dd>{{ asistencia_mes.presentes }}</dd></div>
+                <div><dt>Ausentes</dt><dd>{{ asistencia_mes.ausentes }}</dd></div>
+                <div><dt>Sin registrar</dt><dd>{{ asistencia_mes.sin_registrar }}</dd></div>
+            </dl>
+        </article>
+        {% endif %}
+
+        {% if docencia_mes %}
+        <article class="tarjeta portal-tarjeta portal-kpi" aria-labelledby="portal-docencia-titulo">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="portal-docencia-titulo">Clases a cargo · {{ hoy|date:"F"|capfirst }}</h2>
+                <a class="dashboard-enlace" href="{{ docencia_mes.url_clases }}">Mis clases</a>
+            </div>
+            <div class="portal-kpi-resumen">
+                <div class="dashboard-kpi-fila">
+                    <p class="dashboard-kpi-valor{% if not docencia_mes.total %} dashboard-valor-cero{% endif %}">{{ docencia_mes.dictadas }} <span class="portal-kpi-de">de {{ docencia_mes.total }}</span></p>
+                    {% if docencia_mes.proximas %}
+                        <span class="dashboard-delta dashboard-delta-info">{{ docencia_mes.proximas }} restante{{ docencia_mes.proximas|pluralize:"s" }}</span>
+                    {% endif %}
+                </div>
+                <p class="dashboard-kpi-detalle">clases dictadas en el mes</p>
+                {% if docencia_mes.total %}
+                    <div class="portal-barra-pista" aria-hidden="true">
+                        {% if docencia_mes.dictadas %}<span class="portal-barra-seg portal-barra-clase" style="width: {{ docencia_mes.pct_dictadas }};"></span>{% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="dashboard-desglose">
+                <div>
+                    <span class="dashboard-subetiqueta"><span class="dashboard-marcador-clases" aria-hidden="true"></span>Dictadas</span>
+                    <p class="dashboard-valor-secundario{% if not docencia_mes.dictadas %} dashboard-valor-cero{% endif %}">{{ docencia_mes.dictadas }}</p>
+                </div>
+                <div>
+                    <span class="dashboard-subetiqueta">Programadas</span>
+                    <p class="dashboard-valor-secundario{% if not docencia_mes.proximas %} dashboard-valor-cero{% endif %}">{{ docencia_mes.proximas }}</p>
+                </div>
+            </div>
+        </article>
+        {% endif %}
+
+        {% if reservas_mes %}
+        <article class="tarjeta portal-tarjeta portal-kpi" aria-labelledby="portal-reservas-mes-titulo">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="portal-reservas-mes-titulo">Reservas · {{ hoy|date:"F"|capfirst }}</h2>
+                <a class="dashboard-enlace" href="{% url 'reservas:mis_reservas' %}">Mis reservas</a>
+            </div>
+            <div class="portal-kpi-resumen">
+                <div class="dashboard-kpi-fila">
+                    <p class="dashboard-kpi-valor{% if not reservas_mes.total %} dashboard-valor-cero{% endif %}">{{ reservas_mes.total }}</p>
+                    <span class="dashboard-total-texto">turno{{ reservas_mes.total|pluralize }} este mes</span>
+                </div>
+                <p class="dashboard-kpi-detalle">excluye reservas anuladas</p>
+            </div>
+            <div class="dashboard-desglose">
+                <div>
+                    <span class="dashboard-subetiqueta"><span class="dashboard-marcador-reservas" aria-hidden="true"></span>Organizadas</span>
+                    <p class="dashboard-valor-secundario{% if not reservas_mes.organizadas %} dashboard-valor-cero{% endif %}">{{ reservas_mes.organizadas }}</p>
+                </div>
+                <div>
+                    <span class="dashboard-subetiqueta">Como invitado</span>
+                    <p class="dashboard-valor-secundario{% if not reservas_mes.invitaciones %} dashboard-valor-cero{% endif %}">{{ reservas_mes.invitaciones }}</p>
+                </div>
+            </div>
+        </article>
+        {% endif %}
+
+        {% if revisar_en_kpis %}
+            {% include "componentes/dashboard_revisar.html" with para_revisar=para_revisar clases="portal-tarjeta" only %}
+        {% endif %}
     </section>
     {% endif %}
-    <section class="tarjeta portal-contrataciones" aria-labelledby="portal-contrataciones-titulo">
-        <header class="inicio-seccion-cabecera"><h2 id="portal-contrataciones-titulo">Este mes</h2><span class="inicio-periodo">{{ hoy|date:"F \d\e Y"|capfirst }}</span></header>
-        <div class="inicio-cuerpo portal-contratos">
-            {% for contrato in contrataciones_mes %}<a class="portal-contrato" href="{{ contrato.url }}"><small>{{ contrato.tipo }}</small><strong>{{ contrato.nombre }}</strong></a>
-            {% empty %}<p class="portal-sin-datos">No tenés planes ni membresías vigentes para este mes</p>{% endfor %}
-        </div>
-        <footer class="inicio-pie"><a href="{% url 'membresias:mis_contrataciones' %}">Ver contrataciones</a></footer>
-    </section>
-    {% if clases_proximas %}
-    <section class="tarjeta portal-lista portal-otras-clases" aria-labelledby="portal-clases-titulo">
-        <header class="inicio-seccion-cabecera"><h2 id="portal-clases-titulo">Otras clases próximas</h2></header>
-        <div class="inicio-cuerpo">{% for clase in clases_proximas %}{% include "componentes/inicio_actividad.html" with actividad=clase ruta="clases:clase_detalle" only %}{% endfor %}</div>
-        <footer class="inicio-pie"><a href="{% url 'clases:actividad_clases' request.user.pk %}">Mis clases</a></footer>
-    </section>
-    {% endif %}
-    {% if pendientes %}
-    <section class="tarjeta portal-pendientes" aria-labelledby="portal-pendientes-titulo">
-        <header class="inicio-seccion-cabecera"><h2 id="portal-pendientes-titulo">Pendientes</h2></header>
-        <div class="inicio-cuerpo">{% for pendiente in pendientes %}<div class="portal-pendiente"><p>{{ pendiente.texto }}</p>{% if pendiente.modal %}<button type="button" class="portal-enlace portal-enlace-boton" data-abrir-modal-url="{{ pendiente.url }}">{{ pendiente.accion }}</button>{% else %}<a class="portal-enlace" href="{{ pendiente.url }}">{{ pendiente.accion }}</a>{% endif %}</div>{% endfor %}</div>
+
+    {% if mostrar_fila_cierre %}
+    <section class="{% if contrataciones_mes and revisar_en_cierre %}dashboard-fila-doble{% else %}portal-fila-unica{% endif %}" aria-label="Contrataciones y pendientes">
+        {% if contrataciones_mes %}
+        <article class="tarjeta portal-tarjeta portal-contrataciones" aria-labelledby="portal-contrataciones-titulo">
+            <div class="dashboard-tarjeta-cabecera">
+                <h2 class="dashboard-etiqueta" id="portal-contrataciones-titulo">Contrataciones · {{ hoy|date:"F \d\e Y"|capfirst }}</h2>
+                <a class="dashboard-enlace" href="{% url 'membresias:mis_contrataciones' %}">Ver contrataciones</a>
+            </div>
+            <ul class="portal-contratos-lista">
+                {% for contrato in contrataciones_mes %}
+                    <li>
+                        <a class="portal-contrato-fila" href="{{ contrato.url }}">
+                            <div>
+                                <span class="portal-contrato-tipo">{{ contrato.tipo }}</span>
+                                <strong class="portal-contrato-nombre">{{ contrato.nombre }}</strong>
+                                <span class="portal-contrato-detalle">{{ contrato.detalle }}</span>
+                            </div>
+                            <span class="dashboard-revisar-enlace">Ver detalle</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </article>
+        {% endif %}
+
+        {% if revisar_en_cierre %}
+            {% include "componentes/dashboard_revisar.html" with para_revisar=para_revisar clases="portal-tarjeta" only %}
+        {% endif %}
     </section>
     {% endif %}
 </div>

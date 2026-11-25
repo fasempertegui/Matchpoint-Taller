@@ -242,34 +242,7 @@
             </div>
         </article>
 
-        <article class="tarjeta dashboard-revisar" aria-labelledby="inicio-revisar-titulo">
-            <div class="dashboard-tarjeta-cabecera">
-                <h2 class="dashboard-etiqueta" id="inicio-revisar-titulo">Para revisar</h2>
-                {% if para_revisar.todo_al_dia %}
-                    <span class="dashboard-delta dashboard-delta-sube">Todo al día</span>
-                {% endif %}
-            </div>
-
-            <ul class="dashboard-revisar-lista">
-                {% for fila in para_revisar.filas %}
-                    <li>
-                        {% if fila.cantidad %}
-                            <a class="dashboard-revisar-fila" href="{{ fila.url }}">
-                                <span class="dashboard-revisar-texto">{{ fila.texto }}</span>
-                                <span class="dashboard-delta dashboard-delta-{{ fila.badge_clase }} dashboard-revisar-contador">{{ fila.cantidad }}</span>
-                                <span class="dashboard-revisar-enlace">Revisar</span>
-                            </a>
-                        {% else %}
-                            <div class="dashboard-revisar-fila dashboard-revisar-vacia">
-                                <span class="dashboard-revisar-texto">{{ fila.texto }}</span>
-                                <span class="dashboard-delta dashboard-delta-{{ fila.badge_clase }} dashboard-revisar-contador">{{ fila.cantidad }}</span>
-                                <span class="dashboard-revisar-ok">¡Todo bien!</span>
-                            </div>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        </article>
+        {% include "componentes/dashboard_revisar.html" with para_revisar=para_revisar only %}
     </section>
 </div>
 {{ ocupacion.datos_json|json_script:"dashboard-ocupacion-datos" }}

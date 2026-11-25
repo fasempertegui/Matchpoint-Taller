@@ -1,0 +1,36 @@
+<article class="tarjeta dashboard-revisar{% if clases %} {{ clases }}{% endif %}" aria-labelledby="{{ titulo_id|default:'inicio-revisar-titulo' }}">
+    <div class="dashboard-tarjeta-cabecera">
+        <h2 class="dashboard-etiqueta" id="{{ titulo_id|default:'inicio-revisar-titulo' }}">Para revisar</h2>
+        {% if para_revisar.todo_al_dia %}
+            <span class="dashboard-delta dashboard-delta-sube">Todo al día</span>
+        {% endif %}
+    </div>
+
+    <ul class="dashboard-revisar-lista">
+        {% for fila in para_revisar.filas %}
+            <li>
+                {% if fila.cantidad %}
+                    {% if fila.modal %}
+                        <button type="button" class="dashboard-revisar-fila" data-abrir-modal-url="{{ fila.url }}">
+                            <span class="dashboard-revisar-texto">{{ fila.texto }}</span>
+                            <span class="dashboard-delta dashboard-delta-{{ fila.badge_clase }} dashboard-revisar-contador">{{ fila.cantidad }}</span>
+                            <span class="dashboard-revisar-enlace">{{ fila.accion|default:"Revisar" }}</span>
+                        </button>
+                    {% else %}
+                        <a class="dashboard-revisar-fila" href="{{ fila.url }}">
+                            <span class="dashboard-revisar-texto">{{ fila.texto }}</span>
+                            <span class="dashboard-delta dashboard-delta-{{ fila.badge_clase }} dashboard-revisar-contador">{{ fila.cantidad }}</span>
+                            <span class="dashboard-revisar-enlace">{{ fila.accion|default:"Revisar" }}</span>
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <div class="dashboard-revisar-fila dashboard-revisar-vacia">
+                        <span class="dashboard-revisar-texto">{{ fila.texto }}</span>
+                        <span class="dashboard-delta dashboard-delta-{{ fila.badge_clase }} dashboard-revisar-contador">{{ fila.cantidad }}</span>
+                        <span class="dashboard-revisar-ok">{{ fila.ok_texto|default:"¡Todo bien!" }}</span>
+                    </div>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</article>
