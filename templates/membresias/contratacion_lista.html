@@ -84,12 +84,12 @@
                     {% for fila in filas %}
                         <tr>
                             <td><strong>{{ fila.usuario_nombre }}</strong><span class="tabla-secundario">@{{ fila.usuario_username }}</span></td>
-                            <td>{{ fila.producto_nombre }}{% if tipo == 'todas' %}<span class="tabla-secundario">{{ fila.tipo_texto }}</span>{% endif %}</td>
+                            <td>{{ fila.producto_nombre }}{% if tipo == 'todas' %}<span class="tabla-secundario contratacion-tipo contratacion-tipo-{{ fila.tipo }}">{{ fila.tipo_texto }}</span>{% endif %}</td>
                             <td>{{ fila.mes_cubierto|date:"F Y"|capfirst }}</td>
                             <td class="tabla-numero">$ {{ fila.importe_financiero|floatformat:"2g" }}</td>
                             <td class="tabla-numero">
                                 {% if fila.por_cubrir_tipo == 'faltante' %}
-                                    <span class="contratacion-por-cubrir-faltante">$ {{ fila.por_cubrir_monto|floatformat:"2g" }}</span>
+                                    <span class="contratacion-por-cubrir-faltante">$ {{ fila.por_cubrir_monto|floatformat:"2g" }}</span><span class="tabla-secundario contratacion-por-cubrir-faltante-etiqueta">Faltante</span>
                                 {% elif fila.por_cubrir_tipo == 'excedente' %}
                                     <span class="contratacion-por-cubrir-excedente">$ {{ fila.por_cubrir_monto|floatformat:"2g" }}</span><span class="tabla-secundario contratacion-por-cubrir-excedente-etiqueta">Excedente</span>
                                 {% elif fila.por_cubrir_tipo == 'cubierto' %}

@@ -1071,3 +1071,24 @@ button.agenda-opcion:hover {
     color: var(--advertencia);
     font-size: .85rem;
 }
+
+.evento-tipo {
+    font-weight: 600;
+}
+
+.evento-tipo-clase {
+    color: var(--agenda-clase-texto);
+}
+
+.evento-tipo-reserva {
+    color: var(--agenda-reserva-texto);
+}
+
+.evento-tipo-bloqueo {
+    color: var(--texto-suave);
+}
+
+.evento-aviso-pendiente {
+    color: var(--advertencia);
+    font-weight: 600;
+}

@@ -1,19 +1,15 @@
-from urllib.parse import urlencode
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_http_methods
 
 from caja.consultas import contexto_financiero
 from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
-from instalaciones.models import Sede
 
 from .forms import ReservaAnulacionForm
 from .models import Evento, Reserva
@@ -21,7 +17,6 @@ from .servicios import (
     anular_reserva,
     exigir_acceso_reservas,
     finalizar_reserva,
-    reservas_sin_resultado_queryset,
     validar_anulacion_reserva,
     validar_finalizacion_reserva,
 )
@@ -164,46 +159,3 @@ def reserva_finalizar(request, pk):
     else:
         messages.success(request, f"La reserva {reserva.numero} fue finalizada.")
     return redirect("reservas:reserva_detalle", pk=reserva.pk)
-
-
-@login_required
-@never_cache
-@require_GET
-def reservas_sin_resultado(request):
-    if not exigir_acceso_reservas(request.user):
-        raise PermissionDenied
-    base = reservas_sin_resultado_queryset()
-    hay_pendientes = base.exists()
-    sedes = list(Sede.objects.order_by("nombre"))
-    sede_actual = request.GET.get("sede", "")
-    if sede_actual not in {str(sede.pk) for sede in sedes}:
-        sede_actual = ""
-    busqueda = request.GET.get("q", "").strip()[:150]
-
-    reservas = base
-    if sede_actual:
-        reservas = reservas.filter(evento__turno__cancha__sede_id=sede_actual)
-    if busqueda:
-        for termino in busqueda.split():
-            reservas = reservas.filter(
-                Q(organizador__first_name__icontains=termino)
-                | Q(organizador__last_name__icontains=termino)
-                | Q(organizador__username__icontains=termino)
-            )
-    reservas = reservas.select_related(
-        "organizador", "membresia_usuario__membresia", "evento__turno__cancha__sede",
-    ).order_by("-evento__turno__fecha", "-evento__turno__hora_inicio", "-pk")
-    pagina = Paginator(reservas, 25).get_page(request.GET.get("pagina"))
-    parametros = urlencode({
-        clave: valor
-        for clave, valor in (("q", busqueda), ("sede", sede_actual))
-        if valor
-    })
-    return render(request, "reservas/reservas_sin_resultado.html", {
-        "pagina": pagina,
-        "hay_pendientes": hay_pendientes,
-        "sedes": sedes,
-        "sede_actual": sede_actual,
-        "busqueda": busqueda,
-        "parametros": parametros,
-    })

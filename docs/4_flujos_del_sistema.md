@@ -1089,6 +1089,7 @@ Alternativas:
 - Las instalaciones inactivas conservan su historia y no admiten nuevas actividades. La ausencia de precio no impide consultar; impide registrar reservas normales.
 - Las fechas, canchas o selecciones inválidas se rechazan sin ejecutar acciones.
 - La selección de turno y toda acción posterior vuelven a validar permisos, ocupación y límites temporales. La anulación confirma el identificador de la reserva; no actúa sobre una reserva distinta que ocupe ese turno.
+- Desde **Agenda**, administración dispone además de **Ver todos** para consultar el listado administrativo de eventos (`/agenda/eventos/`) con pestañas `Todos`, `Clases`, `Reservas` y `Bloqueos`, filtros comunes (búsqueda por persona o código `R-`/`B-`/`#clase`, estado, rango de fechas con `hasta >= desde`, sede, cancha dependiente de la sede y día de la semana) y filtros específicos (`Asistencia` en Clases; `Modalidad` y `Resultado de uso` en Reservas), conservando los filtros comunes al cambiar de pestaña y sirviendo como destino prefiltrado para los pendientes de clases sin asistencia y reservas sin resultado desde **Inicio**.
 
 - **Resultado:** agenda diaria y detalle del turno seleccionado, sin modificar actividades.
 - **Datos:** usuarios, roles, sedes, canchas, horarios, turnos, eventos, reservas, clases, profesores asignados y bloqueos.

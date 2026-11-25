@@ -17,13 +17,12 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 
 from common.fechas import FECHA_INICIO_OPERACIONES
 from common.modales import es_peticion_modal, respuesta_modal_exito, respuesta_modal_html
-from instalaciones.models import Sede
 from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
 from .anulaciones import confirmar_anulacion_clase, preparar_anulacion_clase, validar_accion_anulacion
 from .consultas import (
-    clases_sin_asistencia_queryset, consultar_actividad_clases, consultar_clase, consultar_mis_clases,
+    consultar_actividad_clases, consultar_clase, consultar_mis_clases,
     consultar_participantes, consultar_participantes_planilla, consultar_profesores,
     resumen_comercial_participantes,
 )
@@ -599,54 +598,3 @@ def clase_responder(request, pk):
     else:
         messages.success(request, "Tu aviso de asistencia fue registrado.")
     return redirect("clases:clase_detalle", pk=pk)
-
-
-@login_required
-@never_cache
-@require_GET
-def clases_sin_asistencia(request):
-    exigir_administracion_clases(request.user)
-    base = clases_sin_asistencia_queryset()
-    hay_pendientes = base.exists()
-    sedes = list(Sede.objects.order_by("nombre"))
-    sede_actual = request.GET.get("sede", "")
-    if sede_actual not in {str(sede.pk) for sede in sedes}:
-        sede_actual = ""
-
-    clases = base
-    if sede_actual:
-        clases = clases.filter(evento__turno__cancha__sede_id=sede_actual)
-    clases = clases.select_related("evento__turno__cancha__sede").prefetch_related(
-        "profesores__profesor", "alumnos", "asistencias",
-    )
-    pagina = Paginator(clases, 25).get_page(request.GET.get("pagina"))
-    filas = []
-    for clase in pagina:
-        profesores = sorted((str(asignacion.profesor) for asignacion in clase.profesores.all()), key=str.casefold)
-        registradas = {
-            asistencia.usuario_id
-            for asistencia in clase.asistencias.all()
-            if asistencia.estado in (Asistencia.Estado.PRESENTE, Asistencia.Estado.AUSENTE)
-        }
-        pendientes = {
-            alumno.usuario_id for alumno in clase.alumnos.all() if alumno.usuario_id not in registradas
-        } | {
-            asistencia.usuario_id
-            for asistencia in clase.asistencias.all()
-            if asistencia.estado == Asistencia.Estado.SIN_REGISTRAR
-        }
-        filas.append({
-            "clase": clase,
-            "turno": clase.evento.turno,
-            "profesores": ", ".join(profesores),
-            "pendientes": len(pendientes),
-        })
-    pagina.object_list = filas
-
-    return render(request, "clases/clases_sin_asistencia.html", {
-        "pagina": pagina,
-        "hay_pendientes": hay_pendientes,
-        "sedes": sedes,
-        "sede_actual": sede_actual,
-        "parametros": urlencode({"sede": sede_actual}) if sede_actual else "",
-    })

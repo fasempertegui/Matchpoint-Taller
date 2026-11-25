@@ -10,7 +10,9 @@
 {% endblock %}
 
 {% block contenido %}
-{% tarjeta_titulo "Agenda" descripcion="Consultá las clases, reservas y bloqueos de cada sede y cancha." %}{% endtarjeta_titulo %}
+{% tarjeta_titulo "Agenda" descripcion="Consultá las clases, reservas y bloqueos de cada sede y cancha." %}
+    {% if es_administrador %}<a class="boton boton-secundario" href="{% url 'agenda:eventos_lista' %}">Ver todos</a>{% endif %}
+{% endtarjeta_titulo %}
 
 {% if hay_sedes %}
     {% if formulario.errors %}

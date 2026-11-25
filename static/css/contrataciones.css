@@ -19,9 +19,25 @@
 .contratacion-estado-activo::before { background: var(--estado-positivo); }
 .contratacion-estado-anulado::before { background: var(--peligro); }
 
+.contratacion-tipo {
+    font-weight: 600;
+}
+
+.contratacion-tipo-plan {
+    color: var(--agenda-clase-texto);
+}
+
+.contratacion-tipo-membresia {
+    color: var(--agenda-reserva-texto);
+}
+
 .contratacion-por-cubrir-faltante {
     color: var(--advertencia);
     font-weight: 600;
+}
+
+.contratacion-por-cubrir-faltante-etiqueta {
+    color: var(--advertencia);
 }
 
 .contratacion-por-cubrir-excedente {

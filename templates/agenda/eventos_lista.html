@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load encabezados %}
+{% load pestanas %}
+{% load tablas %}
+{% load filtros %}
+{% load estados %}
+{% load static %}
+{% block titulo %}Eventos | Academia TM{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{% static 'css/agenda.css' %}">{% endblock %}
+{% block clase_contenido %}contenido-agenda-eventos{% endblock %}
+{% block contenido %}
+{% tarjeta_titulo "Eventos" descripcion="Consultá las clases, reservas y bloqueos registrados en la academia." %}
+    <a class="boton boton-secundario" href="{% url 'agenda:agenda' %}">Volver a la agenda</a>
+{% endtarjeta_titulo %}
+{% pestanas "Tipo de evento" resultados_filtros="pestanas" %}
+    <a href="{{ url_tab_todos }}"{% if tipo == 'todos' %} aria-current="page"{% endif %}>Todos</a>
+    <a href="{{ url_tab_clases }}"{% if tipo == 'clase' %} aria-current="page"{% endif %}>Clases</a>
+    <a href="{{ url_tab_reservas }}"{% if tipo == 'reserva' %} aria-current="page"{% endif %}>Reservas</a>
+    <a href="{{ url_tab_bloqueos }}"{% if tipo == 'bloqueo' %} aria-current="page"{% endif %}>Bloqueos</a>
+{% endpestanas %}
+{% if hay_eventos %}
+    {% tarjeta_filtros abierto=filtros_abiertos %}
+        <form class="tarjeta-busqueda filtros-compactos" method="get" aria-label="Filtros de eventos" novalidate>
+            {% if formulario.non_field_errors %}
+                <div class="mensaje mensaje-error" role="alert">{{ formulario.non_field_errors }}</div>
+            {% endif %}
+            {% for campo in formulario %}
+                <div class="grupo-campo">
+                    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                    {{ campo }}
+                    {% for error in campo.errors %}<p class="error-campo" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+            {% endfor %}
+            <div class="filtros-acciones"><a class="boton boton-secundario" href="{{ url_limpiar }}" data-limpiar-filtros>Limpiar filtros</a></div>
+        </form>
+    {% endtarjeta_filtros %}
+    <section class="tarjeta tabla-contenedor" data-resultados-filtros="tabla" aria-label="Listado de eventos">
+        {% if formulario_valido %}
+            {% tabla %}
+                <thead>
+                    <tr>
+                        <th scope="col">Evento</th>
+                        <th scope="col">Fecha y horario</th>
+                        <th scope="col">Sede y cancha</th>
+                        <th scope="col">Detalle</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col" class="acciones-columna">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fila in filas %}
+                        <tr>
+                            <td>
+                                <strong>{{ fila.codigo }}</strong>
+                                {% if tipo == 'todos' %}
+                                    <span class="tabla-secundario evento-tipo evento-tipo-{{ fila.tipo }}">{{ fila.tipo_texto }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="tabla-fecha">
+                                {{ fila.fecha|date:"d/m/Y" }}
+                                <span class="tabla-secundario">{{ fila.hora_inicio|time:"H:i" }} a {{ fila.hora_fin|time:"H:i" }}</span>
+                            </td>
+                            <td>
+                                {{ fila.sede_nombre }}
+                                <span class="tabla-secundario">{{ fila.cancha_nombre }}</span>
+                            </td>
+                            <td>
+                                {% if fila.detalle_principal_suave %}
+                                    <span class="texto-secundario">{{ fila.detalle_principal }}</span>
+                                {% else %}
+                                    {{ fila.detalle_principal }}{% if fila.detalle_principal_secundario %} <span class="texto-secundario">({{ fila.detalle_principal_secundario }})</span>{% endif %}
+                                {% endif %}
+                                {% if fila.detalle_secundario or fila.detalle_aviso %}
+                                    <span class="tabla-secundario">
+                                        {% if fila.detalle_secundario %}{{ fila.detalle_secundario }}{% endif %}{% if fila.detalle_secundario and fila.detalle_aviso %} · {% endif %}{% if fila.detalle_aviso %}<span class="evento-aviso-pendiente">{{ fila.detalle_aviso }}</span>{% endif %}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{% indicador_estado "evento" fila.estado %}</td>
+                            <td class="acciones-columna">
+                                <a class="boton boton-secundario boton-chico" href="{{ fila.url_detalle }}" aria-label="Ver detalle de {{ fila.codigo }}">Detalles</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td class="estado-vacio" colspan="6">No hay {% if tipo == 'clase' %}clases{% elif tipo == 'reserva' %}reservas{% elif tipo == 'bloqueo' %}bloqueos{% else %}eventos{% endif %} que coincidan con los filtros.</td></tr>
+                    {% endfor %}
+                </tbody>
+            {% endtabla %}
+            {% include "componentes/paginacion.html" with pagina=pagina entidad="eventos" parametros=parametros only %}
+        {% else %}
+            <p class="estado-vacio">Revisá los filtros para ver los eventos.</p>
+        {% endif %}
+    </section>
+{% else %}
+    <p class="tarjeta estado-vacio">Todavía no hay {% if tipo == 'clase' %}clases registradas{% elif tipo == 'reserva' %}reservas registradas{% elif tipo == 'bloqueo' %}bloqueos registrados{% else %}eventos registrados{% endif %}.</p>
+{% endif %}
+{% endblock %}

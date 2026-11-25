@@ -10,12 +10,162 @@ from bloqueos.models import Bloqueo
 from common.fechas import FECHA_INICIO_OPERACIONES, fecha_maxima_agenda, fecha_maxima_eventos, opciones_meses_agenda
 from instalaciones.horarios import horario_efectivo, horarios_del_mes
 from instalaciones.models import Cancha, Sede
+from reservas.models import Evento
 from usuarios.models import Rol, Usuario
 
 
 class CanchaAgendaField(forms.ModelChoiceField):
     def label_from_instance(self, cancha):
         return cancha.nombre
+
+
+class EventosFiltroForm(forms.Form):
+    PLACEHOLDERS_BUSQUEDA = {
+        "todos": "Persona o código (R-, B-, #clase)",
+        Evento.Tipo.CLASE: "Profesor, participante o #clase",
+        Evento.Tipo.RESERVA: "Organizador, invitado o R-...",
+        Evento.Tipo.BLOQUEO: "Código B-..., motivo u observaciones",
+    }
+    DIAS_SEMANA = (
+        ("", "Todos"),
+        ("1", "Lunes"),
+        ("2", "Martes"),
+        ("3", "Miércoles"),
+        ("4", "Jueves"),
+        ("5", "Viernes"),
+        ("6", "Sábado"),
+        ("7", "Domingo"),
+    )
+    ESTADOS = (
+        ("", "Todos"),
+        (Evento.Estado.PROGRAMADO, Evento.Estado.PROGRAMADO.label),
+        (Evento.Estado.FINALIZADO, Evento.Estado.FINALIZADO.label),
+        (Evento.Estado.ANULADO, Evento.Estado.ANULADO.label),
+    )
+    ASISTENCIAS = (
+        ("", "Todas"),
+        ("pendiente", "Pendiente de carga"),
+        ("completa", "Completa"),
+    )
+    MODALIDADES = (
+        ("", "Todas"),
+        ("normal", "Normal"),
+        ("membresia", "Con membresía"),
+    )
+    RESULTADOS = (
+        ("", "Todos"),
+        ("sin_registrar", "Sin registrar"),
+        ("realizada", "Realizada"),
+        ("no_realizada", "No realizada"),
+    )
+
+    q = forms.CharField(
+        label="Buscar",
+        required=False,
+        max_length=150,
+        widget=forms.TextInput(attrs={"type": "search", "class": "form-control", "maxlength": "150"}),
+    )
+    estado = forms.ChoiceField(
+        label="Estado",
+        required=False,
+        choices=ESTADOS,
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    desde = forms.DateField(
+        label="Fecha desde",
+        required=False,
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+    hasta = forms.DateField(
+        label="Fecha hasta",
+        required=False,
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"class": "form-control", "type": "date"}),
+    )
+    sede = forms.ModelChoiceField(
+        label="Sede",
+        queryset=Sede.objects.order_by("nombre"),
+        required=False,
+        empty_label="Todas",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    cancha = CanchaAgendaField(
+        label="Cancha",
+        queryset=Cancha.objects.none(),
+        required=False,
+        empty_label="Todas",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    dia_semana = forms.TypedChoiceField(
+        label="Día de la semana",
+        choices=DIAS_SEMANA,
+        coerce=int,
+        empty_value=None,
+        required=False,
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    asistencia = forms.ChoiceField(
+        label="Asistencia",
+        required=False,
+        choices=ASISTENCIAS,
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    modalidad = forms.ChoiceField(
+        label="Modalidad",
+        required=False,
+        choices=MODALIDADES,
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    resultado = forms.ChoiceField(
+        label="Resultado de uso",
+        required=False,
+        choices=RESULTADOS,
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+
+    def __init__(self, data=None, *, tipo="todos", **kwargs):
+        datos = data.copy() if data is not None else {}
+        sede_raw = str(datos.get("sede", "")).strip()
+        canchas = Cancha.objects.none()
+        sede_valida = False
+        if sede_raw.isdigit() and Sede.objects.filter(pk=int(sede_raw)).exists():
+            sede_valida = True
+            canchas = Cancha.objects.filter(sede_id=int(sede_raw)).order_by("nombre")
+            cancha_raw = str(datos.get("cancha", "")).strip()
+            if cancha_raw and (not cancha_raw.isdigit() or not canchas.filter(pk=int(cancha_raw)).exists()):
+                datos["cancha"] = ""
+        elif "cancha" in datos:
+            datos["cancha"] = ""
+
+        modalidad_raw = str(datos.get("modalidad", "")).strip()
+        if tipo == Evento.Tipo.RESERVA and modalidad_raw == "normal" and "resultado" in datos:
+            datos["resultado"] = ""
+
+        super().__init__(datos, **kwargs)
+        self.fields["q"].widget.attrs["placeholder"] = self.PLACEHOLDERS_BUSQUEDA.get(
+            tipo, self.PLACEHOLDERS_BUSQUEDA["todos"],
+        )
+        if sede_valida:
+            self.fields["cancha"].queryset = canchas
+        else:
+            self.fields.pop("cancha", None)
+
+        if tipo != Evento.Tipo.CLASE:
+            self.fields.pop("asistencia", None)
+        if tipo != Evento.Tipo.RESERVA:
+            self.fields.pop("modalidad", None)
+            self.fields.pop("resultado", None)
+        elif modalidad_raw == "normal":
+            self.fields.pop("resultado", None)
+
+    def clean(self):
+        datos = super().clean()
+        desde = datos.get("desde")
+        hasta = datos.get("hasta")
+        if desde and hasta and hasta < desde:
+            self.add_error("hasta", "La fecha hasta no puede ser anterior a la fecha desde.")
+        return datos
 
 
 class AgendaFiltroForm(forms.Form):

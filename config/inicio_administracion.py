@@ -266,13 +266,13 @@ def _contexto_para_revisar():
             "texto": "Clases finalizadas sin asistencia cargada",
             "cantidad": clases_sin_asistencia,
             "badge_clase": "advertencia" if clases_sin_asistencia else "sube",
-            "url": reverse("clases:sin_asistencia"),
+            "url": f"{reverse('agenda:eventos_clases')}?estado=finalizado&asistencia=pendiente",
         },
         {
             "texto": "Reservas finalizadas sin resultado",
             "cantidad": reservas_sin_resultado,
             "badge_clase": "advertencia" if reservas_sin_resultado else "sube",
-            "url": reverse("reservas:sin_resultado"),
+            "url": f"{reverse('agenda:eventos_reservas')}?estado=finalizado&modalidad=membresia&resultado=sin_registrar",
         },
         {
             "texto": "Contrataciones con diferencia por cubrir",

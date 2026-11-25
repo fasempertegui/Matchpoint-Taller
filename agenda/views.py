@@ -27,6 +27,7 @@ from reservas.models import Evento
 from reservas.servicios import exigir_acceso_reservas, finalizar_reserva
 from usuarios.models import Rol
 
+from .eventos import listar_eventos_administracion
 from .forms import AgendaFiltroForm, AgendaMesForm, AgendaOperacionForm, AgendaOperacionMesForm, AgendaReservaForm
 from .operaciones import ejecutar_operacion, preparar_operacion
 from .servicios import construir_agenda, enlace_acciones, enlace_agenda
@@ -132,6 +133,18 @@ def agenda(request):
         )
         return respuesta
     return render(request, "agenda/agenda.html", contexto)
+
+
+@login_required
+@never_cache
+@require_GET
+def eventos_lista(request, tipo="todos"):
+    exigir_administracion_clases(request.user)
+    return render(
+        request,
+        "agenda/eventos_lista.html",
+        listar_eventos_administracion(request.GET, tipo=tipo),
+    )
 
 
 @login_required
